@@ -34,7 +34,7 @@ fn fixture_with_declaration(declaration_name: &str) -> Fixture {
         r#"{"lsp":{"lint":false,"typecheck":false}}"#,
     );
     for package in ["vendor", "left", "right", "idle"] {
-        file(root.path(), &format!("{package}/package.json"), "{}");
+        file(root.path(), &vize_l0::cstr!("{package}/package.json"), "{}");
     }
     let declaration = file(root.path(), declaration_name, "export interface Kind {}\n");
     let (service, _socket) = LspService::new(MaestroServer::new);
@@ -47,9 +47,10 @@ fn fixture_with_declaration(declaration_name: &str) -> Fixture {
             "lint":false,"typecheck":false,"ecosystem":false
         })));
     let mut importers = Vec::new();
-    let direct_source = format!(
+    let direct_source = vize_l0::cstr!(
         "<script setup lang=\"ts\">import type {{ Kind }} from './{declaration_name}'; let item: Kind</script><template />"
-    );
+    )
+    .to_string();
     for (name, source) in [
         ("Alpha.vue", direct_source.as_str()),
         ("Beta.vue", "<template />"),
