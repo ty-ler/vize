@@ -39,3 +39,20 @@ settings and an unrelated Vite export that must never execute. Successful
 explicit files still use the existing single evaluated configuration facade.
 Nuxt's actual lint reader has separate Vite `serve` and dedicated `lint`
 function controls, preserving dedicated precedence and the complete rule maps.
+
+## Hosted CLI source prerequisites
+
+The public workflow at `bc47bb5ff6de5c2c1071d701165129eec8083091` places hosted
+CLI capture and snapshot-identity checks in the gallery job before source package
+builds are available. Add the existing Rust-script setup to the native job and
+move the two original complete commands after native and npm package builds.
+Keep both job budgets at 25 and 5 minutes and retain every per-test deadline.
+
+Move the four original hosted-capture artifact globs into a separate always-run
+upload in the native job. Preserve the original strict missing-file policy,
+seven-day retention and hidden-file setting. All remaining workflow behavior,
+product test inputs, complete expected results and body-mode controls stay intact.
+The approved whole-workflow patch is reversible to the complete original file;
+its SHA-256 is `87f5887ca5ac4cf3abb03b6cb79ad6948fb259498218f1a86b6aee4523b113dc`.
+Packed-consumer changes in #8537 retain separate ownership and are absent here.
+Qualification requires genuine source Actions after the coherent restack.
