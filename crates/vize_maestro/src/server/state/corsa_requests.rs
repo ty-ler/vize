@@ -13,6 +13,11 @@ pub(crate) struct CorsaRequestStamp {
 }
 
 impl CorsaRequestStamp {
+    #[cfg(all(test, feature = "native"))]
+    pub(crate) fn environment_revision_for_test(self) -> u64 {
+        self.environment
+    }
+
     pub(crate) fn is_current(self, state: &ServerState) -> bool {
         self.stable
             && !state.project_context_retired()

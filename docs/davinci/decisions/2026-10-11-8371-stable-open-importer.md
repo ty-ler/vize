@@ -50,3 +50,5 @@ not executed locally; Actions is the qualification authority.
 This source decision is paired with the existing issue. Fresh hosted native
 controls and the original eight-law protocol report remain qualification
 requirements; source review alone does not establish runtime completion.
+
+The native-only source controls read the already captured request stamp through a test-only owner accessor. The environment counter remains private, and every whole revision, freshness, importer, and backend-free expectation is unchanged. This corrects the actual final-source E0616 compile failure before any runtime qualification.

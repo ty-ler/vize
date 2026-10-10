@@ -1,6 +1,6 @@
 //! Deferred validation cannot manufacture a same-owner source mutation.
 
-use std::{path::Path, sync::atomic::Ordering};
+use std::path::Path;
 
 use tower_lsp::{
     LspService,
@@ -111,8 +111,8 @@ fn revisions(fixture: &Fixture) -> Vec<u64> {
         .map(|owner| {
             owner
                 .state
-                .corsa_environment_revision
-                .load(Ordering::Acquire)
+                .corsa_request_stamp()
+                .environment_revision_for_test()
         })
         .collect()
 }
