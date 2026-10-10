@@ -23,11 +23,14 @@ const nestedCases = [
   "ignores::ignored_open_sources_keep_native_types_while_lint_exclusions_and_negation_apply",
   "marker_lifecycle::newly_created_and_removed_nested_config_refreshes_without_document_requests",
 ].map((name) => `nested_lsp::${name}`);
-const expectedCounts = new Map([
+const originalExpectedCounts = new Map([
   ...nestedCases.map((name): [string, number] => [name, 1]),
   ["lsp::lsp_initializes_project_formatting_without_options_and_respects_false", 2],
   ["lsp::active_native_typecheck_advertises_fresh_jsx_without_an_opt_in_flag", 1],
 ]);
+const additiveFormatterCase =
+  "lsp::fresh_formatting_without_an_authored_switch_returns_the_complete_edit_packet";
+const expectedCounts = new Map([...originalExpectedCounts, [additiveFormatterCase, 1]]);
 const root = process.cwd();
 const destination = path.join(root, "target/project-config-native");
 const json = (file: string) => JSON.parse(fs.readFileSync(file, "utf8"));
@@ -67,7 +70,7 @@ const harnessStderr = fs.readFileSync(path.join(destination, "harness-stderr.bin
 assert.equal(harness.stderrSha256, sha256(harnessStderr));
 assert.equal(harness.stderrBytes, harnessStderr.length);
 const log = stripVTControlCharacters(logBytes.toString());
-assert.match(log, /test result: ok\. 32 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out;/);
+assert.match(log, /test result: ok\. 33 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out;/);
 for (const name of expectedCounts.keys()) {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   assert.match(log, new RegExp(`^test ${escaped} \\.\\.\\. ok$`, "m"));
@@ -144,7 +147,9 @@ const compareNames = ([left]: [string, number], [right]: [string, number]) => {
   return 0;
 };
 assert.deepEqual([...seen].sort(compareNames), [...expectedCounts].sort(compareNames));
-assert.equal(processes.length, 16);
+assert.equal(processes.filter(({ testName }) => originalExpectedCounts.has(testName)).length, 16);
+assert.equal(processes.filter(({ testName }) => testName === additiveFormatterCase).length, 1);
+assert.equal(processes.length, 17);
 fs.writeFileSync(
   path.join(destination, "custody.json"),
   `${JSON.stringify(
@@ -163,6 +168,9 @@ fs.writeFileSync(
       testLogSha256: sha256(logBytes),
       requiredNative: true,
       originalNestedCases: nestedCases,
+      qualificationSuccessor: "no-authored-formatting-33-tests-17-processes",
+      originalProcessCount: 16,
+      additiveFormatterCase,
       processes,
     },
     null,
@@ -170,5 +178,5 @@ fs.writeFileSync(
   )}\n`,
 );
 console.log(
-  `Authenticated ${nestedCases.length} original lifecycle cases and ${processes.length} source-built LSP processes`,
+  `Authenticated ${nestedCases.length} original lifecycle cases, 16 original LSP processes and one additive no-authored-formatting process`,
 );
