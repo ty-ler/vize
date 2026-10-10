@@ -53,6 +53,7 @@ export class WorkspaceLspConfigDiscovery {
     return [
       watcher,
       watcher.onDidCreate(changed),
+      watcher.onDidChange(changed),
       watcher.onDidDelete(changed),
       workspace.onDidChangeWorkspaceFolders(() => onChange("workspace changed")),
     ];

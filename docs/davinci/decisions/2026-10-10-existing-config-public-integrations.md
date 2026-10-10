@@ -96,3 +96,13 @@ archived with whole original test SHA256
 Their declared current successors preserve every authored input and old field,
 then assert the entire object with project/preview metadata. An additive whole
 packet checks explicit plugin precedence and exactly one config evaluation.
+
+## Existing editor configuration content edits
+
+The extension configuration watcher handles existing-file changes as well as
+creation and deletion. Reuse its existing debounced synchronization so explicit
+editor overrides remain unchanged, including `typecheck: false` profiles that
+cannot rely on native type-check dependency watchers. The real extension-host
+fixture adds complete initialization-option vectors for Vite, dedicated and
+nested TypeScript content edits; all original seven discovery inputs, complete
+assertions and deadlines remain intact. Actual Actions execution is required.

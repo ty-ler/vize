@@ -102,4 +102,36 @@ exports.runExistingConfigSmoke = async function runExistingConfigSmoke() {
   assert.deepEqual(Buffer.from(await vscode.workspace.fs.readFile(unrelatedFile)), unrelatedBytes);
   await vscode.workspace.fs.delete(unrelatedDirectory, { recursive: true });
   if (createdNodeModules) await vscode.workspace.fs.delete(nodeModulesUri);
+  await runExistingConfigurationContentChangeSmoke();
 };
+
+async function runExistingConfigurationContentChangeSmoke() {
+  const { logPath, serverPath } = getFakeServer();
+  const root = getWorkspaceFolder().uri.fsPath;
+  for (const filename of ["vite.config.ts", "vize.config.json", "packages/app/tsconfig.app.json"]) {
+    await prepareConfiguredFakeServer({ logPath, serverPath });
+    const uri = vscode.Uri.file(path.join(root, filename));
+    await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(uri.fsPath)));
+    await vscode.workspace.fs.writeFile(uri, Buffer.from("{}\n"));
+    await updateVizeConfiguration("typecheck.enable", false);
+    await updateVizeConfiguration("enable", undefined);
+    const options = { typecheck: false };
+    let entries = await waitForReadyServer(logPath, `${filename} content-change startup`);
+    assertInitializationOptions(entries, options);
+    const previousInitializations = initializeMessages(entries).length;
+
+    await vscode.workspace.fs.writeFile(uri, Buffer.from('{"compilerOptions":{"strict":true}}\n'));
+    entries = await waitForLogEntries(
+      logPath,
+      (next) => initializeMessages(next).length > previousInitializations,
+      `${filename} existing content edit restarts without native typecheck watchers`,
+    );
+    assert.equal(initializeMessages(entries).length, previousInitializations + 1);
+    assert.deepEqual(
+      initializeMessages(entries).map((message) => message.params.initializationOptions),
+      Array.from({ length: previousInitializations + 1 }, () => options),
+    );
+    await disableVizeAndWaitForShutdown(logPath);
+    await vscode.workspace.fs.delete(uri);
+  }
+}
