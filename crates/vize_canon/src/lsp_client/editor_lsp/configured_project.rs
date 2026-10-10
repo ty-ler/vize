@@ -5,6 +5,9 @@ use corsa::{api::UpdateSnapshotParams, runtime::block_on};
 use std::path::Path;
 use vize_l0::{String, cstr};
 
+mod shared_transport;
+pub(in crate::lsp_client) use shared_transport::try_shared_editor_project;
+
 impl EditorLspSession {
     pub(super) fn spawn_with_config(
         executable: &str,
