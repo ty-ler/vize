@@ -24,3 +24,18 @@ Use the existing CLI package build after the native binding and before the Vite
 and Musea packages. Keep browser inputs, oracles, runtime settings, dependency
 manifests, and publishers unchanged. Actual rendering qualification requires
 successful source Actions on the repaired head; the failed run is not proof.
+
+## Public review corrections
+
+Workspace editor detection includes `jsconfig.json`, preserving all existing
+project-marker cases. The editor smoke test owns only its created dependency
+subdirectory, proves an unrelated dependency's complete bytes survive cleanup,
+and removes a newly created `node_modules` parent only when it is empty.
+
+When an explicit Musea config is missing, retain the existing complete default
+result and undefined VRT value. Do not discover another dedicated/Vite config
+behind the explicit path. The negative control includes another project's
+settings and an unrelated Vite export that must never execute. Successful
+explicit files still use the existing single evaluated configuration facade.
+Nuxt's actual lint reader has separate Vite `serve` and dedicated `lint`
+function controls, preserving dedicated precedence and the complete rule maps.

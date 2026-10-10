@@ -116,6 +116,30 @@ void test("missing vite config has no Musea VRT options", async () => {
   assert.equal(await loadMuseaVrtOptions("vite.config.ts", workspace), undefined);
 });
 
+void test("a missing explicit Musea config never selects another authored config", async (t) => {
+  const workspace = await fs.promises.mkdtemp(path.join(os.tmpdir(), "musea-explicit-missing-"));
+  t.after(() => fs.promises.rm(workspace, { force: true, recursive: true }));
+  await fs.promises.writeFile(
+    path.join(workspace, "vize.config.json"),
+    JSON.stringify({ musea: { include: ["wrong/**/*.art.vue"], vrt: { threshold: 99 } } }),
+  );
+  await fs.promises.writeFile(
+    path.join(workspace, "vite.config.mjs"),
+    `throw new Error("an explicit missing config must not evaluate this config");`,
+  );
+  assert.deepEqual(await loadMuseaConfiguration("missing.config.mjs", workspace), {
+    fileSet: {
+      root: workspace,
+      projectRoot: workspace,
+      include: ["**/*.art.vue"],
+      exclude: ["node_modules/**", "dist/**"],
+    },
+    vrt: undefined,
+    configDir: workspace,
+    previewBasePath: "/__musea__",
+  });
+});
+
 void test("VRT and scanning use top-level vize.musea without a dedicated config", async (t) => {
   const workspace = await fs.promises.mkdtemp(path.join(os.tmpdir(), "musea-vite-top-level-"));
   t.after(() => fs.promises.rm(workspace, { force: true, recursive: true }));

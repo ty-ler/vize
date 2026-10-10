@@ -59,7 +59,7 @@ export async function loadMuseaConfiguration(
 }> {
   const loaded = await loadViteConfig(configPath, cwd);
   const pluginOptions = loaded ? readPluginMuseaOptions(loaded.plugins) : undefined;
-  const vizeOptions = await readSharedMuseaOptions(loaded, cwd);
+  const vizeOptions = await readSharedMuseaOptions(loaded, cwd, configPath);
   const include = pluginOptions?.include ?? vizeOptions?.include ?? DEFAULT_INCLUDE;
   const exclude = pluginOptions?.exclude ?? vizeOptions?.exclude ?? DEFAULT_EXCLUDE;
   const sharedVrt = vizeOptions?.vrt;
@@ -127,7 +127,14 @@ function readPluginMuseaOptions(plugins: unknown[]): MuseaOptions | undefined {
   return undefined;
 }
 
-async function readSharedMuseaOptions(loaded: LoadedViteConfig | undefined, cwd: string) {
+async function readSharedMuseaOptions(
+  loaded: LoadedViteConfig | undefined,
+  cwd: string,
+  configPath: string | undefined,
+) {
+  // Preserve existing defaults for a missing explicit file, without selecting a
+  // different project's authored configuration behind that explicit request.
+  if (!loaded && configPath !== undefined) return undefined;
   // Project the config Vite already evaluated, including custom --config paths.
   // Re-importing it could repeat plugin factories and other user side effects.
   const config = loaded

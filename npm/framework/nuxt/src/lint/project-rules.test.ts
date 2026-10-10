@@ -53,6 +53,30 @@ void test("Vite shared lint settings work without a dedicated Vize config", asyn
   assert.deepEqual(rules, { "vue/require-v-for-key": "off", "vue/no-array-index-key": "error" });
 });
 
+void test("Nuxt Vite config functions receive serve and dedicated functions retain lint", async (t) => {
+  const root = await temporaryRoot(t, "vize-nuxt-config-command-");
+  await writeFile(
+    path.join(root, "vite.config.mjs"),
+    `export default ({ command, mode }) => {
+      if (command !== "serve" || mode !== "development") throw new Error("invalid Vite env");
+      return { vize: { linter: { rules: { "vue/require-v-for-key": "error" } } } };
+    };`,
+  );
+  assert.deepEqual(await readProjectLintRules(root, unexpectedPreset), {
+    "vue/require-v-for-key": "error",
+  });
+  await writeFile(
+    path.join(root, "vize.config.mjs"),
+    `export default ({ command, mode }) => {
+      if (command !== "lint" || mode !== "development") throw new Error("invalid Vize env");
+      return { linter: { rules: { "vue/require-v-for-key": "warn" } } };
+    };`,
+  );
+  assert.deepEqual(await readProjectLintRules(root, unexpectedPreset), {
+    "vue/require-v-for-key": "warn",
+  });
+});
+
 void test("Nuxt reads nearest shared settings in a monorepo and preserves dedicated precedence", async (t) => {
   const root = await temporaryRoot(t, "vize-nuxt-project-rules-monorepo-");
   const app = path.join(root, "packages/app");

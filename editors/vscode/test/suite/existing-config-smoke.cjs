@@ -22,6 +22,7 @@ exports.runExistingConfigSmoke = async function runExistingConfigSmoke() {
     "vite.config.ts",
     "vite.config.mjs",
     "tsconfig.json",
+    "jsconfig.json",
     "packages/app/tsconfig.app.json",
     "packages/app/vite.config.ts",
     "vize.config.json",
@@ -57,6 +58,24 @@ exports.runExistingConfigSmoke = async function runExistingConfigSmoke() {
 
   await prepareConfiguredFakeServer({ logPath, serverPath });
   const dependencyUri = vscode.Uri.file(path.join(root, "node_modules/dependency/tsconfig.json"));
+  const nodeModulesUri = vscode.Uri.file(path.join(root, "node_modules"));
+  const dependencyDirectory = vscode.Uri.file(path.dirname(dependencyUri.fsPath));
+  const unrelatedDirectory = vscode.Uri.file(
+    path.join(root, "node_modules/existing-config-unrelated-dependency"),
+  );
+  const unrelatedFile = vscode.Uri.file(path.join(unrelatedDirectory.fsPath, "retained.txt"));
+  const unrelatedBytes = Buffer.from("pre-existing dependency contents\n");
+  let createdNodeModules = false;
+  try {
+    await vscode.workspace.fs.stat(nodeModulesUri);
+  } catch (error) {
+    if (error.code !== "FileNotFound") throw error;
+    createdNodeModules = true;
+  }
+  await assert.rejects(vscode.workspace.fs.stat(dependencyDirectory), { code: "FileNotFound" });
+  await assert.rejects(vscode.workspace.fs.stat(unrelatedDirectory), { code: "FileNotFound" });
+  await vscode.workspace.fs.createDirectory(unrelatedDirectory);
+  await vscode.workspace.fs.writeFile(unrelatedFile, unrelatedBytes);
   await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(dependencyUri.fsPath)));
   await vscode.workspace.fs.writeFile(dependencyUri, Buffer.from("{}\n"));
   await updateVizeConfiguration("enable", true);
@@ -79,7 +98,8 @@ exports.runExistingConfigSmoke = async function runExistingConfigSmoke() {
   );
   assertInitializationOptions(entries, recommendedInitializationOptions);
   await disableVizeAndWaitForShutdown(logPath);
-  await vscode.workspace.fs.delete(vscode.Uri.file(path.join(root, "node_modules")), {
-    recursive: true,
-  });
+  await vscode.workspace.fs.delete(dependencyDirectory, { recursive: true });
+  assert.deepEqual(Buffer.from(await vscode.workspace.fs.readFile(unrelatedFile)), unrelatedBytes);
+  await vscode.workspace.fs.delete(unrelatedDirectory, { recursive: true });
+  if (createdNodeModules) await vscode.workspace.fs.delete(nodeModulesUri);
 };

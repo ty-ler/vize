@@ -42,6 +42,7 @@ export const WORKSPACE_PROJECT_CONFIG_FILES = [
   "vite.config.mjs",
   "vite.config.cjs",
   "tsconfig.json",
+  "jsconfig.json",
 ] as const;
 export const WORKSPACE_PROJECT_CONFIG_GLOB = `**/{${[
   ...WORKSPACE_LSP_CONFIG_FILES,
