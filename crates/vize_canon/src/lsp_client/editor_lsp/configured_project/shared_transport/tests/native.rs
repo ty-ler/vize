@@ -212,3 +212,47 @@ fn native_editor_resolves_package_alias_from_monorepo_root_without_cross_owner_a
     second.shutdown().unwrap();
     control::assert_reaped(&b_owner);
 }
+
+#[test]
+fn native_editor_resolves_package_alias_from_monorepo_root_reaps_stopped_shared_owner() {
+    if !control::enabled() {
+        return;
+    }
+    let fixture = control::fixture();
+    let native = control::runtime();
+    let root = tempfile::tempdir().unwrap();
+    control::write_fixture(root.path(), &fixture);
+    let mut client =
+        CorsaProjectClient::new_for_editor_workspace(native.to_str(), root.path()).unwrap();
+    let owner = only_owner(root.path(), &native);
+    assert!(client.project_session_attached_to_editor);
+    let stopped = std::process::Command::new("kill")
+        .arg("-STOP")
+        .arg(cstr!("{}", owner.pid).as_str())
+        .status()
+        .unwrap();
+    assert!(stopped.success());
+    let start = std::time::Instant::now();
+    client.invalidate_disk_project_state().unwrap();
+    assert!(
+        start.elapsed() < std::time::Duration::from_secs(5),
+        "discard must not request a snapshot from its stopped backend"
+    );
+    control::assert_reaped(&owner);
+    assert!(client.session.is_none());
+    assert!(client.editor_lsp.is_none());
+    assert!(!client.project_session_attached_to_editor);
+    assert!(client.editor_lsp_documents_dirty);
+    assert_eq!(
+        complete_report(
+            &mut client,
+            root.path(),
+            fixture["source"].as_str().unwrap()
+        ),
+        fixture["expected"]
+    );
+    let replacement = only_owner(root.path(), &native);
+    assert_ne!(replacement, owner);
+    client.shutdown().unwrap();
+    control::assert_reaped(&replacement);
+}

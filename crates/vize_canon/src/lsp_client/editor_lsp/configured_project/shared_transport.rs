@@ -152,8 +152,13 @@ impl CorsaProjectClient {
         discard: bool,
     ) -> Result<(), String> {
         let snapshot_result = self.session.take().map_or(Ok(()), |session| {
-            // Release the live snapshot first. The LSP owns the attached socket,
-            // so ProjectSession::close must never close it ahead of that owner.
+            // Immediate disk invalidation must not wait on the stale backend.
+            // Drop queues release; reaping its owner below closes that peer.
+            if discard {
+                return Ok(());
+            }
+            // Graceful retirement releases the live snapshot before its owner.
+            // ProjectSession::close must never close the shared socket first.
             block_on(session.snapshot().release())
                 .map_err(|error| cstr!("Cannot release attached editor snapshot: {error}"))
         });
