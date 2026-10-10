@@ -74,3 +74,24 @@ test("renders repaired invalid server markup without unsafe threshold attributes
   assert.match(html, /data-invalid="true"/);
   assert.doesNotMatch(html, /high="NaN"|optimum="Infinity"/);
 });
+
+test("renders finite wide and collapsed ranges identically across SSR requests", async () => {
+  for (const [min, max, value, percent, invalid] of [
+    [-Number.MAX_VALUE, Number.MAX_VALUE, 0, 50, false],
+    [-Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, 100, false],
+    [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, 0, true],
+  ] as const) {
+    const probe = {
+      setup: () => () => h(Meter, { id: "finite-meter", min, max, value }),
+    };
+    const first = await renderToString(createSSRApp(probe));
+    const second = await renderToString(createSSRApp(probe));
+    assert.equal(first, second);
+    assert.ok(first.includes(`min="${min}"`));
+    assert.ok(first.includes(`max="${max}"`));
+    assert.ok(first.includes(`value="${value}"`));
+    assert.ok(first.includes(`data-percent="${percent}"`));
+    assert.equal(first.includes('data-invalid="true"'), invalid);
+    assert.doesNotMatch(first, /NaN|Infinity/);
+  }
+});

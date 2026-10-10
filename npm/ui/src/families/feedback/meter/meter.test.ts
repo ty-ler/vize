@@ -158,3 +158,43 @@ test("does not enter the tab order or create a live region", async () => {
   assert.ok((await handle.tab()) === null);
   handle.unmount();
 });
+
+test("updates native attributes, slots, and expose across extreme finite ranges", async () => {
+  const handle = mountInteraction(Meter, {
+    props: {
+      ariaLabel: "Signed measurement",
+      min: -Number.MAX_VALUE,
+      max: Number.MAX_VALUE,
+      value: 0,
+    },
+    slots: {
+      default: (state: MeterSlotState) => `${state.percent}%`,
+    },
+  });
+  const exposed = handle.exposes<MeterExpose>();
+  const meter = handle.root() as HTMLMeterElement;
+
+  assert.equal(meter.getAttribute("min"), String(-Number.MAX_VALUE));
+  assert.equal(meter.getAttribute("max"), String(Number.MAX_VALUE));
+  assert.equal(meter.getAttribute("value"), "0");
+  assert.equal(meter.getAttribute("data-percent"), "50");
+  assert.equal(meter.textContent, "50%");
+  assert.equal(exposed.percent, 50);
+
+  await handle.wrapper.setProps({ value: Number.MAX_VALUE });
+  assert.equal(meter.getAttribute("value"), String(Number.MAX_VALUE));
+  assert.equal(meter.getAttribute("data-percent"), "100");
+  assert.equal(exposed.percent, 100);
+  assert.equal(exposed.state, "full");
+
+  await handle.wrapper.setProps({ min: Number.MAX_VALUE });
+  assert.equal(meter.getAttribute("min"), String(Number.MAX_VALUE));
+  assert.equal(meter.getAttribute("max"), String(Number.MAX_VALUE));
+  assert.equal(meter.getAttribute("value"), String(Number.MAX_VALUE));
+  assert.equal(meter.getAttribute("data-percent"), "0");
+  assert.equal(meter.getAttribute("data-invalid"), "true");
+  assert.equal(meter.textContent, "0%");
+  assert.equal(exposed.percent, 0);
+  assert.equal(exposed.invalid, true);
+  handle.unmount();
+});

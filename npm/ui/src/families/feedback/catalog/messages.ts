@@ -87,6 +87,7 @@ export const feedbackMessageCatalog = [
     behaviorContract: "src/families/feedback/meter/meter.behavior.md",
     tests: [
       "src/families/feedback/meter/meter.test.ts",
+      "src/families/feedback/meter/meter-state.test.ts",
       "src/families/feedback/meter/meter-ssr.test.ts",
     ],
     typeTests: ["src/families/feedback/meter/meter.types.test-d.ts"],

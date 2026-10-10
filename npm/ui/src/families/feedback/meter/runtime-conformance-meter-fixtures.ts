@@ -49,3 +49,55 @@ export const meterRuntimeFixture: RuntimeFixture = {
     assert.equal(meter.textContent, "64%");
   },
 };
+
+function finiteRangeFixture(
+  name: string,
+  min: number,
+  max: number,
+  value: number,
+  percent: number,
+  invalid: boolean,
+): RuntimeFixture {
+  return {
+    name,
+    sourceFile: "families/feedback/meter/meter.vue",
+    render: () =>
+      h(
+        Meter,
+        { ariaLabel: "Signed measurement", id: name, min, max, value },
+        { default: () => `${percent}%` },
+      ),
+    assertServerMarkup(html) {
+      assert.match(html, /^<meter/);
+      assert.ok(html.includes(`min="${min}"`));
+      assert.ok(html.includes(`max="${max}"`));
+      assert.ok(html.includes(`value="${value}"`));
+      assert.ok(html.includes(`data-percent="${percent}"`));
+      assert.equal(html.includes('data-invalid="true"'), invalid);
+      assert.doesNotMatch(html, /NaN|Infinity/);
+    },
+    assertHydratedDom(host) {
+      const meter = host.querySelector('[data-vize-ui="meter"]');
+      assert.ok(meter instanceof HTMLMeterElement);
+      assert.equal(meter.getAttribute("min"), String(min));
+      assert.equal(meter.getAttribute("max"), String(max));
+      assert.equal(meter.getAttribute("value"), String(value));
+      assert.equal(meter.getAttribute("data-percent"), String(percent));
+      assert.equal(meter.getAttribute("data-invalid"), invalid ? "true" : null);
+      assert.equal(meter.textContent, `${percent}%`);
+    },
+  };
+}
+
+export const meterRuntimeFixtures: readonly RuntimeFixture[] = [
+  meterRuntimeFixture,
+  finiteRangeFixture("meter-wide-range", -Number.MAX_VALUE, Number.MAX_VALUE, 0, 50, false),
+  finiteRangeFixture(
+    "meter-collapsed-range",
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    0,
+    true,
+  ),
+];

@@ -41,6 +41,8 @@ const {
 
   /**
    * Upper bound. Values less than or equal to `min` are repaired to `min + 1`.
+   * If that addition rounds back to `min`, the collapsed finite range reports
+   * zero percent and invalid state.
    *
    * @default 1
    */

@@ -50,18 +50,25 @@ async function renderFixture(fixture: RuntimeFixture): Promise<string> {
 
 test("declares an SSR and hydration fixture for every source SFC", async () => {
   const sourceFiles = await collectSourceSfcFiles(path.resolve("src"));
-  const fixtureFiles = runtimeFixtures
-    .map((fixture) => fixture.sourceFile)
-    .sort((left, right) => left.localeCompare(right));
+  const fixtureFiles = [...new Set(runtimeFixtures.map((fixture) => fixture.sourceFile))].sort(
+    (left, right) => left.localeCompare(right),
+  );
 
   assert.deepEqual(fixtureFiles, sourceFiles);
+});
+
+test("gives every runtime conformance case a unique name", () => {
+  assert.equal(
+    new Set(runtimeFixtures.map((fixture) => fixture.name)).size,
+    runtimeFixtures.length,
+  );
 });
 
 // One test per source SFC: the sweep grows with every family, so a single
 // looping test would eventually exceed the per-test timeout. Per-fixture tests
 // keep each budget constant and name the failing component directly.
 for (const fixture of runtimeFixtures) {
-  test(`${fixture.sourceFile} renders stable, accessible markup across isolated SSR requests`, async () => {
+  test(`${fixture.name}: ${fixture.sourceFile} renders stable, accessible markup across isolated SSR requests`, async () => {
     const [left, right] = await Promise.all([renderFixture(fixture), renderFixture(fixture)]);
     assert.equal(left, right, `${fixture.name} emitted request-dependent SSR markup`);
     fixture.assertServerMarkup(left);
@@ -69,7 +76,7 @@ for (const fixture of runtimeFixtures) {
 }
 
 for (const fixture of runtimeFixtures) {
-  test(`${fixture.sourceFile} hydrates without warnings or node replacement`, async () => {
+  test(`${fixture.name}: ${fixture.sourceFile} hydrates without warnings or node replacement`, async () => {
     const serverHtml = await renderFixture(fixture);
     const host = document.createElement("div");
     host.innerHTML = serverHtml;

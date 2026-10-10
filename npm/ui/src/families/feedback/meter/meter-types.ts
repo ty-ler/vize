@@ -12,7 +12,10 @@ export interface MeterSlotState {
   /** Finite lower bound. */
   readonly min: number;
 
-  /** Finite upper bound, always greater than `min`. */
+  /**
+   * Finite upper bound. Equals `min` only when a repaired `min + 1` rounds
+   * back to `min`; that collapsed range reports zero percent and invalid state.
+   */
   readonly max: number;
 
   /** Optional low threshold clamped to the normalized range. */
