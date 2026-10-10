@@ -47,7 +47,7 @@ function runInit(context, projectRoot, args) {
   });
 }
 
-function assertNoDedicatedConfig(projectRoot) {
+export function assertNoDedicatedConfig(projectRoot) {
   assert.equal(
     fs.readdirSync(projectRoot).some((name) => name.startsWith("vize.config.")),
     false,

@@ -123,6 +123,19 @@ The current release audit is exactly 40/31: all original 37 contracts, the two
 genuine delivered broad contracts, and the named config-free broad contract.
 Packed execution across all eight manager cells remains an Actions obligation.
 
+The canonical Rust packed producer runs the installed TS/JS typecheck helper
+before the eight fresh-project cells. Its current generated-file successor
+snapshots only `package.json` and `tsconfig.json`; the same existing fresh-project
+absence check rejects every `vize.config.*` after both initialization passes.
+Preserve the helper API, authored TS/JS sources, diagnostic checks, manager argv
+and idempotency flow. The entire original helper and runtime-oracle source remain
+archived under `project-settings-8371/archives`. The false-clean oracle retains
+its whole historical fake CLI literal and derives the named current fixture by
+omitting only its generated dedicated-config write; its original standalone TS
+failure assertion and invocation remain unchanged. No wrapper, parser or runtime
+stage is added. Node fixture and inverse controls do not qualify actual packed
+execution or a public release; fresh exact-source Actions remain required.
+
 ## Review and execution successors
 
 Vite config functions receive only `serve` or `build`. Vize workflow commands
