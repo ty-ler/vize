@@ -258,12 +258,18 @@ fn run_worker(
                     job.version
                 );
                 // Opening an unsaved dependency changes its importers too.
-                project
-                    .publish_importer_diagnostics(&uri, Some(job.version))
-                    .await;
+                refresh_initial_importers(&project, &uri, job.version).await;
             });
         }
     }
+}
+
+async fn refresh_initial_importers(project: &MaestroServer, uri: &Url, version: i32) -> Vec<Url> {
+    // didOpen/didChange or the event that retained this pass prepared its
+    // current owner already. Only other importer owners still need marking.
+    project
+        .publish_importer_diagnostics_with_current_owner(uri, Some(version), true)
+        .await
 }
 
 impl MaestroServer {
@@ -276,3 +282,6 @@ impl MaestroServer {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod open_importer_tests;

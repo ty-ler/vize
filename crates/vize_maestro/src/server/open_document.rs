@@ -28,6 +28,11 @@ impl MaestroServer {
         #[cfg(feature = "experimental-source-navigation")]
         self.notify_native_navigation(&uri);
         self.state.update_virtual_docs(&uri, &content);
+        // Prepare the owner's disk view at the open boundary. A delayed
+        // importer pass must not invalidate this same owner after an editor
+        // request has already synchronized the stable opened source.
+        #[cfg(feature = "native")]
+        super::workspace_files::invalidate_changed_document_disk_project_state(self, &uri).await;
 
         // The bounded worker starts parser/lint feedback promptly, then runs
         // the full type-diagnostic pass after an interactive grace. Opening a
@@ -40,6 +45,10 @@ impl MaestroServer {
         }
 
         self.publish_diagnostics(&uri).await;
+        #[cfg(feature = "native")]
+        self.publish_importer_diagnostics_with_current_owner(&uri, Some(version), true)
+            .await;
+        #[cfg(not(feature = "native"))]
         self.publish_importer_diagnostics(&uri, Some(version)).await;
     }
 
