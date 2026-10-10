@@ -41,6 +41,19 @@ impl MaestroServer {
         uri: &Url,
         version: Option<i32>,
     ) -> Vec<Url> {
+        self.publish_importer_diagnostics_with_current_owner(uri, version, false)
+            .await
+    }
+
+    /// didChange has already invalidated its owner before its own diagnostics.
+    pub(super) async fn publish_importer_diagnostics_with_current_owner(
+        &self,
+        uri: &Url,
+        version: Option<i32>,
+        current_owner_invalidated: bool,
+    ) -> Vec<Url> {
+        #[cfg(not(feature = "native"))]
+        let _ = current_owner_invalidated;
         let mut refreshed = Vec::new();
         tracing::info!(
             "finding open typecheck dependents for {} version {:?}",
@@ -56,6 +69,12 @@ impl MaestroServer {
             dependents.len(),
             uri
         );
+        #[cfg(feature = "native")]
+        let mut invalidated_owners = if current_owner_invalidated {
+            vec![self.state.clone()]
+        } else {
+            Vec::new()
+        };
         for importer in dependents {
             if self.state.documents.version(uri) != version {
                 tracing::debug!(
@@ -67,10 +86,25 @@ impl MaestroServer {
                 break;
             }
             tracing::info!("refreshing importer {} for {}", importer, uri);
-            self.for_document(&importer)
-                .await
-                .publish_diagnostics(&importer)
+            let project = self.for_document(&importer).await;
+            if self.state.documents.version(uri) != version {
+                break;
+            }
+            #[cfg(feature = "native")]
+            if !invalidated_owners
+                .iter()
+                .any(|owner| std::sync::Arc::ptr_eq(owner, &project.state))
+            {
+                // A declaration can belong to another package while its
+                // importer's native session still holds the old disk view.
+                // Mark each affected owner once; backend IO stays deferred.
+                super::workspace_files::invalidate_changed_document_disk_project_state(
+                    &project, uri,
+                )
                 .await;
+                invalidated_owners.push(project.state.clone());
+            }
+            project.publish_diagnostics(&importer).await;
             tracing::info!("refreshed importer {} for {}", importer, uri);
             refreshed.push(importer);
         }

@@ -212,3 +212,28 @@ The fresh native build exposed a private-module access at the project path
 consumer. Re-export the same pure normalizer from the crate-visible IDE surface;
 keep its body, host tuple and existing rename consumers unchanged. Retain the
 whole original failed log and require fresh native compilation and protocol laws.
+
+## Declaration refresh across actual native owners
+
+The unchanged full Vue Router and VitePress editor laws exposed stale diagnostics
+after an open package declaration changed: the declaration's nearest owner was
+marked dirty, but the actual importer owner reused its prior native disk view.
+Before refreshing each importer, resolve its existing project owner and mark that
+owner through the existing deferred disk invalidation. Deduplicate owners for
+one fan-out, including the declaration owner already invalidated by didChange.
+Opening and closing retain the original entry point and independently invalidate
+the affected owners. Recheck the dependency version after awaited routing;
+superseded passes cannot dirty an owner or publish diagnostics.
+
+The native state controls assert entire refreshed lists and environment vectors
+for cross-package declarations, shared-owner and duplicate importers, an already
+invalidated same owner, untouched idle owners, and a superseded version. They
+also require that no backend is created. Preserve the original full declaration
+fixtures, diagnostic expectations and notification deadlines. Hosted native and
+whole-source Actions must qualify the successor; no prior green run transfers.
+
+The authored missing-import default-discovery control belongs to this checked
+CLI producer layer. Its entire input, invocation, expected exit and error checks
+move unchanged from the earlier compatibility layer; default evaluation errors
+still refuse instead of silently falling back. The six earlier CLI contract
+cases and the checker-only explicit --no-config recipe remain unchanged.

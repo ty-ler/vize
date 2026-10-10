@@ -68,6 +68,10 @@ impl MaestroServer {
             uri,
             version
         );
+        #[cfg(feature = "native")]
+        self.publish_importer_diagnostics_with_current_owner(uri, Some(version), true)
+            .await;
+        #[cfg(not(feature = "native"))]
         self.publish_importer_diagnostics(uri, Some(version)).await;
         tracing::info!(
             "finished importer diagnostics after edit {} version {}",
