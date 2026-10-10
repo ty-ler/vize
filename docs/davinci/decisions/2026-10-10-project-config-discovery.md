@@ -122,3 +122,29 @@ plans and the omitted dedicated config file, retaining the original archive.
 The current release audit is exactly 40/31: all original 37 contracts, the two
 genuine delivered broad contracts, and the named config-free broad contract.
 Packed execution across all eight manager cells remains an Actions obligation.
+
+## Review and execution successors
+
+Vite config functions receive only `serve` or `build`. Vize workflow commands
+such as `lint`, `check` and `fmt` project to `serve`, preserving every other
+supplied environment field and leaving the caller's object unchanged. Existing
+valid Vite environments retain their object identity. Dedicated Vize config
+functions continue receiving the authored workflow command.
+
+The original sub-package checker runner is retained as a complete
+[historical execution recipe](../../../tests/_fixtures/differential/typechecker/sub-package-3366/original-checker-runner.ts.txt).
+Its current recipe adds only `--no-config`: the intentionally unresolvable
+`vize.config.ts` remains an unchanged checked source, including both original
+installed/missing-module diagnostic controls. Default configuration discovery
+still refuses the same missing import before checking, with no silent fallback.
+The original full Check failure and complete runner remain archival authority.
+
+An additive `fresh_formatting_without_an_authored_switch_returns_the_complete_edit_packet`
+process law omits only the authored formatting switch from a separate input.
+It requires all three providers, the complete diagnostic publication, the whole
+single-edit response including range and formatted buffer, graceful shutdown,
+and absence of dedicated configuration. Preserve all original 32 test inputs,
+oracles and raw observations, including 13 lifecycle cases and 16 authenticated
+processes. The named current native qualification successor requires exactly
+33 passing tests and 17 joined processes; the added law cannot borrow the
+original 32/16 head's Actions credit or weaken any build/executable/protocol join.

@@ -58,6 +58,11 @@ export function projectConfigDefaults() {
 /** Resolve just the native settings from an ordinary Vite or Vite+ export. */
 export async function resolveViteConfigExport(exported, env) {
   env ??= { mode: "development", command: "serve" };
+  // Dedicated Vize workflows also use commands such as lint and check. A Vite
+  // function receives only Vite's serve/build discriminator, without mutation.
+  if (env.command !== "build" && env.command !== "serve") {
+    env = { ...env, command: "serve" };
+  }
   const source = await resolveSource(exported, env);
   let shared = await (typeof source.vize === "function" ? source.vize(env) : source.vize);
   const alias = object(shared) ? shared.lint : undefined;

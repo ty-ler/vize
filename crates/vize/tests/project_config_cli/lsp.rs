@@ -116,3 +116,70 @@ fn active_native_typecheck_advertises_fresh_jsx_without_an_opt_in_flag() {
     assert!(lsp.wait_for_exit().success());
     assert_no_dedicated_config(root);
 }
+
+#[test]
+fn fresh_formatting_without_an_authored_switch_returns_the_complete_edit_packet() {
+    let project = project();
+    let root = project.path();
+    let settings = include_str!(
+        "../../../../tests/_fixtures/differential/config/project-settings-8371/no-authored-formatting.vite.config.mjs.txt"
+    );
+    assert!(!settings.contains("formatting"));
+    write(root, "vite.config.mjs", settings);
+    let uri = file_uri(&root.join("Quotes.vue"));
+    let mut lsp = LspProcess::spawn(root);
+    lsp.send(
+        json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{
+            "processId":null,"rootUri":file_uri(root),"capabilities":{}
+        }}),
+    );
+    let response = lsp.recv_response(1);
+    assert!(response["error"].is_null(), "{response:#}");
+    assert_eq!(
+        response["result"]["capabilities"]["documentFormattingProvider"],
+        json!(true)
+    );
+    assert_eq!(
+        response["result"]["capabilities"]["documentRangeFormattingProvider"],
+        json!(true)
+    );
+    assert_eq!(
+        response["result"]["capabilities"]["documentOnTypeFormattingProvider"],
+        json!({"firstTriggerCharacter":";","moreTriggerCharacter":["}","\n"]})
+    );
+    lsp.send(json!({"jsonrpc":"2.0","method":"initialized","params":{}}));
+    lsp.send(
+        json!({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{
+            "textDocument":{"uri":uri,"languageId":"vue","version":1,"text":support::QUOTES}
+        }}),
+    );
+    let publication = lsp.recv_matching(|message| {
+        message["method"] == "textDocument/publishDiagnostics"
+            && message["params"]["uri"] == uri.as_str()
+    });
+    assert_eq!(
+        publication,
+        json!({"jsonrpc":"2.0","method":"textDocument/publishDiagnostics",
+        "params":{"uri":uri,"version":1,"diagnostics":[]}})
+    );
+    lsp.send(
+        json!({"jsonrpc":"2.0","id":2,"method":"textDocument/formatting","params":{
+            "textDocument":{"uri":uri},"options":{"tabSize":2,"insertSpaces":true}
+        }}),
+    );
+    assert_eq!(
+        lsp.recv_response(2),
+        json!({"jsonrpc":"2.0","id":2,"result":[{
+            "range":{"start":{"line":0,"character":0},"end":{"line":4,"character":0}},
+            "newText":support::PRESERVED_SINGLE
+        }]})
+    );
+    lsp.send(json!({"jsonrpc":"2.0","id":3,"method":"shutdown"}));
+    assert_eq!(
+        lsp.recv_response(3),
+        json!({"jsonrpc":"2.0","id":3,"result":null})
+    );
+    lsp.send(json!({"jsonrpc":"2.0","method":"exit"}));
+    assert!(lsp.wait_for_exit().success());
+    assert_no_dedicated_config(root);
+}

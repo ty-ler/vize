@@ -7,6 +7,33 @@ import { test } from "vite-plus/test";
 import { loadConfig } from "../src/config.ts";
 import { resolveViteConfigExport } from "../src/config/vite-runtime.mjs";
 
+test("Vite functions receive serve/build while the authored workflow environment stays exact", async () => {
+  for (const command of ["lint", "check", "fmt", "serve", "build"]) {
+    const env = Object.freeze({ command, mode: "production", isSsrBuild: true });
+    const seen: unknown[] = [];
+    const viteEnv = { ...env, command: command === "build" ? "build" : "serve" };
+    const resolved = await resolveViteConfigExport((actual: unknown) => {
+      seen.push(actual);
+      return {
+        vize: (shared: unknown) => {
+          seen.push(shared);
+          return { linter: { rules: { "vue/require-v-for-key": "error" } } };
+        },
+      };
+    }, env);
+    assert.deepEqual(resolved, {
+      typeChecker: { jsxTypecheck: true },
+      linter: { rules: { "vue/require-v-for-key": "error" } },
+    });
+    assert.deepEqual(seen, [viteEnv, viteEnv]);
+    if (command === "serve" || command === "build") {
+      assert.equal(seen[0], env);
+      assert.equal(seen[1], env);
+    }
+    assert.deepEqual(env, { command, mode: "production", isSsrBuild: true });
+  }
+});
+
 test("Vite settings retain shared values, overrides and explicit feature disables", async () => {
   const source = {
     vize: {
