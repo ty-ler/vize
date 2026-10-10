@@ -26,7 +26,7 @@ import path from "node:path";
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { ArtFileInfo } from "../types/index.js";
-import { parseArtFile } from "./utils.js";
+import { parseArtFile, parseWorkers } from "./utils.js";
 import { scanArtFiles } from "../utils.js";
 import { runVrt, runApprove, runClean, runGenerate } from "./commands.js";
 import { loadMuseaConfiguration } from "./config.js";
@@ -163,11 +163,6 @@ export function parseArgs(args: string[]): CliOptions {
 function parseThreshold(value: string | undefined): number {
   const threshold = Number.parseFloat(value ?? "");
   return Number.isFinite(threshold) ? threshold : 0.1;
-}
-
-function parseWorkers(value: string | undefined): number {
-  const workers = Number.parseInt(value ?? "", 10);
-  return Number.isFinite(workers) ? Math.max(1, workers) : 1;
 }
 
 function printHelp(): void {
