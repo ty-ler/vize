@@ -124,7 +124,10 @@ fn fresh_formatting_without_an_authored_switch_returns_the_complete_edit_packet(
     let settings = include_str!(
         "../../../../tests/_fixtures/differential/config/project-settings-8371/no-authored-formatting.vite.config.mjs.txt"
     );
-    assert!(!settings.contains("formatting"));
+    assert_eq!(
+        settings,
+        support::SETTINGS.replace("formatting: true, ", "")
+    );
     write(root, "vite.config.mjs", settings);
     let uri = file_uri(&root.join("Quotes.vue"));
     let mut lsp = LspProcess::spawn(root);

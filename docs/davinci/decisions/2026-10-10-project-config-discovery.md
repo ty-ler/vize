@@ -161,3 +161,15 @@ oracles and raw observations, including 13 lifecycle cases and 16 authenticated
 processes. The named current native qualification successor requires exactly
 33 passing tests and 17 joined processes; the added law cannot borrow the
 original 32/16 head's Actions credit or weaken any build/executable/protocol join.
+
+The appended default-discovery missing-import case keeps its complete authored
+input, exit-two requirement and full diagnostics when it moves from the tooling
+runner to the checked native owner in #8476. Retain the entire old runner and
+whole test block in source custody; the preceding six cases remain byte-exact.
+This changes execution ownership only, with no product behavior or expected
+outcome change. The additive no-authored-formatting law compares its entire
+fixture with the original settings minus only `formatting: true, `, preserving
+all original fixtures, editor response oracles and native process joins.
+The complete old tooling, native, consumer and full-script failure logs remain
+authority. Every changed layer needs fresh exact-source Actions; cached CLI
+results and prior green heads do not qualify this successor.
