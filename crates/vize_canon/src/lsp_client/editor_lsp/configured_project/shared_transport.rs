@@ -151,9 +151,10 @@ impl CorsaProjectClient {
         &mut self,
         discard: bool,
     ) -> Result<(), String> {
-        let snapshot_result = self.session.take().map_or(Ok(()), |session| {
-            // Immediate disk invalidation must not wait on the stale backend.
-            // Drop queues release; reaping its owner below closes that peer.
+        // Keep the snapshot alive until its owning process is reaped: a full
+        // SDK release queue makes snapshot drop synchronously call its peer.
+        let session = self.session.take();
+        let snapshot_result = session.as_ref().map_or(Ok(()), |session| {
             if discard {
                 return Ok(());
             }
@@ -169,6 +170,7 @@ impl CorsaProjectClient {
                 editor.shutdown()
             }
         });
+        drop(session);
         self.project_session_attached_to_editor = false;
         self.editor_lsp_documents_dirty = true;
         snapshot_result.and(editor_result)

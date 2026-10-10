@@ -32,14 +32,23 @@ impl CorsaProjectClient {
         let working_dir = workspace_root.to_string_lossy();
         let executable = resolve_corsa_executable(corsa_path, Some(working_dir.as_ref()))?;
 
-        Self::spawn_initialized_client_with_transport(
-            executable.as_str(),
-            workspace_root.clone(),
-            Some(workspace_root),
-            None,
-            None,
-            shared_editor_transport,
-        )
+        if shared_editor_transport {
+            Self::spawn_initialized_client_with_transport(
+                executable.as_str(),
+                workspace_root.clone(),
+                Some(workspace_root),
+                None,
+                None,
+                true,
+            )
+        } else {
+            Self::spawn_initialized_client(
+                executable.as_str(),
+                workspace_root.clone(),
+                Some(workspace_root),
+                None,
+            )
+        }
     }
 
     /// Use the generated configuration while retaining the complete workspace.

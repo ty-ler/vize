@@ -69,14 +69,19 @@ impl CorsaProjectClient {
         write_temp_tsconfig(&temp_dir_path)?;
 
         let temp_root = temp_dir_path.canonicalize().ok();
-        Self::spawn_initialized_client_with_transport(
-            executable.as_str(),
-            temp_dir_path,
-            temp_root,
-            Some(temp_dir_base.join(&*cstr!("{}-{}", std::process::id(), client_id))),
-            None,
-            shared_editor_transport,
-        )
+        let temp_dir = Some(temp_dir_path.clone());
+        if shared_editor_transport {
+            Self::spawn_initialized_client_with_transport(
+                executable.as_str(),
+                temp_dir_path,
+                temp_root,
+                temp_dir,
+                None,
+                true,
+            )
+        } else {
+            Self::spawn_initialized_client(executable.as_str(), temp_dir_path, temp_root, temp_dir)
+        }
     }
 
     /// Shutdown the project session.
