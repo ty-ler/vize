@@ -20,9 +20,26 @@ fs.mkdirSync(output);
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const write = (file, value) =>
   fs.writeFileSync(file, JSON.stringify(value, null, 2) + "\n", { flag: "wx" });
+write(path.join(output, "driver-receipt.json"), {
+  dispatchRevision: process.env.GITHUB_SHA,
+  heads,
+  files: ["run.mjs", "sample.py", "symbols.mjs", "verify.mjs"].map((file) => ({
+    file,
+    sha256: hash(fs.readFileSync(path.join(driver, file))),
+  })),
+});
 const git = (...args) => {
-  const result = spawnSync("git", args, { cwd: repo, encoding: "utf8", timeout: 120000 });
-  assert.equal(result.status, 0, result.stderr);
+  const result = spawnSync("git", args, {
+    cwd: repo,
+    encoding: "utf8",
+    timeout: 120000,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  assert.equal(
+    result.status,
+    0,
+    JSON.stringify({ args, error: result.error?.message, stderr: result.stderr }),
+  );
   return result.stdout.trim();
 };
 const run = async (command, args, cwd, label, env = process.env, deadlineMs = 900000) => {
