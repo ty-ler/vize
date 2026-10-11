@@ -52,6 +52,13 @@ export interface VizePluginState {
    */
   viteBuildSourcemap?: boolean;
   root: string;
+  /**
+   * Vite's resolved `cacheDir`; pre-bundled dependencies live in its `deps`
+   * directories. Vitest moves it under `node_modules/.vite/vitest/<hash>`, so
+   * the optimized Vue entry cannot be recognized by a fixed path. Optional so a
+   * state literal without it falls back to Vite's default layout.
+   */
+  viteCacheDir?: string;
   clientViteBase: string;
   serverViteBase: string;
   server: ViteDevServer | null;

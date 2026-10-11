@@ -41,6 +41,8 @@ mod tests_setup_components;
 #[cfg(test)]
 mod tests_sibling_navigation;
 #[cfg(test)]
+mod tests_slot_destructure;
+#[cfg(test)]
 mod tests_slot_outlets;
 #[cfg(test)]
 mod tests_source_map;
@@ -48,6 +50,8 @@ mod tests_source_map;
 mod tests_static_attribute_entities;
 #[cfg(test)]
 mod tests_static_style;
+#[cfg(test)]
+mod tests_svg;
 #[cfg(test)]
 mod tests_template_children;
 #[cfg(test)]

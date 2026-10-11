@@ -103,6 +103,7 @@ export function vize(
 
     async configResolved(resolvedConfig: ResolvedConfig) {
       state.root = options.root ?? resolvedConfig.root;
+      state.viteCacheDir = resolvedConfig.cacheDir;
       state.isProduction = options.isProduction ?? resolvedConfig.isProduction;
       state.viteBuildSourcemap = !!resolvedConfig.build?.sourcemap;
 

@@ -18,6 +18,8 @@ import type { VizePluginState } from "./state.ts";
 import { isInsidePath, isProjectSourceImporter, normalizeImporterFilePath } from "./importer.ts";
 import { resolvePackageJsonImportFromVizeImporter } from "./package-imports.ts";
 import { cleanVueSfcImporter, resolveRelativeVueSfcImport } from "./resolve-relative-vue.ts";
+import { isOptimizedVueDependency } from "./resolve-optimized-vue.ts";
+export { isOptimizedVueDependency };
 import {
   LEGACY_VIZE_PREFIX,
   VIRTUAL_CSS_MODULE,
@@ -539,12 +541,6 @@ function resolveProjectNuxtVuePeerRuntimeEntryWithNode(
   );
 }
 
-function isOptimizedVueDependency(id: string): boolean {
-  const { request } = splitViteIdQuery(id);
-  const normalized = request.split(path.sep).join("/");
-  return normalized.includes("/node_modules/.vite/deps/vue.");
-}
-
 // Cache per project root: does `vue` resolve from that root via Node?
 //
 // When vize defers Vue runtime in dev (returns null), Vite re-runs resolveId
@@ -618,7 +614,7 @@ async function resolveProjectVueRuntime(
 
   try {
     const resolved = await resolveWithVite(ctx, state, id, viteImporter, { skipSelf: true });
-    if (resolved && isOptimizedVueDependency(resolved.id)) return null;
+    if (resolved && isOptimizedVueDependency(state, resolved.id)) return null;
     if (resolved) {
       const projectLocalEntry = resolveProjectLocalPnpmVueRuntime(state, resolved.id);
       if (projectLocalEntry) {
@@ -1023,7 +1019,11 @@ export async function resolveIdHook(
               return { ...resolved, id: normalizedFsId };
             }
 
-            if (isVueRuntime && state.server !== null && !isOptimizedVueDependency(resolved.id)) {
+            if (
+              isVueRuntime &&
+              state.server !== null &&
+              !isOptimizedVueDependency(state, resolved.id)
+            ) {
               const pnpmHoistedEntry = resolveVueBundlerEntryFromPnpmHoist(
                 state,
                 id,

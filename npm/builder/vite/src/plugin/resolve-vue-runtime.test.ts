@@ -104,3 +104,50 @@ function createState(root: string): VizePluginState {
     "Dev Vue imports from dependencies should stay with Vite's optimized runtime to avoid duplicate Vue instances",
   );
 }
+
+{
+  // Vitest pre-bundles under `<root>/node_modules/.vite/vitest/<hash>/deps`, not
+  // Vite's default `.vite/deps`. A project SFC must still keep Vite's optimized
+  // Vue there; pinning the raw pnpm `vue` file instead loads a second Vue
+  // runtime beside the pre-bundled one, and Vapor effects stop seeing updates.
+  const projectRoot = fs.mkdtempSync(path.join(testRoot, "vitest-cache-dir-"));
+  writeFixtureFile(path.join(projectRoot, "package.json"), "{}");
+  const importer = path.join(projectRoot, "src", "Counter.vue");
+  writeFixtureFile(importer, "<template><div /></template>");
+
+  const vuePackage = path.join(
+    projectRoot,
+    "node_modules",
+    ".pnpm",
+    "vue@3.6.0",
+    "node_modules",
+    "vue",
+  );
+  writeFixtureFile(
+    path.join(vuePackage, "package.json"),
+    JSON.stringify({ name: "vue", main: "index.js" }),
+  );
+  writeFixtureFile(path.join(vuePackage, "index.js"), "module.exports = {};");
+  writeFixtureFile(path.join(vuePackage, "dist", "vue.runtime.esm-bundler.js"), "export {};");
+  fs.mkdirSync(path.join(projectRoot, "node_modules"), { recursive: true });
+  fs.symlinkSync(vuePackage, path.join(projectRoot, "node_modules", "vue"), "dir");
+
+  const cacheDir = path.join(projectRoot, "node_modules", ".vite", "vitest", "da39a3ee5e6b4b0d");
+  const optimizedVueEntry = path.join(cacheDir, "deps", "vue.js");
+  writeFixtureFile(optimizedVueEntry, "export {};");
+
+  const state = { ...createState(projectRoot), viteCacheDir: cacheDir };
+  const resolved = await resolveIdHook(
+    { resolve: async (id) => (id === "vue" ? { id: `${optimizedVueEntry}?v=abc123` } : null) },
+    state,
+    "vue",
+    importer,
+    undefined,
+  );
+
+  assert.equal(
+    resolved?.id,
+    `${optimizedVueEntry}?v=abc123`,
+    "A Vue entry in Vite's configured cacheDir (Vitest's .vite/vitest/<hash>) is the optimized runtime and must not be replaced",
+  );
+}
