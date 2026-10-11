@@ -19,7 +19,6 @@ mod vue;
 use tower_lsp::lsp_types::{Location, Position, Range, SymbolInformation, SymbolKind, Url};
 
 use crate::server::ServerState;
-use vize_l0::cstr;
 
 /// Workspace symbols service.
 pub struct WorkspaceSymbolsService;

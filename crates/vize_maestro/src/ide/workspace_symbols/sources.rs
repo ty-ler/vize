@@ -11,14 +11,14 @@ pub(super) fn borrowed_descriptor<'a>(
     source: &'a str,
 ) -> Option<vize_atelier_sfc::SfcDescriptor<'a>> {
     let filename = vize_l0::String::from(filename);
-    let (descriptor, errors) = vize_atelier_sfc::parse_sfc(
+    vize_atelier_sfc::parse_sfc(
         source,
         vize_atelier_sfc::SfcParseOptions {
             filename,
             ..Default::default()
         },
-    );
-    errors.is_empty().then_some(descriptor)
+    )
+    .ok()
 }
 
 #[cfg(feature = "native")]
