@@ -1,10 +1,10 @@
 {
   "version": 1,
   "originalComponentSource": "c0dc03760aaf8cdb4810e3ed0417c668a36c4721",
-  "parentSource": "c8764d3ad2446d2958621d557e742b56a3fa4bc4",
-  "reviewedSource": "5943c4e05639566b434426f8a3c7b17ef1507527",
+  "parentSource": "51ea8413a2f1c8aa86ff5b4df87247b006275874",
+  "reviewedSource": "3427e55cdf42356abcfe15685513e284cb907843",
   "originalConfigSource": "7386b2a79604ae5b74cb541be911eb19735e68b2",
-  "parentManifestSHA256": "91eeb37a31cb046247bb4b92842bb7427850966f1fa19f08912a00b28a82381c",
+  "parentManifestSHA256": "b2e3b87fbde5f89d668e137fe4e87e0468c89347e6e90b5c41de52015f383cd5",
   "componentBodies": [
     [
       "crates/vize/src/commands/lint.rs",
@@ -870,7 +870,7 @@
     [
       "tests/performance/support/warm-type-backed-measure.ts",
       "577455fb9ab4b814c233eb96a814aafc32c9755623d296c8efe3f7224a7593c8",
-      "577455fb9ab4b814c233eb96a814aafc32c9755623d296c8efe3f7224a7593c8"
+      "25bfe452824e518547c65bd2968da1182c4a84bd7ae377fac819ede9729b6d01"
     ],
     [
       "tests/performance/support/warm-type-backed-packets.ts",
@@ -935,7 +935,7 @@
     [
       "tests/performance/support/warm-type-backed-requests.ts",
       "4162926bc7d02b92423e6731d8f8efaf48964fa6009df6751c087aa4372939f7",
-      "4162926bc7d02b92423e6731d8f8efaf48964fa6009df6751c087aa4372939f7"
+      "623e0447ccf2879566b05919faf3d334952514c8dd14dff08aa1a6b94d8ddce8"
     ],
     [
       "tests/performance/support/warm-type-backed-runtime.ts",
@@ -968,7 +968,23 @@
       "a6153287d33576aef29272e05dd727e66c7dd64167f7487643466b3663064229"
     ]
   ],
-  "inheritedHarnessExtensions": [],
+  "inheritedHarnessExtensions": [
+    [
+      "tests/performance/support/warm-type-backed-owner-capture.ts",
+      null,
+      "828ea1dd92cc043aec66bb1f68b27635dcd0fe2fb212149bd89c3e3594e9bf94"
+    ],
+    [
+      "tests/performance/support/warm-type-backed-owner-migration.ts",
+      null,
+      "22f522d1d1a2a0ed4266fd424c5d6ed681bdfc73a5bb03deb2aeff7bfdf9d39e"
+    ],
+    [
+      "tests/performance/support/warm-type-backed-owner-resolve.ts",
+      null,
+      "3e47a00ba443b277bc52e5d1e18c4cec89acc12ce3f5ad710c7c28e3274f19bc"
+    ]
+  ],
   "originalComponentBodies": [
     [
       "crates/vize_patina/tests/component_registration_project_context.rs",
