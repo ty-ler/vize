@@ -182,6 +182,7 @@ remain intact on their original local branches; delivery repairs use a fresh
 `repair/canon-stack-delivery-20261011` worktree from the authenticated remote
 `1a0d0cbb`. The merged prefix stays immutable. Descendants will be rebased onto
 the actual merged main and pushed only against their rechecked remote leases.
+
 ## Projection snapshot audit
 
 Source Check `38138943314` at exact `1a0d0cbb0070c861e514864e1727b62b1192087d`
@@ -210,3 +211,21 @@ the same paired build and measurements; it changes no original 400 input,
 response oracle, workload, profile, timeout or latency/memory budget. Unknown
 paths retain the original refusal. Passing source or this preparation guard
 alone grants no performance result; the actual pair remains required.
+
+## Explicit directory-module resolver qualification
+
+Source pair `38142630260` at `fb350226ed` also refused before its CLI or timings:
+the reviewed directory-module resolver did not match either immutable resolver
+source in the original eight-case alias contract. A separate
+`directory-module-resolver-successor.json` binds the exact new resolver bytes
+to the existing selected semantics. The original successor manifest, historical
+archive, eight authored cases, diagnostic vectors, file memberships and budgets
+remain byte exact. The new source must pass those original native/CLI cases on
+Actions; registering it grants no semantic or performance credit.
+
+Four source-contract laws preserve both original resolver/collector axes,
+compare every original membership for the explicit successor, and retain the
+unknown-source/wrong-head refusal before any trap CLI can run. The original
+manifest is never broadened to accept arbitrary source hashes. This is a bounded
+qualification candidate for the authored `.`/`..` fix, with exact-head paired
+execution and composed provider qualification still required.
