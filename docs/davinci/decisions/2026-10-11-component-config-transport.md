@@ -59,6 +59,24 @@ member's SHA256 after download:
 | `lsp-transport.json`                                          | 90 versioned publications and complete protocol              |
 | `lsp-policy-replacement.json`                                 | Four required workspace/reload packets and complete protocol |
 
+The public observer is part of this same source PR and the existing public
+acceptance workflow. Eligibility requires #8497 actually merged into the release
+cut, all executed component harness bodies equal the frozen release head, and
+the complete original 30-case corpus copied from that head without changes.
+It authenticates the terminal successful Release, tag and source PR, the exact
+public GNU CLI archive and sidecar, and the freshly installed executable digest.
+It replays the same 180/90 complete packets, six evaluation counters and four
+required reload observations. Every additional reload publication is judged
+against its own live policy; raw CLI bytes, complete JSON-RPC frames, stderr and
+ordinary process exits remain available on failures. Final sealing binds every
+whole packet file, original corpus, archive, sidecar and executable again.
+
+The new component observer runs after the original native DOM, SSR, browser and
+VRT observations with independent prerequisites. Its eligibility or runtime
+failure retains evidence without suppressing those original observations;
+successful public completion additionally requires the component observer.
+Earlier releases cannot receive credit for this later, unmerged transport fix.
+
 Local formatting and the 12 config-host boundary controls pass. Actual consumer
 execution, fresh source/full Actions, unchanged instruction ceilings, protected
 queue, signed merge and genuinely included installed release acceptance remain
