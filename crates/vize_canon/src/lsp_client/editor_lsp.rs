@@ -34,7 +34,7 @@ mod client;
 mod code_actions;
 mod completion_resolve;
 mod component_types;
-mod configured_project;
+pub(super) mod configured_project;
 mod declaration;
 mod file_rename;
 mod implementation;

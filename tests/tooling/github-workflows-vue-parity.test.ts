@@ -93,6 +93,7 @@ test("Vue parity structurally gates compiler fixtures and incremental LSP behavi
 
   const parity = steps.find((step) => step.name === "Check Vue compiler and typecheck parity");
   assert.deepEqual(parity?.env, {
+    VIZE_TRACE_EDITOR_PREPARATION: "1",
     VIZE_TEST_BIN: "${{ github.workspace }}/target/ci/vize",
     VIZE_LSP_BIN: "${{ github.workspace }}/target/ci/vize",
     VIZE_LSP_REQUIRE_SOURCE_BUILD: "1",

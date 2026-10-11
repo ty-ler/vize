@@ -174,6 +174,15 @@ The complete old tooling, native, consumer and full-script failure logs remain
 authority. Every changed layer needs fresh exact-source Actions; cached CLI
 results and prior green heads do not qualify this successor.
 
+## Nested project follow-up
+
+[Document project ownership](./2026-10-10-lsp-project-contexts.md) adds automatic
+nested-package settings without switching a shared request profile. The
+[Vite root decision](./2026-10-10-vite-cli-project-root.md) records standalone
+source selection and custom-root controls. Both require complete current-source
+and protected qualification, actual merge, and release replay before #8371
+receives complete acceptance.
+
 ## Core-owned Musea build prerequisite
 
 Protected core candidate `55b31b19c6cfff9db87fb3ef4a6552edd6b4f7da` failed the unchanged native inline and packed-gallery contracts because the Vite plugin imports the new `vize/config` entry, while its job had not built the CLI package. The exact existing CLI-before-Vite build command belongs to this config-producing core slice and is moved down from the public integration layer. Native acquisition, all browser commands, assertions, artifacts, job budgets and deadlines remain intact. The failed candidate and its whole first-failure log remain historical; fresh core Actions and protected candidate qualification are required.
