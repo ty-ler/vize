@@ -64,6 +64,7 @@ const run = async (command, args, cwd, label, env = process.env, deadlineMs = 90
   const result = {
     command,
     args,
+    pid: child.pid,
     ...status,
     error,
     elapsedMs: Number(process.hrtime.bigint() - started) / 1e6,

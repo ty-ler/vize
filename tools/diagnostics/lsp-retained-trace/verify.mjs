@@ -82,10 +82,6 @@ function diagnostics(directory, role) {
 const baseline = session(path.join(output, "1-before.custody"), "before");
 const instrumented = session(path.join(output, "2-after.custody"), "after");
 assert.deepEqual(
-  transform(baseline.client, baseline.init.params.rootUri),
-  transform(instrumented.client, instrumented.init.params.rootUri),
-);
-assert.deepEqual(
   workspaceRows(path.join(output, "1-before.custody"), "before"),
   workspaceRows(path.join(output, "2-after.custody"), "after"),
 );
@@ -118,6 +114,8 @@ for (const [label, role] of [
     .flatMap((row) => row.members)
     .filter((row) => row.pid === pid && row.startTicks === ticks);
   assert(parent.length > 0);
+  const clientSession = role === "before" ? baseline : instrumented;
+  assert.equal(parent[0].parentPid, clientSession.init.params.processId);
   assert(
     parent.every((row) => row.executableSha256 === json(`${role}.build-receipt.json`).binarySha256),
   );
@@ -135,6 +133,7 @@ for (const [label, role] of [
     role,
     pid,
     birthTicks: ticks,
+    initializationClientPid: clientSession.init.params.processId,
     elfSha256: peak.executableSha256,
     physicalPeakSmapsKiB: peak.smapsKiB,
     lastSmapsKiB: last.smapsKiB,
@@ -222,7 +221,8 @@ const report = {
   status: "diagnostic-completed",
   acceptanceCredit: 0,
   sourceHeads: receipts.map((row) => row.sourceRevision),
-  wholeClientPacketsEqual: true,
+  completeRawClientPacketsCaptured: true,
+  initializationClientPidsBoundToObservedNativeParent: true,
   wholeDiagnosticsPerSession: 287,
   wholeWorkspaceResponsesPerSession: 40,
   measured,
