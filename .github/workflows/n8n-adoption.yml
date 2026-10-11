@@ -203,13 +203,15 @@ jobs:
             > "$receipt/original-inputs.sha256"
           npm install --prefix "$bootstrap" --ignore-scripts --no-audit --no-fund pnpm@12.4.2
           sha256sum "$bootstrap/node_modules/pnpm/package.json" \
-            "$bootstrap/node_modules/pnpm/bin/pnpm.cjs" > "$receipt/pnpm-producer.sha256"
+            "$bootstrap/node_modules/pnpm/bin/pnpm.mjs" \
+            "$bootstrap/node_modules/@pnpm/exe.linux-x64/package.json" \
+            "$bootstrap/node_modules/@pnpm/exe.linux-x64/pnpm" > "$receipt/pnpm-producer.sha256"
           (
             cd "$fixture"
-            node "$bootstrap/node_modules/pnpm/bin/pnpm.cjs" --version \
+            node "$bootstrap/node_modules/pnpm/bin/pnpm.mjs" --version \
               | tee "$receipt/pnpm-version.txt"
             test "$(cat "$receipt/pnpm-version.txt")" = 12.4.2
-            node "$bootstrap/node_modules/pnpm/bin/pnpm.cjs" install \
+            node "$bootstrap/node_modules/pnpm/bin/pnpm.mjs" install \
               --frozen-lockfile --ignore-scripts --filter 'n8n-editor-ui...' \
               --reporter append-only
           ) 2>&1 | tee "$receipt/install.log"
