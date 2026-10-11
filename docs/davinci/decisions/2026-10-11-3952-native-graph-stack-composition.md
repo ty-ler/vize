@@ -202,3 +202,56 @@ field/nested-route/refusal/error precedence.
 
 No generation skip/read/owner/configuration/deadline/budget change; exact-source
 original lifecycle/performance qualification remains pending.
+
+## Original composed-source outcome and remaining cause repair
+
+Exact `535786c4497afcce3d5750a114dee507d4ba52c1` full Check `38122540906`
+completed successfully. The unchanged Misskey workload passed with 120,532 KiB
+server RSS and 353,256 KiB process-tree RSS against the original 128 MiB and
+384 MiB caps; all 20 churn cycles and original deadlines remain required.
+These are measurements of that source, not evidence for a later head or a
+10x speedup.
+
+Original n8n run `38122544701` passed all 2,013 Canon tests with one original
+ignored test, all nine retained filters and strict production Clippy, but the
+authored lifecycle failed. CREATE publishes `RunData.v4`, RENAME publishes
+`RunData.v5`, and DELETE retains `v5`; the required missing-module diagnostic
+never arrived before the original notification deadline. The whole 2,518-member
+artifact `11696311118`, including original source inputs, diagnostic vectors,
+process receipt and stderr, is retained. No upstream source was modified.
+
+The original foreground future builds the entire graph synchronously before
+its first await. The recorded `v5` preparations took 31.535 s and 88.072 s;
+the actual delete notification was handled only after the latter completed.
+This establishes dispatch starvation. Graph guard 9 refuses a changed live
+source membership; the original log identifies neither its offending path nor
+which incoming or departed-live-source arm refused it. That guard and every
+cold-project refusal remain unchanged.
+
+Two actual package reconciliation sites also copy the complete inherited
+input vector repeatedly solely to seed the returned facts. Run the unchanged
+inner operation to completion first, then append the exact ordered
+`S + I + S + N` packet to the actual caller: qualification, duplicate stamps,
+all stored fields and existing immutable Arc owners remain intact, including
+the original caller mutation boundary on unwind. A retained original outer
+oracle checks 64 modes across three real registration rounds, complete
+registries, route metrics, virtual outputs, maps and owner-sharing patterns.
+
+Move Vue workspace preparation into the existing retained native worker open
+operation, preserving actual source bytes, ordered overlay/request pairs,
+configuration, resolver identity and editor-session ownership. Native project
+synchronization still precedes opening the same complete batch. Existing
+caller retirement checkpoints refuse native work and, under the existing
+publication lock, prevent abandoned preparation from inserting an older
+mirror after exclusive deletion. No new worker, pipeline stage or queue frame
+is added. Original initialization/error precedence, cancellation and the
+configured hard bound are retained; owned request transport is checked against
+the complete original projection, maps, catalog and materialization delta.
+
+The original PR source check also rejected the 403-line n8n workflow. The
+separate move-only commit extracts the exact existing shell bodies into two
+sourced helpers, retaining the same steps, environment, arguments and checks;
+the workflow is 348 lines. Fresh exact-head original n8n lifecycle, full Check,
+native vectors, Misskey resource and instruction controls remain required.
+Offloading preparation alone does not establish a faster cold graph or release
+acceptance; #8520 remains a draft until the actual consumer gates succeed.

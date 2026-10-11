@@ -16,36 +16,59 @@ impl VirtualProject {
         &mut self,
         changed: &FxHashSet<PathBuf>,
     ) {
-        self.reconcile_package_routes_for_importers_consumed(changed, false, None);
+        self.reconcile_package_routes_for_importers_consumed(
+            changed,
+            false,
+            super::package_source_index::empty(false),
+        );
     }
 
     pub(super) fn reconcile_package_routes_for_importers_inner_observed(
         &mut self,
         changed: &FxHashSet<PathBuf>,
     ) -> Consumed<()> {
-        self.reconcile_package_routes_for_importers_consumed(changed, true, None)
+        self.reconcile_package_routes_for_importers_consumed(
+            changed,
+            true,
+            super::package_source_index::empty(false),
+        )
     }
 
+    #[cfg(test)]
     pub(super) fn reconcile_package_routes_for_importers_inner_observed_with_inputs(
         &mut self,
         changed: &FxHashSet<PathBuf>,
         inputs: &Consumed<()>,
     ) -> Consumed<()> {
-        self.reconcile_package_routes_for_importers_consumed(changed, true, Some(inputs))
+        self.reconcile_package_routes_for_importers_consumed(
+            changed,
+            true,
+            Consumed {
+                value: (),
+                stamps: inputs.stamps.clone(),
+                qualified: inputs.qualified,
+            },
+        )
+    }
+
+    pub(super) fn reconcile_package_routes_for_importers_inner_observed_from_qualified_inputs(
+        &mut self,
+        changed: &FxHashSet<PathBuf>,
+        inherited_qualified: bool,
+    ) -> Consumed<()> {
+        self.reconcile_package_routes_for_importers_consumed(
+            changed,
+            true,
+            super::package_source_index::empty(inherited_qualified),
+        )
     }
 
     fn reconcile_package_routes_for_importers_consumed(
         &mut self,
         changed: &FxHashSet<PathBuf>,
         observe: bool,
-        inputs: Option<&Consumed<()>>,
+        mut facts: Consumed<()>,
     ) -> Consumed<()> {
-        // Only the original caller can witness mapped-input and policy owners.
-        let mut facts = Consumed {
-            value: (),
-            stamps: inputs.map_or_else(Vec::new, |inputs| inputs.stamps.clone()),
-            qualified: inputs.is_some_and(|inputs| inputs.qualified),
-        };
         if changed.is_empty() {
             return facts;
         }

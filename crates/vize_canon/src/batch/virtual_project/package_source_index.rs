@@ -10,6 +10,9 @@ use super::VirtualProject;
 use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
 
+#[cfg(test)]
+mod reconciliation_tests;
+
 mod ownership;
 pub(crate) use ownership::{RegisteredPackageGeneration, RegisteredPackageRoots};
 
@@ -197,18 +200,18 @@ impl VirtualProject {
         let retained = self.take_rebound_package_sources_with_consumption(&keys, observe, facts);
         if observe {
             if let Some(inputs) = inputs {
-                let mut witness = Consumed {
-                    value: (),
-                    stamps: inputs.stamps.clone(),
-                    qualified: inputs.qualified && facts.qualified,
-                };
-                witness.stamps.extend(facts.stamps.iter().cloned());
-                take(
-                    facts,
-                    self.reconcile_package_routes_for_importers_inner_observed_with_inputs(
-                        &changed, &witness,
-                    ),
-                );
+                let inherited_len = facts.stamps.len();
+                let registration = self
+                    .reconcile_package_routes_for_importers_inner_observed_from_qualified_inputs(
+                        &changed,
+                        inputs.qualified && facts.qualified,
+                    );
+                // The original complete output is S + I + S + N. Keep its
+                // order and owners without copying I + S into two temporary
+                // packets; the original caller is mutated only after N returns.
+                facts.stamps.extend(inputs.stamps.iter().cloned());
+                facts.stamps.extend_from_within(..inherited_len);
+                take(facts, registration);
             } else {
                 take(
                     facts,

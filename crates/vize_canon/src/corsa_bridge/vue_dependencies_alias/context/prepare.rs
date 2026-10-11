@@ -123,6 +123,11 @@ impl AliasContext {
         fingerprint.stamp(&context);
         stamp_phase.finish();
         let mut cache = environment.editor_session.cache();
+        // An abandoned worker still owns its mirror until draining completes.
+        // Hold the publication lock while checking its existing caller lease:
+        // exclusive deletion must not be followed by an older cache insertion.
+        crate::corsa_bridge::native_operation::checkpoint()
+            .map_err(super::super::super::types::CorsaBridgeError::CommunicationError)?;
         if let Some(context) = cache.get(source_path, &fingerprint) {
             return Ok(PreparedAliasContext {
                 source_catalog: context

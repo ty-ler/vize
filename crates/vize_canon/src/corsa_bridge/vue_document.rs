@@ -16,6 +16,7 @@ pub(super) mod materialized_documents;
 use build::build_vue_virtual_workspace_project;
 #[path = "vue_document/types.rs"]
 mod model;
+mod workspace_open;
 pub(crate) use model::CorsaVueVirtualProject;
 pub(super) use model::GeneratedVueDocument;
 pub use model::{
@@ -28,9 +29,10 @@ pub(crate) use model::CorsaProjectEnvironment;
 impl CorsaBridge {
     /// Forget deleted source owners without waiting for native IPC.
     ///
-    /// An exclusive bridge owner proves no caller can still prepare and insert
-    /// an older mirror revision after this eviction. The next native request
-    /// flushes disk invalidation before synchronizing the materialized delta.
+    /// Exclusive ownership retires any outstanding preparation caller first;
+    /// background publication checks that lease under the same cache lock.
+    /// The next native request flushes disk invalidation before synchronizing
+    /// the materialized delta.
     pub fn mark_deleted_vue_virtual_documents(&mut self, source_paths: &[PathBuf]) {
         if source_paths.is_empty() {
             return;
@@ -114,8 +116,8 @@ impl CorsaBridge {
         .await
     }
 
-    /// Generate and sync a Vue document without copying unchanged overlay text.
-    /// Reachable and registered sources share a revision with borrowed text.
+    /// Capture one authored buffer revision for the retained native worker.
+    /// Reachable and registered sources share the same captured source bytes.
     pub async fn open_vue_virtual_document_with_borrowed_overlays_and_options(
         &self,
         source_path: &Path,
@@ -146,35 +148,16 @@ impl CorsaBridge {
         virtual_ts_options: &VirtualTsOptions,
         requested_sources: &[(PathBuf, &str)],
     ) -> Result<CorsaVueVirtualDocument, CorsaBridgeError> {
-        let project = build_vue_virtual_workspace_project(
+        workspace_open::open(
+            self,
             source_path,
             content,
             options,
             overlays,
+            virtual_ts_options,
             requested_sources,
-            CorsaProjectEnvironment {
-                virtual_ts_options,
-                package_routes: &self.package_route_resolver,
-                project_root: self.config.working_dir.as_deref(),
-                tsconfig_path: self.config.tsconfig_path.as_deref(),
-                editor_session: &self.editor_session,
-            },
-        )?;
-        let CorsaVueVirtualProject {
-            host,
-            documents,
-            session_project_root,
-            session_config_path,
-            materialized_changes,
-        } = project;
-        self.open_canon_project_documents(
-            documents,
-            session_project_root,
-            session_config_path,
-            materialized_changes,
         )
-        .await?;
-        Ok(host)
+        .await
     }
 
     pub(super) async fn open_canon_project_documents(
