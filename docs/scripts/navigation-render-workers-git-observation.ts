@@ -15,7 +15,10 @@ export async function retainWorkersGitObservation(
   assert.equal(await realpath(output), output, "Physical evidence root required");
   assert.match(source, /^[a-f0-9]{40}$/);
   const git = (...args: string[]) =>
-    execFileSync("git", args, { cwd: root, maxBuffer: 16 * 1024 * 1024 });
+    execFileSync("git", ["--no-replace-objects", ...args], {
+      cwd: root,
+      maxBuffer: 16 * 1024 * 1024,
+    });
   assert.equal(git("rev-parse", "HEAD").toString("utf8").trim(), source);
   const status = git("status", "--porcelain", "-z", "--untracked-files=all");
   const index = git("ls-files", "--stage", "-z");

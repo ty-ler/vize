@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -19,6 +19,7 @@ export async function qualifyNavigationRenderWorkers() {
       phase: { type: "string" },
       dir: { type: "string", default: "docs/dist" },
       output: { type: "string" },
+      "build-evidence": { type: "string" },
       "baseline-outcome": { type: "string" },
       "candidate-outcome": { type: "string" },
     },
@@ -33,15 +34,35 @@ export async function qualifyNavigationRenderWorkers() {
   const output = path.resolve(values.output);
   const source = process.env.GITHUB_SHA;
   assert(source, "Actual Actions source identity is required");
+  assert(values["build-evidence"] && process.env.RUNNER_TEMP);
+  const buildEvidence = path.resolve(values["build-evidence"]);
+  assert.equal(
+    buildEvidence,
+    path.join(
+      path.resolve(process.env.RUNNER_TEMP),
+      "vize-docs-workers",
+      `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}`,
+      "component-previews",
+    ),
+    "Original UI proof must use this fresh owned runner attempt",
+  );
   if (values.phase === "checkout") {
     await mkdir(path.dirname(output), { recursive: true });
     await mkdir(output); // An existing directory must never supply old receipts.
+    assert.equal(
+      await lstat(buildEvidence).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") return null;
+        throw error;
+      }),
+      null,
+      "Previous UI proof directory refuses",
+    );
     const identity = await workersCheckoutIdentity(root, source);
     const producers = await workersBuildProducerIdentity(root);
     await retainWorkersGeneratedBytes(root, output, "inputs");
     await writeFile(
       path.join(output, "source-before-build.json"),
-      JSON.stringify({ schemaVersion: 1, identity, producers }, null, 2) + "\n",
+      JSON.stringify({ schemaVersion: 1, identity, producers, buildEvidence }, null, 2) + "\n",
     );
     return;
   }
@@ -61,8 +82,9 @@ export async function qualifyNavigationRenderWorkers() {
       JSON.parse(await readFile(path.join(output, "source-before-build.json"), "utf8")),
     );
     assert.equal(prebuild.schemaVersion, 1);
+    assert.equal(prebuild.buildEvidence, buildEvidence);
     const checkout = prebuild.identity as Awaited<ReturnType<typeof workersCheckoutIdentity>>;
-    const identity = await workersSourceIdentity(root, dist, source, checkout);
+    const identity = await workersSourceIdentity(root, dist, source, checkout, buildEvidence);
     assert.deepEqual(prebuild.producers, identity.buildProducers, "Actual build producer changed");
     if (values.phase === "prepare") {
       await verifyWorkersGeneratedBytes(output, identity.generated);

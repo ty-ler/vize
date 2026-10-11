@@ -1,6 +1,16 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, mkdir, readFile, writeFile, rm, realpath, symlink } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import {
+  chmod,
+  mkdtemp,
+  mkdir,
+  readFile,
+  writeFile,
+  rm,
+  realpath,
+  symlink,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -58,7 +68,13 @@ void test("actual clean Git checkout, nine generated outputs and both arm custod
     await retainWorkersGeneratedBytes(root, output, "inputs");
     for (const file of generatedWorkersFiles) {
       const original = await readFile(path.join(root, file));
-      await write(file, Buffer.concat([original, Buffer.from("complete authored build output\n")]));
+      const bytes = Buffer.concat([original, Buffer.from("complete authored build output\n")]);
+      await write(file, bytes);
+      if (file.endsWith(".png"))
+        await write(
+          file.replace(/\.png$/, `-${createHash("sha256").update(bytes).digest("hex")}.png`),
+          bytes,
+        );
     }
     await retainWorkersGeneratedBytes(root, output, "outputs");
     const two = await workersGeneratedIdentity(root, source, before);
@@ -68,7 +84,57 @@ void test("actual clean Git checkout, nine generated outputs and both arm custod
     );
     assert(two.generated.every(({ before: old, after }) => old.sha256 !== after.sha256));
     assert.equal(two.producerFiles.length, 7);
+    assert.equal(two.publicGenerated.length, 8);
+    for (const image of two.publicGenerated) {
+      assert.equal(image.mode, "100644");
+      assert.equal(image.physicalMode, 0o644);
+      assert(image.file.endsWith(`-${image.sha256}.png`));
+      const original = await readFile(path.join(root, image.file));
+      await write(image.file, "wrong immutable PNG body");
+      await assert.rejects(
+        () => workersGeneratedIdentity(root, source, before),
+        /strictly equal|logical generated body/,
+      );
+      await write(image.file, original);
+    }
+    const immutable = path.join(root, two.publicGenerated[0].file);
+    for (const physicalMode of [0o755, 0o600, 0o666]) {
+      await chmod(immutable, physicalMode);
+      await assert.rejects(
+        () => workersGeneratedIdentity(root, source, before),
+        /generated PNG mode/,
+      );
+    }
+    await chmod(immutable, 0o644);
+    const immutableBytes = await readFile(immutable);
+    await rm(immutable);
+    await symlink(path.join(root, two.publicGenerated[0].logical), immutable);
+    await assert.rejects(
+      () => workersGeneratedIdentity(root, source, before),
+      /Physical content-addressed/,
+    );
+    await rm(immutable);
+    await writeFile(immutable, immutableBytes);
+    const nearbyHash = `docs/public/component-previews/alert-${"f".repeat(64)}.png`;
+    await write(nearbyHash, immutableBytes);
+    await assert.rejects(() => workersGeneratedIdentity(root, source, before), /staged\/untracked/);
+    await rm(path.join(root, nearbyHash));
+    git("add", two.publicGenerated[0].file);
+    await assert.rejects(() => workersGeneratedIdentity(root, source, before), /staged\/untracked/);
+    git("reset", "--quiet", "HEAD", "--", two.publicGenerated[0].file); // Owned temporary authored fixture only.
     await verifyWorkersGeneratedBytes(output, two.generated);
+    const replacement = path.join(temporary, "replacement.bin");
+    await writeFile(replacement, "opaque Git replacement must not supply original producer bytes");
+    const oldObject = before.sourceFiles.find(
+      ({ file }) => file === generatedWorkersFiles[0],
+    )!.object;
+    git("replace", oldObject, git("hash-object", "-w", replacement));
+    assert.deepEqual(
+      await workersGeneratedIdentity(root, source, before),
+      two,
+      "Original physical Git objects ignore replacements",
+    );
+    git("replace", "--delete", oldObject);
     const four = await workersGeneratedIdentity(root, source, before);
     assert.deepEqual(two, four, "Both arms use every identical source/build output");
     await assert.rejects(

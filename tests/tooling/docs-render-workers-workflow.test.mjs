@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import os from "node:os";
+import path from "node:path";
 import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import { parse } from "yaml";
@@ -51,8 +55,18 @@ void test("whole Docs two/four comparison is manual-only, builds once and preser
   assert(checkout && steps.indexOf(checkout) < steps.indexOf(build[0]));
   assert.equal(
     build[0].run,
-    "rust-script tools/commands/ci/github/run-many.rs vp run --filter './npm/native' build:ci -- vp run --filter './npm/cli' build -- vp run --filter './npm/builder/vite' build\nvp run --no-cache --filter './docs' build\n",
+    "rust-script tools/commands/ci/github/run-many.rs vp run --filter './npm/native' build:ci -- vp run --filter './npm/cli' build -- vp run --filter './npm/builder/vite' build\nvp run --no-cache --filter './docs' build --output \"$VIZE_DOCS_WORKERS_BUILD_EVIDENCE\"\n",
   );
+  for (const step of [
+    checkout,
+    build[0],
+    steps.find(({ id }) => id === "prepare"),
+    steps.find(({ run }) => run?.includes("--phase qualify")),
+  ])
+    assert.equal(
+      step.env.VIZE_DOCS_WORKERS_BUILD_EVIDENCE,
+      "${{ runner.temp }}/vize-docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/component-previews",
+    );
   const two = steps.find(({ id }) => id === "two");
   const four = steps.find(({ id }) => id === "four");
   assert(steps.indexOf(build[0]) < steps.indexOf(two) && steps.indexOf(two) < steps.indexOf(four));
@@ -87,8 +101,47 @@ void test("whole Docs two/four comparison is manual-only, builds once and preser
   assert.match(upload.uses, /^actions\/upload-artifact@[a-f0-9]{40}$/);
   assert.equal(
     upload.with.path,
-    "target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/\ntarget/differential/docs-render-workers/\n",
+    "target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/\ntarget/differential/docs-render-workers/\n${{ runner.temp }}/vize-docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/component-previews/\n",
   );
   assert.equal(upload.with["if-no-files-found"], "error");
   assert.equal(upload.with["retention-days"], 14);
+});
+
+void test("real VP forwards the supported output option only to the original final chained proof", async () => {
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), "vize-docs-build-output-")));
+  try {
+    await writeFile(
+      path.join(root, "package.json"),
+      JSON.stringify({
+        name: "authored-docs-output-proof",
+        private: true,
+        scripts: {
+          build: "node first.mjs && pnpm check:ui-docs",
+          "check:ui-docs": "node last.mjs",
+        },
+      }),
+    );
+    await writeFile(
+      path.join(root, "first.mjs"),
+      'import assert from "node:assert/strict";import{writeFileSync}from"node:fs";assert.deepEqual(process.argv.slice(2),[]);writeFileSync("first.json","[]");if(process.env.AUTHORED_FIRST_FAIL)process.exit(23);',
+    );
+    await writeFile(
+      path.join(root, "last.mjs"),
+      'import{parseArgs}from"node:util";import{writeFileSync}from"node:fs";const{values}=parseArgs({options:{output:{type:"string"}}});writeFileSync("last.json",JSON.stringify(values));',
+    );
+    const output = path.join(root, "original-proof-output");
+    const args = ["run", "--no-cache", "build", "--output", output];
+    const invoke = (extraEnv = {}) =>
+      spawnSync("vp", args, { cwd: root, encoding: "utf8", env: { ...process.env, ...extraEnv } });
+    const positive = invoke();
+    assert.equal(positive.status, 0, `${positive.stdout}\n${positive.stderr}`);
+    assert.deepEqual(JSON.parse(await readFile(path.join(root, "first.json"), "utf8")), []);
+    assert.deepEqual(JSON.parse(await readFile(path.join(root, "last.json"), "utf8")), { output });
+    await rm(path.join(root, "last.json"));
+    const failed = invoke({ AUTHORED_FIRST_FAIL: "true" });
+    assert.notEqual(failed.status, 0);
+    await assert.rejects(() => readFile(path.join(root, "last.json")), /ENOENT/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

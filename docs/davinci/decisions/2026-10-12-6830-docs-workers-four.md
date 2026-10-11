@@ -35,11 +35,15 @@ The observer authenticates the clean entire tracked Actions checkout before buil
 including every original Git blob, the two exact committed logo link objects and
 their physical tracked targets, and unchanged empty fixture gitlink commit pins.
 Staged changes, untracked source, new links and populated fixture roots refuse.
-The unchanged build regenerates exactly eight tracked component preview PNGs and
+The original build regenerates exactly eight tracked component preview PNGs and
 `npm/native/index.d.ts`. Preserve their complete old/new bytes and hashes, whole
 producer source identities, actual NAPI CLI package tree and Node executable.
-Only those nine ordinary generated files may differ from the clean input;
-every other source and its physical ancestors must remain unchanged. Nearby
+Only those nine tracked ordinary generated files may differ from the clean input.
+The existing screenshot generator also creates exactly eight public immutable
+PNG paths derived from those logical families and their complete output SHA256.
+Each physical regular file must retain ordinary Git mode and equal its logical
+output's complete bytes and full filename hash. Other new assets still refuse.
+Every other source and its physical ancestors must remain unchanged. Nearby
 unknown outputs, altered producers, source changes and raw-byte substitutions
 are covered by a successful real temporary-Git transition plus refusal controls.
 
@@ -114,3 +118,38 @@ an untracked path containing newline/tab bytes, byte-exact vector retention,
 all old/new output bodies, refusal identity and generated-link substitution.
 Do not expand the generated census until the actual refused path, full old/new
 bytes and unchanged producer source have been reviewed.
+
+## Existing build evidence and immutable public outputs
+
+Run [38178958027](https://github.com/ubugeeei-prod/vize/actions/runs/38178958027)
+at `2c8676bbcfe8be6fde4258ce8a68f8585b900231` retained the actual original
+NUL status vectors. Artifact `11716943780` proves 279 entries: the nine original
+tracked changes, 262 original UI proof files under
+`docs-render-evidence/component-previews/`, and eight new immutable public PNGs.
+Both arms remained skipped. All eight immutable filenames match the complete
+SHA256 of their retained logical output bodies. This run has no render timing.
+
+The producer is the unchanged `docs/package.json` build chain's final
+`pnpm check:ui-docs`, whose existing `check-site.ts` accepts `--output`.
+The benchmark appends that supported option directly to the original VP task
+and uses a fresh run/attempt directory under `RUNNER_TEMP`. A real VP/PNPM
+temporary-package law proves all preceding commands receive no extra arguments,
+the original final proof receives exactly that option, and earlier failure still
+prevents the final proof. Passing an additional separator would instead reach
+Node and is deliberately avoided. All original build commands, preview checks,
+capture calls, source files, providers and deadlines remain intact.
+
+The full physical relocated proof tree is authenticated before/after both arms
+and always uploaded alongside all original packets. No checkout directory is
+ignored or exempted. The exact eight new public PNGs require whole-body equality,
+full filename SHA256, logical-family identity, complete count and ordinary mode.
+Wrong bodies, nearby hash-shaped files, staged outputs, executable modes and
+physical links refuse. Preserve all nine original/generated bodies and every
+other authored input byte. Fresh qualified full same-source acceptance remains
+required before any speed claim.
+
+Record actual physical permission bits for every custody file, including the
+relocated original proof tree. Public PNG permissions must equal their retained
+logical producer output; readable non-executable `0600`/`0666` substitutions also
+refuse. All source-census Git commands disable replacement objects explicitly;
+an actual temporary-Git blob replacement cannot supply reviewed input bytes.

@@ -28,18 +28,22 @@ runs:
       shell: bash
       env:
         VIZE_DOCS_WORKERS_OUTPUT: target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}
-      run: vp node docs/scripts/qualify-navigation-render-workers.ts --phase checkout --output "$VIZE_DOCS_WORKERS_OUTPUT"
+        VIZE_DOCS_WORKERS_BUILD_EVIDENCE: ${{ runner.temp }}/vize-docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/component-previews
+      run: vp node docs/scripts/qualify-navigation-render-workers.ts --phase checkout --output "$VIZE_DOCS_WORKERS_OUTPUT" --build-evidence "$VIZE_DOCS_WORKERS_BUILD_EVIDENCE"
     - name: Build the same native packages and Docs once
       shell: bash
+      env:
+        VIZE_DOCS_WORKERS_BUILD_EVIDENCE: ${{ runner.temp }}/vize-docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/component-previews
       run: |
         rust-script tools/commands/ci/github/run-many.rs vp run --filter './npm/native' build:ci -- vp run --filter './npm/cli' build -- vp run --filter './npm/builder/vite' build
-        vp run --no-cache --filter './docs' build
+        vp run --no-cache --filter './docs' build --output "$VIZE_DOCS_WORKERS_BUILD_EVIDENCE"
     - name: Retain complete physical source and built Docs custody
       id: prepare
       shell: bash
       env:
         VIZE_DOCS_WORKERS_OUTPUT: target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}
-      run: vp node docs/scripts/qualify-navigation-render-workers.ts --phase prepare --output "$VIZE_DOCS_WORKERS_OUTPUT"
+        VIZE_DOCS_WORKERS_BUILD_EVIDENCE: ${{ runner.temp }}/vize-docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/component-previews
+      run: vp node docs/scripts/qualify-navigation-render-workers.ts --phase prepare --output "$VIZE_DOCS_WORKERS_OUTPUT" --build-evidence "$VIZE_DOCS_WORKERS_BUILD_EVIDENCE"
     - name: Complete original two-worker navigation proof
       id: two
       shell: bash
@@ -58,7 +62,8 @@ runs:
       shell: bash
       env:
         VIZE_DOCS_WORKERS_OUTPUT: target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}
-      run: vp node docs/scripts/qualify-navigation-render-workers.ts --phase qualify --output "$VIZE_DOCS_WORKERS_OUTPUT" --baseline-outcome "${{ steps.two.outcome }}" --candidate-outcome "${{ steps.four.outcome }}"
+        VIZE_DOCS_WORKERS_BUILD_EVIDENCE: ${{ runner.temp }}/vize-docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/component-previews
+      run: vp node docs/scripts/qualify-navigation-render-workers.ts --phase qualify --output "$VIZE_DOCS_WORKERS_OUTPUT" --build-evidence "$VIZE_DOCS_WORKERS_BUILD_EVIDENCE" --baseline-outcome "${{ steps.two.outcome }}" --candidate-outcome "${{ steps.four.outcome }}"
     - name: Preserve both complete campaign packets on success and failure
       if: ${{ always() }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -67,5 +72,6 @@ runs:
         path: |
           target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/
           target/differential/docs-render-workers/
+          ${{ runner.temp }}/vize-docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/component-previews/
         if-no-files-found: error
         retention-days: 14

@@ -19,9 +19,14 @@ export async function fileCustody(file: string, expectedBlob?: string) {
   }
   if (expectedBlob)
     assert.equal(blob.digest("hex"), expectedBlob, `Tracked Git blob changed: ${file}`);
-  return { file, physical, bytes: stat.size, sha256: digest.digest("hex") };
+  return {
+    file,
+    physical,
+    bytes: stat.size,
+    sha256: digest.digest("hex"),
+    physicalMode: stat.mode & 0o7777,
+  };
 }
-
 /** Preserve complete file membership, and refuse substituted links in authored/build trees. */
 export async function treeCustody(directory: string) {
   assert.equal(await realpath(directory), directory, `Substituted tree ancestor: ${directory}`);
@@ -63,7 +68,11 @@ const buildProducerFiles = [
 function gitSource(root: string, source: string) {
   assert.match(source, /^[a-f0-9]{40}$/, "Expected immutable Actions source");
   const git = (...args: string[]) =>
-    execFileSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+    execFileSync("git", ["--no-replace-objects", ...args], {
+      cwd: root,
+      encoding: "utf8",
+      maxBuffer: 16 * 1024 * 1024,
+    });
   assert.equal(
     git("rev-parse", "HEAD").trim(),
     source,
@@ -71,15 +80,50 @@ function gitSource(root: string, source: string) {
   );
   return git;
 }
+export async function workersGeneratedPublicImages(root: string) {
+  const images = [];
+  for (const logical of generatedWorkersFiles.slice(0, 8)) {
+    const original = path.join(root, logical);
+    assert.equal(await realpath(path.dirname(original)), path.dirname(original));
+    assert.equal(await realpath(original), original, "Physical logical preview required");
+    const authority = await fileCustody(original);
+    const relative = logical.replace(/\.png$/, `-${authority.sha256}.png`);
+    const file = path.join(root, relative);
+    assert.equal(await realpath(file), file, "Physical content-addressed preview required");
+    const stat = await lstat(file);
+    assert(
+      stat.isFile() && !(stat.mode & 0o111) && (stat.mode & 0o7777) === authority.physicalMode,
+      "Ordinary generated PNG mode required",
+    );
+    const actual = await fileCustody(file);
+    assert.equal(actual.bytes, authority.bytes);
+    assert.equal(
+      actual.sha256,
+      authority.sha256,
+      "Immutable PNG must equal its logical generated body",
+    );
+    assert.deepEqual(
+      await readFile(file),
+      await readFile(original),
+      "Complete original PNG body required",
+    );
+    images.push({ ...actual, file: relative, logical, mode: "100644" });
+  }
+  assert.equal(images.length, 8);
+  return images;
+}
 async function physicalCheckout(root: string, source: string, built: boolean) {
   assert.equal(await realpath(root), root, "Physical checkout root required");
   const git = gitSource(root, source);
   const status = git("status", "--porcelain", "-z", "--untracked-files=all")
     .split("\0")
     .filter(Boolean);
+  const publicGenerated = built ? await workersGeneratedPublicImages(root) : [];
   for (const entry of status)
     assert(
-      built && entry.startsWith(" M ") && generatedWorkersFiles.includes(entry.slice(3)),
+      built &&
+        ((entry.startsWith(" M ") && generatedWorkersFiles.includes(entry.slice(3))) ||
+          (entry.startsWith("?? ") && publicGenerated.some(({ file }) => file === entry.slice(3)))),
       `Only the exact authored generated output census may change; staged/untracked source refuses: ${JSON.stringify(entry)}`,
     );
   const sourceFiles: (Awaited<ReturnType<typeof fileCustody>> & {
@@ -150,7 +194,13 @@ async function physicalCheckout(root: string, source: string, built: boolean) {
       });
     }
   }
-  return { source, tree: git("rev-parse", "HEAD^{tree}").trim(), sourceFiles, gitlinks };
+  return {
+    source,
+    tree: git("rev-parse", "HEAD^{tree}").trim(),
+    sourceFiles,
+    gitlinks,
+    publicGenerated,
+  };
 }
 export async function workersCheckoutIdentity(root: string, source: string) {
   return physicalCheckout(root, source, false);
@@ -180,10 +230,16 @@ export async function workersGeneratedIdentity(
     const old = before.sourceFiles.find((item) => item.file === file);
     const current = after.sourceFiles.find((item) => item.file === file);
     assert(
-      old && current && old.mode === current.mode && old.object === current.object,
+      old &&
+        current &&
+        old.mode === current.mode &&
+        old.physicalMode === current.physicalMode &&
+        old.object === current.object,
       "Complete nine-file generated census required",
     );
-    const original = execFileSync("git", ["cat-file", "blob", old.object], { cwd: root });
+    const original = execFileSync("git", ["--no-replace-objects", "cat-file", "blob", old.object], {
+      cwd: root,
+    });
     assert.equal(old.bytes, original.length);
     assert.equal(
       old.sha256,
@@ -216,6 +272,7 @@ export async function retainWorkersGeneratedBytes(
     await copyFile(file, destination, constants.COPYFILE_EXCL);
     const raw = await fileCustody(destination);
     assert.equal(raw.bytes, original.bytes);
+    assert.equal(raw.physicalMode, original.physicalMode);
     assert.equal(raw.sha256, original.sha256, "Complete physical generated-byte copy required");
     retained.push({ file: relative, source: original, raw });
   }
@@ -238,6 +295,7 @@ export async function verifyWorkersGeneratedBytes(
       assert.equal(await realpath(file), file, "Physical original generated-byte packet required");
       const actual = await fileCustody(file);
       assert.equal(actual.bytes, authority.bytes);
+      assert.equal(actual.physicalMode, authority.physicalMode);
       assert.equal(actual.sha256, authority.sha256, "Complete original generated bytes required");
     }
   }
@@ -255,6 +313,7 @@ export async function workersSourceIdentity(
   dist: string,
   source: string,
   before: Awaited<ReturnType<typeof workersCheckoutIdentity>>,
+  buildEvidence: string,
 ) {
   const checkout = await workersGeneratedIdentity(root, source, before);
   const manifest = JSON.parse(await readFile(path.join(dist, "_og/manifest.json"), "utf8"));
@@ -278,6 +337,7 @@ export async function workersSourceIdentity(
   return {
     ...checkout,
     buildProducers: await workersBuildProducerIdentity(root),
+    buildEvidence: { directory: buildEvidence, files: await treeCustody(buildEvidence) },
     dist: { directory: dist, manifest, files: await treeCustody(dist) },
     libraries,
     node: { version: process.version, ...(await fileCustody(process.execPath)) },
