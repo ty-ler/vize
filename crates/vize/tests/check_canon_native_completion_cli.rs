@@ -123,35 +123,70 @@ fn quote(value: &Path) -> String {
 }
 fn wrapper(native: &Path, root: &Path, mode: &str) -> PathBuf {
     let path = root.join("native-wrapper.sh");
-    let custody = root.join("native-child.txt");
-    let body = match mode {
-        "nonzero" => cstr!(
-            "{native} \"$@\" <&0 &\nnative_pid=$!\nprintf 'wrapper-pid=%s\\nnative-pid=%s\\n' \"$$\" \"$native_pid\" > {custody}\nwait \"$native_pid\"\nnative_status=$?\nprintf 'native-exit=%s\\nwrapper-exit=17\\n' \"$native_status\" >> {custody}\nexit 17\n",
-            native = quote(native),
-            custody = quote(&custody)
-        ),
-        "nonutf8" => cstr!(
-            "printf 'native-exec-pid=%s\\n' \"$$\" > {custody}\nprintf 'wrapper\\000\\377control\\n' >&2\nexec {native} \"$@\"\n",
-            custody = quote(&custody),
-            native = quote(native)
-        ),
-        "unexpected" => cstr!(
-            "printf 'native-exec-pid=%s\\n' \"$$\" > {custody}\nprintf 'unexpected native stderr\\n' >&2\nexec {native} \"$@\"\n",
-            custody = quote(&custody),
-            native = quote(native)
-        ),
-        _ => panic!("unknown genuine wrapper control"),
-    };
+    let driver = root.join("native-control.py");
     fs::write(
-        &path,
-        cstr!(
-            "#!/bin/sh\nif [ \"$1\" = '--lsp' ]; then\n{body}fi\nexec {} \"$@\"\n",
-            quote(native)
-        ),
+        &driver,
+        include_bytes!("../../../tests/_fixtures/corsa-process-receipt/native-control.py"),
     )
     .unwrap();
+    assert!(["nonzero", "nonutf8", "unexpected"].contains(&mode));
+    fs::write(&path, cstr!(
+        "#!/bin/sh\nif [ \"$1\" = '--lsp' ]; then\nexec python3 {driver} --native {native} --mode '{mode}' --control-dir {root} -- \"$@\"\nfi\nexec {native} \"$@\"\n",
+        driver=quote(&driver), native=quote(native), root=quote(root),
+    )).unwrap();
     fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
     path
+}
+
+fn assert_control(root: &Path, native: &Path, mode: &str) {
+    let receipt: Value =
+        serde_json::from_slice(&fs::read(root.join("control.json")).unwrap()).unwrap();
+    let wrapper_pid = receipt["wrapperPid"].as_u64().unwrap();
+    let native_pid = receipt["nativePid"].as_u64().unwrap();
+    assert_ne!(wrapper_pid, native_pid);
+    assert_ne!(wrapper_pid, 0);
+    assert_ne!(native_pid, 0);
+    let wrapper_exit = if mode == "nonzero" { 17 } else { 0 };
+    assert_eq!(receipt["nativeExit"], 0);
+    assert_eq!(receipt["wrapperExit"], wrapper_exit);
+    assert_eq!(receipt["errors"], json!([]));
+    for flag in [
+        "nativeReaped",
+        "stdinComplete",
+        "stdoutComplete",
+        "stderrComplete",
+        "shutdownAcknowledged",
+        "exitTranslatedToNativeEof",
+    ] {
+        assert_eq!(receipt[flag], true, "{flag}");
+    }
+    for flag in ["timedOut", "killRequested"] {
+        assert_eq!(receipt[flag], false, "{flag}");
+    }
+    assert_eq!(receipt["native"], json!(native));
+    assert_eq!(
+        receipt["nativeSha256"],
+        json!(digest(&fs::read(native).unwrap()))
+    );
+    assert_eq!(
+        receipt["wrapperSourceSha256"],
+        json!(digest(&fs::read(root.join("native-control.py")).unwrap()))
+    );
+    assert_eq!(fs::read_to_string(root.join("native-child.txt")).unwrap(), cstr!("wrapper-pid={wrapper_pid}\nnative-pid={native_pid}\nnative-exit=0\nwrapper-exit={wrapper_exit}\n").as_str());
+    assert_eq!(receipt["rawFiles"].as_object().unwrap().len(), 8);
+    for (file, metadata) in receipt["rawFiles"].as_object().unwrap() {
+        let bytes = fs::read(root.join(file)).unwrap();
+        assert_eq!(metadata["bytes"], json!(bytes.len()));
+        assert_eq!(metadata["sha256"], json!(digest(&bytes)));
+    }
+    assert_eq!(fs::read(root.join("native.stderr.bin")).unwrap(), b"");
+    assert_eq!(
+        fs::read(root.join("native.stdout.bin")).unwrap(),
+        fs::read(root.join("wrapper.stdout.bin")).unwrap()
+    );
+    let mut stdin = fs::read(root.join("native.stdin.bin")).unwrap();
+    stdin.extend(fs::read(root.join("translated-exit.frames.bin")).unwrap());
+    assert_eq!(stdin, fs::read(root.join("wrapper.stdin.bin")).unwrap());
 }
 
 #[test]
@@ -203,6 +238,7 @@ fn native_completion_cli_preserves_frozen_full_outputs_and_observable_failures()
     assert_eq!(frozen.stderr, b"");
     for (mode, control, output) in controls {
         assert_eq!(inputs(&control, &case), before);
+        assert_control(&control, &native, mode);
         if mode == "nonzero" {
             assert_eq!(output.status.code(), Some(1));
             assert_eq!(output.stdout, b"");
@@ -214,22 +250,6 @@ fn native_completion_cli_preserves_frozen_full_outputs_and_observable_failures()
                     .unwrap(),
                 EOF
             );
-            let child = fs::read_to_string(control.join("native-child.txt")).unwrap();
-            let rows: Vec<_> = child.lines().collect();
-            assert_eq!(rows.len(), 4);
-            let wrapper_pid = rows[0]
-                .strip_prefix("wrapper-pid=")
-                .unwrap()
-                .parse::<u32>()
-                .unwrap();
-            let native_pid = rows[1]
-                .strip_prefix("native-pid=")
-                .unwrap()
-                .parse::<u32>()
-                .unwrap();
-            assert_ne!(wrapper_pid, native_pid);
-            assert_eq!(rows[2], "native-exit=0");
-            assert_eq!(rows[3], "wrapper-exit=17");
         } else {
             assert_eq!(output.status.code(), Some(1));
             assert_eq!(output.stdout, EXPECTED);
@@ -241,15 +261,6 @@ fn native_completion_cli_preserves_frozen_full_outputs_and_observable_failures()
             let mut expected = prefix.to_vec();
             expected.extend_from_slice(EOF);
             assert_eq!(output.stderr, expected);
-            let custody = fs::read_to_string(control.join("native-child.txt")).unwrap();
-            let pid = custody
-                .strip_prefix("native-exec-pid=")
-                .unwrap()
-                .strip_suffix('\n')
-                .unwrap()
-                .parse::<u32>()
-                .unwrap();
-            assert_ne!(pid, 0);
         }
     }
     assert_eq!(wrong.status.code(), Some(1));

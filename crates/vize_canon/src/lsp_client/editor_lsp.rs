@@ -40,6 +40,7 @@ mod file_rename;
 mod implementation;
 mod inlay_hint;
 mod materialized;
+mod native_shutdown;
 mod native_vue;
 mod original_program;
 mod process_close;
@@ -72,6 +73,9 @@ pub(super) struct EditorLspSession {
     responder: Option<std::thread::JoinHandle<()>>,
     configured_api: Option<project_configuration::DiagnosingApi>,
     closed: bool,
+    shutdown_to_eof: bool,
+    #[cfg(test)]
+    native_initialize_response: serde_json::Value,
     /// Last text mirrored into the server, keyed by session document URI.
     documents: FxHashMap<String, String>,
     /// Latest notification generation written to this transport.
@@ -101,13 +105,17 @@ impl EditorLspSession {
         let stop = Arc::new(AtomicBool::new(false));
         let responder = spawn_responder(client.clone(), stop.clone());
 
-        if let Err(error) = initialize_lsp_client(&client, project_root) {
-            stop.store(true, Ordering::Relaxed);
-            let _ = block_on(client.close());
-            let _ = responder.join();
-            let _ = process_receipt::report(&process_observer, false, false);
-            return Err(error);
-        }
+        let initialized = match initialize_lsp_client(&client, project_root) {
+            Ok(response) => response,
+            Err(error) => {
+                stop.store(true, Ordering::Relaxed);
+                let _ = block_on(client.close());
+                let _ = responder.join();
+                let _ = process_receipt::report(&process_observer, false, false);
+                return Err(error);
+            }
+        };
+        let shutdown_to_eof = native_shutdown::eof_capability(Path::new(executable), &initialized);
         crate::corsa_session_cache::note_typescript_project_init();
 
         Ok(Self {
@@ -118,6 +126,9 @@ impl EditorLspSession {
             responder: Some(responder),
             configured_api: None,
             closed: false,
+            shutdown_to_eof,
+            #[cfg(test)]
+            native_initialize_response: initialized,
             documents: Default::default(),
             document_generation: 0,
             ready_generation: None,

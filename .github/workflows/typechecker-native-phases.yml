@@ -326,7 +326,7 @@ jobs:
           set -euo pipefail
           # Retain original raw custody even when immutable helper authority is unavailable.
           raw_paths=(outside-import-types/ typechecker-native-source-custody.json 'native-source-recipe*' reference-path-module/ typechecker-native-phases.json typechecker-native-phases.json.samples/provenance.json template-dollar-emit/ config-scoped-vue-helpers/)
-          raw_paths+=(native-semantic-completion/ tsconfig-types-extends/ jsx-slot-parameter-types/ canon-selected-alias/ lsp-passive-3952/ unchecked-index-access/ unknown-template-options/ template-emit-ts40-projection/)
+          raw_paths+=(tsconfig-types-extends/ jsx-slot-parameter-types/ canon-selected-alias/ lsp-passive-3952/ unchecked-index-access/ unknown-template-options/ template-emit-ts40-projection/)
           raw_paths+=(typechecker-native-phases.json.samples/failure.json typechecker-native-phases.json.samples/inputs/ typechecker-native-phases.json.samples/raw/ typechecker-native-phases.json.samples/native/ typechecker-native-phases.json.samples/projections/ typechecker-native-phases.json.samples/virtual-ts/ undefined-default-props/)
           { printf 'raw_paths<<NATIVE_RAW_PATHS\n'; for raw_path in "${raw_paths[@]}"; do printf '%s/%s\n' "$RUNNER_TEMP" "$raw_path"; done
             printf 'NATIVE_RAW_PATHS\n'; } >> "$GITHUB_OUTPUT"

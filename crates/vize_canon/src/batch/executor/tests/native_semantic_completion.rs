@@ -62,9 +62,11 @@ fn native_semantic_completion_keeps_frozen_full_vector_and_actual_terminal_owner
     project.register_reachable_dependencies().unwrap();
     project.ensure_included_sources().unwrap();
     let executor = CorsaExecutor::with_corsa_path(&root, Some(&native)).unwrap();
-    let result = executor.check_with_servers(&project, Some(1));
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        executor.check_with_servers(&project, Some(1))
+    }));
     let terminal = semantic_completion::finish();
-    let result = result.unwrap();
+    let result = result.unwrap().unwrap();
     let mut whole:Vec<_>=result.diagnostics.iter().map(|row|json!({"file":row.file.strip_prefix(&root).unwrap(),"line":row.line,"column":row.column,"code":row.code,"severity":row.severity,"message":row.message.as_str(),"blockType":row.block_type.map(|block|cstr!("{block:?}"))})).collect();
     whole.sort_by(|a, b| a["file"].as_str().cmp(&b["file"].as_str()));
     if let Some(dir) = std::env::var_os("VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR").map(PathBuf::from) {
@@ -79,11 +81,66 @@ fn native_semantic_completion_keeps_frozen_full_vector_and_actual_terminal_owner
         assert_eq!(receipt["reaped"], true);
         assert_eq!(receipt["stderrError"], Value::Null);
         assert_eq!(receipt["processError"], Value::Null);
-        assert_eq!(
-            receipt["stderr"],
-            json!(b"error handling method 'exit': EOF\n".as_slice())
-        );
+        assert_eq!(receipt["stderr"], json!(b"".as_slice()));
     }
     assert_eq!(json!(whole), case["expectedDiagnostics"]);
     assert_eq!((result.success, result.exit_code), (false, 1));
+
+    // A separate configured session observes the same full declaration while an
+    // ordinary import makes its global visible. Keep the malformed input intact.
+    let valid_root = root.parent().unwrap().join("factory-valid-import");
+    fs::create_dir_all(&valid_root).unwrap();
+    for entry in case["inputFiles"].as_array().unwrap() {
+        let source = root.join(entry["file"].as_str().unwrap());
+        let destination = valid_root.join(entry["file"].as_str().unwrap());
+        fs::create_dir_all(destination.parent().unwrap()).unwrap();
+        fs::copy(source, destination).unwrap();
+    }
+    let original = fs::read_to_string(valid_root.join("Comp0.vue")).unwrap();
+    assert_eq!(original.matches("i\\u006dport").count(), 1);
+    fs::write(
+        valid_root.join("Comp0.vue"),
+        original.replace("i\\u006dport", "import"),
+    )
+    .unwrap();
+    let mut valid = VirtualProject::new(&valid_root).unwrap();
+    valid.set_tsconfig_path(Some(valid_root.join("tsconfig.json")));
+    valid
+        .register_paths(
+            &case["reportedFiles"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|file| valid_root.join(file.as_str().unwrap()))
+                .collect::<Vec<_>>(),
+        )
+        .unwrap();
+    valid.register_reachable_dependencies().unwrap();
+    valid.ensure_included_sources().unwrap();
+    valid.materialize().unwrap();
+    let valid_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        executor.check_with_project_session(&valid)
+    }));
+    let valid_terminal = semantic_completion::finish();
+    let valid_result = valid_result.unwrap().unwrap();
+    if let Some(dir) = std::env::var_os("VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR").map(PathBuf::from) {
+        fs::write(dir.join("factory-valid-import/result.json"), serde_json::to_vec_pretty(&json!({
+            "nativeBinary":native,"diagnostics":valid_result.diagnostics.iter().map(|row|cstr!("{row:?}")).collect::<Vec<_>>(),
+            "success":valid_result.success,"exitCode":valid_result.exit_code,"terminal":valid_terminal,
+        })).unwrap()).unwrap();
+        let [receipt] = valid_terminal.as_array().unwrap().as_slice() else {
+            panic!("one owned native process required")
+        };
+        assert_eq!(receipt["completed"], true);
+        assert_eq!(receipt["stderrComplete"], true);
+        assert_eq!(receipt["exitCode"], 0);
+        assert_eq!(receipt["timedOut"], false);
+        assert_eq!(receipt["killRequested"], false);
+        assert_eq!(receipt["reaped"], true);
+        assert_eq!(receipt["stderrError"], Value::Null);
+        assert_eq!(receipt["processError"], Value::Null);
+        assert_eq!(receipt["stderr"], json!(b"".as_slice()));
+    }
+    assert_eq!(valid_result.diagnostics.len(), 0);
+    assert_eq!((valid_result.success, valid_result.exit_code), (true, 0));
 }

@@ -30,7 +30,7 @@ fi
 [[ -x "${VIZE_TEST_TSGO_PATH:-}" ]]
 unset VIZE_TEST_DISABLE_TSGO VIZE_NESTED_BATCH_CAPTURE_DIR
 export CORSA_PATH="$VIZE_TEST_TSGO_PATH"
-export VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR="$RUNNER_TEMP/native-semantic-completion"
+export VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR="$RUNNER_TEMP/native-source-recipe-semantic-completion"
 mkdir "$VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR"
 node tests/_fixtures/corsa-process-receipt/verify-vendor.mjs > "$VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR/vendor-custody.json"
 printf '%s\n' "$SOURCE_SHA" > "$VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR/source-sha.txt"

@@ -36,8 +36,9 @@ pub(super) fn capture(
     let observer = client
         .batch_test_process_observer()
         .expect("real diagnosing LSP process required");
+    PENDING.with(|pending| *pending.borrow_mut() = Some((observer.clone(), dir.clone())));
     let config = project.generated_tsconfig_path();
-    let receipt = json!({"native":native, "requestedUris":uris, "generatedConfig":config,
+    let mut receipt = json!({"native":native, "requestedUris":uris, "generatedConfig":config,
         "generatedConfigBytes":fs::read(&config).unwrap(), "rawDiagnostics":cstr!("{raw:#?}"),
         "generatedFiles":project.virtual_files_sorted().into_iter().map(|file|json!({"original":file.original_path,"virtual":file.virtual_path,"code":file.content.as_str(),"sourceMap":cstr!("{:#?}",file.source_map)})).collect::<Vec<_>>(),
         "wholePhysicalFiles":physical(project.virtual_root()), "spawnReceiptsBeforeClose":cstr!("{:?}",observer.receipts())});
@@ -46,7 +47,21 @@ pub(super) fn capture(
         serde_json::to_vec_pretty(&receipt).unwrap(),
     )
     .unwrap();
+    receipt["leafProvider"] = client.batch_test_leaf_source(uri, &native);
+    fs::write(
+        dir.join("same-owner.json"),
+        serde_json::to_vec_pretty(&receipt).unwrap(),
+    )
+    .unwrap();
     assert_eq!(receipt["native"]["mode"], "editor-lsp");
+    assert_eq!(
+        receipt["native"]["nativeShutdownMode"],
+        "authenticated-native-7.0.2-shutdown-eof"
+    );
+    assert_eq!(
+        receipt["native"]["nativeInitializeResponse"]["serverInfo"],
+        json!({"name":"typescript-go","version":"7.0.2"})
+    );
     assert_eq!(receipt["native"]["selectedConfig"], json!(config));
     assert_eq!(
         receipt["native"]["project"]["compilerOptions"],
@@ -99,16 +114,20 @@ pub(super) fn capture(
             "shared.ts"
         ]
     );
-    assert_eq!(
-        sources
-            .iter()
-            .filter_map(|v| v.as_str())
-            .filter(|v| Path::new(v).ends_with("node_modules/leaf-types/index.d.ts"))
-            .collect::<Vec<_>>(),
-        Vec::<&str>::new(),
-        "the escaped import must not acquire the absent leaf global"
+    assert_eq!(receipt["leafProvider"]["qualified"], true);
+    let original_leaf = include_bytes!(
+        "../../../../../../tests/_fixtures/differential/typechecker/native-semantic-completion/inputs/node_modules/leaf-types/index.d.ts.txt"
     );
-    PENDING.with(|p| *p.borrow_mut() = Some((observer, dir)));
+    for row in receipt["leafProvider"]["loadedLeafSources"]
+        .as_array()
+        .unwrap()
+    {
+        assert_eq!(row["completeNativeText"], json!(original_leaf.as_slice()));
+        assert_eq!(
+            row["completePhysicalBytes"],
+            json!(original_leaf.as_slice())
+        );
+    }
 }
 
 pub(in crate::batch::executor) fn finish() -> Value {

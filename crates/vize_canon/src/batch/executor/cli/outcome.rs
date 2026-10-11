@@ -126,13 +126,13 @@ mod tests {
                 1,
                 "",
                 "printf 'unexpected native stderr\\n' >&2",
-                "source.ts(1,15): error TS1109: Expression expected.\nunexpected native stderr",
+                "unexpected native stderr\nsource.ts(1,15): error TS1109: Expression expected.",
             ),
             (
                 1,
                 "",
                 "printf '\\000\\377' >&2",
-                "source.ts(1,15): error TS1109: Expression expected.\n\0�",
+                "\0�\nsource.ts(1,15): error TS1109: Expression expected.",
             ),
         ] {
             let (_temp, project, runtime) = fixture(

@@ -1,8 +1,60 @@
 //! Test-only attestation from the same client that returned Batch diagnostics.
 
 use super::super::diagnostics::test_route::{self, Route};
+use super::snapshot_source::{SnapshotSourceOwner, SourceTextOutcome};
 use super::{CorsaProjectClient, project_identity::ProjectIdentityError};
 use serde_json::{Value, json};
+use std::{fs, path::Path};
+
+impl CorsaProjectClient {
+    /// Read the complete leaf declaration on the attachment that diagnosed this batch.
+    pub(crate) fn batch_test_leaf_source(&mut self, uri: &str, authority: &Value) -> Value {
+        assert_eq!(authority["mode"], "editor-lsp");
+        assert_eq!(authority["nativeBinary"], json!(self.executable));
+        let editor = self.editor_lsp.as_mut().unwrap();
+        let config = editor.diagnosing_configuration(uri).unwrap_or_else(|_| {
+            panic!("the actual diagnosing owner must retain its configuration")
+        });
+        assert_eq!(json!(config), authority["selectedConfig"]);
+        let attachment = editor.configured_api.as_ref().unwrap();
+        assert_eq!(json!(attachment.session), authority["attachment"]);
+        let mut owner = SnapshotSourceOwner::create(&attachment.client).unwrap();
+        let observation = {
+            let project = owner.project(&config).unwrap().unwrap();
+            let same_project = json!(project.descriptor()) == authority["project"];
+            let same_sources = json!(project.source_names()) == authority["sourceNamesResponse"];
+            let sources: Vec<_> = project.source_names().iter()
+                .filter(|name| Path::new(name.as_str()).ends_with("node_modules/leaf-types/index.d.ts"))
+                .map(|name| {
+                    let uri = crate::file_uri::path_to_file_uri(Path::new(name.as_str()));
+                    match project.read(uri.as_str()).unwrap() {
+                        SourceTextOutcome::Complete(text) => {
+                            let physical = fs::canonicalize(text.file_name()).unwrap();
+                            let bytes = fs::read(&physical).unwrap();
+                            json!({"nativeSourceName":name,"nativeFileName":text.file_name(),
+                                "nativePath":text.path(),"nativeUri":text.uri(),"physical":physical,
+                                "completeNativeText":text.text().as_bytes(),
+                                "wholeEncodedPayload":text.encoded_bytes(),"completePhysicalBytes":bytes,
+                                "nativeMatchesPhysical":bytes == text.text().as_bytes()})
+                        }
+                        SourceTextOutcome::Refused { reason, encoded } => json!({
+                            "nativeSourceName":name,"nativeMatchesPhysical":false,
+                            "nativeReadRefusal":vize_l0::cstr!("{reason:?}"),
+                            "wholeEncodedRefusal":encoded.as_ref().map(|value|value.as_bytes()),
+                        }),
+                    }
+                }).collect::<Vec<_>>();
+            json!({"scope":"retained diagnosing attachment","attachment":attachment.session,
+                "snapshotHandle":owner.handle(),"project":project.descriptor(),
+                "wholeSourceNames":project.source_names(),"loadedLeafSources":sources,
+                "sameDiagnosingProject":same_project,"sameDiagnosingSourceNames":same_sources,
+                "qualified":same_project && same_sources && sources.len() == 1
+                    && sources.iter().all(|source|source["nativeMatchesPhysical"] == true)})
+        };
+        owner.release().unwrap();
+        observation
+    }
+}
 
 impl CorsaProjectClient {
     pub(crate) fn batch_test_process_observer(
@@ -25,6 +77,12 @@ impl CorsaProjectClient {
                 return receipt;
             };
             receipt["mode"] = json!("editor-lsp");
+            receipt["nativeInitializeResponse"] = editor.native_initialize_response.clone();
+            receipt["nativeShutdownMode"] = json!(if editor.shutdown_to_eof {
+                "authenticated-native-7.0.2-shutdown-eof"
+            } else {
+                "standard-sdk-shutdown-exit"
+            });
             let processes = editor.process_observer.receipts();
             receipt["processPid"] = json!(processes.first().map(|r| r.pid));
             let selected = editor.diagnosing_configuration(uri);

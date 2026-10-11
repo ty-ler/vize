@@ -6,7 +6,7 @@ use std::sync::atomic::Ordering;
 use vize_l0::{String, cstr};
 
 impl EditorLspSession {
-    /// Complete the standard LSP lifecycle before closing and reaping the
+    /// Complete the selected LSP lifecycle before closing and reaping the
     /// owned process. The responder remains alive until `shutdown` returns so
     /// server-initiated requests cannot deadlock the final response.
     pub(super) fn shutdown(&mut self) -> Result<(), String> {
@@ -15,7 +15,21 @@ impl EditorLspSession {
         }
 
         let mut first_error = None;
-        let close_result = block_on(self.client.graceful_close());
+        // Native 7.0.2's Exit dispatch races stdin EOF into context.Canceled.
+        // Its authenticated initialize identity selects acknowledged Shutdown
+        // then transport EOF. Other servers retain the SDK standard lifecycle.
+        let close_result = if self.shutdown_to_eof {
+            block_on(async {
+                let protocol = self
+                    .client
+                    .request_without_params::<lsp_types::request::Shutdown>()
+                    .await;
+                let closed = self.client.close().await;
+                protocol.and(closed)
+            })
+        } else {
+            block_on(self.client.graceful_close())
+        };
         let graceful_acknowledged = close_result.is_ok();
         if let Err(error) = close_result {
             first_error = Some(cstr!(
