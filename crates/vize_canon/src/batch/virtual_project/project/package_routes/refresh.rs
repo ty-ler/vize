@@ -97,7 +97,7 @@ impl VirtualProject {
         resolver.record_refresh_scope(total, considered, considered);
         drop(resolver);
         for binding in refreshed {
-            self.insert_package_route_binding_with_consumption(binding, observe, facts);
+            self.insert_package_route_binding_with_consumption::<false>(binding, observe, facts);
         }
     }
 }

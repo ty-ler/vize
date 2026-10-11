@@ -208,12 +208,13 @@ impl DiagnosticService {
                 return Ok(vec![]);
             };
             let opened = bridge
-                .open_vue_virtual_document_with_borrowed_overlays_and_options(
+                .open_vue_virtual_workspace_document_with_shared_sources(
                     &source_path,
                     &content,
                     document_options,
-                    &overlays,
+                    &cached_overlays,
                     &virtual_ts_options,
+                    &[],
                 )
                 .await
                 .map_err(|error| classify(&bridge, error))?;

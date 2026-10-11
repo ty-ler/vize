@@ -229,11 +229,17 @@ impl PackageRoute {
 
     #[cfg(feature = "native")]
     pub(crate) fn all_routes(&self) -> Vec<&PackageRoute> {
-        let mut routes = vec![self];
-        for route in &self.nested_routes {
-            routes.extend(route.all_routes());
-        }
+        let mut routes = Vec::new();
+        self.collect_all_routes(&mut routes);
         routes
+    }
+
+    #[cfg(feature = "native")]
+    fn collect_all_routes<'a>(&'a self, routes: &mut Vec<&'a PackageRoute>) {
+        routes.push(self);
+        for route in &self.nested_routes {
+            route.collect_all_routes(routes);
+        }
     }
 
     /// Map a native TypeScript definition inside a materialized package shadow
@@ -316,3 +322,6 @@ pub struct PackageRouteMetrics {
     pub last_reachability_parses: u64,
     pub last_reachability_packages: u64,
 }
+
+#[cfg(all(test, feature = "native"))]
+mod route_order_tests;

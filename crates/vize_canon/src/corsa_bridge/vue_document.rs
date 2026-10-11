@@ -160,6 +160,33 @@ impl CorsaBridge {
         .await
     }
 
+    /// Retain complete immutable editor snapshots on the existing native worker.
+    /// Unchanged buffers keep their original owners rather than copying text.
+    #[expect(
+        clippy::disallowed_types,
+        reason = "actual immutable editor buffer snapshots already have shared Arc owners"
+    )]
+    pub async fn open_vue_virtual_workspace_document_with_shared_sources(
+        &self,
+        source_path: &Path,
+        content: &str,
+        options: CorsaVueVirtualDocumentOptions,
+        overlays: &[(PathBuf, std::sync::Arc<str>)],
+        virtual_ts_options: &VirtualTsOptions,
+        requested_sources: &[(PathBuf, std::sync::Arc<str>)],
+    ) -> Result<CorsaVueVirtualDocument, CorsaBridgeError> {
+        workspace_open::open_owned(
+            self,
+            source_path.to_path_buf(),
+            String::from(content),
+            options,
+            overlays.to_vec(),
+            virtual_ts_options.clone(),
+            requested_sources.to_vec(),
+        )
+        .await
+    }
+
     pub(super) async fn open_canon_project_documents(
         &self,
         documents: Vec<(String, String)>,

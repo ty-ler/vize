@@ -62,7 +62,10 @@ fn owned_request_bytes_preserve_the_complete_actual_query_project() {
     assert_same_project(&after, &before);
 }
 
-fn assert_same_project(actual: &CorsaVueVirtualProject, expected: &CorsaVueVirtualProject) {
+pub(super) fn assert_same_project(
+    actual: &CorsaVueVirtualProject,
+    expected: &CorsaVueVirtualProject,
+) {
     let host = |project: &CorsaVueVirtualProject| {
         let host = &project.host;
         (

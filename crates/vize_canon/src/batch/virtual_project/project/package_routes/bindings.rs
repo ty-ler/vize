@@ -45,7 +45,9 @@ impl VirtualProject {
         self.package_route_manifests.clear();
         self.package_route_roots.clear();
         for binding in bindings {
-            self.insert_package_route_binding_with_consumption(binding, observe, facts);
+            // Every indexed manifest owner was inserted earlier in this loop;
+            // each is already dirty, as were all old keys before the clear.
+            self.insert_package_route_binding_with_consumption::<true>(binding, observe, facts);
         }
         let current_roots = self
             .package_route_roots
@@ -81,7 +83,9 @@ impl VirtualProject {
         }
     }
 
-    pub(in crate::batch::virtual_project) fn insert_route_binding_inner_with_consumption(
+    pub(in crate::batch::virtual_project) fn insert_route_binding_inner_with_consumption<
+        const OWNERS_ALREADY_DIRTY: bool,
+    >(
         &mut self,
         binding: crate::PackageRouteBinding,
         observe: bool,
@@ -111,7 +115,9 @@ impl VirtualProject {
                     .entry(package_root)
                     .or_default()
                     .insert(key.clone());
-                if let Some(keys) = self.package_route_manifests.get(&route.manifest_path) {
+                if !OWNERS_ALREADY_DIRTY
+                    && let Some(keys) = self.package_route_manifests.get(&route.manifest_path)
+                {
                     self.package_shadow_dirty_keys.extend(keys.iter().cloned());
                 }
                 self.package_route_manifests
@@ -240,3 +246,6 @@ impl VirtualProject {
         }
     }
 }
+
+#[cfg(test)]
+mod bulk_tests;

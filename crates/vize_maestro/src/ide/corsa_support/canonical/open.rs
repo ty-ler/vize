@@ -25,11 +25,7 @@ pub(crate) async fn open_canonical_virtual_document_strict(
     bridge: &CorsaBridge,
 ) -> Result<Option<CanonicalVirtualDocument>, CorsaBridgeError> {
     let cached_overlays = ctx.state.corsa_overlays();
-    let overlays = cached_overlays
-        .iter()
-        .map(|(path, content)| (path.clone(), &**content))
-        .collect::<Vec<_>>();
-    open_canonical_virtual_document_with_overlays_strict(ctx, bridge, &overlays).await
+    open_with_sources(ctx, bridge, Sources::Shared(&cached_overlays)).await
 }
 
 pub(super) async fn open_canonical_virtual_document_with_overlays_strict(
@@ -46,6 +42,23 @@ pub(super) async fn open_canonical_virtual_document_with_sources_strict(
     overlays: &[(PathBuf, &str)],
     requested_sources: &[(PathBuf, &str)],
 ) -> Result<Option<CanonicalVirtualDocument>, CorsaBridgeError> {
+    open_with_sources(ctx, bridge, Sources::Borrowed(overlays, requested_sources)).await
+}
+
+#[expect(
+    clippy::disallowed_types,
+    reason = "retain the actual immutable editor overlay owners across the worker await"
+)]
+enum Sources<'a> {
+    Borrowed(&'a [(PathBuf, &'a str)], &'a [(PathBuf, &'a str)]),
+    Shared(&'a [(PathBuf, std::sync::Arc<str>)]),
+}
+
+async fn open_with_sources(
+    ctx: &IdeContext<'_>,
+    bridge: &CorsaBridge,
+    sources: Sources<'_>,
+) -> Result<Option<CanonicalVirtualDocument>, CorsaBridgeError> {
     if !ctx.uri.path().ends_with(".vue") || ctx.uri.path().ends_with(".art.vue") {
         return Ok(None);
     }
@@ -54,23 +67,40 @@ pub(super) async fn open_canonical_virtual_document_with_sources_strict(
         return Ok(None);
     };
     let virtual_ts_options = ctx.state.editor_virtual_ts_options().await;
-    let opened = bridge
-        .open_vue_virtual_workspace_document(
-            &source_path,
-            &ctx.content,
-            CorsaVueVirtualDocumentOptions {
-                options_api: ctx.state.options_api_enabled(),
-                legacy_vue2: ctx.state.legacy_vue2_enabled(),
-                jsx_typecheck: ctx.state.jsx_typecheck_enabled(),
-                experimental_patterned_template: ctx.state.patterned_template_enabled(),
-                preserve_event_navigation: true,
-                dialect: ctx.state.type_checker_vue_version(),
-            },
-            overlays,
-            &virtual_ts_options,
-            requested_sources,
-        )
-        .await?;
+    let options = CorsaVueVirtualDocumentOptions {
+        options_api: ctx.state.options_api_enabled(),
+        legacy_vue2: ctx.state.legacy_vue2_enabled(),
+        jsx_typecheck: ctx.state.jsx_typecheck_enabled(),
+        experimental_patterned_template: ctx.state.patterned_template_enabled(),
+        preserve_event_navigation: true,
+        dialect: ctx.state.type_checker_vue_version(),
+    };
+    let opened = match sources {
+        Sources::Borrowed(overlays, requested) => {
+            bridge
+                .open_vue_virtual_workspace_document(
+                    &source_path,
+                    &ctx.content,
+                    options,
+                    overlays,
+                    &virtual_ts_options,
+                    requested,
+                )
+                .await?
+        }
+        Sources::Shared(overlays) => {
+            bridge
+                .open_vue_virtual_workspace_document_with_shared_sources(
+                    &source_path,
+                    &ctx.content,
+                    options,
+                    overlays,
+                    &virtual_ts_options,
+                    &[],
+                )
+                .await?
+        }
+    };
     #[cfg(test)]
     ctx.state
         .record_editor_project_open("canonical", ctx.uri, &ctx.content, &opened);

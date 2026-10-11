@@ -19,11 +19,27 @@ pub(super) async fn open(
     virtual_ts_options: &VirtualTsOptions,
     requested_sources: &[(PathBuf, &str)],
 ) -> Result<CorsaVueVirtualDocument, CorsaBridgeError> {
-    let source_path = source_path.to_path_buf();
-    let content = String::from(content);
-    let overlays = own_sources(overlays);
-    let requested_sources = own_sources(requested_sources);
-    let virtual_ts_options = virtual_ts_options.clone();
+    open_owned(
+        bridge,
+        source_path.to_path_buf(),
+        String::from(content),
+        options,
+        own_sources(overlays),
+        virtual_ts_options.clone(),
+        own_sources(requested_sources),
+    )
+    .await
+}
+
+pub(super) async fn open_owned<Text: AsRef<str> + Send + 'static>(
+    bridge: &CorsaBridge,
+    source_path: PathBuf,
+    content: String,
+    options: CorsaVueVirtualDocumentOptions,
+    overlays: Vec<(PathBuf, Text)>,
+    virtual_ts_options: VirtualTsOptions,
+    requested_sources: Vec<(PathBuf, Text)>,
+) -> Result<CorsaVueVirtualDocument, CorsaBridgeError> {
     let package_routes = bridge.package_route_resolver.clone();
     let editor_session = bridge.editor_session.clone();
     let config = bridge.config.clone();
@@ -102,12 +118,15 @@ fn own_sources(sources: &[(PathBuf, &str)]) -> Vec<(PathBuf, String)> {
         .collect()
 }
 
-fn borrow_sources(sources: &[(PathBuf, String)]) -> Vec<(PathBuf, &str)> {
+fn borrow_sources<Text: AsRef<str>>(sources: &[(PathBuf, Text)]) -> Vec<(PathBuf, &str)> {
     sources
         .iter()
-        .map(|(path, source)| (path.clone(), source.as_str()))
+        .map(|(path, source)| (path.clone(), source.as_ref()))
         .collect()
 }
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod shared_tests;

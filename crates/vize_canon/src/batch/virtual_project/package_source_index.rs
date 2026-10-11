@@ -101,7 +101,7 @@ impl VirtualProject {
 
     pub(crate) fn insert_package_route_binding(&mut self, binding: crate::PackageRouteBinding) {
         let mut facts = empty(false);
-        self.insert_package_route_binding_with_consumption(binding, false, &mut facts)
+        self.insert_package_route_binding_with_consumption::<false>(binding, false, &mut facts)
     }
 
     pub(crate) fn insert_package_route_binding_observed(
@@ -109,11 +109,13 @@ impl VirtualProject {
         binding: crate::PackageRouteBinding,
     ) -> Consumed<()> {
         let mut facts = empty(true);
-        self.insert_package_route_binding_with_consumption(binding, true, &mut facts);
+        self.insert_package_route_binding_with_consumption::<false>(binding, true, &mut facts);
         finish(facts, ())
     }
 
-    pub(in crate::batch::virtual_project) fn insert_package_route_binding_with_consumption(
+    pub(in crate::batch::virtual_project) fn insert_package_route_binding_with_consumption<
+        const OWNERS_ALREADY_DIRTY: bool,
+    >(
         &mut self,
         binding: crate::PackageRouteBinding,
         observe: bool,
@@ -125,9 +127,15 @@ impl VirtualProject {
             observe,
             facts,
         );
-        self.insert_route_binding_inner_with_consumption(binding, observe, facts);
+        self.insert_route_binding_inner_with_consumption::<OWNERS_ALREADY_DIRTY>(
+            binding, observe, facts,
+        );
         self.restore_rebound_package_sources(retained);
-        self.mark_package_shadow_dependents([key]);
+        // A cleared bulk index contains only owners already dirtied by its
+        // completed insertions. Ordinary incremental calls retain propagation.
+        if !OWNERS_ALREADY_DIRTY {
+            self.mark_package_shadow_dependents([key]);
+        }
     }
 
     pub(crate) fn remove_package_route_binding(

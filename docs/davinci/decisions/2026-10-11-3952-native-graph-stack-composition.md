@@ -284,3 +284,46 @@ the original cycles, deadlines, process-tree bounds and all diagnostic
 vectors while investigating the actual ownership cost. The Nix producer
 repair is an independently owned current-main slice; this correction changes
 only the exact lint scope, the three generated ledger rows and this receipt.
+
+Exact `4b03ce4793f6205dd60001bdf0191a735f136f3d` source Check
+`38126755535` and native qualification `38126755504` both succeeded.
+Original n8n run `38126755501` passed all 2,019 nonignored Canon tests,
+the unchanged source filters and strict production Clippy, but the genuine
+editor lifecycle failed. The first 419-node graph preparation took 12.509 s;
+subsequent 1,391-node cold preparations took 82–85 s. The unchanged 10 s
+caller timeout retired each request before publication, so no usable initial
+graph cache was published and the required DELETE TS2307 packet was absent.
+The complete 2,518-member artifact `11697603597` and raw job
+`114432612926` are retained. Source success does not qualify this workload.
+
+The existing editor snapshot producer already retains immutable `Arc<str>`
+revision owners. Its new worker transport instead copied every borrowed
+buffer into `CompactString`, including unchanged unrelated buffers (#3442).
+Carry those original owners into the same retained worker and keep the
+borrowed public facade unchanged. The actual-worker law checks pointee and
+thread identity, complete ordered duplicate overlays/requested sources and
+the original whole prepared project, mappings and catalog. This repairs a
+source-proved copy regression; it does not attribute the earlier RSS delta.
+
+Cold bulk route replacement marks every old key dirty before clearing its
+indexes and marks each new key dirty during insertion. Its repeated manifest
+owner union and final dependent traversal therefore revisit only already-dirty
+keys. Omit those pure operations only in that bulk specialization, retaining
+ordinary insertion, every removal/rebound and all canonical observations.
+Compare the literal original bulk operation against all ordered facts,
+qualification and owner sharing, complete route/source/shadow/link indexes
+and counters through cold, duplicate-key, rebind, negative, removal and actual
+initialized warm-shadow rounds. A single DFS route collector also preserves
+the exact original parent-first borrowed pointer sequence, including deep,
+wide and equal-valued repeated routes. No phase timing improvement is claimed.
+
+Original 400-provider run `38126755571` refused the unreviewed graph footprint
+before building or measuring either shipping source. Add one finite whole-body
+qualification using the existing host-qualification mechanism after source
+review and actual Nix integration: freeze every complete before/after regular
+Git blob, require the full exact footprint, and reject missing, extra, modified
+or differently typed entries. Preserve both sides' original five fixture,
+five LSP protocol and five source-lock bodies. Existing authorities and all
+400 requests, whole diagnostic vectors, invalidation, 10 s deadlines and
+128/384 MiB resource caps remain unchanged. A new coherent original-source
+campaign must qualify the final compiled source; #8520 remains a draft.
