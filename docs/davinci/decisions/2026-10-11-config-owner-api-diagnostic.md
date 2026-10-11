@@ -145,3 +145,25 @@ absent identities remain explicit failures. This grants no authority and admits
 no new syntax. The same twenty-one controls, transcript limits and original
 79/16 packets remain unchanged; the original ownership migration remains
 unqualified. Only one further original paired diagnostic run is authorized.
+
+## Final composed source binding
+
+The final private replay builds unchanged original `7386b2a7` and the actual
+shipping head `5aa218a0`, whose parent is `87a3c7de`, public baseline is
+`aa3d3fdb`, and actual merged foundation is `86330e79`. The entire selected
+285-path delta is closed: the existing 119-body component/issued successor,
+the explicit two-body Carton loader transition, and 164 additional incoming
+bodies. Every additional whole body and Git mode is identical in that merged
+foundation, public baseline, parent and shipping head. The seven actual issued
+producer pairs, including four absent-new bodies, remain explicit; all original
+90/51/3/4, null, owner, loader and issued manifests retain their authority.
+The independent ordinary public-baseline-to-head classifier must also pass.
+
+A separate literal helper list binds the collector, all imported source
+classifiers and bounded manifests, original protocol inputs and shipping-build
+recipe to the clean private workflow Git object. The private job requires its
+exact branch and explicit input. This source qualification grants no runtime
+owner authority. The original 37 controls, 79 plus 16 complete packets,
+20-field primary comparison, 64 MiB selected transcript, original line and
+five-second retirement bounds remain required. Buffered unwitnessed execs and
+unknown or disappeared actors still refuse; old failures are not relabelled.

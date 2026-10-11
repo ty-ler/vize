@@ -1,0 +1,34 @@
+[
+  [
+    "vendor/oxc_parser/src/js/function.rs",
+    "eeee983cefa66dcc4bdd3c43a58b4c44cfb98fafe2d874edf3929d9ba372bbb3",
+    "00bc16a3cd65d177998e93755a175ecea2041d68604147bcbea9babfaef86196",
+    "100644",
+    "100644",
+    "actual-merged-main"
+  ],
+  [
+    "vendor/oxc_parser/src/lib.rs",
+    "aa129db50674b442fe1b8b8d8a4e9de4fe909f18fb937524fb19f07405e75001",
+    "470c9bdda6eacfd785448d9b79a13e3963d59e17ff36229497fc5fe18a5991ec",
+    "100644",
+    "100644",
+    "actual-merged-main"
+  ],
+  [
+    "vendor/oxc_parser/src/parser_parse/slot_parameters.rs",
+    null,
+    "3785b444cdef3dc522fca613c4fedd9ee80acc1c30a2be1f90f00ac27335d1b9",
+    null,
+    "100644",
+    "actual-merged-main"
+  ],
+  [
+    "vendor/oxc_parser/src/parser_parse/slot_parameters/tests.rs",
+    null,
+    "07d831a4802f3560369a32bacc9fa936babad25a7a16b5cf57ea2fda8bf0e7b2",
+    null,
+    "100644",
+    "actual-merged-main"
+  ]
+]

@@ -1,0 +1,90 @@
+{
+  "version": 2,
+  "sources": {
+    "baseline": "7386b2a79604ae5b74cb541be911eb19735e68b2",
+    "head": "5aa218a08983e92579c3e7b245d547a57bb3c983",
+    "actualParent": "87a3c7de850b03c91c0d5bd2d8e87095cf7845fb",
+    "actualMain": "86330e79616bd977a4787450c2127b6ed9a73356",
+    "publicBaseline": "aa3d3fdb866bf654a09dde6545384faa74fdd1fc",
+    "compositionBase": "86330e79616bd977a4787450c2127b6ed9a73356"
+  },
+  "trees": {
+    "baseline": "388d45cfa24879bcc3d14739d0a59eac32e811ac",
+    "head": "2e65a68c4469dd1c620c21ef71478426aa55b5aa",
+    "actualParent": "b1224e110d6d10b11e778afc7b57c1e787f64db3",
+    "actualMain": "df762f712fe30c8e6523dac410766dae27f74351",
+    "publicBaseline": "3ca0a92de1aae7fad9578e1eafe3349cec907b3a",
+    "compositionBase": "df762f712fe30c8e6523dac410766dae27f74351"
+  },
+  "originalConfigManifestSHA256": "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc",
+  "originalComponentManifestSHA256": "bcf13b6eaf587647a1ef04068b49c264156967f37278292ff2720bf14ef17686",
+  "nullCompletionManifestSHA256": "8d3677de4d6cfa8e5d1a1a18f4eaf93c3c88fb5c7db454d55adae26968054d30",
+  "componentOwnerManifestSHA256": "6d1bdcc6fa6561384abde169481f4e8b10c16d53d606b9364431bc15b828061d",
+  "originalLoaderManifestSHA256": "a7ff805231e2d318d4bebbbce3926a2bbdb0d4f0d5209c458bedb268ceef66c4",
+  "productionPaths": [
+    "crates",
+    "davinci",
+    "vendor",
+    "npm",
+    "Cargo.toml",
+    "Cargo.lock",
+    ".cargo",
+    ".config",
+    "rust-toolchain.toml"
+  ],
+  "originalProductionBodies": 90,
+  "originalCustodyBodies": 51,
+  "originalHarnessExtensions": 3,
+  "componentProductionBodies": 28,
+  "composedProductionBodies": 119,
+  "originalComponentBodies": 4,
+  "completeProductionDelta": 285,
+  "inheritedBodyParts": [
+    {
+      "file": "warm-type-backed-owner-current-context-part-1.json",
+      "rows": 32
+    },
+    {
+      "file": "warm-type-backed-owner-current-context-part-2.json",
+      "rows": 32
+    },
+    {
+      "file": "warm-type-backed-owner-current-context-part-3.json",
+      "rows": 32
+    },
+    {
+      "file": "warm-type-backed-owner-current-context-part-4.json",
+      "rows": 32
+    },
+    {
+      "file": "warm-type-backed-owner-current-context-part-5.json",
+      "rows": 32
+    },
+    {
+      "file": "warm-type-backed-owner-current-context-part-6.json",
+      "rows": 4
+    }
+  ],
+  "loaderMigration": [
+    [
+      "crates/vize_carton/src/config/loader/js.rs",
+      "65e125669983ed80a259bee73f206becf17ad7cd5f225c8c90ccb87207839386",
+      "df49c1e9b603ce50011ecde9dac116987ab32ee48d3a4b2b4c5818e7e1876f5e",
+      "100644",
+      "100644"
+    ],
+    [
+      "crates/vize_carton/src/config/loader/module-runtime.mjs",
+      null,
+      "a5d247f627f4a45924f61d72253114349b512c23817487b45c0a068db69f7eda",
+      null,
+      "100644"
+    ]
+  ],
+  "inheritedBodies": [],
+  "issuedCompletionManifestSHA256": "ef1ffd5636c09cb276a5f8365c24a899691a161ebc70839713e7a8721a0d7c48",
+  "componentIssuedManifestSHA256": "240c692658ad78ee2207cddc2f5ef3b1d1c4e3ad6d9d003ca0e96e067876cc28",
+  "producerBodies": 7,
+  "originalExecutableBefore": [],
+  "originalExecutableAfter": []
+}

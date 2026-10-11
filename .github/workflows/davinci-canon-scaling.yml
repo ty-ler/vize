@@ -253,7 +253,7 @@ jobs:
             ${{ runner.temp }}/warm-pair/**
           if-no-files-found: warn
   native-owner-diagnostic:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.native_owner_diagnostic == true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/fix/config-owner-shipping-context-8371-20261011' && inputs.native_owner_diagnostic == true }}
     name: Private original native API ownership diagnostic
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 30
@@ -289,7 +289,7 @@ jobs:
           key: davinci-canon-scaling
           cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}-private-owner-diagnostic-400
       - name: Verify closed native protocol witness refusal controls
-        run: vp exec node --test tests/tooling/warm-type-backed-owner-syscalls.test.ts tests/tooling/warm-type-backed-owner-kernel-string.test.ts tests/tooling/warm-type-backed-owner-lifecycle.test.ts tests/tooling/warm-type-backed-owner-write-epochs.test.ts
+        run: vp exec node --test tests/tooling/warm-type-backed-owner-syscalls.test.ts tests/tooling/warm-type-backed-owner-kernel-string.test.ts tests/tooling/warm-type-backed-owner-lifecycle.test.ts tests/tooling/warm-type-backed-owner-write-epochs.test.ts tests/tooling/warm-type-backed-owner-current-context.test.ts
       - name: Pin original and actual reviewed production/helper/input bodies
         run: vp exec node tests/performance/support/warm-type-backed-owner-diagnostic.ts prepare
       - name: Build unchanged original source with the existing shipping custody recipe
