@@ -51,7 +51,8 @@ export class NativeProtocolStream {
       selected = this.pending.get(thread)!;
       this.pending.delete(thread);
     } else if (body.startsWith("write(")) {
-      const encoded = body.match(/^write\(\d+<(.+)>, /u)?.[1];
+      // The kernel descriptor ends before the quoted payload; TypeScript itself can contain `>, `.
+      const encoded = body.match(/^write\(\d+<(.+?)>, "/u)?.[1];
       assert.ok(encoded, "undecorated or unknown writes cannot qualify");
       const descriptor = kernelDescriptor(encoded);
       if (/^pipe:\[\d+\]$/u.test(descriptor)) selected = true;

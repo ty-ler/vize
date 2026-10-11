@@ -118,3 +118,13 @@ metadata now retains counters and actual observer retirement state. All twenty-o
 local controls pass; fresh actual capture and the original migration remain
 unqualified. The encoding contract is the pinned
 [strace 6.8 implementation](https://github.com/strace/strace/blob/v6.8/src/util.c#L996).
+
+Actual `bc2ee224` run `38118281567` passed both unchanged shipping builds but
+refused a descriptor after one original row and zero supplemental outcomes.
+The retained partial scope contains 19,311,136 incoming bytes and 411,134
+selected bytes across 96 writes; shutdown, native retirement and wire closure
+passed. The greedy descriptor matcher consumed the real TypeScript payload's
+`>, ` token. It now stops at the kernel descriptor's delimiter before the
+quoted payload. The existing complete-byte law includes that original generic
+token and fails before this correction. All twenty-one controls pass afterward;
+original limits, whole packets and unresolved migration authority remain exact.

@@ -70,7 +70,8 @@ await test("compact kernel encoding retains complete API messages and original r
     method: "getSourceFile",
     params: {
       file: "/fixture/Comp0.vue.ts",
-      source: '/** 日本語 \\ */\nconst name = "unchanged";',
+      source:
+        '/** 日本語 \\ */\nconst name = "unchanged";\ntype Witness<T> = [Pick<T, keyof T>, T];',
     },
   };
   const answer = { jsonrpc: "2.0", id: 9, result: original.params };
