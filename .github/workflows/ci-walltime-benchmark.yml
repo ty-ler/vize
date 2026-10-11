@@ -8,7 +8,7 @@ on:
       component:
         description: Compare serial and concurrent execution on the same source
         type: choice
-        options: [all, js, docs, rust, native, n8n-baseline]
+        options: [all, js, docs, rust, native, n8n-baseline, array-timeout]
         default: all
 permissions: { contents: read }
 concurrency:
@@ -42,6 +42,78 @@ jobs:
           path: |
             target/ci-walltime/
             target/oxlint-original-project-transport/
+          if-no-files-found: error
+          retention-days: 14
+  array-timeout:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.component == 'array-timeout' }}
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 35
+    permissions: { contents: read, actions: read }
+    env:
+      CARGO_BUILD_JOBS: "12"
+      RUST_TEST_THREADS: "4"
+      VIZE_NUXT_CONFIG_ITERATIONS: "100"
+      VIZE_TEST_REQUIRE_TSGO: "1"
+      OBSERVER_DRIVER_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with: { ref: "${{ github.sha }}" }
+      - name: Retain the private observer driver outside the candidate checkout
+        run: cp tools/support/compat/github/native-array-timeout-diagnostic.py "$RUNNER_TEMP/native-array-timeout-diagnostic.py"
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with: { ref: c395492c78117aae12e764235c85fa2e106a53e3 }
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+        with: { toolchain: "1.99.0" }
+      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
+        with: { wild-version: "0.9.0" }
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with: { node-version-file: package.json, cache: true, run-install: true }
+      - uses: taiki-e/install-action@184183c2401be73c3bf42c2e61268aa5855379c1 # v2
+        with: { tool: cargo-nextest@0.9.146 }
+      - name: Select existing cache keys without mounting or registering a writer
+        id: cache-policy
+        env:
+          VIZE_CACHE_RUNNER_ENVIRONMENT: ${{ runner.environment }}
+          VIZE_CACHE_RUNNER_OS: ${{ runner.os }}
+          VIZE_CACHE_RUNNER_ARCH: ${{ runner.arch }}
+          VIZE_CACHE_ROLE: clippy-test
+          VIZE_CACHE_SUFFIX: ${{ runner.os }}-${{ runner.arch }}
+          VIZE_CACHE_TARGET_PATH: target
+        run: node .github/actions/setup-rust-sticky-cache/cache-policy.mjs
+      - uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        with:
+          path: ~/.cargo/registry
+          key: ${{ steps.cache-policy.outputs.registry-key }}
+      - uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        with:
+          path: ~/.cargo/git
+          key: ${{ steps.cache-policy.outputs.git-key }}
+      - uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        with:
+          path: target
+          key: ${{ steps.cache-policy.outputs.target-key }}
+          restore-keys: ${{ steps.cache-policy.outputs.target-restore }}
+      - name: Install external process observers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends strace
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: rust-test-archive-38109119091-c395492c78117aae12e764235c85fa2e106a53e3
+          path: .artifacts/rust-test-archive
+          github-token: ${{ github.token }}
+          run-id: "38109119091"
+          repository: ${{ github.repository }}
+          digest-mismatch: error
+      - name: Observe the exact original array law and its test-only markers
+        run: python3 "$RUNNER_TEMP/native-array-timeout-diagnostic.py"
+      - name: Preserve complete original and observed source, runtime, packets and controls
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-array-timeout-${{ github.run_id }}-${{ github.sha }}
+          path: ${{ runner.temp }}/native-array-timeout/
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
   docs:
