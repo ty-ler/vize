@@ -9,6 +9,7 @@ import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
 import { allowed } from "./warm-type-backed-production-paths.ts";
 import { qualifyProjectConfigLoaderHost } from "./warm-type-backed-project-config-loader-host.ts";
 import { qualifyIssuedCompletionHost } from "./warm-type-backed-issued-completion-host.ts";
+import { qualifyComponentContextHost } from "./warm-type-backed-component-context-host.ts";
 import {
   driverRoot,
   git,
@@ -126,6 +127,11 @@ if (process.argv[2] === "prepare") {
         gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
       ))
     : null;
+  const componentContextHost = !cut
+    ? qualifyComponentContextHost(production, allowed, (side, file) =>
+        gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+      )
+    : null;
   if (!cut) {
     for (const file of production)
       assert.ok(
@@ -133,7 +139,8 @@ if (process.argv[2] === "prepare") {
           pathHostMove?.files.includes(file) ||
           timingHostMove?.files.includes(file) ||
           defaultMigrationHost?.files.includes(file) ||
-          projectConfigHost?.files.includes(file),
+          projectConfigHost?.files.includes(file) ||
+          componentContextHost?.files.includes(file),
         `unqualified production delta: ${file}`,
       );
   }
@@ -178,6 +185,7 @@ if (process.argv[2] === "prepare") {
         timingHostMove,
         defaultMigrationHost,
         projectConfigHost,
+        componentContextHost,
         afterRoot,
         driverSource: driver,
         authority: cut
@@ -218,7 +226,7 @@ if (process.argv[2] === "prepare") {
           ? "Literal published v0.433 and root-frozen release cut; complete changed Git-entry manifest, independent driver, identical fresh ci builds, original400 and one recorded runtime"
           : harnessOnly
             ? "Same production source; closed reviewed harness-only delta and unchanged original inputs/locks. Qualification only, no performance or source-effect gain."
-            : "Actual common ancestor and current source, only owned prepared-surface, readiness-ack, shared editor reference-options, document-batch transfer, streamed workspace-symbol producer, event navigation/rename ownership or exact authenticated path-host move delta or exact authenticated timing-observer host move delta or complete authenticated default-migration slice or complete authenticated project-config slice; one worker, identical release recipe, original400 inputs and current locked runtime",
+            : "Actual common ancestor and current source, only owned prepared-surface, readiness-ack, shared editor reference-options, document-batch transfer, streamed workspace-symbol producer, event navigation/rename ownership or exact authenticated path-host move delta or exact authenticated timing-observer host move delta or complete authenticated default-migration slice or complete authenticated project-config slice or complete authenticated component-context slice; one worker, identical release recipe, original400 inputs and current locked runtime",
       },
       null,
       2,
