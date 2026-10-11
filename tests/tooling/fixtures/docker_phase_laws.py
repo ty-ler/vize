@@ -297,10 +297,21 @@ class DockerPhaseLaws(unittest.TestCase):
             subprocess.run(["git", "-c", "user.name=Law", "-c", "user.email=law@example.invalid",
                             "commit", "--quiet", "-m", "law"], cwd=root, check=True)
             head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root).decode().strip()
-            receipt = root / "target/ci/vize.differential-build.json"
-            receipt.parent.mkdir(parents=True)
-            receipt.write_text('{"source":"frozen"}')
             import hashlib
+            members = []
+            for name, data, mode in (("target/ci/vize", b"inert cli", 0o755),
+                                     ("target/ci/vize.differential-build.json", b'{"source":"frozen"}', 0o644),
+                                     ("target/ci/examples/cli_build_result_oracle", b"inert oracle", 0o755)):
+                member = root / name
+                member.parent.mkdir(parents=True, exist_ok=True)
+                member.write_bytes(data)
+                member.chmod(mode)
+                members.append({"path": name, "bytes": len(data), "mode": mode,
+                                "sha256": hashlib.sha256(data).hexdigest()})
+            receipt = root / "target/ci/vize.source-build.json"
+            receipt.write_text(json.dumps({"identity": {"sourceRevision": head,
+                "sourceTree": subprocess.check_output(["git", "rev-parse", "HEAD^{tree}"], cwd=root).decode().strip(),
+                "runId": "123", "runAttempt": "1"}, "members": members}))
             env = {"GITHUB_SHA": head, "VIZE_SOURCE_CLI_RECEIPT_SHA256": hashlib.sha256(receipt.read_bytes()).hexdigest(),
                    "GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "1", "GITHUB_JOB": "tooling"}
             with patch.dict(os.environ, env):
@@ -308,7 +319,9 @@ class DockerPhaseLaws(unittest.TestCase):
                                cwd=root, check=True)
                 self.assertFalse((helper / "__pycache__").exists())
                 self.assertEqual(subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=root).decode(),
-                                 "target/ci-docker-phase/123-1-tooling/checkout.json\ntarget/ci/vize.differential-build.json\n")
+                                 "target/ci-docker-phase/123-1-tooling/checkout.json\n" +
+                                 "target/ci/examples/cli_build_result_oracle\ntarget/ci/vize\n" +
+                                 "target/ci/vize.differential-build.json\ntarget/ci/vize.source-build.json\n")
                 checkout = packets.checkout_identity(root)
                 self.assertEqual(packets.source_identity(root, checkout)["head"], head)
                 declaration.write_text("actual generated declaration")

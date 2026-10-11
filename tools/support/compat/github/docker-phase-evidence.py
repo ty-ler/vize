@@ -109,7 +109,7 @@ def finish(root):
             any(stream["counters"][key] for key in ("refused", "inspectionUnavailable", "inspectionQueueFull"))) else "observed-containers-complete"
         after = source_identity(root, configuration["checkout"]["identity"])
         receipt["sourceAfter"] = after
-        for key in ("head", "tree", "cliReceiptSha256", "cliReceipt", "generatedDeclaration", "trackedChanges"):
+        for key in ("head", "tree", "cliReceiptSha256", "cliReceipt", "cliMembers", "differentialReceipt", "generatedDeclaration", "trackedChanges"):
             if after[key] != configuration["source"][key]:
                 raise ValueError("Source or authenticated producer identity changed")
         if stream["status"] != "observed" or stream["counters"]["observed"] == 0:

@@ -86,6 +86,31 @@ Received event frames and privileged query receipts each have a 4096 bound.
 Authored permission, partial ancestry, role, timeout, output and birth controls
 precede a genuine successor qualification. No kernel or process mutation occurs.
 
+Fresh-main source `5de93232`, Check `38181826501`, passed shard three's
+original 1,013 tests with zero failures. Its additional diagnostic refused
+at source custody before ownership. The authenticated artifact `11717639006`
+retains the whole 1,219-byte ZIP, CRC validation and SHA
+`0e395aa948cf1bc8548563f44df52b3d4afdebe7119b5b2646625fdfef9ea320`.
+The original raw job log `114596280160` is 674,565 bytes, SHA
+`94c5d3cc7ba59aa9d8afe814edf474cedb0c873539bf21b3c62be4d05a6b14ec`.
+
+The observer had compared the producer's transport-envelope digest with the
+different differential build receipt. The existing producer hashes
+`source-cli.json`; its unchanged consumer restores that envelope to
+`target/ci/vize.source-build.json`. Authenticate those actual bytes, source,
+tree, run and attempt. Stream and compare every original CLI, differential
+receipt and SFC oracle member against its complete declared body, path and
+mode, retaining the separate differential receipt unchanged. Before/after
+observation must preserve every member. Byte totals and elapsed time record
+this read overhead. No provider or producer recipe changes.
+
+A real inert-byte fixture now invokes the existing `packSourceCli` and
+`restoreSourceCli`, then the actual Python observer. It failed on the original
+digest comparison and passes after the fix. Wrong receipt kind, run attempt,
+same-size preserved-time member corruption, permissions and symlinks refuse;
+the original whole-source, staged-declaration and no-bytecode controls remain.
+This authenticates transport wiring, not a Rust build or live Docker capture.
+
 TODO: capture one qualified exact-source four-shard run, retain the original
 outcome and source/provider receipts, and attribute create/start/guest/cleanup
 costs only when the actual events prove them. No causal repair or CI speed gain

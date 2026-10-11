@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 import time
 
@@ -184,19 +185,60 @@ def checkout_identity(root):
             "durationSeconds": time.monotonic() - started}
 
 
+def cli_members(root, producer):
+    expected = ("target/ci/vize", "target/ci/vize.differential-build.json",
+                "target/ci/examples/cli_build_result_oracle")
+    members, differential = [], None
+    for name in expected:
+        path = root / name
+        before = path.lstat()
+        if not stat.S_ISREG(before.st_mode) or path.resolve(strict=True) != path:
+            raise ValueError("Expected original physical producer member")
+        digest, size, receipt = hashlib.sha256(), 0, bytearray()
+        with path.open("rb") as reader:
+            while True:
+                chunk = reader.read(1024 * 1024)
+                if not chunk:
+                    break
+                digest.update(chunk)
+                size += len(chunk)
+                if name == expected[1]:
+                    receipt.extend(chunk)
+        after = path.lstat()
+        if ((before.st_dev, before.st_ino, before.st_size, before.st_mode, before.st_mtime_ns) !=
+                (after.st_dev, after.st_ino, after.st_size, after.st_mode, after.st_mtime_ns)):
+            raise ValueError("Producer member changed during whole-body observation")
+        members.append({"path": name, "bytes": size, "mode": stat.S_IMODE(after.st_mode),
+                        "sha256": digest.hexdigest()})
+        if receipt:
+            differential = json.loads(receipt)
+    if members != producer["members"] or [member["mode"] for member in members] != [0o755, 0o644, 0o755]:
+        raise ValueError("Whole producer member body, mode or inventory differs")
+    return members, differential
+
+
 def source_identity(root, checkout):
     started = time.monotonic()
     def git(*args):
         return subprocess.check_output(["git", "--no-replace-objects"] + list(args), cwd=root).decode().rstrip("\n")
-    receipt = root / "target/ci/vize.differential-build.json"
+    receipt = root / "target/ci/vize.source-build.json"
+    if not stat.S_ISREG(receipt.lstat().st_mode) or receipt.resolve(strict=True) != receipt or stat.S_IMODE(receipt.stat().st_mode) != 0o644:
+        raise ValueError("Expected original physical transport envelope")
     content = receipt.read_bytes()
     digest = hashlib.sha256(content).hexdigest()
     expected = os.environ.get("VIZE_SOURCE_CLI_RECEIPT_SHA256")
     if not expected or digest != expected:
         raise ValueError("Authenticated same-run producer receipt is required")
+    producer = json.loads(content)
     source = git("rev-parse", "HEAD")
     if source != os.environ.get("GITHUB_SHA") or source != checkout["head"] or git("rev-parse", "HEAD^{tree}") != checkout["tree"]:
         raise ValueError("Actual source differs from authenticated clean checkout")
+    identity = producer["identity"]
+    if (identity["sourceRevision"] != source or identity["sourceTree"] != checkout["tree"] or
+            identity["runId"] != os.environ.get("GITHUB_RUN_ID") or
+            identity["runAttempt"] != os.environ.get("GITHUB_RUN_ATTEMPT")):
+        raise ValueError("Actual transport source or run differs")
+    members, differential = cli_members(root, producer)
     # Existing native builds regenerate this declaration; every other tracked/staged delta refuses.
     changes = git("status", "--porcelain", "--untracked-files=no").splitlines()
     if changes not in ([], [" M npm/native/index.d.ts"]):
@@ -208,9 +250,11 @@ def source_identity(root, checkout):
     if declaration.stat().st_mode != checkout["generatedDeclarationBefore"]["mode"]:
         raise ValueError("Generated declaration file mode changed")
     return {"head": source, "tree": git("rev-parse", "HEAD^{tree}"),
-            "cliReceiptSha256": digest, "cliReceipt": json.loads(content),
+            "cliReceiptSha256": digest, "cliReceipt": producer, "cliMembers": members,
+            "differentialReceipt": differential,
             "generatedDeclaration": {"path": "npm/native/index.d.ts", "bytes": len(generated),
                                      "mode": declaration.stat().st_mode,
                                      "sha256": hashlib.sha256(generated).hexdigest()},
             "trackedChanges": changes,
-            "bytesHashed": len(content), "durationSeconds": time.monotonic() - started}
+            "bytesHashed": len(content) + len(generated) + sum(member["bytes"] for member in members),
+            "durationSeconds": time.monotonic() - started}
