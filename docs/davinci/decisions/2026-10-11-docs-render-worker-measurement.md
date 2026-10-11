@@ -83,3 +83,78 @@ are required before proposing four production workers. The unchanged-job-time
 scheduling projection of approximately 1,444 seconds is not a measurement.
 The All Rules readability/index change remains separately owned and must
 measure its own actual source, complete manifest and preserved obligations.
+
+## Terminal paired result
+
+[Original measurement 38111126388](https://github.com/ubugeeei-prod/vize/actions/runs/38111126388)
+completed both original full browser arms on measured source
+`4040e6b96a15d50680fa0dd93af272fe6cbd7276`. Both passed all 53 ordered routes
+and 106 desktop/mobile jobs. Their complete built-site inventory SHA256 is
+`ac339e0fcce783a6aa4a2dd5cee0c82ae34c5a765807c12edc6c3a3bba3dd3ce`.
+The original raw artifact is `11693388690` (1,542,500,609 bytes), provider digest
+`sha256:ad1aac58653e3147f8dfe78f9d71b79ca2e92fc94888c9f23c0f34c37efd2c6e`.
+The source-built site was reused in fixed sequential two-then-four order; this
+is not a repeated or reversed-order benchmark.
+
+| Actual resource observation             |         Two workers |        Four workers |
+| --------------------------------------- | ------------------: | ------------------: |
+| Wrapper elapsed seconds                 |           2,946.102 |           2,123.218 |
+| Original renderer elapsed seconds       |           2,945.727 |           2,122.815 |
+| Peak summed process-tree RSS            | 4,568,588,288 bytes | 6,584,565,760 bytes |
+| Average observed CPU cores, lower bound |               9.293 |               9.522 |
+| Complete raw process samples            |              13,789 |               9,924 |
+| Sampler CPU seconds                     |             343.209 |             251.888 |
+
+Every original raw sample was independently parsed to reproduce the emitted
+sample count, maximum process count, peak RSS and last-observed identity CPU-tick
+sum. Elapsed time is 27.93% lower and sampled peak summed RSS is 44.13% higher.
+Sampled CPU is not exact process-tree accounting, and GNU time's waited CPU
+omits the browser's detached child work here; its low CPU percentage must not
+be reported as whole-browser utilization. Summed RSS counts shared pages per
+process. The sampler's own CPU is recorded separately. This result cannot be
+transferred to a different catalogue, source, manifest or execution order.
+
+[Strict receiver 38116138770](https://github.com/ubugeeei-prod/vize/actions/runs/38116138770)
+uses verifier `f8911eb540a92920581d28ed72656a751af895ad`, checks out the measured
+source, authenticates all original PNG/HTML hashes and retains the complete
+HTML canonicalization journal before rejecting equivalence. Its retained
+receipt SHA256 is
+`af8a38eecadcfac1246873462d5055cab2c7ed2681ae323666ffa911caca86af`;
+receiver artifact `11693293831` has provider digest
+`sha256:da442aab6e756f310fac3ddaf7147f8eaa411d9337fa5e2b459174a38a3620ed`.
+Both the original comparator and corrected strict receiver are terminal red.
+The original navigation receipt has 1,104 distinct PNG carriers per arm;
+218 have different SHA256 values across 20 route/device jobs. Every remaining
+navigation field matches after the controlled worker count and authenticated
+transport-origin canonicalization. This includes the whole packet/code/link,
+font verdict and layout rectangles; PNG differences are still failed acceptance.
+
+Read-only decoding of two selected original PNG pairs checked their receipt
+SHA256, every PNG chunk CRC and complete noninterlaced RGB pixels:
+
+- `000-home-desktop.png` differs at 476,478 pixels, confined to the initial
+  1,440 by 960 viewport of its 1,440 by 2,976 full screenshot. Maximum RGB
+  channel difference is 7. The exact source has an infinite JavaScript/WebGL
+  animation driven by `THREE.Clock` and `u_time`; the existing CSS/Web Animations
+  capture setting does not freeze that clock. The viewport-shaped difference
+  supports this candidate, without proving every mismatch has that cause.
+- `016-rules-all-desktop-005.png` differs at only 17 pixels in two short row
+  bands of the 1,440 by 8,192 tile. Maximum RGB channel difference is 1.
+  Content-page backgrounds are opaque, so this is a separate raster pattern;
+  it is not established as a worker regression or as WebGL animation.
+
+These are actual decoded pixel differences, not merely PNG metadata or filter
+encoding. The pixel-classification report SHA256 is
+`419d3826e189e98280ec7e3745787ef7f12bd72340506e0cbc45c3fd78a61b48`.
+Selective range extraction retained original carriers and ZIP CRCs; the full
+original ZIP was not downloaded or independently hashed locally. No tolerance,
+mask, source omission or acceptance replacement is introduced.
+
+**Decision:** retain production two workers and do not open a four-worker
+promotion PR. The useful measured elapsed-time reduction does not satisfy the
+required complete PNG equivalence. The next bounded investigation is an
+unchanged two-worker repeated-capture control for the two representative routes
+on authenticated generated inputs, followed by coordination with the Docs owner
+for any actual animation or raster fix. No new full-hour browser replay is
+needed to classify this first control. Any later production promotion still
+requires terminal complete proof on its own actual current source and manifest.
