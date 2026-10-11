@@ -264,6 +264,22 @@ impl NativeFacts {
         self,
         value: T,
     ) -> Consumed<T> {
+        // Diagnostic-only immutable counting in a separate opted-in process.
+        // The original facts, bucket index and qualification remain untouched.
+        if std::env::var("VIZE_DIAGNOSTIC_NATIVE_FACT_BUCKETS").is_ok_and(|value| value == "1") {
+            let started = std::time::Instant::now();
+            let report = population::capture(&self.stamps, &self.by_hash);
+            tracing::info!(target: "vize_editor_preparation",
+                event = "diagnostic_native_fact_buckets", pid = std::process::id(),
+                observe = self.observe, qualified = self.qualified,
+                full_facts = report.full_facts, full_buckets = report.full_buckets,
+                full_max = report.full_max, full_pairs = %report.full_pairs,
+                suffix_facts = report.suffix_facts, suffix_buckets = report.suffix_buckets,
+                suffix_max = report.suffix_max, suffix_pairs = %report.suffix_pairs,
+                suffix_over_eight_buckets = report.suffix_over_eight_buckets,
+                suffix_over_eight_facts = report.suffix_over_eight_facts,
+                complete = report.complete, elapsed_us = %started.elapsed().as_micros());
+        }
         Consumed {
             value,
             stamps: self.stamps,
@@ -276,3 +292,5 @@ impl NativeFacts {
 mod tests;
 
 mod retention;
+
+mod population;
