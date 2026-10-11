@@ -117,13 +117,20 @@ fn collect_sources_filtered<Text: AsRef<str>>(
     mut read: impl FnMut(&Path) -> Option<Text>,
     filter: impl Fn(&Url) -> bool,
 ) -> Vec<SymbolInformation> {
+    let first = crate::allocation_trace::first_collector();
+    let _allocation_trace = crate::allocation_trace::span("collector", None);
     uris.extend(open.keys().cloned());
     uris.sort_by(|left, right| left.as_str().cmp(right.as_str()));
     uris.dedup();
     let mut symbols = Vec::new();
     for uri in uris {
+        let _source_trace =
+            first.then(|| crate::allocation_trace::span("source", Some(uri.as_str())));
         let before = symbols.len();
         if let Some(source) = open.get(&uri) {
+            if first {
+                crate::allocation_trace::loaded(uri.as_str(), source.as_ref().len());
+            }
             WorkspaceSymbolsService::collect_source(
                 &uri,
                 source.as_ref(),
@@ -142,6 +149,9 @@ fn collect_sources_filtered<Text: AsRef<str>>(
             continue;
         }
         let Some(source) = read(&path) else { continue };
+        if first {
+            crate::allocation_trace::loaded(uri.as_str(), source.as_ref().len());
+        }
         WorkspaceSymbolsService::collect_source(&uri, source.as_ref(), query_lower, &mut symbols);
         if symbols.len() > before && !filter(&uri) {
             symbols.truncate(before);

@@ -59,6 +59,7 @@
 //! vize_maestro::serve_blocking().unwrap();
 //! ```
 
+mod allocation_trace;
 pub mod document;
 pub mod ide;
 pub mod runtime;

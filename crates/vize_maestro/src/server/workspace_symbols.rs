@@ -16,6 +16,7 @@ pub(super) async fn search(
     server: &MaestroServer,
     params: &WorkspaceSymbolParams,
 ) -> Result<Option<Vec<SymbolInformation>>> {
+    let _allocation_trace = crate::allocation_trace::query();
     #[cfg(not(feature = "native"))]
     if !server.state.lsp_features().workspace_symbols {
         return Ok(None);
