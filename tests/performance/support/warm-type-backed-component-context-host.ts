@@ -1,21 +1,11 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import fs from "node:fs";
 import { componentContextManifest as manifest } from "./warm-type-backed-component-context-manifest.ts";
+import { qualifyComponentContextLoaderContext } from "./warm-type-backed-component-context-loader-host.ts";
+import { projectConfigManifest as parent } from "./warm-type-backed-project-config-manifest.ts";
 
 type BodyDigest = (side: "before" | "after", file: string) => string | null;
 type Pair = [string, string | null, string];
-const parent = JSON.parse(
-  fs.readFileSync(
-    new URL("./warm-type-backed-project-config-manifest.json", import.meta.url),
-    "utf8",
-  ),
-) as {
-  originalSource: string;
-  files: Pair[];
-  preservedBodies: Array<[string, string] | [string, string, string]>;
-  harnessExtensions?: Pair[];
-};
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const manifestSHA256 = hash(manifest);
 assert.equal(manifestSHA256, "bcf13b6eaf587647a1ef04068b49c264156967f37278292ff2720bf14ef17686");
@@ -112,6 +102,8 @@ export function qualifyComponentContextHost(
       )
     )
       continue;
+    const loaderContext = qualifyComponentContextLoaderContext(digest);
+    if (!loaderContext) continue;
     return {
       authority: composed
         ? "complete-project-config-and-component-context-slices"
@@ -126,6 +118,7 @@ export function qualifyComponentContextHost(
       inheritedCustodyBodies: manifest.inheritedCustodyBodies.length,
       inheritedHarnessExtensions: manifest.inheritedHarnessExtensions.length,
       originalComponentBodies: manifest.originalComponentBodies.length,
+      loaderContext,
       files,
     };
   }

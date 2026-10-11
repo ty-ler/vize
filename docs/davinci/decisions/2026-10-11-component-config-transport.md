@@ -143,3 +143,14 @@ queue, signed merge and genuinely included installed release acceptance remain
 unfinished. This bounded transport does not close the full 51-rule, editor,
 type-aware lint or performance requirements of n8n adoption. Upstream stays
 read-only.
+
+The final local replay uses configuration parent `8cf3babc17c75642895fd5a82771b61c1052ffc2`
+and its bounded manifest reader without changing the original logical
+`433e2847` authority or this child's `bcf13b6e` 28/113-body authority. After
+the complete child or composed source qualifies, the distinct child loader
+helper additionally binds the exact `a7ff8052` two-body loader context. Missing,
+mixed, foreign or changed loader bodies refuse; a null parent-only result
+requires the complete matcher successor. Source/refusal laws and local lint
+are preparation evidence. Original selected-owner native packets, protected
+full gates, the unchanged 128 MiB cap and a genuinely included public release
+remain required; the deferred scratch-arena patch is excluded.

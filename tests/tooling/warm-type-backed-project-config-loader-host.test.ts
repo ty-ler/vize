@@ -61,15 +61,41 @@ await test("original whole90/51/3 authority retains its exact legacy loader cont
   assert.equal(result.loaderContext.authority, "original-reviewed-loader");
 });
 
-await test("every current config, corpus and loader body matches its complete pinned authority", () => {
-  const result =
-    qualifyProjectConfigLoaderHost(production, allowed, actualDigest) ??
+await test("every current config, corpus and loader body matches its complete pinned authority", async () => {
+  const result = qualifyProjectConfigLoaderHost(production, allowed, actualDigest) ??
     qualifyIssuedCompletionHost(issuedCompletionProduction, allowed, actualDigest) ??
     qualifyCurrentConfigReviewHost(allowed, actualDigest);
-  assert.ok(result);
-  assert.equal(result.loaderContext.authority, "complete-composed-vite-loader");
-  assert.equal(result.loaderContext.completeBodyPairs.length, 2);
-  assert.equal(result.harnessExtensions.length, 3);
+  if (result) {
+    assert.equal(result.loaderContext.authority, "complete-composed-vite-loader");
+    assert.equal(result.loaderContext.completeBodyPairs.length, 2);
+    assert.equal(result.harnessExtensions.length, 3);
+    return;
+  }
+  // A matcher successor must qualify every original body and its complete
+  // production union before the same two inherited loader bodies can qualify.
+  const { componentContextManifest } =
+    await import("../performance/support/warm-type-backed-component-context-manifest.ts");
+  const { qualifyComponentContextHost } =
+    await import("../performance/support/warm-type-backed-component-context-host.ts");
+  const componentBefore = new Map(
+    componentContextManifest.componentBodies.map(([file, , , before]) => [file, before]),
+  );
+  const composed = [...new Set([...production, ...componentBefore.keys()])].toSorted();
+  const successor = qualifyComponentContextHost(composed, allowed, (side, file) =>
+    side === "before"
+      ? (actualDigest(side, file) ?? componentBefore.get(file) ?? null)
+      : actualDigest(side, file),
+  );
+  assert.ok(successor);
+  assert.equal(successor.authority, "complete-project-config-and-component-context-slices");
+  assert.equal(successor.files.length, 113);
+  assert.equal(successor.completeComponentBodies, 28);
+  assert.equal(successor.inheritedProductionBodies, 90);
+  assert.equal(successor.inheritedCustodyBodies, 51);
+  assert.equal(successor.inheritedHarnessExtensions, 3);
+  assert.equal(successor.originalComponentBodies, 4);
+  assert.equal(successor.loaderContext.authority, "complete-composed-vite-loader");
+  assert.equal(successor.loaderContext.completeBodyPairs.length, 2);
 });
 
 await test("the loader context cannot excuse any original configuration, corpus or extension body drift", () => {
