@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const path = require("node:path");
+const fs = require("node:fs");
 const vscode = require("vscode");
 const { recommendedInitializationOptions } = require("./extension-host-fixtures.cjs");
 const {
@@ -120,17 +121,31 @@ async function runExistingConfigurationContentChangeSmoke() {
     assertInitializationOptions(entries, options);
     const previousInitializations = initializeMessages(entries).length;
 
-    await vscode.workspace.fs.writeFile(uri, Buffer.from('{"compilerOptions":{"strict":true}}\n'));
-    entries = await waitForLogEntries(
-      logPath,
-      (next) => initializeMessages(next).length > previousInitializations,
-      `${filename} existing content edit restarts without native typecheck watchers`,
-    );
-    assert.equal(initializeMessages(entries).length, previousInitializations + 1);
-    assert.deepEqual(
-      initializeMessages(entries).map((message) => message.params.initializationOptions),
-      Array.from({ length: previousInitializations + 1 }, () => options),
-    );
+    const packetPrefix = path.join(path.dirname(logPath), "existing-config-events", filename);
+    fs.mkdirSync(path.dirname(packetPrefix), { recursive: true });
+    const retain = (stage) => {
+      fs.copyFileSync(logPath, `${packetPrefix}.${stage}.jsonl`);
+      fs.copyFileSync(uri.fsPath, `${packetPrefix}.${stage}.source.txt`);
+    };
+    retain("before");
+    try {
+      await vscode.workspace.fs.writeFile(
+        uri,
+        Buffer.from('{"compilerOptions":{"strict":true}}\n'),
+      );
+      entries = await waitForLogEntries(
+        logPath,
+        (next) => initializeMessages(next).length > previousInitializations,
+        `${filename} existing content edit restarts without native typecheck watchers`,
+      );
+      assert.equal(initializeMessages(entries).length, previousInitializations + 1);
+      assert.deepEqual(
+        initializeMessages(entries).map((message) => message.params.initializationOptions),
+        Array.from({ length: previousInitializations + 1 }, () => options),
+      );
+    } finally {
+      retain("after");
+    }
     await disableVizeAndWaitForShutdown(logPath);
     await vscode.workspace.fs.delete(uri);
   }

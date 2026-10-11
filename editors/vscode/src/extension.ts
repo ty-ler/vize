@@ -53,6 +53,7 @@ let activeInitializationOptions: LspInitializationOptions = {};
 let currentStatus: VizeStatus = "disabled";
 let currentStatusDetail = "";
 let configurationSyncTimer: ReturnType<typeof setTimeout> | undefined;
+let configurationSyncGeneration = 0;
 let suppressConfigurationSync = false;
 const workspaceLspConfig = new WorkspaceLspConfigDiscovery(WORKSPACE_LSP_CONFIG_FILES);
 
@@ -154,12 +155,15 @@ function scheduleClientSync(context: ExtensionContext, reason: string): void {
 }
 
 async function syncClientToConfiguration(context: ExtensionContext, reason: string): Promise<void> {
+  const generation = ++configurationSyncGeneration;
   await workspaceLspConfig.refresh();
+  if (generation !== configurationSyncGeneration) return;
   let config = workspace.getConfiguration("vize");
   let enabled = shouldStartFromConfiguration(config, workspaceLspConfig.hasConfig);
 
   if (!enabled) {
     await maybeOfferInitialSetup(context, config);
+    if (generation !== configurationSyncGeneration) return;
     config = workspace.getConfiguration("vize");
     enabled = shouldStartFromConfiguration(config, workspaceLspConfig.hasConfig);
 
@@ -168,6 +172,7 @@ async function syncClientToConfiguration(context: ExtensionContext, reason: stri
         updateStatusBar("starting", "Stopping language server");
         outputChannel.appendLine(`Stopping Vize language server (${reason}; extension disabled).`);
         await stopClient();
+        if (generation !== configurationSyncGeneration) return;
       } else {
         outputChannel.appendLine("Vize is disabled. Set vize.enable to true to start the server.");
       }
@@ -186,9 +191,10 @@ async function syncClientToConfiguration(context: ExtensionContext, reason: stri
     updateStatusBar("starting", "Restarting language server");
     outputChannel.appendLine(`Restarting Vize language server (${reason}).`);
     await stopClient();
+    if (generation !== configurationSyncGeneration) return;
   }
 
-  await startClient(context, config);
+  await startClient(context, config, generation);
 }
 
 async function maybeOfferInitialSetup(
@@ -480,6 +486,7 @@ async function showServerNotFoundMessage(context: ExtensionContext): Promise<voi
 async function startClient(
   context: ExtensionContext,
   config: ReturnType<typeof workspace.getConfiguration>,
+  generation: number,
 ): Promise<void> {
   const initializationOptions = getInitializationOptions(config, {
     hasWorkspaceLspConfig: workspaceLspConfig.hasConfig,
@@ -494,7 +501,8 @@ async function startClient(
       void maybeOfferCapabilitySetup(context, config);
     }
   }
-  const serverPath = await findServerPath(context, config);
+  const serverPath = await findServerPath(context, config, generation);
+  if (generation !== configurationSyncGeneration) return;
   if (!serverPath) {
     updateStatusBar("missing-server", "Language server executable was not found");
     await showServerNotFoundMessage(context);
@@ -513,11 +521,16 @@ async function startClient(
 
   try {
     await nextClient.start();
+    if (generation !== configurationSyncGeneration) {
+      await nextClient.stop();
+      return;
+    }
     client = nextClient;
     outputChannel.appendLine("Vize language server started successfully");
     updateStatusBar("ready", `Ready with ${capabilityDescription}`);
   } catch (error) {
     outputChannel.appendLine(`Failed to start language server: ${String(error)}`);
+    if (generation !== configurationSyncGeneration) return;
     updateStatusBar("failed", "Failed to start language server");
     window.showErrorMessage(`Vize: Failed to start language server: ${String(error)}`);
   }
@@ -550,12 +563,16 @@ function applyTraceSetting(
 }
 
 export async function deactivate(): Promise<void> {
+  ++configurationSyncGeneration;
+  if (configurationSyncTimer) clearTimeout(configurationSyncTimer);
+  configurationSyncTimer = undefined;
   await stopClient();
 }
 
 async function findServerPath(
   context: ExtensionContext,
   config: ReturnType<typeof workspace.getConfiguration>,
+  generation: number,
 ): Promise<string | undefined> {
   const exeName = process.platform === "win32" ? "vize.exe" : "vize";
   const expectedVersion = getExtensionVersion(context);
@@ -568,6 +585,7 @@ async function findServerPath(
         path: configuredPath,
         source: "configured",
       });
+      if (generation !== configurationSyncGeneration) return undefined;
       logSelectedServer(candidate, expectedVersion);
       void warnAboutVersionMismatch(candidate, expectedVersion);
       selectedServerCandidate = candidate;
@@ -578,6 +596,7 @@ async function findServerPath(
   }
 
   const candidates = await inspectServerCandidates(collectServerCandidates(context, exeName));
+  if (generation !== configurationSyncGeneration) return undefined;
 
   if (expectedVersion) {
     const matchingCandidate = candidates.find((candidate) => candidate.version === expectedVersion);
@@ -588,6 +607,7 @@ async function findServerPath(
     }
 
     const releaseCandidate = await resolveReleaseServerCandidate(context, exeName, expectedVersion);
+    if (generation !== configurationSyncGeneration) return undefined;
     if (releaseCandidate) {
       logSelectedServer(releaseCandidate, expectedVersion);
       selectedServerCandidate = releaseCandidate;
