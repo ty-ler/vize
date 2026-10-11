@@ -8,7 +8,7 @@
  * composables, and the fixtures all share one Vapor-capable runtime.
  */
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { createRequire, registerHooks } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -30,6 +30,14 @@ export function runtimeTrack(): "reference" | "supported" {
 export const compileFailures: string[] = [];
 
 const require = createRequire(import.meta.url);
+if (process.env.VIZE_UI_REQUIRE_SOURCE_BINDING === "1") {
+  const expected = realpathSync(
+    fileURLToPath(new URL("../../../native/vize-vitrine.linux-x64-gnu.node", import.meta.url)),
+  );
+  if (!Object.keys(require.cache).includes(expected)) {
+    throw new Error(`The actual source binding was not loaded: ${expected}`);
+  }
+}
 
 /** Absolute URL of the Vue 3.6 runtime-with-vapor browser build. */
 export function vaporVueUrl(): string {

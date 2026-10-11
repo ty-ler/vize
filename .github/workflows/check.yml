@@ -6,6 +6,7 @@ env:
   CARGO_BUILD_JOBS: '12'
   CARGO_INCREMENTAL: '0'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  VIZE_UI_REQUIRE_SOURCE_BINDING: '1'
 jobs:
   ui-vapor-pairing:
     name: Full original UI controls and paired Vapor source diagnostic
@@ -35,9 +36,7 @@ jobs:
       - name: Install immutable dependencies
         run: vp install --frozen-lockfile --prefer-offline
       - name: Build the actual source native binding
-        run: |
-          vp run --filter './npm/native' build:ci
-          printf 'NAPI_RS_NATIVE_LIBRARY_PATH=%s/npm/native/vize-vitrine.linux-x64-gnu.node\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+        run: vp run --filter './npm/native' build:ci
       - name: Verify the source-built binding is actually loaded
         run: |
           node --input-type=module <<'JS'
@@ -49,7 +48,7 @@ jobs:
           const root=process.env.GITHUB_WORKSPACE;
           const require=createRequire(`${root}/npm/ui/package.json`);
           const native=await import(pathToFileURL(require.resolve('@vizejs/native')).href);
-          const expected=realpathSync(process.env.NAPI_RS_NATIVE_LIBRARY_PATH);
+          const expected=realpathSync(`${root}/npm/native/vize-vitrine.linux-x64-gnu.node`);
           const loaded=Object.keys(require.cache).filter(name=>name.endsWith('.node')).map(name=>realpathSync(name));
           assert.ok(loaded.includes(expected), 'actual source binary must be loaded');
           assert.equal(typeof native.compileSfc,'function');
