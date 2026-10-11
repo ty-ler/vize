@@ -85,12 +85,20 @@ export function jsrPublicFixture(context: Context, enabled = true) {
     fs.readdirSync(staged).map((name) => [`/${name}`, fs.readFileSync(path.join(staged, name))]),
   );
   const metadataUrl = "https://jsr.io/@vizejs/vize/meta.json";
+  const packageMetadataUrl = "https://api.jsr.io/scopes/vizejs/packages/vize";
   const versionMetadataUrl = `https://jsr.io/@vizejs/vize/${version}_meta.json`;
   fixture.responses.set(metadataUrl, {
     scope: "vizejs",
     name: "vize",
-    githubRepository: { owner: "ubugeeei-prod", name: "vize" },
+    latest: version,
     versions: { [version]: {} },
+  });
+  // Actual linked packages expose repository identity through this package API;
+  // live registry meta.json may contain only scope/name/latest/versions.
+  fixture.responses.set(packageMetadataUrl, {
+    scope: "vizejs",
+    name: "vize",
+    githubRepository: { owner: "ubugeeei-prod", name: "vize" },
   });
   fixture.responses.set(versionMetadataUrl, {
     exports: plan.jsr!.exports,
@@ -120,6 +128,7 @@ export function jsrPublicFixture(context: Context, enabled = true) {
     plan,
     sources,
     metadataUrl,
+    packageMetadataUrl,
     versionMetadataUrl,
     jobsUrl,
     jobs,

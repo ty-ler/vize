@@ -46,7 +46,9 @@ test("pre-JSR H preserves the legacy plan and receipt shape without any JSR requ
     "success",
   ]);
   assert.equal(
-    fixture.calls.some(({ url }) => url.startsWith("https://jsr.io/")),
+    fixture.calls.some(
+      ({ url }) => url.startsWith("https://jsr.io/") || url.startsWith("https://api.jsr.io/"),
+    ),
     false,
   );
 });
@@ -77,7 +79,9 @@ test("disabled frozen policy captures all authorities and actual producer bytes 
   const result = await verifyPublication(fixture.plan, fixture.options);
   assert.deepEqual(result.jsr, { required: false, name: "@vizejs/vize", version });
   assert.equal(
-    fixture.calls.some(({ url }) => url.startsWith("https://jsr.io/")),
+    fixture.calls.some(
+      ({ url }) => url.startsWith("https://jsr.io/") || url.startsWith("https://api.jsr.io/"),
+    ),
     false,
   );
 });
@@ -93,7 +97,7 @@ test("enabled frozen H requires exact public seven-file bytes and all five offic
   assert.equal(result.jsr?.sources?.length, 7);
   assert.equal(fixture.calls.filter(({ url }) => url.startsWith("https://jsr.io/")).length, 9);
   for (const { url, init } of fixture.calls.filter(({ url }) =>
-    url.startsWith("https://jsr.io/"),
+    url.startsWith("https://jsr.io/") || url.startsWith("https://api.jsr.io/"),
   )) {
     assert.equal(init?.credentials, "omit", url);
     assert.equal(init?.redirect, "error", url);
@@ -199,6 +203,39 @@ test("exact JSR package scope, linked repository, version and non-yanked identit
       /JSR (object|exact package)/,
     );
   }
+});
+
+test("actual registry metadata and package repository binding are distinct authorities", async (t) => {
+  const fixture = jsrPublicFixture(t);
+  const registry = fixture.responses.get(fixture.metadataUrl) as Record<string, unknown>;
+  assert.equal(Object.hasOwn(registry, "githubRepository"), false);
+  const result = await verifyPublication(fixture.plan, fixture.options);
+  assert.equal(result.jsr?.packageMetadataUrl, fixture.packageMetadataUrl);
+  assert.equal(
+    fixture.calls.filter(({ url }) => url === fixture.packageMetadataUrl).length,
+    1,
+  );
+  const valid = fixture.responses.get(fixture.packageMetadataUrl) as Record<string, unknown>;
+  for (const bad of [
+    { ...valid, scope: "other" },
+    { ...valid, name: "other" },
+    { ...valid, githubRepository: null },
+    { ...valid, githubRepository: { owner: "foreign", name: "vize" } },
+    { ...valid, githubRepository: { owner: "ubugeeei-prod", name: "other" } },
+  ]) {
+    fixture.responses.set(fixture.packageMetadataUrl, bad);
+    await assert.rejects(
+      verifyPublication(fixture.plan, fixture.options),
+      /JSR (object|exact package)/,
+    );
+  }
+  fixture.responses.set(fixture.packageMetadataUrl, new Response("{}", { status: 404 }));
+  // A field in static registry metadata cannot substitute for actual binding.
+  fixture.responses.set(fixture.metadataUrl, {
+    ...registry,
+    githubRepository: { owner: "ubugeeei-prod", name: "vize" },
+  });
+  await assert.rejects(verifyPublication(fixture.plan, fixture.options), /public HTTP 404/);
 });
 
 test("exports, missing/extraneous files, metadata checksums and downloaded bytes must match frozen source", async (t) => {

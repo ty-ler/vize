@@ -324,6 +324,13 @@
       "note": "Rule reference and Bad/Good examples retained; topic introductions and Japanese availability still need reader-flow review."
     },
     {
+      "route": "/jsr",
+      "locales": ["en"],
+      "entry": "audited",
+      "capture": true,
+      "note": "Prepared Node-only facades, npm native boundaries and exact setup requirements are explicit; publication and all four installed consumers remain pending, with no delivered JSR support claimed."
+    },
+    {
       "route": "/stability",
       "locales": ["en", "ja"],
       "entry": "audited",

@@ -48,6 +48,7 @@ export interface JsrPublicationReceipt {
   version: string;
   exports?: Record<string, string>;
   metadataUrl?: string;
+  packageMetadataUrl?: string;
   versionMetadataUrl?: string;
   sources?: (JsrPublicationPlan["sources"][number] & { url: string })[];
   jobs?: Record<string, unknown>[];
@@ -184,14 +185,25 @@ export async function verifyJsrPublication(
   });
   const metadataUrl = "https://jsr.io/@vizejs/vize/meta.json";
   const metadata = await reader.json(metadataUrl);
-  const repository = object(metadata.githubRepository);
+  // Live linked packages may omit githubRepository from registry meta.json.
+  // Read only the package's public binding from the management API; version
+  // discovery, yanked status and all source downloads stay on the registry API.
+  const packageMetadataUrl = "https://api.jsr.io/scopes/vizejs/packages/vize";
+  const packageMetadata = await reader.json(packageMetadataUrl);
+  const repository = object(packageMetadata.githubRepository);
+  const declaredRepository =
+    metadata.githubRepository === undefined ? repository : object(metadata.githubRepository);
   const versions = object(metadata.versions);
   const published = object(versions[version]);
   requireValue(
     metadata.scope === "vizejs" &&
       metadata.name === "vize" &&
+      packageMetadata.scope === metadata.scope &&
+      packageMetadata.name === metadata.name &&
       repository.owner === "ubugeeei-prod" &&
       repository.name === "vize" &&
+      declaredRepository.owner === repository.owner &&
+      declaredRepository.name === repository.name &&
       (published.yanked === undefined || published.yanked === false),
     "JSR exact package/version/non-yanked repository identity mismatch",
   );
@@ -223,6 +235,7 @@ export async function verifyJsrPublication(
     ...identity,
     exports: plan.exports,
     metadataUrl,
+    packageMetadataUrl,
     versionMetadataUrl,
     sources,
     jobs: requiredJobs,

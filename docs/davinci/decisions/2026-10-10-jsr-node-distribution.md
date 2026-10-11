@@ -92,3 +92,32 @@ delivers support. Once the source merges and ownership is linked, the initial
 exact-version Release JSR run must publish and pass all four Node consumers
 before the committed channel is enabled or #8367 closes. Registry creation,
 settings changes, publication and consumer receipts are still unfinished.
+
+The live protocol audit also found a publication-verifier defect: on
+2026-10-11 linked `@std/path`, `@std/assert` and `@luca/flag` registry
+`meta.json` omit `githubRepository`, although the documentation shows that
+optional field. Their public package management API exposes the actual linked
+repository. The previous synthetic fixture supplied a repository field the
+live registry does not consistently provide. A realistic fixture reproduces
+`JSR object required` against the unchanged verifier before correction.
+
+Read the exact `vizejs/vize` package binding from
+`https://api.jsr.io/scopes/vizejs/packages/vize` with the existing bounded,
+unauthenticated reader. The management API supplies only package identity and
+repository linking; version discovery, non-yanked status, exports and every
+source checksum still come from the registry APIs, respecting
+<https://jsr.io/docs/api#usage-restrictions>. Both endpoint identities must agree;
+an optional registry repository field must agree too. Missing/foreign binding
+fails even if static metadata asserts the expected repository. Enabled receipts
+retain the binding URL; disabled and pre-JSR receipt shapes remain unchanged.
+The original identity, source-byte, job and release contracts remain intact.
+Require fresh corrected-source Actions and actual published consumers.
+
+The refreshed source's Check `38106461820` retains the unchanged incoming More
+guide audit refusal: tooling shard 3 found `/jsr` missing from explicit route
+coverage. Add only that English route, with its Node/native/account and pending
+publication boundaries reviewed above, and require native browser capture.
+The empty uncovered-route assertion, every existing route, and existing
+rendering boundaries remain unchanged. This records page review scope rather
+than JSR delivery; fresh source/browser and eventual published support remain
+required.
