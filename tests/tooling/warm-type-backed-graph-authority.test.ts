@@ -7,6 +7,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { qualifyGraphHost } from "../performance/support/warm-type-backed-graph-host.ts";
+import { qualifyHostMoves } from "../performance/support/warm-type-backed-host-qualifications.ts";
 import { gitBodyDigest } from "../performance/support/warm-type-backed-path-host.ts";
 
 const manifest = JSON.parse(
@@ -38,6 +39,12 @@ await test("the complete graph qualification retains all actual after blobs and 
   assert.equal(receipt.completeBodyPairs, 185);
   assert.equal(receipt.preservedBodyPairs, 45);
   assert.deepEqual(receipt.files, files);
+  assert.deepEqual(qualifyHostMoves(files, new Set(), true, actual), {
+    graphHost: receipt,
+    pathHostMove: null,
+    timingHostMove: null,
+    defaultMigrationHost: null,
+  });
 });
 
 await test("every missing, duplicate and unlisted producer entry refuses qualification", () => {

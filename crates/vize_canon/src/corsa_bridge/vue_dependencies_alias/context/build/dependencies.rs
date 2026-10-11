@@ -3,7 +3,7 @@ use super::super::routes::{PackageCallback, ReachabilityEntry, RouteDiscovery};
 use super::{NativeFacts, bridge_error};
 use crate::batch::virtual_project::{
     VirtualProject,
-    dependency_scan::{resolve_dependency, resolve_dependency_observed},
+    dependency_scan::{ParsedDependencySources, resolve_dependency, resolve_dependency_observed},
 };
 use crate::corsa_bridge::types::CorsaBridgeError;
 use crate::package_route::stamp::{Consumed, FactRole};
@@ -40,6 +40,7 @@ pub(super) fn register_host(
     facts: &mut NativeFacts,
     root: &Path,
     observe: bool,
+    parsed_sources: &mut ParsedDependencySources,
 ) -> Result<(), CorsaBridgeError> {
     let virtual_file = project.find_by_original(source_path).ok_or_else(|| {
         CorsaBridgeError::CommunicationError(vize_carton::cstr!(
@@ -130,11 +131,12 @@ pub(super) fn register_host(
         specifiers.dedup();
         if observe {
             let walk = project
-                .register_reachable_dependencies_with_package_resolver_observed(
+                .register_reachable_dependencies_with_parsed_sources_observed(
                     overlays,
                     &specifiers,
                     &mut resolve_package,
                     None,
+                    Some(parsed_sources),
                 )
                 .map_err(bridge_error)?;
             facts.record_owned(walk);

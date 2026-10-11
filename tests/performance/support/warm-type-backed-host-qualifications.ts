@@ -10,8 +10,9 @@ export function qualifyHostMoves(
   enabled: boolean,
   digest: (side: "before" | "after", file: string) => string | null,
 ) {
+  const graphHost = enabled ? qualifyGraphHost(production, digest) : null;
   return {
-    graphHost: enabled ? qualifyGraphHost(production, digest) : null,
+    ...(graphHost ? { graphHost } : {}),
     pathHostMove: enabled ? qualifyPathHostMove(production, alreadyQualified, digest) : null,
     timingHostMove: enabled ? qualifyTimingHostMove(production, alreadyQualified, digest) : null,
     defaultMigrationHost: enabled

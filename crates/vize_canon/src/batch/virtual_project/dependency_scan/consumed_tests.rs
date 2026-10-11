@@ -195,6 +195,7 @@ fn both_actual_initial_registered_lists_own_keys_without_completing_unwalked_sou
                     }),
                     resolver: None,
                     registered_roots: None,
+                    parsed_sources: None,
                 },
             )
             .unwrap();

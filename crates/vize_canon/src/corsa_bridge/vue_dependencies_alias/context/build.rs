@@ -96,6 +96,8 @@ fn build_consumed(
         &root,
     );
     let mut project = facts.record(project_packet, FactRole::Configuration, &root);
+    let mut parsed_sources =
+        crate::batch::virtual_project::dependency_scan::ParsedDependencySources::default();
     let package_resolution = if observe {
         project.package_resolution_settings_observed()
     } else {
@@ -148,6 +150,7 @@ fn build_consumed(
         &mut facts,
         &root,
         observe,
+        &mut parsed_sources,
     )?;
 
     reachable_phase.finish();
@@ -221,11 +224,12 @@ fn build_consumed(
                 };
             if observe {
                 let walk = project
-                    .register_reachable_dependencies_with_package_resolver_observed(
+                    .register_reachable_dependencies_with_parsed_sources_observed(
                         overlays,
                         &specifiers,
                         &mut resolve_package,
                         registration.as_ref(),
+                        Some(&mut parsed_sources),
                     )
                     .map_err(bridge_error)?;
                 facts.record_owned(walk);

@@ -1,6 +1,9 @@
 //! Public wrappers retain the original dependency walk and result.
 use super::super::package_source_index::RegisteredPackageRoots;
-use super::{DependencyConsumption, ObservedPackageResolver, PackageResolver, VirtualProject};
+use super::{
+    DependencyConsumption, ObservedPackageResolver, PackageResolver, ParsedDependencySources,
+    VirtualProject,
+};
 use crate::batch::error::CorsaResult;
 use crate::package_route::stamp::Consumed;
 use std::path::PathBuf;
@@ -67,6 +70,7 @@ impl VirtualProject {
                 aliases: Some(aliases),
                 resolver: None,
                 registered_roots: None,
+                parsed_sources: None,
             },
         )
     }
@@ -81,6 +85,24 @@ impl VirtualProject {
             &Consumed<super::super::package_source_index::RegisteredPackageRoots>,
         >,
     ) -> CorsaResult<Consumed<Vec<PathBuf>>> {
+        self.register_reachable_dependencies_with_parsed_sources_observed(
+            overlays,
+            workspace_package_specifiers,
+            package_resolver,
+            registered_roots,
+            None,
+        )
+    }
+
+    /// Keep only pure parsed projections across walks of one cold operation.
+    pub(crate) fn register_reachable_dependencies_with_parsed_sources_observed(
+        &mut self,
+        overlays: &FxHashMap<PathBuf, &str>,
+        workspace_package_specifiers: &[CompactString],
+        package_resolver: ObservedPackageResolver<'_>,
+        registered_roots: Option<&Consumed<RegisteredPackageRoots>>,
+        parsed_sources: Option<&mut ParsedDependencySources>,
+    ) -> CorsaResult<Consumed<Vec<PathBuf>>> {
         let aliases = self.dependency_alias_map_observed();
         self.register_reachable_dependencies_consumed_inner(
             None,
@@ -91,6 +113,7 @@ impl VirtualProject {
                 aliases: Some(aliases),
                 resolver: Some(package_resolver),
                 registered_roots,
+                parsed_sources,
             },
         )
     }
@@ -115,6 +138,7 @@ impl VirtualProject {
                 aliases: Some(aliases),
                 resolver: Some(package_resolver),
                 registered_roots,
+                parsed_sources: None,
             },
         )
     }

@@ -59,6 +59,7 @@ fn deleted_reachable_buffer_keeps_whole_original_values_and_actual_negative_disk
                 aliases: Some(aliases),
                 resolver: None,
                 registered_roots: None,
+                parsed_sources: None,
             },
         )
         .unwrap();

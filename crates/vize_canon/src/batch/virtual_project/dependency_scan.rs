@@ -13,7 +13,6 @@
 
 use std::path::{Path, PathBuf};
 
-use oxc_span::SourceType;
 #[cfg(test)]
 use vize_carton::cstr;
 use vize_carton::{FxHashMap, FxHashSet, String as CompactString};
@@ -27,6 +26,8 @@ mod consumption;
 use consumption::DependencyConsumption;
 mod facade;
 mod observed;
+mod parsed_sources;
+pub(crate) use parsed_sources::ParsedDependencySources;
 mod package_roots;
 #[path = "dependency_scan/references.rs"]
 mod references;
@@ -64,6 +65,7 @@ impl VirtualProject {
                 aliases: None,
                 resolver: None,
                 registered_roots: None,
+                parsed_sources: None,
             },
         )
         .map(|_| ())
@@ -81,6 +83,7 @@ impl VirtualProject {
             aliases: aliases_consumed,
             resolver: mut observed_package_resolver,
             registered_roots,
+            parsed_sources: mut parsed,
         } = consumption;
         let aliases_consumed_is_enabled = aliases_consumed.is_some();
         let (aliases, mut facts) = match aliases_consumed {
@@ -207,24 +210,21 @@ impl VirtualProject {
                 facts.unknown_at(74);
                 continue;
             };
-            let source_type = if virtual_path
-                .extension()
-                .is_some_and(|extension| extension == "tsx")
-            {
-                SourceType::tsx()
-            } else {
-                SourceType::ts()
-            };
-            let specifiers = self
-                .rewriter()
-                .collect_all_specifier_occurrences(&virtual_content, source_type)
-                .into_iter()
-                .map(|(specifier, mode)| (specifier, mode, false))
-                .chain(
-                    references
-                        .into_iter()
-                        .map(|specifier| (specifier, crate::PackageResolutionMode::Import, true)),
-                );
+            let source_type = consumption::source_type(&virtual_path);
+            let specifiers = consumption::occurrences(
+                parsed.as_deref_mut(),
+                self.rewriter(),
+                &virtual_path,
+                virtual_content,
+                source_type,
+            )
+            .into_iter()
+            .map(|(specifier, mode)| (specifier, mode, false))
+            .chain(
+                references
+                    .into_iter()
+                    .map(|specifier| (specifier, crate::PackageResolutionMode::Import, true)),
+            );
             // Route bindings stay unchanged during this walk. Incomplete raw
             // roots and noncanonical originals retain their previous lookup.
             let use_root_index = raw_roots_indexed && visited.contains(&importer);
