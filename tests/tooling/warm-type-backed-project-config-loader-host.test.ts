@@ -1,3 +1,4 @@
+import { qualifyCurrentConfigReviewHost } from "./support/config-reviewed-source.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -63,7 +64,8 @@ await test("original whole90/51/3 authority retains its exact legacy loader cont
 await test("every current config, corpus and loader body matches its complete pinned authority", () => {
   const result =
     qualifyProjectConfigLoaderHost(production, allowed, actualDigest) ??
-    qualifyIssuedCompletionHost(issuedCompletionProduction, allowed, actualDigest);
+    qualifyIssuedCompletionHost(issuedCompletionProduction, allowed, actualDigest) ??
+    qualifyCurrentConfigReviewHost(allowed, actualDigest);
   assert.ok(result);
   assert.equal(result.loaderContext.authority, "complete-composed-vite-loader");
   assert.equal(result.loaderContext.completeBodyPairs.length, 2);

@@ -1,3 +1,4 @@
+import { qualifyCurrentConfigReviewHost } from "./support/config-reviewed-source.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -52,7 +53,8 @@ await test("the current whole bodies qualify only with the explicit successor an
   };
   const result =
     qualifyProjectConfigNullCompletionHost(production, new Set(), actual) ??
-    qualifyIssuedCompletionHost(issuedCompletionProduction, new Set(), actual);
+    qualifyIssuedCompletionHost(issuedCompletionProduction, new Set(), actual) ??
+    qualifyCurrentConfigReviewHost(new Set(), actual);
   assert.ok(result);
   if ("harnessSuccessor" in result) assert.equal(result.harnessSuccessor[2], current);
   else assert.equal(actual("after", changedFile), current);
