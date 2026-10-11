@@ -16,7 +16,7 @@ const bodies = new Map(
 );
 export const reviewedConfigProduction = [
   ...new Set([...issuedCompletionProduction, ...configReviewManifest.reviewedProductionFiles]),
-].toSorted();
+].toSorted((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
 /** Current files remain actual reads; only the explicitly frozen before fixture is extended. */
 export function qualifyCurrentConfigReviewHost(allowed: ReadonlySet<string>, digest: Digest) {
