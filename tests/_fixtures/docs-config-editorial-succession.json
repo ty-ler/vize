@@ -1,0 +1,30 @@
+{
+  "originalSourceSha": "fc551dc09faaa3187cd37a3a02cb94ebab0c3352",
+  "documents": [
+    {
+      "path": "docs/content/guide/configuration-reference.md",
+      "originalSha256": "536b51ab1b289e3fb3a4266c8a687eb9027f5e13d8d27ea21b1e44b141a52a9e",
+      "successorSha256": "81c9c139b0ac583de20912227f9f769f015e401819ccd63ea4ab20989c0fc67a",
+      "patches": [
+        {
+          "offset": 7018,
+          "before": "",
+          "after": "\n## Musea shared configuration\n\nPut shared defaults in the top-level `vize.musea` option of `vite.config.*`.\n`musea()` options override individual shared options. Existing `vize.config.*`\nfiles remain supported and take precedence over shared settings in the same Vite project.\n\n```ts\n// vite.config.ts\nimport { defineConfig } from \"@vizejs/vite-plugin/vite-plus\";\nimport { musea } from \"@vizejs/vite-plugin-musea\";\n\nexport default defineConfig({\n  plugins: [musea()],\n  vize: {\n    musea: {\n      include: [\"src/**/*.art.vue\"],\n      exclude: [\"node_modules/**\", \"dist/**\"],\n      basePath: \"/__musea__\",\n      storybookCompat: false,\n      inlineArt: false,\n    },\n  },\n});\n```\n\n`musea-vrt` also reads shared `include`, `exclude`, and `vrt` settings from this\nVite configuration. Shared `vrt.outDir` selects the snapshot directory; plugin\n`vrt` options override the corresponding shared options. `vize musea new` creates\nan example art file and uses Musea's default discovery without generating a\ndedicated configuration file.\n"
+        }
+      ]
+    },
+    {
+      "path": "docs/content/guide/musea.md",
+      "originalSha256": "1ef34c492e1cc1d3becf1be21af9012b234c90b0610ae13829a8e3b221758e8d",
+      "successorSha256": "88da66b8e4e973490b1bd5e8d0da86d5e308ff1e9e50c28e38e190b65f4a3d79",
+      "patches": [
+        {
+          "offset": 1951,
+          "before": "`musea()` options override shared config. Put stable defaults in `vize.config.ts` when several tools need them, and keep preview settings in `vite.config.ts`.\n",
+          "after": "Use [`vite.config.*` shared `vize.musea` settings](./configuration-reference.md#musea-shared-configuration) for new projects; `musea()` options override shared settings. The following dedicated config remains supported and takes precedence in the same Vite project:\n"
+        }
+      ]
+    }
+  ],
+  "witnesses": []
+}
