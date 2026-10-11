@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "originalFixtureManifestSHA256": "62dfcd2b4845cefa2132e65dff26bc78a87e8b229cf8136dd7a756c1e84f46d5",
+  "predecessorSource": "9445ec5997104d2b9bdd3accf492e9b193738272",
+  "fixtureSource": "0c7af488f473d5eb9d8679bc94c8a7ded6a9e583",
+  "productionBodies": [
+    [
+      "crates/vize_maestro/src/server/project_contexts/tests.rs",
+      null,
+      "8627adccae1f3e8965838f2718c06e6d5d63321f5f2d63843f9a631b99627443",
+      "b7e07394097fa6aaba969d03cae0f7e50ccf40dc77033adb30da4b96ab0a3b33"
+    ]
+  ],
+  "harnessBodies": [
+    [
+      "tests/performance/support/warm-type-backed-config-fixture-host.ts",
+      null,
+      "2b196fe9e7397580e08d8f5deab0f4ec945e6fce2892f8f57bd44efd2ea740fa",
+      "46041b1d3940ed0313864ce4346dd69170033f22fe2871b50d9c82ff2f178a67"
+    ]
+  ]
+}
