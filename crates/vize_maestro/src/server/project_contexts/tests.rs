@@ -24,18 +24,21 @@ struct Fixture {
 }
 
 fn member<'a>(input: &'a Value, name: &str) -> &'a Value {
-    input.get(name).expect("authored fixture member")
+    input
+        .get(name)
+        .unwrap_or_else(|| panic!("authored fixture member"))
 }
 
 fn file(root: &Path, name: &str, source: &str) -> Url {
     let path = root.join(name);
-    std::fs::create_dir_all(path.parent().expect("fixture value")).expect("fixture value");
-    std::fs::write(&path, source).expect("fixture value");
-    Url::from_file_path(path).expect("fixture value")
+    std::fs::create_dir_all(path.parent().unwrap_or_else(|| panic!("fixture value")))
+        .unwrap_or_else(|error| panic!("fixture value: {error:?}"));
+    std::fs::write(&path, source).unwrap_or_else(|error| panic!("fixture value: {error:?}"));
+    Url::from_file_path(path).unwrap_or_else(|error| panic!("fixture value: {error:?}"))
 }
 
 fn fixture() -> Fixture {
-    let root = tempfile::tempdir().expect("fixture value");
+    let root = tempfile::tempdir().unwrap_or_else(|error| panic!("fixture value: {error:?}"));
     file(root.path(), "vize.config.json", "{}");
     for package in ["a", "b"] {
         file(root.path(), &cstr!("packages/{package}/package.json"), "{}");
@@ -60,18 +63,23 @@ fn fixture() -> Fixture {
     server.state.apply_lsp_initialization_options(Some(
         &json!({"lint":false,"typecheck":false,"ecosystem":false}),
     ));
-    let input: Value = serde_json::from_str(INPUT).expect("fixture value");
-    let source = member(&input, "source").as_str().expect("fixture value");
+    let input: Value =
+        serde_json::from_str(INPUT).unwrap_or_else(|error| panic!("fixture value: {error:?}"));
+    let source = member(&input, "source")
+        .as_str()
+        .unwrap_or_else(|| panic!("fixture value"));
     let uris = ["Root.ts", "packages/a/src/One.ts", "packages/b/src/Two.ts"]
         .map(|name| {
             let uri = file(root.path(), name, source);
             server.state.documents.open(
                 uri.clone(),
                 source.into(),
-                member(&input, "version").as_i64().expect("fixture value") as i32,
+                member(&input, "version")
+                    .as_i64()
+                    .unwrap_or_else(|| panic!("fixture value")) as i32,
                 member(&input, "languageId")
                     .as_str()
-                    .expect("fixture value")
+                    .unwrap_or_else(|| panic!("fixture value"))
                     .into(),
             );
             uri
@@ -87,26 +95,27 @@ fn fixture() -> Fixture {
 
 fn position(fixture: &Fixture) -> Position {
     serde_json::from_value(member(&fixture.input, "definitionPosition").clone())
-        .expect("fixture value")
+        .unwrap_or_else(|error| panic!("fixture value: {error:?}"))
 }
 
 fn definition(fixture: &Fixture, uri: &Url) -> Location {
     Location::new(
         uri.clone(),
         serde_json::from_value(member(&fixture.input, "definitionRange").clone())
-            .expect("fixture value"),
+            .unwrap_or_else(|error| panic!("fixture value: {error:?}")),
     )
 }
 
 fn references(fixture: &Fixture, uri: &Url) -> Vec<Location> {
     member(&fixture.input, "referenceRanges")
         .as_array()
-        .expect("fixture value")
+        .unwrap_or_else(|| panic!("fixture value"))
         .iter()
         .map(|range| {
             Location::new(
                 uri.clone(),
-                serde_json::from_value(range.clone()).expect("fixture value"),
+                serde_json::from_value(range.clone())
+                    .unwrap_or_else(|error| panic!("fixture value: {error:?}")),
             )
         })
         .collect()
