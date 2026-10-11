@@ -43,14 +43,16 @@ def start(root):
         checkout = json.loads((directory / "checkout.json").read_text())
         if checkout["status"] != "authenticated":
             raise ValueError("Original clean checkout authentication was unavailable")
-        configuration["setupStage"] = "runner-ownership"
-        configuration["ancestry"] = process_ancestry(os.getpid())
-        configuration["owner"] = runner_owner(os.getpid())
         configuration["setupStage"] = "source-custody"
         configuration.update({"checkout": checkout, "source": source_identity(root, checkout["identity"]),
                               "since": str(time.time_ns() // 1000000000),
                               "workflow": {key: os.environ.get(key) for key in
                                            ("GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT", "GITHUB_JOB")}})
+        configuration["setupStage"] = "runner-ownership"
+        configuration["ancestryQueries"] = []
+        configuration["ancestry"] = process_ancestry(os.getpid(), privileged=True, retain_gaps=True,
+                                                    observations=configuration["ancestryQueries"])
+        configuration["owner"] = runner_owner(os.getpid(), observations=configuration["ancestryQueries"])
         configuration["setupStage"] = "daemon-identity"
         configuration["daemon"] = query(["info", "--format", template({
             "id": ".ID", "cpus": ".NCPU", "memory": ".MemTotal",

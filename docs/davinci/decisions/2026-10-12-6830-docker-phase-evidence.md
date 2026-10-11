@@ -70,6 +70,22 @@ admits only the two gated nonbuilder diagnostic steps; authored builder and
 unconditional-observer mutations remain refusals. No source-cleanliness or
 retention oracle was exempted.
 
+Source `449d1098`, Check `38178521318`, passed all four original tooling commands;
+the four additional diagnostic finalizers alone refused unavailable ownership.
+The retained shard-two packet reports `PermissionError` at runner ownership.
+Before any ownership read, the same-run source receipt is now authenticated.
+The ancestry packet retains PID, parent, start ticks, comm and UID through every
+read failure. Only a permission-denied exact `/proc/<pid>/exe` read may fall back
+to noninteractive `sudo readlink`, with a one-second deadline, 4 KiB output bound
+and exact before/after birth, ancestry and UID equality. Public evidence keeps
+only basename, bounded result identity and elapsed time; full executable paths
+and errors are excluded. `Runner.Worker` remains the sole accepted owner.
+Protected ancestors above an authenticated worker may remain explicit gaps;
+an unavailable worker, `Runner.Listener`, malformed stat or changed birth refuses.
+Received event frames and privileged query receipts each have a 4096 bound.
+Authored permission, partial ancestry, role, timeout, output and birth controls
+precede a genuine successor qualification. No kernel or process mutation occurs.
+
 TODO: capture one qualified exact-source four-shard run, retain the original
 outcome and source/provider receipts, and attribute create/start/guest/cleanup
 costs only when the actual events prove them. No causal repair or CI speed gain

@@ -39,8 +39,8 @@ def observe(directory):
     os.set_blocking(child.stdout.fileno(), False)
     selector = selectors.DefaultSelector()
     selector.register(child.stdout, selectors.EVENT_READ)
-    identities, futures = {}, []
-    counters = {"observed": 0, "unowned": 0, "refused": 0, "inspectionUnavailable": 0,
+    identities, futures, ancestry_queries = {}, [], []
+    counters = {"received": 0, "observed": 0, "unowned": 0, "refused": 0, "inspectionUnavailable": 0,
                 "inspectionQueueFull": 0}
     pool = ThreadPoolExecutor(max_workers=2)
     buffer = b""
@@ -61,6 +61,9 @@ def observe(directory):
                         raise ValueError("Event projection exceeded finite bound")
                     while b"\n" in buffer:
                         line, buffer = buffer.split(b"\n", 1)
+                        counters["received"] += 1
+                        if counters["received"] > 4096:
+                            raise ValueError("Capture exceeded finite received-frame bound")
                         try:
                             event = project_event(json.loads(line))
                         except (ValueError, TypeError):
@@ -69,7 +72,7 @@ def observe(directory):
                         container = event["id"]
                         if container not in identities:
                             try:
-                                host = owned_host(int(event["host"]), root, owner)
+                                host = owned_host(int(event["host"]), root, owner, observations=ancestry_queries)
                                 identities[container] = {"host": host, "image": event["image"],
                                                          "name": event["name"]}
                             except (OSError, ValueError):
@@ -142,6 +145,8 @@ def observe(directory):
             "durationSeconds": time.monotonic() - started,
             "daemonExitCode": child.returncode,
             "inspectionSeconds": sum(item["durationSeconds"] for item in inspections),
+            "ancestryQueries": ancestry_queries,
+            "ancestryQuerySeconds": sum(item["durationSeconds"] for item in ancestry_queries),
             "phases": phases,
             "finalPartialFrameBytes": len(buffer),
         })

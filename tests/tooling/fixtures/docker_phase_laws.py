@@ -68,7 +68,7 @@ class DockerPhaseLaws(unittest.TestCase):
             owner = packets.runner_owner(22, proc)
             ancestry = packets.process_ancestry(22, proc)
             self.assertEqual([entry["pid"] for entry in ancestry], [22, 10, 1])
-            self.assertEqual(set(ancestry[0]), {"pid", "parent", "startTicks", "exe"})
+            self.assertEqual(set(ancestry[0]), {"pid", "parent", "startTicks", "exe", "comm", "uid"})
             self.assertEqual(packets.owned_host(22, checkout, owner, proc)["startTicks"], 202)
             for pid in (23, 31):
                 with self.assertRaises(ValueError):
@@ -95,6 +95,7 @@ class DockerPhaseLaws(unittest.TestCase):
                         {"pid": 1, "parent": 0, "startTicks": 1, "exe": "unreviewed-runner"}]
             with patch.dict(os.environ, env), \
                     patch.object(capture, "process_ancestry", return_value=ancestry), \
+                    patch.object(capture, "source_identity", return_value={"head": "authenticated"}), \
                     patch.object(capture, "runner_owner", side_effect=ValueError("private-control")):
                 directory = capture.capture_directory(root)
                 directory.mkdir(parents=True)
@@ -110,6 +111,85 @@ class DockerPhaseLaws(unittest.TestCase):
                                cwd=root, check=True)
                 self.assertEqual(marker.read_text(), "1")
                 self.assertEqual(capture.finish(root), 1)
+
+    def test_exact_proc_fallback_authenticates_birth_and_refuses_partial_role(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            process(root, 1, 0, 1, "init", root)
+            process(root, 10, 1, 101, "Runner.Worker", root)
+            process(root, 22, 10, 202, "node", root)
+            original = packets.os.readlink
+            def protected(path, *args, **kwargs):
+                if Path(path) == root / "10/exe":
+                    raise PermissionError("private-control")
+                return original(path, *args, **kwargs)
+            result = subprocess.CompletedProcess([], 0, b"/physical/Runner.Worker\n", b"private-control")
+            observations = []
+            with patch.object(packets.os, "readlink", side_effect=protected), \
+                    patch.object(packets.subprocess, "run", return_value=result) as reader:
+                self.assertEqual(packets.runner_owner(22, root, observations)["startTicks"], 101)
+                reader.assert_called_once_with(
+                    ["/usr/bin/sudo", "-n", "/usr/bin/readlink", "--", str(root / "10/exe")],
+                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=1, check=False)
+                with self.assertRaises(PermissionError):
+                    packets.process_identity(10, root)
+            self.assertEqual(observations[0]["status"], "observed")
+            self.assertNotIn("private-control", json.dumps(observations))
+            def upper_gap(path, *args, **kwargs):
+                if Path(path) == root / "1/exe":
+                    raise PermissionError("private-control")
+                return original(path, *args, **kwargs)
+            with patch.object(packets.os, "readlink", side_effect=upper_gap), \
+                    patch.object(packets.subprocess, "run", side_effect=subprocess.TimeoutExpired("reader", 1)):
+                chain = packets.process_ancestry(22, root, privileged=True, retain_gaps=True)
+                self.assertEqual(chain[-1]["status"], "unavailable")
+                self.assertEqual(packets.runner_owner(22, root)["exe"], "Runner.Worker")
+            bad = subprocess.CompletedProcess([], 1, b"private-control", b"private-control")
+            with patch.object(packets.os, "readlink", side_effect=protected), \
+                    patch.object(packets.subprocess, "run", return_value=bad):
+                chain = packets.process_ancestry(22, root, privileged=True, retain_gaps=True)
+                self.assertEqual([item["pid"] for item in chain], [22, 10])
+                self.assertEqual(chain[-1]["status"], "unavailable")
+                self.assertEqual(chain[-1]["startTicks"], 101)
+                with self.assertRaises(ValueError):
+                    packets.runner_owner(22, root)
+            with patch.object(packets.os, "readlink", side_effect=protected), \
+                    patch.object(packets.subprocess, "run", return_value=subprocess.CompletedProcess(
+                        [], 0, b"/physical/Runner.Listener\n", b"")), self.assertRaises(ValueError):
+                packets.runner_owner(22, root)
+            for output in (b"/physical/Runner.Worker\n", b"/physical/Runner.Listener\n"):
+                def drift(_args, **_kwargs):
+                    (root / "10/stat").write_text("10 (worker name) S 1 " + "0 " * 17 + "102")
+                    return subprocess.CompletedProcess([], 0, output, b"")
+                with patch.object(packets.os, "readlink", side_effect=protected), \
+                        patch.object(packets.subprocess, "run", side_effect=drift), self.assertRaises(ValueError):
+                    packets.process_identity(10, root, privileged=True)
+                (root / "10/stat").write_text("10 (worker name) S 1 " + "0 " * 17 + "101")
+
+    def test_exact_proc_fallback_has_finite_output_and_retains_every_gap(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            process(root, 1, 0, 1, "init", root)
+            for output in (b"relative\n", b"/two\nlines\n", b"x" * 4097, b"/physical/Runner.Worker", b"\xff\n"):
+                observations = []
+                result = subprocess.CompletedProcess([], 0, output, b"private-control")
+                with patch.object(packets.os, "readlink", side_effect=PermissionError("private-control")), \
+                        patch.object(packets.subprocess, "run", return_value=result):
+                    chain = packets.process_ancestry(1, root, privileged=True, retain_gaps=True, observations=observations)
+                self.assertEqual(chain[-1]["status"], "unavailable")
+                self.assertEqual(observations[-1]["status"], "unavailable")
+                self.assertNotIn("private-control", json.dumps(chain + observations))
+            with patch.object(packets.os, "readlink", side_effect=PermissionError), \
+                    patch.object(packets.subprocess, "run", side_effect=subprocess.TimeoutExpired("reader", 1)):
+                chain = packets.process_ancestry(1, root, privileged=True, retain_gaps=True)
+            self.assertEqual(chain[-1]["failureType"], "TimeoutExpired")
+            with patch.object(packets.os, "readlink", side_effect=PermissionError), \
+                    patch.object(packets.subprocess, "run") as reader, self.assertRaises(ValueError):
+                packets.process_identity(1, root, privileged=True, observations=[{}] * 4096)
+            reader.assert_not_called()
+            (root / "1/stat").write_text("1 (truncated) S")
+            self.assertEqual(packets.process_ancestry(1, root, retain_gaps=True)[-1],
+                             {"pid": 1, "status": "unavailable", "failureType": "ValueError"})
 
     def test_existing_evidence_cannot_be_overwritten(self):
         with tempfile.TemporaryDirectory() as temporary:

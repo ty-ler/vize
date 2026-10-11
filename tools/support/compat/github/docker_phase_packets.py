@@ -48,39 +48,97 @@ def query(args, timeout=2):
                 "durationSeconds": time.monotonic() - started}
 
 
-def process_identity(pid, proc=Path("/proc")):
+def process_stat(pid, proc):
+    if type(pid) is not int or not 0 < pid < 2147483648:
+        raise ValueError("Expected one actual numeric process identity")
     stat = (proc / str(pid) / "stat").read_text()
     fields = stat[stat.rindex(")") + 2:].split()
+    if len(fields) < 20 or int(stat[:stat.index("(")].strip()) != pid:
+        raise ValueError("Incomplete or substituted process stat")
     return {"pid": int(pid), "parent": int(fields[1]), "startTicks": int(fields[19]),
-            "exe": os.path.basename(os.readlink(proc / str(pid) / "exe"))}
+            "comm": stat[stat.index("(") + 1:stat.rindex(")")],
+            "uid": (proc / str(pid)).stat().st_uid}
 
 
-def process_ancestry(pid, proc=Path("/proc")):
+def process_identity(pid, proc=Path("/proc"), privileged=False, observations=None):
+    before = process_stat(pid, proc)
+    path = proc / str(pid) / "exe"
+    try:
+        executable = os.readlink(path)
+    except PermissionError:
+        if not privileged:
+            raise
+        if observations is not None and len(observations) >= 4096:
+            raise ValueError("Exact-proc query evidence exceeded finite bound")
+        started = time.monotonic()
+        observation = {"pid": int(pid), "method": "sudo-noninteractive-exact-readlink"}
+        try:
+            result = subprocess.run(["/usr/bin/sudo", "-n", "/usr/bin/readlink", "--", str(path)],
+                                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=1, check=False)
+            observation["exitCode"] = result.returncode
+            if result.returncode or not 1 < len(result.stdout) <= 4096 or not result.stdout.endswith(b"\n"):
+                raise ValueError("Bounded exact-proc readlink unavailable")
+            executable = result.stdout[:-1].decode("utf8")
+            if "\n" in executable or not executable.startswith("/"):
+                raise ValueError("Unexpected physical executable path")
+            observation.update({"status": "observed", "bytes": len(result.stdout),
+                                "sha256": hashlib.sha256(result.stdout).hexdigest()})
+        except Exception as error:
+            observation.update({"status": "unavailable", "failureType": type(error).__name__})
+            raise
+        finally:
+            observation["durationSeconds"] = time.monotonic() - started
+            if observations is not None:
+                observations.append(observation)
+    if process_stat(pid, proc) != before:
+        raise ValueError("Process birth or ancestry changed during executable observation")
+    return {**before, "exe": os.path.basename(executable)}
+
+
+def process_ancestry(pid, proc=Path("/proc"), privileged=False, retain_gaps=False, observations=None):
     identities = []
     for _ in range(64):
-        identity = process_identity(pid, proc)
+        try:
+            identity = process_identity(pid, proc, privileged, observations)
+        except (OSError, ValueError, subprocess.SubprocessError) as error:
+            if not retain_gaps:
+                raise
+            try:
+                identity = process_stat(pid, proc)
+            except (OSError, ValueError):
+                identity = {"pid": int(pid)}
+            identities.append({**identity, "status": "unavailable", "failureType": type(error).__name__})
+            break
         if any(entry["pid"] == identity["pid"] for entry in identities):
+            if retain_gaps:
+                identities.append({"pid": int(pid), "status": "unavailable", "failureType": "AncestryCycle"})
+                return identities
             raise ValueError("Actual process ancestry contains a cycle")
         identities.append(identity)
         pid = identity["parent"]
         if pid <= 0:
             break
+    else:
+        if retain_gaps:
+            identities.append({"pid": int(pid), "status": "unavailable", "failureType": "AncestryDepthBound"})
+        else:
+            raise ValueError("Actual process ancestry exceeded finite depth")
     return identities
 
 
-def runner_owner(pid, proc=Path("/proc")):
-    for identity in process_ancestry(pid, proc):
-        if identity["exe"] == "Runner.Worker":
+def runner_owner(pid, proc=Path("/proc"), observations=None):
+    for identity in process_ancestry(pid, proc, privileged=True, retain_gaps=True, observations=observations):
+        if identity.get("exe") == "Runner.Worker" and identity.get("status") != "unavailable":
             return identity
     raise ValueError("Actual isolated job worker ancestry is unavailable")
 
 
-def owned_host(pid, root, owner, proc=Path("/proc")):
+def owned_host(pid, root, owner, proc=Path("/proc"), observations=None):
     identity = process_identity(pid, proc)
     cwd = (proc / str(pid) / "cwd").resolve(strict=True)
     if cwd != root and root not in cwd.parents:
         raise ValueError("Sandbox host is outside actual checkout")
-    if runner_owner(pid, proc) != owner:
+    if runner_owner(pid, proc, observations) != owner:
         raise ValueError("Sandbox host belongs to another runner job")
     return identity
 
@@ -111,7 +169,7 @@ def project_event(value):
 def checkout_identity(root):
     started = time.monotonic()
     def git(*args):
-        return subprocess.check_output(["git"] + list(args), cwd=root).decode().rstrip("\n")
+        return subprocess.check_output(["git", "--no-replace-objects"] + list(args), cwd=root).decode().rstrip("\n")
     source = git("rev-parse", "HEAD")
     if source != os.environ.get("GITHUB_SHA") or git("status", "--porcelain", "--untracked-files=no"):
         raise ValueError("Actual clean checkout differs from workflow identity")
@@ -129,7 +187,7 @@ def checkout_identity(root):
 def source_identity(root, checkout):
     started = time.monotonic()
     def git(*args):
-        return subprocess.check_output(["git"] + list(args), cwd=root).decode().rstrip("\n")
+        return subprocess.check_output(["git", "--no-replace-objects"] + list(args), cwd=root).decode().rstrip("\n")
     receipt = root / "target/ci/vize.differential-build.json"
     content = receipt.read_bytes()
     digest = hashlib.sha256(content).hexdigest()
