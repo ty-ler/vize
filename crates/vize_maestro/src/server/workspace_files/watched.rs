@@ -16,6 +16,12 @@ pub(super) async fn did_change_watched_files(
     let reconfigured = server
         .state
         .observe_project_config_events(&user_watched_file_events(&params.changes));
+    #[cfg(all(feature = "native", feature = "experimental-source-navigation"))]
+    if server.state.project_context_retired()
+        && let Some(navigation) = &server.navigation
+    {
+        navigation.retire();
+    }
     did_change_in_context(server, params).await;
     #[cfg(feature = "native")]
     for state in server.state.cached_project_states() {
