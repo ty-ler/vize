@@ -159,7 +159,11 @@ pub struct ServerState {
     type_checker_jsx_typecheck: RwLock<bool>,
     experimental_patterned_template: AtomicBool,
     /// Linter options shared by LSP diagnostics.
-    linter_config: RwLock<(LinterConfig, vize_l0::config::LinterFeatureFlags)>,
+    linter_config: RwLock<(
+        LinterConfig,
+        vize_l0::config::LinterFeatureFlags,
+        vize_relief::options::CustomElementMatcher,
+    )>,
     /// Typed per-rule lint options (`linter.ruleOptions`) for configurable
     /// script rules; loaded alongside `linter_config` (#1891).
     linter_rule_options: RwLock<vize_l0::config::ConfigLintRuleOptions>,
