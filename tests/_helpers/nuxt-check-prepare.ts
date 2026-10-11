@@ -5,8 +5,8 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { execNpxCommand } from "./app-fixture-runtime.ts";
-import { selectNuxtPrepareRuntime } from "./nuxt-check-runtime.ts";
+import { execNuxtPrepareNpx, selectNuxtPrepareRuntime } from "./nuxt-check-runtime.ts";
+import { prepareNuxtPrerequisites, retainNuxtPrerequisites } from "./nuxt-check-prerequisites.ts";
 import {
   assertNoSourceMutation,
   blobOid,
@@ -94,7 +94,7 @@ export function prepareNuxtCheckFixture(options: PrepareOptions): string {
     HUSKY: "0",
     SKIP_INSTALL_SIMPLE_GIT_HOOKS: "1",
   };
-  const run = options.run ?? execNpxCommand;
+  const run = options.run ?? execNuxtPrepareNpx;
   function retain(file: string, role: string, bytes?: Buffer): void {
     try {
       const content = bytes ?? fs.readFileSync(file);
@@ -132,7 +132,8 @@ export function prepareNuxtCheckFixture(options: PrepareOptions): string {
       /package\.json$|(?:ts|js)config[^/]*\.json$|(?:^|\/)modules\/|(?:^|\/)nuxt\.config\./.test(
         entry.file,
       ) ||
-      lockName.test(entry.file)
+      lockName.test(entry.file) ||
+      (options.name === "npmx.dev" && /^(?:vite\.config\.|scripts\/|lexicons\/)/.test(entry.file))
     ) {
       retain(path.join(cwd, entry.file), "authored-before", entry.bytes);
     }
@@ -168,6 +169,10 @@ export function prepareNuxtCheckFixture(options: PrepareOptions): string {
       const file = path.join(cwd, "node_modules/.bin", name);
       if (fs.existsSync(file)) retain(file, "installed-cli-candidate");
     }
+    prepareNuxtPrerequisites(options.name, packageJson.scripts?.postinstall, (args, timeout) => {
+      command(args, timeout);
+      assertNoSourceMutation(authored, cwd);
+    });
     command(
       options.prepareArgs ?? ["-y", "pnpm@10", "exec", "nuxt", "prepare"],
       options.prepareTimeoutMs ?? 180_000,
@@ -177,6 +182,7 @@ export function prepareNuxtCheckFixture(options: PrepareOptions): string {
     failure = error;
   } finally {
     try {
+      retainNuxtPrerequisites(options.name, cwd, retain);
       // Capture full generated type/config/reference bytes and installed declaration
       // candidates. Native exec-time selection is owned by the checker descriptor.
       for (const entry of authored.filter((entry) => entry.file.endsWith("package.json"))) {

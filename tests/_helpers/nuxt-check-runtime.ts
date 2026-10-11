@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
+
+import { execNpxCommand } from "./app-fixture-runtime.ts";
 
 /** Bind the real executable, rather than a version-manager shim. */
 export function inspectPrepareNode(binary: string, env: NodeJS.ProcessEnv) {
@@ -26,6 +29,7 @@ export function inspectPrepareNode(binary: string, env: NodeJS.ProcessEnv) {
   );
   assert.match(actual.version, /^v\d+\.\d+\.\d+$/);
   scoped.VP_NODE_VERSION = actual.version.slice(1);
+  scoped.VIZE_APP_CHECK_PREPARE_NODE = executable;
   return {
     env: scoped,
     observation: {
@@ -34,6 +38,39 @@ export function inspectPrepareNode(binary: string, env: NodeJS.ProcessEnv) {
       sha256: createHash("sha256").update(fs.readFileSync(executable)).digest("hex"),
     },
   };
+}
+
+/** npm adds ancestor .bin entries before PATH; bind the runtime after that step. */
+export function execNuxtPrepareNpx(
+  args: string[],
+  options: { cwd: string; env: NodeJS.ProcessEnv; timeout: number },
+): void {
+  const executable = options.env.VIZE_APP_CHECK_PREPARE_NODE;
+  if (!executable) return execNpxCommand(args, options);
+  const distribution = inspectPrepareNpx(executable);
+  const windows = process.platform === "win32";
+  const npxEntry = windows
+    ? path.join(path.dirname(executable), "node_modules/npm/bin/npx-cli.js")
+    : distribution.npxEntry;
+  assert.ok(fs.statSync(npxEntry).isFile(), "preparation distribution must own the npm CLI");
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-nuxt-command-shell-"));
+  const shell = path.join(directory, windows ? "runtime.cmd" : "runtime.sh");
+  fs.writeFileSync(
+    shell,
+    windows
+      ? '@echo off\r\nset "PATH=%VIZE_APP_CHECK_PREPARE_BIN%;%PATH%"\r\n"%ComSpec%" /d /s /c %~2\r\n'
+      : '#!/bin/sh\nPATH="$VIZE_APP_CHECK_PREPARE_BIN:$PATH"\nexport PATH\nexec /bin/sh "$@"\n',
+    { mode: 0o755 },
+  );
+  try {
+    execFileSync(executable, [npxEntry, "--script-shell", shell, ...args], {
+      ...options,
+      env: { ...options.env, VIZE_APP_CHECK_PREPARE_BIN: path.dirname(executable) },
+      stdio: "inherit",
+    });
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 }
 
 /** Selected preparation runtimes must own the adjacent package-manager entry. */
