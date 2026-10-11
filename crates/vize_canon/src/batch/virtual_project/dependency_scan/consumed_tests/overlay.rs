@@ -22,6 +22,9 @@ const CONFIG: &str = include_str!(concat!(
 
 fn project(root: &Path, host: &Path) -> VirtualProject {
     let mut project = VirtualProject::new(root).unwrap();
+    project.set_editor_document_options(
+        crate::batch::virtual_project::VueDocumentVirtualTsOptions::default(),
+    );
     project.set_tsconfig_path(Some(root.join("tsconfig.json")));
     project.register_path(host).unwrap();
     project

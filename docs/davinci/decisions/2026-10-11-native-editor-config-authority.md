@@ -225,3 +225,13 @@ The authored `editor-deleted-overlay` corpus fixture and whole-projection
 comparison cover the reachable buffer, untouched overlay, directory refusal,
 TypeScript-before-JavaScript precedence and an exact alias. All original cold
 refusals and the original lifecycle campaign remain required.
+
+Exact `169bd09056`, run `38112395991`, compiled 2,005 Canon tests and
+passed scoped production Clippy. All three prior original failures now pass.
+Two controls still failed: the new editor fixture omitted the actual editor
+projection options, so its generated missing-import stub concealed the authored
+edge; and the new package-body guard took precedence over the original requested
+root refusal. Configure the fixture through the real editor option setter,
+retaining its whole expected values and negative facts. Keep the original
+requested-root guard first, then refuse changed package bodies. No assertion or
+production cold-refusal category is broadened. Fresh Actions remains required.
