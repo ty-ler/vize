@@ -93,7 +93,6 @@ six-case suite runs alongside the mandatory portable six-case cause control.
 All five control groups reuse the original App row's dependency build; their
 complete packets and individual statuses remain retained after any failure.
 
-
 ## Actual first qualifier and bounded corrections
 
 The single qualifier `38129574946` on exact `888a4898a86a0fccfda99490e532eb407fc79157`
