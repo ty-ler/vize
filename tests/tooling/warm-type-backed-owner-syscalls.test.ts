@@ -241,6 +241,25 @@ await test("partial failure metadata preserves custody without completing or con
   assert.equal(complete.inputSHA256, sha256(Buffer.from(input + output)));
   assert.equal(complete.incompleteLineBytes, 0);
   assert.deepEqual(nativeApiAttachments(selected, [native], [parent])[0].response, response);
+  const rejected = Buffer.concat([
+    Buffer.from("21 1.000001 read("),
+    Buffer.from([0, 127, 128, 255]),
+    Buffer.from(") = 0\n"),
+  ]);
+  const failed = new NativeProtocolStream(() => assert.fail("rejected bytes grant no authority"));
+  failed.push(rejected.subarray(0, 18));
+  assert.throws(() => failed.push(rejected.subarray(18)), /unknown syscall cannot qualify/);
+  const failure = failed.snapshot();
+  assert.equal(failure.inputBytes, rejected.length);
+  assert.equal(failure.inputSHA256, sha256(rejected));
+  assert.equal(failure.selectedBytes, 0);
+  assert.deepEqual(failure.rejectedLine, {
+    thread: 21,
+    timestamp: "1.000001",
+    bytes: rejected.length,
+    sha256: sha256(rejected),
+    rawBase64: rejected.toString("base64"),
+  });
 });
 
 const projectRequest = {

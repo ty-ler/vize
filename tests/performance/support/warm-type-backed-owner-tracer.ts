@@ -92,6 +92,8 @@ export class NativeApiSyscallObserver {
   private tracer: ReturnType<typeof tracerWitness> | undefined;
   private readonly stream: NativeProtocolStream;
   private streamFailure: unknown;
+  private rejectedProcess: NativeProcessWitness | undefined;
+  private rejectedProcessFailure: string | undefined;
   private stderr = "";
 
   private constructor(pid: number, output: string, nativeExecutable: string) {
@@ -144,6 +146,19 @@ export class NativeApiSyscallObserver {
         this.stream.push(chunk);
       } catch (error) {
         this.streamFailure = error;
+        const thread = this.stream.snapshot().rejectedLine?.thread;
+        if (thread !== undefined) {
+          try {
+            const status = fs.readFileSync(`/proc/${thread}/status`, "utf8");
+            const pid = Number(status.match(/^Tgid:\s+(\d+)$/mu)?.[1]);
+            assert.ok(Number.isSafeInteger(pid) && pid > 0);
+            this.rejectedProcess = processWitness(pid);
+            assert.ok(this.rejectedProcess.threads.includes(thread));
+          } catch (failure) {
+            this.rejectedProcessFailure =
+              failure instanceof Error ? failure.stack : String(failure);
+          }
+        }
       }
     });
     this.child.stdout!.on("data", () => {
@@ -205,6 +220,10 @@ export class NativeApiSyscallObserver {
       streamFailure:
         this.streamFailure instanceof Error ? this.streamFailure.stack : this.streamFailure,
       protocolScope: this.stream.snapshot(),
+      rejectedProcess: this.rejectedProcess,
+      rejectedProcessFailure: this.rejectedProcessFailure,
+      observedNativeProcesses: this.witnesses,
+      observedParents: this.parents,
     };
   }
 

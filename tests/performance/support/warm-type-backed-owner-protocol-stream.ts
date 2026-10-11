@@ -16,6 +16,15 @@ export class NativeProtocolStream {
   private fileWrites = 0;
   private wakeWrites = 0;
   private readonly retain: (line: string) => void;
+  private rejectedLine:
+    | {
+        thread: number | undefined;
+        timestamp: string | undefined;
+        bytes: number;
+        sha256: string;
+        rawBase64: string;
+      }
+    | undefined;
 
   constructor(retain: (line: string) => void) {
     this.retain = retain;
@@ -25,13 +34,27 @@ export class NativeProtocolStream {
     this.digest.update(chunk);
     this.inputBytes += chunk.length;
     assert.ok(Number.isSafeInteger(this.inputBytes));
-    const text = this.line + chunk.toString("ascii");
+    // Latin-1 retains every incoming byte, including an unknown line that must refuse.
+    const text = this.line + chunk.toString("latin1");
     let start = 0;
     let stop = text.indexOf("\n");
     while (stop >= 0) {
       const line = text.slice(start, stop);
       assert.ok(line.length <= MAX_LINE, "an oversized syscall line cannot qualify");
-      this.accept(line);
+      try {
+        this.accept(line);
+      } catch (error) {
+        const prefix = line.match(/^(?:\[pid\s+(\d+)\]|(\d+))\s+(\d+\.\d+)\s/u);
+        const raw = Buffer.from(`${line}\n`, "latin1");
+        this.rejectedLine ??= {
+          thread: prefix ? Number(prefix[1] ?? prefix[2]) : undefined,
+          timestamp: prefix?.[3],
+          bytes: raw.length,
+          sha256: createHash("sha256").update(raw).digest("hex"),
+          rawBase64: raw.toString("base64"),
+        };
+        throw error;
+      }
       start = stop + 1;
       stop = text.indexOf("\n", start);
     }
@@ -84,7 +107,7 @@ export class NativeProtocolStream {
     this.retain(complete);
   }
 
-  /** Partial metadata grants no authority; retain the first failure without exposing payloads. */
+  /** Failure-only raw bytes grant no authority; callers keep them in the private receipt. */
   snapshot() {
     return {
       scope: "complete-kernel-decorated-pipe-and-Unix-stream-writes",
@@ -98,6 +121,7 @@ export class NativeProtocolStream {
       pendingWrites: this.pending.size,
       selectedTranscriptBound: MAX_SELECTED,
       singleLineBound: MAX_LINE,
+      rejectedLine: this.rejectedLine,
     };
   }
 

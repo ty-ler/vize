@@ -128,3 +128,20 @@ passed. The greedy descriptor matcher consumed the real TypeScript payload's
 quoted payload. The existing complete-byte law includes that original generic
 token and fails before this correction. All twenty-one controls pass afterward;
 original limits, whole packets and unresolved migration authority remain exact.
+
+Actual `4463a02f` run `38119233916` passed both unchanged shipping builds and
+completed 58 original rows before refusing an unknown syscall. No supplemental
+outcome or after-side session completed. The partial scope retains 82,875,243
+incoming bytes and 63,650,598 selected bytes across 8,348 writes; normal
+shutdown, tracer retirement and complete public wire closure passed. The
+offending syscall body was absent from the failure receipt, so its semantic
+cause remains unproved. Refusal now first records its exact whole raw line,
+kernel thread/timestamp, byte count and SHA-256 in the failure-only private
+receipt. Latin-1 preserves each incoming byte before parsing; the existing
+failure-custody law verifies complete split-chunk and non-ASCII refusal bytes.
+The original line limit still bounds capture. The observer separately records
+the actual thread's kernel process identity and all sampled native owners;
+absent identities remain explicit failures. This grants no authority and admits
+no new syntax. The same twenty-one controls, transcript limits and original
+79/16 packets remain unchanged; the original ownership migration remains
+unqualified. Only one further original paired diagnostic run is authorized.
