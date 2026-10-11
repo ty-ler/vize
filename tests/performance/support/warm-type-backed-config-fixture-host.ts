@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import raw from "./warm-type-backed-config-fixture-host.json" with { type: "json" };
 import original from "./warm-type-backed-config-repair-host.json" with { type: "json" };
+import { qualifyConfigResultFixtureHost } from "./warm-type-backed-config-result-fixture-host.ts";
 
 type Digest = (side: "before" | "after", file: string) => string | null;
 type Scope = "parent-pair" | "inherited";
@@ -35,6 +36,27 @@ assert.notEqual(repaired, predecessor);
 
 /** One complete test-only successor still requires every original source witness. */
 export function qualifyConfigFixtureHost<T extends { files: readonly string[] }>(
+  production: string[],
+  alreadyQualified: ReadonlySet<string>,
+  digest: Digest,
+  qualifyOriginal: (
+    production: string[],
+    alreadyQualified: ReadonlySet<string>,
+    digest: Digest,
+  ) => T | null,
+  scope: Scope,
+) {
+  return qualifyConfigResultFixtureHost(
+    production,
+    alreadyQualified,
+    digest,
+    (files, owned, actual) =>
+      qualifyConfigFixtureContext(files, owned, actual, qualifyOriginal, scope),
+    scope,
+  );
+}
+
+function qualifyConfigFixtureContext<T extends { files: readonly string[] }>(
   production: string[],
   alreadyQualified: ReadonlySet<string>,
   digest: Digest,
