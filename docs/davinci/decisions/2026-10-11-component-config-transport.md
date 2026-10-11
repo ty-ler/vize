@@ -90,6 +90,19 @@ JSON rather than raw frames. Full Check was still running when the archive was
 audited. This historical receipt grants no current-head, installed release,
 400-provider or performance credit.
 
+The exact `fc4c7a8e43f2480b856e19baf4bf02c1c0f58918` producer was also audited
+from successful Rust job `114390754841` in run `38112485518`, attempt 1. Its
+artifact `11693045152` has 12,037,045 bytes and SHA256
+`bdfa9657562337ca6170be0e1a7892dbfad0431e2751153e39059f5a8967fab4`,
+matching GitHub's digest. All 2,347 members were independently rehashed; all
+120/8/180/6/90/4 complete observations have no mismatch or required value gap.
+Its ten component tests and 17,380 retained JUnit cases have no failure or skip.
+The whole source receipt SHA256 is
+`d758e3d92ad26a831a870ad9c7b1b2828abe501ea4508e7db3f256481584d1d6`.
+This grants exact fc4 producer credit with the same LSP binary/raw-frame limits;
+it does not grant later-head, full Check, installed-public, reference execution,
+adoption, 400-provider or performance credit.
+
 The public observer is part of this same source PR and the existing public
 acceptance workflow. Eligibility requires #8497 actually merged into the release
 cut, all executed component harness bodies equal the frozen release head, and
@@ -108,7 +121,23 @@ failure retains evidence without suppressing those original observations;
 successful public completion additionally requires the component observer.
 Earlier releases cannot receive credit for this later, unmerged transport fix.
 
-Local formatting and the 14 config-host boundary controls pass. Fresh exact-head
+The source `fc4c7a8e43f2480b856e19baf4bf02c1c0f58918` has two authentic
+failures in [full Check 38112485518](https://github.com/ubugeeei-prod/vize/actions/runs/38112485518):
+the unchanged mocked editor existing-config content-edit restart law exceeded
+its original 20-second deadline, and Misskey churn sampled peak RSS was
+128.1 MiB against the unchanged 128 MiB ceiling. The mocked event archive was
+not uploaded: only its raw job log and last ten events survived before the real
+host started. Preserve complete mocked events on the next diagnosis; no later
+editor scenario receives credit. The RSS metrics and whole LSP custody archives
+were downloaded with their advertised SHA256 digests verified. These failures
+remain open; a private borrow candidate also exceeded the RSS ceiling and is
+excluded from this child's finite source authority. Lower Stack restacking is
+owned separately; replay once after its actual coherent parent is published.
+
+Local formatting and the 14 config-host boundary controls pass. Those controls
+also pass in fc4's successful `test-scripts` job `114390754793`; its final tooling
+group has 7,321 cases, 7,254 passes, no failures and 67 explicit existing skips.
+The whole skip lines and raw log remain retained. Fresh exact-head
 consumer execution, source/full Actions, unchanged instruction ceilings, protected
 queue, signed merge and genuinely included installed release acceptance remain
 unfinished. This bounded transport does not close the full 51-rule, editor,
