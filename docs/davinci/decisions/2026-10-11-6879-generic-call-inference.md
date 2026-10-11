@@ -83,3 +83,11 @@ negative controls, source Actions, queue, merge and installed release remain
 pending. The App owner publishes the true fifth child once the actual parent
 foundation is authenticated and runs the single existing composed qualifier.
 This private payload does not dispatch an extra fourth/fifth observer build.
+
+The publisher replayed only the two sealed owned commits onto the authenticated
+post-prefix foundation `fe4dd1ee670b61da0b1397a8e77f0734ddcfba25`.
+The existing composed workflow includes the same `generic_component_tests::`
+filter and requires `VIZE_TEST_REQUIRE_PIN_INPUT_FIXTURE=1`, so the full pinned
+six-case suite runs alongside the mandatory portable six-case cause control.
+All five control groups reuse the original App row's dependency build; their
+complete packets and individual statuses remain retained after any failure.
