@@ -43,10 +43,13 @@ for (const composed of [false, true]) {
     assert.ok(current);
     if ("configReviewContext" in current) {
       assert.equal(current.configReviewContext.scope, composed ? "parent-pair" : "inherited");
-      assert.equal(current.files.length, composed ? 135 : 28);
+      assert.equal(current.files.length, composed ? 136 : 28);
       assert.equal(current.originalQualification.files.length, composed ? 119 : 28);
       assert.equal(current.configReviewContext.completeProductionBodyPairs.length, 27);
       assert.equal(current.configReviewContext.completeHarnessBodyPairs.length, 4);
+      assert.ok("configCanonBatchContext" in current);
+      assert.equal(current.configCanonBatchContext.completeProductionBodyPairs.length, 2);
+      assert.equal(current.configCanonBatchContext.completeCorpusBodyPairs.length, 1);
     }
     if (composed) assert.deepEqual(pair.production, componentIssuedProduction);
   });

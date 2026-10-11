@@ -8,6 +8,8 @@ import { issuedCompletionManifest as issued } from "../../performance/support/wa
 import successor from "../../performance/support/warm-type-backed-component-issued-manifest.json" with { type: "json" };
 import { qualifyComponentIssuedHost } from "../../performance/support/warm-type-backed-component-issued-host.ts";
 import { configReviewManifest } from "../../performance/support/warm-type-backed-config-review-host.ts";
+import { canonBatchManifest } from "../../performance/support/warm-type-backed-config-canon-batch-host.ts";
+import { runtimeRepairManifest } from "../../performance/support/warm-type-backed-project-config-runtime-repair.ts";
 import {
   configRepairManifest,
   qualifyConfigRepairedReviewHost,
@@ -53,9 +55,13 @@ export function qualifyCurrentComponentIssuedSource(composed = true) {
     ]),
   );
   const production = composed
-    ? [...new Set([...pair.production, ...configReviewManifest.reviewedProductionFiles])].toSorted(
-        (left, right) => (left < right ? -1 : left > right ? 1 : 0),
-      )
+    ? [
+        ...new Set([
+          ...pair.production,
+          ...configReviewManifest.reviewedProductionFiles,
+          ...canonBatchManifest.newProductionFiles,
+        ]),
+      ].toSorted((left, right) => (left < right ? -1 : left > right ? 1 : 0))
     : pair.production;
   const repairedBefore = new Map([
     ...configRepairManifest.productionBodies.map(
@@ -64,16 +70,30 @@ export function qualifyCurrentComponentIssuedSource(composed = true) {
     ...configRepairManifest.corpusBodies.map(
       ([file, before, after]) => [file, composed ? before : after] as const,
     ),
+    ...canonBatchManifest.productionBodies.map(
+      ([file, before, , after]) => [file, composed ? before : after] as const,
+    ),
+    ...canonBatchManifest.corpusBodies.map(
+      ([file, before, after]) => [file, composed ? before : after] as const,
+    ),
   ]);
+  const runtimeBefore = new Map(
+    runtimeRepairManifest.inheritedBodies.map(([file, , after]) => [file, after]),
+  );
+  const runtimeRepaired = [...runtimeBefore].every(
+    ([file, after]) => pair.actual("after", file) === after,
+  );
   return qualifyConfigRepairedReviewHost(
     production,
     new Set(),
     (side, file) =>
-      side === "before" && repairedBefore.has(file)
-        ? repairedBefore.get(file)!
-        : side === "before" && reviewed.has(file)
-          ? reviewed.get(file)![composed ? 1 : 3]
-          : pair.actual(side, file),
+      side === "before" && runtimeRepaired && runtimeBefore.has(file)
+        ? runtimeBefore.get(file)!
+        : side === "before" && repairedBefore.has(file)
+          ? repairedBefore.get(file)!
+          : side === "before" && reviewed.has(file)
+            ? reviewed.get(file)![composed ? 1 : 3]
+            : pair.actual(side, file),
     qualifyComponentIssuedHost,
     composed ? "parent-pair" : "inherited",
   );

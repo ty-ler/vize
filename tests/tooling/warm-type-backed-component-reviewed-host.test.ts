@@ -7,6 +7,8 @@ import {
 } from "../performance/support/warm-type-backed-config-repair-host.ts";
 import { qualifyComponentIssuedHost } from "../performance/support/warm-type-backed-component-issued-host.ts";
 import { componentIssuedSourcePair } from "./support/component-issued-source.ts";
+import { canonBatchManifest as batch } from "../performance/support/warm-type-backed-config-canon-batch-host.ts";
+import { runtimeRepairManifest } from "../performance/support/warm-type-backed-project-config-runtime-repair.ts";
 
 type Digest = (side: "before" | "after", file: string) => string | null;
 const reviewed = new Map(
@@ -16,9 +18,13 @@ const reviewed = new Map(
 for (const composed of [false, true]) {
   const pair = componentIssuedSourcePair(composed);
   const production = composed
-    ? [...new Set([...pair.production, ...review.reviewedProductionFiles])].toSorted(
-        (left, right) => (left < right ? -1 : left > right ? 1 : 0),
-      )
+    ? [
+        ...new Set([
+          ...pair.production,
+          ...review.reviewedProductionFiles,
+          ...batch.newProductionFiles,
+        ]),
+      ].toSorted((left, right) => (left < right ? -1 : left > right ? 1 : 0))
     : pair.production;
   const scope = composed ? "parent-pair" : "inherited";
   const repairedBefore = new Map([
@@ -28,23 +34,37 @@ for (const composed of [false, true]) {
     ...repair.corpusBodies.map(
       ([file, before, after]) => [file, composed ? before : after] as const,
     ),
+    ...batch.productionBodies.map(
+      ([file, before, , after]) => [file, composed ? before : after] as const,
+    ),
+    ...batch.corpusBodies.map(
+      ([file, before, after]) => [file, composed ? before : after] as const,
+    ),
   ]);
+  const runtimeBefore = new Map(
+    runtimeRepairManifest.inheritedBodies.map(([file, , after]) => [file, after]),
+  );
+  const runtimeRepaired = [...runtimeBefore].every(
+    ([file, after]) => pair.actual("after", file) === after,
+  );
   const digest: Digest = (side, file) =>
-    side === "before" && repairedBefore.has(file)
-      ? repairedBefore.get(file)!
-      : side === "before" && reviewed.has(file)
-        ? reviewed.get(file)![composed ? 1 : 3]
-        : pair.actual(side, file);
+    side === "before" && runtimeRepaired && runtimeBefore.has(file)
+      ? runtimeBefore.get(file)!
+      : side === "before" && repairedBefore.has(file)
+        ? repairedBefore.get(file)!
+        : side === "before" && reviewed.has(file)
+          ? reviewed.get(file)![composed ? 1 : 3]
+          : pair.actual(side, file);
   const qualify = (current = digest, files = production, allowed = new Set<string>()) =>
     qualifyConfigRepairedReviewHost(files, allowed, current, qualifyComponentIssuedHost, scope);
 
   await test(`${scope} reviewed component qualification retains the complete original witness and actual source footprint`, () => {
     assert.equal(qualifyComponentIssuedHost(production, new Set(), digest), null);
     const result = qualify();
-    assert.ok(result && "configRepairContext" in result);
+    assert.ok(result && "configRepairContext" in result && "configCanonBatchContext" in result);
     assert.deepEqual(result.files, production);
     assert.deepEqual(result.originalQualification.files, pair.production);
-    assert.equal(result.files.length, composed ? 135 : 28);
+    assert.equal(result.files.length, composed ? 136 : 28);
     assert.equal(result.originalQualification.files.length, composed ? 119 : 28);
     assert.equal(result.inheritedProductionBodies, 90);
     assert.equal(result.inheritedCustodyBodies, 51);
@@ -61,6 +81,12 @@ for (const composed of [false, true]) {
     );
     assert.deepEqual(result.configRepairContext.completeCorpusBodyPairs, repair.corpusBodies);
     assert.equal(result.configRepairContext.scope, scope);
+    assert.deepEqual(
+      result.configCanonBatchContext.completeProductionBodyPairs,
+      batch.productionBodies,
+    );
+    assert.deepEqual(result.configCanonBatchContext.completeCorpusBodyPairs, batch.corpusBodies);
+    assert.equal(result.configCanonBatchContext.scope, scope);
   });
 
   await test(`${scope} reviewed component qualification refuses context drift, child drift and forged extra ownership`, () => {
@@ -95,7 +121,7 @@ for (const composed of [false, true]) {
     const foreign = "crates/vize_canon/unreviewed-component-owner.rs";
     assert.equal(qualify(digest, [...production, foreign], new Set([foreign])), null);
     if (!composed)
-      for (const file of review.reviewedProductionFiles)
+      for (const file of [...review.reviewedProductionFiles, ...batch.newProductionFiles])
         assert.equal(qualify(digest, [...production, file], new Set([file])), null, file);
   });
 }

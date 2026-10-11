@@ -98,14 +98,17 @@ test("complete literal parent repair bodies retain the immutable original112/96/
   assert.ok(Object.isFrozen(repair) && repair.productionBodies.every(Object.isFrozen));
 });
 
-test("the current complete component successor retains its actual 135 paths and every parent repair", () => {
+test("the current complete component successor retains its actual136 paths and every parent repair", () => {
   assert.equal(qualify(currentDigest), null);
   const result = qualifyCurrentComponentIssuedSource();
   assert.ok(result && "configRepairContext" in result);
-  assert.equal(result.files.length, 135);
+  assert.equal(result.files.length, 136);
   assert.equal(result.originalQualification.files.length, 119);
   assert.deepEqual(result.configRepairContext.completeProductionBodyPairs, repair.productionBodies);
   assert.deepEqual(result.configRepairContext.completeCorpusBodyPairs, repair.corpusBodies);
+  assert.ok("configCanonBatchContext" in result);
+  assert.equal(result.configCanonBatchContext.completeProductionBodyPairs.length, 2);
+  assert.equal(result.configCanonBatchContext.completeCorpusBodyPairs.length, 1);
 });
 
 test("the complete additive regression fixture has no absent or drifted substitute", () => {
