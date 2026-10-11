@@ -2,6 +2,7 @@
 
 #[cfg(feature = "glyph")]
 mod formatting;
+mod lint;
 mod read;
 #[cfg(feature = "glyph")]
 use formatting::format_options_from_config;
@@ -175,18 +176,6 @@ impl ServerState {
         LspConfigSection::from(config).with_signature_help(unstable.signature_help)
     }
 
-    fn apply_linter_config(
-        &self,
-        config: LinterConfig,
-        custom_elements: vize_relief::options::CustomElementMatcher,
-        source: &str,
-    ) {
-        let mut snapshot = self.linter_config.write();
-        snapshot.0 = config;
-        snapshot.2 = custom_elements;
-        tracing::info!("Loaded linter config from {}", source);
-    }
-
     fn apply_lsp_config(&self, config: LspConfigSection, source: &str) {
         let features = self.update_names_configuration(|| self.apply_lsp_config_locked(config));
         tracing::info!("Loaded LSP config from {}: {:?}", source, features);
@@ -256,9 +245,7 @@ impl ServerState {
             }
             self.apply_linter_config(
                 loaded.linter,
-                vize_relief::options::CustomElementMatcher::from_patterns(
-                    loaded.project.document.into_compiler_custom_elements(),
-                ),
+                loaded.project.document.into_compiler_custom_elements(),
                 &source,
             );
             *self.linter_rule_options.write() = loaded.lint_rule_options;
@@ -295,9 +282,7 @@ impl ServerState {
             let config = loaded.config;
             self.apply_linter_config(
                 loaded.linter,
-                vize_relief::options::CustomElementMatcher::from_patterns(
-                    loaded.project.document.into_compiler_custom_elements(),
-                ),
+                loaded.project.document.into_compiler_custom_elements(),
                 &source,
             );
             *self.linter_rule_options.write() = loaded.lint_rule_options;
