@@ -12,7 +12,8 @@ use std::{fs, path::Path};
 use vize_carton::{String, cstr};
 
 fn native() -> Option<std::path::PathBuf> {
-    let required = std::env::var("VIZE_TEST_REQUIRE_TSGO").as_deref() == Ok("1");
+    let required = std::env::var("VIZE_TEST_REQUIRE_TSGO").as_deref() == Ok("1")
+        || std::env::var("VIZE_TEST_REQUIRE_PIN_INPUT_FIXTURE").as_deref() == Ok("1");
     if std::env::var_os("VIZE_TEST_DISABLE_TSGO").is_some() {
         assert!(
             !required,

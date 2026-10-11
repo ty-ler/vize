@@ -43,7 +43,8 @@ Rust-shard control runs even when capture and upstream fixtures are absent.
 The single composed App qualifier additionally sets
 `VIZE_TEST_REQUIRE_PIN_INPUT_FIXTURE=1`; the same law then requires the tracked
 pinned fixture in an isolated snapshot with its full Root/story/config/import
-context. Missing hydration or provider authority fails that suite. Every
+context. Either native or pinned-fixture requirement also rejects native
+disabling. Missing hydration or provider authority fails that suite. Every
 observed ancestor provider scope is linked in its original nearest-first
 layout; providers are neither installed nor copied through symlinks. Actual
 link targets, Vue manifests, config provider bodies and missing scopes are
