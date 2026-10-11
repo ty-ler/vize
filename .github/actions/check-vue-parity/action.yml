@@ -153,6 +153,7 @@ runs:
     - name: Check Vue compiler and typecheck parity
       shell: bash
       env:
+        VIZE_TRACE_EDITOR_PREPARATION: "1"
         VIZE_TEST_BIN: ${{ github.workspace }}/target/ci/vize
         VIZE_LSP_BIN: ${{ github.workspace }}/target/ci/vize
         VIZE_LSP_REQUIRE_SOURCE_BUILD: "1"
