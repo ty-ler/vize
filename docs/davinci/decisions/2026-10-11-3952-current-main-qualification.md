@@ -217,3 +217,32 @@ pass actual child `/proc` executable/stat custody and wrong-checkout, unsafe-PID
 and wrong-executable refusals before the original campaign. Its native producer
 remains unchanged; a successful CPU/syscall archive is still required before
 attributing the cold graph cost.
+
+[Native backend run 38150195781](https://github.com/ubugeeei-prod/vize/actions/runs/38150195781)
+refuses older raw head `46cd205b` before tests because the live workflow invokes
+`native-syntax-semantics.sh`, introduced by actual main `006c564067ba`. Merge that
+immutable main into a fresh worktree, retaining every original source commit;
+combined producer `1128e68f5b9cf61892087e89278f8dd59b5e81e7` contains the actual
+helper and current public combined CLI/native error behavior. Review all 193
+complete pairs against original `fc551dc` and current main: each before and after
+body remains exact, with no extra or missing production path relative to the new
+merge base. All 45 original workload bodies remain exact on all three sources.
+Only the reviewed source identity and manifest digest change; preserve original
+source, workloads, deadlines, refusal laws and resource caps. The same-invocation
+regression and all existing Canon controls now pass the current authored job,
+which still fails original n8n DELETE diagnostics with a type-check timeout.
+
+Diagnostic [run 38149506949](https://github.com/ubugeeei-prod/vize/actions/runs/38149506949)
+retains actual process custody and complete CPU/syscall evidence in artifact
+`11706805001`: 16,287 CPU samples, raw `perf.data`, full stacks/report, syscall
+summary, source binary/lock hashes, process birth/stat and observer statuses.
+The consumer fails the unchanged original request. Strace exits 0; perf exits 130
+after the observer's intentional SIGINT and flushes a readable complete archive.
+The helper rejects 130, so its step is red; that does not erase the raw capture or
+grant acceptance. Whole-observer counts include descendant processes: 12,467,091
+`statx`, 14,259,724 `readlink`, and 1,068,700 `read` calls. Sampled native bridge
+frames include `InputStamp::current_consumed_fact` and `PackagePathCache::canonicalize`;
+main-thread frames include `nearest_nuxt_root`. Investigate actual repeated
+read/stamp paths before further producer changes. Intrusive observer timings,
+aggregate descendant counts and historical source receipts cannot establish a
+current-source speed improvement or satisfy the original n8n campaign.

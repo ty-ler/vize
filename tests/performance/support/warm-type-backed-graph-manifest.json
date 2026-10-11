@@ -1,7 +1,7 @@
 {
   "version": 1,
   "originalSource": "fc551dc09faaa3187cd37a3a02cb94ebab0c3352",
-  "reviewedSource": "b36455f360d41b89d9cdf3e9dc12b9a4b32fe78c",
+  "reviewedSource": "1128e68f5b9cf61892087e89278f8dd59b5e81e7",
   "files": [
     "crates/vize/tests/lsp_generic_prop_hover_cli.rs\t3a2a4fae64ef23c1b444e4268fbe4416fbc3f5d8e5b9e2f90bcd018e65d4a865\t0f58949907c9a06b5feb7e9d4369c816b36fcc6dec62f662b3d03742c241c8f3",
     "crates/vize/tests/lsp_generic_prop_hover_cli/template_props.rs\t-\t5520a11484d30a7b07163e3391abcc41e862ef5dc278a753fee4e1ffeb22ea56",
