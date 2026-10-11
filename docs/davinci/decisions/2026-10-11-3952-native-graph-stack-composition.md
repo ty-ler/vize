@@ -327,3 +327,20 @@ five LSP protocol and five source-lock bodies. Existing authorities and all
 400 requests, whole diagnostic vectors, invalidation, 10 s deadlines and
 128/384 MiB resource caps remain unchanged. A new coherent original-source
 campaign must qualify the final compiled source; #8520 remains a draft.
+
+After #8613 actually merged, integrate once onto its literal main commit
+`d45d45908a09cf8931b141fbc92fea8d11c56414`. All six existing commit
+author/date/message/trailer bodies and all 216 nongenerated owned file bodies
+remain exact; the Canon inventory additionally retains the incoming rows.
+Incoming foundation, README, agent rules and Nix producer bodies remain exact.
+
+The finite qualification binds all 185 complete production before/after blobs
+and 45 unchanged workload, protocol, lock and transitive measurement-driver
+bodies, including the original case metadata. Its canonical manifest SHA256
+is `2a196f3992b094b6d3d278acb06d33a9b30f838f788dbe046e46c5325bda3194`.
+Extract the existing path set in a move-only commit without changing its members.
+Four local controls pass: complete actual blobs, every missing/extra/duplicate
+entry, every changed body on either side, and identical bytes with changed
+Git mode/type. Scoped type-aware lint has no warnings. These source proofs
+grant no lifecycle, resource, full Nix or measured speed result; the single
+new exact-source original campaign remains required before draft admission.
