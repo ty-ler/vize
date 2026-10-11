@@ -29,7 +29,7 @@ function sourcePair(composed: boolean) {
       production.set(file, [file, before, after]);
   for (const [file, inherited, after, original] of manifest.componentBodies)
     production.set(file, [file, composed ? original : inherited, after]);
-  const bodies = new Map([...production]);
+  const bodies = new Map(production);
   for (const [file, original, inherited, after] of manifest.inheritedProductionBodies)
     bodies.set(file, [file, composed ? original : inherited, after]);
   for (const [file, original, inherited] of manifest.inheritedCustodyBodies)
