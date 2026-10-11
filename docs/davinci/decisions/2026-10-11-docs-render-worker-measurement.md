@@ -152,9 +152,30 @@ mask, source omission or acceptance replacement is introduced.
 
 **Decision:** retain production two workers and do not open a four-worker
 promotion PR. The useful measured elapsed-time reduction does not satisfy the
-required complete PNG equivalence. The next bounded investigation is an
-unchanged two-worker repeated-capture control for the two representative routes
-on authenticated generated inputs, followed by coordination with the Docs owner
-for any actual animation or raster fix. No new full-hour browser replay is
-needed to classify this first control. Any later production promotion still
-requires terminal complete proof on its own actual current source and manifest.
+required complete PNG equivalence. A zero-rerun historical control compares the original #8566 two-worker
+PNG carriers with this diagnostic's original two-worker carriers. The protected
+renderer/page/CSS/catalogue source bytes are identical, and both EN/JA generated
+All Rules HTML hashes match the diagnostic's whole-site inventory. The entire
+built site and live external assets are not established identical, so this is
+a bounded historical control, not a second same-source qualification.
+
+The original two-worker `016-rules-all-desktop-005.png` SHA256,
+`2055772f60096f8d3c8e30cc5b7bea3101769b7e28795f48f4c9ef1b8079c103`,
+is byte-exact to the diagnostic's four-worker PNG. The diagnostic's two-worker
+PNG differs at the same 17 pixels described above. The two-worker home pair
+also differs at 173,160 pixels in the initial 1,440 by 960 viewport, with a
+maximum RGB channel difference of 3. Both selected historical originals were
+SHA/CRC-authenticated and decoded. At the receipt's reported-hash level,
+historical two workers versus diagnostic two workers differs at 226 of 1,104
+carriers; historical two versus diagnostic four differs at 235. These reported
+hash counts are not authentication of every historical PNG. Four workers are
+therefore not necessary for the two representative differences; their full
+strict qualification remains red. The historical pixel-control report SHA256 is
+`a539abdff5c46224d56c8f444600141d1532989dd5d78f504ba39bf0298ca212`.
+
+**Follow-up ownership:** stop further observer builds and capture campaigns.
+The maintainer will coordinate an actual source renderer determinism/performance
+repair with the active Docs delivery owners. Retain every existing gate and do
+not promote four workers using this limited historical control. Any later
+production promotion still requires terminal complete proof on its own actual
+current source and manifest.
