@@ -7,9 +7,13 @@ import * as path from "node:path";
 import { test } from "node:test";
 
 import { prepareNuxtCheckFixture } from "../_helpers/nuxt-check-prepare.ts";
-import { inspectPrepareNode, selectNuxtPrepareRuntime } from "../_helpers/nuxt-check-runtime.ts";
+import {
+  inspectPrepareNode,
+  inspectPrepareNpx,
+  selectNuxtPrepareRuntime,
+} from "../_helpers/nuxt-check-runtime.ts";
 
-test("preparation binds an actual distribution and scopes child Node without changing its caller", () => {
+test("preparation binds an actual executable and scopes child Node without changing its caller", () => {
   const ambient = environmentFingerprint(process.env);
   const env = { PATH: process.env.PATH, VP_NODE_VERSION: "foreign-selection" };
   const before = { ...env };
@@ -32,13 +36,60 @@ test("preparation binds an actual distribution and scopes child Node without cha
     selected.observation.sha256,
     createHash("sha256").update(fs.readFileSync(actual.execPath)).digest("hex"),
   );
-  assert.equal(path.dirname(selected.observation.npx), path.dirname(actual.execPath));
-  assert.equal(
-    selected.observation.npxSha256,
-    createHash("sha256").update(fs.readFileSync(selected.observation.npxEntry)).digest("hex"),
-  );
   assert.deepEqual(env, before);
   assert.equal(environmentFingerprint(process.env), ambient);
+});
+
+test("a filesystem distribution fixture binds adjacent npx and refuses missing or nonfile entries", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-nuxt-npx-entry-"));
+  const executable = path.join(root, process.platform === "win32" ? "node.exe" : "node");
+  const npx = path.join(root, process.platform === "win32" ? "npx.cmd" : "npx");
+  try {
+    assert.throws(() => inspectPrepareNpx(executable), /ENOENT/);
+    fs.mkdirSync(npx);
+    assert.throws(() => inspectPrepareNpx(executable), /distribution must own npx/);
+    fs.rmdirSync(npx);
+    // This file tests path and byte identity only; it is never executed as npx.
+    const content = "filesystem-only npx entry fixture\n";
+    fs.writeFileSync(npx, content);
+    const direct = inspectPrepareNpx(executable);
+    assert.equal(path.dirname(direct.npx), path.dirname(executable));
+    assert.equal(direct.npxEntry, fs.realpathSync(npx));
+    assert.equal(direct.npxSha256, createHash("sha256").update(content).digest("hex"));
+    fs.rmSync(npx);
+    const target = path.join(root, "npx-entry");
+    fs.writeFileSync(target, content);
+    fs.symlinkSync(target, npx, "file");
+    const linked = inspectPrepareNpx(executable);
+    assert.equal(linked.npx, npx);
+    assert.equal(linked.npxEntry, fs.realpathSync(target));
+    assert.equal(linked.npxSha256, direct.npxSha256);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("a real runtime without adjacent npx authenticates its major before distribution lookup", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-nuxt-bare-node-"));
+  const executable = path.join(root, path.basename(fs.realpathSync(process.execPath)));
+  try {
+    fs.copyFileSync(fs.realpathSync(process.execPath), executable);
+    const env = { VIZE_APP_CHECK_PREPARE_NODE22: executable };
+    const actual = inspectPrepareNode(executable, env);
+    assert.equal(actual.observation.executable, fs.realpathSync(executable));
+    assert.equal(actual.observation.version, process.version);
+    assert.equal(
+      actual.observation.sha256,
+      createHash("sha256").update(fs.readFileSync(process.execPath)).digest("hex"),
+    );
+    assert.throws(() => inspectPrepareNpx(executable), /ENOENT/);
+    assert.throws(
+      () => selectNuxtPrepareRuntime("22", env),
+      process.versions.node.startsWith("22.") ? /ENOENT/ : /requires Node 22/,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 function environmentFingerprint(env: NodeJS.ProcessEnv): string {

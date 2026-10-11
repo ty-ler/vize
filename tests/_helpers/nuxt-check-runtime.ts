@@ -4,15 +4,12 @@ import { createHash } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-/** Bind the real distribution, rather than a version-manager shim. */
+/** Bind the real executable, rather than a version-manager shim. */
 export function inspectPrepareNode(binary: string, env: NodeJS.ProcessEnv) {
   assert.ok(path.isAbsolute(binary), "preparation Node must be an absolute executable path");
   const executable = fs.realpathSync(binary);
   assert.ok(fs.statSync(executable).isFile(), "preparation Node must be a regular file");
   const bin = path.dirname(executable);
-  const npx = path.join(bin, process.platform === "win32" ? "npx.cmd" : "npx");
-  const npxEntry = fs.realpathSync(npx);
-  assert.ok(fs.statSync(npxEntry).isFile(), "preparation Node distribution must own npx");
   const pathKey = Object.keys(env).find((key) => key.toLowerCase() === "path") ?? "PATH";
   const scoped = { ...env, [pathKey]: `${bin}${path.delimiter}${env[pathKey] ?? ""}` };
   const actual: { execPath: string; version: string } = JSON.parse(
@@ -35,10 +32,19 @@ export function inspectPrepareNode(binary: string, env: NodeJS.ProcessEnv) {
       executable,
       version: actual.version,
       sha256: createHash("sha256").update(fs.readFileSync(executable)).digest("hex"),
-      npx,
-      npxEntry,
-      npxSha256: createHash("sha256").update(fs.readFileSync(npxEntry)).digest("hex"),
     },
+  };
+}
+
+/** Selected preparation runtimes must own the adjacent package-manager entry. */
+export function inspectPrepareNpx(executable: string) {
+  const npx = path.join(path.dirname(executable), process.platform === "win32" ? "npx.cmd" : "npx");
+  const npxEntry = fs.realpathSync(npx);
+  assert.ok(fs.statSync(npxEntry).isFile(), "preparation Node distribution must own npx");
+  return {
+    npx,
+    npxEntry,
+    npxSha256: createHash("sha256").update(fs.readFileSync(npxEntry)).digest("hex"),
   };
 }
 
@@ -58,6 +64,11 @@ export function selectNuxtPrepareRuntime(authoredEngine: unknown, env: NodeJS.Pr
   assert.match(selected.observation.version, /^v22\./, "authored preparation requires Node 22");
   return {
     env: selected.env,
-    observation: { authoredEngine, node22Selected: true, ...selected.observation },
+    observation: {
+      authoredEngine,
+      node22Selected: true,
+      ...selected.observation,
+      ...inspectPrepareNpx(selected.observation.executable),
+    },
   };
 }

@@ -49,3 +49,20 @@ and inherits the same provision; it has no separate runtime path. Removing the
 added step leaves every original action input and step object unchanged. Bash
 syntax and formatting pass; real runner provision and full Nuxt/native acceptance
 remain pending until the single composed qualification finishes.
+
+The source Check at `8c1c179184cf1aaf2ece77a0ead8dcf4cd577d94`
+(`38135325525`, tooling job `114458423523`) exposed two runtime laws failing:
+the runner's pnpm Node `24.14.0` has no adjacent npx, so distribution inspection
+both preempted the authored-major refusal and broke the executable-binding law.
+Authenticate the real executable, child identity, version and SHA first. Refuse
+a non-22 runtime before looking up npx. Selected Node 22 still requires its real
+adjacent regular npx entry and hash; there is no package-manager fallback.
+
+Keep the genuine child/runtime/environment assertions independent of npm
+bundling. A transparently synthetic filesystem fixture checks npx path, regular
+file, symlink and byte identity without executing a fabricated package manager.
+A copied real Node binary with no npx checks refusal ordering and the mandatory
+distribution requirement for Node 22. Separate real Node 22 child+npx evidence
+is required; neither filesystem laws nor local runtime controls replace the
+single original composed App qualification. Preparation commands, checked
+source, lock rules, checker runtime and deadlines are unchanged.
