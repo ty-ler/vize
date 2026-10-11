@@ -11,7 +11,6 @@ env:
   CARGO_TERM_COLOR: always
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   NODE_OPTIONS: "--disable-warning=DEP0040 --disable-warning=DEP0169"
-  PACKET_DIR: ${{ runner.temp }}/original-typechecker-negative-packets
   PACKET_DRIVER_SHA: ${{ github.sha }}
 
 jobs:
@@ -26,6 +25,8 @@ jobs:
       - name: Save observer outside the product checkout
         shell: bash
         run: |
+          PACKET_DIR="$RUNNER_TEMP/original-typechecker-negative-packets"
+          printf 'PACKET_DIR=%s\n' "$PACKET_DIR" >> "$GITHUB_ENV"
           mkdir -p "$PACKET_DIR"
           cp tools/diagnostics/app-negative-packets.py "$RUNNER_TEMP/app-negative-packets.py"
           cp .github/workflows/diag-app-negative-packets.yml "$PACKET_DIR/driver-workflow.yml"
@@ -83,7 +84,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: original445-typechecker-negative-whole-packets-${{ github.run_id }}
-          path: ${{ env.PACKET_DIR }}
+          path: ${{ runner.temp }}/original-typechecker-negative-packets
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 30
