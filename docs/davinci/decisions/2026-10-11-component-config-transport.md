@@ -35,12 +35,16 @@ This is a new child of the configuration native Stack #8400, after #8531. Its
 parent APIs and original 400-provider qualification remain separately required.
 The parent's finite source-body custody cannot automatically authorize these
 new matcher bodies; this child needs its own exact-source qualification.
-Its separate selector binds all 27 child production bodies and the 112-body
+Its separate selector binds all 28 child production bodies and the 113-body
 original parent/child composition. Both scopes retain the parent's complete
 90-body source authority, all 51 custody bodies and every explicitly pinned
 harness successor, plus the unchanged original registration corpus/API/oracle.
 Unknown, omitted, duplicate or drifting bodies fail closed. Selector admission
 does not qualify the actual 400-provider packets or a performance improvement.
+The finite JSON authority is split into three explicitly named parts. Reassembly
+retains all 90 production rows and 51 custody rows, and the same complete-value
+SHA256 binding; each part has at most 350 lines. The editor's private lint
+installer lives in its own module to retain the source-length gate.
 The original source preparation was backed up before replay; all original
 fixtures and incoming decisions are retained.
 
@@ -58,6 +62,33 @@ member's SHA256 after download:
 | `cli-one-evaluation.json`                                     | Six CLI calls and evaluation counters                        |
 | `lsp-transport.json`                                          | 90 versioned publications and complete protocol              |
 | `lsp-policy-replacement.json`                                 | Four required workspace/reload packets and complete protocol |
+
+The historical producer at `11910fb33a676265265050f8000769e3939c636d` retained
+all six members in [run 38109907088, attempt 1](https://github.com/ubugeeei-prod/vize/actions/runs/38109907088).
+Rust job `114383136249` succeeded, including all ten component tests; its whole
+workspace JUnit has 17,380 cases with no failures or skips. Artifact `11692275416`
+has exactly 12,037,294 downloaded bytes and archive SHA256
+`5c3c8a248161e86fe33a0068d2003bde0d23a26c82e2b197b224bbb77da85182`,
+matching GitHub's advertised digest. Independent whole-packet judgment found
+no mismatch in the 120/8/180/6/90/4 observations or the counters `1..6`.
+
+| Whole member                  | Bytes     | Downloaded SHA256                                                  |
+| ----------------------------- | --------- | ------------------------------------------------------------------ |
+| `whole-packets.json`          | 79,209    | `124652ec9747ccb2b9bdd542afa767bba3326ee9d0d90000f2077ec9bd6a012e` |
+| `jsx-whole-packets.json`      | 6,214     | `b6b792b66c34eb9fcefccdf76e3ac2a01e7de1dc5a81c8337ba41e24c2a5b9c1` |
+| `cli-transport.json`          | 315,490   | `248eeae7299b4fbe0b4cb23f25cc3325b5d5dd8186a324d398320a401d83b0b6` |
+| `cli-one-evaluation.json`     | 7,048     | `533a71962bc62f5a0a04c4daaf6b07273018829f6c5272dfbc803da4e38177a8` |
+| `lsp-transport.json`          | 3,497,915 | `9e975e798e7dfba113fb778d2325ae9161e20f4ed724a2c4f6ea1bc4c55b0256` |
+| `lsp-policy-replacement.json` | 193,426   | `5956f26078e71f3904aed563625fb0cc7d7ab665496d0ecf84eccf1114ce4a86` |
+
+The retained whole audit receipt SHA256 is
+`ed92c229bbac5c341ff05e6d39d5074850f71bfc439e21c5cffd5c7f5fe481b6`;
+the digest inventory covers all 2,347 archive members. The LSP source identity
+joins the authenticated artifact/run and timing receipt: its own `sourceSha`
+is null, executable bytes were not hashed, and its complete protocol is decoded
+JSON rather than raw frames. Full Check was still running when the archive was
+audited. This historical receipt grants no current-head, installed release,
+400-provider or performance credit.
 
 The public observer is part of this same source PR and the existing public
 acceptance workflow. Eligibility requires #8497 actually merged into the release
@@ -77,8 +108,8 @@ failure retains evidence without suppressing those original observations;
 successful public completion additionally requires the component observer.
 Earlier releases cannot receive credit for this later, unmerged transport fix.
 
-Local formatting and the 12 config-host boundary controls pass. Actual consumer
-execution, fresh source/full Actions, unchanged instruction ceilings, protected
+Local formatting and the 14 config-host boundary controls pass. Fresh exact-head
+consumer execution, source/full Actions, unchanged instruction ceilings, protected
 queue, signed merge and genuinely included installed release acceptance remain
 unfinished. This bounded transport does not close the full 51-rule, editor,
 type-aware lint or performance requirements of n8n adoption. Upstream stays
