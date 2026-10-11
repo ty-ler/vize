@@ -3,17 +3,18 @@ use std::{io::ErrorKind, path::Path, sync::Arc};
 
 fn owned_facts() -> Vec<InputStamp> {
     vec![
-        InputStamp::observed_source("/owned/tsconfig.json".into(), b"configuration")
-            .with_owner(Arc::new(FactOwner {
+        InputStamp::observed_source("/owned/tsconfig.json".into(), b"configuration").with_owner(
+            Arc::new(FactOwner {
                 path: "/owned/configuration".into(),
                 role: FactRole::Configuration,
-            })),
-        InputStamp::observed_source("/owned/source.ts".into(), b"authored").with_owner(
-            Arc::new(FactOwner {
-                path: "/owned/source.ts".into(),
-                role: FactRole::AuthoredSource,
             }),
         ),
+        InputStamp::observed_source("/owned/source.ts".into(), b"authored").with_owner(Arc::new(
+            FactOwner {
+                path: "/owned/source.ts".into(),
+                role: FactRole::AuthoredSource,
+            },
+        )),
         InputStamp::observed_canonical_file(
             "/owned/probe.ts".into(),
             "/owned/selected.ts".into(),

@@ -27,8 +27,7 @@ enum PathOptions {
 /// TypeScript resolves a relative `paths` target against the effective
 /// `baseUrl` when one is declared anywhere in the chain, and against the
 /// directory of the config declaring the winning `paths` map otherwise.
-/// `extends` merging replaces whole values, so each anchor is simply the
-/// directory of the config whose declaration won.
+/// `extends` replaces whole values; each anchor is the winning declaration's directory.
 #[derive(Clone, Default)]
 struct DeclarationDirs {
     paths: Option<PathBuf>,
