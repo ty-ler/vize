@@ -4,6 +4,8 @@
     reason = "registry cells retain their isolated native owner"
 )]
 use super::{Arc, AtomicBool, Ordering, PathBuf, ServerState};
+#[cfg(feature = "experimental-source-navigation")]
+use crate::source_project::{SourceQueryProject, navigation::NativeNavigationProject};
 use futures::{
     FutureExt,
     future::{BoxFuture, Shared},
@@ -14,6 +16,8 @@ type Initialization = Shared<BoxFuture<'static, Option<Arc<ServerState>>>>;
 pub(super) struct ProjectContext {
     root: PathBuf,
     state: OnceLock<Arc<ServerState>>,
+    #[cfg(feature = "experimental-source-navigation")]
+    navigation: OnceLock<Arc<NativeNavigationProject<'static>>>,
     retired: AtomicBool,
     initialization: super::Mutex<Option<Initialization>>,
 }
@@ -23,6 +27,8 @@ impl ProjectContext {
         Self {
             root,
             state: OnceLock::new(),
+            #[cfg(feature = "experimental-source-navigation")]
+            navigation: OnceLock::new(),
             retired: AtomicBool::new(false),
             initialization: super::Mutex::new(None),
         }
@@ -89,6 +95,10 @@ impl ProjectContext {
 
     pub(super) fn mark_retired(&self) {
         self.retired.store(true, Ordering::Release);
+        #[cfg(feature = "experimental-source-navigation")]
+        if let Some(navigation) = self.navigation.get() {
+            navigation.mark_retired();
+        }
         if let Some(state) = self.state.get() {
             state
                 .project_contexts
@@ -99,10 +109,52 @@ impl ProjectContext {
 
     pub(super) fn retire(&self) {
         self.mark_retired();
+        #[cfg(feature = "experimental-source-navigation")]
+        if let Some(navigation) = self.navigation.get() {
+            navigation.retire();
+        }
         if let Some(state) = self.state.get() {
             state.retire_project_owner();
             #[cfg(feature = "experimental-source-navigation")]
             state.retire_module_links(super::super::ModuleLinkRetirement::Shutdown);
+        }
+    }
+
+    #[cfg(feature = "experimental-source-navigation")]
+    pub(super) fn navigation_for_state(
+        &self,
+        state: &Arc<ServerState>,
+    ) -> Option<Arc<NativeNavigationProject<'static>>> {
+        if self.retired.load(Ordering::Acquire)
+            || !self
+                .state
+                .get()
+                .is_some_and(|current| Arc::ptr_eq(current, state))
+        {
+            return None;
+        }
+        let navigation = self
+            .navigation
+            .get_or_init(|| {
+                Arc::new(NativeNavigationProject::new(
+                    SourceQueryProject::new_server(state.clone()),
+                ))
+            })
+            .clone();
+        if self.retired.load(Ordering::Acquire) {
+            navigation.retire();
+            return None;
+        }
+        Some(navigation)
+    }
+}
+
+#[cfg(feature = "experimental-source-navigation")]
+impl Drop for ProjectContext {
+    fn drop(&mut self) {
+        self.mark_retired();
+        if let Some(navigation) = self.navigation.get() {
+            navigation.retire();
         }
     }
 }
