@@ -63,8 +63,9 @@ for (const track of ['supported', 'reference']) {
     }
   }
   const log = readFileSync(`evidence/ui-${track}.log`, 'utf8');
-  const rows = log.split('\n').filter((line) => line.startsWith('{')).map((line) => JSON.parse(line));
-  const summary = rows.filter((row) => row.check === '@vizejs/ui Vapor runtime conformance');
+  const summary = log.split('\n')
+    .filter((line) => line.startsWith('{"check":"@vizejs/ui Vapor runtime conformance"'))
+    .map((line) => JSON.parse(line));
   assert.equal(summary.length, 1);
   assert.equal(summary[0].runtime, track);
   assert.equal(summary[0].fixtures, 533);
