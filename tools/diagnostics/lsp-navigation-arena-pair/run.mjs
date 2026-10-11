@@ -11,7 +11,7 @@ const driver = path.dirname(fileURLToPath(import.meta.url));
 const output = path.join(process.env.RUNNER_TEMP, "lsp-navigation-arena-pair");
 const heads = {
   before: "fc4c7a8e43f2480b856e19baf4bf02c1c0f58918",
-  after: "047f065a0584bc14c199085c1657e1bde9efea87",
+  after: "901984c57df421cc72a33fe9fc0157f7e53d2e27",
 };
 assert.equal(process.platform, "linux");
 assert.equal(process.env.VIZE_PERF_BUDGET_SCALE, "1");
