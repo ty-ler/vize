@@ -6,9 +6,13 @@ use crate::package_route::stamp::Consumed;
 use crate::package_route::stamp::record_package_input_members;
 use std::path::{Path, PathBuf};
 
+#[expect(
+    clippy::large_enum_variant,
+    reason = "original callback provenance stays inline without a per-occurrence allocation"
+)]
 pub(crate) enum PackageCallback {
     RuntimeSupport,
-    Occurrence(Box<PackageOccurrence>),
+    Occurrence(PackageOccurrence),
 }
 
 pub(crate) struct PackageOccurrence {

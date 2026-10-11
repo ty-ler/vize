@@ -263,7 +263,7 @@ impl<'a> RouteDiscovery<'a> {
             retain_package_inputs(&mut stamps, importer, self.inputs, input_start);
         qualified &= inputs_complete;
         Consumed {
-            value: PackageCallback::Occurrence(Box::new(PackageOccurrence {
+            value: PackageCallback::Occurrence(PackageOccurrence {
                 source_options,
                 context,
                 context_inputs,
@@ -277,7 +277,7 @@ impl<'a> RouteDiscovery<'a> {
                 route_inputs,
                 binding: emitted_binding,
                 binding_registered: false,
-            })),
+            }),
             stamps,
             qualified,
         }
