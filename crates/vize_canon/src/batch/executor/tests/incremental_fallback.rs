@@ -66,6 +66,7 @@ fn incremental_session_fallback_is_counted_per_check() {
 #[test]
 fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
     use crate::{batch::error::CorsaError, corsa_client::CorsaProjectClient};
+    use sha2::{Digest, Sha256};
 
     let _fallback_guard = super::super::fallback::FALLBACK_TEST_LOCK
         .lock()
@@ -76,11 +77,19 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
     let source = case_dir.join("src/main.ts");
     fs::write(&source, "const value: number = 1;\n").unwrap();
     let tsgo = case_dir.join("tsgo");
-    fs::write(
-        &tsgo,
-        "#!/bin/sh\nif [ \"$1\" = \"--api\" ]; then printf 'api unavailable'; exit 0; fi\nprintf 'whole CLI failure packet\\n' >&2\nexit 17\n",
-    )
-    .unwrap();
+    let fixture = include_str!(
+        "../../../../../../tests/_fixtures/differential/typechecker/incremental-fallback-precedence/case.json"
+    );
+    assert_eq!(
+        vize_carton::cstr!("{:x}", Sha256::digest(fixture.as_bytes())),
+        "c54bf3e05e78a37cd27b137e47e701b8bf5a1a1a6a610f99a4f26f00e9fad29a",
+    );
+    let case: serde_json::Value = serde_json::from_str(fixture).unwrap();
+    assert_eq!(case["schemaVersion"], 1);
+    assert_eq!(case["id"], "incremental-fallback-precedence");
+    assert_eq!(case["expectedSessionErrorExitCode"], -1);
+    assert_eq!(case["checks"], 2);
+    fs::write(&tsgo, case["runtime"].as_str().unwrap()).unwrap();
     fs::set_permissions(&tsgo, fs::Permissions::from_mode(0o755)).unwrap();
     let mut project = VirtualProject::new(&case_dir).unwrap();
     project.register_path(&source).unwrap();
@@ -98,11 +107,17 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
             message,
         },
     };
-    let fallback = executor.check_with_servers(&project, Some(1)).unwrap_err();
+    let fallback = super::super::check_with_cli(executor.corsa_path(), &project, 1).unwrap_err();
     match &fallback {
         CorsaError::CorsaExecution { exit_code, message } => {
-            assert_eq!(*exit_code, 17);
-            assert_eq!(message.as_str(), "whole CLI failure packet\n");
+            assert_eq!(
+                i64::from(*exit_code),
+                case["expectedCliError"]["exitCode"].as_i64().unwrap()
+            );
+            assert_eq!(
+                message.as_str(),
+                case["expectedCliError"]["message"].as_str().unwrap()
+            );
         }
         other => panic!("the complete CLI failure packet must remain observable: {other}"),
     }
