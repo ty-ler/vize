@@ -228,6 +228,13 @@ export async function verifyNavigationRenderJob(
     }
   });
   await phase("links", async () => {
+    if (route.endsWith("/guide/testing")) {
+      const supportUrl = "https://github.com/ubugeeei-prod/vize/blob/main/SUPPORT.md";
+      const support = page.locator(`.content a[href="${supportUrl}"]`);
+      assert.equal(await support.count(), 1, `${route}: original external Support URL`);
+      assert.equal(await support.getAttribute("target"), "_blank");
+      assert.equal(await support.getAttribute("rel"), "noopener noreferrer");
+    }
     for (const href of new Set(metrics.links)) {
       const target = new URL(href);
       if (target.origin !== origin) continue;
