@@ -152,10 +152,11 @@ fn clean_shadow_packet_keeps_a_completed_importers_unreobserved_manifest_fact() 
 
 #[test]
 fn completed_importer_retention_refuses_conflicting_actual_scope_predicates() {
-    let fixture = fixture("missing.json");
+    let fixture = fixture("package.json");
     let (mut project, registration) = project(&fixture);
     let importer = &fixture.bindings[0].importer_path;
-    let manifest = fixture.root.join("missing.json");
+    let manifest = fixture.root.join("package.json");
+    std::fs::remove_file(&manifest).unwrap();
     let initial = project.rebuild_package_shadows_observed().unwrap();
     assert!(initial.qualified);
     let negative = scope_predicate(&initial, importer, &manifest, false);

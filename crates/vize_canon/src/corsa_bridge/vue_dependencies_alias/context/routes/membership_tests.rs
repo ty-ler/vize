@@ -147,10 +147,27 @@ fn runtime_support_qualifies_its_pure_branch_without_any_resolver_or_map_operati
 }
 
 #[test]
-fn complete_watchable_negative_qualifies_empty_reachability_without_requiring_a_miss_origin() {
+fn configured_missing_vue_target_remains_native_positive_topology() {
     let mut harness = Harness::new();
     harness.observe_configuration();
     let packet = harness.resolve("#missing");
+    let PackageCallback::Occurrence(occurrence) = &packet.value else {
+        panic!("occurrence required");
+    };
+    let (route, _) = occurrence.raw_lookup.clone().into_parts();
+    let route = route.unwrap();
+    let target = harness.importer.parent().unwrap().join("missing.vue");
+    assert!(!target.exists());
+    assert!(route.all_source_paths().contains(&&target));
+    assert!(!occurrence.watchable_negative);
+    assert!(occurrence.binding.as_ref().unwrap().route.is_some());
+}
+
+#[test]
+fn complete_watchable_negative_qualifies_empty_reachability_without_requiring_a_miss_origin() {
+    let mut harness = Harness::new();
+    harness.observe_configuration();
+    let packet = harness.resolve("#unmapped");
     assert!(packet.qualified);
     let PackageCallback::Occurrence(occurrence) = &packet.value else {
         panic!("occurrence required");

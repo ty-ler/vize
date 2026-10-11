@@ -101,6 +101,21 @@ Their original assertions remain. Clippy was skipped after the failed law step;
 its independent source check will still run after failed tests, and every failed
 law continues to block lifecycle admission.
 
+[Run 38109914318](https://github.com/ubugeeei-prod/vize/actions/runs/38109914318)
+passes the corrected actual-chain and original-key laws: filters are 6/6, 2/2,
+9/9, 10/10, 7/7, 96/104 and 35/35. Canon Clippy actually runs and leaves only
+two stale impl-level lint expectations after the argument packet extraction.
+The remaining original shadow control supplied `missing.json`, but the real
+setter replaces the supplied scope with its actually resolved `package.json`.
+Its authentic negative now deletes that selected manifest after registration,
+then restores the same manifest before the positive original shadow operation.
+The raw-negative control used a configured absent `.vue` target, which the
+original resolver deliberately preserves as positive native topology. Its
+negative uses an actually unmapped private specifier; the configured missing
+Vue target remains explicitly covered as positive. All original refusal,
+membership and empty-reachability assertions remain. Six other context laws
+still require source fixes; no diagnostic or instruction budget is changed.
+
 Hosted qualification is pending. The n8n job compiles Canon's actual library test
 module, then executes compiler-options, construction, typed-router, package-index,
 dependency-consumption, native-context and package-stamp controls before the
