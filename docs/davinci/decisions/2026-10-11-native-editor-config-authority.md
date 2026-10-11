@@ -74,6 +74,15 @@ the earlier composed production compilation failure in
 remain explicit failed receipts. Test access corrections keep the original
 assertions and supply the same facts to the unchanged underlying operations.
 
+[Run 38109427658](https://github.com/ubugeeei-prod/vize/actions/runs/38109427658)
+compiles all 1994 Canon library tests and passes six compiler-chain controls,
+two constructor controls and eight typed-router controls. The remaining new
+typed-router control incorrectly expects a missing compiler config to erase the
+legacy default root. The original operation preserves that value but refuses
+qualification. Its corrected control compares the complete original root value,
+requires the cold refusal, and proves later creation invalidates the absence fact.
+This failed test receipt remains recorded; later filters have not yet executed.
+
 Hosted qualification is pending. The n8n job compiles Canon's actual library test
 module, then executes compiler-options, construction, typed-router, package-index,
 dependency-consumption, native-context and package-stamp controls before the

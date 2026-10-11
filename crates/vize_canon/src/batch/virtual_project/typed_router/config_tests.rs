@@ -291,7 +291,11 @@ fn an_enabled_plugin_still_requires_its_actual_complete_default_root_chain() {
     assert_eq!(known.value, Some(project.project_root.clone()));
     assert!(known.qualified);
     let missing = project.project_root.join("missing.json");
+    let legacy = configured_root_consumed(&project, Some(options), Some(&missing), false);
     let cold = configured_root_consumed(&project, Some(options), Some(&missing), true);
-    assert!(cold.value.is_none());
+    assert_eq!(cold.value, legacy.value);
+    assert_eq!(cold.value, Some(project.project_root.clone()));
     assert!(!cold.qualified);
+    std::fs::write(&missing, "{}").unwrap();
+    assert!(cold.stamps.iter().any(|stamp| !stamp.is_current()));
 }
