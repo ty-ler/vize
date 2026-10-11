@@ -12,6 +12,7 @@ const EXCLUDED_DIRECTORIES = ["node_modules", ".git", "target", "dist", "build"]
 
 export class WorkspaceLspConfigDiscovery {
   private discovered = false;
+  private refreshGeneration = 0;
 
   constructor(
     private readonly dedicatedConfigFiles: readonly string[],
@@ -30,9 +31,10 @@ export class WorkspaceLspConfigDiscovery {
   }
 
   async refresh(generation?: number): Promise<void> {
+    const refreshGeneration = ++this.refreshGeneration;
     this.trace(`findFiles enter generation=${generation}`);
     try {
-      this.discovered =
+      const discovered =
         (
           await workspace.findFiles(
             WORKSPACE_PROJECT_CONFIG_GLOB,
@@ -40,6 +42,11 @@ export class WorkspaceLspConfigDiscovery {
             1,
           )
         ).length > 0;
+      if (refreshGeneration !== this.refreshGeneration) {
+        this.trace(`findFiles refused generation=${generation} stage=superseded`);
+        return;
+      }
+      this.discovered = discovered;
       this.trace(`findFiles return generation=${generation} discovered=${this.discovered}`);
     } catch (error) {
       this.trace(`findFiles error generation=${generation}`);
