@@ -1,3 +1,6 @@
+// Exercise the actual replay module graph under the shipping Node strip-only runtime.
+import "../performance/support/warm-type-backed-owner-resolve.ts";
+
 import assert from "node:assert/strict";
 import { test } from "node:test";
 

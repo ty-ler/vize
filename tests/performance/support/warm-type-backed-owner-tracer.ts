@@ -82,16 +82,14 @@ export class NativeApiSyscallObserver {
   readonly parents: NativeProcessWitness[] = [];
   readonly parent: NativeProcessWitness;
   readonly file: string;
+  readonly nativeExecutable: string;
   private readonly child: ChildProcess;
   private readonly closed: Promise<{ code: number | null; signal: string | null }>;
   private tracerPid = 0;
   private tracer: ReturnType<typeof tracerWitness> | undefined;
 
-  private constructor(
-    pid: number,
-    output: string,
-    readonly nativeExecutable: string,
-  ) {
+  private constructor(pid: number, output: string, nativeExecutable: string) {
+    this.nativeExecutable = nativeExecutable;
     assert.equal(process.platform, "linux");
     assert.equal(fs.existsSync(output), false, "a fresh private observer directory is required");
     fs.mkdirSync(output, { recursive: true, mode: 0o700 });
