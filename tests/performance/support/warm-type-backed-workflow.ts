@@ -6,6 +6,10 @@ import { unqualifiedReceiptPaths } from "./warm-type-backed-build-receipt-extens
 import { finiteCut } from "./warm-type-backed-cut.ts";
 import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
 import { reviewedHostPaths } from "./warm-type-backed-reviewed-hosts.ts";
+import {
+  assertNativeTerminalLocks,
+  qualifyNativeTerminalHost,
+} from "./warm-type-backed-native-terminal-host.ts";
 import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
 import {
   driverRoot,
@@ -117,13 +121,19 @@ if (process.argv[2] === "prepare") {
     !cut,
     (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
   );
+  const nativeTerminalHost = !cut
+    ? qualifyNativeTerminalHost(production, allowed, (side, file) =>
+        gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+      )
+    : null;
   if (!cut) {
     for (const file of production)
       assert.ok(
         allowed.has(file) ||
           pathHostMove?.files.includes(file) ||
           timingHostMove?.files.includes(file) ||
-          defaultMigrationHost?.files.includes(file),
+          defaultMigrationHost?.files.includes(file) ||
+          nativeTerminalHost?.files.includes(file),
         `unqualified production delta: ${file}`,
       );
   }
@@ -167,6 +177,7 @@ if (process.argv[2] === "prepare") {
         pathHostMove,
         timingHostMove,
         defaultMigrationHost,
+        nativeTerminalHost,
         afterRoot,
         driverSource: driver,
         authority: cut
@@ -207,13 +218,18 @@ if (process.argv[2] === "prepare") {
           ? "Literal published v0.433 and root-frozen release cut; complete changed Git-entry manifest, independent driver, identical fresh ci builds, original400 and one recorded runtime"
           : harnessOnly
             ? "Same production source; closed reviewed harness-only delta and unchanged original inputs/locks. Qualification only, no performance or source-effect gain."
-            : "Actual common ancestor and current source, only owned prepared-surface, readiness-ack, shared editor reference-options, document-batch transfer, streamed workspace-symbol producer, event navigation/rename ownership or exact authenticated path-host move delta or exact authenticated timing-observer host move delta or complete authenticated default-migration slice; one worker, identical release recipe, original400 inputs and current locked runtime",
+            : "Actual common ancestor and current source, only owned prepared-surface, readiness-ack, shared editor reference-options, document-batch transfer, streamed workspace-symbol producer, event navigation/rename ownership or exact authenticated path-host move delta or exact authenticated timing-observer host move delta or complete authenticated default-migration slice or complete authenticated native terminal repair; one worker, identical release recipe, original400 inputs and current locked runtime",
       },
       null,
       2,
     ) + "\n",
   );
-  if (!cut) assert.deepEqual(sourceIdentity(before).locks, sourceIdentity(afterRoot).locks);
+  if (!cut)
+    assertNativeTerminalLocks(
+      sourceIdentity(before).locks,
+      sourceIdentity(afterRoot).locks,
+      nativeTerminalHost,
+    );
   else fs.writeFileSync(path.join(output, "changed-tree-manifest.json"), cut.manifestBytes);
 } else {
   throw new Error("usage: warm-type-backed-workflow.ts prepare");
