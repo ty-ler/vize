@@ -125,3 +125,20 @@ jobs keep 20 minutes, and both executions keep all original consumer ceilings.
 No native producer, fact guard, fixture, oracle, request deadline or corpus
 registration changes. Unsupported or failed process observers must retain
 their errors and cannot be reported as measured attribution.
+
+Diagnostic run [38148153802](https://github.com/ubugeeei-prod/vize/actions/runs/38148153802)
+preserves the original authored timeout and all default/native controls.
+Installed `perf` discovery succeeds after following Ubuntu symlink directories,
+but the observer's inline Node checker shadows global `process` and refuses
+before attachment. Artifact `11706266171` retains the original whole packets
+and second consumer startup, with no CPU or syscall evidence.
+
+Move the same actual process verification into one reusable module and call
+it from the observer. Add early controls using the actual Linux child process,
+its `/proc` executable and complete stat, alongside wrong-checkout, unsafe-PID
+and different-executable refusals. The exact same executable module is exercised
+through its CLI before any original source build or expensive campaign on the
+optional Linux workflow. Local macOS cannot qualify the two `/proc` controls;
+the Linux job must execute them. The native producer and original driver,
+recipe, bytes, requests, deadlines and caps remain unchanged. Retry the original
+campaign before sampling; no cost or improvement claim is made yet.

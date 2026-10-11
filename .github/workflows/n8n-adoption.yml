@@ -299,6 +299,9 @@ jobs:
           cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
       - name: Install pinned source and typechecker dependencies
         run: vp install --frozen-lockfile --prefer-offline
+      - name: Verify the actual diagnostic process custody before the original campaign
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.profile-authored-graph }}
+        run: vp node --test .github/actions/n8n-authored-editor/owned-process.test.mjs
       - name: Build and authenticate the current-source LSP
         run: cargo build --profile ci -p vize && vp node tests/differential/build-receipt.ts
       - name: Verify actual configuration and native fact refusal controls

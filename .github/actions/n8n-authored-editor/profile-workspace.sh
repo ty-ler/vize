@@ -56,25 +56,8 @@ while [[ ! -f "$output/consumer/process.json" ]]; do
   fi
   sleep 0.1
 done
-process_pid=$(vp node --input-type=module - "$output" "$VIZE_LSP_BIN" <<'NODE'
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
-import { execFileSync } from 'node:child_process';
-const [output, binary] = process.argv.slice(2);
-const process = JSON.parse(fs.readFileSync(path.join(output, 'consumer/process.json')));
-const checkout = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-assert.equal(process.checkout, checkout);
-assert.ok(Number.isSafeInteger(process.pid) && process.pid > 0);
-const executable = fs.realpathSync(`/proc/${process.pid}/exe`);
-assert.equal(executable, fs.realpathSync(binary));
-const stat = fs.readFileSync(`/proc/${process.pid}/stat`, 'utf8');
-fs.writeFileSync(path.join(output, 'owned-process.json'), `${JSON.stringify({
-  checkout, pid: process.pid, executable, stat, observedAt: new Date().toISOString(),
-}, null, 2)}\n`);
-globalThis.process.stdout.write(String(process.pid));
-NODE
-)
+process_pid=$(vp node .github/actions/n8n-authored-editor/owned-process.mjs \
+  "$output" "$VIZE_LSP_BIN")
 
 printf '%s\n' "$perf_executable record -e cpu-clock -F 49 --call-graph dwarf,4096 -p $process_pid" \
   > "$output/perf-command.txt"
