@@ -13,11 +13,12 @@ const manifest = JSON.parse(
   originalSource: string;
   reviewedSource: string;
   files: Array<[string, string | null, string]>;
-  preservedBodies: Array<[string, string]>;
+  preservedBodies: Array<[string, string, string]>;
+  harnessExtensions: Array<[string, null, string]>;
 };
 const manifestSHA256 = createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
-assert.equal(manifestSHA256, "91eeb37a31cb046247bb4b92842bb7427850966f1fa19f08912a00b28a82381c");
-assert.equal(manifest.version, 1);
+assert.equal(manifestSHA256, "211aa71ba8c67a05691cab295376e883384c4d17c11879c22d22e4e69fd576e5");
+assert.equal(manifest.version, 2);
 assert.equal(manifest.originalSource, "7386b2a79604ae5b74cb541be911eb19735e68b2");
 assert.equal(manifest.reviewedSource, "0b9cbfebf12dbd49b16fd30a6073184d806c2c07");
 const expectedFiles = manifest.files.map(([file]) => file);
@@ -43,8 +44,10 @@ export function qualifyProjectConfigHost(
   if (JSON.stringify(footprint) !== JSON.stringify(expectedFiles)) return null;
   for (const [file, before, after] of manifest.files)
     if (digest("before", file) !== before || digest("after", file) !== after) return null;
-  for (const [file, original] of manifest.preservedBodies)
-    if (digest("before", file) !== original || digest("after", file) !== original) return null;
+  for (const [file, original, reviewed] of manifest.preservedBodies)
+    if (digest("before", file) !== original || digest("after", file) !== reviewed) return null;
+  for (const [file, absent, reviewed] of manifest.harnessExtensions)
+    if (digest("before", file) !== absent || digest("after", file) !== reviewed) return null;
   return {
     authority: "complete-reviewed-project-config-slice",
     manifestSHA256,
@@ -52,6 +55,10 @@ export function qualifyProjectConfigHost(
     reviewedSource: manifest.reviewedSource,
     completeBodyPairs: manifest.files.length,
     preservedBodyPairs: manifest.preservedBodies.length,
+    reviewedHarnessSuccessors: manifest.preservedBodies
+      .filter(([, before, after]) => before !== after)
+      .map(([file]) => file),
+    harnessExtensions: manifest.harnessExtensions.map(([file]) => file),
     files: expectedFiles,
   };
 }

@@ -7,6 +7,7 @@ import type { JsonRpcMessage } from "../../tooling/support/lsp/protocol.ts";
 import { LspRequestError, LspSession } from "../../tooling/support/lsp/session.ts";
 import { SessionRoots, type Packet, type RequestSpec } from "./warm-type-backed-packets.ts";
 import { observeWork } from "./warm-type-backed-work.ts";
+import { captureCompletionOwnership } from "./warm-type-backed-owner-capture.ts";
 
 export class QueryRecorder {
   readonly rows: Array<Record<string, unknown>> = [];
@@ -136,6 +137,14 @@ export class QueryRecorder {
         after: workAfter,
       },
       processes,
+      ownerMigration: captureCompletionOwnership(
+        stage,
+        spec.method,
+        spec.params,
+        result,
+        processes,
+        this.session.stderrText,
+      ),
     });
     if (error && stage !== "cancel")
       this.failures.push(`${stage}/${spec.name}: ${JSON.stringify(error)}`);

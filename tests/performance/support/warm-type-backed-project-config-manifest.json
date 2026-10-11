@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "originalSource": "7386b2a79604ae5b74cb541be911eb19735e68b2",
   "reviewedSource": "0b9cbfebf12dbd49b16fd30a6073184d806c2c07",
   "files": [
@@ -457,207 +457,275 @@
   "preservedBodies": [
     [
       ".github/workflows/davinci-canon-scaling.yml",
+      "399537c24b593b983ebb847f1fbeb3e4f376301e69bc25b46206ce2253ec6d73",
       "399537c24b593b983ebb847f1fbeb3e4f376301e69bc25b46206ce2253ec6d73"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/App.vue.txt",
+      "8ecf09c4c1d5a7254899b1da44a4bdbcb2fe0c22eb24ed77c9b651dc931aaf0e",
       "8ecf09c4c1d5a7254899b1da44a4bdbcb2fe0c22eb24ed77c9b651dc931aaf0e"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/Child.vue.txt",
+      "20bea00a0db5c8780a8ea1e3b6d2766b032a2024dc3cbd7075f14334ab35debf",
       "20bea00a0db5c8780a8ea1e3b6d2766b032a2024dc3cbd7075f14334ab35debf"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/Consumer.vue.txt",
+      "1594d5d562290cd64bd249912a6f6b77c842d81ee44717eb3940519eecf0cb81",
       "1594d5d562290cd64bd249912a6f6b77c842d81ee44717eb3940519eecf0cb81"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/Image.vue.txt",
+      "ecfabf2f5402b4e424a9f5174d87b425b3b21a63b75c33a1781a994085b5b5d0",
       "ecfabf2f5402b4e424a9f5174d87b425b3b21a63b75c33a1781a994085b5b5d0"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/Quotes.vue.txt",
+      "5be502acbd0fa5505f977f3b78b04079f6c2c02ca9da2ecccbf26c7648a3fa4f",
       "5be502acbd0fa5505f977f3b78b04079f6c2c02ca9da2ecccbf26c7648a3fa4f"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/README.md",
+      "4310510b008ab201dae38f9b1537056248441ebaf33b2a712a0f88e65e389916",
       "4310510b008ab201dae38f9b1537056248441ebaf33b2a712a0f88e65e389916"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/archives/release-smoke-runtime-oracle.original.test.ts.txt",
+      "ad5ef9636ea6310104c1dd6ecd43cd11b7a09ab8178a29145cd0b390d5edc8c0",
       "ad5ef9636ea6310104c1dd6ecd43cd11b7a09ab8178a29145cd0b390d5edc8c0"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/archives/smoke-release-init-typecheck.original.mjs.txt",
+      "2ce7b4aa4ffde080bc916cd42edcfd507010ca7d6eddef65d8f951b642d5c107",
       "2ce7b4aa4ffde080bc916cd42edcfd507010ca7d6eddef65d8f951b642d5c107"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/contracts.ts.txt",
+      "5324c8281301f91219f646f7c132d16e0b951b83b26a44cebea36c3d11fd381b",
       "5324c8281301f91219f646f7c132d16e0b951b83b26a44cebea36c3d11fd381b"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/invalid.ts.txt",
+      "9ef77ee29449c75c3d4b84a07bae59f32d22f5b053f9bed25b46f45cb03de07a",
       "9ef77ee29449c75c3d4b84a07bae59f32d22f5b053f9bed25b46f45cb03de07a"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/no-authored-formatting.vite.config.mjs.txt",
+      "0475f19ab3709f9aa5d29dedea7c06cda5864b78f2126535246e6fc021e8b324",
       "0475f19ab3709f9aa5d29dedea7c06cda5864b78f2126535246e6fc021e8b324"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/tsconfig.json.txt",
+      "5ac475be35c152238710e1df5dfbbd58dfce561c7b0d384f419dd656a4f87a3b",
       "5ac475be35c152238710e1df5dfbbd58dfce561c7b0d384f419dd656a4f87a3b"
     ],
     [
       "tests/_fixtures/differential/config/project-settings-8371/vite.config.mjs.txt",
+      "9ff87a56e2297c9d378759cc0825b6d2bd31d051b00e5df720efc16d348eec66",
       "9ff87a56e2297c9d378759cc0825b6d2bd31d051b00e5df720efc16d348eec66"
     ],
     [
       "tests/_fixtures/differential/lsp/warm-type-backed-requests/case.json",
+      "ba2a49365dd6e3ec9fb5077fbcd6f68101166a2d18030138bcb0a94857713470",
       "ba2a49365dd6e3ec9fb5077fbcd6f68101166a2d18030138bcb0a94857713470"
     ],
     [
       "tests/_fixtures/differential/lsp/warm-type-backed-requests/gen.mjs",
+      "4d0e14d66ce6e7b0b5d2e32a51c39bbe985283aa94934616b4da0ff587d34649",
       "4d0e14d66ce6e7b0b5d2e32a51c39bbe985283aa94934616b4da0ff587d34649"
     ],
     [
       "tests/_fixtures/differential/lsp/warm-type-backed-requests/original-report.md",
+      "247d435038eb8c53f317dc6a5fdcdd216a19fa9bc58d155e355b5ed2c3eb4a58",
       "247d435038eb8c53f317dc6a5fdcdd216a19fa9bc58d155e355b5ed2c3eb4a58"
     ],
     [
       "tests/_fixtures/differential/lsp/warm-type-backed-requests/package.json",
+      "4a2c593a78dd898566bf14bc68914ae452738d0ef2de4a64fd8c2be8f097f942",
       "4a2c593a78dd898566bf14bc68914ae452738d0ef2de4a64fd8c2be8f097f942"
     ],
     [
       "tests/_fixtures/differential/lsp/warm-type-backed-requests/tsconfig.json",
+      "ad4c9c378d4d01ee9230da0acc6aa86d0a5cab68de8e552124c5e557d4506181",
       "ad4c9c378d4d01ee9230da0acc6aa86d0a5cab68de8e552124c5e557d4506181"
     ],
     [
       "tests/_fixtures/differential/lsp/warm-type-backed-requests/vize.config.json",
+      "c6f468f396b9c5afeb4a348dffc20fab9660182dd4b65364968c77c448cee85d",
       "c6f468f396b9c5afeb4a348dffc20fab9660182dd4b65364968c77c448cee85d"
     ],
     [
       "tests/_fixtures/differential/typechecker/original-diagnosing-process-7698/input.json",
+      "3b9e44621b6399d53ff7281d53e710c76ebab2b5328f08deba3ed3d171eba906",
       "3b9e44621b6399d53ff7281d53e710c76ebab2b5328f08deba3ed3d171eba906"
     ],
     [
       "tests/performance/support/warm-type-backed-alias-host.ts",
+      "7d5ae0d8b6c9f05b2b864bafb30335055600ce020809bff5507e1b75b6e72342",
       "7d5ae0d8b6c9f05b2b864bafb30335055600ce020809bff5507e1b75b6e72342"
     ],
     [
       "tests/performance/support/warm-type-backed-build-receipt-extension.ts",
+      "66a328b4c2879c3d782947fdb868e6aff2b7110c35ee264e174a479a71e28ffd",
       "66a328b4c2879c3d782947fdb868e6aff2b7110c35ee264e174a479a71e28ffd"
     ],
     [
       "tests/performance/support/warm-type-backed-build.ts",
+      "7660e93cfa5c908f4065e91d498a3cb778814c38bb8689efefcaa159ef9003e3",
       "7660e93cfa5c908f4065e91d498a3cb778814c38bb8689efefcaa159ef9003e3"
     ],
     [
       "tests/performance/support/warm-type-backed-controls.ts",
+      "81a2fa2b6656e0d09ad421fa3cf772fb9187f5c3ad40c15cf24f9e46f9b25ec0",
       "81a2fa2b6656e0d09ad421fa3cf772fb9187f5c3ad40c15cf24f9e46f9b25ec0"
     ],
     [
       "tests/performance/support/warm-type-backed-cut.ts",
+      "40db183d66d1f62fa9e1a0dc29568c6032a93288cf1b17d4e939744a8bf7d492",
       "40db183d66d1f62fa9e1a0dc29568c6032a93288cf1b17d4e939744a8bf7d492"
     ],
     [
       "tests/performance/support/warm-type-backed-default-migration-host.ts",
+      "6b6bffc7461f754b82ad996abf62cd6f958998212e95d4af600fa4b9bfa483d5",
       "6b6bffc7461f754b82ad996abf62cd6f958998212e95d4af600fa4b9bfa483d5"
     ],
     [
       "tests/performance/support/warm-type-backed-default-migration-manifest.json",
+      "73e19d2b74c4488f8feb1214dd6dc15d0d4ff15f744994bc52d9288ee61e6e0d",
       "73e19d2b74c4488f8feb1214dd6dc15d0d4ff15f744994bc52d9288ee61e6e0d"
     ],
     [
       "tests/performance/support/warm-type-backed-dependency-custody.ts",
+      "d577de728929df0372894af7ebff872afbbe4529759bd259013fd874a42ec2b8",
       "d577de728929df0372894af7ebff872afbbe4529759bd259013fd874a42ec2b8"
     ],
     [
       "tests/performance/support/warm-type-backed-host-qualifications.ts",
+      "3a19f832728df033542b308f0877a9c45e1ae311de5be2533af30e143aa6fa7c",
       "3a19f832728df033542b308f0877a9c45e1ae311de5be2533af30e143aa6fa7c"
     ],
     [
       "tests/performance/support/warm-type-backed-html-hover-host.ts",
+      "d17b52fd60737b8ac46ee2f58780628f4b9ce11d2673b1e7dad606b5dd15d437",
       "d17b52fd60737b8ac46ee2f58780628f4b9ce11d2673b1e7dad606b5dd15d437"
     ],
     [
       "tests/performance/support/warm-type-backed-measure.ts",
-      "577455fb9ab4b814c233eb96a814aafc32c9755623d296c8efe3f7224a7593c8"
+      "577455fb9ab4b814c233eb96a814aafc32c9755623d296c8efe3f7224a7593c8",
+      "8d9686a6ee2dcddf1997896a7dadc6426b26f0ffbcee47470144599d38009c67"
     ],
     [
       "tests/performance/support/warm-type-backed-packets.ts",
+      "a19fc36481942681dc93b5ae1b709af120d803ab70bda6454e98ad702c2669d2",
       "a19fc36481942681dc93b5ae1b709af120d803ab70bda6454e98ad702c2669d2"
     ],
     [
       "tests/performance/support/warm-type-backed-path-host-manifest.json",
+      "36256d2672412efe1681fab3137fab4f641622920360ea690a98a463a7325805",
       "36256d2672412efe1681fab3137fab4f641622920360ea690a98a463a7325805"
     ],
     [
       "tests/performance/support/warm-type-backed-path-host.ts",
+      "b73e46382f99176d54dfa9b5945f6126eefedd6ecfb9cbd4c733151c3e2c6c30",
       "b73e46382f99176d54dfa9b5945f6126eefedd6ecfb9cbd4c733151c3e2c6c30"
     ],
     [
       "tests/performance/support/warm-type-backed-processes.ts",
+      "f843bc5ef4d546862ab273363bb3d787eb4a03a5bd7e1278f88e1fccebfb6be7",
       "f843bc5ef4d546862ab273363bb3d787eb4a03a5bd7e1278f88e1fccebfb6be7"
     ],
     [
       "tests/performance/support/warm-type-backed-public-archives.ts",
+      "6182f844f61058ac620c75d305d55d438a5b31006534e30a8e4f058f2194b6ae",
       "6182f844f61058ac620c75d305d55d438a5b31006534e30a8e4f058f2194b6ae"
     ],
     [
       "tests/performance/support/warm-type-backed-public-assets.ts",
+      "35dabd99ade101b73d3a1fd37058e67acdc791b2d3698deb3ae11c6ea0137c1e",
       "35dabd99ade101b73d3a1fd37058e67acdc791b2d3698deb3ae11c6ea0137c1e"
     ],
     [
       "tests/performance/support/warm-type-backed-public.ts",
+      "a89f874d7db07ad96b05c9f1bfad3d0bba2d6cdad845b913b804e42cb4a7a70f",
       "a89f874d7db07ad96b05c9f1bfad3d0bba2d6cdad845b913b804e42cb4a7a70f"
     ],
     [
       "tests/performance/support/warm-type-backed-publications.ts",
+      "d2e4f3ad158068541335ec0c11fa264ffeafbce3fd2851de48c736fa46836a95",
       "d2e4f3ad158068541335ec0c11fa264ffeafbce3fd2851de48c736fa46836a95"
     ],
     [
       "tests/performance/support/warm-type-backed-query-frames.ts",
+      "6cebfac0f932e86b0f89416647495531f264b477b2d64b7bc9d71f164c71c4ad",
       "6cebfac0f932e86b0f89416647495531f264b477b2d64b7bc9d71f164c71c4ad"
     ],
     [
       "tests/performance/support/warm-type-backed-release-bridge.json",
+      "6887483d6ddfbb8f7a46e3b2dae85e85d14015c670299da46190896f199f4093",
       "6887483d6ddfbb8f7a46e3b2dae85e85d14015c670299da46190896f199f4093"
     ],
     [
       "tests/performance/support/warm-type-backed-release-bridge.py",
+      "8f72189ee25b56f64413f49ce717b1c29750c78d3ac41d65b1c85f89a5b8a767",
       "8f72189ee25b56f64413f49ce717b1c29750c78d3ac41d65b1c85f89a5b8a767"
     ],
     [
       "tests/performance/support/warm-type-backed-release-bridge.ts",
+      "c6cc9fa0ee1b76a16a1a5374fce82aae7600d68425455d43590af73b1e169be5",
       "c6cc9fa0ee1b76a16a1a5374fce82aae7600d68425455d43590af73b1e169be5"
     ],
     [
       "tests/performance/support/warm-type-backed-requests.ts",
-      "4162926bc7d02b92423e6731d8f8efaf48964fa6009df6751c087aa4372939f7"
+      "4162926bc7d02b92423e6731d8f8efaf48964fa6009df6751c087aa4372939f7",
+      "6b150a8fa59c757f287970a2578c3f69183461b9d2a83e54d02f1bc1c79b4c0c"
     ],
     [
       "tests/performance/support/warm-type-backed-runtime.ts",
+      "0a4f2307ccf00ba05e6bf2c8062f9b167c3068d243c4598f87767fdf51b46571",
       "0a4f2307ccf00ba05e6bf2c8062f9b167c3068d243c4598f87767fdf51b46571"
     ],
     [
       "tests/performance/support/warm-type-backed-source.ts",
+      "3a67e29de1f0e56d4da41d3e43ca23e6375a7a84e6317879cd801407288de8cf",
       "3a67e29de1f0e56d4da41d3e43ca23e6375a7a84e6317879cd801407288de8cf"
     ],
     [
       "tests/performance/support/warm-type-backed-startup.ts",
+      "d9196634e6059125d0256c78b09a06d2eb377a8b98bcdce2aa1b41b5af86017f",
       "d9196634e6059125d0256c78b09a06d2eb377a8b98bcdce2aa1b41b5af86017f"
     ],
     [
       "tests/performance/support/warm-type-backed-timing-host-manifest.json",
+      "6d62c20da03b0b7fb69c5a6745b6e061665380475e09d94b5bb07d52887459f7",
       "6d62c20da03b0b7fb69c5a6745b6e061665380475e09d94b5bb07d52887459f7"
     ],
     [
       "tests/performance/support/warm-type-backed-timing-host.ts",
+      "bb76c9ab417dd2ed3f856e9cb93e5e9668c7680268624124497914beff82348f",
       "bb76c9ab417dd2ed3f856e9cb93e5e9668c7680268624124497914beff82348f"
     ],
     [
       "tests/performance/support/warm-type-backed-work.ts",
+      "a6153287d33576aef29272e05dd727e66c7dd64167f7487643466b3663064229",
       "a6153287d33576aef29272e05dd727e66c7dd64167f7487643466b3663064229"
+    ]
+  ],
+  "harnessExtensions": [
+    [
+      "tests/performance/support/warm-type-backed-owner-capture.ts",
+      null,
+      "828ea1dd92cc043aec66bb1f68b27635dcd0fe2fb212149bd89c3e3594e9bf94"
+    ],
+    [
+      "tests/performance/support/warm-type-backed-owner-migration.ts",
+      null,
+      "22f522d1d1a2a0ed4266fd424c5d6ed681bdfc73a5bb03deb2aeff7bfdf9d39e"
+    ],
+    [
+      "tests/performance/support/warm-type-backed-owner-resolve.ts",
+      null,
+      "1dc3a62624e576b0e8d0a7cd602c6706f0fc521bdef7e698caf8a92a5fd779df"
     ]
   ]
 }

@@ -15,7 +15,7 @@ absence of newly added files. Admission requires the whole footprint; unknown,
 missing, duplicate and changed bodies fail closed. Existing path, timing and
 default-migration qualifications retain their original authorities.
 
-Both sides must also retain all 51 complete original400, public settings,
+The initial qualification retains all 51 complete original400, public settings,
 native diagnosing-process fixture and existing measurement/build/ceiling
 bodies. The workflow records the actual matching qualification, then performs
 its complete original before/after builds and 400-provider measurement with
@@ -30,3 +30,12 @@ files are checked against the manifest; the actual measurement uses the
 existing Git blob reader that rejects source mode/type changes. Fresh exact
 head Actions, protected delivery and installed release acceptance remain
 required for #8371 and #8370.
+
+The [strict owner-migration successor](./2026-10-11-config-owner-completion-migration.md)
+retains the complete baseline bodies of all 51 entries and pins the complete
+reviewed current bodies. Only the passive recorder and paired driver change;
+the other 49 original input/build/ceiling bodies remain identical. All added
+helpers are separately pinned with exact baseline absence. Complete raw79
+comparisons remain required until the new live causal and refusal laws prove
+the exact intended per-document capability migration. The initial failed
+whole comparison stays retained; source admission alone grants no success.

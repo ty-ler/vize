@@ -15,6 +15,7 @@ import { controls } from "./warm-type-backed-controls.ts";
 import { assertQueryFrames } from "./warm-type-backed-query-frames.ts";
 import { startup } from "./warm-type-backed-startup.ts";
 import { QueryRecorder } from "./warm-type-backed-measure.ts";
+import { completeOwnerPackets } from "./warm-type-backed-owner-migration.ts";
 import {
   assertOriginalFrames,
   assertTypedPackets,
@@ -306,9 +307,8 @@ export async function pairedWarmRequests(beforeRoot: string, outputRoot: string)
       requestId: row.requestId,
       response: row.comparableResponse,
     }));
-  // Physical random session roots are recorded and checked while live, then
-  // substituted bijectively. No public field, native data or response is dropped.
-  const completePackets = publicPackets;
+  // Physical session roots are checked live and substituted bijectively; no field is dropped.
+  const completePackets = await completeOwnerPackets(publicPackets, packet);
   assert.deepEqual(completePackets(after), completePackets(before));
   if (!releaseCut) assert.deepEqual(after.notifications, before.notifications);
   for (const side of [before, after]) {

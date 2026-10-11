@@ -17,13 +17,19 @@ const manifest = JSON.parse(
   originalSource: string;
   reviewedSource: string;
   files: Array<[string, string | null, string]>;
-  preservedBodies: Array<[string, string]>;
+  preservedBodies: Array<[string, string, string]>;
+  harnessExtensions: Array<[string, null, string]>;
 };
 const entries = new Map(manifest.files.map(([file, before, after]) => [file, { before, after }]));
-const preserved = new Map(manifest.preservedBodies);
+const preserved = new Map(
+  manifest.preservedBodies.map(([file, before, after]) => [file, { before, after }]),
+);
+const extensions = new Map(
+  manifest.harnessExtensions.map(([file, before, after]) => [file, { before, after }]),
+);
 const production = [...entries.keys()];
 const digest = (side: "before" | "after", file: string) =>
-  entries.get(file)?.[side] ?? preserved.get(file) ?? null;
+  entries.get(file)?.[side] ?? preserved.get(file)?.[side] ?? extensions.get(file)?.[side] ?? null;
 
 test("the complete reviewed configuration slice qualifies for actual original400 measurement", () => {
   const result = qualifyProjectConfigHost(production, new Set(), digest);
@@ -61,8 +67,8 @@ test("each original and current source body including absent new owners is manda
       );
 });
 
-test("whole original400, config, native, build and ceiling bodies cannot change on either side", () => {
-  for (const file of preserved.keys())
+test("whole original400, config, native, build, ceiling and finite extension bodies cannot drift", () => {
+  for (const file of [...preserved.keys(), ...extensions.keys()])
     for (const side of ["before", "after"] as const)
       assert.equal(
         qualifyProjectConfigHost(production, new Set(), (candidate, name) =>
