@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import fs from "node:fs";
 import { test } from "node:test";
 import {
   configRepairManifest as repair,
@@ -14,6 +15,7 @@ import {
 import { projectConfigManifest as original } from "../performance/support/warm-type-backed-project-config-manifest.ts";
 import loader from "../performance/support/warm-type-backed-project-config-loader-manifest.json" with { type: "json" };
 import { reviewedConfigProduction as production } from "./support/config-reviewed-source.ts";
+import { qualifyCurrentComponentIssuedSource } from "./support/component-issued-source.ts";
 
 type Side = "before" | "after";
 type Digest = (side: Side, file: string) => string | null;
@@ -29,6 +31,16 @@ const before = new Map(
 for (const [file, value] of issued.producerBodies) before.set(file, value);
 for (const [file, value] of [...review.productionBodies, ...review.harnessBodies])
   before.set(file, value);
+const currentDigest: Digest = (side, file) => {
+  if (side === "before") return before.get(file) ?? null;
+  try {
+    return createHash("sha256")
+      .update(fs.readFileSync(new URL(file, root)))
+      .digest("hex");
+  } catch {
+    return null;
+  }
+};
 const literalBodies = new Map<string, string | null>();
 const digest: Digest = (side, file) => {
   if (side === "before") return before.get(file) ?? null;
@@ -71,7 +83,7 @@ test("the preserved literal repair commit authenticates every named complete bod
   }
 });
 
-test("complete literal repaired bodies retain the immutable original112/96/51/3 witness", () => {
+test("complete literal parent repair bodies retain the immutable original112/96/51/3 witness", () => {
   const result = qualify();
   assert.ok(result && "configRepairContext" in result);
   assert.equal(result.files.length, 112);
@@ -84,6 +96,16 @@ test("complete literal repaired bodies retain the immutable original112/96/51/3 
   assert.deepEqual(result.configRepairContext.completeProductionBodyPairs, repair.productionBodies);
   assert.deepEqual(result.configRepairContext.completeCorpusBodyPairs, repair.corpusBodies);
   assert.ok(Object.isFrozen(repair) && repair.productionBodies.every(Object.isFrozen));
+});
+
+test("the current complete component successor retains its actual 135 paths and every parent repair", () => {
+  assert.equal(qualify(currentDigest), null);
+  const result = qualifyCurrentComponentIssuedSource();
+  assert.ok(result && "configRepairContext" in result);
+  assert.equal(result.files.length, 135);
+  assert.equal(result.originalQualification.files.length, 119);
+  assert.deepEqual(result.configRepairContext.completeProductionBodyPairs, repair.productionBodies);
+  assert.deepEqual(result.configRepairContext.completeCorpusBodyPairs, repair.corpusBodies);
 });
 
 test("the complete additive regression fixture has no absent or drifted substitute", () => {
