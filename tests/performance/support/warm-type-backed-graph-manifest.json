@@ -1,13 +1,13 @@
 {
   "version": 1,
   "originalSource": "fc551dc09faaa3187cd37a3a02cb94ebab0c3352",
-  "reviewedSource": "1128e68f5b9cf61892087e89278f8dd59b5e81e7",
+  "reviewedSource": "5ce5432d048d8de2c49ba00cd1644ae215e15623",
   "files": [
     "crates/vize/tests/lsp_generic_prop_hover_cli.rs\t3a2a4fae64ef23c1b444e4268fbe4416fbc3f5d8e5b9e2f90bcd018e65d4a865\t0f58949907c9a06b5feb7e9d4369c816b36fcc6dec62f662b3d03742c241c8f3",
     "crates/vize/tests/lsp_generic_prop_hover_cli/template_props.rs\t-\t5520a11484d30a7b07163e3391abcc41e862ef5dc278a753fee4e1ffeb22ea56",
     "crates/vize_canon/snapshots/vize_canon__virtual_ts__tests__virtual_ts_reserved_prop_and_hyphenated_slot_names.snap\t46fdf03280d702c39730f887682cdd1e5fc91dad373e4a64052be609ad211e5b\t14b92439992a6d113d109f3cc80061d95557dbd6da3e41be35121d78b0ae862f",
     "crates/vize_canon/src/batch/executor/session.rs\tb87c5ed166c31f75493a698cb2ef3eba1f40cb6f48ba09e1f75340ae03c6a9fc\t86889befb5869b9ec813a1a827f51bc3791793ae136a5d686889280f68b53a35",
-    "crates/vize_canon/src/batch/executor/tests/incremental_fallback.rs\tdc06840ea2fc02f3f25ffb9c9e8b8f17ab639a20b8616643579104df4d9d34a2\t39d17e9b42c231b3038199320fb086ca8d52a20ca22ae90535f1aa16bf2ac9ba",
+    "crates/vize_canon/src/batch/executor/tests/incremental_fallback.rs\tdc06840ea2fc02f3f25ffb9c9e8b8f17ab639a20b8616643579104df4d9d34a2\t8ccfc776ca2dab666524d52fdb61faaa7cd57471537ba3df091785d52375ff4e",
     "crates/vize_canon/src/batch/import_rewriter.rs\te12e67f701320940bcb75b587109f34a575dfd5928c1c9a485c168e6f38209c5\t126170a8ceb21fc0b969e2ae2f0b96312cec7501a833c3fb4910c2ffe79d00d8",
     "crates/vize_canon/src/batch/import_rewriter_alias.rs\t8ed797cacb2db766f99c65779f28a566812119ae596085cdde6199854aec1394\t5f09b346f99ba5cd10f53fdc4066ea616778f6812f38fffe9f0ac4ee6f03b0b7",
     "crates/vize_canon/src/batch/import_rewriter_alias/consumed_tests.rs\t-\tb02bab571fc901ff75ce21001c0c53d254f54226f6f2e00e64eff16756a66b9a",
