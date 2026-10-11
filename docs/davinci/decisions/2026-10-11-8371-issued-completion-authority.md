@@ -31,3 +31,22 @@ The original79 packets, eight valid resolutions, eight refusals, original20
 comparison fields and128/384MiB performance gates remain required. Local corpus
 laws alone do not establish the final native response, performance, protected
 merge or released behavior. Actual composed Actions must qualify those paths.
+
+The unchanged original400 source selector includes every changed `crates/`
+body, including tests and corpus JSON. The correction therefore has seven
+selected bodies: three existing successors and four genuinely new bodies.
+The original whole90/51/3 authority remains immutable and is tried first.
+A distinct, closed whole96 successor binds all seven actual before/after
+bodies, the exact null-response harness successor, and both complete inherited
+loader bodies. Missing, duplicate, extra, mixed or drifting bodies refuse
+qualification. The component descendant must independently bind its whole119
+composition, including the unchanged seven-body producer context when inherited.
+The generated Canon consumer ledger gains only its actual new `issued.rs`
+L0-use row; all other generated inventories remain byte-exact.
+
+The move changes Rust's module privacy: the existing sibling `client.rs`
+caller requires `pub(super)` on the relocated completion method. A bounded
+Rust1.99 module-shape check failed with the private method and passes with that
+visibility; this restores the original access contract without changing its
+request body. Full product compilation and native corpus execution remain
+required on Actions.

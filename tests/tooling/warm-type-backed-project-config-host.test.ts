@@ -6,6 +6,12 @@ import { qualifyProjectConfigHost } from "../performance/support/warm-type-backe
 import { qualifyProjectConfigNullCompletionHost } from "../performance/support/warm-type-backed-project-config-null-completion-host.ts";
 import { projectConfigManifest as manifest } from "../performance/support/warm-type-backed-project-config-manifest.ts";
 import { allowed } from "../performance/support/warm-type-backed-production-paths.ts";
+import {
+  issuedCompletionManifest as issued,
+  issuedCompletionProduction,
+  qualifyIssuedCompletionHost,
+} from "../performance/support/warm-type-backed-issued-completion-host.ts";
+import loader from "../performance/support/warm-type-backed-project-config-loader-manifest.json" with { type: "json" };
 
 const entries = new Map(manifest.files.map(([file, before, after]) => [file, { before, after }]));
 const preserved = new Map(
@@ -33,15 +39,20 @@ await test("the actual composed production selector admits the complete configur
 });
 
 await test("qualification binds every current source and whole unchanged corpus and recipe", () => {
-  const actual = (side: "before" | "after", file: string) =>
-    side === "before"
-      ? digest(side, file)
-      : createHash("sha256")
-          .update(fs.readFileSync(new URL("../../" + file, import.meta.url)))
-          .digest("hex");
+  const actual = (side: "before" | "after", file: string) => {
+    if (side === "before") {
+      const body = issued.producerBodies.find(([name]) => name === file);
+      const context = loader.composedContext.find(([name]) => name === file);
+      return body ? body[1] : context ? context[1] : digest(side, file);
+    }
+    return createHash("sha256")
+      .update(fs.readFileSync(new URL("../../" + file, import.meta.url)))
+      .digest("hex");
+  };
   assert.ok(
     qualifyProjectConfigHost(production, new Set(), actual) ??
-      qualifyProjectConfigNullCompletionHost(production, new Set(), actual),
+      qualifyProjectConfigNullCompletionHost(production, new Set(), actual) ??
+      qualifyIssuedCompletionHost(issuedCompletionProduction, new Set(), actual),
   );
 });
 
