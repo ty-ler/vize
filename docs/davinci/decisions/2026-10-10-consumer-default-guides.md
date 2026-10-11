@@ -81,3 +81,13 @@ assertion, binds both authored links to the exact decoded GitHub policy URL, and
 requires native SSG to retain that destination with `_blank` and
 `noopener noreferrer`. An encoded link or a plain Markdown link must satisfy the
 same complete external-link contract; a generated local route cannot pass.
+
+The fresh-main `a030df64` replay exposed the existing Japanese React policy URL
+with a literal `.md` extension. The whole native rendered-link law correctly
+failed because the current parser converted it into a local route. Apply only
+the already documented `%2Emd` encoding to that one URL, as in the English
+guide. Decoding restores the exact original external destination; every other
+Japanese guide byte and all 18 complete code fences remain unchanged. Retain
+the original RED packet and require the unchanged complete rendered-link law
+to pass with `_blank` and `noopener noreferrer`; no parser qualification or
+installed release behavior is inferred.
