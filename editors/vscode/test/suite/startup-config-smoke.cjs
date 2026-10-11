@@ -9,7 +9,6 @@ const {
   initializeMessages,
   methodMessages,
   prepareConfiguredFakeServer,
-  readLogEntries,
   updateVizeConfiguration,
   waitForLogEntries,
   waitForReadyServer,
