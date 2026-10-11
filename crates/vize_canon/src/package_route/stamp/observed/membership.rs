@@ -110,10 +110,12 @@ pub(crate) fn record_editor_route_write(
     );
 }
 
+#[path = "membership/aggregate.rs"]
 mod aggregate;
 pub(crate) use aggregate::{
     PackageAggregateError, PackageAggregates, package_aggregates, package_aggregates_match_old,
 };
 
 #[cfg(test)]
+#[path = "membership/tests.rs"]
 mod tests;

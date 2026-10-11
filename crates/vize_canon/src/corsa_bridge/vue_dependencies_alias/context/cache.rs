@@ -11,7 +11,7 @@ use super::AliasContext;
 mod catalog;
 mod fingerprint;
 mod reuse;
-pub(super) use fingerprint::ContextFingerprint;
+pub(super) use fingerprint::{ContextFingerprint, consumed::reconciled_are_current};
 
 const CONTEXT_CACHE_CAPACITY: usize = 8;
 

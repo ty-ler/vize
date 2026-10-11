@@ -288,4 +288,5 @@ mod tests {
 }
 
 #[cfg(test)]
+#[path = "search/read_failure_tests.rs"]
 mod read_failure_tests;

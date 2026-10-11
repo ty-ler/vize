@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 use vize_carton::FxHashMap;
 
+#[path = "stamp/observed.rs"]
 mod observed;
 #[cfg(any(feature = "native", test))]
 pub(crate) use observed::membership::{

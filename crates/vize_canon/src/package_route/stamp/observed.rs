@@ -3,6 +3,7 @@
 use super::InputStamp;
 
 #[cfg(any(feature = "native", test))]
+#[path = "observed/membership.rs"]
 pub(crate) mod membership;
 use std::{
     path::{Path, PathBuf},
@@ -305,20 +306,26 @@ impl InputStamp {
     }
 }
 
+#[path = "observed/native.rs"]
 mod native;
 pub(crate) use native::SourceRevisionFact;
 
 #[cfg(test)]
+#[path = "observed/tests.rs"]
 mod tests;
 
 #[cfg(test)]
+#[path = "observed/cache_preservation_tests.rs"]
 mod cache_preservation_tests;
 
 #[cfg(test)]
+#[path = "observed/validation_tests.rs"]
 mod validation_tests;
 
 #[cfg(test)]
+#[path = "observed/metadata_tests.rs"]
 mod metadata_tests;
 
 #[cfg(test)]
+#[path = "observed/try_exists_tests.rs"]
 mod try_exists_tests;

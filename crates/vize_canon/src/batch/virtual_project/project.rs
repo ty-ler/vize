@@ -6,7 +6,6 @@
 use std::path::{Path, PathBuf};
 
 use oxc_span::SourceType;
-use rayon::prelude::*;
 use vize_carton::{FxHashSet, profile};
 
 use crate::batch::error::{CorsaError, CorsaResult};

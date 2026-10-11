@@ -327,7 +327,7 @@ fn build_consumed(
             &value.route_inputs,
         )
         .is_ok();
-        let current_inputs = super::cache::fingerprint::consumed::reconciled_are_current(
+        let current_inputs = super::cache::reconciled_are_current(
             &witness,
             &known,
             source_path,
