@@ -35,7 +35,7 @@ impl CorsaProjectClient {
 }
 
 impl EditorLspSession {
-    fn completion(
+    pub(super) fn completion(
         &mut self,
         document_uri: &str,
         line: u32,
