@@ -29,6 +29,11 @@ test("Japanese configuration and Musea retain every original complete code block
     count += fences.length;
     assert.equal(fences.length, entry.originalCodeBlocks, entry.path);
     assert.equal(sha(fences.join("\0")), entry.originalWholeCodeSha256, entry.path);
+    for (const fence of fences)
+      assert(
+        read(entry.path).includes(fence),
+        `${entry.path}: original complete example remains published`,
+      );
     assert.deepEqual(
       [...source.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)].map((match) => match[1]),
       entry.originalLinks,
