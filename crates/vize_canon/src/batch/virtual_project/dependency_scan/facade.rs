@@ -5,7 +5,6 @@ use crate::batch::error::CorsaResult;
 use crate::package_route::stamp::Consumed;
 use std::path::PathBuf;
 use vize_carton::{FxHashMap, String as CompactString};
-#[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
 impl VirtualProject {
     /// Register every reachable first-party dependency, to a fixpoint.
     pub fn register_reachable_dependencies(&mut self) -> CorsaResult<()> {
@@ -53,6 +52,7 @@ impl VirtualProject {
     /// Conditional native metadata from that same original frontier operation.
     /// Aliases must already carry the facts from their original load.
     #[cfg(test)]
+    #[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
     pub(crate) fn register_reachable_dependencies_from_consumed(
         &mut self,
         sources: &[PathBuf],

@@ -47,7 +47,6 @@ type ObservedPackageResolver<'a> = &'a mut dyn FnMut(
 )
     -> crate::package_route::stamp::Consumed<bool>;
 
-#[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
 impl VirtualProject {
     fn register_reachable_dependencies_inner(
         &mut self,
