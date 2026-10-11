@@ -11,6 +11,7 @@ import { qualifyProjectConfigLoaderHost } from "./warm-type-backed-project-confi
 import { qualifyIssuedCompletionHost } from "./warm-type-backed-issued-completion-host.ts";
 import { qualifyConfigReviewHost } from "./warm-type-backed-config-review-host.ts";
 import { qualifyComponentContextHost } from "./warm-type-backed-component-context-host.ts";
+import { qualifyComponentOwnerMigrationHost } from "./warm-type-backed-component-owner-migration-host.ts";
 import {
   driverRoot,
   git,
@@ -135,9 +136,12 @@ if (process.argv[2] === "prepare") {
       ))
     : null;
   const componentContextHost = !cut
-    ? qualifyComponentContextHost(production, allowed, (side, file) =>
+    ? (qualifyComponentContextHost(production, allowed, (side, file) =>
         gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
-      )
+      ) ??
+      qualifyComponentOwnerMigrationHost(production, allowed, (side, file) =>
+        gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+      ))
     : null;
   if (!cut) {
     for (const file of production)
