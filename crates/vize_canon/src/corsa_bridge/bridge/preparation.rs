@@ -24,6 +24,10 @@ impl CorsaBridge {
         P: Send + 'static,
         R: Send + 'static,
     {
+        #[expect(
+            clippy::disallowed_types,
+            reason = "retain the same bridge caller owner on its existing worker"
+        )]
         let initialized = Arc::clone(&self.initialized);
         self.submit_ready_async(move |slot| {
             let prepared = prepare()?;

@@ -255,3 +255,32 @@ the workflow is 348 lines. Fresh exact-head original n8n lifecycle, full Check,
 native vectors, Misskey resource and instruction controls remain required.
 Offloading preparation alone does not establish a faster cold graph or release
 acceptance; #8520 remains a draft until the actual consumer gates succeed.
+
+Exact `68c65d7db19a0cef486901725ccea69cce008848` n8n run `38125670257`
+compiled all 2,020 Canon tests: 2,019 passed with one original ignored test;
+all nine unchanged filters and all six added complete-packet, transport,
+dispatch, retirement and deadline laws passed. Strict production Clippy then
+rejected the actual `Arc::clone` expression in the new preparation helper;
+the import annotation alone did not cover that use. Scope the same justified
+existing worker-owner expectation to that exact statement, retaining its
+production expression and all tests unchanged. The original authored n8n
+lifecycle has not executed on this head and has no performance credit.
+
+Full run `38125688042` also retained the stale generated source-inventory
+failure: the real generator adds exactly three new Canon source/test rows,
+without removing or altering prior rows. Regenerate that ledger with the
+existing checked generator; diagnostic vectors and baselines remain untouched.
+Its inherited Nix source filter additionally omits the actual Carton
+`config/loader/module-runtime.mjs` required by `include_str!`; preserve the
+whole failed job `114429471988` and repair that producer filter independently.
+All genuinely blocked original source and consumer gates remain required.
+
+The same full run's original Misskey churn job `114429472224` completed all
+40 update cycles, 20 file lifecycle iterations and 287 publications, but its
+sampled server peak was 131,824 KiB (128.734375 MiB), above the unchanged
+128 MiB cap. The complete metrics artifact `11697671258` and raw job log
+are retained. This is a resource failure, not release qualification; retain
+the original cycles, deadlines, process-tree bounds and all diagnostic
+vectors while investigating the actual ownership cost. The Nix producer
+repair is an independently owned current-main slice; this correction changes
+only the exact lint scope, the three generated ledger rows and this receipt.
