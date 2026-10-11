@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { decodeFrames } from "../../differential/lsp-wire.ts";
 import { object } from "./warm-type-backed-packets.ts";
 import { sha256 } from "./warm-type-backed-source.ts";
+import { kernelStringBytes } from "./warm-type-backed-owner-kernel-string.ts";
 
 export type NativeProcessWitness = {
   pid: number;
@@ -56,9 +57,9 @@ export function syscallWrites(text: string): Write[] {
     }
     // Errors transmit no bytes; a successful partial write retains only its actual count.
     if (/\)\s+= -1\s+[A-Z]+/u.test(body)) continue;
-    const match = body.match(/^write\(\d+(<.+>), "((?:\\x[0-9a-f]{2})*)", (\d+)\)\s+= (\d+)$/u);
+    const match = body.match(/^write\(\d+(<.+>), "((?:\\.|[^"\\])*)", (\d+)\)\s+= (\d+)$/u);
     assert.ok(match, "truncated, undecorated or unknown writes cannot qualify");
-    const bytes = Buffer.from(match[2].replaceAll("\\x", ""), "hex");
+    const bytes = kernelStringBytes(match[2]);
     const requested = Number(match[3]);
     const transmitted = Number(match[4]);
     assert.equal(bytes.length, requested, "every original write byte must be observed");

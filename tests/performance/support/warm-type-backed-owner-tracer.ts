@@ -117,7 +117,7 @@ export class NativeApiSyscallObserver {
         "-f",
         "-qq",
         "-ttt",
-        "-xx",
+        "--strings-in-hex=non-ascii-chars",
         "-yy",
         "-s",
         "1048576",
@@ -208,8 +208,19 @@ export class NativeApiSyscallObserver {
     };
   }
 
+  private checkStreamFailure() {
+    if (this.streamFailure) {
+      fs.writeFileSync(
+        path.join(path.dirname(this.file), "observer-failure.json"),
+        `${JSON.stringify({ qualified: false, observer: this.diagnosticState() }, null, 2)}\n`,
+        { mode: 0o600 },
+      );
+      throw this.streamFailure;
+    }
+  }
+
   sample(row: Record<string, unknown>) {
-    if (this.streamFailure) throw this.streamFailure;
+    this.checkStreamFailure();
     assert.ok(
       fs.statSync(this.file).size <= MAX_TRANSCRIPT,
       "native observation exceeds its finite transcript bound",
@@ -246,13 +257,13 @@ export class NativeApiSyscallObserver {
         fs.readFileSync(`/proc/${this.parent.pid}/status`, "utf8"),
         /^TracerPid:\s+0$/mu,
       );
-    if (this.streamFailure) throw this.streamFailure;
+    this.checkStreamFailure();
   }
 
   receipt() {
+    this.checkStreamFailure();
     assert.ok(this.witnesses.length > 0);
     assert.ok(fs.statSync(this.file).size <= MAX_TRANSCRIPT);
-    if (this.streamFailure) throw this.streamFailure;
     const protocolScope = this.stream.finish();
     const transcriptSHA256 = syscallTranscriptDigest(this.file);
     const attachments = nativeApiAttachments(

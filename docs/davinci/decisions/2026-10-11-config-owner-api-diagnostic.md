@@ -102,3 +102,19 @@ pipe and Unix-peer controls pass together with all eighteen original/new laws.
 Original fixture values moved without changes into one bounded shared helper;
 all owned files remain within the existing line ratchet. Actual complete native
 API capture and the original migration authority remain unfinished.
+
+Actual `52b94b4b` run `38117409919` reached the same 64 MiB protocol limit
+before the first original completion. Both unchanged shipping builds passed;
+only one original row and no supplemental outcomes completed, so the capture
+remains unqualified. The observer now uses strace 6.8's documented
+`--strings-in-hex=non-ascii-chars` representation: printable ASCII stays literal,
+C escapes and complete two-digit hexadecimal escapes retain every other byte.
+The strict decoder preserves all 256 byte values, the original full raw kernel
+lines and hashes, and complete decoded API messages. Unknown escapes, raw
+non-ASCII/control bytes, truncated strings and inconsistent kernel byte counts
+refuse. The same 64 MiB transcript, 4 MiB line, five-second observer windows,
+original 79 packets and sixteen outcomes remain required. Partial failure
+metadata now retains counters and actual observer retirement state. All twenty-one
+local controls pass; fresh actual capture and the original migration remain
+unqualified. The encoding contract is the pinned
+[strace 6.8 implementation](https://github.com/strace/strace/blob/v6.8/src/util.c#L996).

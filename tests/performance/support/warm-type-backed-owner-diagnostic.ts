@@ -139,8 +139,10 @@ if (process.argv[2] === "prepare") {
     "tests/performance/support/warm-type-backed-owner-protocol-stream.ts",
     "tests/performance/support/warm-type-backed-owner-socket-traffic.ts",
     "tests/performance/support/warm-type-backed-owner-syscalls.ts",
+    "tests/performance/support/warm-type-backed-owner-kernel-string.ts",
     "tests/performance/support/warm-type-backed-owner-resolve.ts",
     "tests/tooling/warm-type-backed-owner-syscalls.test.ts",
+    "tests/tooling/warm-type-backed-owner-kernel-string.test.ts",
     "tests/tooling/support/warm-type-backed-owner-kernel-fixture.ts",
   ].map((file) => {
     const sourceSHA256 = digest(driver.revision, file);
