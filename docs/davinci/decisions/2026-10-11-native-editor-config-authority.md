@@ -83,6 +83,12 @@ qualification. Its corrected control compares the complete original root value,
 requires the cold refusal, and proves later creation invalidates the absence fact.
 This failed test receipt remains recorded; later filters have not yet executed.
 
+The hosted job compiles the library once, then collects all seven independent
+filter results and fails admission if any fail. A failed early law cannot hide
+later configuration/ownership refusals. Canon production Clippy follows in the
+same cached job with the original warning and wildcard-import errors enforced;
+this scoped evidence does not replace the eventual full-workspace gate.
+
 Hosted qualification is pending. The n8n job compiles Canon's actual library test
 module, then executes compiler-options, construction, typed-router, package-index,
 dependency-consumption, native-context and package-stamp controls before the
