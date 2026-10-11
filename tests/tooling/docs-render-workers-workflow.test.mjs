@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import { parse } from "yaml";
 
-test("whole Docs two/four comparison is manual-only, builds once and preserves full failures", () => {
+void test("whole Docs two/four comparison is manual-only, builds once and preserves full failures", () => {
   const yaml = (file) => parse(readFileSync(new URL(`../../${file}`, import.meta.url), "utf8"));
   const workflow = yaml(".github/workflows/ci-walltime-benchmark.yml");
   const job = workflow.jobs["docs-workers"];
