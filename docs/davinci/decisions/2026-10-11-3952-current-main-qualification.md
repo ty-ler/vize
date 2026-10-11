@@ -99,3 +99,29 @@ the preceding 190 pairs; the new literal control is the additional body. The
 canonical consumer ledger is regenerated. New native/full/n8n/original400 and
 resource Actions remain required; this allocation change has no measured
 performance or acceptance result yet.
+
+At actual source `a5e97ffb987e923a3b93bf8692ce7d1967f395ab`,
+[authored run 38144668819](https://github.com/ubugeeei-prod/vize/actions/runs/38144668819)
+passes all 2,034 ordinary Canon tests and retained native controls. Artifact
+`11704194238` still shows 419-source graphs at 11.083 to 11.828 seconds and
+1,391-source graphs at 81.619 to 82.476 seconds. DELETE's 1,390/1,389-source
+graphs take 83.812/83.940 seconds; every graph has guard/takeover zero. The
+original 400-request comparison and native CLI evidence pass independently;
+the authored DELETE timeout remains a release blocker.
+
+Before another structural optimization, attach CPU sampling and syscall
+summaries to the actual owned source-built LSP in a separate diagnostic run.
+The workflow first executes its unchanged original campaign. An optional
+dispatch input then repeats the same driver, oracle, source/configuration
+bytes, source-build recipe, requests and deadlines in a distinct process and
+output directory. Verify the driver's published PID, executable and checkout,
+retain the full original packet/custody evidence, and attach `perf` at 49 Hz
+and `strace -f -c`. Hash the source binary and both Vize lockfiles before and
+after. Sampling time and the second campaign's status grant no acceptance or
+performance credit; the first original campaign's failure stays failed.
+
+This opt-in diagnostic extends only its job envelope to 35 minutes. Normal
+jobs keep 20 minutes, and both executions keep all original consumer ceilings.
+No native producer, fact guard, fixture, oracle, request deadline or corpus
+registration changes. Unsupported or failed process observers must retain
+their errors and cannot be reported as measured attribution.
