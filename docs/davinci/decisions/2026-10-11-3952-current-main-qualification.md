@@ -378,3 +378,22 @@ actual-CLI paired run 38152993582 fails with the complete degraded API warning
 and `error handling method 'exit': EOF`; coordinate the existing Canon close/
 semantic-handoff repair instead of suppressing stderr. No merge, release or
 issue-completion credit follows from these partial receipts.
+
+The read-only parser audit finds an existing operation-local
+`ParsedDependencySources` packet, created in `context/build.rs` and dropped after
+dependency registration. It keys the complete virtual path, source bytes and
+`SourceType`, and its current hits skip only Oxc parsing; original observations
+and callbacks still run. The host prepass, frontier collection and route
+registration can share syntax only when their complete content and syntax equal
+the walk's projected module. This equality is not guaranteed by a common path.
+An exploratory exact-hit frontier projection could retain first-seen specifiers
+from the existing complete occurrence packet and use the original collector on
+every mismatch. No new cache variant or observation bypass is approved.
+
+The final editor import rewrite needs complete ordered source spans, duplicates
+and callback modes; a deduplicated occurrence packet cannot replace it. JS/JSX
+syntax can also differ from the walk's TS default. Package reachability has its
+own supplied/read source identity, and authored `TypeSourceSnapshot` entries
+already have immutable singleflight; neither supports a path-only cross-owner
+shortcut. Actual duplicate-parse counts remain unmeasured. These are bounded
+pure-computation candidates for later measurement, not performance results.
