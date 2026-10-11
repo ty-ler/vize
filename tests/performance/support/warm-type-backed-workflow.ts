@@ -111,12 +111,10 @@ if (process.argv[2] === "prepare") {
       );
     }
   } else assert.ok(production.length > 0);
-  const { pathHostMove, timingHostMove, defaultMigrationHost, graphHost } = qualifyHostMoves(
-    production,
-    allowed,
-    !cut,
-    (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
-  );
+  const { pathHostMove, timingHostMove, defaultMigrationHost, graphHost, diagnosticHost } =
+    qualifyHostMoves(production, allowed, !cut, (side, file) =>
+      gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+    );
   if (!cut) {
     for (const file of production)
       assert.ok(
@@ -124,7 +122,8 @@ if (process.argv[2] === "prepare") {
           pathHostMove?.files.includes(file) ||
           timingHostMove?.files.includes(file) ||
           defaultMigrationHost?.files.includes(file) ||
-          graphHost?.files.includes(file),
+          graphHost?.files.includes(file) ||
+          diagnosticHost?.files.includes(file),
         `unqualified production delta: ${file}`,
       );
   }
@@ -169,6 +168,7 @@ if (process.argv[2] === "prepare") {
         timingHostMove,
         defaultMigrationHost,
         graphHost,
+        diagnosticHost,
         afterRoot,
         driverSource: driver,
         authority: cut

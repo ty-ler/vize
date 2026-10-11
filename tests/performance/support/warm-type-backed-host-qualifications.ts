@@ -2,6 +2,7 @@ import { qualifyPathHostMove } from "./warm-type-backed-path-host.ts";
 import { qualifyTimingHostMove } from "./warm-type-backed-timing-host.ts";
 import { qualifyDefaultMigrationHost } from "./warm-type-backed-default-migration-host.ts";
 import { qualifyGraphHost } from "./warm-type-backed-graph-host.ts";
+import { qualifyDiagnosticHost } from "./warm-type-backed-diagnostic-host.ts";
 
 /** Compose finite qualifications without changing existing path/timing authorities. */
 export function qualifyHostMoves(
@@ -11,8 +12,10 @@ export function qualifyHostMoves(
   digest: (side: "before" | "after", file: string) => string | null,
 ) {
   const graphHost = enabled ? qualifyGraphHost(production, digest) : null;
+  const diagnosticHost = enabled ? qualifyDiagnosticHost(production, digest) : null;
   return {
     ...(graphHost ? { graphHost } : {}),
+    ...(diagnosticHost ? { diagnosticHost } : {}),
     pathHostMove: enabled ? qualifyPathHostMove(production, alreadyQualified, digest) : null,
     timingHostMove: enabled ? qualifyTimingHostMove(production, alreadyQualified, digest) : null,
     defaultMigrationHost: enabled

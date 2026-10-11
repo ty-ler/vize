@@ -14,9 +14,22 @@ The local diagnostic source commit is
 195 whole before/after production bodies against immutable original
 `fc551dc09faaa3187cd37a3a02cb94ebab0c3352`, plus the same 45 complete original
 workload bodies. Only the preceding `consumption.rs` after body changes and
-`population.rs` is added; all other preceding 194 source axes stay intact.
+`population.rs` is added; the other 193 producer bodies stay unchanged.
 Manifest SHA-256 is
 `da67c0b266a29d54ee9561d7dc7dbe739e621cbc66e796ebeee2bdefbb009adc`.
+
+The initial child PR's original400 source binding in
+[run 38156985618](https://github.com/ubugeeei-prod/vize/actions/runs/38156985618)
+honestly refuses `population.rs`: its actual parent baseline is `aaf0512`,
+so the production delta has two paths, while the original `fc551dc` authority
+requires the complete 195-path delta. Preserve that original qualification.
+Add a separate exact-parent counterpart that permits only these two actual
+changed paths but verifies all 195 whole baseline/current bodies (193 unchanged,
+the exact former carrier body and literal absence of the new helper before),
+plus all the same 45 original workload bodies. Every omitted, extra or duplicate
+producer and every complete body change refuses qualification. Retain this
+named counterpart in the source receipt; it grants source qualification only.
+Six original and exact-parent authority controls pass locally.
 
 ## Decision and source boundary
 
