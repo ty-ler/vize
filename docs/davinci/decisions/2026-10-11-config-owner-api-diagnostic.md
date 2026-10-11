@@ -33,3 +33,8 @@ child retirement controls remain required in the primary measurement.
 This diagnostic is unfinished until actual Actions produces complete live
 receipts. The original 20-field migration, exact source/member/config/offset
 proof, eight resolved public items and negative controls remain unqualified.
+
+A live-ref checkout may omit force-pushed historical objects. The diagnostic
+fetches only its four literal commits when missing, authenticates each exact Git
+object and every complete original/current body before the unchanged builds.
+Missing commits or any mismatched body remain unqualified.

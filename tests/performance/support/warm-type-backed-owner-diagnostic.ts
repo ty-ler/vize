@@ -35,6 +35,20 @@ if (process.argv[2] === "prepare") {
   assert.equal(driver.dirty, "");
   assert.equal(driver.revision, process.env.GITHUB_SHA);
   assert.equal(driver.revision, process.env.GITHUB_WORKFLOW_SHA);
+  // A full live-ref checkout need not retain force-pushed historical source objects.
+  for (const source of [baseline, head, actualParent, actualMain]) {
+    const present = spawnSync("git", ["cat-file", "-e", `${source}^{commit}`], {
+      cwd: driverRoot,
+    });
+    if (present.status !== 0) {
+      const fetched = spawnSync("git", ["fetch", "--no-tags", "origin", source], {
+        cwd: driverRoot,
+        encoding: "utf8",
+      });
+      assert.equal(fetched.status, 0, `literal source ${source}: ${fetched.stderr}`);
+    }
+    assert.equal(git(driverRoot, ["rev-parse", `${source}^{commit}`]), source);
+  }
   const manifest = JSON.parse(
     fs.readFileSync(
       new URL("./warm-type-backed-project-config-manifest.json", import.meta.url),
@@ -45,6 +59,14 @@ if (process.argv[2] === "prepare") {
     sha256(JSON.stringify(manifest)),
     "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc",
   );
+  for (const [file, original, reviewed] of [
+    ...manifest.files,
+    ...manifest.preservedBodies,
+    ...manifest.harnessExtensions,
+  ]) {
+    assert.equal(digest(baseline, file), original, `complete original body ${file}`);
+    assert.equal(digest(head, file), reviewed, `complete actual body ${file}`);
+  }
   const configFiles = manifest.files.map(([file]: [string]) => file);
   const authority = qualifyProjectConfigHost(configFiles, new Set(), (side, file) =>
     digest(side === "before" ? baseline : head, file),
