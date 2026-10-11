@@ -12,7 +12,7 @@ workflow/document preservation controls, including all four Linux process laws.
 Exact-parent Check `38161304606`, original 400-provider `38161304519` and native
 backend phases `38161304623` all pass. The original authored failure below is
 retained separately; the optional capture is not repeated.
-The actual reviewed source is `ab497e944cbfb57952db8dad1f787b0f6df5cd9b`.
+The actual reviewed source is `f3dbbedad2298dd0dd207e29457651068ea145b1`.
 The preceding [Linux occupancy receipt](./2026-10-12-3952-native-fact-occupancy-diagnostic.md)
 counts the whole full-key index, unlike its explicitly incomplete prospective
 suffix histogram. At 1,391 files, all 1,223,853 full buckets contain one index.
@@ -50,7 +50,7 @@ adds the explicit vector type needed after making the helper generic.
 The finite source successor authenticates all preceding 195 whole producer
 bodies and the added test body, plus all the same 45 original workload bodies.
 Its actual delta is precisely four paths: `consumption.rs`, `population.rs`,
-the test-module declaration and the new `tests/inline_bucket.rs`. The immutable
+the retention module's test declaration and the new `tests/inline_bucket.rs`. The immutable
 195-body graph and exact-parent diagnostic authorities remain unchanged.
 Their original positive graph control authenticates the pinned reviewed Git
 bodies, while the successor control authenticates the actual current head's
@@ -105,3 +105,37 @@ warm/churn receipts before any adoption or merge decision. A cold gain cannot
 establish warm RSS closure. Parent #8520 remains draft with its authored timeout
 and separate CLI stderr failure, so no merge, release or issue-completion credit
 is available yet.
+
+## Native test placement repair
+
+The first child head `9ec21af5a9777b50f3bcfca17df75b3a7c09f3e0` fails
+Rust compilation with E0624: the cutoff oracle calls the existing private
+`retention.rs::contains_before` from a sibling test module. Preserve the complete
+failed logs from original authored job `114539086990`, affected Rust build
+`114539237975` and full source coverage `114539196423`; no runtime or resource
+qualification is claimed from their aborted tests.
+
+Declare the new control as a test child of `retention.rs`, following its existing
+private-bucket control placement. Every production function body and visibility,
+all new cutoff assertions and the whole old `tests.rs`, private-bucket and witness
+bodies remain unchanged. Restore the original generated Carton site at line 204.
+The source successor still requires exactly four producer paths and all 196/45
+complete bodies; the two actual module-body identities and reviewed source
+identity change explicitly. Fresh full native, original authored, 400-provider
+and full warm/Misskey controls remain required after this compile repair.
+
+The failed native-test head separately passes full Vue parity job `114539196401`
+in [38162843462](https://github.com/ubugeeei-prod/vize/actions/runs/38162843462).
+Its authenticated build receipt records the original
+`cargo build --profile ci -p vize --features legacy` recipe, exact source
+`9ec21af5a9777b50f3bcfca17df75b3a7c09f3e0` and binary SHA-256
+`54c44fbc98318f20469765f1163bec9daea109c6154d36ddb8e164e2efe51d93`.
+Artifact `11710948289`, archive SHA-256
+`a592f0044798222ad8560fffb6d8611d75f09e211dd739e54ee7345d9d08ceeb`,
+retains the complete original scale-1, 40-cycle Misskey packet and 63 samples.
+At `file-lifecycle-0`, actual server PID `93634` peaks at 130,328 KiB
+(127.2734375 MiB), below the unchanged 128 MiB cap; the full tree peaks at
+351,636 KiB with at most three processes. This is genuine warm/RSS evidence
+for that failed native-test head, not repaired-head qualification or proof
+that the bucket change caused a memory improvement. Repeat the original gates
+on the genuine compile repair before adopting it.
