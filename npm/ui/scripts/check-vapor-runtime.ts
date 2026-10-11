@@ -27,7 +27,7 @@
  * that now passes (remove it from the ledger). Requires a native binding.
  */
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -118,6 +118,11 @@ for (const lane of ["mount", "hydrate"] as const) {
   lanes[lane] = output.results;
   for (const failure of output.compileFailures) failures.push(`[compile:vapor] ${failure}`);
 }
+// Private diagnostic capture: preserve raw results even when nested vp tasks
+// filter an optional environment variable. No conformance oracle changes.
+cpSync(workDirectory, path.resolve(packageRoot, "../../evidence", runtimeTrack()), {
+  recursive: true,
+});
 rmSync(workDirectory, { recursive: true, force: true });
 
 // 4. Ratchet against the known-failure ledger.
