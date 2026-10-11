@@ -47,7 +47,7 @@ impl InlayHintService {
             .await;
         trace_native_inlay("canonicalResponse", || match &response {
             Ok(value) => serde_json::json!({"ok":true,"response":value}),
-            Err(error) => serde_json::json!({"ok":false,"error":error.as_str()}),
+            Err(error) => serde_json::json!({"ok":false,"error":error.to_string()}),
         });
         let Ok(Some(response)) = response else {
             return Vec::new();

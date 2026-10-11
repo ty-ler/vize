@@ -11,3 +11,9 @@ A retiring attached project releases its active snapshot while the backend is al
 Additive native laws reuse the existing package-alias native test command and frozen original diagnosing fixture. They require whole positive/negative diagnostic reports, API type answers before and after editor interaction, one actual native child per configuration, distinct independent-owner attachment/session identities, and complete physical process retirement. Standard/fake/absent-configuration classification controls remain explicit. Source preparation and pure formatting are insufficient: fresh native/full Actions must qualify these laws and rerun the unchanged Vben four-process gate.
 
 The current complete create-vue editor oracle returned `null` for its original inlay-hint packet. Existing numeric editor-preparation tracing now records the already-issued native inlay request/result, retained API attachment, mirror generation, complete canonical source, decoded hints, and authored mapping. The existing source parity step enables that passive trace; every original request, preference, fixture, judge, timeout, and artifact policy remains unchanged. The SDK exposes no native PID here, so these records do not claim one. No null-response cause or runtime recovery is established by this observation change.
+
+Actions rejected the passive Maestro inlay trace because `CorsaBridgeError`
+has no `as_str` method. Render that borrowed error through its existing
+`Display` implementation. The native request, refusals, mapped hints and
+original structured-hint assertions remain unchanged; this compilation
+correction does not settle the previously observed empty hint response.
