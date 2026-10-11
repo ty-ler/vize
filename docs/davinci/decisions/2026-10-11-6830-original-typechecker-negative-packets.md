@@ -39,3 +39,11 @@ trees and direct native output to be saved while the original program exists.
 This observer delay is declared separately; original CLI arguments and
 300-second consumer deadlines remain unchanged. Custody now refuses empty
 live captures and records whether the config stayed unchanged throughout.
+
+The next observer run refused its unsupported `strace` INT_MAX string-size
+argument before any original consumer command executed. It supplies no
+consumer verdict. The supported one-MiB string size exceeds every syscall
+buffer observed in the first literal-H trace (894,969 bytes for Element Plus;
+501,327 for Hoppscotch). A native-exec/live-tree control now checks the actual
+observer arguments before the real cases; each whole trace separately records
+whether any string was truncated. Raw native output files remain unbounded.

@@ -244,12 +244,16 @@ def capture_project(name, pin, vize, corsa, cache):
             shutil.copyfile(authored, phase_dir / "whole-authored.vue")
             # Exact original argv; strace is an explicitly separate observer process.
             trace_path = phase_dir / "native-ipc.strace"
-            trace = ["strace", "-f", "-yy", "-s", "2147483647", "-o", str(trace_path),
+            trace = ["strace", "-f", "-yy", "-s", "1048576", "-o", str(trace_path),
                      "-e", "inject=execve:delay_enter=5s",
                      "-e", "trace=execve,openat,read,write,close", *argv]
             command = run(trace, project, phase_dir / "original-command", observer=lambda stop:
                           observe_native_exec(stop, trace_path, phase_dir / "native-exec-live",
                                               corsa, phase == "broken"))
+            save_json(phase_dir / "native-string-custody.json", {
+                "stringLimitBytes": 1048576,
+                "truncatedString": bool(re.search(r'(?<!\\)"\.\.\.', trace_path.read_text()))
+            })
             snapshot(cache, phase_dir)
             reports[phase] = report_diagnostics(phase_dir / "original-command", relative)
             reports[phase]["command"] = command
@@ -280,6 +284,20 @@ def capture_project(name, pin, vize, corsa, cache):
 
 def main():
     authenticate_source()
+    # Fail before real consumer execution if observer argv/lifecycle is unsupported.
+    control = OUT / "observer-control/batch-installed-control/projects/control"
+    control.mkdir(parents=True)
+    config = control / "tsconfig.json"
+    config.write_text('{"files": []}\n')
+    trace = OUT / "observer-control/native-exec.strace"
+    command = run(["strace", "-f", "-yy", "-s", "1048576", "-o", str(trace),
+                   "-e", "inject=execve:delay_enter=5s", "-e", "trace=execve,read,write",
+                   "/bin/true", "--checkers", "1", "--project", str(config)], ROOT,
+                  OUT / "observer-control/command", observer=lambda stop:
+                  observe_native_exec(stop, trace, OUT / "observer-control/live", Path("/bin/true"), False))
+    receipts = json.loads((OUT / "observer-control/live/live-exec-receipts.json").read_text())
+    assert command["returncode"] == 0 and receipts and all(
+        receipt["configUnchangedThroughObservation"] for receipt in receipts), "observer control failed"
     vize = ROOT / "target/ci/vize"
     corsa = ROOT / "node_modules/@typescript/typescript-linux-x64/lib/tsc"
     assert vize.is_file() and corsa.is_file()
