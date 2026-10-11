@@ -200,3 +200,13 @@ output. No authored App diagnostic golden or assertion changes. This records
 the intended source contract and permits fresh source gates; it grants no native
 correctness credit. The composed pinned-native and unchanged whole App acceptance,
 protected queue, merge and installed release qualification remain pending.
+
+The new source pair `38142630222` at `fb350226ed` refused before timing:
+the original 400-provider guard did not recognize the reviewed generic
+projection snapshot. `warm-type-backed-generic-host.ts` enumerates only this
+slice's exact twenty previously unlisted production/test/projection paths.
+The existing bare import rewriter path was already recognized. This list admits
+the same paired build and measurements; it changes no original 400 input,
+response oracle, workload, profile, timeout or latency/memory budget. Unknown
+paths retain the original refusal. Passing source or this preparation guard
+alone grants no performance result; the actual pair remains required.
