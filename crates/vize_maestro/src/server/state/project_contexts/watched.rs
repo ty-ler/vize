@@ -10,11 +10,22 @@ impl ServerState {
         if self.project_contexts.owner.read().is_some() {
             return Vec::new();
         }
+        let mut roots = self.workspace_root_paths();
+        if let Some(boundary) = self.project_contexts.boundary.read().clone()
+            && !roots.contains(&boundary)
+        {
+            roots.push(boundary);
+        }
+        let physical_roots = roots
+            .iter()
+            .map(|root| physical_path(root))
+            .collect::<Vec<_>>();
         let config_paths = changes
             .iter()
             .filter_map(|event| event.uri.to_file_path().ok())
-            .filter(|path| is_config_marker(path))
+            .filter(|path| is_config_marker(path) && !excluded_config_path(path, &roots))
             .map(|path| physical_path(&path))
+            .filter(|path| !excluded_config_path(path, &physical_roots))
             .collect::<Vec<_>>();
         if config_paths.is_empty() {
             return Vec::new();
@@ -48,6 +59,14 @@ impl ServerState {
                 affected.push(root);
             }
         }
+        for root in &affected {
+            let replacement = Arc::new(registry::ProjectContext::new(root.clone()));
+            if let Some(previous) = contexts.insert(root.clone(), replacement) {
+                previous.mark_retired();
+                retired.push(previous);
+            }
+        }
+        drop(contexts);
         let affected_documents = self
             .documents
             .iter()
@@ -73,6 +92,8 @@ impl ServerState {
         // A newly created marker can move a document out of the primary
         // owner before any child context exists. Drop that old virtual view;
         // the watcher prepares the current buffer in the new owner below.
+        #[cfg(test)]
+        super::lock_order_tests::before_route_changes();
         let moved_primary_documents = affected_documents
             .iter()
             .filter(|(uri, _)| {
@@ -91,14 +112,6 @@ impl ServerState {
             .map(|(uri, _)| uri.clone())
             .collect::<Vec<_>>();
         self.project_contexts.routes.clear();
-        for root in affected {
-            let replacement = Arc::new(registry::ProjectContext::new(root.clone()));
-            if let Some(previous) = contexts.insert(root, replacement) {
-                previous.mark_retired();
-                retired.push(previous);
-            }
-        }
-        drop(contexts);
         if primary_retired {
             self.retire_project_owner();
         }
@@ -110,4 +123,24 @@ impl ServerState {
         }
         affected_documents
     }
+}
+
+fn excluded_config_path(path: &std::path::Path, roots: &[std::path::PathBuf]) -> bool {
+    let relative = roots
+        .iter()
+        .filter_map(|root| {
+            path.strip_prefix(root)
+                .ok()
+                .map(|relative| (root, relative))
+        })
+        .max_by_key(|(root, _)| root.components().count())
+        .map(|(_, relative)| relative);
+    relative.is_some_and(|relative| {
+        relative.components().any(|part| {
+            matches!(part, std::path::Component::Normal(name) if matches!(
+                name.to_str(),
+                Some("node_modules" | ".git" | "target" | "dist" | "build")
+            ))
+        })
+    })
 }
