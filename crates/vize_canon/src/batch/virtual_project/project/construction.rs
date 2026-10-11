@@ -7,6 +7,11 @@ use vize_atelier_core::TemplateSyntaxMode;
 use vize_carton::{FxHashMap, FxHashSet};
 
 impl VirtualProject {
+    #[cfg(test)]
+    pub(crate) fn assert_same_configuration(&self, other: &Self) {
+        configuration_scope_tests::same_configuration(self, other);
+    }
+
     /// Create a new virtual project.
     pub fn new(project_root: &Path) -> CorsaResult<Self> {
         Self::new_consumed(project_root, false, true).map(|consumed| consumed.value)

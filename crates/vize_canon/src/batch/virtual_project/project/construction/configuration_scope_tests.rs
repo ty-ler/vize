@@ -2,7 +2,7 @@
 
 use super::VirtualProject;
 
-fn same_configuration(left: &VirtualProject, right: &VirtualProject) {
+pub(super) fn same_configuration(left: &VirtualProject, right: &VirtualProject) {
     assert_eq!(left.project_root, right.project_root);
     assert_eq!(left.virtual_root, right.virtual_root);
     assert_eq!(left.tsconfig_path, right.tsconfig_path);

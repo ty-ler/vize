@@ -94,15 +94,6 @@ impl Generation {
 }
 
 #[expect(clippy::disallowed_types, reason = "serde_json keys are std strings")]
-pub(super) fn configured_root(
-    project: &VirtualProject,
-    options: Option<&Map<std::string::String, Value>>,
-    tsconfig: Option<&Path>,
-) -> Option<PathBuf> {
-    configured_root_consumed(project, options, tsconfig, false).value
-}
-
-#[expect(clippy::disallowed_types, reason = "serde_json keys are std strings")]
 pub(super) fn configured_root_consumed(
     project: &VirtualProject,
     options: Option<&Map<std::string::String, Value>>,
@@ -111,11 +102,29 @@ pub(super) fn configured_root_consumed(
 ) -> crate::package_route::stamp::Consumed<Option<PathBuf>> {
     use super::project::consumption::{empty, finish};
     let mut facts = empty(observe && project.project_root.is_absolute());
+    let Some(options) = options else {
+        facts.qualified = false;
+        return finish(facts, None);
+    };
+    let Some(entries) = options.get("plugins") else {
+        return finish(facts, None);
+    };
+    let Some(entries) = entries.as_array() else {
+        facts.qualified = false;
+        return finish(facts, None);
+    };
+    let mut supported_entries = true;
+    let plugin = entries.iter().find(|entry| {
+        supported_entries &= entry.is_string() || entry.get("name").is_some_and(Value::is_string);
+        entry.as_str() == Some(PLUGIN) || entry.get("name").and_then(Value::as_str) == Some(PLUGIN)
+    });
+    let Some(plugin) = plugin else {
+        // Absence from the actual supported configuration is an authoritative
+        // no-op. Unsupported shapes cannot lend that absence to a guessed root.
+        facts.qualified &= supported_entries;
+        return finish(facts, None);
+    };
     let value = (|| {
-        let plugin = options?.get("plugins")?.as_array()?.iter().find(|entry| {
-            entry.as_str() == Some(PLUGIN)
-                || entry.get("name").and_then(Value::as_str) == Some(PLUGIN)
-        })?;
         let explicit_root = plugin.get("options").and_then(|value| value.get("rootDir"));
         let root = if let Some(value) = explicit_root {
             // A malformed path is unsupported; it never enables a guessed transform.
@@ -133,7 +142,7 @@ pub(super) fn configured_root_consumed(
             project.project_root.join(root)
         }))
     })();
-    // None may be a pure absent-plugin value or an unsupported loader/default error.
+    // An enabled plugin still needs its actual supported root and loader facts.
     facts.qualified &= value.is_some();
     finish(facts, value)
 }

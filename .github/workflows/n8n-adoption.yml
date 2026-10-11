@@ -179,6 +179,13 @@ jobs:
         run: vp install --frozen-lockfile --prefer-offline
       - name: Build and authenticate the current-source LSP
         run: cargo build --profile ci -p vize && vp node tests/differential/build-receipt.ts
+      - name: Verify actual configuration and native fact refusal controls
+        run: |
+          cargo test --profile ci -p vize_canon --lib batch::virtual_project::tsconfig_gen::compiler_options
+          cargo test --profile ci -p vize_canon --lib batch::virtual_project::project::construction
+          cargo test --profile ci -p vize_canon --lib batch::virtual_project::typed_router::config_tests
+          cargo test --profile ci -p vize_canon --lib corsa_bridge::vue_dependencies_alias::context
+          cargo test --profile ci -p vize_canon --lib package_route::stamp
       - name: Preserve ordinary default-export navigation
         run: cargo test --profile ci -p vize_maestro --lib ide::definition::service::import_target::default_export::tests -- --nocapture
       - name: Check original n8n navigation and unsaved diagnostic repair

@@ -108,6 +108,7 @@ impl VirtualProject {
             .map(|consumed| consumed.value)
     }
 
+    #[cfg(test)]
     #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
     pub(in super::super) fn load_compiler_options_verbatim_observed(
         &self,
