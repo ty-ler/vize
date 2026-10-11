@@ -250,3 +250,9 @@ client's actual `getSourceFileNames` response before its verdict. Its two
 test-only receipt paths and fixture test path join the same bounded producer
 qualification; the frozen 400 inputs/oracles/budgets stay unchanged. No
 declaration-edge production fix or App baseline migration is yet qualified.
+
+The bounded declaration-import law also runs before the existing CLI/native
+phase on PR Actions, sharing its exact source, toolchain, profile and sticky
+target. Its compiled test name must exist and actual native execution is
+required; complete packets and pipeline statuses use a distinct retained
+subdirectory. Every existing full App/native qualification remains mandatory.
