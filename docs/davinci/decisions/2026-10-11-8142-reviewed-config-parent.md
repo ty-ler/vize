@@ -40,3 +40,13 @@ Parent refusal controls read the complete preserved repair commit, since the
 component layer deliberately changes some parent bodies. Separate current-file
 controls require the entire actual component successor and both real scopes;
 the child's files never substitute for the parent's literal source evidence.
+
+The separate [Canon batch identity successor](./2026-10-12-canon-batch-physical-identity.md)
+authenticates its two complete changed bodies and additive closed-importer
+fixture. Its new session control expands the genuine current full composition
+from135 to136 paths while preserving the original119 witness. The inherited
+child still changes28 paths; both complete Canon bodies and its fixture must
+match on both sides, and an extra claimed parent path refuses qualification.
+The earlier135 and seven-body repair receipts remain intact historical
+authorities. Current-file controls exercise both real scopes and every
+missing, changed, duplicate and foreign source refusal.
