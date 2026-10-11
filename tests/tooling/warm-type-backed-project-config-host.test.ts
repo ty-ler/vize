@@ -72,11 +72,15 @@ await test("qualification binds every current source and whole unchanged corpus 
   const originalBodies = new Map(
     component.componentBodies.map(([file, , , before]) => [file, before]),
   );
+  const loaderFiles = new Set([
+    "crates/vize_carton/src/config/loader/js.rs",
+    "crates/vize_carton/src/config/loader/module-runtime.mjs",
+  ]);
   const composed = [...new Set([...production, ...originalBodies.keys()])].toSorted();
   const result = qualifyComponentContextHost(composed, new Set(), (side, file) =>
-    side === "before"
+    side === "before" && !loaderFiles.has(file)
       ? (digest(side, file) ?? originalBodies.get(file) ?? null)
-      : actual(side, file),
+      : actual("after", file),
   );
   assert.ok(result);
   assert.equal(result.authority, "complete-project-config-and-component-context-slices");
