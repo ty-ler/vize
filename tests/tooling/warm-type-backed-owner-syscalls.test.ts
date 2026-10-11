@@ -190,6 +190,24 @@ await test("unknown descriptors, syscalls and partial lines never receive protoc
   assert.throws(() => nativeApiAttachments(selected, [native], [parent]));
 });
 
+await test("partial failure metadata preserves custody without completing or consuming the trace", () => {
+  let selected = "";
+  const stream = new NativeProtocolStream((line) => (selected += line));
+  const first = Buffer.from(input + output.slice(0, -1));
+  stream.push(first);
+  const partial = stream.snapshot();
+  assert.equal(partial.inputSHA256, sha256(first));
+  assert.equal(partial.incompleteLineBytes, output.length - 1);
+  assert.equal(partial.selectedBytes, Buffer.byteLength(input));
+  assert.throws(() => stream.finish(), /partial syscall line/);
+  assert.deepEqual(stream.snapshot(), partial);
+  stream.push(Buffer.from("\n"));
+  const complete = stream.finish();
+  assert.equal(complete.inputSHA256, sha256(Buffer.from(input + output)));
+  assert.equal(complete.incompleteLineBytes, 0);
+  assert.deepEqual(nativeApiAttachments(selected, [native], [parent])[0].response, response);
+});
+
 await test("the protocol transcript retains its original 64MiB ceiling and finite line bound", () => {
   const line = write(21, "pipe:[101]", Buffer.alloc(1024));
   const chunk = Buffer.from(line.repeat(250));

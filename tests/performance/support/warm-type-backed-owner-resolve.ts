@@ -136,6 +136,9 @@ export async function runOwnerResolveFixture(
   let initialization: unknown;
   let failure: unknown;
   let observerFailure: unknown;
+  let shutdownFailure: unknown;
+  let retirementFailure: unknown;
+  let wireFailure: unknown;
   let nativeAPIObserver: unknown;
   const native = new Map<string, ReturnType<typeof nativeIdentities>[number]>();
   try {
@@ -169,18 +172,30 @@ export async function runOwnerResolveFixture(
     } catch (error) {
       observerFailure = error instanceof Error ? error.stack : String(error);
     }
-    await session.shutdown();
-    await awaitRetired([...native.values()]);
+    try {
+      await session.shutdown();
+    } catch (error) {
+      shutdownFailure = error instanceof Error ? error.stack : String(error);
+    }
+    try {
+      await awaitRetired([...native.values()]);
+    } catch (error) {
+      retirementFailure = error instanceof Error ? error.stack : String(error);
+    }
   }
   try {
     nativeAPIObserver = recorder.observer?.receipt();
   } catch (error) {
     observerFailure = error instanceof Error ? error.stack : String(error);
   }
-  const wire = await finishWire(repoRoot, previous, captureRoot);
-  const capture = wire.capture;
+  let wire: Awaited<ReturnType<typeof finishWire>> | undefined;
+  try {
+    wire = await finishWire(repoRoot, previous, captureRoot);
+  } catch (error) {
+    wireFailure = error instanceof Error ? error.stack : String(error);
+  }
   fs.mkdirSync(output, { recursive: true });
-  fs.cpSync(capture, path.join(output, "wire"), { recursive: true });
+  if (wire) fs.cpSync(wire.capture, path.join(output, "wire"), { recursive: true });
   const receipt = {
     input,
     initialization,
@@ -191,8 +206,22 @@ export async function runOwnerResolveFixture(
     wire,
     nativeAPIObserver,
     observerFailure,
+    shutdownFailure,
+    retirementFailure,
+    wireFailure,
   };
   fs.writeFileSync(path.join(output, "resolved.json"), `${JSON.stringify(receipt, null, 2)}\n`);
+  assert.equal(failure, undefined, "all supplemental resolve/refusal outcomes are required");
+  assert.equal(observerFailure, undefined, "missing or partial native API facts cannot qualify");
+  assert.equal(
+    shutdownFailure,
+    undefined,
+    "the original initialized server must shut down cleanly",
+  );
+  assert.equal(retirementFailure, undefined, "all original native identities must retire");
+  assert.equal(wireFailure, undefined, "the original complete wire capture remains required");
+  assert.ok(wire);
+  const capture = wire.capture;
   const client = decodeFrames(fs.readFileSync(path.join(capture, "client.bin"))).messages;
   const server = decodeFrames(fs.readFileSync(path.join(capture, "server.bin"))).messages;
   const additional = new Set(recorder.additional.map((row) => row.id));
@@ -213,8 +242,6 @@ export async function runOwnerResolveFixture(
       [row.response],
     );
   }
-  assert.equal(failure, undefined, "all supplemental resolve/refusal outcomes are required");
-  assert.equal(observerFailure, undefined, "missing or partial native API facts cannot qualify");
   assert.equal(recorder.rows.length, 79);
   assert.equal(recorder.additional.filter((row) => !row.refusal).length, 8);
   assert.equal(recorder.additional.filter((row) => row.refusal).length, 8);

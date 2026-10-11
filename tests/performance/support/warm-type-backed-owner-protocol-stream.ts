@@ -81,19 +81,26 @@ export class NativeProtocolStream {
     this.retain(complete);
   }
 
-  finish() {
-    assert.equal(this.line, "", "a partial syscall line cannot qualify");
-    assert.equal(this.pending.size, 0, "unfinished writes cannot grant authority");
+  /** Partial metadata grants no authority; retain the first failure without exposing payloads. */
+  snapshot() {
     return {
       scope: "complete-kernel-decorated-pipe-and-Unix-stream-writes",
       inputBytes: this.inputBytes,
-      inputSHA256: this.digest.digest("hex"),
+      inputSHA256: this.digest.copy().digest("hex"),
       selectedBytes: this.selectedBytes,
       selectedWrites: this.selectedWrites,
       excludedFileWrites: this.fileWrites,
       excludedEventfdWrites: this.wakeWrites,
+      incompleteLineBytes: this.line.length,
+      pendingWrites: this.pending.size,
       selectedTranscriptBound: MAX_SELECTED,
       singleLineBound: MAX_LINE,
     };
+  }
+
+  finish() {
+    assert.equal(this.line, "", "a partial syscall line cannot qualify");
+    assert.equal(this.pending.size, 0, "unfinished writes cannot grant authority");
+    return this.snapshot();
   }
 }

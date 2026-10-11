@@ -52,3 +52,13 @@ write refuse qualification. Ten original and added controls cover complete
 bytes, process/pipe identity, peer arrows, scope, partial/interleaved writes and
 the unchanged retained limit. This source correction needs fresh actual capture
 before any complete API receipt or migration is credited.
+
+The next actual run failed before initialization. Its cleanup then rejected
+shutdown because the server was uninitialized, masking the first error and
+preventing the supplemental receipt. The private driver now stores startup,
+observer retirement, server shutdown, native retirement and wire-close errors
+separately before requiring every original boundary. Partial trace counters and
+hashes are diagnostic metadata and cannot authenticate any attachment. An added
+control proves that inspecting this metadata neither consumes the stream nor
+qualifies its incomplete bytes. All original 79 requests, request windows,
+transcript limits and complete initialized shutdown/reap checks remain required.

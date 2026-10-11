@@ -151,20 +151,54 @@ export class NativeApiSyscallObserver {
   }
 
   static async start(pid: number, output: string, nativeExecutable: string) {
-    const observer = new NativeApiSyscallObserver(pid, output, nativeExecutable);
-    const deadline = Date.now() + 5000;
-    while (Date.now() < deadline) {
-      const status = fs.readFileSync(`/proc/${pid}/status`, "utf8");
-      observer.tracerPid = Number(status.match(/^TracerPid:\s+(\d+)$/mu)?.[1]);
-      if (observer.tracerPid > 0) {
-        observer.tracer = tracerWitness(observer.tracerPid);
-        return observer;
+    assert.equal(fs.existsSync(output), false, "a fresh private observer directory is required");
+    let observer: NativeApiSyscallObserver | undefined;
+    let phase = "construct";
+    try {
+      observer = new NativeApiSyscallObserver(pid, output, nativeExecutable);
+      phase = "attach";
+      const deadline = Date.now() + 5000;
+      while (Date.now() < deadline) {
+        const status = fs.readFileSync(`/proc/${pid}/status`, "utf8");
+        observer.tracerPid = Number(status.match(/^TracerPid:\s+(\d+)$/mu)?.[1]);
+        if (observer.tracerPid > 0) {
+          phase = "tracer-identity";
+          observer.tracer = tracerWitness(observer.tracerPid);
+          return observer;
+        }
+        if (observer.child.exitCode !== null) break;
+        await setTimeout(10);
       }
-      if (observer.child.exitCode !== null) break;
-      await setTimeout(10);
+      throw new Error("the observer must attach before the original initialize request");
+    } catch (failure) {
+      let retirementFailure: unknown;
+      try {
+        await observer?.stop();
+      } catch (error) {
+        retirementFailure = error instanceof Error ? error.stack : String(error);
+      }
+      if (fs.existsSync(output))
+        fs.writeFileSync(
+          path.join(output, "startup-failure.json"),
+          `${JSON.stringify({ qualified: false, phase, failure: failure instanceof Error ? failure.stack : String(failure), retirementFailure, observer: observer?.diagnosticState() }, null, 2)}\n`,
+          { flag: "wx", mode: 0o600 },
+        );
+      throw failure;
     }
-    await observer.stop();
-    throw new Error("the observer must attach before the original initialize request");
+  }
+
+  private diagnosticState() {
+    return {
+      parent: this.parent,
+      tracer: this.tracer,
+      tracerPid: this.tracerPid,
+      childExitCode: this.child.exitCode,
+      childSignalCode: this.child.signalCode,
+      stderr: this.stderr,
+      streamFailure:
+        this.streamFailure instanceof Error ? this.streamFailure.stack : this.streamFailure,
+      protocolScope: this.stream.snapshot(),
+    };
   }
 
   sample(row: Record<string, unknown>) {
