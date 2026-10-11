@@ -354,3 +354,5 @@ actual L0 neutral-code move for #6833; retiring the three old packages remains u
 records #8371's process-local provider session counter and complete pipe/session
 identity. All actual owner, single-process, configuration, diagnostic and reaping
 controls remain; failed native/full receipts require fresh Actions qualification.
+
+[Configuration provider measurement qualification](./2026-10-11-config-provider-source-qualification.md) records #8371's complete90-body source pair and unchanged51-body original input/build/ceiling authority; missing, extra, duplicate and changed bodies refuse before unchanged actual400-provider measurement. Exact-source Actions and delivery remain required.
