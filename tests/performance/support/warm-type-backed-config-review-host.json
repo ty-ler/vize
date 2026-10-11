@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "actualBaseline": "df7f2e83722371a71c75bc29208be0ed51491579",
+  "predecessorSource": "ad9efeef994cb58b39a76c84fc9cac497f65f695",
+  "reviewedSource": "a5d96d1d48e8e18b9515d909305c50c734d891c6",
+  "originalConfigManifestSHA256": "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc",
+  "issuedCompletionManifestSHA256": "ef1ffd5636c09cb276a5f8365c24a899691a161ebc70839713e7a8721a0d7c48",
+  "baselineWitness": {
+    "originalSource": "7386b2a79604ae5b74cb541be911eb19735e68b2",
+    "commonMergedSource": "a18ab6830c4935fb50465caa829741af82716ced",
+    "mergedPR": 8392,
+    "verifiedAuthor": "ubugeeei <ubuge1122@gmail.com>",
+    "inflightRootCommits": [
+      "950e01e25d323608686fdee64f1a85186820c1e6",
+      "68e80aaff9f82481c1e64faf0c9bba74f3ba6781",
+      "e530e84859afdd84942af1895ec3d912728e617b",
+      "c1d303841bccad6cc915cafdf5c444699fc1c38a"
+    ],
+    "review": "Actual main never removed the inflight root registration or root/ordered-array tests. Reviewed predecessor and after retain every complete original-after test body; only two exact actual-main before bodies project to the frozen original before."
+  },
+  "reviewedCommits": [
+    "fe5c2636af7cb7abd9bba45eefac7a13bde6987e",
+    "a121ff7fd5b2182d70be8b689c263eee322cb13e",
+    "a5d96d1d48e8e18b9515d909305c50c734d891c6"
+  ],
+  "productionBodies": [
+    [
+      "crates/vize_canon/src/lsp_client/diagnostics/virtual_overlay_diagnostics.rs",
+      "70f654e440e72b73d4da74a98585c585110fa4dc783afc5ae94eb08fc0cfe95c",
+      "70f654e440e72b73d4da74a98585c585110fa4dc783afc5ae94eb08fc0cfe95c",
+      "b955f265d44ec59302ee464cfed4494c48f7fb899aeb509651a894b0ace54d08"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport.rs",
+      null,
+      "d9fc7b34f36b16957b8c14cb12fb167d4aefe27c17b6f1e1e8f57100d3c0c2bd",
+      "aba2bd809b177cefd8860188a313c5157b05234d4e8b957969a471de37097dc1"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport/tests/native.rs",
+      null,
+      "13369b9dea8c2d67cd51b2337ab712a4e2f5b49e9e757bf9f2837d58b015a20a",
+      "ae8018baa30d97078ee1c5bf140697e743503bebb81e35cd125738d1758d4239"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport/tests/native/replay.rs",
+      null,
+      null,
+      "2b7408c43e574e62d982213d3e0b46a7c17abc8159cc25bdda1594d26ff08776"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/queries.rs",
+      "6a8926358bc071cf7bb497a0d7926007f1b3811cc05119723e4b98bfa7ad1f7e",
+      "6a8926358bc071cf7bb497a0d7926007f1b3811cc05119723e4b98bfa7ad1f7e",
+      "8dff18254cf6d6dca93055e3bdb5c1fd96bf43d87000176fec285fbd7ddda908"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/session.rs",
+      "9408751665c7142a94bfff93fd71d5852e69f8dc5af42340929334758415b128",
+      "35d75f61e8a04f8b856d6a06b94a7d2dcc8ad6b097f55e7958df7777d00b3656",
+      "e119f6f05305a302a7a5747e1b60676e69a7fac092ac5f1c15ac444ed4b5e63a"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/session/replay.rs",
+      null,
+      null,
+      "91786a3cd73bf8cf7a35ba5a5da589d67bbd445336db1d4f8b356215b99ef5d7"
+    ],
+    [
+      "crates/vize_maestro/src/server/state/project_contexts.rs",
+      null,
+      "be61b16ba68870439deef13332cad7b1f7a5ce0039430ac75aa1764b6fb328ce",
+      "a86eefde9cf8ba776f784e2cead446ec2a8a28870157a7362270714b0df78957"
+    ],
+    [
+      "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs",
+      null,
+      null,
+      "860ad749f0e1349c152a36178f0dd9b4778e179a0b953d9dcb4decaeb2bef799"
+    ],
+    [
+      "crates/vize_maestro/src/server/state/project_contexts/watched.rs",
+      null,
+      "64652f984ea0a9b42ecfbea07b9b9e040e2c2f80d55a44dc789db6097a310522",
+      "1ceaefe9ed9c1961721c5b4e1f596570b80e91f97ef9414d40091b8c2c6562ce"
+    ]
+  ],
+  "harnessBodies": [
+    [
+      ".github/workflows/project-config-native.yml",
+      null,
+      "49a20061efa4321119362773d4909d3105e4a1c3da7afbe3911fae306391815c",
+      "85bc2924266d9883ebc0ff3197bf3a758db66da3224c15f4c81b40bc46101e73"
+    ],
+    [
+      "tests/_fixtures/differential/config/project-marker-retirement.json",
+      null,
+      null,
+      "4b62b7496aedff6cfdbf2f609ba5dc9fda401171b71a41f3ad2bff8dc78ce713"
+    ],
+    [
+      "tests/tooling/project-config-native-triggers.test.ts",
+      null,
+      null,
+      "3b909d83970fd51762174fe7e89d04cdfe1d9bc0bfaa07eae847d47cb8a79e23"
+    ]
+  ],
+  "newProductionFiles": [
+    "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport/tests/native/replay.rs",
+    "crates/vize_canon/src/lsp_client/session/replay.rs",
+    "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs"
+  ],
+  "excludedDecisionAndGeneratedPaths": [
+    "docs/davinci/decisions/2026-10-11-config-native-overlay-replay.md",
+    "docs/davinci/decisions/2026-10-11-project-context-lock-order.md",
+    "docs/davinci/plan/consumer-migration-surfaces/typechecker/vize_canon.tsv"
+  ],
+  "deferredActualMainComposition": {
+    "actualMain": "fc551dc09faaa3187cd37a3a02cb94ebab0c3352",
+    "baselineSuccessors": [
+      [
+        "crates/vize/tests/project_config_cli.rs",
+        "9f9aacdce665fba2c40eab783ab4d380abd4ce6a2609789b275a23c62d020116",
+        "58340e320d8e893df0aca6392de6e8e80ee27c62f9d70d702a4f973a4bc6e179",
+        "a841f70896a028c28b5f9a48e718b7b66a4d9abc954e7f7c19983ada0d522ec0"
+      ],
+      [
+        "crates/vize_carton/src/config/loader/project_settings_tests.rs",
+        "a044e9e318521820a4a5fda609e74517288feb7544af05b9103efa785972d434",
+        "c6a0ffd3065e9540d1b54a69a53412d9a5328cecce38a26940ba285aefe64118",
+        "f5c25e42f024ab0a4c6d387cde0a915b700e052e64d39dabcf10af974f306eff"
+      ]
+    ],
+    "status": "Not admitted by this qualifier. A separate closed composed-parent-pair review is required before any actual-main before projection."
+  },
+  "reviewedProductionFiles": [
+    "crates/vize_canon/src/lsp_client/diagnostics/virtual_overlay_diagnostics.rs",
+    "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport/tests/native/replay.rs",
+    "crates/vize_canon/src/lsp_client/queries.rs",
+    "crates/vize_canon/src/lsp_client/session/replay.rs",
+    "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs"
+  ]
+}
