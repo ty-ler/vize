@@ -15,3 +15,14 @@ runs:
           target/differential/
           target/ci/vize.differential-build.json
         if-no-files-found: warn
+    - name: Finish opted-in passive Docker lifecycle evidence
+      if: ${{ always() && env.VIZE_DOCKER_PHASE_CAPTURE == 'true' }}
+      shell: bash
+      run: python3 tools/support/compat/github/docker-phase-evidence.py finish
+    - name: Retain opted-in bounded Docker lifecycle evidence
+      if: ${{ always() && env.VIZE_DOCKER_PHASE_CAPTURE == 'true' }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: docker-phase-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.shard }}
+        path: target/ci-docker-phase/
+        if-no-files-found: error
