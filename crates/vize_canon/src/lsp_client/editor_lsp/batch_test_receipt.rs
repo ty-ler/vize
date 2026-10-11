@@ -1,8 +1,10 @@
 //! Test-only attestation from the same client that returned Batch diagnostics.
 
 use super::super::diagnostics::test_route::{self, Route};
-use super::{CorsaProjectClient, project_identity::ProjectIdentityError};
+use super::{CorsaProjectClient, EditorLspSession, project_identity::ProjectIdentityError};
+use corsa::runtime::block_on;
 use serde_json::{Value, json};
+use std::path::Path;
 
 impl CorsaProjectClient {
     pub(crate) fn batch_test_receipt(&mut self, uri: &str) -> Value {
@@ -17,18 +19,24 @@ impl CorsaProjectClient {
                 return receipt;
             };
             receipt["mode"] = json!("editor-lsp");
-            let selected = editor.diagnosing_configuration(uri);
-            match selected {
-                Ok(path) => receipt["selectedConfig"] = json!(path),
-                Err(error) => {
-                    receipt["selectedConfig"] = Value::Null;
-                    receipt["configurationError"] = json!(match error {
+            // Preserve the original overlay-only gate, including its refusal.
+            // A Batch request can have already diagnosed this materialized URI
+            // in an earlier chunk, outside the last live overlay map.
+            receipt["originalOverlayConfigurationObservation"] =
+                match editor.diagnosing_configuration(uri) {
+                    Ok(path) => json!({"status":"ok","selectedConfig":path}),
+                    Err(error) => json!({"status":"refused","wholeError":match error {
                         ProjectIdentityError::Communication(error) => error,
                         ProjectIdentityError::Unconfigured =>
                             "native document is inferred or unconfigured".into(),
-                    });
-                }
+                    }}),
+                };
+            let observed = materialized_configuration_receipt(editor, uri);
+            receipt["selectedConfig"] = observed["selectedConfig"].clone();
+            if observed["status"] != "ok" {
+                receipt["configurationError"] = observed["wholeError"].clone();
             }
+            receipt["materializedConfigurationObservation"] = observed;
             match editor.configured_project_receipt(uri) {
                 Ok(observed) => {
                     for key in [
@@ -79,4 +87,48 @@ impl CorsaProjectClient {
         }
         receipt
     }
+}
+
+/// Query the existing diagnosing LSP, without opening or replacing an overlay.
+pub(super) fn materialized_configuration_receipt(
+    editor: &mut EditorLspSession,
+    uri: &str,
+) -> Value {
+    struct ProjectInfoRequest;
+    impl lsp_types::request::Request for ProjectInfoRequest {
+        type Params = Value;
+        type Result = Value;
+        const METHOD: &'static str = "custom/projectInfo";
+    }
+
+    let request = json!({"textDocument":{"uri":uri}});
+    let mut receipt = json!({
+        "method":"custom/projectInfo","wholeRequest":request,
+        "scope":"same already-diagnosing LSP, acknowledged materialized Batch URI; no overlay or owner replacement",
+        "status":"refused","selectedConfig":null,
+    });
+    if let Err(error) = editor.ready_workspace_request() {
+        receipt["wholeError"] = json!(error);
+        return receipt;
+    }
+    receipt["acknowledgedDocumentGeneration"] = json!(editor.document_generation);
+    match block_on(editor.client.request::<ProjectInfoRequest>(request)) {
+        Ok(response) => {
+            let selected = response
+                .get("configFilePath")
+                .and_then(Value::as_str)
+                .filter(|path| !path.is_empty() && Path::new(path).is_absolute())
+                .map(std::path::PathBuf::from);
+            receipt["wholeResponse"] = response;
+            if let Some(selected) = selected {
+                receipt["status"] = json!("ok");
+                receipt["selectedConfig"] = json!(selected);
+            } else {
+                receipt["wholeError"] =
+                    json!("native materialized document is inferred or unconfigured");
+            }
+        }
+        Err(error) => receipt["wholeError"] = json!(vize_l0::cstr!("{error}")),
+    }
+    receipt
 }

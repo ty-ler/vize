@@ -8,6 +8,7 @@
 
 use super::{
     CorsaProjectClient,
+    batch_test_receipt::materialized_configuration_receipt,
     snapshot_source::{SnapshotSourceOwner, SourceTextOutcome},
 };
 use corsa::api::ApiClient;
@@ -23,20 +24,29 @@ impl CorsaProjectClient {
         retain: impl Fn(&[u8]) -> Value,
     ) -> Value {
         assert_eq!(authority["nativeBinary"], json!(self.executable));
-        let config = Path::new(authority["selectedConfig"].as_str().unwrap());
+        let Some(selected_config) = authority["selectedConfig"].as_str() else {
+            return json!({"qualified":false,"refusal":"no actual diagnosing config selection",
+                "wholeConfigurationObservation":authority["materializedConfigurationObservation"]});
+        };
+        let config = Path::new(selected_config);
         match authority["mode"].as_str() {
             Some("editor-lsp") => {
                 let editor = self.editor_lsp.as_mut().unwrap();
-                let selected = editor.diagnosing_configuration(uri).unwrap_or_else(|_| {
-                    panic!("the existing diagnosing LSP must retain its configuration")
-                });
-                assert_eq!(selected, config);
+                let selected = materialized_configuration_receipt(editor, uri);
+                if selected["status"] != "ok"
+                    || selected["selectedConfig"] != authority["selectedConfig"]
+                {
+                    return json!({"qualified":false,
+                        "refusal":"the existing diagnosing LSP did not retain its actual selection",
+                        "wholeConfigurationObservation":selected});
+                }
                 // This is the retained attachment to this diagnosing LSP, not
                 // a new process or a separately started project API oracle.
                 let attachment = editor.configured_api.as_ref().unwrap();
                 assert_eq!(json!(attachment.session), authority["attachment"]);
                 let mut receipt = read_sources(&attachment.client, config, authority, retain);
                 receipt["diagnosingAttachment"] = json!(attachment.session);
+                receipt["wholeConfigurationObservation"] = selected;
                 receipt
             }
             Some("project-api") => {
@@ -59,13 +69,45 @@ fn read_sources(
     retain: impl Fn(&[u8]) -> Value,
 ) -> Value {
     let mut owner = SnapshotSourceOwner::create(client).unwrap();
-    let observation = {
-        let project = owner.project(config).unwrap().unwrap_or_else(|reason| {
-            panic!("the same native snapshot refused its configured project: {reason:?}")
-        });
+    let observation = (|| {
+        let original = match owner.project(config).unwrap() {
+            Ok(project) => json!({"status":"admitted","wholeProject":project.descriptor(),
+                "wholeSourceNames":project.source_names()}),
+            Err(reason) => json!({"status":"refused","wholeRefusal":cstr!("{reason:?}")}),
+        };
+        let whole_projects = json!(owner.whole_batch_snapshot_projects_for_test());
+        let controls =
+            owner.batch_project_identity_refusals_for_test(config, &authority["project"]);
+        let project = match owner
+            .batch_project_for_test(config, &authority["project"])
+            .unwrap()
+        {
+            Ok(project) => project,
+            Err(reason) => {
+                return json!({"qualified":false,"wholeRefusal":cstr!("{reason:?}"),
+                "wholeSnapshotProjects":whole_projects,"originalSingletonAdmission":original,
+                "identityRefusalControls":controls});
+            }
+        };
         let same_project = json!(project.descriptor()) == authority["project"];
         let same_sources =
             json!(project.source_names()) == authority["sourceFileNamesResponse"]["wholeResponse"];
+        let absent_uri = crate::file_uri::path_to_file_uri(
+            &config.with_file_name("__vize_absent_provider_read__.d.ts"),
+        );
+        let foreign_uri = "file:///__vize_foreign_snapshot__/vue.d.ts";
+        let mut source_refusals = Vec::new();
+        for uri in [absent_uri.as_str(), foreign_uri] {
+            let refused = match project.read(uri).unwrap() {
+                SourceTextOutcome::Refused { reason, encoded } => json!({
+                    "uri":uri,"refused":true,"wholeRefusal":cstr!("{reason:?}"),
+                    "wholeEncodedRefusal":encoded.as_ref().map(|value|retain(value.as_bytes())),
+                }),
+                SourceTextOutcome::Complete(text) => json!({"uri":uri,"refused":false,
+                    "unexpectedWholeNativeText":retain(text.text().as_bytes())}),
+            };
+            source_refusals.push(refused);
+        }
         let mut sources = Vec::new();
         for name in project.source_names().iter().filter(|name| {
             name.ends_with("/vue/dist/vue.d.ts")
@@ -112,14 +154,20 @@ fn read_sources(
         json!({
             "ownerScope":"the retained attachment/session that returned this phase's diagnostics",
             "snapshotHandle":owner.handle(),"project":project.descriptor(),
+            "wholeSnapshotProjects":whole_projects,"originalSingletonAdmission":original,
+            "identityRefusalControls":controls,"sourceRefusalControls":source_refusals,
+            "selectionScope":"test-only exact config and complete diagnosing descriptor; production singleton contract is unchanged",
             "wholeSourceNames":project.source_names(),"loadedProviderSources":sources,
             "sameDiagnosingProject":same_project,"sameDiagnosingSourceNames":same_sources,
             "missingRequiredProviders":missing,
             "qualified":same_project && same_sources && missing.is_empty()
+                && ["absentProjectRefused","foreignDescriptorRefused","duplicateProjectRefused","changedWholeDescriptorRefused"]
+                    .iter().all(|name|controls[*name] == true)
+                && source_refusals.iter().all(|refusal|refusal["refused"] == true)
                 && sources.iter().all(|source| source["nativeMatchesPhysical"] == true),
             "additionalReadScope":"selected loaded Vue/Nuxt/helper providers only; all source names are retained, unqueried bytes receive no read credit",
         })
-    };
+    })();
     owner.release().unwrap();
     observation
 }
