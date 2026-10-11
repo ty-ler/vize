@@ -63,13 +63,29 @@ These are source-build observations, not installed-release acceptance.
 
 ## Validation and remaining work
 
-The source correction has local formatting and diff checks. Hosted qualification
-is pending. The n8n job compiles Canon's actual library test module, then executes
-compiler-options, construction, typed-router, native-context and package-stamp
-controls before the unchanged original authored lifecycle. The regression keeps
+The source correction has local formatting and diff checks. Composed source
+`0e5818c8233c49a81974d74a6420b0d5c2dbbc8e` passes the production build, complete
+compiler corpus and pinned fixture jobs in
+[run 38109170762](https://github.com/ubugeeei-prod/vize/actions/runs/38109170762).
+Canon's newly enabled whole-library test compilation exposes eight retained test
+access/signature errors; it fails before any control executes. These failures and
+the earlier composed production compilation failure in
+[run 38109011157](https://github.com/ubugeeei-prod/vize/actions/runs/38109011157)
+remain explicit failed receipts. Test access corrections keep the original
+assertions and supply the same facts to the unchanged underlying operations.
+
+Hosted qualification is pending. The n8n job compiles Canon's actual library test
+module, then executes compiler-options, construction, typed-router, package-index,
+dependency-consumption, native-context and package-stamp controls before the
+unchanged original authored lifecycle. The regression keeps
 missing bare config packages cold, qualifies only the installed actual chain,
 invalidates later parent changes, and compares complete configuration fields with
 the original factory.
+
+The temporary aggregate and unresolved-extends numeric trace exports are removed
+after their exact failed packets establish the first loss. Every underlying
+qualification, observed stamp and cold refusal remains. Retained dependency fact
+tests move unchanged into their own module to satisfy the existing 350-line gate.
 
 The existing #8520 draft also requires its 85 Clippy failures to be repaired and
 its full source/allocation/instruction controls to pass. Callback boxing in that

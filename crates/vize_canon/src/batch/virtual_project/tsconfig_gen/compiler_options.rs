@@ -73,12 +73,6 @@ impl ChainLoad {
             return resolve_extended_tsconfig_path(config, extends);
         }
         let consumed = resolve_extended_tsconfig_path_observed(config, extends);
-        if !self.unknown && (!consumed.qualified || consumed.value.is_none()) {
-            crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(
-                95,
-                usize::from(consumed.value.is_none()),
-            );
-        }
         self.unknown |= !consumed.qualified || consumed.value.is_none();
         self.stamps.extend(consumed.stamps);
         consumed.value

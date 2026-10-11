@@ -14,11 +14,11 @@ pub(crate) type Shared<T> = std::sync::Arc<T>;
 #[path = "stamp/observed.rs"]
 mod observed;
 #[cfg(test)]
-pub(crate) use observed::membership::PackageContributionRef;
+pub(crate) use observed::membership::{PackageAggregateError, PackageContributionRef};
 #[cfg(any(feature = "native", test))]
 pub(crate) use observed::membership::{
-    PackageAggregateError, package_aggregates, package_aggregates_match_old,
-    record_editor_route_write, record_package_input_members,
+    package_aggregates, package_aggregates_match_old, record_editor_route_write,
+    record_package_input_members,
 };
 pub(crate) use observed::{Consumed, FactOwner, FactRole, SourceRevisionFact};
 

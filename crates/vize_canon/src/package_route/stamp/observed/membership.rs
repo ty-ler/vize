@@ -112,7 +112,7 @@ pub(crate) fn record_editor_route_write(
 
 #[path = "membership/aggregate.rs"]
 mod aggregate;
-#[cfg(any(feature = "native", test))]
+#[cfg(test)]
 pub(crate) use aggregate::PackageAggregateError;
 pub(crate) use aggregate::{package_aggregates, package_aggregates_match_old};
 
