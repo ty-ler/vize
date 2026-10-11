@@ -119,6 +119,11 @@ runs:
           --filter './npm/builder/vite-musea...' \
           --filter './npm/framework/musea-nuxt...'
 
+    - name: Prepare original pinned ReKa providers
+      if: inputs.suite == 'check'
+      shell: bash
+      run: node tests/_helpers/reka-check-prepare.ts
+
     - name: Build native package
       shell: bash
       run: vp run --filter './npm/native' build:ci

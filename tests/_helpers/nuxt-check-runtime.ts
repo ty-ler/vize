@@ -52,6 +52,17 @@ export function execNuxtPrepareNpx(
   const npxEntry = windows
     ? path.join(path.dirname(executable), "node_modules/npm/bin/npx-cli.js")
     : distribution.npxEntry;
+  execBoundPrepareNpx(executable, npxEntry, args, options);
+}
+
+/** Also supports Actions' bare Node distribution with an authenticated npm CLI. */
+export function execBoundPrepareNpx(
+  executable: string,
+  npxEntry: string,
+  args: string[],
+  options: { cwd: string; env: NodeJS.ProcessEnv; timeout: number },
+): void {
+  const windows = process.platform === "win32";
   assert.ok(fs.statSync(npxEntry).isFile(), "preparation distribution must own the npm CLI");
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-nuxt-command-shell-"));
   const shell = path.join(directory, windows ? "runtime.cmd" : "runtime.sh");
