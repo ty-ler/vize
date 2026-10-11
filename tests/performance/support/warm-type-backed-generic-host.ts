@@ -4,6 +4,8 @@
 export const genericHostPaths = [
   "crates/vize_canon/snapshots/vize_canon__virtual_ts__tests__virtual_ts_multi_generic_exposed_component.snap",
   "crates/vize_canon/src/batch/type_checker.rs",
+  "crates/vize_canon/src/batch/virtual_project/dependency_scan.rs",
+  "crates/vize_canon/src/batch/virtual_project/dependency_scan/declaration_sources.rs",
   "crates/vize_canon/src/batch/virtual_project/dependency_scan/directory_module_tests.rs",
   "crates/vize_canon/src/batch/virtual_project/dependency_scan/resolution.rs",
   "crates/vize_canon/src/batch/virtual_project/vue_codegen.rs",
