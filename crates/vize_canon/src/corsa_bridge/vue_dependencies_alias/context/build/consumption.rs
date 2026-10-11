@@ -1,10 +1,10 @@
 //! Operation-local facts for the existing native project construction.
 
+use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
 use std::{
     hash::{Hash, Hasher},
     path::{Path, PathBuf},
-    sync::Arc,
 };
 use vize_carton::{FxHashMap, FxHashSet};
 
@@ -71,7 +71,7 @@ impl NativeFacts {
             );
         }
         self.qualified &= packet.qualified && path.is_absolute();
-        let owner = Arc::new(FactOwner {
+        let owner = Shared::new(FactOwner {
             path: path.to_path_buf(),
             role,
         });
@@ -82,13 +82,13 @@ impl NativeFacts {
                 self.insert(if stamp.owner().is_some() {
                     stamp
                 } else {
-                    stamp.with_owner(Arc::clone(&owner))
+                    stamp.with_owner(Shared::clone(&owner))
                 });
             } else if let Some(body) = stamp.retained_consumed_source() {
                 self.insert(if body.owner().is_some() {
                     body
                 } else {
-                    body.with_owner(Arc::clone(&owner))
+                    body.with_owner(Shared::clone(&owner))
                 });
             }
         }
@@ -104,13 +104,13 @@ impl NativeFacts {
         path: &Path,
     ) -> Consumed<T> {
         if self.observe {
-            let owner = Arc::new(FactOwner {
+            let owner = Shared::new(FactOwner {
                 path: path.to_path_buf(),
                 role,
             });
             for stamp in &mut packet.stamps {
                 if stamp.owner().is_none() {
-                    *stamp = stamp.clone().with_owner(Arc::clone(&owner));
+                    *stamp = stamp.clone().with_owner(Shared::clone(&owner));
                 }
             }
             self.record_view(&packet, role, path);
@@ -188,10 +188,12 @@ impl NativeFacts {
             self.qualified = false;
         }
         self.insert(
-            InputStamp::observed_source(path.to_path_buf(), body).with_owner(Arc::new(FactOwner {
-                path: path.to_path_buf(),
-                role: FactRole::AuthoredSource,
-            })),
+            InputStamp::observed_source(path.to_path_buf(), body).with_owner(Shared::new(
+                FactOwner {
+                    path: path.to_path_buf(),
+                    role: FactRole::AuthoredSource,
+                },
+            )),
         );
     }
 

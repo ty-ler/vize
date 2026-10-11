@@ -1,11 +1,11 @@
 //! Exact callback output membership, distinct from filesystem authority.
 
 use super::{FactOwner, FactRole, InputFact};
+use crate::package_route::stamp::Shared;
 use crate::{PackageRoute, package_route::stamp::InputStamp};
 use std::{
     hash::{Hash, Hasher},
     path::{Path, PathBuf},
-    sync::Arc,
 };
 use vize_carton::String;
 
@@ -14,7 +14,7 @@ pub(crate) enum PackageContribution {
     InputMember,
     RouteWrite {
         specifier: String,
-        route: Arc<PackageRoute>,
+        route: Shared<PackageRoute>,
     },
 }
 
@@ -53,7 +53,7 @@ impl InputStamp {
     pub(crate) fn observed_editor_route_write(
         directory: PathBuf,
         specifier: String,
-        route: Arc<PackageRoute>,
+        route: Shared<PackageRoute>,
     ) -> Self {
         Self::observed_predicate(
             directory,
@@ -84,12 +84,12 @@ pub(crate) fn record_package_input_members(
     importer: &Path,
     inputs: &[PathBuf],
 ) {
-    let owner = Arc::new(FactOwner {
+    let owner = Shared::new(FactOwner {
         path: importer.to_path_buf(),
         role: FactRole::LocalImporter,
     });
     stamps.extend(inputs.iter().map(|path| {
-        InputStamp::observed_package_input_member(path.clone()).with_owner(Arc::clone(&owner))
+        InputStamp::observed_package_input_member(path.clone()).with_owner(Shared::clone(&owner))
     }));
 }
 
@@ -100,21 +100,21 @@ pub(crate) fn record_editor_route_write(
     specifier: String,
     route: &PackageRoute,
 ) {
-    let owner = Arc::new(FactOwner {
+    let owner = Shared::new(FactOwner {
         path: importer.to_path_buf(),
         role: FactRole::LocalImporter,
     });
     stamps.push(
-        InputStamp::observed_editor_route_write(directory, specifier, Arc::new(route.clone()))
+        InputStamp::observed_editor_route_write(directory, specifier, Shared::new(route.clone()))
             .with_owner(owner),
     );
 }
 
 #[path = "membership/aggregate.rs"]
 mod aggregate;
-pub(crate) use aggregate::{
-    PackageAggregateError, PackageAggregates, package_aggregates, package_aggregates_match_old,
-};
+#[cfg(test)]
+pub(crate) use aggregate::PackageAggregateError;
+pub(crate) use aggregate::{package_aggregates, package_aggregates_match_old};
 
 #[cfg(test)]
 #[path = "membership/tests.rs"]

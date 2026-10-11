@@ -8,8 +8,8 @@ use vize_carton::FxHashSet;
 use super::VirtualProject;
 use super::dependency_scan::{resolve_dependency, resolve_dependency_observed};
 use super::package_route_reachability::{PackageRouteReachability, package_route_reaches_vue};
+use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole};
-use std::sync::Arc;
 
 impl VirtualProject {
     pub(super) fn reconcile_package_routes_for_importers_inner(
@@ -214,7 +214,11 @@ impl VirtualProject {
                             if observe {
                                 let mut scanned = super::package_route_reachability::package_route_reaches_vue_observed(
                                     route, &aliases.value, &resolution.value, &mut resolver,
-                                    source_options, aliases.qualified, Some(&resolution), raw_lookup_qualified,
+                                    source_options, super::package_route_reachability::ReachabilityAuthority {
+                                        aliases_qualified: aliases.qualified,
+                                        configuration: Some(&resolution),
+                                        route_qualified: raw_lookup_qualified,
+                                    },
                                 );
                                 Self::assign_root_importer(&mut scanned, &importer);
                                 take_registration(&mut facts, scanned).reachability
@@ -280,7 +284,7 @@ impl VirtualProject {
 }
 
 fn assign_configuration<T>(packet: &mut Consumed<T>, root: &Path) {
-    let owner = Arc::new(FactOwner {
+    let owner = Shared::new(FactOwner {
         path: root.to_path_buf(),
         role: FactRole::Configuration,
     });

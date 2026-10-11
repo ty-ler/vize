@@ -1,18 +1,16 @@
 //! Temporary consumed facts and actual edge-reconciliation completion.
 use super::resolution;
+use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
-use std::{
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use std::path::{Path, PathBuf};
 
 pub(super) struct WalkFacts {
     enabled: bool,
     stamps: Vec<InputStamp>,
     completed: Vec<PathBuf>,
     qualified: bool,
-    namespace: Option<Arc<FactOwner>>,
-    owner: Option<Arc<FactOwner>>,
+    namespace: Option<Shared<FactOwner>>,
+    owner: Option<Shared<FactOwner>>,
 }
 
 impl WalkFacts {
@@ -32,10 +30,10 @@ impl WalkFacts {
         aliases: Consumed<Vec<(std::string::String, std::string::String)>>,
         root: &Path,
     ) -> (Vec<(std::string::String, std::string::String)>, Self) {
-        let namespace = Some(Arc::new(FactOwner {
+        let namespace = Shared::new(FactOwner {
             path: root.to_path_buf(),
             role: FactRole::Configuration,
-        }));
+        });
         (
             aliases.value,
             Self {
@@ -45,7 +43,7 @@ impl WalkFacts {
                     .into_iter()
                     .map(|stamp| {
                         if stamp.owner().is_none() {
-                            stamp.with_owner(Arc::clone(namespace.as_ref().unwrap()))
+                            stamp.with_owner(Shared::clone(&namespace))
                         } else {
                             stamp
                         }
@@ -53,8 +51,8 @@ impl WalkFacts {
                     .collect(),
                 completed: Vec::new(),
                 qualified: aliases.qualified,
-                namespace: namespace.clone(),
-                owner: namespace,
+                namespace: Some(Shared::clone(&namespace)),
+                owner: Some(namespace),
             },
         )
     }
@@ -86,7 +84,9 @@ impl WalkFacts {
                 .stamps
                 .into_iter()
                 .map(|stamp| match self.owner.as_ref() {
-                    Some(owner) if stamp.owner().is_none() => stamp.with_owner(Arc::clone(owner)),
+                    Some(owner) if stamp.owner().is_none() => {
+                        stamp.with_owner(Shared::clone(owner))
+                    }
                     _ => stamp,
                 }),
         );
@@ -123,7 +123,7 @@ impl WalkFacts {
         if !self.enabled {
             return;
         }
-        self.owner = Some(Arc::new(FactOwner {
+        self.owner = Some(Shared::new(FactOwner {
             path: path.to_path_buf(),
             role: FactRole::LocalImporter,
         }));
@@ -132,10 +132,12 @@ impl WalkFacts {
             return;
         };
         self.stamps.push(
-            InputStamp::observed_source(path.to_path_buf(), body).with_owner(Arc::new(FactOwner {
-                path: path.to_path_buf(),
-                role: FactRole::AuthoredSource,
-            })),
+            InputStamp::observed_source(path.to_path_buf(), body).with_owner(Shared::new(
+                FactOwner {
+                    path: path.to_path_buf(),
+                    role: FactRole::AuthoredSource,
+                },
+            )),
         );
     }
 
@@ -156,7 +158,7 @@ impl WalkFacts {
             self.unknown_at(78);
             return self.canonical_key(path);
         }
-        let previous = self.owner.replace(Arc::new(FactOwner {
+        let previous = self.owner.replace(Shared::new(FactOwner {
             path: path.to_path_buf(),
             role: FactRole::AuthoredSource,
         }));

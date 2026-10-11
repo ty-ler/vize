@@ -5,10 +5,6 @@ use vize_carton::FxHashSet;
 
 use super::{normalize_path_lexically, parse_jsonc_value};
 
-pub(super) fn collect_project_paths(tsconfig_path: &Path) -> Vec<PathBuf> {
-    collect_project_paths_consumed(tsconfig_path, false).value
-}
-
 pub(super) fn collect_project_paths_consumed(
     tsconfig_path: &Path,
     observe: bool,

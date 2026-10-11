@@ -3,9 +3,9 @@
 //! makes references query offsets from a different program than diagnostics.
 
 use super::{VirtualProject, VueDocumentVirtualTs, VueDocumentVirtualTsOptions};
+use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole};
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 impl VirtualProject {
     /// Keep reachable implementation files in one stable configured project.
@@ -124,7 +124,7 @@ impl VirtualProject {
             }
         };
         if observe {
-            let owner = Arc::new(FactOwner {
+            let owner = Shared::new(FactOwner {
                 path: self.project_root.clone(),
                 role: FactRole::Configuration,
             });
@@ -210,7 +210,7 @@ impl VirtualProject {
                     observe,
                 );
                 if observe {
-                    let owner = Arc::new(FactOwner {
+                    let owner = Shared::new(FactOwner {
                         path: file.original_path.clone(),
                         role: FactRole::LocalImporter,
                     });

@@ -1,6 +1,6 @@
 //! Public wrappers retain the original dependency walk and result.
 use super::super::package_source_index::RegisteredPackageRoots;
-use super::{ObservedPackageResolver, PackageResolver, VirtualProject};
+use super::{DependencyConsumption, ObservedPackageResolver, PackageResolver, VirtualProject};
 use crate::batch::error::CorsaResult;
 use crate::package_route::stamp::Consumed;
 use std::path::PathBuf;
@@ -52,6 +52,7 @@ impl VirtualProject {
 
     /// Conditional native metadata from that same original frontier operation.
     /// Aliases must already carry the facts from their original load.
+    #[cfg(test)]
     pub(crate) fn register_reachable_dependencies_from_consumed(
         &mut self,
         sources: &[PathBuf],
@@ -62,9 +63,11 @@ impl VirtualProject {
             &FxHashMap::default(),
             &[],
             None,
-            Some(aliases),
-            None,
-            None,
+            DependencyConsumption {
+                aliases: Some(aliases),
+                resolver: None,
+                registered_roots: None,
+            },
         )
     }
     /// Observe the same original full walk, including its fresh alias load and
@@ -84,9 +87,11 @@ impl VirtualProject {
             overlays,
             workspace_package_specifiers,
             None,
-            Some(aliases),
-            Some(package_resolver),
-            registered_roots,
+            DependencyConsumption {
+                aliases: Some(aliases),
+                resolver: Some(package_resolver),
+                registered_roots,
+            },
         )
     }
 
@@ -106,9 +111,11 @@ impl VirtualProject {
             overlays,
             workspace_package_specifiers,
             None,
-            Some(aliases),
-            Some(package_resolver),
-            registered_roots,
+            DependencyConsumption {
+                aliases: Some(aliases),
+                resolver: Some(package_resolver),
+                registered_roots,
+            },
         )
     }
 }

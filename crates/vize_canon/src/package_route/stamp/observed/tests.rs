@@ -108,3 +108,37 @@ fn broken_link_is_not_a_file_and_creation_changes_the_original_decision() {
     std::fs::write(&target, "export const value = 1;").unwrap();
     assert!(!fact.is_current());
 }
+
+#[test]
+fn retained_fact_owners_share_the_exact_identity_across_threads() {
+    use crate::package_route::stamp::Shared;
+    fn assert_send_sync<T: Send + Sync>() {}
+    assert_send_sync::<InputStamp>();
+    let owner = Shared::new(FactOwner {
+        path: "/project/importer.vue".into(),
+        role: FactRole::LocalImporter,
+    });
+    let first = InputStamp::observed_is_file("/project/target.ts".into(), true)
+        .with_owner(Shared::clone(&owner));
+    let second = InputStamp::observed_exists("/project/package.json".into(), false)
+        .with_owner(Shared::clone(&owner));
+    let retained = first.clone();
+    std::thread::spawn(move || {
+        assert!(Shared::ptr_eq(
+            retained.owner.as_ref().unwrap(),
+            second.owner.as_ref().unwrap()
+        ));
+        (retained, second)
+    })
+    .join()
+    .map(|(retained, second)| {
+        assert!(Shared::ptr_eq(
+            first.owner.as_ref().unwrap(),
+            retained.owner.as_ref().unwrap()
+        ));
+        assert!(Shared::ptr_eq(&owner, second.owner.as_ref().unwrap()));
+        assert_eq!(retained, first);
+        assert_eq!(second.owner(), Some(owner.as_ref()));
+    })
+    .unwrap();
+}

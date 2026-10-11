@@ -8,6 +8,7 @@ impl VirtualProject {
             .map(|_| ())
     }
 
+    #[cfg(test)]
     pub(crate) fn register_package_route_targets_observed(
         &mut self,
     ) -> CorsaResult<Consumed<RegisteredPackageRoots>> {

@@ -20,6 +20,7 @@ use super::super::tsconfig_paths::{
 
 /// The transitive project configs referenced by `tsconfig_path`, in stable
 /// declaration order. The solution shell itself is omitted.
+#[cfg(test)]
 pub(in super::super) fn referenced_project_configs(tsconfig_path: &Path) -> Vec<PathBuf> {
     referenced_project_configs_consumed(tsconfig_path, false).value
 }
@@ -100,6 +101,7 @@ fn included_source_kind(path: &Path) -> Option<TsconfigSourceKind> {
 
 /// Select the unique effective project that owns an authored source. Missing
 /// or ambiguous ownership fails closed to the solution shell.
+#[cfg(test)]
 pub(in super::super) fn effective_config_for_source(
     tsconfig_path: &Path,
     source_path: &Path,

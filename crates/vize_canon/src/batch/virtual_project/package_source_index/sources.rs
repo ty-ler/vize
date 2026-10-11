@@ -1,20 +1,23 @@
-use super::{Consumed, FactRole, Path, VirtualProject, empty, finish};
+use super::{Consumed, FactRole, Path, VirtualProject};
+#[cfg(test)]
+use super::{empty, finish};
 
 impl VirtualProject {
+    #[cfg(test)]
     pub(in super::super) fn index_package_source(&mut self, source: &Path, virtual_path: &Path) {
         let mut facts = empty(false);
         self.index_package_source_with_consumption(source, virtual_path, false, &mut facts)
     }
 
+    #[cfg(test)]
     pub(crate) fn index_package_source_observed(
         &mut self,
         source: &Path,
         virtual_path: &Path,
     ) -> Consumed<()> {
         let mut facts = empty(true);
-        let value =
-            self.index_package_source_with_consumption(source, virtual_path, true, &mut facts);
-        finish(facts, value)
+        self.index_package_source_with_consumption(source, virtual_path, true, &mut facts);
+        finish(facts, ())
     }
 
     pub(in crate::batch::virtual_project) fn index_package_source_with_consumption(
@@ -57,19 +60,20 @@ impl VirtualProject {
         }
     }
 
+    #[cfg(test)]
     pub(in super::super) fn remove_package_source_from_index(&mut self, source: &Path) {
         let mut facts = empty(false);
         self.remove_package_source_from_index_with_consumption(source, false, &mut facts)
     }
 
+    #[cfg(test)]
     pub(crate) fn remove_package_source_from_index_observed(
         &mut self,
         source: &Path,
     ) -> Consumed<()> {
         let mut facts = empty(true);
-        let value =
-            self.remove_package_source_from_index_with_consumption(source, true, &mut facts);
-        finish(facts, value)
+        self.remove_package_source_from_index_with_consumption(source, true, &mut facts);
+        finish(facts, ())
     }
 
     pub(in crate::batch::virtual_project) fn remove_package_source_from_index_with_consumption(
@@ -96,24 +100,6 @@ impl VirtualProject {
                 self.mark_package_shadow_dependents(keys);
             }
         }
-    }
-
-    pub(in super::super) fn index_existing_package_route_sources(
-        &mut self,
-        route: &crate::PackageRoute,
-    ) {
-        let mut facts = empty(false);
-        self.index_existing_package_route_sources_with_consumption(route, None, false, &mut facts)
-    }
-
-    pub(crate) fn index_existing_package_route_sources_observed(
-        &mut self,
-        route: &crate::PackageRoute,
-    ) -> Consumed<()> {
-        let mut facts = empty(true);
-        let value = self
-            .index_existing_package_route_sources_with_consumption(route, None, true, &mut facts);
-        finish(facts, value)
     }
 
     pub(in crate::batch::virtual_project) fn index_existing_package_route_sources_with_consumption(

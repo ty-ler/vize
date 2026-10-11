@@ -274,7 +274,7 @@ fn complete_original_packets_qualify_scan_output_and_refuse_new_alias_domain_on_
 
 fn occurrence(callback: PackageCallback) -> PackageOccurrence {
     match callback {
-        PackageCallback::Occurrence(occurrence) => occurrence,
+        PackageCallback::Occurrence(occurrence) => *occurrence,
         PackageCallback::RuntimeSupport => panic!("expected original package occurrence"),
     }
 }

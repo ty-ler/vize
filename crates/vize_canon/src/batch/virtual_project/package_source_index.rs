@@ -7,8 +7,8 @@ use vize_carton::{FxHashMap, FxHashSet};
 use crate::package_route::PackageRouteKey;
 
 use super::VirtualProject;
+use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
-use std::sync::Arc;
 
 mod ownership;
 pub(crate) use ownership::RegisteredPackageRoots;
@@ -42,7 +42,7 @@ mod sources;
 impl VirtualProject {
     pub(super) fn assign_root_importer<T>(consumed: &mut Consumed<T>, importer: &Path) {
         consumed.qualified &= importer.is_absolute();
-        let owner = Arc::new(FactOwner {
+        let owner = Shared::new(FactOwner {
             path: importer.to_path_buf(),
             role: FactRole::LocalImporter,
         });
@@ -61,7 +61,7 @@ impl VirtualProject {
     ) {
         if observe {
             facts.qualified &= path.is_absolute();
-            let owner = Arc::new(FactOwner {
+            let owner = Shared::new(FactOwner {
                 path: path.to_path_buf(),
                 role: FactRole::AuthoredSource,
             });
@@ -82,7 +82,7 @@ impl VirtualProject {
         if observe {
             if let Some((path, role)) = owner {
                 consumed.qualified &= path.is_absolute();
-                let owner = Arc::new(FactOwner {
+                let owner = Shared::new(FactOwner {
                     path: path.to_path_buf(),
                     role,
                 });
@@ -106,8 +106,8 @@ impl VirtualProject {
         binding: crate::PackageRouteBinding,
     ) -> Consumed<()> {
         let mut facts = empty(true);
-        let value = self.insert_package_route_binding_with_consumption(binding, true, &mut facts);
-        finish(facts, value)
+        self.insert_package_route_binding_with_consumption(binding, true, &mut facts);
+        finish(facts, ())
     }
 
     pub(in crate::batch::virtual_project) fn insert_package_route_binding_with_consumption(
@@ -140,8 +140,8 @@ impl VirtualProject {
         key: &PackageRouteKey,
     ) -> Consumed<Option<crate::PackageRouteBinding>> {
         let mut facts = empty(true);
-        let value = self.remove_package_route_binding_with_consumption(key, true, &mut facts);
-        finish(facts, value)
+        self.remove_package_route_binding_with_consumption(key, true, &mut facts);
+        finish(facts, ())
     }
 
     pub(in crate::batch::virtual_project) fn remove_package_route_binding_with_consumption(
@@ -159,17 +159,6 @@ impl VirtualProject {
         self.reconcile_package_routes_for_importers_with_consumption(
             changed, false, &mut facts, None,
         )
-    }
-
-    pub(crate) fn reconcile_package_routes_for_importers_observed(
-        &mut self,
-        changed: &[PathBuf],
-    ) -> Consumed<()> {
-        let mut facts = empty(true);
-        let value = self.reconcile_package_routes_for_importers_with_consumption(
-            changed, true, &mut facts, None,
-        );
-        finish(facts, value)
     }
 
     pub(in crate::batch::virtual_project) fn reconcile_package_routes_for_importers_with_consumption(
@@ -230,17 +219,6 @@ impl VirtualProject {
             self.reconcile_package_routes_for_importers_inner(&changed);
         }
         self.restore_rebound_package_sources(retained);
-    }
-
-    // Route-owned entry points are only a subset of a package's registered
-    // relative sources. Keep that bounded topology across an atomic rebind
-    // when removing its final owner would otherwise discard the whole index.
-    fn take_rebound_package_sources(
-        &mut self,
-        keys: &FxHashSet<PackageRouteKey>,
-    ) -> FxHashMap<PathBuf, PackageSources> {
-        let mut facts = empty(false);
-        self.take_rebound_package_sources_with_consumption(keys, false, &mut facts)
     }
 
     pub(in crate::batch::virtual_project) fn take_rebound_package_sources_with_consumption(

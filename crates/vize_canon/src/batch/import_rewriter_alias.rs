@@ -66,10 +66,6 @@ impl ImportRewriter {
         clippy::disallowed_types,
         reason = "existing alias resolver uses std String"
     )]
-    #[expect(
-        clippy::too_many_arguments,
-        reason = "preserves original alias policy arguments beside private observation flag"
-    )]
     pub(crate) fn rewrite_with_alias_resolver_consumed<F>(
         &self,
         source: &str,

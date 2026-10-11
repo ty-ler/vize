@@ -5,14 +5,12 @@ use std::path::{Path, PathBuf};
 use vize_carton::{FxHashMap, String as CompactString};
 
 use crate::batch::virtual_project::VirtualProject;
-use crate::package_route::stamp::{
-    Consumed, InputStamp, record_editor_route_write, record_package_input_members,
-};
+use crate::package_route::stamp::{Consumed, InputStamp, record_editor_route_write};
 #[path = "routes/callback.rs"]
 mod callback;
 use crate::batch::virtual_project::package_resolution::PackageResolutionSettings;
 pub(super) use callback::{PackageCallback, PackageOccurrence, ReachabilityEntry};
-use callback::{ReachabilityFacts, ReachabilityOrigin};
+use callback::{ReachabilityFacts, ReachabilityOrigin, retain_package_inputs};
 
 #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")] // Compiler-option aliases originate in serde_json maps.
 type CompilerAlias = (std::string::String, std::string::String);
@@ -173,9 +171,11 @@ impl<'a> RouteDiscovery<'a> {
                             self.settings,
                             self.resolver,
                             crate::PackageSourceOptions::new(true, true),
-                            aliases_qualified,
-                            self.settings_consumed,
-                            raw_lookup_qualified,
+                            crate::batch::virtual_project::ReachabilityAuthority {
+                                aliases_qualified,
+                                configuration: self.settings_consumed,
+                                route_qualified: raw_lookup_qualified,
+                            },
                         );
                         scanned.value.reachability.record_work(self.resolver);
                         // Retain actual miss input facts, never a later filesystem recapture.
@@ -259,9 +259,11 @@ impl<'a> RouteDiscovery<'a> {
             emitted_binding = Some(binding.clone());
             self.bindings.push(binding);
         }
-        record_package_input_members(&mut stamps, importer, &self.inputs[input_start..]);
+        let (route_inputs, inputs_complete) =
+            retain_package_inputs(&mut stamps, importer, self.inputs, input_start);
+        qualified &= inputs_complete;
         Consumed {
-            value: PackageCallback::Occurrence(PackageOccurrence {
+            value: PackageCallback::Occurrence(Box::new(PackageOccurrence {
                 source_options,
                 context,
                 context_inputs,
@@ -272,10 +274,10 @@ impl<'a> RouteDiscovery<'a> {
                 needs_shadow,
                 track_reachability,
                 watchable_negative,
-                route_inputs: self.inputs[input_start..].to_vec(),
+                route_inputs,
                 binding: emitted_binding,
                 binding_registered: false,
-            }),
+            })),
             stamps,
             qualified,
         }

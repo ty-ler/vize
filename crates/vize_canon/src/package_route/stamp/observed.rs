@@ -1,14 +1,12 @@
 //! Consumed facts from the original operation, without a second observation.
 
 use super::InputStamp;
+use crate::package_route::stamp::Shared;
 
 #[cfg(any(feature = "native", test))]
 #[path = "observed/membership.rs"]
 pub(crate) mod membership;
-use std::{
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use std::path::{Path, PathBuf};
 
 /// Temporary metadata paired with an existing private operation's result.
 /// Unknown facts cannot be recovered by a later filesystem capture.
@@ -109,7 +107,7 @@ impl InputStamp {
         }
     }
 
-    pub(crate) fn with_owner(mut self, owner: Arc<FactOwner>) -> Self {
+    pub(crate) fn with_owner(mut self, owner: Shared<FactOwner>) -> Self {
         self.owner = Some(owner);
         self
     }

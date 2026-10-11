@@ -104,7 +104,7 @@ pub(super) fn register_host(
                             resolve_dependency_observed(
                                 specifier,
                                 importer_dir,
-                                &root,
+                                root,
                                 &aliases.value,
                             ),
                             FactRole::LocalImporter,
@@ -112,7 +112,7 @@ pub(super) fn register_host(
                         )
                         .0
                 } else {
-                    resolve_dependency(specifier, importer_dir, &root, &aliases.value)
+                    resolve_dependency(specifier, importer_dir, root, &aliases.value)
                 };
                 if local.is_some() {
                     return None;

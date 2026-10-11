@@ -43,12 +43,6 @@ impl VirtualProject {
         self.governing_config_paths_consumed(false).value
     }
 
-    pub(crate) fn governing_config_paths_observed(
-        &self,
-    ) -> crate::package_route::stamp::Consumed<Vec<PathBuf>> {
-        self.governing_config_paths_consumed(true)
-    }
-
     pub(in super::super) fn governing_config_paths_consumed(
         &self,
         observe: bool,

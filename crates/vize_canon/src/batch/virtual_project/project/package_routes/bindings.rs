@@ -1,8 +1,10 @@
 use super::{FxHashSet, VirtualProject};
+#[cfg(test)]
 use crate::batch::virtual_project::package_source_index::{empty, finish};
 use crate::package_route::stamp::{Consumed, FactRole};
 
 impl VirtualProject {
+    #[cfg(test)]
     pub(crate) fn replace_package_route_bindings(
         &mut self,
         bindings: impl IntoIterator<Item = crate::PackageRouteBinding>,
@@ -11,14 +13,14 @@ impl VirtualProject {
         self.replace_package_route_bindings_with_consumption(bindings, false, &mut facts)
     }
 
+    #[cfg(test)]
     pub(crate) fn replace_package_route_bindings_observed(
         &mut self,
         bindings: impl IntoIterator<Item = crate::PackageRouteBinding>,
     ) -> Consumed<()> {
         let mut facts = empty(true);
-        let value =
-            self.replace_package_route_bindings_with_consumption(bindings, true, &mut facts);
-        finish(facts, value)
+        self.replace_package_route_bindings_with_consumption(bindings, true, &mut facts);
+        finish(facts, ())
     }
 
     pub(in crate::batch::virtual_project) fn replace_package_route_bindings_with_consumption(
@@ -74,11 +76,6 @@ impl VirtualProject {
                 }
             }
         }
-    }
-
-    pub(crate) fn insert_route_binding_inner(&mut self, binding: crate::PackageRouteBinding) {
-        let mut facts = empty(false);
-        self.insert_route_binding_inner_with_consumption(binding, false, &mut facts)
     }
 
     pub(in crate::batch::virtual_project) fn insert_route_binding_inner_with_consumption(
@@ -139,14 +136,6 @@ impl VirtualProject {
         self.package_routes.insert(key, binding);
     }
 
-    pub(crate) fn remove_route_binding_inner(
-        &mut self,
-        key: &crate::package_route::PackageRouteKey,
-    ) -> Option<crate::PackageRouteBinding> {
-        let mut facts = empty(false);
-        self.remove_route_binding_inner_with_consumption(key, false, &mut facts)
-    }
-
     pub(in crate::batch::virtual_project) fn remove_route_binding_inner_with_consumption(
         &mut self,
         key: &crate::package_route::PackageRouteKey,
@@ -187,15 +176,6 @@ impl VirtualProject {
         if remove {
             self.package_route_importers.remove(&binding.importer_path);
         }
-    }
-
-    fn remove_route_topology_indexes(
-        &mut self,
-        key: &crate::package_route::PackageRouteKey,
-        binding: &crate::PackageRouteBinding,
-    ) {
-        let mut facts = empty(false);
-        self.remove_route_topology_indexes_with_consumption(key, binding, false, &mut facts)
     }
 
     pub(in crate::batch::virtual_project) fn remove_route_topology_indexes_with_consumption(

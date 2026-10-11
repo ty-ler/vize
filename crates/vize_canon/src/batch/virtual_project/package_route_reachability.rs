@@ -80,6 +80,14 @@ pub(crate) struct ConsumedReachability {
     pub(crate) failures: Vec<(PathBuf, &'static str, std::io::ErrorKind)>,
 }
 
+/// Qualification belongs to the exact alias/configuration/route operation.
+pub(crate) struct ReachabilityAuthority<'a> {
+    pub(crate) aliases_qualified: bool,
+    pub(crate) configuration:
+        Option<&'a Consumed<super::package_resolution::PackageResolutionSettings>>,
+    pub(crate) route_qualified: bool,
+}
+
 #[derive(Clone, Copy, Debug)]
 struct ReachabilityBudget {
     max_packages: usize,
@@ -122,9 +130,7 @@ pub(crate) fn package_route_reaches_vue_observed(
     resolution: &super::package_resolution::PackageResolutionSettings,
     resolver: &mut crate::PackageRouteResolver,
     source_options: crate::PackageSourceOptions,
-    aliases_qualified: bool,
-    configuration: Option<&Consumed<super::package_resolution::PackageResolutionSettings>>,
-    route_qualified: bool,
+    authority: ReachabilityAuthority<'_>,
 ) -> Consumed<ConsumedReachability> {
     package_route_reaches_vue_with_budget_observed(
         route,
@@ -133,9 +139,7 @@ pub(crate) fn package_route_reaches_vue_observed(
         resolver,
         source_options,
         DEFAULT_BUDGET,
-        aliases_qualified,
-        configuration,
-        route_qualified,
+        authority,
     )
 }
 
@@ -178,9 +182,11 @@ fn package_route_reaches_vue_with_budget(
         resolver,
         source_options,
         budget,
-        false,
-        None,
-        false,
+        ReachabilityAuthority {
+            aliases_qualified: false,
+            configuration: None,
+            route_qualified: false,
+        },
     )
     .value
     .reachability
@@ -194,10 +200,13 @@ fn package_route_reaches_vue_with_budget_observed(
     resolver: &mut crate::PackageRouteResolver,
     source_options: crate::PackageSourceOptions,
     budget: ReachabilityBudget,
-    aliases_qualified: bool,
-    configuration: Option<&Consumed<super::package_resolution::PackageResolutionSettings>>,
-    route_qualified: bool,
+    authority: ReachabilityAuthority<'_>,
 ) -> Consumed<ConsumedReachability> {
+    let ReachabilityAuthority {
+        aliases_qualified,
+        configuration,
+        route_qualified,
+    } = authority;
     scan_package_route_reachability_observed(
         route,
         |importer, specifier| {

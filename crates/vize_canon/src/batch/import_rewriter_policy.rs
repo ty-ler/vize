@@ -15,22 +15,6 @@ use super::{
 };
 
 impl ImportRewriter {
-    pub(crate) fn rewrite_module_specifier_with_missing_vue_policy(
-        &self,
-        path: &str,
-        source_dir: Option<&Path>,
-        preserve_missing_vue_diagnostics: bool,
-        include_absolute_missing_vue: bool,
-    ) -> Option<String> {
-        self.rewrite_module_specifier_with_missing_vue_policy_and_alias_policy(
-            path,
-            source_dir,
-            preserve_missing_vue_diagnostics,
-            include_absolute_missing_vue,
-            None,
-        )
-    }
-
     pub(crate) fn rewrite_module_specifier_with_missing_vue_policy_and_alias_policy(
         &self,
         path: &str,
@@ -50,10 +34,6 @@ impl ImportRewriter {
         .value
     }
 
-    #[expect(
-        clippy::too_many_arguments,
-        reason = "preserves original rewrite policy arguments beside private observation flag"
-    )]
     pub(crate) fn rewrite_module_specifier_with_missing_vue_policy_consumed(
         &self,
         path: &str,

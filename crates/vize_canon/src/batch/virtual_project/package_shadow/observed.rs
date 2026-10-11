@@ -1,7 +1,7 @@
 //! Operation-local shadow facts; this sink never outlives the original pass.
 
+use crate::package_route::stamp::Shared;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use super::super::VirtualProject;
 use crate::batch::error::CorsaResult;
@@ -10,13 +10,13 @@ use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
 pub(in super::super) struct ShadowFacts {
     enabled: bool,
     facts: Consumed<()>,
-    configuration: Arc<FactOwner>,
-    owner: Arc<FactOwner>,
+    configuration: Shared<FactOwner>,
+    owner: Shared<FactOwner>,
 }
 
 impl ShadowFacts {
     pub(in super::super) fn new(project: &VirtualProject, observe: bool) -> Self {
-        let configuration = Arc::new(FactOwner {
+        let configuration = Shared::new(FactOwner {
             path: project.project_root.clone(),
             role: FactRole::Configuration,
         });
@@ -39,9 +39,9 @@ impl ShadowFacts {
     pub(in super::super) fn binding(
         &mut self,
         binding: &crate::PackageRouteBinding,
-    ) -> Arc<FactOwner> {
+    ) -> Shared<FactOwner> {
         let previous = self.owner.clone();
-        self.owner = Arc::new(FactOwner {
+        self.owner = Shared::new(FactOwner {
             path: binding.importer_path.clone(),
             role: FactRole::LocalImporter,
         });
@@ -49,7 +49,7 @@ impl ShadowFacts {
         previous
     }
 
-    pub(in super::super) fn restore_owner(&mut self, owner: Arc<FactOwner>) {
+    pub(in super::super) fn restore_owner(&mut self, owner: Shared<FactOwner>) {
         self.owner = owner;
     }
 

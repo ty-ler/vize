@@ -4,12 +4,21 @@ use std::path::{Path, PathBuf};
 
 use vize_carton::FxHashMap;
 
+/// Immutable facts outlive the operation and cache lock that produced them.
+#[expect(
+    clippy::disallowed_types,
+    reason = "one immutable fact owner/route is shared by retained native snapshots across threads"
+)]
+pub(crate) type Shared<T> = std::sync::Arc<T>;
+
 #[path = "stamp/observed.rs"]
 mod observed;
+#[cfg(test)]
+pub(crate) use observed::membership::{PackageAggregateError, PackageContributionRef};
 #[cfg(any(feature = "native", test))]
 pub(crate) use observed::membership::{
-    PackageAggregateError, PackageAggregates, PackageContributionRef, package_aggregates,
-    package_aggregates_match_old, record_editor_route_write, record_package_input_members,
+    package_aggregates, package_aggregates_match_old, record_editor_route_write,
+    record_package_input_members,
 };
 pub(crate) use observed::{Consumed, FactOwner, FactRole, SourceRevisionFact};
 
@@ -23,7 +32,7 @@ pub(crate) struct InputStamp {
     symlink_target: Option<PathBuf>,
     source_content: bool,
     fact: Option<observed::InputFact>,
-    owner: Option<std::sync::Arc<FactOwner>>,
+    owner: Option<Shared<FactOwner>>,
     consumed_only: bool,
 }
 
@@ -205,19 +214,6 @@ pub(super) fn stamp_paths_with_cache(
     cache: &mut InputStampCache,
 ) -> Vec<InputStamp> {
     paths.iter().map(|path| cache.capture(path)).collect()
-}
-
-pub(super) fn stamps_are_current(stamps: &[InputStamp]) -> bool {
-    stamps.iter().all(InputStamp::route_cache_is_current)
-}
-
-pub(super) fn stamps_are_current_with_cache(
-    stamps: &[InputStamp],
-    cache: &mut InputStampCache,
-) -> bool {
-    stamps
-        .iter()
-        .all(|stamp| stamp.route_cache_is_current_with_cache(cache))
 }
 
 pub(super) fn manifest_path(root: &Path) -> PathBuf {

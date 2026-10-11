@@ -69,7 +69,7 @@ pub(super) fn register(
         let path = facts.record(
             VirtualProject::canonical_configuration_path(path, observe),
             FactRole::Configuration,
-            &root,
+            root,
         );
         if path == source_path {
             continue;

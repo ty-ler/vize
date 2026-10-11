@@ -23,6 +23,8 @@ use crate::batch::error::CorsaResult;
 use super::VirtualProject;
 
 mod aliases;
+mod consumption;
+use consumption::DependencyConsumption;
 mod facade;
 mod observed;
 mod package_roots;
@@ -59,9 +61,11 @@ impl VirtualProject {
             overlays,
             workspace_package_specifiers,
             package_resolver,
-            None,
-            None,
-            None,
+            DependencyConsumption {
+                aliases: None,
+                resolver: None,
+                registered_roots: None,
+            },
         )
         .map(|_| ())
     }
@@ -72,16 +76,13 @@ impl VirtualProject {
         overlays: &FxHashMap<PathBuf, &str>,
         workspace_package_specifiers: &[CompactString],
         mut package_resolver: Option<PackageResolver<'_>>,
-        aliases_consumed: Option<
-            crate::package_route::stamp::Consumed<Vec<(std::string::String, std::string::String)>>,
-        >,
-        mut observed_package_resolver: Option<ObservedPackageResolver<'_>>,
-        registered_roots: Option<
-            &crate::package_route::stamp::Consumed<
-                super::package_source_index::RegisteredPackageRoots,
-            >,
-        >,
+        consumption: DependencyConsumption<'_>,
     ) -> CorsaResult<crate::package_route::stamp::Consumed<Vec<PathBuf>>> {
+        let DependencyConsumption {
+            aliases: aliases_consumed,
+            resolver: mut observed_package_resolver,
+            registered_roots,
+        } = consumption;
         let aliases_consumed_is_enabled = aliases_consumed.is_some();
         let (aliases, mut facts) = match aliases_consumed {
             Some(aliases) => observed::WalkFacts::from_aliases(aliases, &self.project_root),

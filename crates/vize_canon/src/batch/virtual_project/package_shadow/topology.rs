@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use vize_carton::{FxHashSet, cstr};
 
 impl VirtualProject {
-    pub(in super::super) fn collect_route_shadow_topology(
+    pub(super) fn collect_route_shadow_topology(
         &self,
         route: &crate::PackageRoute,
         shadow_root: &Path,

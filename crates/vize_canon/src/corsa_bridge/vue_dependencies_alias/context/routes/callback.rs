@@ -3,27 +3,112 @@
 use crate::batch::virtual_project::PackageRouteReachability;
 use crate::batch::virtual_project::package_resolution::PackageResolutionSettings;
 use crate::package_route::stamp::Consumed;
-use std::path::PathBuf;
+use crate::package_route::stamp::record_package_input_members;
+use std::path::{Path, PathBuf};
 
 pub(crate) enum PackageCallback {
     RuntimeSupport,
-    Occurrence(PackageOccurrence),
+    Occurrence(Box<PackageOccurrence>),
 }
 
 pub(crate) struct PackageOccurrence {
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) source_options: crate::PackageSourceOptions,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) context: crate::PackageResolutionContext,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) context_inputs: Vec<PathBuf>,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) raw_lookup: crate::PackageRouteLookup,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) reachability: PackageRouteReachability,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) failures: Vec<(PathBuf, &'static str, std::io::ErrorKind)>,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) reachability_origin: Option<ReachabilityOrigin>,
     pub(crate) needs_shadow: bool,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) track_reachability: bool,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) watchable_negative: bool,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) route_inputs: Vec<PathBuf>,
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) binding: Option<crate::PackageRouteBinding>,
     // Emission into a pending Vec is not current registered graph-root authority.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "original callback facts retained for native provenance"
+        )
+    )]
     pub(crate) binding_registered: bool,
 }
 
@@ -97,4 +182,19 @@ impl PackageCallback {
             qualified: packet.qualified,
         }
     }
+}
+
+/// Retain only the inputs appended by this exact original callback.
+/// A lost frontier refuses native qualification instead of panicking or inventing inputs.
+pub(super) fn retain_package_inputs(
+    stamps: &mut Vec<crate::package_route::stamp::InputStamp>,
+    importer: &Path,
+    inputs: &[PathBuf],
+    input_start: usize,
+) -> (Vec<PathBuf>, bool) {
+    let Some(members) = inputs.get(input_start..) else {
+        return (Vec::new(), false);
+    };
+    record_package_input_members(stamps, importer, members);
+    (members.to_vec(), true)
 }

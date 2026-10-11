@@ -1,5 +1,5 @@
 //! Per-authored-source artifact ownership inside a persistent virtual project.
-use crate::batch::virtual_project::package_source_index::{empty, finish};
+use crate::batch::virtual_project::package_source_index::empty;
 use crate::package_route::stamp::{Consumed, FactRole};
 
 use std::path::{Path, PathBuf};
@@ -145,18 +145,10 @@ impl VirtualProject {
         }
     }
 
+    #[cfg(test)]
     pub(crate) fn remove_registered_source(&mut self, original_path: &Path) -> Vec<PathBuf> {
         let mut facts = empty(false);
         self.remove_registered_source_with_consumption(original_path, false, &mut facts)
-    }
-
-    pub(crate) fn remove_registered_source_observed(
-        &mut self,
-        original_path: &Path,
-    ) -> Consumed<Vec<PathBuf>> {
-        let mut facts = empty(true);
-        let value = self.remove_registered_source_with_consumption(original_path, true, &mut facts);
-        finish(facts, value)
     }
 
     pub(in crate::batch::virtual_project) fn remove_registered_source_with_consumption(
@@ -170,11 +162,6 @@ impl VirtualProject {
             self.remove_registered_source_inner_with_consumption(original_path, observe, facts);
         self.reconcile_shared_helper_membership(before);
         removed
-    }
-
-    fn remove_registered_source_inner(&mut self, original_path: &Path) -> Vec<PathBuf> {
-        let mut facts = empty(false);
-        self.remove_registered_source_inner_with_consumption(original_path, false, &mut facts)
     }
 
     pub(in crate::batch::virtual_project) fn remove_registered_source_inner_with_consumption(

@@ -247,3 +247,36 @@ fn exact_original_editor_insert_records_whole_value_and_importer_not_pending_roo
         crate::PackageSourceOptions::new(true, true)
     );
 }
+
+#[test]
+fn retained_callback_inputs_preserve_membership_and_refuse_an_impossible_frontier() {
+    let importer = Path::new("/project/importer.vue");
+    let prior = PathBuf::from("/project/prior.json");
+    let current = PathBuf::from("/project/current.json");
+    let inputs = vec![prior, current.clone()];
+    let mut stamps = vec![InputStamp::observed_source(
+        importer.into(),
+        b"original importer",
+    )];
+    let original = stamps.clone();
+    let (members, qualified) = super::retain_package_inputs(&mut stamps, importer, &inputs, 1);
+    assert!(qualified);
+    assert_eq!(members, vec![current.clone()]);
+    assert_eq!(&stamps[..original.len()], &original);
+    let member = stamps.last().unwrap();
+    assert_eq!(
+        member.package_contribution(),
+        Some(PackageContributionRef::Input(&current))
+    );
+    assert_eq!(member.owner().unwrap().path, importer);
+    assert_eq!(member.owner().unwrap().role, FactRole::LocalImporter);
+    let complete = stamps.clone();
+    let (members, qualified) =
+        super::retain_package_inputs(&mut stamps, importer, &inputs, inputs.len());
+    assert!(qualified && members.is_empty());
+    assert_eq!(stamps, complete);
+    let (members, qualified) =
+        super::retain_package_inputs(&mut stamps, importer, &inputs, inputs.len() + 1);
+    assert!(!qualified && members.is_empty());
+    assert_eq!(stamps, complete);
+}

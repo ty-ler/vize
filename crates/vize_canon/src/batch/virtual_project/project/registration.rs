@@ -3,9 +3,9 @@ use super::{
     VirtualBuildContext, VirtualProject, build_registered_file, profile,
 };
 use crate::batch::virtual_project::package_source_index::{empty, finish, take};
+use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use std::sync::Arc;
 
 impl VirtualProject {
     pub(crate) fn register_path_observed(&mut self, path: &Path) -> CorsaResult<Consumed<()>> {
@@ -25,6 +25,7 @@ impl VirtualProject {
         Ok(finish(facts, ()))
     }
 
+    #[cfg(test)]
     pub(crate) fn register_paths_observed(
         &mut self,
         paths: &[PathBuf],
@@ -123,7 +124,7 @@ impl VirtualProject {
                 let is_file = path.is_file();
                 if observe {
                     facts.qualified &= path.is_absolute();
-                    let owner = Arc::new(FactOwner {
+                    let owner = Shared::new(FactOwner {
                         path: path.to_path_buf(),
                         role: FactRole::AuthoredSource,
                     });

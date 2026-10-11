@@ -31,13 +31,7 @@ impl VirtualProject {
         resolution: &super::super::package_resolution::PackageResolutionSettings,
         resolver: &mut crate::PackageRouteResolver,
         source_options: crate::PackageSourceOptions,
-        aliases_qualified: bool,
-        configuration: Option<
-            &crate::package_route::stamp::Consumed<
-                super::super::package_resolution::PackageResolutionSettings,
-            >,
-        >,
-        route_qualified: bool,
+        authority: super::super::package_route_reachability::ReachabilityAuthority<'_>,
     ) -> crate::package_route::stamp::Consumed<
         super::super::package_route_reachability::ConsumedReachability,
     > {
@@ -47,9 +41,7 @@ impl VirtualProject {
             resolution,
             resolver,
             source_options,
-            aliases_qualified,
-            configuration,
-            route_qualified,
+            authority,
         )
     }
 

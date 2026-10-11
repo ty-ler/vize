@@ -2,8 +2,8 @@
 
 use super::{FxHashSet, Path, PathBuf, VirtualProject};
 use crate::batch::virtual_project::package_source_index::{empty, finish};
+use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole};
-use std::sync::Arc;
 
 impl VirtualProject {
     pub(super) fn graph_owner_path(
@@ -16,7 +16,7 @@ impl VirtualProject {
             return vize_carton::path::canonicalize_non_verbatim(path);
         }
         let mut consumed = Self::canonical_configuration_path(path, true);
-        let owner = Arc::new(FactOwner {
+        let owner = Shared::new(FactOwner {
             path: path.to_path_buf(),
             role,
         });
@@ -37,6 +37,7 @@ impl VirtualProject {
         finish(facts, value)
     }
 
+    #[cfg(test)]
     pub(crate) fn prune_unowned_sources_observed(
         &mut self,
         candidates: impl IntoIterator<Item = PathBuf>,

@@ -11,36 +11,23 @@ use crate::package_route::stamp::{Consumed, FactRole};
 
 pub(super) mod consumption;
 mod dependencies;
+#[cfg(test)]
+mod legacy;
+#[cfg(test)]
+pub(super) use legacy::build;
 mod settings;
 mod source_inputs;
 use consumption::NativeFacts;
 pub(super) use settings::{configured_project, configured_project_observed};
 
+struct HostSource<'a> {
+    path: &'a Path,
+    content: &'a str,
+}
+
 pub(super) struct SourceRevision<'a> {
     pub requested_sources: &'a [(PathBuf, &'a str)],
     pub overlay_identity: u64,
-}
-
-pub(super) fn build(
-    source_path: &Path,
-    content: &str,
-    overlays: &FxHashMap<PathBuf, &str>,
-    revision: SourceRevision<'_>,
-    resolver: &mut crate::PackageRouteResolver,
-    options: crate::corsa_bridge::vue_document::CorsaVueVirtualDocumentOptions,
-    environment: crate::corsa_bridge::vue_document::CorsaProjectEnvironment<'_>,
-) -> Result<AliasContext, CorsaBridgeError> {
-    build_consumed(
-        source_path,
-        content,
-        overlays,
-        revision,
-        resolver,
-        options,
-        environment,
-        false,
-    )
-    .map(|consumed| consumed.value)
 }
 
 pub(super) fn build_observed(
@@ -53,8 +40,10 @@ pub(super) fn build_observed(
     environment: crate::corsa_bridge::vue_document::CorsaProjectEnvironment<'_>,
 ) -> Result<crate::package_route::stamp::Consumed<AliasContext>, CorsaBridgeError> {
     build_consumed(
-        source_path,
-        content,
+        HostSource {
+            path: source_path,
+            content,
+        },
         overlays,
         revision,
         resolver,
@@ -65,8 +54,7 @@ pub(super) fn build_observed(
 }
 
 fn build_consumed(
-    source_path: &Path,
-    content: &str,
+    source: HostSource<'_>,
     overlays: &FxHashMap<PathBuf, &str>,
     revision: SourceRevision<'_>,
     resolver: &mut crate::PackageRouteResolver,
@@ -74,6 +62,10 @@ fn build_consumed(
     environment: crate::corsa_bridge::vue_document::CorsaProjectEnvironment<'_>,
     observe: bool,
 ) -> Result<crate::package_route::stamp::Consumed<AliasContext>, CorsaBridgeError> {
+    let HostSource {
+        path: source_path,
+        content,
+    } = source;
     // A caller may reach the same file through a logical symlink spelling
     // (`/var` vs `/private/var` on macOS). Package routes already use physical
     // source identity, so normalize the host once before deriving its mirror
