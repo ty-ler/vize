@@ -18,12 +18,12 @@ sources in qualifier run `38138961313`, Vize source
 `8170fd3e28885b0de430fd9cd8bbece666cbce18`, Nuxt UI pin
 `3dbca020969582d577c7df9698dc8cd484f76dc1`:
 
-| Whole original source | SHA256 |
-| --- | --- |
-| `src/runtime/composables/useToast.ts` | `161238b70551fe45d61ef4aadfa2caf2ffec7b402950028f83dd7133cf1b6ec9` |
-| `src/runtime/composables/useFormField.ts` | `924009d57c4efccc91767a8922a778a10adff11ff0676e38b55cdc7c8cffd405` |
+| Whole original source                         | SHA256                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------ |
+| `src/runtime/composables/useToast.ts`         | `161238b70551fe45d61ef4aadfa2caf2ffec7b402950028f83dd7133cf1b6ec9` |
+| `src/runtime/composables/useFormField.ts`     | `924009d57c4efccc91767a8922a778a10adff11ff0676e38b55cdc7c8cffd405` |
 | `src/runtime/composables/useContentSearch.ts` | `5704e9cfba9b8248b5edfac912501d5e796c67ae621813b5e843eca97f88075d` |
-| `.nuxt/imports.d.ts` | `e281f54c047190b5ad543fc6d8a2b7939b5039d6933f4bf358f9eaf25ca42741` |
+| `.nuxt/imports.d.ts`                          | `e281f54c047190b5ad543fc6d8a2b7939b5039d6933f4bf358f9eaf25ca42741` |
 
 Each existing Vue target was present in that report and captured program.
 The generated barrel re-exported those three original TypeScript modules. That

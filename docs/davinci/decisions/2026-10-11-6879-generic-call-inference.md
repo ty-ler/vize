@@ -229,3 +229,24 @@ unknown-source/wrong-head refusal before any trap CLI can run. The original
 manifest is never broadened to accept arbitrary source hashes. This is a bounded
 qualification candidate for the authored `.`/`..` fix, with exact-head paired
 execution and composed provider qualification still required.
+
+## Complete native declaration output and declaration-barrel control
+
+The full native-phase job `114479435486` in `38142630198` passed its preceding
+real CLI/config/editor controls and then failed the actual generic declaration
+emit snapshot. Comparing the entire emitted `Multi.vue.d.ts` proves exactly
+twenty-four bytes change: two call helpers each drop two artificial `= any`
+defaults. Every other declaration byte is identical, including the authored
+`'a'` default in `Generic.vue.d.ts`, public callable and aliases. This fourth
+projection snapshot acknowledges only that intended producer contract; it
+changes no diagnostic golden. Its exact path joins the reviewed producer list.
+
+The [whole App baseline audit](./2026-10-11-app-check-provider-baseline-audit.md)
+preserves historical green runs and their missing-provider/config custody.
+They cannot promote newly configured App vectors. A new authored four-case
+direct/declaration-barrel control retains broken/repair public and native
+vectors, a genuinely absent neighboring Vue module and the same diagnosing
+client's actual `getSourceFileNames` response before its verdict. Its two
+test-only receipt paths and fixture test path join the same bounded producer
+qualification; the frozen 400 inputs/oracles/budgets stay unchanged. No
+declaration-edge production fix or App baseline migration is yet qualified.
