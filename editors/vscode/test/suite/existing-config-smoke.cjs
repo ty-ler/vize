@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const path = require("node:path");
+const fs = require("node:fs");
 const vscode = require("vscode");
 const { recommendedInitializationOptions } = require("./extension-host-fixtures.cjs");
 const {
@@ -106,40 +107,28 @@ exports.runExistingConfigSmoke = async function runExistingConfigSmoke() {
 };
 
 async function runExistingConfigurationContentChangeSmoke() {
-  const fs = require("node:fs");
   const { logPath, serverPath } = getFakeServer();
   const root = getWorkspaceFolder().uri.fsPath;
-  const observers = ["**/*", "**/tsconfig.*.json"].flatMap((pattern) => {
-    const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-    return [
-      watcher,
-      ...["Create", "Change", "Delete"].map((kind) =>
-        watcher[`onDid${kind}`]((uri) =>
-          fs.appendFileSync(
-            logPath,
-            `${JSON.stringify({ event: "observer", pattern, kind, uri: uri.toString(), time: new Date().toISOString() })}\n`,
-          ),
-        ),
-      ),
-    ];
-  });
-  try {
-    for (const filename of ["vite.config.ts", "vize.config.json", "packages/app/tsconfig.app.json"]) {
-      await prepareConfiguredFakeServer({ logPath, serverPath });
-      const uri = vscode.Uri.file(path.join(root, filename));
-      await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(uri.fsPath)));
-      await vscode.workspace.fs.writeFile(uri, Buffer.from("{}\n"));
-      await updateVizeConfiguration("typecheck.enable", false);
-      await updateVizeConfiguration("enable", undefined);
-      const options = { typecheck: false };
-      let entries = await waitForReadyServer(logPath, `${filename} content-change startup`);
-      assertInitializationOptions(entries, options);
-      const previousInitializations = initializeMessages(entries).length;
+  for (const filename of ["vite.config.ts", "vize.config.json", "packages/app/tsconfig.app.json"]) {
+    await prepareConfiguredFakeServer({ logPath, serverPath });
+    const uri = vscode.Uri.file(path.join(root, filename));
+    await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(uri.fsPath)));
+    await vscode.workspace.fs.writeFile(uri, Buffer.from("{}\n"));
+    await updateVizeConfiguration("typecheck.enable", false);
+    await updateVizeConfiguration("enable", undefined);
+    const options = { typecheck: false };
+    let entries = await waitForReadyServer(logPath, `${filename} content-change startup`);
+    assertInitializationOptions(entries, options);
+    const previousInitializations = initializeMessages(entries).length;
 
-      fs.appendFileSync(
-        logPath,
-        `${JSON.stringify({ event: "content-write", uri: uri.toString(), time: new Date().toISOString() })}\n`,
-      );
+    const packetPrefix = path.join(path.dirname(logPath), "existing-config-events", filename);
+    fs.mkdirSync(path.dirname(packetPrefix), { recursive: true });
+    const retain = (stage) => {
+      fs.copyFileSync(logPath, `${packetPrefix}.${stage}.jsonl`);
+      fs.copyFileSync(uri.fsPath, `${packetPrefix}.${stage}.source.txt`);
+    };
+    retain("before");
+    try {
       await vscode.workspace.fs.writeFile(uri, Buffer.from('{"compilerOptions":{"strict":true}}\n'));
       entries = await waitForLogEntries(
         logPath,
@@ -151,10 +140,10 @@ async function runExistingConfigurationContentChangeSmoke() {
         initializeMessages(entries).map((message) => message.params.initializationOptions),
         Array.from({ length: previousInitializations + 1 }, () => options),
       );
-      await disableVizeAndWaitForShutdown(logPath);
-      await vscode.workspace.fs.delete(uri);
+    } finally {
+      retain("after");
     }
-  } finally {
-    for (const observer of observers) observer.dispose();
+    await disableVizeAndWaitForShutdown(logPath);
+    await vscode.workspace.fs.delete(uri);
   }
 }

@@ -46,12 +46,6 @@ export class WorkspaceLspConfigDiscovery {
   watch(onChange: (reason: string) => void): Disposable[] {
     const watcher = workspace.createFileSystemWatcher(WORKSPACE_PROJECT_CONFIG_GLOB);
     const changed = (uri: Uri) => {
-      if (process.env.VIZE_TEST_ENABLE_HOST_COMMANDS === "1" && process.env.VIZE_TEST_SERVER_LOG) {
-        fs.appendFileSync(
-          process.env.VIZE_TEST_SERVER_LOG,
-          `${JSON.stringify({ event: "config-watcher", uri: uri.toString(), time: new Date().toISOString() })}\n`,
-        );
-      }
       if (!uri.path.split("/").some((part) => EXCLUDED_DIRECTORIES.includes(part))) {
         onChange("project configuration changed");
       }

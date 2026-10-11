@@ -12,3 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: ./.github/actions/vscode-host-smoke
+      - name: Retain complete original mocked configuration packets
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: vscode-config-whole-events
+          path: editors/vscode/.vscode-test/host-smoke/fake-server/existing-config-events/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
