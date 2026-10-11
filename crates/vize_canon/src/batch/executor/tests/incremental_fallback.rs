@@ -62,3 +62,65 @@ fn incremental_session_fallback_is_counted_per_check() {
 
     let _ = fs::remove_dir_all(&case_dir);
 }
+
+#[test]
+fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
+    use crate::{batch::error::CorsaError, corsa_client::CorsaProjectClient};
+
+    let _fallback_guard = super::super::fallback::FALLBACK_TEST_LOCK
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let case_dir = unique_case_dir("incremental-failed-fallback-precedence");
+    let _ = fs::remove_dir_all(&case_dir);
+    fs::create_dir_all(case_dir.join("src")).unwrap();
+    let source = case_dir.join("src/main.ts");
+    fs::write(&source, "const value: number = 1;\n").unwrap();
+    let tsgo = case_dir.join("tsgo");
+    fs::write(
+        &tsgo,
+        "#!/bin/sh\nif [ \"$1\" = \"--api\" ]; then printf 'api unavailable'; exit 0; fi\nprintf 'whole CLI failure packet\\n' >&2\nexit 17\n",
+    )
+    .unwrap();
+    fs::set_permissions(&tsgo, fs::Permissions::from_mode(0o755)).unwrap();
+    let mut project = VirtualProject::new(&case_dir).unwrap();
+    project.register_path(&source).unwrap();
+    project.materialize().unwrap();
+    let executor = CorsaExecutor::with_corsa_path(&case_dir, Some(&tsgo)).unwrap();
+    let path = executor.corsa_path().to_string_lossy();
+    let first = match CorsaProjectClient::new_for_workspace_config(
+        Some(path.as_ref()),
+        project.virtual_root(),
+        &project.generated_tsconfig_path(),
+    ) {
+        Ok(_) => panic!("the unchanged fixture protocol must fail before a session starts"),
+        Err(message) => CorsaError::CorsaExecution {
+            exit_code: -1,
+            message,
+        },
+    };
+    let fallback = executor.check_with_servers(&project, Some(1)).unwrap_err();
+    match &fallback {
+        CorsaError::CorsaExecution { exit_code, message } => {
+            assert_eq!(*exit_code, 17);
+            assert_eq!(message.as_str(), "whole CLI failure packet\n");
+        }
+        other => panic!("the complete CLI failure packet must remain observable: {other}"),
+    }
+    eprintln!("first session error: {first}\nfailed CLI fallback: {fallback}");
+    for checks in 1..=2 {
+        let actual = executor
+            .check_incremental_session(&mut project, Some(1))
+            .unwrap_err();
+        assert_eq!(
+            vize_carton::cstr!("{actual}"),
+            vize_carton::cstr!("{first}")
+        );
+        let metrics = executor.incremental_metrics();
+        assert_eq!(metrics.checks, checks);
+        assert_eq!(metrics.session_to_cli_fallbacks, checks);
+        assert!(metrics.last_session_to_cli_fallback);
+        assert_eq!(metrics.session_starts, 0);
+        assert_eq!(metrics.session_reuses, 0);
+    }
+    let _ = fs::remove_dir_all(&case_dir);
+}

@@ -138,7 +138,18 @@ impl CorsaExecutor {
             Ok(result) => Ok(result),
             Err(error) => {
                 warn_fallback(FallbackStep::SessionToCli, &error);
-                self.check_with_servers(project, servers)
+                match self.check_with_servers(project, servers) {
+                    Ok(result) => Ok(result),
+                    Err(fallback_error) => {
+                        tracing::warn!(
+                            target: "vize_canon::corsa::fallback",
+                            error = %error,
+                            fallback_error = %fallback_error,
+                            "CLI fallback failed; retaining the original project-session error",
+                        );
+                        Err(error)
+                    }
+                }
             }
         }
     }
