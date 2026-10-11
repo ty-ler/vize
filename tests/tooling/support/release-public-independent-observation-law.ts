@@ -19,12 +19,15 @@ export function independentPublicObservationLaw() {
   ) as Workflow;
   const job = workflow.jobs["public-consumer"];
   const prerequisiteIds = ["guard", "prepare", "install", "chromium"];
-  const ids = [...prerequisiteIds, "native", "browser"];
+  const ids = [...prerequisiteIds, "native", "browser", "vrt", "component"];
   for (const id of ids) assert.equal(job.steps.filter((step) => step.id === id).length, 1);
   assert.ok(!job["continue-on-error"]);
   assert.ok(job.steps.every((step) => !step["continue-on-error"]));
   const browser = job.steps.find((step) => step.id === "browser")!;
   const seal = job.steps.find((step) => step.name === "Seal installed public acceptance")!;
+  const component = job.steps.find((step) => step.id === "component")!;
+  for (const id of ["native", "browser", "vrt"])
+    assert.ok(job.steps.findIndex((step) => step.id === id) < job.steps.indexOf(component));
   const evaluate = (
     condition: string | undefined,
     overrides: Partial<Record<string, Outcome>> = {},
@@ -53,9 +56,18 @@ export function independentPublicObservationLaw() {
     assert.equal(evaluate(browser.if, { native: outcome }, false, false), false);
   assert.equal(evaluate(browser.if, { native: "failure" }, true, false), false);
   assert.equal(evaluate(browser.if, {}, true), false);
+  assert.equal(evaluate(browser.if, { component: "failure" }, false, false), true);
+  assert.equal(evaluate(component.if), true);
+  for (const id of ["chromium", "native", "browser", "vrt"])
+    for (const outcome of ["failure", "skipped", "cancelled"] as const)
+      assert.equal(evaluate(component.if, { [id]: outcome }, false, false), true);
+  for (const id of ["guard", "prepare", "install"])
+    for (const outcome of ["failure", "skipped", "cancelled"] as const)
+      assert.equal(evaluate(component.if, { [id]: outcome }, false, false), false);
+  assert.equal(evaluate(component.if, {}, true), false);
   assert.equal(evaluate(seal.if), true);
   assert.equal(evaluate(seal.if, {}, false, false), false);
-  for (const id of ["native", "browser"]) {
+  for (const id of ["native", "browser", "component"]) {
     for (const outcome of ["failure", "skipped", "cancelled"] as const)
       assert.equal(evaluate(seal.if, { [id]: outcome }), false);
   }
