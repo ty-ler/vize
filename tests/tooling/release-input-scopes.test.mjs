@@ -31,27 +31,39 @@ const installedHttpsContracts = [
   "tests/tooling/release/release-public-vrt-upload-refusal.test.ts",
 ];
 
+const installedComponentContracts = [
+  "tests/tooling/release/release-public-component-context.test.ts",
+  "tests/tooling/release/release-public-component-source.test.ts",
+];
+
 void test("audited release contracts have complete imports and leave unresolved cases broad", () => {
   assert.equal(installedHttpsContracts.length, 8);
   assert.equal(new Set(installedHttpsContracts).size, 8);
   assert.ok(installedHttpsContracts.every((file) => unscoped.includes(file)));
-  assert.equal(releaseFiles.length, 37 + 2 + 1 + installedHttpsContracts.length);
+  assert.equal(installedComponentContracts.length, 2);
+  assert.equal(new Set(installedComponentContracts).size, 2);
+  assert.ok(installedComponentContracts.every((file) => unscoped.includes(file)));
+  assert.equal(
+    releaseFiles.length,
+    37 + 2 + 1 + installedHttpsContracts.length + installedComponentContracts.length,
+  );
   assert.equal(
     releaseFiles.filter((file) => file !== configFreeInitContract).length,
-    39 + installedHttpsContracts.length,
+    39 + installedHttpsContracts.length + installedComponentContracts.length,
   );
   assert.equal(
     releaseFiles.filter(
       (file) => file !== configFreeInitContract && !deliveredInitContracts.includes(file),
     ).length,
-    37 + installedHttpsContracts.length,
+    37 + installedHttpsContracts.length + installedComponentContracts.length,
   );
   assert.equal(scoped.length, 31);
   const historicalUnscoped = unscoped.filter(
     (file) =>
       file !== configFreeInitContract &&
       !deliveredInitContracts.includes(file) &&
-      !installedHttpsContracts.includes(file),
+      !installedHttpsContracts.includes(file) &&
+      !installedComponentContracts.includes(file),
   );
   assert.deepEqual(historicalUnscoped, [
     "tests/tooling/release/release-guest-locks.test.ts",
@@ -62,7 +74,10 @@ void test("audited release contracts have complete imports and leave unresolved 
     "tests/tooling/release/release-smoke-init-typecheck.test.ts",
   ]);
   const deliveredUnscoped = unscoped.filter(
-    (file) => file !== configFreeInitContract && !installedHttpsContracts.includes(file),
+    (file) =>
+      file !== configFreeInitContract &&
+      !installedHttpsContracts.includes(file) &&
+      !installedComponentContracts.includes(file),
   );
   assert.deepEqual(deliveredUnscoped, [
     "tests/tooling/release/release-guest-locks.test.ts",
@@ -76,13 +91,32 @@ void test("audited release contracts have complete imports and leave unresolved 
   ]);
   assert.deepEqual(
     unscoped,
-    [...deliveredUnscoped, configFreeInitContract, ...installedHttpsContracts].sort(),
+    [
+      ...deliveredUnscoped,
+      configFreeInitContract,
+      ...installedHttpsContracts,
+      ...installedComponentContracts,
+    ].sort(),
   );
   for (const file of scoped) {
     assert.ok(releaseFiles.includes(file), `${file} must exist`);
     assert.equal(localImportInputs(file).complete, true, `${file} import closure`);
   }
   assert.deepEqual(selected("davinci/vize_l1/src/parser.rs"), unscoped);
+});
+
+void test("installed component contracts keep complete imports and remain unscoped", () => {
+  for (const contract of installedComponentContracts)
+    assert.equal(localImportInputs(contract).complete, true, `${contract} import closure`);
+  for (const input of [
+    "davinci/vize_l1/src/parser.rs",
+    "tools/support/release/public_acceptance/component_inputs.ts",
+    "tools/support/release/public_acceptance/component_source.ts",
+  ]) {
+    const tests = selected(input);
+    for (const contract of installedComponentContracts)
+      assert.ok(tests.includes(contract), `${input}: ${contract}`);
+  }
 });
 
 void test("installed VRT observer inputs select both complete audited contracts", () => {

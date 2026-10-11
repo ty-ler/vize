@@ -138,6 +138,12 @@ test("VRT runs independently after completed original probes while the original 
   const job = workflow.jobs["public-consumer"];
   const step = job.steps.find((item: { id: string }) => item.id === "vrt");
   assert.equal(job.steps.filter((item: { id: string }) => item.id === "vrt").length, 1);
+  assert.equal(job.steps.filter((item: { id: string }) => item.id === "component").length, 1);
+  const componentIndex = job.steps.findIndex((item: { id: string }) => item.id === "component");
+  for (const id of ["native", "browser", "vrt"]) {
+    const probeIndex = job.steps.findIndex((item: { id: string }) => item.id === id);
+    assert.ok(probeIndex >= 0 && probeIndex < componentIndex, `${id} precedes component`);
+  }
   assert.equal(job["timeout-minutes"], 30);
   assert.equal(job["continue-on-error"], undefined);
   assert.ok(job.steps.every((item: Record<string, unknown>) => !item["continue-on-error"]));
@@ -168,7 +174,7 @@ test("VRT runs independently after completed original probes while the original 
     success = true,
   ) => {
     const steps = Object.fromEntries(
-      ids.map((id) => [id, { outcome: overrides[id] ?? "success" }]),
+      [...ids, "component"].map((id) => [id, { outcome: overrides[id] ?? "success" }]),
     );
     return runInNewContext(
       condition.slice(3, -2),
@@ -189,4 +195,11 @@ test("VRT runs independently after completed original probes while the original 
   );
   assert.equal(evaluate(seal.if), true);
   assert.equal(evaluate(seal.if, { vrt: "failure" }, false, false), false);
+  for (const component of ["failure", "skipped", "cancelled"]) {
+    assert.equal(evaluate(seal.if, { component }), false);
+    for (const id of ["browser", "vrt"]) {
+      const probe = job.steps.find((item: { id: string }) => item.id === id);
+      assert.equal(evaluate(probe.if, { component }, false, false), true);
+    }
+  }
 });
