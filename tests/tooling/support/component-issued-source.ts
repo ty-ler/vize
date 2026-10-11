@@ -1,3 +1,9 @@
+import {
+  componentOwnedManifest,
+  componentHistoricalDigest,
+  qualifyComponentOwnedCompletionHost,
+} from "../../performance/support/warm-type-backed-component-owned-completion-host.ts";
+import { ownedCompletionManifest } from "../../performance/support/warm-type-backed-owned-completion-host.ts";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import {
@@ -81,24 +87,49 @@ export function qualifyCurrentComponentIssuedSource(composed = true) {
       ([file, before, , after]) => [file, composed ? before : after] as const,
     ),
   ]);
-  const runtimeBefore = new Map(
-    runtimeRepairManifest.inheritedBodies.map(([file, , after]) => [file, after]),
+  const rows = new Map(
+    [...componentOwnedManifest.helperBodies, ...componentOwnedManifest.integrationBodies].map(
+      (row) => [row[0], row],
+    ),
   );
-  const runtimeRepaired = [...runtimeBefore].every(
-    ([file, after]) => pair.actual("after", file) === after,
-  );
-  return qualifyConfigRepairedReviewHost(
+  const extensions = new Map(componentOwnedManifest.extensions.map((row) => [row[0], row]));
+  const nativeExtensions = new Map(ownedCompletionManifest.extensions.map((row) => [row[0], row]));
+  const tests = new Map(componentOwnedManifest.testBodies.map((row) => [row[0], row]));
+  const actual = (side: "before" | "after", file: string) => {
+    if (side === "after") return pair.actual(side, file);
+    if (rows.has(file)) return rows.get(file)![composed ? 1 : 2];
+    if (tests.has(file)) return tests.get(file)![composed ? 1 : 2];
+    if (extensions.has(file)) return null;
+    if (nativeExtensions.has(file)) return composed ? null : nativeExtensions.get(file)![2];
+    return pair.actual(side, file);
+  };
+  return qualifyComponentOwnedCompletionHost(
     production,
     new Set(),
-    (side, file) =>
-      side === "before" && runtimeRepaired && runtimeBefore.has(file)
-        ? runtimeBefore.get(file)!
-        : side === "before" && repairedBefore.has(file)
-          ? repairedBefore.get(file)!
-          : side === "before" && reviewed.has(file)
-            ? reviewed.get(file)![composed ? 1 : 3]
-            : pair.actual(side, file),
-    qualifyComponentIssuedHost,
+    actual,
+    (_files, _owned, authenticated) => {
+      const runtimeBefore = new Map(
+        runtimeRepairManifest.inheritedBodies.map(([file, , after]) => [file, after]),
+      );
+      const runtimeRepaired = [...runtimeBefore].every(
+        ([file, after]) => authenticated("after", file) === after,
+      );
+      return qualifyConfigRepairedReviewHost(
+        production,
+        new Set(),
+        (side, file) =>
+          side === "before" && runtimeRepaired && runtimeBefore.has(file)
+            ? runtimeBefore.get(file)!
+            : side === "before" && repairedBefore.has(file)
+              ? repairedBefore.get(file)!
+              : side === "before" && reviewed.has(file)
+                ? reviewed.get(file)![composed ? 1 : 3]
+                : authenticated(side, file),
+        (selected, qualified, historical) =>
+          qualifyComponentIssuedHost(selected, qualified, componentHistoricalDigest(historical)),
+        composed ? "parent-pair" : "inherited",
+      );
+    },
     composed ? "parent-pair" : "inherited",
   );
 }

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { runOwnerResolveFixture } from "./warm-type-backed-owner-resolve.ts";
+import { compareComponentOwnedPackets } from "./warm-type-backed-component-owned-completion-packets.ts";
 import { compareOwnedCompletionPackets } from "./warm-type-backed-owned-completion-successor.ts";
 import { object, type ObservedPair } from "./warm-type-backed-owned-completion-fixture.ts";
 import {
@@ -53,14 +54,21 @@ export async function compareOwnerPackets(
   packet: Pair & ObservedPair,
 ) {
   const host = packet.sourceBinding.projectConfigHost;
-  if (!host || typeof host !== "object" || !("ownedCompletionContext" in host)) {
+  const componentHost = packet.sourceBinding.componentContextHost;
+  const component =
+    componentHost !== null &&
+    typeof componentHost === "object" &&
+    "componentOwnedCompletionContext" in componentHost;
+  if (!component && (!host || typeof host !== "object" || !("ownedCompletionContext" in host))) {
     await completeOwnerPackets(null, packet);
     assert.deepEqual(after, before);
     return;
   }
-  const context = object(host.ownedCompletionContext);
-  assert.equal(context.manifestSHA256, ownedCompletionManifestSHA256);
-  assert.equal(context.fixtureManifestSHA256, ownedCompletionManifest.fixtureManifestSHA256);
+  if (!component) {
+    const context = object(object(host).ownedCompletionContext);
+    assert.equal(context.manifestSHA256, ownedCompletionManifestSHA256);
+    assert.equal(context.fixtureManifestSHA256, ownedCompletionManifest.fixtureManifestSHA256);
+  }
   const workspace = packet.before.inputs.workspace;
   const output = path.dirname(workspace);
   const resolved = [];
@@ -79,5 +87,6 @@ export async function compareOwnerPackets(
     `${JSON.stringify(resolved, null, 2)}\n`,
   );
   assert.equal(resolved.length, 2);
-  compareOwnedCompletionPackets(before, after, packet, resolved);
+  if (component) compareComponentOwnedPackets(before, after, packet, resolved);
+  else compareOwnedCompletionPackets(before, after, packet, resolved);
 }

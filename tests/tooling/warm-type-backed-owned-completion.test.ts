@@ -1,3 +1,5 @@
+import { componentRuntimePreflight } from "./support/component-owned-source.ts";
+import { componentOwnedManifest } from "../performance/support/warm-type-backed-component-owned-completion-host.ts";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
@@ -17,6 +19,21 @@ import {
 } from "../performance/support/warm-type-backed-owned-completion-host.ts";
 
 import { control } from "./support/warm-type-backed-owned-completion-control.ts";
+
+function currentComponentProof() {
+  return componentRuntimePreflight(
+    [],
+    (side, file) => {
+      if (side === "before") return null;
+      try {
+        return digest(fs.readFileSync(new URL(`../../${file}`, import.meta.url)));
+      } catch {
+        return null;
+      }
+    },
+    true,
+  );
+}
 
 function compare({ pair, resolved }: ReturnType<typeof control>) {
   compareOwnedCompletionPackets(
@@ -164,7 +181,17 @@ await test("the complete historical helper body and original3 native refusal fai
     new URL("../performance/support/warm-type-backed-owner-migration.ts", import.meta.url),
     "utf8",
   );
-  assert.ok(current.includes(historical.slice(historical.indexOf("/** Retain"))));
+  const component = currentComponentProof();
+  const preserved = component
+    ? fs.readFileSync(
+        new URL(
+          "../_fixtures/differential/lsp/component-owned-completion/historical-owner-migration.ts.txt",
+          import.meta.url,
+        ),
+        "utf8",
+      )
+    : historical;
+  assert.ok(current.includes(preserved.slice(preserved.indexOf("/** Retain"))));
   const requests = fs.readFileSync(new URL("historical-requests.ts.txt", fixtureRoot), "utf8");
   const actualRequests = fs.readFileSync(
     new URL("../performance/support/warm-type-backed-requests.ts", import.meta.url),
@@ -173,10 +200,21 @@ await test("the complete historical helper body and original3 native refusal fai
   assert.equal(
     actualRequests,
     requests
-      .replace("import { completeOwnerPackets }", "import { compareOwnerPackets }")
+      .replace(
+        "import { completeOwnerPackets }",
+        component
+          ? "import { compareOwnerPackets, capturesOwners }"
+          : "import { compareOwnerPackets }",
+      )
       .replace(
         "  const completePackets = await completeOwnerPackets(publicPackets, packet);\n  assert.deepEqual(completePackets(after), completePackets(before));",
         "  await compareOwnerPackets(publicPackets(before), publicPackets(after), packet);",
+      )
+      .replace(
+        "const captureOwners = Boolean(sourceBinding.projectConfigHost);",
+        component
+          ? "const captureOwners = capturesOwners(sourceBinding);"
+          : "const captureOwners = Boolean(sourceBinding.projectConfigHost);",
       ),
   );
   const old = readFixture<{ refusalFailures: string[] }>("before-resolve-proof.json");
@@ -261,11 +299,22 @@ await test("the source successor binds both complete helpers and every declared 
           );
         }
   }
-  for (const [file, , , after] of rows.values())
-    assert.equal(
-      digest(fs.readFileSync(fileURLToPath(new URL(`../../${file}`, import.meta.url)))),
-      after,
+  for (const [file, , , after] of rows.values()) {
+    const actual = digest(
+      fs.readFileSync(fileURLToPath(new URL(`../../${file}`, import.meta.url))),
     );
+    if (actual === after) assert.equal(actual, after);
+    else {
+      assert.ok(
+        currentComponentProof(),
+        "the complete component helper successor must qualify first",
+      );
+      const successor = componentOwnedManifest.helperBodies.find(([name]) => name === file);
+      assert.ok(successor);
+      assert.equal(successor[2], after);
+      assert.equal(actual, successor[4]);
+    }
+  }
   for (const [file, , after] of extensions.values())
     assert.equal(
       digest(fs.readFileSync(fileURLToPath(new URL(`../../${file}`, import.meta.url)))),

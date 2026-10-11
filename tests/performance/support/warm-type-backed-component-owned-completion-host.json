@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "nativeSource": "9f17b52dcb8c8ad89c1f5686c5898d3a8a5aae0e",
+  "componentHistoricalSource": "d1985a4cdf133902049b4a3947bdce58a3c10c56",
+  "nativeManifestSHA256": "7280e8c07888a234477bae5f896d091e2ff988d44f2875040a0d7cda0ab1938b",
+  "fixtureManifestSHA256": "8fd8acf103ac5975aa2db67aad77cf22ae40304406fbabb32a83ed9220813db7",
+  "originalPackets": 79,
+  "unchangedPackets": 77,
+  "originalComparedFields": 20,
+  "helperBodies": [
+    [
+      "tests/performance/support/warm-type-backed-owner-migration.ts",
+      null,
+      "fab46cfff0af53eb7f891931adbe3cc4a3c91a973a0c501bedd2afaac3a5bed5",
+      "e265b8ac80199886662f64b7bd36c21b81f56f1d84ec11f5975a3a3dca80d3f7",
+      "53cb05ee5f79e3c7064ff15a714cc34d632e1e75609bd89962406854d349826c"
+    ],
+    [
+      "tests/performance/support/warm-type-backed-requests.ts",
+      "4162926bc7d02b92423e6731d8f8efaf48964fa6009df6751c087aa4372939f7",
+      "2630fb36b30b7465496c3051a5de32b3538bbbc8fb72bdbbbe5845c2db2a70b0",
+      "cf50fe30df23323a650775359761e784473e87442bb9d0c02ade15349297cf83",
+      "132aad7bfcd22bdd0de3ca067927046a64aeab3c05c0cc2a072b200d00d8365a"
+    ]
+  ],
+  "integrationBodies": [
+    [
+      "tests/performance/support/warm-type-backed-workflow.ts",
+      "644bfdffcfba2ac504df57685ff9dea7b676c535123c38d7ac45148d1ba7bea5",
+      "8fa22da3f22a12695a35aa33d5229004bb6162fac9c7e1242cdec1924fe95b28",
+      "873fab74a0ab5dd708f9695ca9f9ff8e21eeb90eb993f603b26d8f667b2d2273",
+      "e395e910a7b481ac8d0b99da7256d8424c414eabea28f69c6a98176b0455f027"
+    ]
+  ],
+  "extensions": [
+    [
+      "tests/_fixtures/differential/lsp/component-owned-completion/historical-native-owned-completion.test.ts.txt",
+      null,
+      "0996eb8304584160cad3897b78ac264f1aa70223861e53f10493948e59bea28a"
+    ],
+    [
+      "tests/_fixtures/differential/lsp/component-owned-completion/historical-owner-migration.ts.txt",
+      null,
+      "e265b8ac80199886662f64b7bd36c21b81f56f1d84ec11f5975a3a3dca80d3f7"
+    ],
+    [
+      "tests/_fixtures/differential/lsp/component-owned-completion/historical-requests.ts.txt",
+      null,
+      "cf50fe30df23323a650775359761e784473e87442bb9d0c02ade15349297cf83"
+    ],
+    [
+      "tests/_fixtures/differential/lsp/component-owned-completion/historical-workflow.ts.txt",
+      null,
+      "873fab74a0ab5dd708f9695ca9f9ff8e21eeb90eb993f603b26d8f667b2d2273"
+    ],
+    [
+      "tests/performance/support/warm-type-backed-component-owned-completion-native.ts",
+      null,
+      "61dfeee5ff7f6ccb9790671e6f5a33ba89fd2f3cb013fb10437920d1e241729b"
+    ],
+    [
+      "tests/performance/support/warm-type-backed-component-owned-completion-packets.ts",
+      null,
+      "88ce0a7a1a2e085ef70b23b569e89a126eee9686c346b09551ce64712bbe9b95"
+    ],
+    [
+      "tests/tooling/support/component-issued-source.ts",
+      null,
+      "fb6649fd75fa170a0391c8acc52491c017f7b65ebcdcc3d58e47328542fde958"
+    ],
+    [
+      "tests/tooling/support/component-owned-completion-control.ts",
+      null,
+      "45efa967297448b35b750509288df8ca7819955db6ba1eebe30c2d3763ea2f6e"
+    ],
+    [
+      "tests/tooling/support/component-owned-source.ts",
+      null,
+      "93a491e01d1a5f45d0f0e387c760de98ca0fb38107433f13b09a7027fdffb3e6"
+    ],
+    [
+      "tests/tooling/warm-type-backed-component-owned-completion.test.ts",
+      null,
+      "aca4e72933c90ac639007d9df02c2745b131e4e406f6fd16ed215962c9a27369"
+    ],
+    [
+      "tests/tooling/warm-type-backed-component-reviewed-host.test.ts",
+      null,
+      "7ca0809461e07af03cb8ed96d0f82cfec36ab1800cfb18603a52268c22b1ee99"
+    ]
+  ],
+  "testBodies": [
+    [
+      "tests/tooling/warm-type-backed-owned-completion.test.ts",
+      null,
+      "0996eb8304584160cad3897b78ac264f1aa70223861e53f10493948e59bea28a",
+      "1474791532efe6bc6674a9f3f5c23995a04a331758d7699f61cd6541d0d2c2a7"
+    ]
+  ]
+}

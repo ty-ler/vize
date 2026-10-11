@@ -1,10 +1,12 @@
+import {
+  componentOwnedSourceDigest,
+  componentRuntimePreflight,
+} from "./support/component-owned-source.ts";
+import { qualifyComponentCompleteOwnedHost } from "../performance/support/warm-type-backed-component-owned-completion-host.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { configReviewManifest as review } from "../performance/support/warm-type-backed-config-review-host.ts";
-import {
-  configRepairManifest as repair,
-  qualifyConfigRepairedReviewHost,
-} from "../performance/support/warm-type-backed-config-repair-host.ts";
+import { configRepairManifest as repair } from "../performance/support/warm-type-backed-config-repair-host.ts";
 import { qualifyComponentIssuedHost } from "../performance/support/warm-type-backed-component-issued-host.ts";
 import { componentIssuedSourcePair } from "./support/component-issued-source.ts";
 import { canonBatchManifest as batch } from "../performance/support/warm-type-backed-config-canon-batch-host.ts";
@@ -48,19 +50,20 @@ for (const composed of [false, true]) {
   const runtimeBefore = new Map(
     runtimeRepairManifest.inheritedBodies.map(([file, , after]) => [file, after]),
   );
-  const runtimeRepaired = [...runtimeBefore].every(
-    ([file, after]) => pair.actual("after", file) === after,
+  const runtimeRepaired = componentRuntimePreflight(production, pair.actual, composed) !== null;
+  const digest: Digest = componentOwnedSourceDigest(
+    (side, file) =>
+      side === "before" && runtimeRepaired && runtimeBefore.has(file)
+        ? runtimeBefore.get(file)!
+        : side === "before" && repairedBefore.has(file)
+          ? repairedBefore.get(file)!
+          : side === "before" && reviewed.has(file)
+            ? reviewed.get(file)![composed ? 1 : 3]
+            : pair.actual(side, file),
+    composed,
   );
-  const digest: Digest = (side, file) =>
-    side === "before" && runtimeRepaired && runtimeBefore.has(file)
-      ? runtimeBefore.get(file)!
-      : side === "before" && repairedBefore.has(file)
-        ? repairedBefore.get(file)!
-        : side === "before" && reviewed.has(file)
-          ? reviewed.get(file)![composed ? 1 : 3]
-          : pair.actual(side, file);
   const qualify = (current = digest, files = production, allowed = new Set<string>()) =>
-    qualifyConfigRepairedReviewHost(files, allowed, current, qualifyComponentIssuedHost, scope);
+    qualifyComponentCompleteOwnedHost(files, allowed, current, scope);
 
   await test(`${scope} reviewed component qualification retains the complete original witness and actual source footprint`, () => {
     assert.equal(qualifyComponentIssuedHost(production, new Set(), digest), null);

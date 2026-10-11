@@ -1,3 +1,4 @@
+import { qualifyComponentCompleteOwnedHost } from "./warm-type-backed-component-owned-completion-host.ts";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -146,18 +147,17 @@ if (process.argv[2] === "prepare") {
       qualifyComponentIssuedHost(production, allowed, (side, file) =>
         gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
       ) ??
-      qualifyConfigRepairedReviewHost(
+      qualifyComponentCompleteOwnedHost(
         production,
         allowed,
         (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
-        qualifyComponentIssuedHost,
         "inherited",
       ) ??
-      qualifyConfigRepairedReviewHost(
+      qualifyComponentCompleteOwnedHost(
         production,
         allowed,
         (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
-        qualifyComponentIssuedHost,
+        "parent-pair",
       ))
     : null;
   if (!cut) {
