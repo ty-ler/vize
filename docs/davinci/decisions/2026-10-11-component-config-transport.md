@@ -154,3 +154,15 @@ requires the complete matcher successor. Source/refusal laws and local lint
 are preparation evidence. Original selected-owner native packets, protected
 full gates, the unchanged 128 MiB cap and a genuinely included public release
 remain required; the deferred scratch-arena patch is excluded.
+
+The next composition retains the original strict `bcf13b6e`, `433e2847` and
+`a7ff8052` authorities and independently binds the complete 28/113 source
+footprint to exactly three whole harness successors. The parent `8d3677de`
+null-completion successor binds `61921cd7` to `d200def1`; the two child
+caller bodies preserve every original row and use the same owner predicate
+for qualified project or component context. Extra production owners cannot
+receive this authority through another selector. The original 79 packets,
+eight additional resolves, eight refusals and all 20 owner fields remain
+required on both actual sources. Source laws and a truth table do not prove
+those Linux native packets ran. Preserve the parent wrapper failure and the
+4b29 green run that omitted all 16 additional controls; neither is completion.
