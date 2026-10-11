@@ -79,3 +79,24 @@ its original three-key packet; only complete non-null graph qualification adds
 must qualify the correction with unchanged recipes, 10 s deadline and 128/384
 MiB RSS limits. The dedicated source campaign is the next evidence; release and
 broader #3952 coverage remain unfinished.
+
+## First compiled correction
+
+At exact `fc381266e25bc35abace8b4ba30d84e157a71ecd`, source control
+`38136291698` correctly refused the new walker law before execution: its
+whole-state renderer incorrectly assumed `VirtualProject: Debug` (`E0277`).
+PR and Full strict Clippy also refused the old uncached observed wrapper,
+which production no longer calls after the cold parser carrier connection.
+The full original logs and immutable failed source are retained. This run
+cannot qualify the original n8n lifecycle, which was skipped behind those
+source failures; no current cold speed or successful deadline is inferred.
+
+The correction keeps the old wrapper body and all retained callers under
+`cfg(test)`. The whole-state law instead exhaustively binds all 64 actual
+project fields, including full source/maps/indices, options, edges, artifacts,
+shadow ownership and diagnostics. The unused resolver remains the same
+caller-owned Arc with its complete public metrics; the rewriter remains a
+stateless unit. It adds no production Debug implementation or pipeline,
+removes no original assertion, and retains the complete callback/fact/owner
+comparisons. The complete 188-body source manifest must be pinned again to
+these actual source bytes before the coherent corrective head is published.

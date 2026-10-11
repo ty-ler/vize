@@ -76,6 +76,7 @@ impl VirtualProject {
     }
     /// Observe the same original full walk, including its fresh alias load and
     /// exactly one existing package callback per unresolved occurrence.
+    #[cfg(test)]
     pub(crate) fn register_reachable_dependencies_with_package_resolver_observed(
         &mut self,
         overlays: &FxHashMap<PathBuf, &str>,

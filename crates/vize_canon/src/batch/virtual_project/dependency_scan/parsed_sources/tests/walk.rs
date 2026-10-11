@@ -4,6 +4,9 @@ use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp, Sha
 use std::path::{Path, PathBuf};
 use vize_carton::{FxHashMap, String};
 
+// Exhaustive field binding keeps the whole project-state oracle current.
+// Opaque resolver input is represented by its complete public metrics; this
+// fixture supplies its own callback and never invokes that unused resolver.
 #[expect(
     clippy::disallowed_types,
     reason = "complete regression state rendering"
@@ -12,8 +15,187 @@ use vize_carton::{FxHashMap, String};
     clippy::disallowed_macros,
     reason = "complete regression state rendering"
 )]
-fn state(project: &VirtualProject) -> std::string::String {
-    format!("{project:?}")
+fn state(project: &VirtualProject) -> Vec<(&'static str, std::string::String)> {
+    let VirtualProject {
+        project_root,
+        virtual_root,
+        tsconfig_path,
+        preserve_unused_diagnostics,
+        source_policy,
+        alias_rewrite_policy,
+        virtual_ts_options,
+        diagnostic_paths,
+        declaration_roots,
+        virtual_ts_check_options,
+        typed_router,
+        package_routes,
+        package_route_reverse,
+        package_route_importers,
+        package_route_source_owners,
+        package_route_manifests,
+        package_route_roots,
+        package_source_index,
+        dependency_edges,
+        dependency_inbound,
+        package_route_resolver,
+        package_routes_need_refresh,
+        package_route_refresh_keys,
+        package_shadow_files,
+        package_shadow_manifests,
+        package_shadow_artifacts,
+        retired_package_shadow_paths,
+        package_shadow_file_owners,
+        package_shadow_manifest_owners,
+        package_shadow_source_paths,
+        package_shadow_dirty_keys,
+        package_shadows_initialized,
+        package_shadow_scopes,
+        incremental_materialized_candidates,
+        incremental_source_nodes_rebuilt,
+        incremental_dependency_nodes_reconciled,
+        incremental_shadow_bindings_rebuilt,
+        materialized_package_links,
+        materialized_package_link_scopes,
+        materialized_package_link_owners,
+        package_link_scope_files,
+        package_link_scope_targets,
+        package_shadow_link_scopes,
+        incremental_package_link_scopes,
+        incremental_link_topology_dirty,
+        options_api,
+        session_scripts,
+        editor_document_options,
+        pre_rewrite_code,
+        jsx_typecheck,
+        dialect,
+        template_syntax,
+        experimental_in_tag_comments,
+        experimental_patterned_template,
+        experimental_strict_slot_children,
+        virtual_files,
+        shared_helper_source_count,
+        source_artifacts,
+        passthrough_files,
+        original_index,
+        original_contents,
+        unchecked_javascript_files,
+        diagnostics,
+        rewriter,
+    } = project;
+    macro_rules! records {
+        ($($field:ident),* $(,)?) => {
+            vec![$((stringify!($field), format!("{:?}", $field))),*]
+        };
+    }
+    let mut packet = records!(
+        project_root,
+        virtual_root,
+        tsconfig_path,
+        preserve_unused_diagnostics,
+        source_policy,
+        alias_rewrite_policy,
+        virtual_ts_options,
+        diagnostic_paths,
+        declaration_roots,
+        virtual_ts_check_options,
+        package_routes,
+        package_route_reverse,
+        package_route_importers,
+        package_route_source_owners,
+        package_route_manifests,
+        package_route_roots,
+        package_source_index,
+        dependency_edges,
+        dependency_inbound,
+        package_routes_need_refresh,
+        package_route_refresh_keys,
+        package_shadow_files,
+        package_shadow_manifests,
+        retired_package_shadow_paths,
+        package_shadow_file_owners,
+        package_shadow_manifest_owners,
+        package_shadow_source_paths,
+        package_shadow_dirty_keys,
+        package_shadows_initialized,
+        package_shadow_scopes,
+        incremental_materialized_candidates,
+        incremental_source_nodes_rebuilt,
+        incremental_dependency_nodes_reconciled,
+        incremental_shadow_bindings_rebuilt,
+        materialized_package_links,
+        materialized_package_link_scopes,
+        materialized_package_link_owners,
+        package_link_scope_files,
+        package_link_scope_targets,
+        package_shadow_link_scopes,
+        incremental_package_link_scopes,
+        incremental_link_topology_dirty,
+        options_api,
+        session_scripts,
+        editor_document_options,
+        pre_rewrite_code,
+        jsx_typecheck,
+        dialect,
+        template_syntax,
+        experimental_in_tag_comments,
+        experimental_patterned_template,
+        experimental_strict_slot_children,
+        virtual_files,
+        shared_helper_source_count,
+        passthrough_files,
+        original_index,
+        original_contents,
+        unchecked_javascript_files,
+        diagnostics,
+    );
+    packet.push((
+        "typed_router",
+        format!("{:?}", (&typed_router.root, &typed_router.import_files)),
+    ));
+    packet.push((
+        "source_artifacts",
+        format!(
+            "{:?}",
+            source_artifacts
+                .iter()
+                .map(|(path, artifacts)| (
+                    path,
+                    &artifacts.virtual_paths,
+                    &artifacts.passthrough_paths
+                ))
+                .collect::<Vec<_>>()
+        ),
+    ));
+    packet.push((
+        "package_shadow_artifacts",
+        format!(
+            "{:?}",
+            package_shadow_artifacts
+                .iter()
+                .map(|(key, topology)| (
+                    key,
+                    &topology.files,
+                    &topology.manifests,
+                    &topology.aliases,
+                    &topology.install_roots
+                ))
+                .collect::<Vec<_>>()
+        ),
+    ));
+    packet.push((
+        "package_route_resolver",
+        format!(
+            "{:?}",
+            package_route_resolver
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .metrics()
+        ),
+    ));
+    // The production ImportRewriter is a stateless unit struct.
+    assert_eq!(std::mem::size_of_val(rewriter), 0);
+    packet.push(("rewriter", "stateless".into()));
+    packet
 }
 
 fn run(
@@ -83,6 +265,8 @@ fn retained_parsing_preserves_every_actual_walk_callback_fact_edge_and_refusal()
         project.set_session_script_registration(true);
         project.register_path(&host).unwrap();
     }
+    let original_resolver = original.package_route_resolver.clone();
+    let candidate_resolver = candidate.package_route_resolver.clone();
     let mut parsed = ParsedDependencySources::default();
     for wave in 0..6 {
         let mut overlays = FxHashMap::default();
@@ -115,6 +299,14 @@ fn retained_parsing_preserves_every_actual_walk_callback_fact_edge_and_refusal()
         equal_owner_sharing(&before.stamps, &after.stamps);
         assert_eq!(old_calls, new_calls);
         assert_eq!(state(&original), state(&candidate));
+        assert!(std::ptr::eq(
+            original.package_route_resolver.as_ref(),
+            original_resolver.as_ref()
+        ));
+        assert!(std::ptr::eq(
+            candidate.package_route_resolver.as_ref(),
+            candidate_resolver.as_ref()
+        ));
         if wave == 0 {
             assert!(!after.qualified);
             assert!(after.stamps.iter().any(|stamp| stamp.path() == unreadable));
