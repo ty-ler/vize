@@ -17,7 +17,7 @@ const manifest = JSON.parse(
   harnessExtensions: Array<[string, null, string]>;
 };
 const manifestSHA256 = createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
-assert.equal(manifestSHA256, "b2e3b87fbde5f89d668e137fe4e87e0468c89347e6e90b5c41de52015f383cd5");
+assert.equal(manifestSHA256, "e081fa0e43c2abce8da6a3e4318ca97e5b561f5dc8ef27daf48d53cdb266fa6a");
 assert.equal(manifest.version, 2);
 assert.equal(manifest.originalSource, "7386b2a79604ae5b74cb541be911eb19735e68b2");
 assert.equal(manifest.reviewedSource, "0b9cbfebf12dbd49b16fd30a6073184d806c2c07");

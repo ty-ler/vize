@@ -65,19 +65,31 @@ class OwnerRecorder extends QueryRecorder {
       return packet;
     }
     assert.equal(items.length, 4);
-    for (const item of items)
-      await this.extra(`${stage}/resolve/${object(item).label}`, object(item), false);
+    for (const item of items) {
+      const label = object(item).label;
+      if (typeof label !== "string") throw new Error("a complete native item requires its label");
+      await this.extra(`${stage}/resolve/${label}`, object(item), false);
+    }
     const stale = structuredClone(object(items[0]));
     const staleData = object(object(stale.data).vizeCompletion);
-    staleData.revision = Number(staleData.revision) + 1;
+    const revision = staleData.revision;
+    if (typeof revision !== "number" || !Number.isSafeInteger(revision) || revision <= 0)
+      throw new Error("the negative control requires a complete native revision");
+    staleData.revision = revision + 1;
     await this.extra(`${stage}/stale-revision`, stale, true);
     const wrongFile = structuredClone(object(items[0]));
     const native = object(object(object(object(wrongFile.data).vizeCompletion).item).data);
-    native.fileName = `${native.fileName}.foreign`;
+    const fileName = native.fileName;
+    if (typeof fileName !== "string" || !path.isAbsolute(fileName))
+      throw new Error("the negative control requires its actual absolute native file");
+    native.fileName = `${fileName}.foreign`;
     await this.extra(`${stage}/foreign-native-file`, wrongFile, true);
     const wrongPosition = structuredClone(object(items[0]));
     const position = object(object(object(object(wrongPosition.data).vizeCompletion).item).data);
-    position.position = Number(position.position) + 1;
+    const offset = position.position;
+    if (typeof offset !== "number" || !Number.isSafeInteger(offset) || offset < 0)
+      throw new Error("the negative control requires its actual native offset");
+    position.position = offset + 1;
     await this.extra(`${stage}/foreign-native-position`, wrongPosition, true);
     if (stage === "cross-root") {
       assert.ok(this.currentMain);

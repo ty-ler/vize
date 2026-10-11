@@ -15,7 +15,10 @@ function nativeSockets(processes: Array<Record<string, unknown>>) {
     .map((line) => line.trim().split(/\s+/u))
     .filter((fields) => fields.length === 8 && fields[7].startsWith("/tmp/tsgo-api-"));
   return processes.flatMap((process) => {
-    const directory = `/proc/${process.pid}/fd`;
+    const pid = process.pid;
+    if (typeof pid !== "number" || !Number.isSafeInteger(pid) || pid <= 0)
+      throw new Error("kernel pipe ownership requires a positive integer process ID");
+    const directory = `/proc/${pid}/fd`;
     let descriptors: string[];
     try {
       descriptors = fs.readdirSync(directory).flatMap((fd) => {
