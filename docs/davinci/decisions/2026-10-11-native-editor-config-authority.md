@@ -184,3 +184,23 @@ scope, while package callbacks and shadow predicates remain `LocalImporter`.
 The original independent deleted-probe law now uses the actual dependency
 owner emitted by its original walk; every canonical/negative/stale assertion
 and the genuinely independent resolver operation is retained.
+
+Package registration now receives a transient value from the actual completed
+source-regeneration operation: its consumed package-generation classification,
+exact retained root/binding maps and current returned authored-body facts.
+Only an unchanged exact registry and matching completed package generation can
+retain a target; new targets, changed classification, missing/unknown body
+packets and ordinary cold registration take the original build path. Both
+original registration waves still perform their complete importer/route
+reconciliation and return their real registry snapshot. The original four-node
+work limit, whole hot/cold output and source/refusal laws remain mandatory.
+
+The exact `2a45c003da` source run `38111615858` failed production compilation
+before laws: the new completed-editor return value was incorrectly used as
+the original unit fact accumulator. Keep that accumulator unchanged and finish
+with the actual completed-source vector. This repair also keeps the legacy
+consumption wrapper test-only; no input fact or refusal is discarded. Package
+generation controls now require actual package-classified regeneration, its
+complete authored-body packet and the unchanged registry. Missing completion,
+body, qualification, a changed registry, and first-party classification all
+retain ordinary registration. Their Actions results remain pending.

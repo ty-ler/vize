@@ -8,6 +8,8 @@ pub(super) struct Replacement {
     pub(super) host: PathBuf,
     pub(super) known: FxHashSet<PathBuf>,
     pub(super) regenerated: FxHashSet<PathBuf>,
+    pub(super) package_generation:
+        crate::batch::virtual_project::package_source_index::RegisteredPackageGeneration,
     pub(super) deleted: FxHashSet<PathBuf>,
     pub(super) frontier: Vec<PathBuf>,
     pub(super) supplied: FxHashMap<PathBuf, String>,
@@ -90,13 +92,17 @@ pub(super) fn replace(
         .map(|(path, _)| path.clone())
         .collect::<FxHashSet<_>>();
     let mut regenerated = FxHashSet::default();
+    let mut package_regenerated = FxHashSet::default();
     for (path, source) in ordered {
         if let Some(source) = source {
-            facts.record_owned(
+            let package = facts.record_owned(
                 mirror
-                    .register_path_with_content_observed(&path, &source)
+                    .register_path_with_package_generation_observed(&path, &source)
                     .ok()?,
             );
+            if package {
+                package_regenerated.insert(path.clone());
+            }
             regenerated.insert(path.clone());
             // Actual regenerated Vue module bytes can change imports as a
             // consequence of imported props, even when its own body is equal.
@@ -119,6 +125,7 @@ pub(super) fn replace(
         host,
         known,
         regenerated,
+        package_generation: mirror.snapshot_regenerated_package_generation(package_regenerated),
         deleted,
         frontier,
         supplied,

@@ -25,6 +25,19 @@ impl VirtualProject {
         Ok(finish(facts, ()))
     }
 
+    /// The value is the package classification actually consumed by this build.
+    pub(crate) fn register_path_with_package_generation_observed(
+        &mut self,
+        path: &Path,
+        content: &str,
+    ) -> CorsaResult<Consumed<bool>> {
+        let mut facts = empty(true);
+        Self::observe_registered_source(path, content, true, &mut facts);
+        let package =
+            self.register_path_with_content_with_consumption(path, content, true, &mut facts)?;
+        Ok(finish(facts, package))
+    }
+
     #[cfg(test)]
     pub(crate) fn register_paths_observed(
         &mut self,
@@ -49,12 +62,14 @@ impl VirtualProject {
         let content = profile!("canon.file.read", std::fs::read_to_string(path))?;
         Self::observe_registered_source(path, &content, observe, facts);
         self.register_path_with_content_with_consumption(path, &content, observe, facts)
+            .map(|_| ())
     }
 
     /// Register a supported file path with already-loaded content.
     pub fn register_path_with_content(&mut self, path: &Path, content: &str) -> CorsaResult<()> {
         let mut facts = empty(false);
         self.register_path_with_content_with_consumption(path, content, false, &mut facts)
+            .map(|_| ())
     }
 
     pub(in crate::batch::virtual_project) fn register_path_with_content_with_consumption(
@@ -63,7 +78,7 @@ impl VirtualProject {
         content: &str,
         observe: bool,
         facts: &mut Consumed<()>,
-    ) -> CorsaResult<()> {
+    ) -> CorsaResult<bool> {
         let package_route_path = self.is_package_route_path(path);
         let registered = build_registered_file(
             path,
@@ -94,7 +109,7 @@ impl VirtualProject {
             },
         )?;
         self.absorb_registered_file_with_consumption(registered, observe, facts);
-        Ok(())
+        Ok(package_route_path)
     }
 
     /// Register a batch of file paths, parallelizing per-file parse and Virtual TS

@@ -113,13 +113,14 @@ impl VirtualProject {
 
     fn finalize_editor_imports_consumed(&mut self, observe: bool) -> Consumed<Vec<PathBuf>> {
         let mut facts = Consumed {
-            value: Vec::new(),
+            value: (),
             stamps: Vec::new(),
             qualified: observe,
         };
+        let mut completed = Vec::new();
         if self.editor_document_options.is_none() {
             facts.qualified = false;
-            return facts;
+            return super::project::consumption::finish(facts, completed);
         }
         let mut consumed = if observe {
             self.dependency_alias_map_observed()
@@ -246,13 +247,13 @@ impl VirtualProject {
                 file.content = rewritten.code;
                 file.source_map.import_map = rewritten.source_map;
                 if observe {
-                    facts.value.push(source);
+                    completed.push(source);
                 }
             } else if observe {
                 facts.qualified = false;
             }
         }
-        facts
+        super::project::consumption::finish(facts, completed)
     }
 
     pub(crate) fn editor_vue_document(

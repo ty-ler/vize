@@ -84,7 +84,7 @@ pub(super) fn apply_observed(
         overlays,
         &protected,
         resolver,
-        facts,
+        (facts, &replacement.package_generation),
     );
     #[cfg(test)]
     if completed.is_none() {

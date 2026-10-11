@@ -47,6 +47,7 @@ impl NativeFacts {
         );
     }
 
+    #[cfg(test)]
     pub(in crate::corsa_bridge::vue_dependencies_alias::context) fn retain_previous_with_validated_deleted(
         &mut self,
         stamps: &[InputStamp],

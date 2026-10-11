@@ -8,7 +8,23 @@ pub(crate) struct RegisteredPackageRoots {
     roots: FxHashMap<PathBuf, FxHashSet<PackageRouteKey>>,
 }
 
+/// One existing source-regeneration scope, never a freshness grant by itself.
+pub(crate) struct RegisteredPackageGeneration {
+    pub(crate) roots: RegisteredPackageRoots,
+    pub(crate) sources: FxHashSet<PathBuf>,
+}
+
 impl VirtualProject {
+    pub(crate) fn snapshot_regenerated_package_generation(
+        &self,
+        sources: FxHashSet<PathBuf>,
+    ) -> RegisteredPackageGeneration {
+        RegisteredPackageGeneration {
+            roots: self.snapshot_registered_package_roots(),
+            sources,
+        }
+    }
+
     pub(in super::super) fn snapshot_registered_package_roots(&self) -> RegisteredPackageRoots {
         RegisteredPackageRoots {
             bindings: self.package_routes.clone(),

@@ -27,6 +27,14 @@ impl InputStamp {
         }
     }
 
+    /// Compare stored bytes with an actual returned source fact, without
+    /// recording or recapturing an observation.
+    pub(crate) fn has_registered_body(&self, path: &std::path::Path, body: &[u8]) -> bool {
+        self.path == path
+            && self.is_authored_body_fact()
+            && matches!(self.fact, Some(InputFact::ConsumedBody(digest)) if digest == super::super::digest(body))
+    }
+
     /// Exact authored ownership is recorded by the original source operation.
     /// Generated text and filename classifications cannot establish it.
     pub(crate) fn is_authored_body_fact(&self) -> bool {

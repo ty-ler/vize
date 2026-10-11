@@ -14,8 +14,12 @@ pub(super) fn reconcile(
     overlays: &FxHashMap<PathBuf, &str>,
     protected: &FxHashSet<PathBuf>,
     resolver: &mut crate::PackageRouteResolver,
-    facts: &mut NativeFacts,
+    registration: (
+        &mut NativeFacts,
+        &crate::batch::virtual_project::package_source_index::RegisteredPackageGeneration,
+    ),
 ) -> Option<Vec<PathBuf>> {
+    let (facts, generation) = registration;
     let root = mirror.project_root().to_path_buf();
     let settings = facts.factory(
         mirror.package_resolution_settings_observed(),
@@ -41,7 +45,7 @@ pub(super) fn reconcile(
         scanned.remove(path);
     }
     let mut registration = mirror
-        .register_package_route_targets_observed_with_inputs(&facts.witness())
+        .register_package_route_targets_observed_retaining_generation(&facts.witness(), generation)
         .ok()?;
     loop {
         let specifiers = package_specifiers_from_frontier(mirror, &mut scanned);
@@ -104,7 +108,10 @@ pub(super) fn reconcile(
         // before emptiness can prove closure. Carry that very token forward;
         // do not repeat the registration at the next wave's entry.
         registration = mirror
-            .register_package_route_targets_observed_with_inputs(&facts.witness())
+            .register_package_route_targets_observed_retaining_generation(
+                &facts.witness(),
+                generation,
+            )
             .ok()?;
         // Newly reached modules and package entry sources use the same full
         // overlay scope on the next actual scoped walk. Known retained targets

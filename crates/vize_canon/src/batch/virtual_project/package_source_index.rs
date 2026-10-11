@@ -11,7 +11,7 @@ use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
 
 mod ownership;
-pub(crate) use ownership::RegisteredPackageRoots;
+pub(crate) use ownership::{RegisteredPackageGeneration, RegisteredPackageRoots};
 
 pub(super) fn empty(observe: bool) -> Consumed<()> {
     Consumed {

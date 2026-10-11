@@ -1,4 +1,4 @@
-//! Draft source laws only: not compiled or executed.
+//! Whole registry laws and operation-owned package generation controls.
 
 use super::super::{
     FactRole, FxHashMap, FxHashSet, PackageRouteKey, PackageSources, Path, PathBuf, VirtualProject,
@@ -294,3 +294,5 @@ fn ordinary_registration_consumes_actual_policy_settings_and_alias_witness() {
     assert_eq!(project.package_roots_for_importer(&source, true), [package]);
     // This is the bounded registry/scanner packet, not native host/codegen completion.
 }
+
+mod generation;

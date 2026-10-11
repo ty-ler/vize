@@ -1,10 +1,12 @@
 use super::{CorsaResult, FxHashSet, VirtualProject};
-use crate::batch::virtual_project::package_source_index::{RegisteredPackageRoots, empty, finish};
+use crate::batch::virtual_project::package_source_index::{
+    RegisteredPackageGeneration, RegisteredPackageRoots, empty, finish,
+};
 use crate::package_route::stamp::Consumed;
 
 impl VirtualProject {
     pub(crate) fn register_package_route_targets(&mut self) -> CorsaResult<()> {
-        self.register_package_route_targets_consumed(false, None)
+        self.register_package_route_targets_consumed(false, None, None)
             .map(|_| ())
     }
 
@@ -12,7 +14,7 @@ impl VirtualProject {
     pub(crate) fn register_package_route_targets_observed(
         &mut self,
     ) -> CorsaResult<Consumed<RegisteredPackageRoots>> {
-        let facts = self.register_package_route_targets_consumed(true, None)?;
+        let facts = self.register_package_route_targets_consumed(true, None, None)?;
         let value = self.snapshot_registered_package_roots();
         Ok(finish(facts, value))
     }
@@ -21,15 +23,26 @@ impl VirtualProject {
         &mut self,
         inputs: &Consumed<()>,
     ) -> CorsaResult<Consumed<RegisteredPackageRoots>> {
-        let facts = self.register_package_route_targets_consumed(true, Some(inputs))?;
+        let facts = self.register_package_route_targets_consumed(true, Some(inputs), None)?;
         let value = self.snapshot_registered_package_roots();
         Ok(finish(facts, value))
+    }
+
+    pub(crate) fn register_package_route_targets_observed_retaining_generation(
+        &mut self,
+        inputs: &Consumed<()>,
+        generation: &RegisteredPackageGeneration,
+    ) -> CorsaResult<Consumed<RegisteredPackageRoots>> {
+        let facts =
+            self.register_package_route_targets_consumed(true, Some(inputs), Some(generation))?;
+        Ok(finish(facts, self.snapshot_registered_package_roots()))
     }
 
     fn register_package_route_targets_consumed(
         &mut self,
         observe: bool,
         inputs: Option<&Consumed<()>>,
+        generation: Option<&RegisteredPackageGeneration>,
     ) -> CorsaResult<Consumed<()>> {
         let mut facts = empty(observe);
         if self.package_routes_need_refresh {
@@ -54,7 +67,27 @@ impl VirtualProject {
                 break;
             }
             targets.sort();
-            self.register_paths_with_consumption(&targets, observe, &mut facts)?;
+            let fresh = targets
+                .iter()
+                .filter(|path| {
+                    let retained = generation.zip(inputs).is_some_and(|(generation, inputs)| {
+                        inputs.qualified
+                            && generation.sources.contains(*path)
+                            && self.registered_package_roots_are_current(&generation.roots)
+                            && self.find_by_original(path).is_some_and(|file| {
+                                self.original_content_for_virtual(&file.virtual_path)
+                                    .is_some_and(|body| {
+                                        inputs.stamps.iter().any(|stamp| {
+                                            stamp.has_registered_body(path, body.as_bytes())
+                                        })
+                                    })
+                            })
+                    });
+                    !retained
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            self.register_paths_with_consumption(&fresh, observe, &mut facts)?;
             self.reconcile_package_routes_for_importers_with_consumption(
                 &targets, observe, &mut facts, inputs,
             );
