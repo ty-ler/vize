@@ -11,7 +11,7 @@ const read = file => JSON.parse(readFileSync(`${root}/${file}`, 'utf8'));
 const digest = value => createHash('sha256').update(value).digest('hex');
 const head = () => execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const before = '2eed646c3293d83bf14d005c02b068e81909867f';
-const after = '73cb0c7e79c60040e248c4be0e59ada78ab54073';
+const after = '6a279bc77f531c95abb58ee5b90c634354ef5f3f';
 const command = process.argv[2];
 
 if (command === 'binding') {

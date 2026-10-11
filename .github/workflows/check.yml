@@ -72,7 +72,7 @@ jobs:
           git diff --name-only > evidence/before-generated-paths.txt
           test "$(cat evidence/before-generated-paths.txt)" = 'npm/native/index.d.ts'
           git restore -- npm/native/index.d.ts
-          git checkout 73cb0c7e79c60040e248c4be0e59ada78ab54073
+          git checkout 6a279bc77f531c95abb58ee5b90c634354ef5f3f
           git diff --exit-code
           git diff --cached --exit-code
           git status --porcelain > evidence/after-source-status.txt
