@@ -9,8 +9,10 @@ enum Phase {
     BeforeRoutes,
 }
 
+type Hook = (Phase, Box<dyn FnOnce()>);
+
 thread_local! {
-    static HOOK: RefCell<Option<(Phase, Box<dyn FnOnce()>)>> = const { RefCell::new(None) };
+    static HOOK: RefCell<Option<Hook>> = const { RefCell::new(None) };
 }
 
 fn arrive(phase: Phase) {

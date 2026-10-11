@@ -23,6 +23,29 @@ const root = new URL("../../", import.meta.url);
 const baseline = "df7f2e83722371a71c75bc29208be0ed51491579";
 const predecessor = "ad9efeef994cb58b39a76c84fc9cac497f65f695";
 const reviewedSource = "27243d0b5ed2e0ba24bf90a3904615f3ab628a6b";
+// PR tooling uses a shallow checkout. Fetch only the immutable, archived
+// source objects; a missing commit must never masquerade as an absent file.
+const sourceCommits = [
+  baseline,
+  predecessor,
+  reviewedSource,
+  review.deferredActualMainComposition.actualMain,
+];
+const missingCommits = sourceCommits.filter(
+  (ref) => spawnSync("git", ["cat-file", "-e", `${ref}^{commit}`], { cwd: root }).status !== 0,
+);
+if (missingCommits.length) {
+  const fetched = spawnSync(
+    "git",
+    ["fetch", "--no-tags", "--depth=1", "origin", ...missingCommits],
+    {
+      cwd: root,
+    },
+  );
+  assert.equal(fetched.status, 0, fetched.stderr.toString());
+}
+for (const ref of sourceCommits)
+  assert.equal(spawnSync("git", ["cat-file", "-e", `${ref}^{commit}`], { cwd: root }).status, 0);
 const bodies = new Map<string, string | null>();
 function gitDigest(ref: string, file: string) {
   const key = `${ref}:${file}`;
@@ -37,7 +60,7 @@ const digest: Digest = (side, file) =>
   gitDigest(side === "before" ? baseline : reviewedSource, file);
 const production = [
   ...new Set([...issuedCompletionProduction, ...review.reviewedProductionFiles]),
-].toSorted();
+].toSorted((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 const reviewedRows = [...review.productionBodies, ...review.harnessBodies];
 const qualify = (files = production, current: Digest = digest, owned = new Set<string>()) =>
   qualifyConfigReviewHost(files, owned, current, qualifyIssuedCompletionHost);

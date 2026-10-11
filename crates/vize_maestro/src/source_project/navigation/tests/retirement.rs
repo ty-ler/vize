@@ -122,7 +122,7 @@ fn retired_projects_refuse_issued_and_ready_work_without_mutating_document_versi
     project.retire();
     assert!(cancel.is_aborted());
     assert!(matches!(
-        block_on(issued.run(|_| async { () })),
+        block_on(issued.run(|_| async {})),
         Err(SnapshotRefusal::Cancelled)
     ));
     assert_eq!(state.documents.version(&uri), Some(7));
