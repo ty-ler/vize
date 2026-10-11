@@ -9,7 +9,10 @@ import {
   qualifyIssuedCompletionHost,
 } from "../performance/support/warm-type-backed-issued-completion-host.ts";
 import { qualifyComponentOwnerMigrationHost } from "../performance/support/warm-type-backed-component-owner-migration-host.ts";
-import { componentIssuedSourcePair } from "./support/component-issued-source.ts";
+import {
+  componentIssuedSourcePair,
+  qualifyCurrentComponentIssuedSource,
+} from "./support/component-issued-source.ts";
 import { componentOwnerSourcePair } from "./support/component-owner-migration-source.ts";
 
 for (const composed of [false, true]) {
@@ -36,7 +39,15 @@ for (const composed of [false, true]) {
     assert.equal(result.supplementalResolves, 8);
     assert.equal(result.supplementalRefusals, 8);
     assert.equal(result.originalComparedFields, 20);
-    assert.ok(qualify(pair.actual));
+    const current = qualify(pair.actual) ?? qualifyCurrentComponentIssuedSource(composed);
+    assert.ok(current);
+    if ("configReviewContext" in current) {
+      assert.equal(current.configReviewContext.scope, composed ? "parent-pair" : "inherited");
+      assert.equal(current.files.length, composed ? 135 : 28);
+      assert.equal(current.originalQualification.files.length, composed ? 119 : 28);
+      assert.equal(current.configReviewContext.completeProductionBodyPairs.length, 27);
+      assert.equal(current.configReviewContext.completeHarnessBodyPairs.length, 4);
+    }
     if (composed) assert.deepEqual(pair.production, componentIssuedProduction);
   });
 
