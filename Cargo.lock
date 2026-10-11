@@ -587,8 +587,6 @@ dependencies = [
 [[package]]
 name = "corsa_core"
 version = "1.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e1b70c8d7c6decd3d6cff7487542e0eaa4437786bbcb8e04e2c2b73c778c715"
 dependencies = [
  "base64",
  "compact_str",
@@ -617,8 +615,6 @@ dependencies = [
 [[package]]
 name = "corsa_lsp"
 version = "1.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5223d92bf4e87bee6e4aae2c85948894fb7a92618fc5264d7f8ce7c599212f8"
 dependencies = [
  "corsa_core",
  "corsa_jsonrpc",
