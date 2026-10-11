@@ -24,3 +24,16 @@ recipe and rendered reading-path checks.
 Four focused source tests pass on the public-integration composition. Exact-head
 Actions, the protected Stack queue, installed/editor acceptance and release are
 still required; this source repair closes none of those gates.
+
+## Composed Japanese Vite guide
+
+The full authored Japanese Vite review from #8650 composes with #8447 shared
+native `vize` settings, optional dedicated formats and configuration discovery.
+All ten whole original examples remain byte-exact, as do the original fifteen
+link destinations in their order and multiplicity. The five original bookmarks
+stay present; an explicit alias preserves the replaced dedicated-settings heading.
+The source check permits its one dedicated-reference destination only when the
+actual English page declares the complete shared-native contract. A forged or
+partial contract refuses that successor. Legacy-mode exclusions and every current
+option row remain explicit. Exact-head source/native Docs Actions, protected Stack
+delivery and deployed reading acceptance remain required.
