@@ -188,6 +188,47 @@ jobs:
         working-directory: npm/cli
       - name: Hydrate unchanged licensed n8n CLI inputs
         run: git submodule update --init --depth 1 -- tests/_fixtures/_git/n8n
+      - name: Install the original pinned n8n editor workspace dependencies
+        run: |
+          fixture="$GITHUB_WORKSPACE/tests/_fixtures/_git/n8n"
+          receipt="$GITHUB_WORKSPACE/target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}/workspace-hydration"
+          mkdir -p "$receipt"
+          git -C "$fixture" rev-parse HEAD > "$receipt/n8n-source-sha.txt"
+          git -C "$fixture" diff --exit-code
+          sha256sum "$fixture/package.json" "$fixture/pnpm-lock.yaml" \
+            "$fixture/pnpm-workspace.yaml" \
+            "$fixture/packages/frontend/editor-ui/tsconfig.json" \
+            "$fixture/packages/@n8n/typescript-config/package.json" \
+            > "$receipt/original-inputs.sha256"
+          npm exec --yes --package=pnpm@12.4.2 -- pnpm --version \
+            | tee "$receipt/pnpm-version.txt"
+          test "$(cat "$receipt/pnpm-version.txt")" = 12.4.2
+          (
+            cd "$fixture"
+            npm exec --yes --package=pnpm@12.4.2 -- pnpm install \
+              --frozen-lockfile --ignore-scripts --filter 'n8n-editor-ui...' \
+              --reporter append-only
+          ) 2>&1 | tee "$receipt/install.log"
+          sha256sum --check "$receipt/original-inputs.sha256"
+          git -C "$fixture" diff --exit-code
+          vp node --input-type=module - "$fixture" "$receipt" <<'NODE'
+          import assert from 'node:assert/strict';
+          import crypto from 'node:crypto';
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import { createRequire } from 'node:module';
+          const [fixture, receipt] = process.argv.slice(2);
+          const original = JSON.parse(fs.readFileSync(path.join(fixture, 'package.json'), 'utf8'));
+          assert.equal(original.packageManager, 'pnpm@12.4.2');
+          const require = createRequire(path.join(fixture, 'packages/frontend/editor-ui/package.json'));
+          const selected = fs.realpathSync(require.resolve('@n8n/typescript-config/tsconfig.frontend.json'));
+          const authored = fs.realpathSync(path.join(fixture, 'packages/@n8n/typescript-config/tsconfig.frontend.json'));
+          assert.deepEqual(fs.readFileSync(selected), fs.readFileSync(authored), 'the selected config must preserve the original pinned workspace bytes');
+          const installedManifest = require.resolve('@n8n/typescript-config/package.json');
+          assert.deepEqual(fs.readFileSync(installedManifest), fs.readFileSync(path.join(fixture, 'packages/@n8n/typescript-config/package.json')));
+          const sha256 = crypto.createHash('sha256').update(fs.readFileSync(selected)).digest('hex');
+          fs.writeFileSync(path.join(receipt, 'selected-config.json'), `${JSON.stringify({ packageManager: original.packageManager, selected, authored, sha256 }, null, 2)}\n`);
+          NODE
       - name: Verify current-source CLI configuration, entries and independent witnesses
         run: |
           vp node --test tests/tooling/n8n-cli-config-contract.test.mjs tests/tooling/n8n-cli-config-failure-custody.test.mjs
