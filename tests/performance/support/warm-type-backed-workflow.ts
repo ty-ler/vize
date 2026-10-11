@@ -9,7 +9,7 @@ import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
 import { allowed } from "./warm-type-backed-production-paths.ts";
 import { qualifyProjectConfigLoaderHost } from "./warm-type-backed-project-config-loader-host.ts";
 import { qualifyIssuedCompletionHost } from "./warm-type-backed-issued-completion-host.ts";
-import { qualifyConfigReviewHost } from "./warm-type-backed-config-review-host.ts";
+import { qualifyConfigRepairedReviewHost } from "./warm-type-backed-config-repair-host.ts";
 import {
   driverRoot,
   git,
@@ -126,7 +126,7 @@ if (process.argv[2] === "prepare") {
       qualifyIssuedCompletionHost(production, allowed, (side, file) =>
         gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
       ) ??
-      qualifyConfigReviewHost(
+      qualifyConfigRepairedReviewHost(
         production,
         allowed,
         (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
