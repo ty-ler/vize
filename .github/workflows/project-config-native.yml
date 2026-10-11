@@ -6,9 +6,7 @@ on:
     paths:
       - ".github/workflows/project-config-native.yml"
       - "crates/vize/tests/project_config_cli**"
-      - "crates/vize/tests/project_config_cli/**"
       - "crates/vize/tests/support/lsp_process**"
-      - "crates/vize/tests/support/lsp_process/**"
       - "tests/differential/project-config-native-receipt.ts"
       - "tests/differential/project-config-native-run.ts"
       - "tests/differential/build-receipt.ts"
