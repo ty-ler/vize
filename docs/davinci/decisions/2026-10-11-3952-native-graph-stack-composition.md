@@ -344,3 +344,7 @@ entry, every changed body on either side, and identical bytes with changed
 Git mode/type. Scoped type-aware lint has no warnings. These source proofs
 grant no lifecycle, resource, full Nix or measured speed result; the single
 new exact-source original campaign remains required before draft admission.
+
+Full `38131637079` and PR tests found the DFS test's child module path missing:
+its parent uses `#[path]`. Add the explicit existing test path, retaining every
+production operation and assertion, and refresh its complete body manifest.

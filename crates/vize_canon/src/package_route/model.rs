@@ -324,4 +324,5 @@ pub struct PackageRouteMetrics {
 }
 
 #[cfg(all(test, feature = "native"))]
+#[path = "model/route_order_tests.rs"]
 mod route_order_tests;
