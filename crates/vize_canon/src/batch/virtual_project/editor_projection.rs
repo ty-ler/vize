@@ -3,7 +3,9 @@
 //! makes references query offsets from a different program than diagnostics.
 
 use super::{VirtualProject, VueDocumentVirtualTs, VueDocumentVirtualTsOptions};
+use crate::package_route::stamp::{Consumed, FactOwner, FactRole};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 impl VirtualProject {
     /// Keep reachable implementation files in one stable configured project.
@@ -95,43 +97,136 @@ impl VirtualProject {
     /// registered. Out-of-root modules have private mirror identities, so an
     /// authored `../shared` cannot be left relative to the generated host.
     pub(crate) fn finalize_editor_imports(&mut self) {
+        self.finalize_editor_imports_consumed(false);
+    }
+
+    pub(crate) fn finalize_editor_imports_observed(&mut self) -> Consumed<()> {
+        self.finalize_editor_imports_consumed(true)
+    }
+
+    fn finalize_editor_imports_consumed(&mut self, observe: bool) -> Consumed<()> {
+        let mut facts = Consumed {
+            value: (),
+            stamps: Vec::new(),
+            qualified: observe,
+        };
         if self.editor_document_options.is_none() {
-            return;
+            facts.qualified = false;
+            return facts;
         }
-        let aliases = self.dependency_alias_map();
+        let mut consumed = if observe {
+            self.dependency_alias_map_observed()
+        } else {
+            Consumed {
+                value: self.dependency_alias_map(),
+                stamps: Vec::new(),
+                qualified: false,
+            }
+        };
+        if observe {
+            let owner = Arc::new(FactOwner {
+                path: self.project_root.clone(),
+                role: FactRole::Configuration,
+            });
+            consumed.stamps = consumed
+                .stamps
+                .into_iter()
+                .map(|stamp| {
+                    if stamp.owner().is_none() {
+                        stamp.with_owner(owner.clone())
+                    } else {
+                        stamp
+                    }
+                })
+                .collect();
+        }
+        let aliases = Self::consume_configuration(&mut facts, consumed);
         let rewrites = self
             .virtual_files_sorted()
             .into_iter()
             .filter_map(|file| {
                 let source = self.module_source(file)?;
                 let resolver = |specifier: &str, _| {
-                    let path = super::dependency_scan::resolve_dependency(
-                        specifier,
-                        file.original_path.parent()?,
-                        &self.project_root,
-                        &aliases,
-                    )?;
-                    let target = self
-                        .find_by_original(&vize_carton::path::canonicalize_non_verbatim(&path))?;
-                    let path = if crate::batch::declaration_path::is_declaration_file(
-                        &target.virtual_path,
-                    ) {
-                        crate::batch::declaration_module_path(&target.virtual_path)
-                    } else {
-                        target.virtual_path.clone()
+                    let mut local = Consumed {
+                        value: (),
+                        stamps: Vec::new(),
+                        qualified: observe,
                     };
-                    Some(path.to_string_lossy().replace('\\', "/"))
+                    let value = (|| {
+                        let Some(directory) = file.original_path.parent() else {
+                            local.qualified = false;
+                            return None;
+                        };
+                        let path = if observe {
+                            Self::consume_configuration(
+                                &mut local,
+                                super::dependency_scan::resolve_dependency_observed(
+                                    specifier,
+                                    directory,
+                                    &self.project_root,
+                                    &aliases,
+                                ),
+                            )
+                            .0
+                        } else {
+                            super::dependency_scan::resolve_dependency(
+                                specifier,
+                                directory,
+                                &self.project_root,
+                                &aliases,
+                            )
+                        }?;
+                        let path = if observe {
+                            Self::consume_configuration(
+                                &mut local,
+                                Self::canonical_configuration_path(&path, true),
+                            )
+                        } else {
+                            vize_carton::path::canonicalize_non_verbatim(&path)
+                        };
+                        let target = self.find_by_original(&path)?;
+                        let path = if crate::batch::declaration_path::is_declaration_file(
+                            &target.virtual_path,
+                        ) {
+                            crate::batch::declaration_module_path(&target.virtual_path)
+                        } else {
+                            target.virtual_path.clone()
+                        };
+                        Some(path.to_string_lossy().replace('\\', "/"))
+                    })();
+                    Consumed {
+                        value,
+                        stamps: local.stamps,
+                        qualified: local.qualified,
+                    }
                 };
                 let source_type = super::build::source_type_for_path(&file.virtual_path)?;
-                let rewritten = self
-                    .rewriter
-                    .rewrite_with_alias_resolver_and_missing_vue_policy(
-                        source,
-                        source_type,
-                        file.original_path.parent(),
-                        &resolver,
-                        true,
-                    );
+                let mut rewritten = self.rewriter.rewrite_with_alias_resolver_consumed(
+                    source,
+                    source_type,
+                    file.original_path.parent(),
+                    resolver,
+                    true,
+                    observe,
+                );
+                if observe {
+                    let owner = Arc::new(FactOwner {
+                        path: file.original_path.clone(),
+                        role: FactRole::LocalImporter,
+                    });
+                    rewritten.stamps = rewritten
+                        .stamps
+                        .into_iter()
+                        .map(|stamp| {
+                            if stamp.owner().is_none() {
+                                stamp.with_owner(owner.clone())
+                            } else {
+                                stamp
+                            }
+                        })
+                        .collect();
+                }
+                let rewritten = Self::consume_configuration(&mut facts, rewritten);
                 Some((file.virtual_path.clone(), rewritten))
             })
             .collect::<Vec<_>>();
@@ -141,6 +236,7 @@ impl VirtualProject {
                 file.source_map.import_map = rewritten.source_map;
             }
         }
+        facts
     }
 
     pub(crate) fn editor_vue_document(
@@ -174,3 +270,6 @@ impl VirtualProject {
         ))
     }
 }
+
+#[cfg(test)]
+mod consumed_tests;

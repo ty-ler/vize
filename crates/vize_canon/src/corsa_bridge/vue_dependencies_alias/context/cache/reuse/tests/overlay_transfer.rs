@@ -31,8 +31,8 @@ fn released_then_reacquired_known_overlay_cannot_be_replaced_by_disk_registratio
     assert!(fixture.guard(host, &overlays).is_ok());
     let transferred = fixture.open(host, &overlays);
     assert!(
-        !transferred.graph_reused,
-        "post-walk supplied authority must catch reacquisition from disk"
+        transferred.graph_reused,
+        "the qualified scoped walk must preserve supplied authority on reacquisition"
     );
     let mirror = transferred.mirror.as_ref().unwrap();
     let file = mirror.find_by_original(&target).unwrap();

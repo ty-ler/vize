@@ -182,7 +182,7 @@ fn unrelated_requested_membership_retains_the_original_cold_constructor() {
 }
 
 #[test]
-fn deleting_a_first_party_alias_target_preserves_cold_package_lookup_provenance() {
+fn deleting_a_first_party_alias_target_uses_a_completed_negative_lookup_with_cold_output() {
     let host = HOST.replace("./Child.vue", "@/Child.vue");
     let fixture = Fixture::new(&host);
     let empty = FxHashMap::default();
@@ -190,8 +190,8 @@ fn deleting_a_first_party_alias_target_preserves_cold_package_lookup_provenance(
     std::fs::remove_file(fixture.root.join("src/Child.vue")).unwrap();
     let deleted = fixture.open(&host, &empty);
     assert!(
-        !deleted.graph_reused,
-        "an unresolved paths alias may introduce new package inputs"
+        deleted.graph_reused,
+        "actual deleted-body and completed negative lookup ownership must qualify reuse"
     );
     fixture.assert_cold_equal(&deleted, &host, &empty);
 }
@@ -238,8 +238,8 @@ fn an_already_open_unrelated_buffer_uses_unsaved_bytes_when_it_becomes_reachable
     );
     let reached = fixture.open(&edited, &overlays);
     assert!(
-        !reached.graph_reused,
-        "a newly reached supplied overlay must use the full cold producer"
+        reached.graph_reused,
+        "the qualified scoped walk must register the full supplied overlay"
     );
     let mirror = reached.mirror.as_ref().unwrap();
     let file = mirror.find_by_original(&path).unwrap();

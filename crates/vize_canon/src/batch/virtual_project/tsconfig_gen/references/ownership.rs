@@ -81,11 +81,35 @@ impl TsconfigOwnershipCache {
     /// The root project followed by every transitive reference, in declaration
     /// order and with cycles/deduplicated diamonds visited once.
     pub fn project_paths(&mut self, tsconfig_path: &Path) -> Vec<PathBuf> {
-        let resolved = graph::normalize_path(tsconfig_path);
-        self.project_paths
+        self.project_paths_consumed(tsconfig_path, false).value
+    }
+
+    pub(super) fn project_paths_consumed(
+        &mut self,
+        tsconfig_path: &Path,
+        observe: bool,
+    ) -> crate::package_route::stamp::Consumed<Vec<PathBuf>> {
+        use super::super::super::project::consumption::{empty, finish, take};
+        let mut facts = empty(observe);
+        let resolved = take(
+            &mut facts,
+            graph::normalize_path_consumed(tsconfig_path, observe),
+        );
+        // Same existing map/entry/default execution. An occupied value has no stored facts.
+        let mut computed = false;
+        let value = self
+            .project_paths
             .entry(resolved)
-            .or_insert_with_key(|root| graph::collect_project_paths(root))
-            .clone()
+            .or_insert_with_key(|root| {
+                let consumed = graph::collect_project_paths_consumed(root, observe);
+                computed = true;
+                take(&mut facts, consumed)
+            })
+            .clone();
+        if !computed {
+            facts.qualified = false;
+        }
+        finish(facts, value)
     }
 
     /// Whether a single effective project includes `source_path`.
@@ -100,6 +124,20 @@ impl TsconfigOwnershipCache {
             return false;
         };
         spec.includes(source_path, case_sensitive, source_kind)
+    }
+
+    fn project_owns_source_consumed(
+        &mut self,
+        tsconfig_path: &Path,
+        source_path: &Path,
+        source_kind: TsconfigSourceKind,
+        _observe: bool,
+    ) -> crate::package_route::stamp::Consumed<bool> {
+        crate::package_route::stamp::Consumed {
+            value: self.project_owns_source(tsconfig_path, source_path, source_kind),
+            stamps: Vec::new(),
+            qualified: false,
+        }
     }
 
     /// The inherited `compilerOptions.allowJs` for one effective project.
@@ -118,21 +156,51 @@ impl TsconfigOwnershipCache {
         source_path: &Path,
         source_kind: TsconfigSourceKind,
     ) -> PathBuf {
-        let projects = self.project_paths(tsconfig_path);
-        let root = projects
-            .first()
-            .cloned()
-            .unwrap_or_else(|| graph::normalize_path(tsconfig_path));
+        self.effective_config_for_source_consumed(tsconfig_path, source_path, source_kind, false)
+            .value
+    }
+
+    pub(super) fn effective_config_for_source_consumed(
+        &mut self,
+        tsconfig_path: &Path,
+        source_path: &Path,
+        source_kind: TsconfigSourceKind,
+        observe: bool,
+    ) -> crate::package_route::stamp::Consumed<PathBuf> {
+        use super::super::super::project::consumption::{empty, finish, take};
+        let mut facts = empty(observe);
+        let projects = take(
+            &mut facts,
+            self.project_paths_consumed(tsconfig_path, observe),
+        );
+        let root = projects.first().cloned().unwrap_or_else(|| {
+            take(
+                &mut facts,
+                graph::normalize_path_consumed(tsconfig_path, observe),
+            )
+        });
+        // Single proven leaf: all original ownership outcomes select this same root.
+        let single_leaf = facts.qualified && projects.len() == 1;
         let mut owner = None;
         for project in projects {
-            if !self.project_owns_source(&project, source_path, source_kind) {
+            let ownership =
+                self.project_owns_source_consumed(&project, source_path, source_kind, observe);
+            let owns = if single_leaf {
+                ownership.value
+            } else {
+                take(&mut facts, ownership)
+            };
+            if !owns {
                 continue;
             }
             if owner.is_some() {
-                return root;
+                return finish(facts, root);
             }
             owner = Some(project);
         }
-        owner.unwrap_or(root)
+        finish(facts, owner.unwrap_or(root))
     }
 }
+
+#[cfg(test)]
+mod consumed_selection_tests;

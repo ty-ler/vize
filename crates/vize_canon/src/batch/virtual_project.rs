@@ -91,7 +91,7 @@ mod package_shadow;
 mod package_shadow_owners;
 mod package_shadow_runtime;
 mod package_shadow_scope;
-mod package_source_index;
+pub(crate) mod package_source_index;
 mod passthrough;
 mod paths;
 pub(in crate::batch) use paths::script_virtual_path;

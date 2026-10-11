@@ -8,3 +8,6 @@ mod lifecycle;
 mod overlay_transfer;
 mod packages;
 mod support;
+
+mod consumed_native;
+mod deletion_bridge;

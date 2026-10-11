@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use serde_json::Value;
 use vize_carton::FxHashMap;
 
-use super::stamp::{InputStamp, InputStampCache, manifest_path};
+use super::stamp::{Consumed, InputStamp, InputStampCache, manifest_path};
 
 const MANIFEST_CACHE_CAPACITY: usize = 1_024;
 
@@ -51,17 +51,22 @@ impl PackageSearchCache {
         self.evictions
     }
 
+    #[cfg(test)]
     fn read_manifest(&mut self, root: &Path) -> Option<Value> {
+        self.read_manifest_observed(root).value
+    }
+
+    fn read_manifest_observed(&mut self, root: &Path) -> Consumed<Option<Value>> {
         let path = manifest_path(root);
         let validation_epoch = self.validation_epoch;
         if let Some(cached) = self.manifests.get_mut(&path) {
             let current = validation_epoch != 0 && cached.last_validated_epoch == validation_epoch
                 || if validation_epoch == 0 {
-                    cached.stamp.is_current()
+                    cached.stamp.route_cache_is_current()
                 } else {
                     cached
                         .stamp
-                        .is_current_with_cache(&mut self.stamp_snapshots)
+                        .route_cache_is_current_with_cache(&mut self.stamp_snapshots)
                 };
             if current {
                 if validation_epoch != 0 {
@@ -69,19 +74,39 @@ impl PackageSearchCache {
                 }
                 self.clock = self.clock.wrapping_add(1);
                 cached.last_used = self.clock;
-                return cached.value.clone();
+                let stamp = cached.stamp.retained_consumed_source();
+                return Consumed {
+                    value: cached.value.clone(),
+                    qualified: path.is_absolute()
+                        && stamp
+                            .as_ref()
+                            .is_some_and(|stamp| !stamp.has_non_not_found_read_failure()),
+                    stamps: stamp.into_iter().collect(),
+                };
             }
         }
         self.manifests.remove(&path);
-        let stamp = if self.validation_epoch == 0 {
+        let mut stamp = if self.validation_epoch == 0 {
             InputStamp::capture(&path)
         } else {
             self.stamp_snapshots.capture(&path)
         };
         self.manifest_reads += 1;
-        let value = std::fs::read_to_string(&path)
-            .ok()
-            .and_then(|content| serde_json::from_str(&content).ok());
+        let value = match std::fs::read_to_string(&path) {
+            Ok(content) => {
+                stamp = stamp.with_consumed_source(content.as_bytes());
+                serde_json::from_str(&content).ok()
+            }
+            Err(error) => {
+                stamp = stamp.with_consumed_read_failure(error.kind());
+                None
+            }
+        };
+        let consumed = stamp.retained_consumed_source();
+        let qualified = path.is_absolute()
+            && consumed
+                .as_ref()
+                .is_some_and(|stamp| !stamp.has_non_not_found_read_failure());
         if self.manifests.len() >= MANIFEST_CACHE_CAPACITY {
             let oldest = self
                 .manifests
@@ -103,7 +128,11 @@ impl PackageSearchCache {
                 last_validated_epoch: self.validation_epoch,
             },
         );
-        value
+        Consumed {
+            value,
+            stamps: consumed.into_iter().collect(),
+            qualified,
+        }
     }
 }
 
@@ -156,20 +185,27 @@ fn is_absolute_specifier(specifier: &str) -> bool {
     )
 }
 
-pub(super) fn find_package_root(
+pub(super) fn find_package_root_observed(
     importer_dir: &Path,
     package: &str,
     invalidation_paths: &mut Vec<PathBuf>,
     cache: &mut PackageSearchCache,
-) -> Option<PathBuf> {
-    // Node resolves a package self-reference from the nearest package scope
-    // before walking `node_modules`. Do that as a separate cached pass so a
-    // same-named nested install cannot shadow the authored package itself.
+) -> Consumed<Option<PathBuf>> {
+    let mut stamps = Vec::new();
+    let mut qualified = importer_dir.is_absolute();
+    // Preserve the separate nearest-scope self-reference pass and early break.
     for dir in importer_dir.ancestors() {
         invalidation_paths.push(dir.join("package.json"));
-        if let Some(manifest) = read_manifest(dir, cache) {
+        let consumed = read_manifest_observed(dir, cache);
+        stamps.extend(consumed.stamps);
+        qualified &= consumed.qualified;
+        if let Some(manifest) = consumed.value {
             if manifest.get("name").and_then(Value::as_str) == Some(package) {
-                return Some(dir.to_path_buf());
+                return Consumed {
+                    value: Some(dir.to_path_buf()),
+                    stamps,
+                    qualified,
+                };
             }
             break;
         }
@@ -179,29 +215,55 @@ pub(super) fn find_package_root(
         let manifest = candidate.join("package.json");
         invalidation_paths.push(candidate.clone());
         invalidation_paths.push(manifest.clone());
-        if manifest.is_file() {
-            return Some(candidate);
+        let is_file = manifest.is_file();
+        stamps.push(InputStamp::observed_is_file(manifest, is_file));
+        if is_file {
+            return Consumed {
+                value: Some(candidate),
+                stamps,
+                qualified,
+            };
         }
     }
-    None
+    Consumed {
+        value: None,
+        stamps,
+        qualified,
+    }
 }
 
-pub(super) fn nearest_package_manifest(
+pub(super) fn nearest_package_manifest_observed(
     start: &Path,
     invalidation_paths: &mut Vec<PathBuf>,
     cache: &mut PackageSearchCache,
-) -> Option<(PathBuf, Value)> {
+) -> Consumed<Option<(PathBuf, Value)>> {
+    let mut stamps = Vec::new();
+    let mut qualified = start.is_absolute();
     for dir in start.ancestors() {
         invalidation_paths.push(dir.join("package.json"));
-        if let Some(manifest) = read_manifest(dir, cache) {
-            return Some((dir.to_path_buf(), manifest));
+        let consumed = read_manifest_observed(dir, cache);
+        stamps.extend(consumed.stamps);
+        qualified &= consumed.qualified;
+        if let Some(manifest) = consumed.value {
+            return Consumed {
+                value: Some((dir.to_path_buf(), manifest)),
+                stamps,
+                qualified,
+            };
         }
     }
-    None
+    Consumed {
+        value: None,
+        stamps,
+        qualified,
+    }
 }
 
-pub(super) fn read_manifest(root: &Path, cache: &mut PackageSearchCache) -> Option<Value> {
-    cache.read_manifest(root)
+pub(super) fn read_manifest_observed(
+    root: &Path,
+    cache: &mut PackageSearchCache,
+) -> Consumed<Option<Value>> {
+    cache.read_manifest_observed(root)
 }
 
 #[expect(clippy::disallowed_methods, reason = "fixtures use std strings")]
@@ -224,3 +286,6 @@ mod tests {
         assert_eq!(cache.evictions(), 1);
     }
 }
+
+#[cfg(test)]
+mod read_failure_tests;

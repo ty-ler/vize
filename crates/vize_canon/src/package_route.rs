@@ -33,9 +33,11 @@ use candidates::{
     collect_types_version_candidates,
 };
 use search::{
-    PackageRequest, PackageSearchCache, find_package_root, nearest_package_manifest, read_manifest,
+    PackageRequest, PackageSearchCache, find_package_root_observed,
+    nearest_package_manifest_observed, read_manifest_observed,
 };
 use source::{resolve_sources, resolve_workspace_source_fallbacks};
+use stamp::{Consumed, InputStamp};
 
 pub use cache::{PackageRouteLookup, PackageRouteResolver};
 #[cfg(feature = "native")]
@@ -85,13 +87,15 @@ impl PackagePathCache {
     }
 }
 
-fn lookup_uncached(
+fn lookup_uncached_observed(
     importer_dir: &Path,
     specifier: &str,
     options: PackageSourceOptions,
     search: &mut PackageSearchCache,
     canonical_paths: &mut PackagePathCache,
-) -> PackageRouteLookup {
+) -> Consumed<PackageRouteLookup> {
+    let mut stamps = Vec::new();
+    let mut qualified = importer_dir.is_absolute();
     let mut invalidation_paths = Vec::new();
     let mut watchable_negative = false;
     let route = resolve_uncached(
@@ -102,6 +106,8 @@ fn lookup_uncached(
         search,
         &mut watchable_negative,
         canonical_paths,
+        &mut stamps,
+        &mut qualified,
     );
     if let Some(route) = route.as_ref() {
         invalidation_paths.extend(route.invalidation_paths());
@@ -110,13 +116,21 @@ fn lookup_uncached(
     graph_inputs::collect(importer_dir, &mut invalidation_paths);
     invalidation_paths.sort();
     invalidation_paths.dedup();
-    cache::PackageRouteLookup {
-        route,
-        invalidation_paths,
-        watchable_negative,
+    Consumed {
+        value: cache::PackageRouteLookup {
+            route,
+            invalidation_paths,
+            watchable_negative,
+        },
+        stamps,
+        qualified,
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "retain the original resolver operation"
+)]
 fn resolve_uncached(
     importer_dir: &Path,
     specifier: &str,
@@ -125,9 +139,14 @@ fn resolve_uncached(
     search: &mut PackageSearchCache,
     watchable_negative: &mut bool,
     canonical_paths: &mut PackagePathCache,
+    stamps: &mut Vec<InputStamp>,
+    qualified: &mut bool,
 ) -> Option<PackageRoute> {
     let (package_link_root, manifest, request, package_name) = if specifier.starts_with('#') {
-        let (root, manifest) = nearest_package_manifest(importer_dir, invalidation_paths, search)?;
+        let consumed = nearest_package_manifest_observed(importer_dir, invalidation_paths, search);
+        stamps.extend(consumed.stamps);
+        *qualified &= consumed.qualified;
+        let (root, manifest) = consumed.value?;
         let package_name = manifest.get("name").and_then(Value::as_str).map(Into::into);
         (root, manifest, specifier.to_owned(), package_name)
     } else {
@@ -136,13 +155,18 @@ fn resolve_uncached(
         }
         let request = PackageRequest::parse(specifier)?;
         let package_name = request.package.into();
-        let Some(root) =
-            find_package_root(importer_dir, request.package, invalidation_paths, search)
-        else {
+        let consumed =
+            find_package_root_observed(importer_dir, request.package, invalidation_paths, search);
+        stamps.extend(consumed.stamps);
+        *qualified &= consumed.qualified;
+        let Some(root) = consumed.value else {
             *watchable_negative = true;
             return None;
         };
-        let Some(manifest) = read_manifest(&root, search) else {
+        let consumed = read_manifest_observed(&root, search);
+        stamps.extend(consumed.stamps);
+        *qualified &= consumed.qualified;
+        let Some(manifest) = consumed.value else {
             *watchable_negative = true;
             return None;
         };
@@ -151,8 +175,9 @@ fn resolve_uncached(
             .map_or_else(|| ".".to_owned(), |subpath| cstr!("./{subpath}").into());
         (root, manifest, request, Some(package_name))
     };
-    let package_root = canonical_path(&package_link_root, canonical_paths);
-    let manifest_path = canonical_path(&package_root.join("package.json"), canonical_paths);
+    *qualified &= package_link_root.is_absolute();
+    let package_root = canonical_path(&package_link_root, canonical_paths, stamps);
+    let manifest_path = canonical_path(&package_root.join("package.json"), canonical_paths, stamps);
     let mappings = if specifier.starts_with('#') {
         manifest.get("imports")
     } else {
@@ -179,6 +204,8 @@ fn resolve_uncached(
                 search,
                 watchable_negative,
                 canonical_paths,
+                stamps,
+                qualified,
             ) {
                 nested_routes.push(route);
             }
@@ -195,7 +222,13 @@ fn resolve_uncached(
     let workspace_source = !inside_node_modules(&package_root);
     for candidate in &candidates {
         invalidation_paths.push(candidate.clone());
-        let mut resolved = resolve_sources(candidate, options, invalidation_paths, canonical_paths);
+        let mut resolved = resolve_sources(
+            candidate,
+            options,
+            invalidation_paths,
+            canonical_paths,
+            stamps,
+        );
         if resolved.is_empty() && workspace_source {
             resolved = resolve_workspace_source_fallbacks(
                 candidate,
@@ -203,20 +236,22 @@ fn resolve_uncached(
                 options,
                 invalidation_paths,
                 canonical_paths,
+                stamps,
             );
         }
         if resolved.is_empty() && candidate.extension().is_some_and(|ext| ext == "vue") {
             resolved.push(source::ResolvedPackageSource {
-                source_path: canonical_path(candidate, canonical_paths),
+                source_path: canonical_path(candidate, canonical_paths, stamps),
                 native_probe_path: canonical_path(
                     &candidate.with_extension("d.vue.ts"),
                     canonical_paths,
+                    stamps,
                 ),
             });
         }
         for source in resolved {
             let route_source = PackageRouteSource {
-                target_path: canonical_path(candidate, canonical_paths),
+                target_path: canonical_path(candidate, canonical_paths, stamps),
                 source_path: source.source_path,
                 native_probe_path: source.native_probe_path,
             };
@@ -259,8 +294,17 @@ fn inside_node_modules(path: &Path) -> bool {
         .any(|component| matches!(component, Component::Normal(part) if part == "node_modules"))
 }
 
-fn canonical_path(path: &Path, cache: &mut PackagePathCache) -> PathBuf {
-    cache.canonicalize(path)
+fn canonical_path(
+    path: &Path,
+    cache: &mut PackagePathCache,
+    stamps: &mut Vec<InputStamp>,
+) -> PathBuf {
+    let selected = cache.canonicalize(path);
+    stamps.push(InputStamp::observed_canonical_path(
+        path.to_path_buf(),
+        selected.clone(),
+    ));
+    selected
 }
 
 /// Preserve the logical package spelling, including a workspace symlink.

@@ -7,6 +7,8 @@ use oxc_span::SourceType;
 use vize_carton::{FxHashSet, String, cstr};
 
 use super::ModuleSpecifierCollector;
+use super::authored_vue_ts::consumed_file_predicate;
+use crate::package_route::stamp::Consumed;
 
 const SOURCE_EXTENSIONS: &[&str] = &[
     ".ts", ".tsx", ".d.ts", ".d.mts", ".d.cts", ".vue", ".mts", ".cts", ".js", ".jsx", ".mjs",
@@ -132,6 +134,36 @@ pub(super) fn is_rewritable_project_specifier(path: &Path) -> bool {
 /// successful one: a specifier TypeScript already resolves through an ordinary
 /// source sibling or directory module keeps its original spelling.
 pub(crate) fn rewrite_relative_vue_specifier(specifier: &str, source_dir: &Path) -> Option<String> {
+    rewrite_relative_vue_specifier_inner(specifier, source_dir, &mut None)
+}
+
+pub(crate) fn rewrite_relative_vue_specifier_consumed(
+    specifier: &str,
+    source_dir: &Path,
+    observe: bool,
+) -> Consumed<Option<String>> {
+    let mut facts = Consumed {
+        value: (),
+        stamps: Vec::new(),
+        qualified: observe,
+    };
+    let value = rewrite_relative_vue_specifier_inner(
+        specifier,
+        source_dir,
+        &mut observe.then_some(&mut facts),
+    );
+    Consumed {
+        value,
+        stamps: facts.stamps,
+        qualified: facts.qualified,
+    }
+}
+
+fn rewrite_relative_vue_specifier_inner(
+    specifier: &str,
+    source_dir: &Path,
+    facts: &mut Option<&mut Consumed<()>>,
+) -> Option<String> {
     // `.`/`..` name a directory module, not a stem an extension can be appended
     // to, so only the `./`-prefixed spellings are candidates here.
     if !(specifier.starts_with("./") || specifier.starts_with("../")) {
@@ -141,7 +173,9 @@ pub(crate) fn rewrite_relative_vue_specifier(specifier: &str, source_dir: &Path)
         return None;
     }
     let target = source_dir.join(specifier);
-    if !append_extension(&target, ".vue").is_file() || resolves_without_vue(&target) {
+    if !consumed_file_predicate(&append_extension(&target, ".vue"), facts)
+        || resolves_without_vue(&target, facts)
+    {
         return None;
     }
     Some(cstr!("{specifier}.vue.ts"))
@@ -155,13 +189,13 @@ fn specifier_has_extension(specifier: &str) -> bool {
 
 /// Whether TypeScript already resolves `target` without consulting `.vue`,
 /// through an ordinary source extension or an `index` directory module.
-fn resolves_without_vue(target: &Path) -> bool {
+fn resolves_without_vue(target: &Path, facts: &mut Option<&mut Consumed<()>>) -> bool {
     SOURCE_EXTENSIONS
         .iter()
         .filter(|extension| **extension != ".vue")
         .any(|extension| {
-            append_extension(target, extension).is_file()
-                || target.join(cstr!("index{extension}").as_str()).is_file()
+            consumed_file_predicate(&append_extension(target, extension), facts)
+                || consumed_file_predicate(&target.join(cstr!("index{extension}").as_str()), facts)
         })
 }
 

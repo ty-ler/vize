@@ -92,9 +92,9 @@ impl AliasContext {
             }
         });
         let takeover = u8::from(reused.is_some());
-        let mut context = match reused {
+        let built = match reused {
             Some(context) => context,
-            None => build::build(
+            None => build::build_observed(
                 source_path,
                 content,
                 overlays,
@@ -107,6 +107,7 @@ impl AliasContext {
                 environment,
             )?,
         };
+        let mut context = fingerprint.include_consumed(built);
         let (rebuilt, reconciled) = context
             .mirror
             .as_ref()

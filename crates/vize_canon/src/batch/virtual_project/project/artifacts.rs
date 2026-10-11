@@ -1,4 +1,6 @@
 //! Per-authored-source artifact ownership inside a persistent virtual project.
+use crate::batch::virtual_project::package_source_index::{empty, finish};
+use crate::package_route::stamp::{Consumed, FactRole};
 
 use std::path::{Path, PathBuf};
 
@@ -22,10 +24,21 @@ impl VirtualProject {
     }
 
     pub(super) fn absorb_registered_file(&mut self, registered: RegisteredFile) {
+        let mut facts = empty(false);
+        self.absorb_registered_file_with_consumption(registered, false, &mut facts)
+    }
+
+    pub(in crate::batch::virtual_project) fn absorb_registered_file_with_consumption(
+        &mut self,
+        registered: RegisteredFile,
+        observe: bool,
+        facts: &mut Consumed<()>,
+    ) {
         let shared_helpers_before = self.uses_shared_helpers();
         self.incremental_source_nodes_rebuilt += 1;
         let original_path = registered.file.original_path.clone();
-        let previous_materialized = self.remove_registered_source_inner(&original_path);
+        let previous_materialized =
+            self.remove_registered_source_inner_with_consumption(&original_path, observe, facts);
         if registered.typed_router_import {
             self.typed_router
                 .import_files
@@ -82,7 +95,12 @@ impl VirtualProject {
         // `original_index` maps this source to its own virtual path (inserted above).
         let canonical_virtual = registered.file.virtual_path.clone();
         self.replace_virtual_file(registered.file);
-        self.index_package_source(&original_path, &canonical_virtual);
+        self.index_package_source_with_consumption(
+            &original_path,
+            &canonical_virtual,
+            observe,
+            facts,
+        );
         self.mark_package_shadow_source_changed(&canonical_virtual);
         artifacts.virtual_paths.sort();
         artifacts.virtual_paths.dedup();
@@ -128,14 +146,49 @@ impl VirtualProject {
     }
 
     pub(crate) fn remove_registered_source(&mut self, original_path: &Path) -> Vec<PathBuf> {
+        let mut facts = empty(false);
+        self.remove_registered_source_with_consumption(original_path, false, &mut facts)
+    }
+
+    pub(crate) fn remove_registered_source_observed(
+        &mut self,
+        original_path: &Path,
+    ) -> Consumed<Vec<PathBuf>> {
+        let mut facts = empty(true);
+        let value = self.remove_registered_source_with_consumption(original_path, true, &mut facts);
+        finish(facts, value)
+    }
+
+    pub(in crate::batch::virtual_project) fn remove_registered_source_with_consumption(
+        &mut self,
+        original_path: &Path,
+        observe: bool,
+        facts: &mut Consumed<()>,
+    ) -> Vec<PathBuf> {
         let before = self.uses_shared_helpers();
-        let removed = self.remove_registered_source_inner(original_path);
+        let removed =
+            self.remove_registered_source_inner_with_consumption(original_path, observe, facts);
         self.reconcile_shared_helper_membership(before);
         removed
     }
 
     fn remove_registered_source_inner(&mut self, original_path: &Path) -> Vec<PathBuf> {
-        let canonical = vize_carton::path::canonicalize_non_verbatim(original_path);
+        let mut facts = empty(false);
+        self.remove_registered_source_inner_with_consumption(original_path, false, &mut facts)
+    }
+
+    pub(in crate::batch::virtual_project) fn remove_registered_source_inner_with_consumption(
+        &mut self,
+        original_path: &Path,
+        observe: bool,
+        facts: &mut Consumed<()>,
+    ) -> Vec<PathBuf> {
+        let canonical = Self::root_owner_canonical(
+            original_path,
+            Some((original_path, FactRole::AuthoredSource)),
+            observe,
+            facts,
+        );
         let key = if self.source_artifacts.contains_key(original_path) {
             original_path
         } else {
@@ -147,7 +200,7 @@ impl VirtualProject {
         if let Some(canonical_virtual) = self.original_index.get(key).cloned() {
             self.mark_package_shadow_source_changed(&canonical_virtual);
         }
-        self.remove_package_source_from_index(key);
+        self.remove_package_source_from_index_with_consumption(key, observe, facts);
         self.original_index.remove(key);
         self.diagnostics.retain(|diagnostic| diagnostic.file != key);
         let mut removed =

@@ -26,6 +26,22 @@ pub use model::{
 pub(crate) use model::CorsaProjectEnvironment;
 
 impl CorsaBridge {
+    /// Forget deleted source owners without waiting for native IPC.
+    ///
+    /// An exclusive bridge owner proves no caller can still prepare and insert
+    /// an older mirror revision after this eviction. The next native request
+    /// flushes disk invalidation before synchronizing the materialized delta.
+    pub fn mark_deleted_vue_virtual_documents(&mut self, source_paths: &[PathBuf]) {
+        if source_paths.is_empty() {
+            return;
+        }
+        super::vue_dependencies_alias::AliasContext::forget_cached_sources(
+            &self.editor_session,
+            source_paths,
+        );
+        self.mark_disk_project_state_dirty();
+    }
+
     /// Remove virtual TypeScript overlays derived from deleted Vue SFCs.
     pub async fn forget_vue_virtual_documents(
         &self,

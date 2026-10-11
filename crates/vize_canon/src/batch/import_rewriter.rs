@@ -21,6 +21,7 @@ use collect::{ModuleSpecifierCollector, collect_specifier_occurrences};
 #[path = "import_rewriter_virtual.rs"]
 mod virtual_rewrite;
 pub(super) use virtual_rewrite::rewrite_relative_vue_specifier;
+pub(crate) use virtual_rewrite::rewrite_relative_vue_specifier_consumed;
 
 #[path = "import_rewriter_virtual_alias.rs"]
 mod virtual_alias;
@@ -124,10 +125,10 @@ impl ImportRewriter {
         &self,
         source: &str,
         source_type: SourceType,
-        rewrite_specifier: F,
+        mut rewrite_specifier: F,
     ) -> RewriteResult
     where
-        F: Fn(&str, crate::PackageResolutionMode) -> Option<String>,
+        F: FnMut(&str, crate::PackageResolutionMode) -> Option<String>,
     {
         let allocator = Allocator::default();
         let parser = Parser::new(&allocator, source, source_type);

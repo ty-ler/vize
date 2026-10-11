@@ -6,7 +6,7 @@ use crate::corsa_bridge::EditorMirrorSession;
 use crate::corsa_bridge::vue_dependencies_alias::context::cache::fingerprint::{
     ContextFingerprint, SourceGuard,
 };
-use crate::corsa_bridge::vue_dependencies_alias::{AliasContext, PreparedAliasContext};
+use crate::corsa_bridge::vue_dependencies_alias::{AliasContext, context::PreparedAliasContext};
 use crate::corsa_bridge::vue_document::{CorsaProjectEnvironment, CorsaVueVirtualDocumentOptions};
 
 pub(super) const CHILD: &str = "<!-- 🦀 -->\r\n<script setup lang='ts'>type Props = { label?: string }; withDefaults(defineProps<Props>(), { label: 'before' });</script>\r\n<template>{{ label }}</template>\r\n";
@@ -104,7 +104,15 @@ impl Fixture {
         let cache = self.session.cache();
         let old = &cache.slots[&self.host];
         old.fingerprint
-            .source_changes(&current, &old.context, overlays)
+            .source_changes(
+                &current,
+                &old.context,
+                overlays,
+                &self.host,
+                source.as_bytes(),
+                &[],
+            )
+            .map(|changes| changes.changed)
     }
 
     pub(super) fn assert_cold_equal(

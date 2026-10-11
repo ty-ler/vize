@@ -1,10 +1,10 @@
 //! Only authored-source revisions may take ownership of a cached graph.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use vize_carton::{FxHashMap, FxHashSet};
 
-use super::ContextFingerprint;
+use super::{ContextFingerprint, consumed};
 use crate::corsa_bridge::vue_dependencies_alias::AliasContext;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -16,6 +16,111 @@ pub(in crate::corsa_bridge::vue_dependencies_alias::context) enum SourceGuard {
     Configuration,
     PackageInput,
     ResolutionInput,
+    UnknownAuthority,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::consumed::refusal_tests::source_change_fixture;
+    use super::SourceGuard;
+    use vize_carton::FxHashMap;
+
+    #[test]
+    fn requested_root_removal_and_package_input_exception_require_actual_deleted_body() {
+        for mode in 0..7 {
+            let (_storage, host, target, context, mut old) = source_change_fixture();
+            let mut current = old.clone();
+            if mode != 6 {
+                current.requested_paths.clear();
+            }
+            let mut overlays = FxHashMap::default();
+            let mut requested = Vec::new();
+            if mode != 1 {
+                std::fs::remove_file(&target).unwrap();
+            }
+            match mode {
+                2 => {
+                    overlays.insert(target.clone(), "still open");
+                    current.overlay_paths.push(target.clone());
+                }
+                3 => {
+                    std::fs::create_dir(&target).unwrap();
+                }
+                4 => {
+                    old.consumed_inputs_qualified = false;
+                }
+                5 => {
+                    requested.push((target.clone(), "still requested"));
+                }
+                6 => {
+                    requested.push((target.clone(), "still requested"));
+                }
+                _ => {}
+            }
+            let result =
+                old.source_changes(&current, &context, &overlays, &host, b"host", &requested);
+            if mode == 0 {
+                let changes = result.unwrap();
+                assert_eq!(changes.changed, vec![target.clone()]);
+                assert_eq!(changes.deleted, vec![target]);
+            } else {
+                let expected = match mode {
+                    1 | 2 => SourceGuard::RequestedSources,
+                    3 | 6 => SourceGuard::PackageInput,
+                    _ => SourceGuard::UnknownAuthority,
+                };
+                assert_eq!(result.unwrap_err(), expected);
+            }
+        }
+    }
+
+    #[test]
+    fn requested_additions_duplicate_shifts_and_uncertain_exact_identities_stay_cold() {
+        for mode in 0..3 {
+            let (_storage, host, target, context, mut old) = source_change_fixture();
+            let mut current = old.clone();
+            let requested = match mode {
+                0 => {
+                    current.requested_paths.push(host.clone());
+                    current.requested_paths.sort();
+                    vec![(host.clone(), "host"), (target.clone(), "target")]
+                }
+                1 => {
+                    old.requested_paths.push(target.clone());
+                    vec![(target.clone(), "target")]
+                }
+                _ => {
+                    let uncertain = target.parent().unwrap().join("logical/../target.ts");
+                    std::fs::create_dir(target.parent().unwrap().join("logical")).unwrap();
+                    assert_eq!(
+                        vize_carton::path::canonicalize_non_verbatim(&uncertain),
+                        target
+                    );
+                    old.requested_paths = vec![uncertain.clone()];
+                    current.requested_paths = old.requested_paths.clone();
+                    vec![(uncertain, "target")]
+                }
+            };
+            let expected = if mode == 2 {
+                SourceGuard::UnknownAuthority
+            } else {
+                SourceGuard::RequestedSources
+            };
+            assert_eq!(
+                old.source_changes(
+                    &current,
+                    &context,
+                    &FxHashMap::default(),
+                    &host,
+                    b"host",
+                    &requested
+                )
+                .unwrap_err(),
+                expected
+            );
+        }
+        assert_eq!(SourceGuard::UnknownAuthority.code(), 12);
+    }
 }
 
 impl SourceGuard {
@@ -28,6 +133,8 @@ impl SourceGuard {
             Self::Configuration => 5,
             Self::PackageInput => 6,
             Self::ResolutionInput => 7,
+            // Existing cache takeover guards retain numeric codes 8 through 11.
+            Self::UnknownAuthority => 12,
         }
     }
 }
@@ -38,11 +145,18 @@ impl ContextFingerprint {
         current: &Self,
         context: &AliasContext,
         overlays: &FxHashMap<PathBuf, &str>,
-    ) -> Result<Vec<PathBuf>, SourceGuard> {
+        source_path: &Path,
+        source_body: &[u8],
+        requested: &[(PathBuf, &str)],
+    ) -> Result<consumed::SourceChanges, SourceGuard> {
         if self.generation_options != current.generation_options {
             return Err(SourceGuard::Settings);
         }
-        if self.requested_paths != current.requested_paths {
+        if current
+            .requested_paths
+            .iter()
+            .any(|path| !self.requested_paths.contains(path))
+        {
             return Err(SourceGuard::RequestedSources);
         }
         let mirror = context.mirror.as_ref().ok_or(SourceGuard::Settings)?;
@@ -68,9 +182,62 @@ impl ContextFingerprint {
         {
             return Err(SourceGuard::AddedOverlay);
         }
+        // Requested registration canonicalizes its keys in the cold producer.
+        // This guard has no such operation: uncertain identities remain cold.
+        let mut requested_paths = requested
+            .iter()
+            .map(|(path, _)| path.clone())
+            .collect::<Vec<_>>();
+        requested_paths.sort();
+        if requested_paths != current.requested_paths
+            || requested_paths.iter().any(|path| !known.contains(path))
+        {
+            return Err(SourceGuard::UnknownAuthority);
+        }
+        let inputs = consumed::AuthoredInputs {
+            host_path: source_path,
+            host_body: source_body,
+            overlays,
+            requested,
+        };
+        let validated = consumed::validate(
+            &self.stamps,
+            self.consumed_inputs_qualified,
+            &known,
+            &inputs,
+        )
+        .map_err(|refusal| match refusal {
+            consumed::Refusal::UnknownAuthority => SourceGuard::UnknownAuthority,
+            consumed::Refusal::ChangedFact(path) if configurations.contains(&path) => {
+                SourceGuard::Configuration
+            }
+            consumed::Refusal::ChangedFact(path) if context.route_inputs.contains(&path) => {
+                SourceGuard::PackageInput
+            }
+            consumed::Refusal::ChangedFact(_) => SourceGuard::ResolutionInput,
+        })?;
+        let mut changes = validated.value;
+        // Only actual missing authored bodies can remove old requested roots.
+        // Surviving duplicate counts and all other membership shifts stay cold.
+        let retained_requested = self
+            .requested_paths
+            .iter()
+            .filter(|path| !changes.deleted.contains(path))
+            .collect::<Vec<_>>();
+        if retained_requested != current.requested_paths.iter().collect::<Vec<_>>()
+            || changes.deleted.iter().any(|path| {
+                path == source_path
+                    || overlays.contains_key(path)
+                    || requested.iter().any(|(supplied, _)| supplied == path)
+            })
+        {
+            return Err(SourceGuard::RequestedSources);
+        }
         let mut observed = crate::package_route::stamp::InputStampCache::default();
-        let mut changed = Vec::new();
         for stamp in &self.stamps {
+            if stamp.is_consumed_only() {
+                continue;
+            }
             if stamp.is_current_with_cache(&mut observed) {
                 continue;
             }
@@ -85,14 +252,17 @@ impl ContextFingerprint {
                 .route_inputs
                 .iter()
                 .any(|input| input.as_path() == path)
+                && !(known.contains(path) && changes.deleted.iter().any(|deleted| deleted == path))
             {
                 return Err(SourceGuard::PackageInput);
             }
             if !known.contains(path) {
                 return Err(SourceGuard::ResolutionInput);
             }
-            changed.push(path.to_path_buf());
+            changes.changed.push(path.to_path_buf());
         }
-        Ok(changed)
+        changes.changed.sort();
+        changes.changed.dedup();
+        Ok(changes)
     }
 }

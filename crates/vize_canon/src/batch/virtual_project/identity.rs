@@ -30,30 +30,10 @@ pub fn project_virtual_root(project_root: &Path) -> PathBuf {
     project_virtual_root_for_key(&project_root, &project_key)
 }
 
-/// Return a namespace shared only by editor snapshots with the same effective
-/// config and generation options. A solution shell may own multiple referenced
-/// projects whose compiler options are intentionally incompatible; they must
-/// never overwrite one mirror `tsconfig.json` merely because their source tree
-/// has the same root.
-pub(super) fn project_virtual_root_with_identity(
-    storage_root: &Path,
-    project_root: &Path,
-    identity: u64,
-) -> PathBuf {
-    let project_root = vize_carton::path::canonicalize_non_verbatim(project_root);
-    let mut digest = Sha256::new();
-    digest.update(PROJECT_CONTEXT_KEY_SCHEMA);
-    update_path_digest(&mut digest, &project_root);
-    digest.update(identity.to_le_bytes());
-    let project_key = encode_digest(digest.finalize());
-    // TypeScript's editor project service classifies every path below a
-    // `node_modules` segment as an external library. The bridge supplies a
-    // session-private temp root so unsaved overlay bytes never cross native
-    // project lifetimes; this digest scopes incompatible configs inside it.
-    vize_carton::path::canonicalize_non_verbatim(storage_root)
-        .join(PROJECTS_DIR)
-        .join(project_key.as_str())
-}
+mod editor_namespace;
+pub(super) use editor_namespace::{
+    project_virtual_root_with_identity, project_virtual_root_with_identity_observed,
+};
 
 fn project_virtual_root_for_key(project_root: &Path, project_key: &vize_carton::String) -> PathBuf {
     project_canon_storage_root(project_root)

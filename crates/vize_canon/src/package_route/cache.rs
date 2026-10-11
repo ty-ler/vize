@@ -3,16 +3,17 @@ use std::path::{Path, PathBuf};
 use vize_carton::{FxHashMap, String};
 
 use super::search::PackageSearchCache;
-use super::stamp::{
-    InputStamp, InputStampCache, stamp_paths, stamp_paths_with_cache, stamps_are_current,
-    stamps_are_current_with_cache,
-};
+use super::stamp::{InputStamp, InputStampCache};
 use super::{
     PackagePathCache, PackageResolutionContext, PackageRoute, PackageRouteMetrics,
-    PackageSourceOptions, logical_absolute, lookup_uncached,
+    PackageSourceOptions,
 };
 pub use lookup::PackageRouteLookup;
 
+#[path = "cache/consumed_lookup.rs"]
+mod consumed_lookup;
+#[path = "cache/context.rs"]
+mod context;
 #[path = "cache_lookup.rs"]
 mod lookup;
 
@@ -62,6 +63,7 @@ struct PackageRouteResolverState {
 struct CachedPackageRouteLookup {
     lookup: PackageRouteLookup,
     stamps: Vec<InputStamp>,
+    qualified: bool,
     last_used: u64,
     last_validated_epoch: u64,
 }
@@ -88,27 +90,14 @@ impl PackageRouteResolver {
         module: Option<&str>,
         active_conditions: impl IntoIterator<Item = impl Into<String>>,
     ) -> (PackageResolutionContext, Vec<PathBuf>) {
-        let mut state = self
-            .state
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let mut inputs = Vec::new();
-        let start = importer.parent().unwrap_or(importer);
-        let nearest_scope =
-            super::search::nearest_package_manifest(start, &mut inputs, &mut state.search);
-        let package_is_module = nearest_scope.as_ref().map(|(_, manifest)| {
-            manifest.get("type").and_then(serde_json::Value::as_str) == Some("module")
-        });
-        let mut context = PackageResolutionContext::for_importer(
+        self.resolution_context_observed(
             importer,
             occurrence_mode,
             module_resolution,
             module,
             active_conditions,
-            package_is_module,
-        );
-        context.scope_manifest_path = nearest_scope.map(|(root, _)| root.join("package.json"));
-        (context, inputs)
+        )
+        .value
     }
 
     pub fn resolve(
@@ -139,98 +128,8 @@ impl PackageRouteResolver {
         options: PackageSourceOptions,
         context: PackageResolutionContext,
     ) -> PackageRouteLookup {
-        let mut state = self
-            .state
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        // Key on the logical importer directory: resolution walks the logical
-        // ancestors, so two importer directories that share a canonical path
-        // through a package symlink still see different `node_modules` chains.
-        let logical_importer_dir = logical_absolute(importer_dir);
-        let key = (
-            logical_importer_dir.clone(),
-            specifier.into(),
-            options,
-            context,
-        );
-        let validation_epoch = state.validation_epoch;
-        let cached_entry = state.resolutions.get(&key).map(|cached| {
-            (
-                cached.last_validated_epoch,
-                cached.stamps.clone(),
-                cached.lookup.clone(),
-            )
-        });
-        let cached = cached_entry.and_then(|(last_validated_epoch, stamps, lookup)| {
-            let current = validation_epoch != 0 && last_validated_epoch == validation_epoch
-                || if validation_epoch == 0 {
-                    stamps_are_current(&stamps)
-                } else {
-                    stamps_are_current_with_cache(&stamps, &mut state.stamp_snapshots)
-                };
-            if current {
-                if validation_epoch != 0
-                    && let Some(cached) = state.resolutions.get_mut(&key)
-                {
-                    cached.last_validated_epoch = validation_epoch;
-                }
-                Some(lookup)
-            } else {
-                None
-            }
-        });
-        if let Some(cached) = cached {
-            state.clock = state.clock.wrapping_add(1);
-            let clock = state.clock;
-            if let Some(entry) = state.resolutions.get_mut(&key) {
-                entry.last_used = clock;
-            }
-            state.cache_hits += 1;
-            return cached;
-        }
-        state.cache_misses += 1;
-        state.resolutions.remove(&key);
-        if state.validation_epoch == 0 {
-            state.canonical_paths.clear();
-        }
-        let mut canonical_paths = std::mem::take(&mut state.canonical_paths);
-        let lookup = lookup_uncached(
-            &logical_importer_dir,
-            specifier,
-            options,
-            &mut state.search,
-            &mut canonical_paths,
-        );
-        state.canonical_paths = canonical_paths;
-        let stamps = if state.validation_epoch == 0 {
-            stamp_paths(&lookup.invalidation_paths)
-        } else {
-            stamp_paths_with_cache(&lookup.invalidation_paths, &mut state.stamp_snapshots)
-        };
-        if state.resolutions.len() >= RESOLUTION_CACHE_CAPACITY {
-            let oldest = state
-                .resolutions
-                .iter()
-                .min_by_key(|(_, cached)| cached.last_used)
-                .map(|(key, _)| key.clone());
-            if let Some(oldest) = oldest {
-                state.resolutions.remove(&oldest);
-                state.resolution_evictions += 1;
-            }
-        }
-        state.clock = state.clock.wrapping_add(1);
-        let clock = state.clock;
-        let validation_epoch = state.validation_epoch;
-        state.resolutions.insert(
-            key,
-            CachedPackageRouteLookup {
-                lookup: lookup.clone(),
-                stamps,
-                last_used: clock,
-                last_validated_epoch: validation_epoch,
-            },
-        );
-        lookup
+        self.lookup_with_context_observed(importer_dir, specifier, options, context)
+            .value
     }
 
     pub fn clear(&mut self) {

@@ -8,7 +8,51 @@ use crate::batch::error::CorsaResult;
 
 use super::super::VirtualProject;
 
+#[path = "package_routes/refresh.rs"]
+mod refresh;
+
+mod bindings;
+#[cfg(any(feature = "native", test))]
+mod closure;
+
+mod registration;
+mod retirement;
+pub(crate) use retirement::PackageBindingRetirement;
+
 impl VirtualProject {
+    /// Internal carrier from the one original reachability operation.
+    #[expect(
+        clippy::disallowed_types,
+        reason = "compiler aliases originate in serde_json"
+    )]
+    pub(crate) fn package_route_reaches_vue_observed(
+        route: &crate::PackageRoute,
+        aliases: &[(std::string::String, std::string::String)],
+        resolution: &super::super::package_resolution::PackageResolutionSettings,
+        resolver: &mut crate::PackageRouteResolver,
+        source_options: crate::PackageSourceOptions,
+        aliases_qualified: bool,
+        configuration: Option<
+            &crate::package_route::stamp::Consumed<
+                super::super::package_resolution::PackageResolutionSettings,
+            >,
+        >,
+        route_qualified: bool,
+    ) -> crate::package_route::stamp::Consumed<
+        super::super::package_route_reachability::ConsumedReachability,
+    > {
+        super::super::package_route_reachability::package_route_reaches_vue_observed(
+            route,
+            aliases,
+            resolution,
+            resolver,
+            source_options,
+            aliases_qualified,
+            configuration,
+            route_qualified,
+        )
+    }
+
     pub(crate) fn clear_package_route_bindings_for_rebuild(&mut self) {
         let keys = self.package_routes.keys().cloned().collect::<Vec<_>>();
         for key in keys {
@@ -16,185 +60,6 @@ impl VirtualProject {
         }
         self.package_route_refresh_keys.clear();
         self.package_routes_need_refresh = false;
-    }
-
-    pub(crate) fn replace_package_route_bindings(
-        &mut self,
-        bindings: impl IntoIterator<Item = crate::PackageRouteBinding>,
-    ) {
-        let previous_roots = self
-            .package_route_roots
-            .keys()
-            .cloned()
-            .collect::<FxHashSet<_>>();
-        self.package_routes.clear();
-        self.package_route_reverse.clear();
-        self.package_route_importers.clear();
-        self.package_route_source_owners.clear();
-        self.package_route_manifests.clear();
-        self.package_route_roots.clear();
-        self.package_shadow_dirty_keys.clear();
-        for binding in bindings {
-            self.insert_package_route_binding(binding);
-        }
-        let current_roots = self
-            .package_route_roots
-            .keys()
-            .cloned()
-            .collect::<FxHashSet<_>>();
-        self.package_source_index
-            .retain(|root, _| current_roots.contains(root));
-        let added_roots = current_roots
-            .difference(&previous_roots)
-            .cloned()
-            .collect::<Vec<_>>();
-        if !added_roots.is_empty() {
-            let registered = self
-                .original_index
-                .iter()
-                .map(|(source, virtual_path)| (source.clone(), virtual_path.clone()))
-                .collect::<Vec<_>>();
-            for (source, virtual_path) in registered {
-                for root in &added_roots {
-                    let Ok(relative) = source.strip_prefix(root) else {
-                        continue;
-                    };
-                    self.package_source_index
-                        .entry(root.clone())
-                        .or_default()
-                        .insert(
-                            source.clone(),
-                            (relative.to_path_buf(), virtual_path.clone()),
-                        );
-                }
-            }
-        }
-    }
-
-    pub(crate) fn insert_route_binding_inner(&mut self, binding: crate::PackageRouteBinding) {
-        let key = binding.key();
-        self.remove_package_route_binding(&key);
-        for path in &binding.invalidation_paths {
-            self.package_route_reverse
-                .entry(path.clone())
-                .or_default()
-                .insert(key.clone());
-        }
-        self.package_route_importers
-            .entry(binding.importer_path.clone())
-            .or_default()
-            .insert(key.clone());
-        if let Some(route) = binding.route.as_ref() {
-            for route in route.all_routes() {
-                let package_root =
-                    vize_carton::path::canonicalize_non_verbatim(&route.package_root);
-                self.package_route_roots
-                    .entry(package_root)
-                    .or_default()
-                    .insert(key.clone());
-                if let Some(keys) = self.package_route_manifests.get(&route.manifest_path) {
-                    self.package_shadow_dirty_keys.extend(keys.iter().cloned());
-                }
-                self.package_route_manifests
-                    .entry(route.manifest_path.clone())
-                    .or_default()
-                    .insert(key.clone());
-            }
-            for source in route.all_source_paths() {
-                let source = vize_carton::path::canonicalize_non_verbatim(source);
-                *self.package_route_source_owners.entry(source).or_default() += 1;
-            }
-            self.index_existing_package_route_sources(route);
-        }
-        self.package_shadow_dirty_keys.insert(key.clone());
-        self.package_routes.insert(key, binding);
-    }
-
-    pub(crate) fn remove_route_binding_inner(
-        &mut self,
-        key: &crate::package_route::PackageRouteKey,
-    ) -> Option<crate::PackageRouteBinding> {
-        let binding = self.package_routes.remove(key)?;
-        self.package_shadow_dirty_keys.insert(key.clone());
-        self.remove_route_reverse_indexes(key, &binding);
-        self.remove_route_topology_indexes(key, &binding);
-        Some(binding)
-    }
-
-    fn remove_route_reverse_indexes(
-        &mut self,
-        key: &crate::package_route::PackageRouteKey,
-        binding: &crate::PackageRouteBinding,
-    ) {
-        for path in &binding.invalidation_paths {
-            let remove = self
-                .package_route_reverse
-                .get_mut(path)
-                .is_some_and(|keys| {
-                    keys.remove(key);
-                    keys.is_empty()
-                });
-            if remove {
-                self.package_route_reverse.remove(path);
-            }
-        }
-        let remove = self
-            .package_route_importers
-            .get_mut(&binding.importer_path)
-            .is_some_and(|keys| {
-                keys.remove(key);
-                keys.is_empty()
-            });
-        if remove {
-            self.package_route_importers.remove(&binding.importer_path);
-        }
-    }
-
-    fn remove_route_topology_indexes(
-        &mut self,
-        key: &crate::package_route::PackageRouteKey,
-        binding: &crate::PackageRouteBinding,
-    ) {
-        let Some(route) = binding.route.as_ref() else {
-            return;
-        };
-        for route in route.all_routes() {
-            let root = vize_carton::path::canonicalize_non_verbatim(&route.package_root);
-            let remove = self.package_route_roots.get_mut(&root).is_some_and(|keys| {
-                keys.remove(key);
-                keys.is_empty()
-            });
-            if remove {
-                self.package_route_roots.remove(&root);
-                self.package_source_index.remove(&root);
-            }
-            if let Some(keys) = self.package_route_manifests.get(&route.manifest_path) {
-                self.package_shadow_dirty_keys.extend(keys.iter().cloned());
-            }
-            let remove = self
-                .package_route_manifests
-                .get_mut(&route.manifest_path)
-                .is_some_and(|keys| {
-                    keys.remove(key);
-                    keys.is_empty()
-                });
-            if remove {
-                self.package_route_manifests.remove(&route.manifest_path);
-            }
-        }
-        for source in route.all_source_paths() {
-            let source = vize_carton::path::canonicalize_non_verbatim(source);
-            let remove = self
-                .package_route_source_owners
-                .get_mut(&source)
-                .is_some_and(|count| {
-                    *count = count.saturating_sub(1);
-                    *count == 0
-                });
-            if remove {
-                self.package_route_source_owners.remove(&source);
-            }
-        }
     }
 
     pub(crate) fn package_route_keys_for_changes(
@@ -224,33 +89,6 @@ impl VirtualProject {
         affected
     }
 
-    pub(crate) fn register_package_route_targets(&mut self) -> CorsaResult<()> {
-        if self.package_routes_need_refresh {
-            self.refresh_package_routes();
-            self.package_routes_need_refresh = false;
-        }
-        // A package source can itself import another export of the same
-        // package. Discover those routes after registering each wave of
-        // sources so its own package boundary is available in the virtual
-        // project, even when the app only imports the package root.
-        let mut processed = FxHashSet::default();
-        loop {
-            let mut targets = self
-                .package_route_source_paths()
-                .into_iter()
-                .filter(|path| !processed.contains(path))
-                .collect::<Vec<_>>();
-            if targets.is_empty() {
-                break;
-            }
-            targets.sort();
-            self.register_paths(&targets)?;
-            self.reconcile_package_routes_for_importers(&targets);
-            processed.extend(targets);
-        }
-        Ok(())
-    }
-
     pub(crate) fn refresh_package_route_keys(
         &mut self,
         keys: FxHashSet<crate::package_route::PackageRouteKey>,
@@ -260,59 +98,6 @@ impl VirtualProject {
         if self.package_routes_need_refresh {
             self.refresh_package_routes();
             self.package_routes_need_refresh = false;
-        }
-    }
-
-    fn refresh_package_routes(&mut self) {
-        let resolution = self.package_resolution_settings();
-        let mut resolver = match self.package_route_resolver.lock() {
-            Ok(resolver) => resolver,
-            Err(_) => return,
-        };
-        let total = self.package_routes.len();
-        let refresh_keys = std::mem::take(&mut self.package_route_refresh_keys);
-        let mut refreshed = Vec::with_capacity(refresh_keys.len());
-        for key in &refresh_keys {
-            let Some(mut binding) = self.package_routes.get(key).cloned() else {
-                continue;
-            };
-            let importer_dir = binding
-                .importer_path
-                .parent()
-                .unwrap_or(binding.importer_path.as_path());
-            let (context, context_inputs) = resolution.context(
-                &mut resolver,
-                &binding.importer_path,
-                binding.occurrence_mode,
-            );
-            let lookup = resolver.lookup_with_context(
-                importer_dir,
-                &binding.specifier,
-                crate::PackageSourceOptions::new(
-                    self.source_policy.allows_javascript(),
-                    self.jsx_typecheck,
-                ),
-                context.clone(),
-            );
-            let (route, mut invalidation_paths) = lookup.into_parts();
-            invalidation_paths.extend(resolution.input_paths().iter().cloned());
-            invalidation_paths.extend(context_inputs);
-            invalidation_paths.push(binding.importer_path.clone());
-            binding.context = context;
-            if route.is_none() {
-                invalidation_paths.extend(binding.invalidation_paths.iter().cloned());
-            }
-            binding.route = route;
-            invalidation_paths.sort();
-            invalidation_paths.dedup();
-            binding.invalidation_paths = invalidation_paths;
-            refreshed.push(binding);
-        }
-        let considered = refreshed.len();
-        resolver.record_refresh_scope(total, considered, considered);
-        drop(resolver);
-        for binding in refreshed {
-            self.insert_package_route_binding(binding);
         }
     }
 
@@ -354,4 +139,33 @@ impl VirtualProject {
         self.finalize_module_imports();
         Ok(())
     }
+
+    /// Retain the facts consumed by the same final shadow and import passes.
+    pub(crate) fn finalize_package_routes_observed(
+        &mut self,
+    ) -> CorsaResult<crate::package_route::stamp::Consumed<()>> {
+        let shadow = self.rebuild_package_shadows_observed()?;
+        let editor = if self.editor_document_options.is_some() {
+            self.finalize_editor_imports_observed()
+        } else {
+            // Other callers retain their original finalizer. Its raw reads
+            // have no complete native operation witness and cannot qualify.
+            self.finalize_module_imports();
+            crate::package_route::stamp::Consumed {
+                value: (),
+                stamps: Vec::new(),
+                qualified: false,
+            }
+        };
+        let mut stamps = shadow.stamps;
+        stamps.extend(editor.stamps);
+        Ok(crate::package_route::stamp::Consumed {
+            value: (),
+            stamps,
+            qualified: shadow.qualified && editor.qualified,
+        })
+    }
 }
+
+#[cfg(test)]
+mod union_controls;

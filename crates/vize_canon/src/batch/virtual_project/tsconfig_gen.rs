@@ -38,6 +38,8 @@ const PATH_SENSITIVE_COMPILER_OPTIONS: &[&str] = &[
     "tsBuildInfoFile",
 ];
 
+mod unused_diagnostics;
+
 impl VirtualProject {
     pub(crate) fn tsconfig_preserves_unused_diagnostics(&self) -> bool {
         self.preserve_unused_diagnostics
@@ -69,18 +71,6 @@ impl VirtualProject {
             })
             .map(|(alias, _)| alias.trim_end_matches('*').to_compact_string())
             .collect()
-    }
-
-    pub(super) fn resolve_tsconfig_preserves_unused_diagnostics(&self) -> bool {
-        let Some(tsconfig_path) = self.resolved_tsconfig_path() else {
-            return false;
-        };
-        let Ok(compiler_options) = self.load_compiler_options(Some(tsconfig_path.as_path())) else {
-            return false;
-        };
-
-        compiler_option_enabled(&compiler_options, "noUnusedLocals")
-            || compiler_option_enabled(&compiler_options, "noUnusedParameters")
     }
 
     pub(super) fn write_tsconfig_file(

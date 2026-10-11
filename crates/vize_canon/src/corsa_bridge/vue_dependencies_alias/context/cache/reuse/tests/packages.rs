@@ -91,7 +91,7 @@ fn source_only_takeover_retains_importer_scopes_raw_manifests_and_all_whole_proj
 }
 
 #[test]
-fn same_mtime_package_bytes_and_changed_package_occurrences_fall_back_to_cold() {
+fn same_mtime_package_bytes_stay_cold_and_completed_occurrences_match_cold_output() {
     let fixture = fixture();
     let empty = FxHashMap::default();
     drop(fixture.open(HOST, &empty));
@@ -105,7 +105,10 @@ fn same_mtime_package_bytes_and_changed_package_occurrences_fall_back_to_cold() 
     // Occurrences differ even though every prior strong filesystem stamp is current.
     let removed_import = HOST.replace("import Widget from '@scope/ui';", "const Widget = 'div';");
     let changed_occurrence = fixture.open(&removed_import, &empty);
-    assert!(!changed_occurrence.graph_reused);
+    assert!(
+        changed_occurrence.graph_reused,
+        "completed callback ownership must reconcile the removed package occurrence"
+    );
     fixture.assert_cold_equal(&changed_occurrence, &removed_import, &empty);
 }
 

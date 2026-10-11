@@ -22,78 +22,75 @@ use crate::batch::error::CorsaResult;
 
 use super::VirtualProject;
 
+mod aliases;
+mod facade;
+mod observed;
 mod package_roots;
 #[path = "dependency_scan/references.rs"]
 mod references;
 #[path = "dependency_scan/resolution.rs"]
 mod resolution;
 #[cfg(test)]
-use resolution::probe_candidates;
-use resolution::{
-    alias_may_reach_first_party, canonical_key, inside_node_modules, is_declaration_file,
-    may_resolve_a_dependency,
+use resolution::{alias_may_reach_first_party, probe_candidates};
+use resolution::{inside_node_modules, is_declaration_file, may_resolve_a_dependency};
+pub(crate) use resolution::{
+    resolve_dependency, resolve_dependency_observed, resolve_dependency_with_inputs,
 };
-pub(crate) use resolution::{resolve_dependency, resolve_dependency_with_inputs};
 
 type PackageResolver<'a> = &'a mut dyn FnMut(&Path, &str, crate::PackageResolutionMode) -> bool;
+type ObservedPackageResolver<'a> = &'a mut dyn FnMut(
+    &Path,
+    &str,
+    crate::PackageResolutionMode,
+)
+    -> crate::package_route::stamp::Consumed<bool>;
 
 #[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
 impl VirtualProject {
-    /// Register every reachable first-party dependency, to a fixpoint.
-    pub fn register_reachable_dependencies(&mut self) -> CorsaResult<()> {
-        self.register_reachable_dependencies_with_overlays(&FxHashMap::default())
-    }
-
-    /// Reconcile only dependencies reachable from sources rebuilt by one
-    /// persistent patch. Existing edge ownership covers the untouched graph.
-    pub(crate) fn register_reachable_dependencies_from(
-        &mut self,
-        sources: &[PathBuf],
-    ) -> CorsaResult<()> {
-        self.register_reachable_dependencies_inner(Some(sources), &FxHashMap::default(), &[], None)
-    }
-
-    /// The same walk, with unsaved editor buffers standing in for their on-disk
-    /// contents.
-    ///
-    /// An editor session must see the buffer the user is typing in: a dependency
-    /// reachable only through an import that exists in an unsaved file is
-    /// invisible to a disk-only walk, so nothing registers it, its mirror
-    /// companion is never generated, and the alias rewrite has no real file to
-    /// point at until the buffer is saved (#3900).
-    pub(crate) fn register_reachable_dependencies_with_overlays(
-        &mut self,
-        overlays: &FxHashMap<PathBuf, &str>,
-    ) -> CorsaResult<()> {
-        self.register_reachable_dependencies_inner(None, overlays, &[], None)
-    }
-
-    pub(crate) fn register_reachable_dependencies_with_package_resolver(
-        &mut self,
-        overlays: &FxHashMap<PathBuf, &str>,
-        workspace_package_specifiers: &[CompactString],
-        package_resolver: PackageResolver<'_>,
-    ) -> CorsaResult<()> {
-        self.register_reachable_dependencies_inner(
-            None,
-            overlays,
-            workspace_package_specifiers,
-            Some(package_resolver),
-        )
-    }
-
     fn register_reachable_dependencies_inner(
         &mut self,
         initial_sources: Option<&[PathBuf]>,
         overlays: &FxHashMap<PathBuf, &str>,
         workspace_package_specifiers: &[CompactString],
-        mut package_resolver: Option<PackageResolver<'_>>,
+        package_resolver: Option<PackageResolver<'_>>,
     ) -> CorsaResult<()> {
-        let aliases = self.dependency_alias_map();
+        self.register_reachable_dependencies_consumed_inner(
+            initial_sources,
+            overlays,
+            workspace_package_specifiers,
+            package_resolver,
+            None,
+            None,
+            None,
+        )
+        .map(|_| ())
+    }
+
+    fn register_reachable_dependencies_consumed_inner(
+        &mut self,
+        initial_sources: Option<&[PathBuf]>,
+        overlays: &FxHashMap<PathBuf, &str>,
+        workspace_package_specifiers: &[CompactString],
+        mut package_resolver: Option<PackageResolver<'_>>,
+        aliases_consumed: Option<
+            crate::package_route::stamp::Consumed<Vec<(std::string::String, std::string::String)>>,
+        >,
+        mut observed_package_resolver: Option<ObservedPackageResolver<'_>>,
+        registered_roots: Option<
+            &crate::package_route::stamp::Consumed<
+                super::package_source_index::RegisteredPackageRoots,
+            >,
+        >,
+    ) -> CorsaResult<crate::package_route::stamp::Consumed<Vec<PathBuf>>> {
+        let aliases_consumed_is_enabled = aliases_consumed.is_some();
+        let (aliases, mut facts) = match aliases_consumed {
+            Some(aliases) => observed::WalkFacts::from_aliases(aliases, &self.project_root),
+            None => (self.dependency_alias_map(), observed::WalkFacts::disabled()),
+        };
         let alias_prefixes: Vec<CompactString> = aliases
             .iter()
             .filter(|(pattern, target)| {
-                alias_may_reach_first_party(pattern, target, &self.project_root)
+                facts.alias_may_reach_first_party(pattern, target, &self.project_root)
             })
             .map(|(pattern, _)| {
                 CompactString::from(
@@ -116,7 +113,13 @@ impl VirtualProject {
         let mut queue: Vec<PathBuf> = match initial_sources {
             Some(paths) => paths
                 .iter()
-                .filter(|path| self.find_by_original(path).is_some())
+                .filter(|path| {
+                    let registered = self.find_by_original(path).is_some();
+                    if !registered {
+                        facts.unknown();
+                    }
+                    registered
+                })
                 .cloned()
                 .collect(),
             None => self
@@ -127,17 +130,28 @@ impl VirtualProject {
         };
         // Explicit patch importers retain current target graphs; full walks
         // keep their original queue-derived lookup identities.
+        let mut key = |p: &PathBuf| facts.registered_key(p, self.find_by_original(p).is_some());
         let mut visited: FxHashSet<PathBuf> = if initial_sources.is_some() {
             self.registered_original_paths_sorted()
                 .iter()
-                .filter_map(|path| canonical_key(path))
+                .filter_map(&mut key)
                 .collect()
         } else {
-            queue
-                .iter()
-                .filter_map(|path| canonical_key(path))
-                .collect()
+            queue.iter().filter_map(&mut key).collect()
         };
+        // The original getter uses only registered bindings and their root index.
+        // Compare that exact owner once; source-index membership may change during
+        // the original walk without changing these getter inputs.
+        let roots_qualified = match registered_roots {
+            Some(roots) => {
+                facts.registered_roots(roots);
+                roots.qualified && self.registered_package_roots_are_current(&roots.value)
+            }
+            None => self.package_routes.is_empty() && self.package_route_roots.is_empty(),
+        };
+        if !roots_qualified {
+            facts.unknown();
+        }
         let (raw_roots_indexed, checked_roots) = self.raw_package_roots_are_indexed();
         let mut indexed_package_root_lookups = 0usize;
         let mut fallback_package_root_lookups = 0usize;
@@ -152,8 +166,15 @@ impl VirtualProject {
                     )
                 })
             else {
+                facts.unknown();
                 continue;
             };
+            facts.begin_importer(
+                &importer,
+                self.original_contents
+                    .get(&virtual_path)
+                    .map(|source| source.as_bytes()),
+            );
             let mut dependency_targets = FxHashSet::default();
             // Generated SFC projections carry synthetic triple-slash paths for
             // the type checker. Only references in the authored SFC source are
@@ -179,9 +200,11 @@ impl VirtualProject {
             {
                 let released = self.replace_dependency_edges(&importer, dependency_targets);
                 self.prune_unowned_sources(released);
+                facts.complete(&importer);
                 continue;
             }
             let Some(importer_dir) = importer.parent().map(Path::to_path_buf) else {
+                facts.unknown();
                 continue;
             };
             let source_type = if virtual_path
@@ -216,17 +239,27 @@ impl VirtualProject {
                 // Path references are always relative to the containing file,
                 // even without `./`; import aliases and packages do not apply.
                 let native_target = if is_reference {
-                    resolution::probe_candidates(&importer_dir.join(&specifier))
+                    facts.probe_candidates(&importer_dir.join(&specifier))
                 } else {
-                    resolve_dependency(&specifier, &importer_dir, &self.project_root, &aliases)
+                    facts.resolve_dependency(
+                        &specifier,
+                        &importer_dir,
+                        &self.project_root,
+                        &aliases,
+                    )
                 };
                 let Some(target) = native_target else {
-                    if !is_reference && let Some(resolve) = package_resolver.as_deref_mut() {
-                        let _ = resolve(&importer, &specifier, mode);
+                    if !is_reference {
+                        if let Some(resolve) = observed_package_resolver.as_deref_mut() {
+                            let _ = facts.package_result(resolve(&importer, &specifier, mode));
+                        } else if let Some(resolve) = package_resolver.as_deref_mut() {
+                            facts.unknown();
+                            let _ = resolve(&importer, &specifier, mode);
+                        }
                     }
                     continue;
                 };
-                let Some(key) = canonical_key(&target) else {
+                let Some(key) = facts.canonical_key(&target) else {
                     continue;
                 };
                 let package_local = importer_package_roots
@@ -272,78 +305,41 @@ impl VirtualProject {
                 // abort the check the user actually asked for, so registration
                 // failure degrades to the pre-#3887 ambient stub for that one
                 // import instead of propagating (#3898).
-                let registered = match overlays.get(&key) {
-                    Some(content) => self.register_path_with_content(&key, content),
-                    None => self.register_path(&key),
+                let registered = if aliases_consumed_is_enabled {
+                    let packet = match overlays.get(&key) {
+                        Some(content) => self.register_path_with_content_observed(&key, content),
+                        None => self.register_path_observed(&key),
+                    };
+                    packet.map(|packet| facts.registration(packet))
+                } else {
+                    match overlays.get(&key) {
+                        Some(content) => self.register_path_with_content(&key, content),
+                        None => self.register_path(&key),
+                    }
                 };
                 if registered.is_ok() {
                     queue.push(key);
+                } else {
+                    facts.unknown();
                 }
             }
             let released = self.replace_dependency_edges(&importer, dependency_targets);
             self.prune_unowned_sources(released);
+            facts.complete(&importer);
         }
         crate::corsa_bridge::preparation_trace::Phase::package_root_lookup(
             checked_roots,
             indexed_package_root_lookups,
             fallback_package_root_lookups,
         );
-        Ok(())
-    }
-
-    /// The effective `paths` aliases with project-root-relative targets, as
-    /// (pattern, target) pairs. Both come from the flattened chain, so the
-    /// anchors match what the generated tsconfig resolves (#3886).
-    /// Opt an editor session into registering reachable in-root scripts (#3915).
-    pub(crate) fn set_session_script_registration(&mut self, enabled: bool) {
-        self.session_scripts = enabled;
-    }
-
-    pub(crate) fn dependency_alias_map(&self) -> Vec<(String, String)> {
-        let anchored = self.resolved_tsconfig_path();
-        let aliases = self.alias_map_of(anchored.as_deref());
-        if !aliases.is_empty() {
-            return aliases;
-        }
-        // A solution-style shell (create-vue's default) declares nothing
-        // itself; the first referenced config that yields paths wins — the
-        // standard app/node split has exactly one (#3915).
-        let Some(anchored) = anchored else {
-            return aliases;
-        };
-        for referenced in super::tsconfig_gen::references::referenced_project_configs(&anchored) {
-            let referenced_aliases = self.alias_map_of(Some(&referenced));
-            if !referenced_aliases.is_empty() {
-                return referenced_aliases;
-            }
-        }
-        aliases
-    }
-
-    fn alias_map_of(&self, tsconfig_path: Option<&Path>) -> Vec<(String, String)> {
-        let Ok(flattened) = self.load_compiler_options_flattened(tsconfig_path) else {
-            return Vec::new();
-        };
-        let Some(paths) = flattened
-            .options
-            .get("paths")
-            .and_then(serde_json::Value::as_object)
-        else {
-            return Vec::new();
-        };
-        let mut aliases = Vec::new();
-        for (pattern, targets) in paths {
-            let Some(targets) = targets.as_array() else {
-                continue;
-            };
-            for target in targets.iter().filter_map(serde_json::Value::as_str) {
-                aliases.push((pattern.clone(), target.to_owned()));
-            }
-        }
-        aliases
+        Ok(facts.finish())
     }
 }
 
 #[cfg(test)]
 #[path = "dependency_scan_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "dependency_scan/consumed_tests.rs"]
+mod consumed_tests;

@@ -6,11 +6,14 @@
 //! byte offset after the first substitution and silently breaks position
 //! mapping for hover and definition.
 
+use crate::batch::virtual_project::VirtualProject;
+use crate::package_route::stamp::Consumed;
 use std::path::Path;
 
 use oxc_span::SourceType;
 
-use super::import_rewriter::{ImportRewriter, RewriteResult, rewrite_relative_vue_specifier};
+use super::import_rewriter::rewrite_relative_vue_specifier_consumed;
+use super::import_rewriter::{ImportRewriter, RewriteResult};
 
 /// Resolver consulted before the generic relative/package rewrite.
 #[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
@@ -44,37 +47,110 @@ impl ImportRewriter {
         alias_resolver: AliasSpecifierResolver<'_>,
         preserve_missing_vue_diagnostics: bool,
     ) -> RewriteResult {
-        self.rewrite_with(source, source_type, |path, mode| {
+        self.rewrite_with_alias_resolver_consumed(
+            source,
+            source_type,
+            source_dir,
+            |path, mode| Consumed {
+                value: alias_resolver(path, mode),
+                stamps: Vec::new(),
+                qualified: false,
+            },
+            preserve_missing_vue_diagnostics,
+            false,
+        )
+        .value
+    }
+
+    #[expect(
+        clippy::disallowed_types,
+        reason = "existing alias resolver uses std String"
+    )]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "preserves original alias policy arguments beside private observation flag"
+    )]
+    pub(crate) fn rewrite_with_alias_resolver_consumed<F>(
+        &self,
+        source: &str,
+        source_type: SourceType,
+        source_dir: Option<&Path>,
+        mut alias_resolver: F,
+        preserve_missing_vue_diagnostics: bool,
+        observe: bool,
+    ) -> Consumed<RewriteResult>
+    where
+        F: FnMut(&str, crate::PackageResolutionMode) -> Consumed<Option<std::string::String>>,
+    {
+        let mut facts = Consumed {
+            value: (),
+            stamps: Vec::new(),
+            qualified: observe,
+        };
+        let value = self.rewrite_with(source, source_type, |path, mode| {
             if path.starts_with("./") || path.starts_with("../") {
-                return alias_resolver(path, mode)
-                    .map(Into::into)
-                    .or_else(|| {
-                        self.rewrite_module_specifier_with_missing_vue_policy(
+                return VirtualProject::consume_configuration(
+                    &mut facts,
+                    alias_resolver(path, mode),
+                )
+                .map(Into::into)
+                .or_else(|| {
+                    VirtualProject::consume_configuration(
+                        &mut facts,
+                        self.rewrite_module_specifier_with_missing_vue_policy_consumed(
                             path,
                             source_dir,
                             preserve_missing_vue_diagnostics,
                             true,
+                            None,
+                            observe,
+                        ),
+                    )
+                })
+                .or_else(|| {
+                    source_dir.and_then(|dir| {
+                        VirtualProject::consume_configuration(
+                            &mut facts,
+                            rewrite_relative_vue_specifier_consumed(path, dir, observe),
                         )
                     })
-                    .or_else(|| {
-                        source_dir.and_then(|dir| rewrite_relative_vue_specifier(path, dir))
-                    });
+                });
             }
             // A resolvable alias wins over the generic `.vue` → `.vue.ts`
             // rewrite: `is_rewritable_vue_specifier` also matches `@/Foo.vue`
             // and `~/Foo.vue`, so rewriting first would emit `@/Foo.vue.ts` and
             // leave the alias prefix unresolved in the generated module.
-            alias_resolver(path, mode)
+            VirtualProject::consume_configuration(&mut facts, alias_resolver(path, mode))
                 .map(Into::into)
                 .or_else(|| {
-                    self.rewrite_module_specifier_with_missing_vue_policy(
-                        path,
-                        source_dir,
-                        preserve_missing_vue_diagnostics,
-                        true,
+                    VirtualProject::consume_configuration(
+                        &mut facts,
+                        self.rewrite_module_specifier_with_missing_vue_policy_consumed(
+                            path,
+                            source_dir,
+                            preserve_missing_vue_diagnostics,
+                            true,
+                            None,
+                            observe,
+                        ),
                     )
                 })
-                .or_else(|| source_dir.and_then(|dir| rewrite_relative_vue_specifier(path, dir)))
-        })
+                .or_else(|| {
+                    source_dir.and_then(|dir| {
+                        VirtualProject::consume_configuration(
+                            &mut facts,
+                            rewrite_relative_vue_specifier_consumed(path, dir, observe),
+                        )
+                    })
+                })
+        });
+        Consumed {
+            value,
+            stamps: facts.stamps,
+            qualified: facts.qualified,
+        }
     }
 }
+
+#[cfg(test)]
+mod consumed_tests;

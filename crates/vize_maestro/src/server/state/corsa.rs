@@ -195,14 +195,35 @@ impl ServerState {
                 .is_some_and(|bridge| bridge.is_initialized())
     }
 
-    /// Drop the cached editor session after a Vue file disappears on disk.
-    /// Its private mirror is rebuilt by the next Corsa request. This must not
-    /// wait for the old worker while handling the file-operation notification.
-    pub(crate) fn retire_corsa_bridge_for_deleted_vue_files(&self) {
-        let bridge = { self.corsa_bridge.read().clone() };
-        if let Some(bridge) = bridge {
-            self.retire_corsa_bridge(&bridge);
+    /// Keep an idle exclusive mirror for a deletion delta; otherwise retire it.
+    /// No native IPC or wait is permitted on the file-operation notification.
+    pub(crate) fn invalidate_corsa_bridge_for_deleted_vue_files(&self, deleted: &[PathBuf]) {
+        if deleted.is_empty() {
+            return;
         }
+        let mut slot = self.corsa_bridge.write();
+        let Some(current) = slot.as_mut() else {
+            return;
+        };
+        let _change = self.corsa_environment_change();
+        if let Some(bridge) = Arc::get_mut(current)
+            && bridge.is_initialized()
+            && !bridge.is_draining()
+        {
+            bridge.mark_deleted_vue_virtual_documents(deleted);
+            tracing::info!(
+                deleted = deleted.len(),
+                "retaining exclusive Corsa bridge after deleted Vue sources"
+            );
+            return;
+        }
+        // A live borrower may still stamp and insert the old graph. Isolate its
+        // session instead of relying only on the eventual reply freshness check.
+        *slot = None;
+        tracing::info!(
+            deleted = deleted.len(),
+            "retiring shared or unavailable Corsa bridge after deleted Vue sources"
+        );
     }
 
     /// Drop a Corsa bridge whose backend process died mid-session so the next
@@ -252,3 +273,6 @@ impl ServerState {
 
 #[cfg(all(test, unix))]
 mod tests;
+
+#[cfg(all(test, unix))]
+mod deleted_vue_tests;

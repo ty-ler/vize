@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 use vize_carton::{FxHashMap, FxHashSet, String};
 
+use super::observed::ShadowFacts;
 use super::{PackageShadowTopology, VirtualProject};
 
 type PackageIdentity = (PathBuf, PathBuf);
@@ -13,10 +14,10 @@ pub(super) struct WorkspaceShadowPlan {
     divergent: FxHashSet<String>,
 }
 
-fn identity(route: &crate::PackageRoute) -> PackageIdentity {
+fn identity(route: &crate::PackageRoute, facts: &mut ShadowFacts) -> PackageIdentity {
     (
-        vize_carton::path::canonicalize_non_verbatim(&route.package_root),
-        vize_carton::path::canonicalize_non_verbatim(&route.manifest_path),
+        facts.canonical(&route.package_root),
+        facts.canonical(&route.manifest_path),
     )
 }
 
@@ -25,6 +26,7 @@ impl WorkspaceShadowPlan {
         &self,
         project: &VirtualProject,
         binding: &crate::PackageRouteBinding,
+        facts: &mut ShadowFacts,
     ) -> Option<PathBuf> {
         let route = binding.route.as_ref()?;
         let name = route.package_name.as_deref()?;
@@ -44,13 +46,10 @@ impl WorkspaceShadowPlan {
         }
         // Rebase the actual selected installation, not each importing source
         // directory. Divergent packages keep their own physical identity.
-        super::super::build::mirrored_virtual_path(
-            &project.project_root,
-            &project.virtual_root,
-            owner,
-        )
-        .ok()
-        .map(|root| root.join(relative))
+        facts
+            .mirrored(&project.project_root, &project.virtual_root, owner)
+            .ok()
+            .map(|root| root.join(relative))
     }
 
     fn target(
@@ -59,8 +58,9 @@ impl WorkspaceShadowPlan {
         name: &str,
         route: &crate::PackageRoute,
         alias: &Path,
+        facts: &mut ShadowFacts,
     ) -> Option<PathBuf> {
-        let expected = identity(route);
+        let expected = identity(route, facts);
         for directory in importer.parent()?.ancestors() {
             let candidate = directory.join("node_modules").join(name);
             let Some(identities) = self.incoming.get(&candidate) else {
@@ -82,17 +82,18 @@ impl WorkspaceShadowPlan {
 }
 
 impl VirtualProject {
-    pub(super) fn workspace_shadow_plan(&self) -> WorkspaceShadowPlan {
+    pub(super) fn workspace_shadow_plan(&self, facts: &mut ShadowFacts) -> WorkspaceShadowPlan {
         let mut identities = FxHashMap::<String, FxHashSet<_>>::default();
         for binding in self.package_routes.values() {
             if !binding.specifier.starts_with('#')
                 && let Some(route) = binding.route.as_ref()
                 && let Some(name) = route.package_name.as_ref()
             {
+                facts.binding(binding);
                 identities
                     .entry(name.clone())
                     .or_default()
-                    .insert(identity(route));
+                    .insert(identity(route, facts));
             }
         }
         let mut plan = WorkspaceShadowPlan {
@@ -118,22 +119,26 @@ impl VirtualProject {
             else {
                 continue;
             };
-            let roots = plan.selected_install_shadow(self, binding).map_or_else(
-                || {
-                    self.package_shadow_scope_dirs(name, directory)
-                        .into_iter()
-                        .map(|scope| scope.join("node_modules").join(name))
-                        .collect()
-                },
-                |root| vec![root],
-            );
+            facts.binding(binding);
+            let roots = plan
+                .selected_install_shadow(self, binding, facts)
+                .map_or_else(
+                    || {
+                        self.package_shadow_scope_dirs(name, directory)
+                            .into_iter()
+                            .map(|scope| scope.join("node_modules").join(name))
+                            .collect()
+                    },
+                    |root| vec![root],
+                );
             for root in roots {
                 plan.incoming
                     .entry(root)
                     .or_default()
-                    .insert(identity(route));
+                    .insert(identity(route, facts));
             }
         }
+        facts.configuration();
         plan
     }
 
@@ -160,11 +165,12 @@ impl VirtualProject {
         ancestors: &mut FxHashSet<PathBuf>,
         topology: &mut PackageShadowTopology,
         plan: &WorkspaceShadowPlan,
+        facts: &mut ShadowFacts,
     ) {
         if !route.workspace_source {
             return;
         }
-        let root = vize_carton::path::canonicalize_non_verbatim(&route.package_root);
+        let root = facts.canonical(&route.package_root);
         let Some(sources) = self.package_source_index.get(&root) else {
             return;
         };
@@ -196,6 +202,7 @@ impl VirtualProject {
                     continue;
                 }
                 let shadow = shadow_root.join(relative);
+                let previous_owner = facts.binding(binding);
                 let target = dependency
                     .workspace_source
                     .then(|| {
@@ -204,9 +211,11 @@ impl VirtualProject {
                             name,
                             dependency,
                             &shadow,
+                            facts,
                         )
                     })
                     .flatten();
+                facts.restore_owner(previous_owner);
                 dependencies.push((shadow, dependency, target));
             }
         }
@@ -222,26 +231,31 @@ impl VirtualProject {
             };
             let shared_target = target.as_ref().filter(|target| {
                 group.iter().all(|(_, route, candidate)| {
-                    identity(route) == identity(dependency) && candidate.as_ref() == Some(*target)
+                    identity(route, facts) == identity(dependency, facts)
+                        && candidate.as_ref() == Some(*target)
                 })
             });
             if let Some(target) = shared_target {
                 topology.aliases.insert(shadow.clone(), target.clone());
                 // Pin the target's authored files and raw manifest under this
                 // owner too; another binding's refresh/removal cannot dangle it.
-                self.collect_route_shadow_topology(dependency, target, ancestors, topology, plan);
+                self.collect_route_shadow_topology(
+                    dependency, target, ancestors, topology, plan, facts,
+                );
             } else {
                 // An uncertain or divergent incoming scope retains the bound
                 // installation's own topology rather than aliasing by name.
                 for (_, route, _) in group {
-                    self.collect_route_shadow_topology(route, shadow, ancestors, topology, plan);
+                    self.collect_route_shadow_topology(
+                        route, shadow, ancestors, topology, plan, facts,
+                    );
                 }
                 if dependency.workspace_source
                     && topology.manifests.get(&shadow.join("package.json"))
                         == Some(&dependency.manifest_path)
                     && group
                         .iter()
-                        .all(|(_, route, _)| identity(route) == identity(dependency))
+                        .all(|(_, route, _)| identity(route, facts) == identity(dependency, facts))
                 {
                     topology
                         .install_roots

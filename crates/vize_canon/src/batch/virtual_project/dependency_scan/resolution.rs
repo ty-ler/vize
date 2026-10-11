@@ -2,12 +2,35 @@
 
 use std::path::{Component, Path, PathBuf};
 
+use crate::package_route::stamp::{Consumed, InputStamp};
 use vize_carton::{String as CompactString, cstr};
 
 /// First-party classification key: workspace symlinks use physical identity.
 pub(super) fn canonical_key(path: &Path) -> Option<PathBuf> {
+    canonical_key_inner(path, None)
+}
+
+pub(super) fn canonical_key_observed(path: &Path) -> Consumed<Option<PathBuf>> {
+    let mut stamps = Vec::new();
+    let value = canonical_key_inner(path, Some(&mut stamps));
+    Consumed {
+        value,
+        stamps,
+        qualified: true,
+    }
+}
+
+fn canonical_key_inner(path: &Path, stamps: Option<&mut Vec<InputStamp>>) -> Option<PathBuf> {
     let canonical = vize_carton::path::canonicalize_non_verbatim(path);
-    canonical.is_file().then_some(canonical)
+    let is_file = canonical.is_file();
+    if let Some(stamps) = stamps {
+        stamps.push(InputStamp::observed_canonical_file(
+            path.to_path_buf(),
+            canonical.clone(),
+            is_file,
+        ));
+    }
+    is_file.then_some(canonical)
 }
 
 pub(super) fn inside_node_modules(path: &Path) -> bool {
@@ -28,6 +51,29 @@ pub(super) fn alias_may_reach_first_party(
     target: &str,
     project_root: &Path,
 ) -> bool {
+    alias_may_reach_first_party_inner(pattern, target, project_root, None)
+}
+
+pub(super) fn alias_may_reach_first_party_observed(
+    pattern: &str,
+    target: &str,
+    project_root: &Path,
+) -> Consumed<bool> {
+    let mut stamps = Vec::new();
+    let value = alias_may_reach_first_party_inner(pattern, target, project_root, Some(&mut stamps));
+    Consumed {
+        value,
+        stamps,
+        qualified: true,
+    }
+}
+
+fn alias_may_reach_first_party_inner(
+    pattern: &str,
+    target: &str,
+    project_root: &Path,
+    mut stamps: Option<&mut Vec<InputStamp>>,
+) -> bool {
     if pattern.contains('*') {
         return true;
     }
@@ -36,10 +82,11 @@ pub(super) fn alias_may_reach_first_party(
     } else {
         project_root.join(target)
     };
-    let Some(resolved) = probe_candidates(&absolute) else {
+    let Some(resolved) = probe_candidates_with_inputs_inner(&absolute, stamps.as_deref_mut()).0
+    else {
         return false;
     };
-    let Some(key) = canonical_key(&resolved) else {
+    let Some(key) = canonical_key_inner(&resolved, stamps) else {
         return false;
     };
     !inside_node_modules(&key) && !is_declaration_file(&key)
@@ -77,6 +124,39 @@ pub(crate) fn resolve_dependency_with_inputs(
     project_root: &Path,
     aliases: &[(std::string::String, std::string::String)],
 ) -> (Option<PathBuf>, Vec<PathBuf>) {
+    resolve_dependency_with_inputs_inner(specifier, importer_dir, project_root, aliases, None)
+}
+
+#[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
+pub(crate) fn resolve_dependency_observed(
+    specifier: &str,
+    importer_dir: &Path,
+    project_root: &Path,
+    aliases: &[(std::string::String, std::string::String)],
+) -> Consumed<(Option<PathBuf>, Vec<PathBuf>)> {
+    let mut stamps = Vec::new();
+    let value = resolve_dependency_with_inputs_inner(
+        specifier,
+        importer_dir,
+        project_root,
+        aliases,
+        Some(&mut stamps),
+    );
+    Consumed {
+        value,
+        stamps,
+        qualified: true,
+    }
+}
+
+#[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
+fn resolve_dependency_with_inputs_inner(
+    specifier: &str,
+    importer_dir: &Path,
+    project_root: &Path,
+    aliases: &[(std::string::String, std::string::String)],
+    mut stamps: Option<&mut Vec<InputStamp>>,
+) -> (Option<PathBuf>, Vec<PathBuf>) {
     let specifier = specifier
         .strip_suffix(".vue.ts")
         .map_or_else(|| specifier.to_owned(), |stem| cstr!("{stem}.vue").into());
@@ -84,7 +164,7 @@ pub(crate) fn resolve_dependency_with_inputs(
         || specifier.starts_with("../")
         || Path::new(&specifier).is_absolute()
     {
-        return probe_candidates_with_inputs(&importer_dir.join(&specifier));
+        return probe_candidates_with_inputs_inner(&importer_dir.join(&specifier), stamps);
     }
 
     // Select the authored pattern before probing its targets. An exact key
@@ -141,7 +221,8 @@ pub(crate) fn resolve_dependency_with_inputs(
         } else {
             project_root.join(&substituted)
         };
-        let (resolved, consulted) = probe_candidates_with_inputs(&absolute);
+        let (resolved, consulted) =
+            probe_candidates_with_inputs_inner(&absolute, stamps.as_deref_mut());
         inputs.extend(consulted);
         if resolved.is_some() {
             return (resolved, inputs);
@@ -154,7 +235,24 @@ pub(super) fn probe_candidates(base: &Path) -> Option<PathBuf> {
     probe_candidates_with_inputs(base).0
 }
 
+pub(super) fn probe_candidates_observed(base: &Path) -> Consumed<Option<PathBuf>> {
+    let mut stamps = Vec::new();
+    let value = probe_candidates_with_inputs_inner(base, Some(&mut stamps)).0;
+    Consumed {
+        value,
+        stamps,
+        qualified: true,
+    }
+}
+
 fn probe_candidates_with_inputs(base: &Path) -> (Option<PathBuf>, Vec<PathBuf>) {
+    probe_candidates_with_inputs_inner(base, None)
+}
+
+fn probe_candidates_with_inputs_inner(
+    base: &Path,
+    mut stamps: Option<&mut Vec<InputStamp>>,
+) -> (Option<PathBuf>, Vec<PathBuf>) {
     let mut inputs = vec![base.to_path_buf()];
     let extension = base.extension().and_then(|extension| extension.to_str());
     // TypeScript substitutes type-bearing extensions before consulting the
@@ -163,7 +261,7 @@ fn probe_candidates_with_inputs(base: &Path) -> (Option<PathBuf>, Vec<PathBuf>) 
         Some("js" | "jsx") => &["ts", "tsx", "d.ts", "js", "jsx"],
         Some("mjs") => &["mts", "d.mts", "mjs"],
         Some("cjs") => &["cts", "d.cts", "cjs"],
-        _ if base.is_file() => return (Some(base.to_path_buf()), inputs),
+        _ if file_predicate(base, &mut stamps) => return (Some(base.to_path_buf()), inputs),
         Some("vue" | "ts" | "tsx" | "mts" | "cts" | "json") => return (None, inputs),
         _ => &[
             "ts", "tsx", "d.ts", "mts", "d.mts", "cts", "d.cts", "vue", "js", "jsx", "mjs", "cjs",
@@ -178,7 +276,7 @@ fn probe_candidates_with_inputs(base: &Path) -> (Option<PathBuf>, Vec<PathBuf>) 
     for extension in extensions {
         let candidate = PathBuf::from(cstr!("{}.{extension}", probe_base.display()).as_str());
         inputs.push(candidate.clone());
-        if candidate.is_file() {
+        if file_predicate(&candidate, &mut stamps) {
             return (Some(candidate), inputs);
         }
     }
@@ -201,11 +299,19 @@ fn probe_candidates_with_inputs(base: &Path) -> (Option<PathBuf>, Vec<PathBuf>) 
     ] {
         let candidate = base.join(index);
         inputs.push(candidate.clone());
-        if candidate.is_file() {
+        if file_predicate(&candidate, &mut stamps) {
             return (Some(candidate), inputs);
         }
     }
     (None, inputs)
+}
+
+fn file_predicate(path: &Path, stamps: &mut Option<&mut Vec<InputStamp>>) -> bool {
+    let is_file = path.is_file();
+    if let Some(stamps) = stamps {
+        stamps.push(InputStamp::observed_is_file(path.to_path_buf(), is_file));
+    }
+    is_file
 }
 
 #[cfg(test)]

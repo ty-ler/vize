@@ -19,6 +19,8 @@ use super::{
     VUE_MODULE_STUBS_FILE, VirtualProject,
 };
 
+mod configuration;
+
 impl VirtualProject {
     /// Materialize the virtual project to disk for diagnostics collection.
     ///
@@ -308,37 +310,6 @@ impl VirtualProject {
         }
 
         common
-    }
-
-    pub(super) fn resolved_tsconfig_path(&self) -> Option<PathBuf> {
-        if let Some(ref tsconfig_path) = self.tsconfig_path {
-            return Some(tsconfig_path.clone());
-        }
-
-        let tsconfig = self.project_root.join("tsconfig.json");
-        tsconfig.exists().then_some(tsconfig)
-    }
-
-    /// The configs whose contents govern this project's alias map: the
-    /// anchored tsconfig plus, for a solution-style shell, everything it
-    /// references (#3923 cache invalidation).
-    pub(crate) fn governing_config_paths(&self) -> Vec<PathBuf> {
-        let Some(anchored) = self.resolved_tsconfig_path() else {
-            return Vec::new();
-        };
-        let mut config_roots = vec![anchored.clone()];
-        config_roots.extend(super::tsconfig_gen::references::referenced_project_configs(
-            &anchored,
-        ));
-        let mut paths = config_roots.clone();
-        for config in config_roots {
-            if let Ok(flattened) = self.load_compiler_options_flattened(Some(&config)) {
-                paths.extend(flattened.input_paths);
-            }
-        }
-        paths.sort();
-        paths.dedup();
-        paths
     }
 
     /// File that project-level (file-less) diagnostics are attributed to:

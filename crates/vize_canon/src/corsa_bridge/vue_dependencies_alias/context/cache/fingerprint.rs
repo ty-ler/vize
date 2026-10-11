@@ -13,8 +13,10 @@ pub(crate) struct ContextFingerprint {
     overlay_paths: Vec<PathBuf>,
     requested_paths: Vec<PathBuf>,
     stamps: Vec<crate::package_route::stamp::InputStamp>,
+    consumed_inputs_qualified: bool,
 }
 
+pub(in crate::corsa_bridge::vue_dependencies_alias::context) mod consumed;
 mod reuse;
 pub(super) use reuse::SourceGuard;
 
@@ -60,10 +62,25 @@ impl ContextFingerprint {
             overlay_paths,
             requested_paths: Vec::new(),
             stamps: Vec::new(),
+            consumed_inputs_qualified: false,
         }
     }
 
+    /// Facts from the original producer operations, never a later capture.
+    pub(in crate::corsa_bridge::vue_dependencies_alias::context) fn include_consumed<T>(
+        &mut self,
+        packet: crate::package_route::stamp::Consumed<T>,
+    ) -> T {
+        self.consumed_inputs_qualified = packet.qualified;
+        self.stamps.extend(packet.stamps);
+        packet.value
+    }
+
     pub(crate) fn stamp(&mut self, context: &AliasContext) {
+        let consumed = std::mem::take(&mut self.stamps)
+            .into_iter()
+            .filter(crate::package_route::stamp::InputStamp::is_consumed_only)
+            .collect::<Vec<_>>();
         let mut paths = vec![context.project_root.join("tsconfig.json")];
         if let Some(mirror) = context.mirror.as_ref() {
             paths.extend(mirror.governing_config_paths());
@@ -79,6 +96,7 @@ impl ContextFingerprint {
             .into_iter()
             .map(crate::package_route::stamp::InputStamp::capture)
             .collect();
+        self.stamps.extend(consumed);
     }
 
     pub(crate) fn include_requested_sources(&mut self, sources: &[(PathBuf, &str)]) {
@@ -104,11 +122,22 @@ impl ContextFingerprint {
     ) -> bool {
         self.stamps
             .iter()
+            .filter(|stamp| !stamp.is_consumed_only())
             .all(|stamp| stamp.is_current_with_cache(observed))
     }
 
     pub(crate) fn input_stamps(&self) -> Vec<crate::package_route::stamp::InputStamp> {
-        self.stamps.clone()
+        // Union members retain the original metadata vector; consumed graph
+        // authority belongs only to the same existing host slot.
+        self.stamps
+            .iter()
+            .filter(|stamp| !stamp.is_consumed_only())
+            .cloned()
+            .collect()
+    }
+
+    pub(super) fn consumed_inputs(&self) -> (&[crate::package_route::stamp::InputStamp], bool) {
+        (&self.stamps, self.consumed_inputs_qualified)
     }
 
     pub(crate) fn overlay_identity(&self) -> u64 {

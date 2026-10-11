@@ -99,25 +99,43 @@ pub(super) fn configured_root(
     options: Option<&Map<std::string::String, Value>>,
     tsconfig: Option<&Path>,
 ) -> Option<PathBuf> {
-    let plugin = options?.get("plugins")?.as_array()?.iter().find(|entry| {
-        entry.as_str() == Some(PLUGIN) || entry.get("name").and_then(Value::as_str) == Some(PLUGIN)
-    })?;
-    let explicit_root = plugin.get("options").and_then(|value| value.get("rootDir"));
-    let root = if let Some(value) = explicit_root {
-        // A malformed path is unsupported; it never enables a guessed transform.
-        PathBuf::from(value.as_str()?)
-    } else {
-        let compiler = project.load_compiler_options(tsconfig).ok()?;
-        compiler
-            .get("rootDir")
-            .map(|value| value.as_str().map(PathBuf::from))
-            .unwrap_or_else(|| Some(project.project_root.clone()))?
-    };
-    Some(normalize_path_lexically(&if root.is_absolute() {
-        root
-    } else {
-        project.project_root.join(root)
-    }))
+    configured_root_consumed(project, options, tsconfig, false).value
+}
+
+#[expect(clippy::disallowed_types, reason = "serde_json keys are std strings")]
+pub(super) fn configured_root_consumed(
+    project: &VirtualProject,
+    options: Option<&Map<std::string::String, Value>>,
+    tsconfig: Option<&Path>,
+    observe: bool,
+) -> crate::package_route::stamp::Consumed<Option<PathBuf>> {
+    use super::project::consumption::{empty, finish};
+    let mut facts = empty(observe && project.project_root.is_absolute());
+    let value = (|| {
+        let plugin = options?.get("plugins")?.as_array()?.iter().find(|entry| {
+            entry.as_str() == Some(PLUGIN)
+                || entry.get("name").and_then(Value::as_str) == Some(PLUGIN)
+        })?;
+        let explicit_root = plugin.get("options").and_then(|value| value.get("rootDir"));
+        let root = if let Some(value) = explicit_root {
+            // A malformed path is unsupported; it never enables a guessed transform.
+            PathBuf::from(value.as_str()?)
+        } else {
+            let compiler = project.configuration_options(tsconfig, observe, &mut facts)?;
+            compiler
+                .get("rootDir")
+                .map(|value| value.as_str().map(PathBuf::from))
+                .unwrap_or_else(|| Some(project.project_root.clone()))?
+        };
+        Some(normalize_path_lexically(&if root.is_absolute() {
+            root
+        } else {
+            project.project_root.join(root)
+        }))
+    })();
+    // None may be a pure absent-plugin value or an unsupported loader/default error.
+    facts.qualified &= value.is_some();
+    finish(facts, value)
 }
 
 pub(super) fn file_literal(root: &Path, path: &Path) -> Option<String> {

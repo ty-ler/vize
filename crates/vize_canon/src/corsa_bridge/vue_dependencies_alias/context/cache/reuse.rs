@@ -5,8 +5,10 @@ use std::sync::Arc;
 
 use vize_carton::FxHashMap;
 
+use super::super::build::consumption::NativeFacts;
 use super::{ContextFingerprint, SessionCache};
 use crate::corsa_bridge::vue_dependencies_alias::AliasContext;
+use crate::package_route::stamp::{Consumed, FactRole};
 
 mod patch;
 
@@ -84,17 +86,32 @@ impl RebuildCandidate {
         requested_sources: &[(PathBuf, &str)],
         options: crate::corsa_bridge::vue_document::CorsaVueVirtualDocumentOptions,
         environment: crate::corsa_bridge::vue_document::CorsaProjectEnvironment<'_>,
-    ) -> Result<AliasContext, RebuildFailure> {
+    ) -> Result<Consumed<AliasContext>, RebuildFailure> {
         let changed = self
             .fingerprint
-            .source_changes(fingerprint, &self.context, overlays)
+            .source_changes(
+                fingerprint,
+                &self.context,
+                overlays,
+                source_path,
+                content.as_bytes(),
+                requested_sources,
+            )
             .map_err(ReuseGuard::SourceInputs)?;
-        let configured = super::super::build::configured_project(
-            &vize_carton::path::canonicalize_non_verbatim(source_path),
+        let mut facts = NativeFacts::new(true);
+        let canonical = crate::batch::virtual_project::VirtualProject::canonical_configuration_path(
+            source_path,
+            true,
+        );
+        let configured = super::super::build::configured_project_observed(
+            &canonical.value,
             options,
             environment,
         )
         .map_err(|_| ReuseGuard::Namespace)?;
+        let root = configured.value.project_root().to_path_buf();
+        facts.record(canonical, FactRole::Configuration, &root);
+        let configured = facts.record(configured, FactRole::Configuration, &root);
         let old = self.context.mirror.as_ref().ok_or(ReuseGuard::Namespace)?;
         if configured.virtual_root() != old.virtual_root()
             || configured.project_root() != old.project_root()
@@ -103,7 +120,14 @@ impl RebuildCandidate {
         {
             return Err(ReuseGuard::Namespace.into());
         }
-        let host = vize_carton::path::canonicalize_non_verbatim(source_path);
+        let host = facts.record(
+            crate::batch::virtual_project::VirtualProject::canonical_configuration_path(
+                source_path,
+                true,
+            ),
+            FactRole::Configuration,
+            &root,
+        );
         let known = old.registered_original_paths_sorted();
         let mut seeds = vec![host.clone()];
         seeds.extend(
@@ -132,19 +156,30 @@ impl RebuildCandidate {
         {
             return Err(ReuseGuard::Membership.into());
         }
+        if !facts.is_qualified() {
+            return Err(ReuseGuard::SourceInputs(
+                super::fingerprint::SourceGuard::UnknownAuthority,
+            )
+            .into());
+        }
         let mut context = Arc::try_unwrap(self.context).map_err(|_| ReuseGuard::SharedReader)?;
         context
             .mirror
             .as_mut()
             .ok_or(ReuseGuard::Namespace)?
             .discard_incremental_materialization();
-        let patched = patch::apply(
+        let mut resolver = environment.package_routes.clone();
+        let patched = patch::apply_observed(
             &mut context,
             source_path,
             content,
             overlays,
             requested_sources,
             &changed,
+            &seeds,
+            &mut resolver,
+            self.fingerprint.consumed_inputs(),
+            &mut facts,
         );
         if patched.is_none() {
             return Err(RebuildFailure {
@@ -162,7 +197,7 @@ impl RebuildCandidate {
         {
             context.graph_reused = true;
         }
-        Ok(context)
+        Ok(facts.finish(context))
     }
 }
 
