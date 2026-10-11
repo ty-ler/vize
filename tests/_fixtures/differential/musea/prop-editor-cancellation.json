@@ -1,6 +1,0 @@
-{
-  "values": { "label": "Cancellation probe" },
-  "cancelled": "cancelled",
-  "replacement": "replacement",
-  "objectDefault": { "enabled": false }
-}

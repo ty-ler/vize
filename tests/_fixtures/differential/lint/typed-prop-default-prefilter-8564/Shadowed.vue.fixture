@@ -1,3 +1,0 @@
-<script setup lang="ts">
-function defineProps<T>() { return {} as T; } const { value = 1 } = defineProps<{ value: number }>()
-</script>

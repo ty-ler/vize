@@ -1,6 +1,0 @@
-<script setup lang="ts">
-import { 'ref' as ref } from 'vue';
-ref('');
-const broken = ;
-void broken;
-</script>

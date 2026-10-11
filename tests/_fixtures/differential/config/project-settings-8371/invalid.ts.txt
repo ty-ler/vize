@@ -1,3 +1,0 @@
-import type { Count } from "@/contracts";
-
-export const invalid: Count = "wrong";
