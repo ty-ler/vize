@@ -3,7 +3,7 @@
 use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
 use std::{
-    hash::{Hash, Hasher},
+    hash::BuildHasher,
     path::{Path, PathBuf},
 };
 use vize_carton::{FxHashMap, FxHashSet};
@@ -49,9 +49,8 @@ impl NativeFacts {
         if !self.observe {
             return;
         }
-        let mut hasher = std::hash::DefaultHasher::new();
-        stamp.hash(&mut hasher);
-        let bucket = self.by_hash.entry(hasher.finish()).or_default();
+        let hash = self.by_hash.hasher().hash_one(&stamp);
+        let bucket = self.by_hash.entry(hash).or_default();
         if bucket.iter().any(|index| {
             self.stamps
                 .get(*index)

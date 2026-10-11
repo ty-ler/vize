@@ -1,10 +1,7 @@
 //! Proof-bounded retirement after actual original owner operations.
 
 use super::{FactRole, InputStamp, NativeFacts};
-use std::{
-    hash::{Hash, Hasher},
-    path::PathBuf,
-};
+use std::{hash::BuildHasher, path::PathBuf};
 use vize_carton::FxHashSet;
 
 impl NativeFacts {
@@ -145,9 +142,8 @@ impl NativeFacts {
     }
 
     fn contains_before(&self, expected: &InputStamp, cutoff: usize) -> bool {
-        let mut hasher = std::hash::DefaultHasher::new();
-        expected.hash(&mut hasher);
-        self.by_hash.get(&hasher.finish()).is_some_and(|bucket| {
+        let hash = self.by_hash.hasher().hash_one(expected);
+        self.by_hash.get(&hash).is_some_and(|bucket| {
             bucket.iter().any(|index| {
                 *index < cutoff
                     && self
@@ -158,3 +154,7 @@ impl NativeFacts {
         })
     }
 }
+
+#[cfg(test)]
+#[path = "tests/private_bucket.rs"]
+mod private_bucket;
