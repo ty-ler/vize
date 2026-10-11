@@ -79,12 +79,39 @@ jobs:
         run: |
           command -v strace
           python3 "$RUNNER_TEMP/app-negative-packets.py"
+      - name: Retain complete narrow native packets first
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: original445-typechecker-negative-native-packets-${{ github.run_id }}
+          path: ${{ runner.temp }}/original-typechecker-negative-native-packets
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+      - name: Package whole packets with symlink identities preserved
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os, tarfile
+          from pathlib import Path
+          root = Path(os.environ["RUNNER_TEMP"])
+          with tarfile.open(root / "original-typechecker-negative-whole-packets.tar.gz",
+                            "w:gz", dereference=False) as archive:
+              archive.add(root / "original-typechecker-negative-packets",
+                          arcname="original-typechecker-negative-packets")
+          PY
+          sha256sum "$RUNNER_TEMP/original-typechecker-negative-whole-packets.tar.gz" \
+            > "$RUNNER_TEMP/original-typechecker-negative-whole-packets.tar.gz.sha256"
       - name: Retain whole packets including genuine failures
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: original445-typechecker-negative-whole-packets-${{ github.run_id }}
-          path: ${{ runner.temp }}/original-typechecker-negative-packets
+          path: |
+            ${{ runner.temp }}/original-typechecker-negative-whole-packets.tar.gz
+            ${{ runner.temp }}/original-typechecker-negative-whole-packets.tar.gz.sha256
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 30
+          compression-level: 0

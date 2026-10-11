@@ -313,6 +313,39 @@ def main():
     results = [capture_project(name, pin, vize, corsa, cache) for name, pin in PINS.items()]
     save_json(OUT / "original-oracle-verdicts.json", results)
     save_json(OUT / "whole-packet-manifest.json", manifest(OUT))
+    narrow = OUT.parent / "original-typechecker-negative-native-packets"
+    for path in (OUT / "producers.json", OUT / "original-oracle-verdicts.json"):
+        narrow.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, narrow / path.name)
+    for name in PINS:
+        phase = OUT / name / "broken"
+        paths = [phase / "whole-authored.vue", phase / "native-string-custody.json",
+                 phase / "original-command/command.json", phase / "original-command/stdout",
+                 phase / "original-command/stderr", phase / "native-exec-live/live-exec-receipts.json"]
+        for live in sorted((phase / "native-exec-live").glob("[0-9]*")):
+            paths.extend([live / "whole-native-exec-line", live / "materialized/tsconfig.json",
+                          live / "materialized-manifest.json"])
+            for command in ("direct-diagnostics", "effective-roots"):
+                paths.extend(live / command / file for file in ("command.json", "stdout", "stderr"))
+            paths.extend((live / "materialized").rglob("__vize_intentional_type_error_*.vue.ts"))
+        for path in paths:
+            if path.is_file():
+                target = narrow / path.relative_to(OUT)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(path, target)
+    save_json(narrow / "packet-manifest.json", manifest(narrow))
+    # Retain the complete narrow compiler packet in the job log as transport backup.
+    for name in PINS:
+        for live in sorted((OUT / name / "broken/native-exec-live").glob("[0-9]*")):
+            paths = [live / "whole-native-exec-line", live / "materialized/tsconfig.json",
+                     live / "direct-diagnostics/command.json", live / "direct-diagnostics/stdout",
+                     live / "direct-diagnostics/stderr"]
+            paths.extend((live / "materialized").rglob("__vize_intentional_type_error_*.vue.ts"))
+            for path in paths:
+                if path.is_file():
+                    print(f"PACKET BEGIN {path.relative_to(OUT)} SHA256 {sha(path)}", flush=True)
+                    print(path.read_text(), flush=True)
+                    print(f"PACKET END {path.relative_to(OUT)}", flush=True)
     print(json.dumps(results, indent=2))
     return 0 if all(all(result[key] for key in (
         "cleanOracle", "brokenOracle", "repairOracle", "originalDeadlines", "liveCustody")) for result in results) else 1

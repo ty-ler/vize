@@ -47,3 +47,12 @@ buffer observed in the first literal-H trace (894,969 bytes for Element Plus;
 501,327 for Hoppscotch). A native-exec/live-tree control now checks the actual
 observer arguments before the real cases; each whole trace separately records
 whether any string was truncated. Raw native output files remain unbounded.
+
+The supported observer executed both original negatives and retained stable
+live configs, but upload-artifact followed dependency-directory symlinks into
+3,110,068 files and exhausted its JavaScript heap. No provider artifact exists
+for that run. Recovery uploads the complete narrow native/config/injected
+packet first, then archives the whole tree without dereferencing symlinks.
+A local cycle/external-alias/hardlink control verifies archive identities and
+member bytes before the single recovery qualification. Consumer sources,
+configs, commands, deadlines, and the genuine red oracles remain unchanged.
