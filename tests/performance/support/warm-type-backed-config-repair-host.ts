@@ -9,6 +9,7 @@ import {
 } from "./warm-type-backed-config-review-host.ts";
 import { projectConfigManifest } from "./warm-type-backed-project-config-manifest.ts";
 import { issuedCompletionManifest } from "./warm-type-backed-issued-completion-host.ts";
+import { qualifyConfigCanonBatchHost } from "./warm-type-backed-config-canon-batch-host.ts";
 
 type Digest = (side: "before" | "after", file: string) => string | null;
 type Row = [file: string, originalBefore: string | null, reviewed: string, repaired: string];
@@ -70,6 +71,27 @@ export function qualifyConfigRepairedReviewHost<T extends { files: readonly stri
     digest: Digest,
   ) => T | null,
   scope: ConfigReviewScope = "parent-pair",
+) {
+  return qualifyConfigCanonBatchHost(
+    production,
+    alreadyQualified,
+    digest,
+    (files, owned, current) =>
+      qualifyConfigRepairedReviewContext(files, owned, current, qualifyOriginal, scope),
+    scope,
+  );
+}
+
+function qualifyConfigRepairedReviewContext<T extends { files: readonly string[] }>(
+  production: string[],
+  alreadyQualified: ReadonlySet<string>,
+  digest: Digest,
+  qualifyOriginal: (
+    production: string[],
+    alreadyQualified: ReadonlySet<string>,
+    digest: Digest,
+  ) => T | null,
+  scope: ConfigReviewScope,
 ) {
   const original = qualifyConfigReviewHost(
     production,
