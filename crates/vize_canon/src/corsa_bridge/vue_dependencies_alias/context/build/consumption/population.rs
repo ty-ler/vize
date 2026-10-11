@@ -25,7 +25,7 @@ pub(super) struct PopulationReport {
 
 pub(super) fn capture(
     stamps: &[InputStamp],
-    full: &FxHashMap<u64, Vec<usize>>,
+    full: &FxHashMap<u64, impl AsRef<[usize]>>,
 ) -> PopulationReport {
     capture_limited(stamps, full, MAX_KEYS, MAX_FACTS)
 }
@@ -39,7 +39,7 @@ fn suffix(path: &Path) -> [Option<Component<'_>>; 3] {
 
 fn capture_limited(
     stamps: &[InputStamp],
-    full: &FxHashMap<u64, Vec<usize>>,
+    full: &FxHashMap<u64, impl AsRef<[usize]>>,
     max_keys: usize,
     max_facts: usize,
 ) -> PopulationReport {
@@ -49,7 +49,7 @@ fn capture_limited(
         ..PopulationReport::default()
     };
     for bucket in full.values() {
-        let count = bucket.len();
+        let count = bucket.as_ref().len();
         report.full_max = report.full_max.max(count);
         report.full_pairs += (count as u128) * (count.saturating_sub(1) as u128) / 2;
     }
@@ -237,7 +237,7 @@ mod tests {
 
     fn capture_unchanged(
         stamps: &[InputStamp],
-        full: &FxHashMap<u64, Vec<usize>>,
+        full: &FxHashMap<u64, impl AsRef<[usize]> + Clone + std::fmt::Debug + PartialEq>,
     ) -> PopulationReport {
         let (before, old_full) = (stamps.to_vec(), full.clone());
         let report = capture(stamps, full);
@@ -344,6 +344,6 @@ mod tests {
             .collect::<Vec<_>>();
         let full = index(&same);
         assert_eq!(capture_limited(&same, &full, 1, 4), oracle(&same, &full));
-        assert!(capture_limited(&[], &FxHashMap::default(), 0, 0).complete);
+        assert!(capture_limited(&[], &FxHashMap::<u64, Vec<usize>>::default(), 0, 0).complete);
     }
 }

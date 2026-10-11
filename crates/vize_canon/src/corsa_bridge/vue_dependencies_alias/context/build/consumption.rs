@@ -13,7 +13,51 @@ pub(in crate::corsa_bridge::vue_dependencies_alias::context) struct NativeFacts 
     observe: bool,
     qualified: bool,
     stamps: Vec<InputStamp>,
-    by_hash: FxHashMap<u64, Vec<usize>>,
+    by_hash: FxHashMap<u64, FactBucket>,
+}
+
+/// The first index is inline; full equality admits any allocated collision tail.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+enum FactBucket {
+    #[default]
+    Empty,
+    Singleton(usize),
+    Collisions(Vec<usize>),
+}
+
+impl FactBucket {
+    fn push(&mut self, index: usize) {
+        match self {
+            Self::Empty => *self = Self::Singleton(index),
+            Self::Singleton(first) => *self = Self::Collisions(vec![*first, index]),
+            Self::Collisions(indices) => indices.push(index),
+        }
+    }
+}
+
+impl std::ops::Deref for FactBucket {
+    type Target = [usize];
+    fn deref(&self) -> &[usize] {
+        match self {
+            Self::Empty => &[],
+            Self::Singleton(index) => std::slice::from_ref(index),
+            Self::Collisions(indices) => indices,
+        }
+    }
+}
+
+impl AsRef<[usize]> for FactBucket {
+    fn as_ref(&self) -> &[usize] {
+        self
+    }
+}
+
+impl<'a> IntoIterator for &'a FactBucket {
+    type Item = &'a usize;
+    type IntoIter = std::slice::Iter<'a, usize>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
 }
 
 /// Lend the existing complete vector during one synchronous owner operation.
