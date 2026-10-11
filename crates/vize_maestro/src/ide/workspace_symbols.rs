@@ -11,7 +11,6 @@ mod disk;
 mod rank;
 #[cfg(feature = "native")]
 mod script;
-#[cfg(feature = "native")]
 mod sources;
 #[cfg(test)]
 mod tests;
@@ -54,7 +53,7 @@ impl WorkspaceSymbolsService {
         query: &str,
         symbols: &mut Vec<SymbolInformation>,
     ) {
-        let Some(descriptor) = vize_incremental::parse_descriptor(uri.path(), content) else {
+        let Some(descriptor) = sources::borrowed_descriptor(uri.path(), content) else {
             return;
         };
 

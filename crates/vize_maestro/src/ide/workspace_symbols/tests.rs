@@ -2,6 +2,8 @@
 use super::WorkspaceSymbolsService;
 use tower_lsp::lsp_types::{Position, Range, SymbolKind};
 
+mod borrowed_descriptor;
+
 #[test]
 fn test_to_pascal_case() {
     assert_eq!(
