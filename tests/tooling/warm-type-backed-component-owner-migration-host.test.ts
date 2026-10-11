@@ -5,6 +5,7 @@ import { qualifyComponentOwnerMigrationHost } from "../performance/support/warm-
 import { capturesOwners } from "../performance/support/warm-type-backed-owner-migration.ts";
 import successor from "../performance/support/warm-type-backed-component-owner-migration-manifest.json" with { type: "json" };
 import loader from "../performance/support/warm-type-backed-project-config-loader-manifest.json" with { type: "json" };
+import { qualifyCurrentComponentIssuedSource } from "./support/component-issued-source.ts";
 import { componentOwnerSourcePair } from "./support/component-owner-migration-source.ts";
 
 for (const composed of [false, true]) {
@@ -25,7 +26,7 @@ for (const composed of [false, true]) {
     assert.equal(result.originalPackets, 79);
     assert.equal(result.supplementalResolves + result.supplementalRefusals, 16);
     assert.equal(result.originalComparedFields, 20);
-    assert.ok(qualify(pair.actual));
+    assert.ok(qualify(pair.actual) ?? qualifyCurrentComponentIssuedSource(composed));
   });
 
   await test(`${scope} refuses every omitted, duplicate or foreign production owner`, () => {

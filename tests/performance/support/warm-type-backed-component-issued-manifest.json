@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "originalComponentManifestSHA256": "bcf13b6eaf587647a1ef04068b49c264156967f37278292ff2720bf14ef17686",
+  "originalConfigManifestSHA256": "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc",
+  "ownerMigrationManifestSHA256": "6d1bdcc6fa6561384abde169481f4e8b10c16d53d606b9364431bc15b828061d",
+  "issuedCompletionManifestSHA256": "ef1ffd5636c09cb276a5f8365c24a899691a161ebc70839713e7a8721a0d7c48",
+  "loaderManifestSHA256": "a7ff805231e2d318d4bebbbce3926a2bbdb0d4f0d5209c458bedb268ceef66c4",
+  "nullCompletionManifestSHA256": "8d3677de4d6cfa8e5d1a1a18f4eaf93c3c88fb5c7db454d55adae26968054d30",
+  "parentSource": "87a3c7de850b03c91c0d5bd2d8e87095cf7845fb",
+  "original400": 400,
+  "originalPackets": 79,
+  "supplementalResolves": 8,
+  "supplementalRefusals": 8,
+  "originalComparedFields": 20,
+  "completeComponentBodies": 28,
+  "composedProductionBodies": 119,
+  "issuedManifestBodySHA256": "f3384dcc5e56affcc81c18178eab775d92bff605d4e6804dd4cb945e4ee65f22"
+}
