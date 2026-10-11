@@ -142,3 +142,22 @@ optional Linux workflow. Local macOS cannot qualify the two `/proc` controls;
 the Linux job must execute them. The native producer and original driver,
 recipe, bytes, requests, deadlines and caps remain unchanged. Retry the original
 campaign before sampling; no cost or improvement claim is made yet.
+
+Diagnostic `92f0c981ac` retains artifact `11706805001`: actual owned process,
+16,287 CPU samples, full raw perf data/report/stacks, complete syscall summary
+and binary/lock receipts. Strace exits 0; the deliberately interrupted perf
+process exits 130 after flushing readable data. The observer rejects that exit,
+so the step is red despite preserving the capture. Native producer and original
+request/campaign failure remain unchanged. Whole descendant syscall counts
+cannot be interpreted as cold phase wall time. Four-KiB dwarf stacks truncate
+above some syscall leaves and lack a paired monotonic/UTC clock receipt.
+
+A diagnostic-only successor captures CPU without simultaneous ptrace, retaining
+the existing syscall archive as a separate source. Use explicit perf mono clock
+and 16-KiB dwarf stacks. Executable process custody includes paired actual Node
+monotonic/UTC samples; save another pair at the end to bound wall-clock drift.
+Keep the literal perf exit and intentional stop reason, accepting 130 only for
+that observer SIGINT after a readable full report/data capture. Native source,
+original workload and request deadlines remain unchanged; profile timing does
+not grant performance or acceptance credit. Execute custody/clock controls
+before the native build and independent original campaign.

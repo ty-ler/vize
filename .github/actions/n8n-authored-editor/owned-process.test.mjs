@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { authenticateProcess } from "./owned-process.mjs";
+import { authenticateProcess, clockReceipt } from "./owned-process.mjs";
 
 const checkout = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 const helper = fileURLToPath(new URL("./owned-process.mjs", import.meta.url));
@@ -17,6 +17,22 @@ function workspace(t, receipt) {
   fs.writeFileSync(path.join(output, "consumer/process.json"), JSON.stringify(receipt));
   return output;
 }
+
+test("actual clock receipts bracket UTC with increasing monotonic samples", () => {
+  const before = process.hrtime.bigint();
+  const first = clockReceipt();
+  const second = clockReceipt();
+  const after = process.hrtime.bigint();
+  assert.ok(before <= BigInt(first.beforeNs));
+  assert.ok(BigInt(first.beforeNs) <= BigInt(first.afterNs));
+  assert.ok(BigInt(first.afterNs) <= BigInt(second.beforeNs));
+  assert.ok(BigInt(second.beforeNs) <= BigInt(second.afterNs));
+  assert.ok(BigInt(second.afterNs) <= after);
+  for (const receipt of [first, second]) {
+    assert.ok(Number.isSafeInteger(receipt.wallTimeMs));
+    assert.ok(Math.abs(Date.now() - receipt.wallTimeMs) < 1000);
+  }
+});
 
 test("the actual receipt refuses a different checkout before any process observation", (t) => {
   const output = workspace(t, { checkout: "different-checkout", pid: process.pid });
@@ -58,6 +74,8 @@ test(
     assert.equal(owned.executable, fs.realpathSync(process.execPath));
     assert.ok(owned.stat.startsWith(`${child.pid} (`));
     assert.ok(Number.isFinite(Date.parse(owned.observedAt)));
+    assert.ok(BigInt(owned.clock.beforeNs) <= BigInt(owned.clock.afterNs));
+    assert.ok(Number.isSafeInteger(owned.clock.wallTimeMs));
   },
 );
 

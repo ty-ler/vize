@@ -59,16 +59,14 @@ done
 process_pid=$(vp node .github/actions/n8n-authored-editor/owned-process.mjs \
   "$output" "$VIZE_LSP_BIN")
 
-printf '%s\n' "$perf_executable record -e cpu-clock -F 49 --call-graph dwarf,4096 -p $process_pid" \
+printf '%s\n' "$perf_executable record --clockid mono -e cpu-clock -F 49 --call-graph dwarf,16384 -p $process_pid" \
   > "$output/perf-command.txt"
-printf '%s\n' "strace -f -c -p $process_pid" > "$output/strace-command.txt"
-sudo -n "$perf_executable" record -e cpu-clock -F 49 --call-graph dwarf,4096 \
+printf '%s\n' 'No simultaneous strace: complete syscall archive is retained in artifact 11706805001.' \
+  > "$output/syscall-reference.txt"
+sudo -n "$perf_executable" record --clockid mono -e cpu-clock -F 49 --call-graph dwarf,16384 \
   -p "$process_pid" -o "$output/perf.data" \
   > "$output/perf.stdout" 2> "$output/perf.stderr" &
 perf_pid=$!
-sudo -n strace -f -c -p "$process_pid" -o "$output/syscalls.txt" \
-  > "$output/strace.stdout" 2> "$output/strace.stderr" &
-strace_pid=$!
 
 while kill -0 "$consumer_pid" 2>/dev/null; do
   if (( SECONDS - started > 660 )); then
@@ -79,16 +77,14 @@ while kill -0 "$consumer_pid" 2>/dev/null; do
 done
 if wait "$consumer_pid"; then consumer_status=0; else consumer_status=$?; fi
 consumer_pid=""
-for observer in "$perf_pid" "$strace_pid"; do
-  sudo -n kill -INT "$observer" 2>/dev/null || true
-done
+sudo -n kill -INT "$perf_pid" 2>/dev/null || true
 if wait "$perf_pid"; then perf_status=0; else perf_status=$?; fi
-if wait "$strace_pid"; then strace_status=0; else strace_status=$?; fi
 perf_pid=""
-strace_pid=""
 sudo -n chown -R "$(id -u):$(id -g)" "$output"
-printf 'consumer_exit=%s\nperf_exit=%s\nstrace_exit=%s\n' \
-  "$consumer_status" "$perf_status" "$strace_status" > "$output/status.txt"
+printf 'consumer_exit=%s\nperf_exit=%s\nperf_stop=observer_SIGINT\n' \
+  "$consumer_status" "$perf_status" > "$output/status.txt"
+vp node --input-type=module -e 'import { clockReceipt } from "./.github/actions/n8n-authored-editor/owned-process.mjs"; process.stdout.write(JSON.stringify(clockReceipt()))' \
+  > "$output/finished-clock.json"
 if [[ -s "$output/perf.data" ]]; then
   "$perf_executable" report --stdio --header -i "$output/perf.data" \
     > "$output/cpu-report.txt" 2> "$output/cpu-report.stderr"
@@ -98,8 +94,6 @@ fi
 sha256sum --check "$output/source-binary.sha256"
 sha256sum --check "$output/source-locks.sha256"
 date --iso-8601=ns > "$output/finished-at.txt"
-test "$perf_status" -eq 0
-test "$strace_status" -eq 0
+[[ "$perf_status" -eq 0 || "$perf_status" -eq 130 ]]
 test -s "$output/cpu-report.txt"
-test -s "$output/syscalls.txt"
 printf '%s\n' 'Profile capture finished; original campaign status remains separate.'

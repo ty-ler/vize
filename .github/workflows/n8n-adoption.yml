@@ -59,7 +59,7 @@ on:
   workflow_dispatch:
     inputs:
       profile-authored-graph:
-        description: Repeat the original authored campaign with separate CPU and syscall observers
+        description: Repeat the original authored campaign with a separate CPU observer
         type: boolean
         default: false
 
@@ -347,7 +347,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.profile-authored-graph }}
         run: |
           sudo -n apt-get update
-          sudo -n apt-get install --no-install-recommends --yes linux-tools-common linux-tools-generic strace
+          sudo -n apt-get install --no-install-recommends --yes linux-tools-common linux-tools-generic
       - name: Profile a separate original authored campaign
         if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.profile-authored-graph }}
         env: { VIZE_TRACE_EDITOR_PREPARATION: "1", VIZE_TRACE_NATIVE_FACT_REFUSAL: "1" }

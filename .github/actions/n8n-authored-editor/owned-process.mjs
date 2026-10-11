@@ -4,6 +4,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+/** Bracket the real-time sample with the same monotonic clock used by perf. */
+export function clockReceipt() {
+  const beforeNs = process.hrtime.bigint();
+  const wallTimeMs = Date.now();
+  const afterNs = process.hrtime.bigint();
+  return { beforeNs: String(beforeNs), wallTimeMs, afterNs: String(afterNs) };
+}
+
 /** Authenticate the actual provider process before attaching observers. */
 export function authenticateProcess(output, binary) {
   const receipt = JSON.parse(fs.readFileSync(path.join(output, "consumer/process.json")));
@@ -16,7 +24,14 @@ export function authenticateProcess(output, binary) {
   fs.writeFileSync(
     path.join(output, "owned-process.json"),
     `${JSON.stringify(
-      { checkout, pid: receipt.pid, executable, stat, observedAt: new Date().toISOString() },
+      {
+        checkout,
+        pid: receipt.pid,
+        executable,
+        stat,
+        observedAt: new Date().toISOString(),
+        clock: clockReceipt(),
+      },
       null,
       2,
     )}\n`,
