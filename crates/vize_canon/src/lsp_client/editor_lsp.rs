@@ -55,8 +55,8 @@ mod tests;
 mod type_definition;
 pub(super) use original_program::OriginalDiagnosingSession;
 use requests::{
-    RawCompletionRequest, RawDefinitionRequest, RawHoverRequest, RawPrepareRenameRequest,
-    RawReferencesRequest, RawRenameRequest, RawSignatureHelpRequest, RawWillRenameFilesRequest,
+    RawDefinitionRequest, RawHoverRequest, RawPrepareRenameRequest, RawReferencesRequest,
+    RawRenameRequest, RawSignatureHelpRequest, RawWillRenameFilesRequest,
     signature_help_request_params, will_rename_files_request_params,
 };
 use responder::spawn_responder;
@@ -160,24 +160,6 @@ impl EditorLspSession {
             "position": { "line": line, "character": character },
         })))
         .map_err(|error| cstr!("Failed to request editor LSP hover: {error}"))
-    }
-
-    fn completion(
-        &mut self,
-        document_uri: &str,
-        line: u32,
-        character: u32,
-    ) -> Result<Option<Value>, String> {
-        let uri = self.ready_document_uri(document_uri)?;
-        block_on(
-            self.client
-                .request::<RawCompletionRequest>(serde_json::json!({
-                    "textDocument": { "uri": uri },
-                    "position": { "line": line, "character": character },
-                    "context": { "triggerKind": 1 },
-                })),
-        )
-        .map_err(|error| cstr!("Failed to request editor LSP completion: {error}"))
     }
 
     fn definition(
