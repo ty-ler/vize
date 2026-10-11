@@ -16,14 +16,21 @@ export class QueryRecorder {
   readonly session: LspSession;
   readonly nativeExecutable: string;
   readonly parentExecutable: string;
+  readonly captureOwners: boolean;
   readonly roots = new SessionRoots();
   readonly notifications: Array<{ method: string; params: unknown }> = [];
   readonly responses: JsonRpcMessage[] = [];
 
-  constructor(session: LspSession, nativeExecutable: string, parentExecutable: string) {
+  constructor(
+    session: LspSession,
+    nativeExecutable: string,
+    parentExecutable: string,
+    captureOwners = false,
+  ) {
     this.session = session;
     this.nativeExecutable = nativeExecutable;
     this.parentExecutable = fs.realpathSync(parentExecutable);
+    this.captureOwners = captureOwners;
     this.sampler = createSampler(session.processId);
     session.notificationObservers.push((method, params) =>
       this.notifications.push({ method, params }),
@@ -137,14 +144,16 @@ export class QueryRecorder {
         after: workAfter,
       },
       processes,
-      ownerMigration: captureCompletionOwnership(
-        stage,
-        spec.method,
-        spec.params,
-        result,
-        processes,
-        this.session.stderrText,
-      ),
+      ownerMigration: this.captureOwners
+        ? captureCompletionOwnership(
+            stage,
+            spec.method,
+            spec.params,
+            result,
+            processes,
+            this.session.stderrText,
+          )
+        : null,
     });
     if (error && stage !== "cancel")
       this.failures.push(`${stage}/${spec.name}: ${JSON.stringify(error)}`);

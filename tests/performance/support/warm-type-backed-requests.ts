@@ -40,6 +40,7 @@ export async function runSide(
   output: string,
   published?: PublishedSessionBinding & { binary: string },
   coldStart = false,
+  captureOwners = false,
 ) {
   const binary = published?.binary ?? path.join(repoRoot, "target/ci/vize");
   const captureRoot =
@@ -65,7 +66,7 @@ export async function runSide(
   try {
     session = new LspSession({ repoRoot, binary, ...(published ? { published } : {}) });
     processId = session.processId;
-    recorder = new QueryRecorder(session, runtime.executable, binary);
+    recorder = new QueryRecorder(session, runtime.executable, binary, captureOwners);
     ({ initialization, startupTimings } = await startup(
       recorder,
       workspace,
@@ -74,8 +75,7 @@ export async function runSide(
       coldStart,
     ));
     await waitForInitialTypes(session, uri);
-    // One complete priming sweep is retained separately, then every one of
-    // the five reported four-request rounds is measured without case selection.
+    // One complete priming sweep is retained separately, then every one of the five reported four-request rounds is measured without case selection.
     try {
       assertTypedPackets(await recorder.sweep("prime", requests(uri, source)), workspace);
     } catch (error) {
@@ -209,7 +209,6 @@ export async function runSide(
     retirement,
   };
 }
-
 export async function pairedWarmRequests(beforeRoot: string, outputRoot: string) {
   assert.equal(process.platform, "linux", "actual native CPU qualification requires Linux /proc");
   assert.ok(process.env.RUNNER_TEMP);
@@ -242,8 +241,9 @@ export async function pairedWarmRequests(beforeRoot: string, outputRoot: string)
   const originals = inputAuthority();
   const workspace = path.join(outputRoot, "workspace");
   fs.mkdirSync(outputRoot, { recursive: true });
+  const captureOwners = Boolean(sourceBinding.projectConfigHost);
   const run = (root: string, side: string) =>
-    runSide(root, workspace, runtime, path.join(outputRoot, side), undefined, true);
+    runSide(root, workspace, runtime, path.join(outputRoot, side), undefined, true, captureOwners);
   const before = await run(beforeRoot, "before");
   fs.writeFileSync(path.join(outputRoot, "before.json"), `${JSON.stringify(before, null, 2)}\n`);
   const after = await run(afterRoot, "after");

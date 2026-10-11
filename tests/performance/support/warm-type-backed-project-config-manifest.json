@@ -613,7 +613,7 @@
     [
       "tests/performance/support/warm-type-backed-measure.ts",
       "577455fb9ab4b814c233eb96a814aafc32c9755623d296c8efe3f7224a7593c8",
-      "8d9686a6ee2dcddf1997896a7dadc6426b26f0ffbcee47470144599d38009c67"
+      "25bfe452824e518547c65bd2968da1182c4a84bd7ae377fac819ede9729b6d01"
     ],
     [
       "tests/performance/support/warm-type-backed-packets.ts",
@@ -678,7 +678,7 @@
     [
       "tests/performance/support/warm-type-backed-requests.ts",
       "4162926bc7d02b92423e6731d8f8efaf48964fa6009df6751c087aa4372939f7",
-      "6b150a8fa59c757f287970a2578c3f69183461b9d2a83e54d02f1bc1c79b4c0c"
+      "623e0447ccf2879566b05919faf3d334952514c8dd14dff08aa1a6b94d8ddce8"
     ],
     [
       "tests/performance/support/warm-type-backed-runtime.ts",
@@ -725,7 +725,7 @@
     [
       "tests/performance/support/warm-type-backed-owner-resolve.ts",
       null,
-      "1dc3a62624e576b0e8d0a7cd602c6706f0fc521bdef7e698caf8a92a5fd779df"
+      "3e47a00ba443b277bc52e5d1e18c4cec89acc12ce3f5ad710c7c28e3274f19bc"
     ]
   ]
 }

@@ -28,6 +28,10 @@ native-position, stale-revision and retired-process refusal controls. Original
 child-death/recovery, diagnostic, cancellation, config, same-stamp and physical
 retirement controls remain required.
 
+The finite project-config source authority explicitly enables this passive
+observer. Generic and public release provider lanes keep it disabled; the
+separate owner replay enables it for both attested configuration builds.
+
 Admission pins all 90 reviewed production bodies and all 51 complete original
 fixture/measurement/build/ceiling bodies on both sides. Of those 51, the only
 two explicit harness successors are the passive recorder and paired driver;

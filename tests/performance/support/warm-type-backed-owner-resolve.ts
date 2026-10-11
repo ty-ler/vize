@@ -106,7 +106,7 @@ export async function runOwnerResolveFixture(repoRoot: string, workspace: string
   const source = input.source["src/c/Comp0.vue"];
   const uri = pathToFileURL(path.join(workspace, "src/c/Comp0.vue")).href;
   const session = new LspSession({ repoRoot, binary });
-  const recorder = new OwnerRecorder(session, runtime.executable, binary);
+  const recorder = new OwnerRecorder(session, runtime.executable, binary, true);
   let initialization: unknown;
   let failure: unknown;
   const native = new Map<string, ReturnType<typeof nativeIdentities>[number]>();
