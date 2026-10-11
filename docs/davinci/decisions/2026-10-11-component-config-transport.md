@@ -35,6 +35,12 @@ This is a new child of the configuration native Stack #8400, after #8531. Its
 parent APIs and original 400-provider qualification remain separately required.
 The parent's finite source-body custody cannot automatically authorize these
 new matcher bodies; this child needs its own exact-source qualification.
+Its separate selector binds all 27 child production bodies and the 112-body
+original parent/child composition. Both scopes retain the parent's complete
+90-body source authority, all 51 custody bodies and every explicitly pinned
+harness successor, plus the unchanged original registration corpus/API/oracle.
+Unknown, omitted, duplicate or drifting bodies fail closed. Selector admission
+does not qualify the actual 400-provider packets or a performance improvement.
 The original source preparation was backed up before replay; all original
 fixtures and incoming decisions are retained.
 
