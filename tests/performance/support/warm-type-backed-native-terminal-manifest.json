@@ -1,7 +1,7 @@
 {
   "version": 1,
   "originalSource": "006c564067bacd05be9eac5660e34992e0bdabe8",
-  "reviewedSource": "004719e6b04ca02eb909bdc98494e14671b686fa",
+  "reviewedSource": "38ea52dcfba3ae6ca3e2784344367f1858493e38",
   "preservedBodies": [
     [
       "tests/_fixtures/differential/lsp/warm-type-backed-requests/case.json",
@@ -83,18 +83,9 @@
       ".github/workflows/davinci-canon-scaling.yml",
       "399537c24b593b983ebb847f1fbeb3e4f376301e69bc25b46206ce2253ec6d73"
     ],
-    [
-      "package.json",
-      "d3a2188046e21c5dfe8d1117292136eb8ad0232c42490aed3e994fba71fac34f"
-    ],
-    [
-      "pnpm-lock.yaml",
-      "12e66667fc82ac9a5b72d1e9ab2aa59f7c1466ea8be689f17a67678bf31a0915"
-    ],
-    [
-      "rust-toolchain.toml",
-      "3cd5d0cc3a4440d9200bd1515826fc106e0499317556fb35dfde2f30f85fdcb9"
-    ]
+    ["package.json", "d3a2188046e21c5dfe8d1117292136eb8ad0232c42490aed3e994fba71fac34f"],
+    ["pnpm-lock.yaml", "12e66667fc82ac9a5b72d1e9ab2aa59f7c1466ea8be689f17a67678bf31a0915"],
+    ["rust-toolchain.toml", "3cd5d0cc3a4440d9200bd1515826fc106e0499317556fb35dfde2f30f85fdcb9"]
   ],
   "qualifiedHarnessBodies": [
     [

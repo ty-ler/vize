@@ -37,6 +37,14 @@ verified. The Darwin executable is the complete 23,653,616-byte arm64 member
 used in the three physical EOF experiments. Version output alone is not an
 identity authority.
 
+The authenticated successful Linux native qualification for source `b32ae8b`
+also contains 14 genuine stock-native terminal transcripts. Its source-bound
+session helper receives the complete shutdown result, closes its owned stdin,
+then polls the physical child and joins both readers. All 14 finish exit 0
+with empty stderr; deadline/error cleanup cannot count as success. This is
+acknowledged shutdown followed by stdin EOF, not a claim that standard Exit
+notifications succeed or that attached API-only processes share this contract.
+
 The Linux executable's embedded Go build information identifies revision
 `2bd066d87f5bafd315be9f40889d0a60b9e58e0b` and `vcs.modified=true`.
 This is published exact-binary custody; no clean source reconstruction is
