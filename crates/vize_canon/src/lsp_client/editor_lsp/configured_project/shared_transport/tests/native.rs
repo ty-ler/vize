@@ -26,7 +26,11 @@ fn only_process_owner(root: &Path, native: &Path, role: &[u8]) -> control::Proce
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
             Err(error) => panic!("cannot observe task children: {error}"),
         };
-        children.extend(content.split_whitespace().map(|pid| pid.parse().unwrap()));
+        children.extend(
+            content
+                .split_whitespace()
+                .map(|pid| pid.parse::<u32>().unwrap()),
+        );
     }
     children.sort_unstable();
     children.dedup();
