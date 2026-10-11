@@ -45,7 +45,7 @@ export function syscallWrites(text: string): Write[] {
     }
     // Errors transmit no bytes; a successful partial write retains only its actual count.
     if (/\)\s+= -1\s+[A-Z]+/u.test(body)) continue;
-    const match = body.match(/^write\(\d+(<[^>]+>), "((?:\\x[0-9a-f]{2})*)", (\d+)\)\s+= (\d+)$/u);
+    const match = body.match(/^write\(\d+(<.+>), "((?:\\x[0-9a-f]{2})*)", (\d+)\)\s+= (\d+)$/u);
     assert.ok(match, "truncated, undecorated or unknown writes cannot qualify");
     const bytes = Buffer.from(match[2].replaceAll("\\x", ""), "hex");
     const requested = Number(match[3]);

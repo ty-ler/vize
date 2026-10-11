@@ -10,6 +10,8 @@ import {
   syscallWrites,
   type NativeProcessWitness,
 } from "../performance/support/warm-type-backed-owner-syscalls.ts";
+import { NativeProtocolStream } from "../performance/support/warm-type-backed-owner-protocol-stream.ts";
+import { sha256 } from "../performance/support/warm-type-backed-source.ts";
 
 const request = {
   jsonrpc: "2.0",
@@ -118,5 +120,86 @@ await test("PID reuse, changed executable, shared pipe ownership and changed ori
   );
   assert.throws(() =>
     nativeApiAttachments(input + output, [native], [parent, { ...parent, birthTicks: 999 }]),
+  );
+});
+
+await test("Unix socket peer arrows preserve the complete decorated descriptor and bytes", () => {
+  const descriptor = 'UNIX-STREAM:[202->203,"/tmp/tsgo-api-actual"]';
+  const bytes = Buffer.from([0x93, 1, 0xc4, 0]);
+  const [observed] = syscallWrites(write(21, descriptor, bytes));
+  assert.equal(observed.descriptor, descriptor);
+  assert.deepEqual(observed.bytes, bytes);
+  assert.equal(
+    nativeApiAttachments(input + write(21, descriptor, bytes) + output, [native], [parent]).length,
+    1,
+  );
+});
+
+function protocolStream(text: string) {
+  let selected = "";
+  const stream = new NativeProtocolStream((line) => (selected += line));
+  const bytes = Buffer.from(text);
+  for (let offset = 0; offset < bytes.length; offset += 7)
+    stream.push(bytes.subarray(offset, offset + 7));
+  return { selected, scope: stream.finish() };
+}
+
+await test("the bounded observer retains every protocol byte and hashes excluded filesystem writes", () => {
+  const regular = write(11, "/fixture/virtuals/Comp0.vue.ts", Buffer.from("synthetic source"));
+  const wake = write(21, "anon_inode:[eventfd]", Buffer.alloc(8));
+  const trace = input + regular + wake + output;
+  const { selected, scope } = protocolStream(trace);
+  assert.equal(selected, input + output);
+  assert.equal(scope.inputBytes, Buffer.byteLength(trace));
+  assert.equal(scope.inputSHA256, sha256(Buffer.from(trace)));
+  assert.equal(scope.selectedBytes, Buffer.byteLength(input + output));
+  assert.equal(scope.selectedWrites, 2);
+  assert.equal(scope.excludedFileWrites, 1);
+  assert.equal(scope.excludedEventfdWrites, 1);
+  assert.deepEqual(nativeApiAttachments(selected, [native], [parent])[0].response, response);
+});
+
+await test("unfinished filesystem and protocol writes retain independent exact thread custody", () => {
+  const nativeLine = output.replace(/\) = (\d+)\n$/u, " <unfinished ...>\n");
+  const fileLine = write(11, "/fixture/source.ts", Buffer.from("a")).replace(
+    /\) = (\d+)\n$/u,
+    " <unfinished ...>\n",
+  );
+  const nativeResume = `21 1.000002 <... write resumed>) = ${frameMessage(response).length}\n`;
+  const fileResume = "11 1.000002 <... write resumed>) = 1\n";
+  const { selected, scope } = protocolStream(
+    input + fileLine + nativeLine + fileResume + nativeResume,
+  );
+  assert.equal(selected, input + nativeLine + nativeResume);
+  assert.equal(scope.excludedFileWrites, 1);
+  assert.deepEqual(nativeApiAttachments(selected, [native], [parent])[0].response, response);
+  assert.throws(() => protocolStream(input + nativeLine));
+  assert.throws(() => protocolStream(nativeResume));
+});
+
+await test("unknown descriptors, syscalls and partial lines never receive protocol authority", () => {
+  for (const trace of [
+    write(21, "TCP:[123]", Buffer.from("a")),
+    write(21, "unknown", Buffer.from("a")),
+    '21 1.000001 write(1, "\\x61", 1) = 1\n',
+    "21 1.000001 read(1, 0, 0) = 0\n",
+    output.slice(0, -1),
+  ])
+    assert.throws(() => protocolStream(trace));
+  const { selected } = protocolStream(input + output.replace('"\\x43', '"...\\x43'));
+  assert.throws(() => nativeApiAttachments(selected, [native], [parent]));
+});
+
+await test("the protocol transcript retains its original 64MiB ceiling and finite line bound", () => {
+  const line = write(21, "pipe:[101]", Buffer.alloc(1024));
+  const chunk = Buffer.from(line.repeat(250));
+  const stream = new NativeProtocolStream(() => {});
+  assert.throws(() => {
+    for (let i = 0; i < 80; i++) stream.push(chunk);
+  }, /finite transcript bound/);
+  const oversized = new NativeProtocolStream(() => {});
+  assert.throws(
+    () => oversized.push(Buffer.alloc(4 * 1024 * 1024 + 4097, 97)),
+    /oversized syscall/,
   );
 });

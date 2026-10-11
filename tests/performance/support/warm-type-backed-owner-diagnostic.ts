@@ -136,6 +136,7 @@ if (process.argv[2] === "prepare") {
   const helpers = [
     "tests/performance/support/warm-type-backed-owner-diagnostic.ts",
     "tests/performance/support/warm-type-backed-owner-tracer.ts",
+    "tests/performance/support/warm-type-backed-owner-protocol-stream.ts",
     "tests/performance/support/warm-type-backed-owner-syscalls.ts",
     "tests/performance/support/warm-type-backed-owner-resolve.ts",
     "tests/tooling/warm-type-backed-owner-syscalls.test.ts",

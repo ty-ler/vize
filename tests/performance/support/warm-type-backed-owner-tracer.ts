@@ -10,6 +10,7 @@ import {
   type NativeProcessWitness,
 } from "./warm-type-backed-owner-syscalls.ts";
 import { sha256 } from "./warm-type-backed-source.ts";
+import { NativeProtocolStream } from "./warm-type-backed-owner-protocol-stream.ts";
 
 const MAX_TRANSCRIPT = 64 * 1024 * 1024;
 
@@ -87,6 +88,9 @@ export class NativeApiSyscallObserver {
   private readonly closed: Promise<{ code: number | null; signal: string | null }>;
   private tracerPid = 0;
   private tracer: ReturnType<typeof tracerWitness> | undefined;
+  private readonly stream: NativeProtocolStream;
+  private streamFailure: unknown;
+  private stderr = "";
 
   private constructor(pid: number, output: string, nativeExecutable: string) {
     this.nativeExecutable = nativeExecutable;
@@ -94,6 +98,8 @@ export class NativeApiSyscallObserver {
     assert.equal(fs.existsSync(output), false, "a fresh private observer directory is required");
     fs.mkdirSync(output, { recursive: true, mode: 0o700 });
     this.file = path.join(output, "native-api-syscalls.private");
+    fs.writeFileSync(this.file, "", { flag: "wx", mode: 0o600 });
+    this.stream = new NativeProtocolStream((line) => fs.appendFileSync(this.file, line));
     this.parent = processWitness(pid);
     assert.equal(
       this.parent.ppid,
@@ -118,12 +124,26 @@ export class NativeApiSyscallObserver {
         "-p",
         String(pid),
         "-o",
-        this.file,
+        "/dev/stdout",
       ],
       {
-        stdio: ["ignore", "ignore", "pipe"],
+        stdio: ["ignore", "pipe", "pipe"],
       },
     );
+    this.child.stdout!.on("data", (chunk: Buffer) => {
+      if (this.streamFailure) return;
+      try {
+        this.stream.push(chunk);
+      } catch (error) {
+        this.streamFailure = error;
+      }
+    });
+    this.child.stderr!.on("data", (chunk: Buffer) => {
+      if (this.streamFailure) return;
+      this.stderr += chunk.toString("utf8");
+      if (Buffer.byteLength(this.stderr) > 65_536)
+        this.streamFailure = new Error("the independent observer's stderr exceeded its bound");
+    });
     this.closed = new Promise((resolve, reject) => {
       this.child.once("error", reject);
       this.child.once("close", (code, signal) => resolve({ code, signal }));
@@ -148,6 +168,7 @@ export class NativeApiSyscallObserver {
   }
 
   sample(row: Record<string, unknown>) {
+    if (this.streamFailure) throw this.streamFailure;
     assert.ok(
       fs.statSync(this.file).size <= MAX_TRANSCRIPT,
       "native observation exceeds its finite transcript bound",
@@ -184,11 +205,14 @@ export class NativeApiSyscallObserver {
         fs.readFileSync(`/proc/${this.parent.pid}/status`, "utf8"),
         /^TracerPid:\s+0$/mu,
       );
+    if (this.streamFailure) throw this.streamFailure;
   }
 
   receipt() {
     assert.ok(this.witnesses.length > 0);
     assert.ok(fs.statSync(this.file).size <= MAX_TRANSCRIPT);
+    if (this.streamFailure) throw this.streamFailure;
+    const protocolScope = this.stream.finish();
     const transcriptSHA256 = syscallTranscriptDigest(this.file);
     const attachments = nativeApiAttachments(
       fs.readFileSync(this.file, "utf8"),
@@ -200,6 +224,7 @@ export class NativeApiSyscallObserver {
       tracer: this.tracer,
       tracerPid: this.tracerPid,
       transcriptSHA256,
+      protocolScope,
       attachments,
     };
     fs.writeFileSync(
