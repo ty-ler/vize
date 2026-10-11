@@ -13,5 +13,9 @@
     "exitCode": 17,
     "stdout": "",
     "stderr": "whole CLI failure packet\n"
-  }
+  },
+  "expectedFailedFallbackPackets": [
+    "corsa error (exit code 17): whole CLI failure packet",
+    "corsa error (exit code 1): corsa error (exit code 17): whole CLI failure packet\nSame-config native diagnostic completion failed: corsa error (exit code 17): whole CLI failure packet"
+  ]
 }

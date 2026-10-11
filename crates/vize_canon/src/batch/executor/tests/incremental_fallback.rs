@@ -65,7 +65,7 @@ fn incremental_session_fallback_is_counted_per_check() {
 
 #[test]
 fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
-    use crate::{batch::error::CorsaError, corsa_client::CorsaProjectClient};
+    use crate::batch::error::CorsaError;
     use sha2::{Digest, Sha256};
 
     let _fallback_guard = super::super::fallback::FALLBACK_TEST_LOCK
@@ -83,9 +83,9 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
     assert_eq!(
         &Sha256::digest(fixture.as_bytes())[..],
         &[
-            0x04, 0x36, 0x89, 0xa6, 0xcb, 0xcb, 0xe6, 0xfe, 0x89, 0x29, 0x48, 0x81, 0x68, 0x66,
-            0x3e, 0xa3, 0x2a, 0x50, 0xd0, 0x1c, 0x25, 0x99, 0xfe, 0x68, 0x67, 0xbb, 0xaf, 0x3d,
-            0xf0, 0x40, 0x28, 0xf2
+            0xd0, 0x1c, 0x71, 0x61, 0x24, 0x21, 0x04, 0xde, 0x91, 0x26, 0x72, 0x8a, 0xc4, 0x28,
+            0x2c, 0x75, 0xcb, 0x92, 0x1d, 0xbf, 0x72, 0x24, 0xc2, 0x77, 0x1a, 0x33, 0x6f, 0xb4,
+            0x83, 0xaf, 0x2a, 0xe0
         ],
     );
     let case: serde_json::Value = serde_json::from_str(fixture).unwrap();
@@ -99,18 +99,6 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
     project.register_path(&source).unwrap();
     project.materialize().unwrap();
     let executor = CorsaExecutor::with_corsa_path(&case_dir, Some(&tsgo)).unwrap();
-    let path = executor.corsa_path().to_string_lossy();
-    let first = match CorsaProjectClient::new_for_workspace_config(
-        Some(path.as_ref()),
-        project.virtual_root(),
-        &project.generated_tsconfig_path(),
-    ) {
-        Ok(_) => panic!("the unchanged fixture protocol must fail before a session starts"),
-        Err(message) => CorsaError::CorsaExecution {
-            exit_code: -1,
-            message,
-        },
-    };
     // Preserve the literal process packet independently from the existing
     // public error format, which strips terminal whitespace.
     let raw = std::process::Command::new(&tsgo)
@@ -150,14 +138,39 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
         }
         other => panic!("the complete CLI failure packet must remain observable: {other}"),
     }
-    eprintln!("first session error: {first}\nfailed CLI fallback: {fallback}");
     for checks in 1..=2 {
-        let actual = executor
-            .check_incremental_session(&mut project, Some(1))
-            .unwrap_err();
-        assert_eq!(
-            vize_carton::cstr!("{actual}"),
-            vize_carton::cstr!("{first}")
+        OBSERVED_FALLBACKS.lock().unwrap().clear();
+        let actual = tracing::subscriber::with_default(FallbackRecorder, || {
+            executor
+                .check_incremental_session(&mut project, Some(1))
+                .unwrap_err()
+        });
+        let packets = std::mem::take(&mut *OBSERVED_FALLBACKS.lock().unwrap());
+        // The actual first warning is independent of the later retained-error
+        // event. Separate API handshakes can have different complete IO errors.
+        let first = packets
+            .first()
+            .expect("the first session refusal is recorded");
+        assert_eq!(first.step.as_deref(), Some("SessionToCli"));
+        let first_error = first.error.as_ref().unwrap();
+        assert_eq!(vize_carton::cstr!("{actual}"), *first_error);
+        assert!(matches!(
+            actual,
+            CorsaError::CorsaExecution { exit_code: -1, .. }
+        ));
+        let retained = packets.last().expect("both failed paths remain recorded");
+        assert_eq!(retained.error.as_ref(), Some(first_error));
+        let failed_cli = retained.failed_cli.as_ref().unwrap();
+        assert!(
+            case["expectedFailedFallbackPackets"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|packet| packet.as_str().unwrap() == failed_cli.as_str()),
+            "unexpected complete fallback packet: {failed_cli}"
+        );
+        eprintln!(
+            "actual first session error: {first_error}\nactual failed CLI fallback: {failed_cli}"
         );
         let metrics = executor.incremental_metrics();
         assert_eq!(metrics.checks, checks);
@@ -167,4 +180,55 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
         assert_eq!(metrics.session_reuses, 0);
     }
     let _ = fs::remove_dir_all(&case_dir);
+}
+
+#[derive(Default)]
+struct FallbackPacket {
+    step: Option<vize_carton::String>,
+    error: Option<vize_carton::String>,
+    failed_cli: Option<vize_carton::String>,
+}
+
+static OBSERVED_FALLBACKS: std::sync::Mutex<Vec<FallbackPacket>> =
+    std::sync::Mutex::new(Vec::new());
+
+struct FallbackRecorder;
+
+impl tracing::field::Visit for FallbackPacket {
+    fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+        let value = vize_carton::cstr!("{value:?}");
+        match field.name() {
+            "fallback" => self.step = Some(value),
+            "error" => self.error = Some(value),
+            "fallback_error" => self.failed_cli = Some(value),
+            _ => {}
+        }
+    }
+}
+
+impl tracing::Subscriber for FallbackRecorder {
+    fn enabled(&self, metadata: &tracing::Metadata<'_>) -> bool {
+        metadata.target() == "vize_canon::corsa::fallback"
+    }
+
+    fn new_span(&self, _span: &tracing::span::Attributes<'_>) -> tracing::span::Id {
+        tracing::span::Id::from_u64(1)
+    }
+
+    fn record(&self, _span: &tracing::span::Id, _values: &tracing::span::Record<'_>) {}
+
+    fn record_follows_from(&self, _span: &tracing::span::Id, _follows: &tracing::span::Id) {}
+
+    fn event(&self, event: &tracing::Event<'_>) {
+        if !self.enabled(event.metadata()) {
+            return;
+        }
+        let mut packet = FallbackPacket::default();
+        event.record(&mut packet);
+        OBSERVED_FALLBACKS.lock().unwrap().push(packet);
+    }
+
+    fn enter(&self, _span: &tracing::span::Id) {}
+
+    fn exit(&self, _span: &tracing::span::Id) {}
 }
