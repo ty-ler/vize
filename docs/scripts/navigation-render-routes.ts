@@ -17,6 +17,7 @@ export const navigationRenderRoutes = [
   ...["", "/ja", "/zh-CN", "/pt-BR", "/fr"].flatMap((locale) => [
     `${locale}/philosophy`,
     `${locale}/guide/content-mapper`,
+    `${locale}/guide/testing`,
   ]),
   "/zh-CN/getting-started",
   "/pt-BR/getting-started",

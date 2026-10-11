@@ -14,6 +14,7 @@ use crate::tokenizer::QuoteType;
 
 use super::{CurrentAttribute, CurrentDirective, Parser};
 
+mod entity;
 mod head;
 
 impl<'a> Parser<'a> {
