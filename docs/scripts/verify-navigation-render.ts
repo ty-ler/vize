@@ -6,10 +6,9 @@ import { parseArgs } from "node:util";
 import { chromium } from "playwright";
 import type { Browser } from "playwright";
 import { resolvePuppeteerExecutablePath } from "../browser-path.js";
-import { navigationRenderRoutes } from "./navigation-render-routes.ts";
-import { categoryFiles } from "./rules/catalogue-routes.ts";
-import { catalogueSubgroups } from "./rules/catalogue-subgroups.ts";
+import { defaultNavigationRenderRoutes } from "./navigation-render-routes.ts";
 import { verifyCaptureRenderControls } from "./capture-render-controls.ts";
+import { CaptureTimings } from "./capture-render-timings.ts";
 import { verifyLocaleRenderControls } from "./locale-control-render.ts";
 import { verifyNavigationRenderJob } from "./navigation-render-page.ts";
 import type { RouteReceipt } from "./navigation-render-page.ts";
@@ -30,19 +29,15 @@ const { values } = parseArgs({
     output: { type: "string", default: "docs-render-evidence" },
     routes: { type: "string" },
     workers: { type: "string" },
+    "capture-timings": { type: "boolean", default: false },
   },
 });
 const dist = path.resolve(values.dir);
 const output = path.resolve(values.output);
-const routes = values.routes?.split(",") ?? [
-  ...navigationRenderRoutes,
-  ...["zh-CN", "pt-BR", "fr"].flatMap((locale) =>
-    ["all", "vue", ...categoryFiles, "cross-file"].map((file) => `/${locale}/rules/${file}`),
-  ),
-  ...Object.keys(catalogueSubgroups).map((file) => `/rules/${file}`),
-];
+const routes = values.routes?.split(",") ?? defaultNavigationRenderRoutes;
 const workers = parseRenderWorkers(values.workers);
 const jobs = createRenderJobs(routes);
+const captureTimings = values["capture-timings"] ? new CaptureTimings() : undefined;
 const startedAt = new Date().toISOString();
 const start = performance.now();
 const phases: RenderPhaseTiming[] = [];
@@ -75,6 +70,8 @@ let results: RenderJobResult<RouteReceipt>[] = [];
 let reports: RouteReceipt[] = [];
 let failure: unknown;
 let failed = false;
+let timingFailure: unknown;
+let timingFailed = false;
 const linkedPages = new Map<string, Promise<string>>();
 try {
   await new Promise<void>((resolve, reject) => {
@@ -92,7 +89,7 @@ try {
   );
   browser = activeBrowser;
   await measureRenderPhase(phases, "capture-controls", () =>
-    verifyCaptureRenderControls(activeBrowser, origin, output),
+    verifyCaptureRenderControls(activeBrowser, origin, output, captureTimings?.forControl()),
   );
   await verifyLocaleRenderControls(activeBrowser, origin, output);
   let completedCaptures = 0;
@@ -103,7 +100,13 @@ try {
         phase("context", () =>
           activeBrowser.newContext({ viewport: job.viewport, reducedMotion: "reduce" }),
         ),
-      (context) => verifyNavigationRenderJob(context, job, phase, { origin, output, linkedPages }),
+      (context) =>
+        verifyNavigationRenderJob(context, job, phase, {
+          origin,
+          output,
+          linkedPages,
+          captureTimings: captureTimings?.forJob(job),
+        }),
       (close) => phase("context-close", close),
     );
     completedCaptures += 1;
@@ -194,8 +197,24 @@ try {
       2,
     ) + "\n",
   );
+  if (captureTimings) {
+    try {
+      await captureTimings.write(output, {
+        source: process.env.GITHUB_SHA ?? null,
+        dist,
+        workers,
+        startedAt,
+        status,
+        scope: path.basename(output) === "docs-render-evidence" ? "general" : path.basename(output),
+      });
+    } catch (error) {
+      timingFailed = true;
+      timingFailure = error;
+    }
+  }
 }
 if (failed) throw failure;
+if (timingFailed) throw timingFailure;
 console.log(
   `Verified ${reports.length} real rendered pages with ${workers} workers; desktop/mobile screenshots and timings in ${output}`,
 );
