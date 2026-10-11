@@ -23,30 +23,31 @@ struct Fixture {
     uris: Vec<Url>,
 }
 
-fn member<'a>(input: &'a Value, name: &str) -> &'a Value {
+type FixtureResult<T> = Result<T, Box<dyn std::error::Error>>;
+
+fn member<'a>(input: &'a Value, name: &str) -> FixtureResult<&'a Value> {
     input
         .get(name)
-        .unwrap_or_else(|| panic!("authored fixture member"))
+        .ok_or_else(|| "authored fixture member".into())
 }
 
-fn file(root: &Path, name: &str, source: &str) -> Url {
+fn file(root: &Path, name: &str, source: &str) -> FixtureResult<Url> {
     let path = root.join(name);
-    std::fs::create_dir_all(path.parent().unwrap_or_else(|| panic!("fixture value")))
-        .unwrap_or_else(|error| panic!("fixture value: {error:?}"));
-    std::fs::write(&path, source).unwrap_or_else(|error| panic!("fixture value: {error:?}"));
-    Url::from_file_path(path).unwrap_or_else(|error| panic!("fixture value: {error:?}"))
+    std::fs::create_dir_all(path.parent().ok_or("fixture value")?)?;
+    std::fs::write(&path, source)?;
+    Ok(Url::from_file_path(path).map_err(|()| "fixture value")?)
 }
 
-fn fixture() -> Fixture {
-    let root = tempfile::tempdir().unwrap_or_else(|error| panic!("fixture value: {error:?}"));
-    file(root.path(), "vize.config.json", "{}");
+fn fixture() -> FixtureResult<Fixture> {
+    let root = tempfile::tempdir()?;
+    file(root.path(), "vize.config.json", "{}")?;
     for package in ["a", "b"] {
-        file(root.path(), &cstr!("packages/{package}/package.json"), "{}");
+        file(root.path(), &cstr!("packages/{package}/package.json"), "{}")?;
         file(
             root.path(),
             &cstr!("packages/{package}/vize.config.json"),
             "{}",
-        );
+        )?;
     }
     let (service, socket) = LspService::new(|client| {
         let mut server = MaestroServer::new(client);
@@ -63,67 +64,63 @@ fn fixture() -> Fixture {
     server.state.apply_lsp_initialization_options(Some(
         &json!({"lint":false,"typecheck":false,"ecosystem":false}),
     ));
-    let input: Value =
-        serde_json::from_str(INPUT).unwrap_or_else(|error| panic!("fixture value: {error:?}"));
-    let source = member(&input, "source")
-        .as_str()
-        .unwrap_or_else(|| panic!("fixture value"));
+    let input: Value = serde_json::from_str(INPUT)?;
+    let source = member(&input, "source")?.as_str().ok_or("fixture value")?;
     let uris = ["Root.ts", "packages/a/src/One.ts", "packages/b/src/Two.ts"]
-        .map(|name| {
-            let uri = file(root.path(), name, source);
+        .map(|name| -> FixtureResult<Url> {
+            let uri = file(root.path(), name, source)?;
             server.state.documents.open(
                 uri.clone(),
                 source.into(),
-                member(&input, "version")
-                    .as_i64()
-                    .unwrap_or_else(|| panic!("fixture value")) as i32,
-                member(&input, "languageId")
+                member(&input, "version")?.as_i64().ok_or("fixture value")? as i32,
+                member(&input, "languageId")?
                     .as_str()
-                    .unwrap_or_else(|| panic!("fixture value"))
+                    .ok_or("fixture value")?
                     .into(),
             );
-            uri
+            Ok(uri)
         })
-        .to_vec();
-    Fixture {
+        .into_iter()
+        .collect::<FixtureResult<Vec<_>>>()?;
+    Ok(Fixture {
         root,
         service,
         input,
         uris,
-    }
+    })
 }
 
-fn position(fixture: &Fixture) -> Position {
-    serde_json::from_value(member(&fixture.input, "definitionPosition").clone())
-        .unwrap_or_else(|error| panic!("fixture value: {error:?}"))
+fn position(fixture: &Fixture) -> FixtureResult<Position> {
+    Ok(serde_json::from_value(
+        member(&fixture.input, "definitionPosition")?.clone(),
+    )?)
 }
 
-fn definition(fixture: &Fixture, uri: &Url) -> Location {
-    Location::new(
+fn definition(fixture: &Fixture, uri: &Url) -> FixtureResult<Location> {
+    Ok(Location::new(
         uri.clone(),
-        serde_json::from_value(member(&fixture.input, "definitionRange").clone())
-            .unwrap_or_else(|error| panic!("fixture value: {error:?}")),
-    )
+        serde_json::from_value(member(&fixture.input, "definitionRange")?.clone())?,
+    ))
 }
 
-fn references(fixture: &Fixture, uri: &Url) -> Vec<Location> {
-    member(&fixture.input, "referenceRanges")
+fn references(fixture: &Fixture, uri: &Url) -> FixtureResult<Vec<Location>> {
+    member(&fixture.input, "referenceRanges")?
         .as_array()
-        .unwrap_or_else(|| panic!("fixture value"))
+        .ok_or("fixture value")?
         .iter()
-        .map(|range| {
-            Location::new(
+        .map(|range| -> FixtureResult<Location> {
+            Ok(Location::new(
                 uri.clone(),
-                serde_json::from_value(range.clone())
-                    .unwrap_or_else(|error| panic!("fixture value: {error:?}")),
-            )
+                serde_json::from_value(range.clone())?,
+            ))
         })
         .collect()
 }
 
 #[test]
-fn primary_and_nested_document_dispatch_reuse_actual_owner_and_program_workers() {
-    let fixture = fixture();
+fn primary_and_nested_document_dispatch_reuse_actual_owner_and_program_workers() -> FixtureResult<()>
+{
+    let fixture = fixture()?;
     let server = fixture.service.inner();
     let primary = server.with_project_state(server.state.clone());
     assert!(Arc::ptr_eq(
@@ -145,8 +142,8 @@ fn primary_and_nested_document_dispatch_reuse_actual_owner_and_program_workers()
         let first = block_on(server.for_document(uri));
         let navigation = first.navigation.as_ref().unwrap();
         assert_eq!(
-            block_on(navigation.definition(uri, position(&fixture))),
-            Ok(Some(definition(&fixture, uri)))
+            block_on(navigation.definition(uri, position(&fixture)?)),
+            Ok(Some(definition(&fixture, uri)?))
         );
         let worker = navigation.cached_program_worker_for_test(uri).unwrap();
         assert_eq!(worker.1, (1, 1));
@@ -154,14 +151,12 @@ fn primary_and_nested_document_dispatch_reuse_actual_owner_and_program_workers()
         assert!(Arc::ptr_eq(&first.state, &second.state));
         assert!(Arc::ptr_eq(navigation, second.navigation.as_ref().unwrap()));
         assert_eq!(
-            block_on(
-                second
-                    .navigation
-                    .as_ref()
-                    .unwrap()
-                    .references(uri, position(&fixture), true)
-            ),
-            Ok(references(&fixture, uri))
+            block_on(second.navigation.as_ref().unwrap().references(
+                uri,
+                position(&fixture)?,
+                true
+            )),
+            Ok(references(&fixture, uri)?)
         );
         assert_eq!(
             navigation.cached_program_worker_for_test(uri),
@@ -183,11 +178,12 @@ fn primary_and_nested_document_dispatch_reuse_actual_owner_and_program_workers()
             .enumerate()
             .all(|(index, worker)| !worker_ids[index + 1..].contains(worker))
     );
+    Ok(())
 }
 
 #[test]
-fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() {
-    let fixture = fixture();
+fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() -> FixtureResult<()> {
+    let fixture = fixture()?;
     let server = fixture.service.inner();
     let a = &fixture.uris[1];
     let b = &fixture.uris[2];
@@ -204,12 +200,12 @@ fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() {
     };
     let sibling_navigation = sibling.navigation.as_ref().unwrap();
     assert_eq!(
-        block_on(old_navigation.definition(a, position(&fixture))),
-        Ok(Some(definition(&fixture, a)))
+        block_on(old_navigation.definition(a, position(&fixture)?)),
+        Ok(Some(definition(&fixture, a)?))
     );
     assert_eq!(
-        block_on(sibling_navigation.definition(b, position(&fixture))),
-        Ok(Some(definition(&fixture, b)))
+        block_on(sibling_navigation.definition(b, position(&fixture)?)),
+        Ok(Some(definition(&fixture, b)?))
     );
     let sibling_worker = sibling_navigation
         .cached_program_worker_for_test(b)
@@ -218,7 +214,7 @@ fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() {
         fixture.root.path(),
         "packages/a/vize.config.json",
         r#"{"lsp":{"hover":false}}"#,
-    );
+    )?;
     server.state.observe_project_config_events(&[FileEvent {
         uri: config,
         typ: FileChangeType::CHANGED,
@@ -242,7 +238,7 @@ fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() {
         tower_lsp::jsonrpc::ErrorCode::ContentModified
     );
     assert_eq!(
-        block_on(old_navigation.definition(a, position(&fixture))),
+        block_on(old_navigation.definition(a, position(&fixture)?)),
         Err(NavigationRefusal::Host(SnapshotRefusal::Superseded))
     );
     assert!(old_navigation.cached_program_worker_for_test(a).is_none());
@@ -272,9 +268,9 @@ fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() {
                 .navigation
                 .as_ref()
                 .unwrap()
-                .definition(a, position(&fixture))
+                .definition(a, position(&fixture)?)
         ),
-        Ok(Some(definition(&fixture, a)))
+        Ok(Some(definition(&fixture, a)?))
     );
     assert_eq!(
         block_on(
@@ -282,32 +278,34 @@ fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() {
                 .navigation
                 .as_ref()
                 .unwrap()
-                .references(b, position(&fixture), true)
+                .references(b, position(&fixture)?, true)
         ),
-        Ok(references(&fixture, b))
+        Ok(references(&fixture, b)?)
     );
     assert_eq!(
         sibling_navigation.cached_program_worker_for_test(b),
         Some((sibling_worker.0, (1, 2)))
     );
     assert_eq!(server.state.documents.version(a), Some(1));
+    Ok(())
 }
 
 #[test]
-fn primary_configuration_replacement_refuses_retained_owner_and_drains_its_worker() {
-    let fixture = fixture();
+fn primary_configuration_replacement_refuses_retained_owner_and_drains_its_worker()
+-> FixtureResult<()> {
+    let fixture = fixture()?;
     let server = fixture.service.inner();
     let uri = &fixture.uris[0];
     let navigation = server.navigation.as_ref().unwrap();
     assert_eq!(
-        block_on(navigation.definition(uri, position(&fixture))),
-        Ok(Some(definition(&fixture, uri)))
+        block_on(navigation.definition(uri, position(&fixture)?)),
+        Ok(Some(definition(&fixture, uri)?))
     );
     let config = file(
         fixture.root.path(),
         "vize.config.json",
         r#"{"lsp":{"hover":false}}"#,
-    );
+    )?;
     // Marking occurs in the registry; publication/admission refuse immediately,
     // before the ordinary server watcher drains the old primary owner.
     server.state.observe_project_config_events(&[FileEvent {
@@ -315,7 +313,7 @@ fn primary_configuration_replacement_refuses_retained_owner_and_drains_its_worke
         typ: FileChangeType::CHANGED,
     }]);
     assert_eq!(
-        block_on(navigation.definition(uri, position(&fixture))),
+        block_on(navigation.definition(uri, position(&fixture)?)),
         Err(NavigationRefusal::Host(SnapshotRefusal::Superseded))
     );
     block_on(tower_lsp::LanguageServer::did_change_watched_files(
@@ -339,8 +337,9 @@ fn primary_configuration_replacement_refuses_retained_owner_and_drains_its_worke
                 .navigation
                 .as_ref()
                 .unwrap()
-                .definition(uri, position(&fixture))
+                .definition(uri, position(&fixture)?)
         ),
-        Ok(Some(definition(&fixture, uri)))
+        Ok(Some(definition(&fixture, uri)?))
     );
+    Ok(())
 }
