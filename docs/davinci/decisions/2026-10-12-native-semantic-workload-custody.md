@@ -58,3 +58,10 @@ existing repository two-digit conversion and collects the complete 64
 lowercase characters. Both official executable hashes and the entire
 initialize contract stay fixed; no digest prefix or alternate identity is
 admitted. Fresh source enrollment and exact-head native Actions are required.
+
+Before publishing the correction, Rust 1.99 compiled this complete corrected
+native_shutdown module against the already built locked sha2/vize_l0 libraries.
+Its original full binary/initialize refusal law and complete SHA256 empty/abc
+known-vector controls passed two tests with no ignored cases. This bounded
+compile proof gives no native-process or whole-project acceptance; actual
+Linux Actions and the original400 pair remain mandatory.

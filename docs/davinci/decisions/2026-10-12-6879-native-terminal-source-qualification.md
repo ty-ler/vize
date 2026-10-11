@@ -85,7 +85,7 @@ diagnostic/request vectors, fixed timeouts/budgets and protected delivery
 remain required. Input/source admission alone gives no correctness,
 performance, merge, release or public consumer acceptance credit.
 
-The reviewed source is `e1d0bb3c98874140caf0fc17b0fcccdc451fc6c5`. The two additional exact body pairs
+The reviewed source is `759fe6af254dbeca020d106fb31c87e26b9eff55`. The two additional exact body pairs
 are the existing snapshot test registration and its reviewed cfg(test) whole
 descriptor child, shared with Stack provider custody. All original118 before
 bodies,23 original request/runtime/recipe bodies and two exact final-guard

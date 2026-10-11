@@ -82,7 +82,7 @@
   [
     "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown.rs",
     null,
-    "0bf8389c244d2189ca5fb85b75e4a1872f086a9b29f5e70e17b9d74e087c9e9b"
+    "c378f4026fefc8c1332239ad51cf01a6ca9b1aa12cea6044df1b3a2e9c736217"
   ],
   [
     "crates/vize_canon/src/lsp_client/editor_lsp/process_close.rs",
