@@ -137,11 +137,7 @@ impl CorsaProjectClient {
             .materialized_session_document_uri(uri)
             .ok_or_else(|| cstr!("Failed to derive materialized Corsa overlay path for {uri}"))?;
         let file_changes = materialize_session_document(uri, document_uri.as_str(), content);
-        if !self.has_project_session() {
-            return Ok(());
-        }
-        block_on(self.project_session_mut()?.refresh(file_changes))
-            .map_err(|error| cstr!("Failed to refresh Corsa snapshot: {error}"))
+        self.refresh_materialized_overlay_snapshot(file_changes)
     }
 
     pub(super) fn delete_overlay_document(&mut self, uri: &str) -> Result<(), String> {
