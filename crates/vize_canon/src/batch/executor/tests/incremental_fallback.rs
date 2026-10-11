@@ -83,9 +83,9 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
     assert_eq!(
         &Sha256::digest(fixture.as_bytes())[..],
         &[
-            0xc5, 0x4b, 0xf3, 0xe0, 0x5e, 0x78, 0xa3, 0x7c, 0xd2, 0x7b, 0x13, 0x7e, 0x47, 0xe7,
-            0x01, 0xb8, 0xbf, 0x5a, 0x1a, 0x1a, 0x6a, 0x61, 0x0f, 0x99, 0xa4, 0xf2, 0x6f, 0x00,
-            0xe9, 0xfa, 0xd2, 0x9a,
+            0x04, 0x36, 0x89, 0xa6, 0xcb, 0xcb, 0xe6, 0xfe, 0x89, 0x29, 0x48, 0x81, 0x68, 0x66,
+            0x3e, 0xa3, 0x2a, 0x50, 0xd0, 0x1c, 0x25, 0x99, 0xfe, 0x68, 0x67, 0xbb, 0xaf, 0x3d,
+            0xf0, 0x40, 0x28, 0xf2
         ],
     );
     let case: serde_json::Value = serde_json::from_str(fixture).unwrap();
@@ -111,6 +111,31 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
             message,
         },
     };
+    // Preserve the literal process packet independently from the existing
+    // public error format, which strips terminal whitespace.
+    let raw = std::process::Command::new(&tsgo)
+        .arg("--project")
+        .arg(project.generated_tsconfig_path())
+        .output()
+        .unwrap();
+    assert_eq!(
+        i64::from(raw.status.code().unwrap()),
+        case["expectedRawCliError"]["exitCode"].as_i64().unwrap()
+    );
+    assert_eq!(
+        raw.stdout,
+        case["expectedRawCliError"]["stdout"]
+            .as_str()
+            .unwrap()
+            .as_bytes()
+    );
+    assert_eq!(
+        raw.stderr,
+        case["expectedRawCliError"]["stderr"]
+            .as_str()
+            .unwrap()
+            .as_bytes()
+    );
     let fallback = super::super::check_with_cli(executor.corsa_path(), &project, 1).unwrap_err();
     match &fallback {
         CorsaError::CorsaExecution { exit_code, message } => {
