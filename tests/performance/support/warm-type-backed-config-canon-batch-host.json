@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "originalRepairManifestSHA256": "9858bd7d0c5cfc24c2722c58bdc629f7125d2e40bfc64d6f47c67423bfb2bc9f",
+  "predecessorSource": "877bc0eba89879ca08ef13fb192c4334c1a5ff32",
+  "repairedSource": "614b8096a80d9a724ef7af56f8701de7ab49e5cd",
+  "productionBodies": [
+    [
+      "crates/vize_canon/src/lsp_client/session/replay.rs",
+      null,
+      "7e6604157741eb77f9736e6c84baabd49e5d0d0c6f6d9122d6aa12b5135fcead",
+      "501e680f7e11996ccd575bb1679c1b543ec6d8eeefdba83be29108f8e78f1efc"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/session/tests.rs",
+      "99796d14843893325fcb8c0567491cf775bfc3a9ed8f37f0a4d06476b1fae957",
+      "99796d14843893325fcb8c0567491cf775bfc3a9ed8f37f0a4d06476b1fae957",
+      "2eba10215cad9f53f9596a8b07ac61b7493c73a7f3ee8e7c028f96a783f50473"
+    ]
+  ],
+  "corpusBodies": [
+    [
+      "tests/_fixtures/differential/config/canon-incoming-batch-8476.json",
+      null,
+      "aa7eccf241d0e510b6867111ed79369a8bd709dd16c8eb5f93c8127b1bd25011"
+    ]
+  ],
+  "newProductionFiles": ["crates/vize_canon/src/lsp_client/session/tests.rs"]
+}
