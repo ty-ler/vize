@@ -11,14 +11,15 @@ import {
 } from "./warm-type-backed-owned-completion-host.ts";
 
 type Pair = {
-  sourceBinding: { projectConfigHost?: unknown };
+  sourceBinding: { projectConfigHost?: unknown; componentContextHost?: unknown };
   buildCustody: Array<{ launchBinary: string }>;
   before: { inputs: { workspace: string } };
 };
 
 /** Retain the complete original comparison until live migration proofs qualify it. */
 export async function completeOwnerPackets<T>(original: T, packet: Pair): Promise<T> {
-  if (!packet.sourceBinding.projectConfigHost) return original;
+  if (!packet.sourceBinding.projectConfigHost && !packet.sourceBinding.componentContextHost)
+    return original;
   const workspace = packet.before.inputs.workspace;
   const output = path.dirname(workspace);
   const resolved = [];
