@@ -7,10 +7,11 @@ import {
 import { issuedCompletionManifest as issued } from "../../performance/support/warm-type-backed-issued-completion-host.ts";
 import successor from "../../performance/support/warm-type-backed-component-issued-manifest.json" with { type: "json" };
 import { qualifyComponentIssuedHost } from "../../performance/support/warm-type-backed-component-issued-host.ts";
+import { configReviewManifest } from "../../performance/support/warm-type-backed-config-review-host.ts";
 import {
-  configReviewManifest,
-  qualifyConfigReviewHost,
-} from "../../performance/support/warm-type-backed-config-review-host.ts";
+  configRepairManifest,
+  qualifyConfigRepairedReviewHost,
+} from "../../performance/support/warm-type-backed-config-repair-host.ts";
 
 /** Preserve every original pinned pair and add only the seven explicit complete producer bodies. */
 export function componentIssuedSourcePair(composed: boolean) {
@@ -52,15 +53,27 @@ export function qualifyCurrentComponentIssuedSource(composed = true) {
     ]),
   );
   const production = composed
-    ? [...new Set([...pair.production, ...configReviewManifest.reviewedProductionFiles])].toSorted()
+    ? [...new Set([...pair.production, ...configReviewManifest.reviewedProductionFiles])].toSorted(
+        (left, right) => (left < right ? -1 : left > right ? 1 : 0),
+      )
     : pair.production;
-  return qualifyConfigReviewHost(
+  const repairedBefore = new Map([
+    ...configRepairManifest.productionBodies.map(
+      ([file, before, , after]) => [file, composed ? before : after] as const,
+    ),
+    ...configRepairManifest.corpusBodies.map(
+      ([file, before, after]) => [file, composed ? before : after] as const,
+    ),
+  ]);
+  return qualifyConfigRepairedReviewHost(
     production,
     new Set(),
     (side, file) =>
-      side === "before" && reviewed.has(file)
-        ? reviewed.get(file)![composed ? 1 : 3]
-        : pair.actual(side, file),
+      side === "before" && repairedBefore.has(file)
+        ? repairedBefore.get(file)!
+        : side === "before" && reviewed.has(file)
+          ? reviewed.get(file)![composed ? 1 : 3]
+          : pair.actual(side, file),
     qualifyComponentIssuedHost,
     composed ? "parent-pair" : "inherited",
   );

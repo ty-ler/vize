@@ -10,7 +10,6 @@ import { allowed } from "./warm-type-backed-production-paths.ts";
 import { qualifyProjectConfigLoaderHost } from "./warm-type-backed-project-config-loader-host.ts";
 import { qualifyIssuedCompletionHost } from "./warm-type-backed-issued-completion-host.ts";
 import { qualifyConfigRepairedReviewHost } from "./warm-type-backed-config-repair-host.ts";
-import { qualifyConfigReviewHost } from "./warm-type-backed-config-review-host.ts";
 import { qualifyComponentContextHost } from "./warm-type-backed-component-context-host.ts";
 import { qualifyComponentOwnerMigrationHost } from "./warm-type-backed-component-owner-migration-host.ts";
 import { qualifyComponentIssuedHost } from "./warm-type-backed-component-issued-host.ts";
@@ -147,14 +146,14 @@ if (process.argv[2] === "prepare") {
       qualifyComponentIssuedHost(production, allowed, (side, file) =>
         gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
       ) ??
-      qualifyConfigReviewHost(
+      qualifyConfigRepairedReviewHost(
         production,
         allowed,
         (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
         qualifyComponentIssuedHost,
         "inherited",
       ) ??
-      qualifyConfigReviewHost(
+      qualifyConfigRepairedReviewHost(
         production,
         allowed,
         (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
