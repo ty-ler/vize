@@ -1,6 +1,7 @@
 //! Retained editor buffers belong to the owner, not to one native snapshot.
 
-use super::{CorsaProjectClient, materialize_session_document};
+use super::{CorsaProjectClient, materialize_session_document, uri_document_identifier};
+use crate::file_uri::file_uri_to_path;
 use corsa::{
     api::{FileChangeSummary, FileChanges},
     runtime::block_on,
@@ -20,6 +21,9 @@ impl CorsaProjectClient {
                 self.editor_lsp_documents_dirty = true;
             }
         }
+        if self.synchronize_existing_canon_project_documents(documents)? {
+            return Ok(());
+        }
         self.activate_materialized_project_session()?;
         let mut summary = FileChangeSummary::default();
         for (uri, content) in documents {
@@ -37,6 +41,51 @@ impl CorsaProjectClient {
         // All new members now exist before one owner reload; content-only
         // batches use one refresh instead of refreshing each document.
         self.refresh_materialized_overlay_snapshot(Some(FileChanges::Summary(summary)))
+    }
+
+    fn synchronize_existing_canon_project_documents(
+        &mut self,
+        documents: &[(&str, &str)],
+    ) -> Result<bool, String> {
+        // These files already belong to Canon's complete generated project.
+        // A second overlay root would change their identity and detach closed
+        // incoming scripts from the configured native answer.
+        if self.materialized_project_session
+            || !self.project_root.join("__vize_vue_modules.d.ts").is_file()
+        {
+            return Ok(false);
+        }
+        let Some(paths) = documents
+            .iter()
+            .map(|(uri, _)| file_uri_to_path(uri))
+            .collect::<Option<Vec<_>>>()
+        else {
+            return Ok(false);
+        };
+        if !paths
+            .iter()
+            .all(|path| path.starts_with(&self.project_root) && path.is_file())
+        {
+            return Ok(false);
+        }
+        let mut summary = FileChangeSummary::default();
+        for ((uri, content), path) in documents.iter().zip(paths) {
+            self.clear_document_state(uri);
+            if std::fs::read_to_string(&path).ok().as_deref() != Some(*content) {
+                std::fs::write(&path, content).map_err(|error| {
+                    cstr!(
+                        "Failed to update Canon document {}: {error}",
+                        path.display()
+                    )
+                })?;
+                summary.changed.push(uri_document_identifier(uri));
+            }
+            self.remember_session_document_uri(uri, (*uri).into());
+        }
+        if !summary.changed.is_empty() {
+            self.refresh_materialized_overlay_snapshot(Some(FileChanges::Summary(summary)))?;
+        }
+        Ok(true)
     }
 
     pub(in crate::lsp_client) fn refresh_materialized_overlay_snapshot(
