@@ -37,6 +37,7 @@ for entry in subprocess.check_output(["git", "ls-files", "--stage", "-z"]).decod
 helper_path = pathlib.Path("tools/support/ci/vuefes-scope-observer.ts")
 helper = (driver / helper_path).read_bytes()
 assert not (root / helper_path).exists()
+(root / helper_path).parent.mkdir(parents=True, exist_ok=True)
 shutil.copyfile(driver / helper_path, root / helper_path)
 before_setup = "    await Promise.all([setupPage(referencePage), setupPage(candidatePage)]);"
 before_assert = "    await expectVisualParity(referencePage, candidatePage, {"
