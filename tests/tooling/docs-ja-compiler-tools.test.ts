@@ -77,6 +77,21 @@ void test("reviewed JSX guidance keeps fresh defaults, dedicated compatibility a
   );
   const reactPolicy =
     "https://github.com/ubugeeei-prod/vize/blob/main/docs/davinci/decisions/2026-10-10-fresh-lsp-capability-policy.md#react-owned-projects";
-  assert.ok(japanese.includes(reactPolicy));
-  assert.ok(english.includes(reactPolicy));
+  for (const [locale, source] of [
+    ["ja/", japanese],
+    ["", english],
+  ]) {
+    const authored = [...source.matchAll(/\]\((https:\/\/[^)\s]*#react-owned-projects)\)/g)];
+    assert.equal(authored.length, 1, `${locale}: one explicit React policy destination`);
+    assert.equal(decodeURI(authored[0][1]), reactPolicy);
+    const sourcePath = resolve(root, `docs/content/${locale}guide/jsx.md`);
+    const rendered = native.transform(source, { convertMdLinks: true, baseUrl: "/", sourcePath });
+    assert.deepEqual(rendered.errors, [], sourcePath);
+    const links = [...rendered.html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/g)].filter(
+      (match) => decodeURI(match[1]) === reactPolicy,
+    );
+    assert.equal(links.length, 1, `${locale}: React policy stays an external Markdown document`);
+    assert.match(links[0][0], /target="_blank"/);
+    assert.match(links[0][0], /rel="noopener noreferrer"/);
+  }
 });
