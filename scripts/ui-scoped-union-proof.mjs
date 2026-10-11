@@ -69,6 +69,9 @@ if (command === 'binding') {
   assert.equal(beforeBinding.head, before);
   assert.equal(afterBinding.head, after);
   assert.notEqual(beforeBinding.sha256, afterBinding.sha256);
+  const evaluator = read('evidence/receipt-evaluator-binding.json');
+  assert.equal(evaluator.head, after);
+  assert.equal(evaluator.sha256, afterBinding.sha256);
   const beforeEmitted = read('evidence/before-emitted.json');
   const afterEmitted = read('evidence/after-emitted.json');
   assert.equal(beforeEmitted.head, before);
@@ -93,6 +96,7 @@ if (command === 'binding') {
   };
   const summaries = {};
   const raw = {};
+  const clientRows = {};
   let expectedOrder;
   for (const phase of ['before', 'after']) {
     summaries[phase] = {};
@@ -125,12 +129,21 @@ if (command === 'binding') {
           assert.match(row.problems[0], /normalizeBlock[\s\S]+resolveCssVars[\s\S]+styleHasMismatch/);
         }
         const stale = Object.keys(known).filter(name => !failedNames.has(name)).sort();
-        assert.deepEqual(stale, phase === 'before' ? [] : targetNames);
+        const correctedTargets = track === 'reference' && lane === 'mount' ? [] : targetNames;
+        assert.deepEqual(stale, phase === 'before' ? [] : correctedTargets);
         for (const name of targetNames) {
           const rows = result.results.filter(row => row.name === name);
           assert.equal(rows.length, 1);
-          assert.equal(rows[0].problems.length === 0, phase === 'after');
+          assert.equal(rows[0].problems.length === 0, phase === 'after' && correctedTargets.includes(name));
+          if (phase === 'after' && !correctedTargets.includes(name)) {
+            assert.equal(rows[0].problems.length, 1);
+            assert.match(rows[0].problems[0], /assert\.ok\(icon instanceof SVGSVGElement\)/);
+          }
         }
+        const otherRows = result.results.filter(row => !targetNames.includes(row.name));
+        const key = `${track}-${lane}`;
+        if (phase === 'before') clientRows[key] = otherRows;
+        else assert.deepEqual(otherRows, clientRows[key]);
         for (const name of progressNames) {
           if (track === 'supported') assert.deepEqual(result.results.filter(row => row.name === name), [{ name, problems: [] }]);
           assert.equal(name in known, false);

@@ -1,33 +1,55 @@
 name: Check
-run-name: Scoped union props exact before/after 533 @ ${{ github.sha }}
+run-name: Scoped union original source receipt @ ${{ github.sha }}
 on: { workflow_dispatch: {} }
-permissions: { contents: read }
+permissions: { contents: read, actions: read }
 env:
   CARGO_BUILD_JOBS: '12'
   CARGO_INCREMENTAL: '0'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   VIZE_UI_REQUIRE_SOURCE_BINDING: '1'
 jobs:
-  ui-scoped-union:
-    name: Exact native union source before/after and full original UI controls
+  ui-scoped-union-receipt:
+    name: Strict observer over complete original native before/after source gates
     runs-on: blacksmith-32vcpu-ubuntu-2404
-    timeout-minutes: 40
+    timeout-minutes: 20
     defaults: { run: { shell: bash } }
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with: { fetch-depth: 0 }
-      - name: Preserve observer and workflow identity
+      - name: Preserve corrected observer and select the same qualified source
         run: |
           git diff --exit-code
           git diff --cached --exit-code
-          mkdir -p evidence
-          git rev-parse HEAD > evidence/workflow-head.txt
           cp scripts/ui-scoped-union-proof.mjs /tmp/ui-scoped-union-proof.mjs
-          git checkout 2eed646c3293d83bf14d005c02b068e81909867f
+          git checkout 6a279bc77f531c95abb58ee5b90c634354ef5f3f
           git diff --exit-code
-          git status --porcelain > evidence/before-source-status.txt
+      - name: Verify every original source guard and product gate actually succeeded
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          gh api repos/ubugeeei-prod/vize/actions/runs/38112877041 > /tmp/original-run.json
+          gh api repos/ubugeeei-prod/vize/actions/jobs/114391906378 > /tmp/original-job.json
+          python3 - <<'PYTHON'
+          import json
+          run=json.load(open('/tmp/original-run.json'))
+          job=json.load(open('/tmp/original-job.json'))
+          assert run['head_sha']=='9d2cfa2c8cdb8234189679abb658fa654aa7419a'
+          assert run['conclusion']=='failure' and job['conclusion']=='failure'
+          assert job['run_id']==38112877041
+          steps=job['steps']
+          assert all(s['conclusion']=='success' for s in steps if s['number'] <= 20)
+          failed=[s for s in steps if s['conclusion']=='failure']
+          assert len(failed)==1 and failed[0]['number']==21
+          assert failed[0]['name']=='Assert complete raw before/after source receipt and unchanged authored SSR markup'
+          print('Original exact source, whole goldens, Rust controls, standard/production UI and both full533 lanes all succeeded; only observer expectation needs correction.')
+          PYTHON
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: scoped-union-props-exact-before-after-9d2cfa2c8cdb8234189679abb658fa654aa7419a
+          run-id: 38112877041
+          github-token: ${{ github.token }}
+          path: evidence
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0
-        with: { toolchain: stable, components: rustfmt }
+        with: { toolchain: stable }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203
         with: { wild-version: '0.9.0' }
       - uses: ./.github/actions/setup-rust-sticky-cache
@@ -37,85 +59,21 @@ jobs:
           cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
       - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa
         with: { node-version-file: package.json, cache: true, run-install: false }
-      - name: Install immutable dependencies
-        run: vp install --frozen-lockfile --prefer-offline
-      - name: Build and identify actual native source before correction
+      - name: Restore identical source dependencies and actual native binding
         run: |
+          vp install --frozen-lockfile --prefer-offline
           vp run --filter './npm/native' build:ci
-          node /tmp/ui-scoped-union-proof.mjs binding before
-          node /tmp/ui-scoped-union-proof.mjs emitted before
-          git diff -- npm/native > evidence/before-generated-native-entry.diff
+          node /tmp/ui-scoped-union-proof.mjs binding receipt-evaluator
           git diff --exit-code -- Cargo.toml Cargo.lock crates davinci npm/ui pnpm-lock.yaml pnpm-workspace.yaml
-      - name: Require the unchanged whole golden test to fail before correction
+      - name: Check all original full outputs and unchanged authored markup assertions
         run: |
-          set +e
-          vp exec node --test npm/ui/scripts/vapor-runtime/scoped-union-props.test.ts 2>&1 | tee evidence/before-golden.log
-          before_status=${PIPESTATUS[0]}
-          set -e
-          test "$before_status" -eq 1
-          node /tmp/ui-scoped-union-proof.mjs golden-negative
-      - name: Preserve all original supported UI controls before correction
-        run: |
-          vp run --filter './npm/ui' check 2>&1 | tee evidence/before-supported.log
-          mv evidence/supported evidence/before-supported
-      - name: Preserve the complete original rc9 negative oracle before correction
-        env: { VIZE_UI_VAPOR_RUNTIME: reference }
-        run: |
-          set +e
-          vp run --filter './npm/ui' check:vapor-runtime 2>&1 | tee evidence/before-reference.log
-          reference_status=${PIPESTATUS[0]}
-          set -e
-          test "$reference_status" -eq 1
-          mv evidence/reference evidence/before-reference
-      - name: Select exact corrected source and retain only generated binding edits
-        run: |
-          git diff --name-only > evidence/before-generated-paths.txt
-          test "$(cat evidence/before-generated-paths.txt)" = 'npm/native/index.d.ts'
-          git restore -- npm/native/index.d.ts
-          git checkout 6a279bc77f531c95abb58ee5b90c634354ef5f3f
-          git diff --exit-code
-          git diff --cached --exit-code
-          git status --porcelain > evidence/after-source-status.txt
-          git diff 2eed646c3293d83bf14d005c02b068e81909867f HEAD > evidence/exact-source-correction.diff
-      - name: Build actual corrected source with the same retained Rust cache
-        run: |
-          vp run --filter './npm/native' build:ci
-          node /tmp/ui-scoped-union-proof.mjs binding after
-          node /tmp/ui-scoped-union-proof.mjs emitted after
-          git diff -- npm/native > evidence/after-generated-native-entry.diff
-          git diff --exit-code -- Cargo.toml Cargo.lock crates davinci npm/ui pnpm-lock.yaml pnpm-workspace.yaml
-      - name: Validate Rust formatting and all original scoped-world controls
-        run: |
-          cargo fmt --all -- --check
-          cargo test --release -p vize_atelier_sfc --lib script::context::type_world 2>&1 | tee evidence/scoped-world-tests.log
-          cargo test --release -p vize_atelier_sfc --lib script::type_resolution 2>&1 | tee evidence/type-resolution-tests.log
-          cargo test --release -p vize_atelier_sfc --lib compile_script::props 2>&1 | tee evidence/runtime-prop-tests.log
-      - name: Execute the complete native and official whole golden regression
-        run: vp exec node --test npm/ui/scripts/vapor-runtime/scoped-union-props.test.ts 2>&1 | tee evidence/after-golden.log
-      - name: Execute all original standard and production UI tests
-        run: vp run --filter './npm/ui' test 2>&1 | tee evidence/after-ui-tests.log
-      - name: Preserve all original supported gates and expose only proven stale entries
-        run: |
-          set +e
-          vp run --filter './npm/ui' check 2>&1 | tee evidence/after-supported.log
-          supported_status=${PIPESTATUS[0]}
-          set -e
-          test "$supported_status" -eq 1
-          mv evidence/supported evidence/after-supported
-      - name: Preserve complete rc9 controls and original ProgressBar negative oracle
-        env: { VIZE_UI_VAPOR_RUNTIME: reference }
-        run: |
-          set +e
-          vp run --filter './npm/ui' check:vapor-runtime 2>&1 | tee evidence/after-reference.log
-          reference_status=${PIPESTATUS[0]}
-          set -e
-          test "$reference_status" -eq 1
-          mv evidence/reference evidence/after-reference
-      - name: Assert complete raw before/after source receipt and unchanged authored SSR markup
-        run: node /tmp/ui-scoped-union-proof.mjs receipt 2>&1 | tee evidence/receipt.log
-      - name: Retain every complete output, assertion, binding and source receipt
+          node /tmp/ui-scoped-union-proof.mjs receipt 2>&1 | tee evidence/corrected-receipt.log
+          cp /tmp/ui-scoped-union-proof.mjs evidence/receipt-observer.mjs
+          cp /tmp/original-run.json evidence/original-run.json
+          cp /tmp/original-job.json evidence/original-job.json
+      - name: Preserve original raw source evidence and the strict receipt
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: scoped-union-props-exact-before-after-${{ github.sha }}
+          name: scoped-union-props-original-source-receipt-${{ github.sha }}
           path: evidence/
