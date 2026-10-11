@@ -10,16 +10,20 @@ import {
   ownedCompletionManifestSHA256,
 } from "./warm-type-backed-owned-completion-host.ts";
 
+type SourceBinding = { projectConfigHost?: unknown; componentContextHost?: unknown };
 type Pair = {
-  sourceBinding: { projectConfigHost?: unknown; componentContextHost?: unknown };
+  sourceBinding: SourceBinding;
   buildCustody: Array<{ launchBinary: string }>;
   before: { inputs: { workspace: string } };
 };
 
+export function capturesOwners(source: SourceBinding): boolean {
+  return Boolean(source.projectConfigHost || source.componentContextHost);
+}
+
 /** Retain the complete original comparison until live migration proofs qualify it. */
 export async function completeOwnerPackets<T>(original: T, packet: Pair): Promise<T> {
-  if (!packet.sourceBinding.projectConfigHost && !packet.sourceBinding.componentContextHost)
-    return original;
+  if (!capturesOwners(packet.sourceBinding)) return original;
   const workspace = packet.before.inputs.workspace;
   const output = path.dirname(workspace);
   const resolved = [];

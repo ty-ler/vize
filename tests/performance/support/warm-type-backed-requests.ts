@@ -15,7 +15,7 @@ import { controls } from "./warm-type-backed-controls.ts";
 import { assertQueryFrames } from "./warm-type-backed-query-frames.ts";
 import { startup } from "./warm-type-backed-startup.ts";
 import { QueryRecorder } from "./warm-type-backed-measure.ts";
-import { compareOwnerPackets } from "./warm-type-backed-owner-migration.ts";
+import { compareOwnerPackets, capturesOwners } from "./warm-type-backed-owner-migration.ts";
 import {
   assertOriginalFrames,
   assertTypedPackets,
@@ -241,7 +241,7 @@ export async function pairedWarmRequests(beforeRoot: string, outputRoot: string)
   const originals = inputAuthority();
   const workspace = path.join(outputRoot, "workspace");
   fs.mkdirSync(outputRoot, { recursive: true });
-  const captureOwners = !!(sourceBinding.projectConfigHost || sourceBinding.componentContextHost);
+  const captureOwners = capturesOwners(sourceBinding);
   const run = (root: string, side: string) =>
     runSide(root, workspace, runtime, path.join(outputRoot, side), undefined, true, captureOwners);
   const before = await run(beforeRoot, "before");
