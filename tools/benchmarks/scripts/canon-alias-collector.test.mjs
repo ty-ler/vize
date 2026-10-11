@@ -228,11 +228,11 @@ void test("a changed or missing candidate body refuses before any CLI while full
           side,
         ),
       );
-      for (const [name, bytes] of [
-        ["resolver", resolverBytes],
-        ["resolver-candidates", candidatesBytes],
-        ["collector", collectorBytes],
-      ])
+      for (const [name, bytes] of Object.entries({
+        resolver: resolverBytes,
+        "resolver-candidates": candidatesBytes,
+        collector: collectorBytes,
+      }))
         assert.deepEqual(readFileSync(join(root, "capture/raw", `${side}-${name}.rs`)), bytes);
     }
     for (const missing of [false, true]) {
