@@ -22,9 +22,15 @@ import {
   newBaselineObserver,
   type BaselineObserver,
 } from "../../../performance/support/current-baseline/observer.ts";
+import {
+  diagnosticLaunch,
+  memoryBinding,
+} from "../../../performance/support/allocation-diagnostic/launch.ts";
+import { MemoryObserver } from "../../../performance/support/allocation-diagnostic/observer.ts";
 
 const captures = new WeakMap<ChildProcessWithoutNullStreams, LspSessionCapture>();
 const baselines = new WeakMap<ChildProcessWithoutNullStreams, BaselineObserver>();
+const memories = new WeakMap<ChildProcessWithoutNullStreams, MemoryObserver>();
 
 export function spawnBoundLspSessionProcess(
   binding: BoundLspSession,
@@ -39,8 +45,13 @@ export function spawnLspSessionProcess(
   envBinary = process.env.VIZE_LSP_BIN,
   published?: PublishedSessionBinding,
 ): ChildProcessWithoutNullStreams {
+  const memory = memoryBinding(repoRoot);
+  assert.ok(!memory || !published, "memory diagnosis is a separate source experiment");
+  if (memory) repoRoot = memory.sourceRoot;
   let verified: VerifiedLspLaunch | VerifiedPublishedLspLaunch | undefined;
   const resolveStarted = process.hrtime.bigint();
+  const diagnostic = memory && diagnosticLaunch(memory, envBinary);
+  if (diagnostic) verified = diagnostic;
   if (published) {
     assert.equal(sourceRequired, true, "published sessions require whole raw capture");
     assert.equal(published.authority, "published-release");
@@ -53,29 +64,42 @@ export function spawnLspSessionProcess(
   }
   const [command, ...args] = published
     ? [verified!.binary, "lsp"]
-    : resolveVizeLaunchCommand(undefined, envBinary, {
-        required: sourceRequired,
-        repoRoot,
-        onVerifiedLaunch: (launch) => {
-          verified = launch;
-        },
-      });
+    : diagnostic
+      ? [diagnostic.binary, "lsp"]
+      : resolveVizeLaunchCommand(undefined, envBinary, {
+          required: sourceRequired,
+          repoRoot,
+          onVerifiedLaunch: (launch) => {
+            verified = launch;
+          },
+        });
   const resolveLaunchMs = Number(process.hrtime.bigint() - resolveStarted) / 1e6;
-  const capture = sourceRequired
-    ? new LspSessionCapture({
-        repoRoot,
-        outputRoot:
-          published?.captureRoot ?? path.join(repoRoot, "target/differential/lsp-sessions"),
-        launch: verified!,
-        callerStack: new Error().stack ?? "",
-      })
+  const capture =
+    sourceRequired && !diagnostic
+      ? new LspSessionCapture({
+          repoRoot,
+          outputRoot:
+            published?.captureRoot ?? path.join(repoRoot, "target/differential/lsp-sessions"),
+          launch: verified!,
+          callerStack: new Error().stack ?? "",
+        })
+      : undefined;
+  assert.ok(
+    !sourceRequired || capture || diagnostic,
+    "source-built sessions require raw observations",
+  );
+  const memoryObserver = memory
+    ? new MemoryObserver(memory, verified as VerifiedLspLaunch)
     : undefined;
-  assert.ok(!sourceRequired || capture, "source-built sessions require raw observations");
   const baseline = published
     ? undefined
     : newBaselineObserver(repoRoot, verified as VerifiedLspLaunch | undefined, resolveLaunchMs);
   baseline?.beforeSpawn();
   const child = spawn(command, args, { cwd: repoRoot, stdio: ["pipe", "pipe", "pipe"] });
+  if (memoryObserver) {
+    memories.set(child, memoryObserver);
+    memoryObserver.attach(child);
+  }
   if (baseline) {
     baselines.set(child, baseline);
     baseline.attach(child);
@@ -94,4 +118,5 @@ export function spawnLspSessionProcess(
 export function recordLspClientWire(child: ChildProcessWithoutNullStreams, frame: string): void {
   captures.get(child)?.append("client", Buffer.from(frame, "utf8"));
   baselines.get(child)?.append("client", Buffer.from(frame, "utf8"));
+  memories.get(child)?.append("client", Buffer.from(frame, "utf8"));
 }

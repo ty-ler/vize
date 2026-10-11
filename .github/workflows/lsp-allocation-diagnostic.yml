@@ -1,0 +1,66 @@
+name: Original LSP allocation diagnosis
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+permissions: { contents: read }
+concurrency:
+  group: lsp-allocation-diagnostic-${{ github.run_id }}
+  cancel-in-progress: false
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CARGO_INCREMENTAL: "0"
+  CARGO_TERM_COLOR: never
+  RAYON_NUM_THREADS: "4"
+  VIZE_PERF_BUDGET_SCALE: "1"
+  SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+jobs:
+  original-pair:
+    if: ${{ github.repository == 'ubugeeei-prod/vize' && ((github.event_name == 'pull_request' && github.event.label.name == 'diagnostic:allocation' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'diag/native-server-allocation-3952-20261012') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/diag/native-server-allocation-3952-20261012')) }}
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with: { ref: "${{ env.SOURCE_SHA }}", fetch-depth: 1, persist-credentials: false }
+      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067
+        with: { toolchain: "1.99.0" }
+      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203
+        with: { wild-version: "0.9.0" }
+      - uses: ./.github/actions/setup-rust-sticky-cache
+        with: { key: lsp-allocation-diagnostic, target-path: target }
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa
+        with: { node-version-file: package.json, run-install: false }
+      - name: Prepare only the finite source objects and original Misskey inputs
+        run: |
+          set -euo pipefail
+          test "$(git --no-replace-objects rev-parse HEAD)" = "$SOURCE_SHA"
+          node tests/performance/support/allocation-diagnostic/prepare.ts
+          git --no-replace-objects submodule update --init --depth 1 -- tests/_fixtures/_git/misskey
+          vp install --frozen-lockfile --prefer-offline
+      - name: Verify finite whole source and bounded diagnostic parser laws
+        run: node --test --test-concurrency=1 tests/tooling/lsp-allocation-diagnostic.test.ts tests/tooling/lsp-allocation-command.test.ts tests/tooling/lsp-allocation-packets.test.ts tests/tooling/lsp-allocation-source.test.ts tests/tooling/lsp-session-capture.test.ts
+      - name: Retain original cutoff, collision, owner and unwind laws in both feature graphs
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_canon --lib consumption -- --nocapture
+          cargo test --locked --profile ci -p vize_canon --lib preparation_trace::allocation_shape -- --nocapture
+          cargo check --locked --profile ci -p vize --features legacy,profiling
+          VIZE_LSP_ALLOCATION_DIAGNOSTIC=1 cargo test --locked --profile ci -p vize_canon --features allocation-diagnostic --lib consumption -- --nocapture
+          VIZE_LSP_ALLOCATION_DIAGNOSTIC=1 cargo test --locked --profile ci -p vize_canon --features allocation-diagnostic --lib preparation_trace::allocation_shape -- --nocapture
+          cargo clippy --locked --profile ci -p vize -p vize_canon --features legacy,allocation-diagnostic -- -D warnings
+      - name: Observe the two authentic builds through the complete original workload
+        run: node tests/performance/support/allocation-diagnostic/run.ts "$RUNNER_TEMP/lsp-allocation-pair"
+      - name: Retain all raw packets even when an unchanged original gate fails
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: lsp-allocation-pair-${{ env.SOURCE_SHA }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/lsp-allocation-pair/campaign.json
+            ${{ runner.temp }}/lsp-allocation-pair/whole-source
+            ${{ runner.temp }}/lsp-allocation-pair/worktree-command
+            ${{ runner.temp }}/lsp-allocation-pair/first
+            ${{ runner.temp }}/lsp-allocation-pair/second
+            ${{ runner.temp }}/lsp-allocation-pair/pair-assessment.json
+          if-no-files-found: error
+          retention-days: 14

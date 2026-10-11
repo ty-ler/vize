@@ -2,6 +2,9 @@
 
 use clap::Args;
 
+#[cfg(feature = "allocation-diagnostic")]
+mod allocation_diagnostic;
+
 #[derive(Args)]
 pub struct LspArgs {
     /// Use stdio for communication (default)
@@ -24,10 +27,15 @@ pub(crate) enum LspTransport {
 }
 
 pub fn run(args: LspArgs) {
+    #[cfg(feature = "allocation-diagnostic")]
+    let allocation_capture = allocation_diagnostic::begin();
     let result = match transport_from_port(args.port) {
         LspTransport::Stdio => vize_maestro::serve_blocking(),
         LspTransport::Tcp(port) => vize_maestro::serve_tcp_blocking(port),
     };
+
+    #[cfg(feature = "allocation-diagnostic")]
+    allocation_diagnostic::finish(allocation_capture);
 
     if let Err(e) = result {
         eprintln!("LSP server error: {}", e);

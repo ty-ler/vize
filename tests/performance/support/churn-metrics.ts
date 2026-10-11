@@ -14,6 +14,7 @@ import {
   resolveBudgetScale,
 } from "./incremental-metrics.ts";
 import { gitHead, processRssKiB, processTreeRss, type ProcessRss } from "./process-metrics.ts";
+import { recordMemoryFence, recordMemoryMetrics } from "./allocation-diagnostic/observer.ts";
 
 /** `id` is the metrics directory under `target/vize-tests/metrics/`; `title` heads the summary. */
 export type ChurnSuite = { id: string; title: string };
@@ -155,6 +156,7 @@ export class ChurnMetrics {
       treeProcesses: tree?.processes ?? 0,
       members: tree?.members ?? [],
     });
+    recordMemoryFence(this.processId, this.rssSamples[this.rssSamples.length - 1]);
   }
 
   /**
@@ -254,6 +256,7 @@ export class ChurnMetrics {
         "hard assertions in the suite.",
     };
     writeChurnArtifacts(incrementalMetricsDir(this.suite.id), this.suite.title, data);
+    recordMemoryMetrics(this.processId, data);
     if (settlementFailure != null) throw settlementFailure;
   }
 

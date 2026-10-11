@@ -308,6 +308,8 @@ impl NativeFacts {
         self,
         value: T,
     ) -> Consumed<T> {
+        #[cfg(feature = "allocation-diagnostic")]
+        allocation::record(&self);
         // Diagnostic-only immutable counting in a separate opted-in process.
         // The original facts, bucket index and qualification remain untouched.
         if std::env::var("VIZE_DIAGNOSTIC_NATIVE_FACT_BUCKETS").is_ok_and(|value| value == "1") {
@@ -338,3 +340,6 @@ mod tests;
 mod retention;
 
 mod population;
+
+#[cfg(feature = "allocation-diagnostic")]
+mod allocation;

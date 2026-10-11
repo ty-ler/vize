@@ -10,6 +10,7 @@ metadata.vize.stability = "compatibility-preview"
 
 [features]
 default = ["native"]
+allocation-diagnostic = []
 native = [
   "dep:oxc_sourcemap",
   "dep:walkdir",

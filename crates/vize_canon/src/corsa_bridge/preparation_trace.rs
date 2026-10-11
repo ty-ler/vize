@@ -9,6 +9,12 @@ use std::time::Instant;
 static ENABLED: OnceLock<bool> = OnceLock::new();
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
+#[cfg(feature = "allocation-diagnostic")]
+mod allocation;
+
+#[cfg(test)]
+mod allocation_shape;
+
 /// Disabled sessions do not read clocks or record inputs, paths or payloads.
 /// A dropped unfinished phase also records cancellation/error unwinding.
 pub(crate) struct Phase {
@@ -17,6 +23,8 @@ pub(crate) struct Phase {
     started: Option<Instant>,
     completed: bool,
     graph_revision: Option<(u8, u8, usize, usize)>,
+    #[cfg(feature = "allocation-diagnostic")]
+    allocation: Option<allocation::Window>,
 }
 
 impl Phase {
@@ -39,6 +47,8 @@ impl Phase {
             started,
             completed: false,
             graph_revision: None,
+            #[cfg(feature = "allocation-diagnostic")]
+            allocation: allocation::Window::begin(),
         }
     }
 
@@ -82,6 +92,10 @@ impl Phase {
 
 impl Drop for Phase {
     fn drop(&mut self) {
+        #[cfg(feature = "allocation-diagnostic")]
+        if let Some(window) = self.allocation.take() {
+            window.finish(self.name, self.id, self.completed);
+        }
         if let Some(started) = self.started {
             if let Some((
                 graph_takeover,

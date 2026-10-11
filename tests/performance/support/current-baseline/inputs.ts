@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { PinnedFixtureWorkspace } from "../../../_helpers/realworld-patch.ts";
 import { hash } from "./wire.ts";
+import { recordMemoryInputs } from "../allocation-diagnostic/inputs.ts";
 
 export const baselineRoot = (): string | undefined => process.env.VIZE_LSP_CURRENT_BASELINE;
 export const writeJson = (file: string, value: unknown): void =>
@@ -45,6 +46,7 @@ export function prepareBaselineInputs(
   fixture: PinnedFixtureWorkspace,
   sources: Record<string, string>,
 ): void {
+  recordMemoryInputs(fixture, sources, manifest);
   const output = baselineRoot();
   if (!output) return;
   assert.equal(process.platform, "linux", "continuous RSS baseline requires Linux");
