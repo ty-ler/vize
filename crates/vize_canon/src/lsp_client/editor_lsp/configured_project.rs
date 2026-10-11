@@ -85,6 +85,10 @@ impl EditorLspSession {
                 "attachment": api.session,
                 "sourceFileNamesRequest": source_request,
                 "sourceFileNamesResponse": source_response,
+                // Retain the original semantic-completion receipt names from
+                // the same complete native response, alongside its raw status.
+                "sourceNamesRequest": source_request,
+                "sourceNamesResponse": source_response.get("wholeResponse"),
             }))
         })();
         let cleanup = block_on(snapshot.release())

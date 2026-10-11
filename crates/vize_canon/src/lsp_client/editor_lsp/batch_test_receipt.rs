@@ -47,6 +47,8 @@ impl CorsaProjectClient {
                         "attachment",
                         "sourceFileNamesRequest",
                         "sourceFileNamesResponse",
+                        "sourceNamesRequest",
+                        "sourceNamesResponse",
                     ] {
                         receipt[key] = observed[key].clone();
                     }

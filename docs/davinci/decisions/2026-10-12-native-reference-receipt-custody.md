@@ -48,6 +48,12 @@ Keep every production source-owner, project-selection and overlay contract
 unchanged. Only the existing test receipt modules and a child of the existing
 `cfg(test)` source-owner tests may change.
 
+SDK composition preserves the complete initialize/shutdown receipt fields and
+the original flat source-name receipt keys. Those flat keys come from the same
+whole native response retained with its status in the structured reference
+receipt; they grant no separate source-read credit. No old native law loses its
+actual owner, source list, initialization or terminal evidence.
+
 Retain the original overlay-only selection observation, including its whole
 failure. On the same already-diagnosing LSP, use its existing workspace readiness
 barrier and request `custom/projectInfo` for the materialized URI without
