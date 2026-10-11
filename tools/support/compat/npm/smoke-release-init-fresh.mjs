@@ -22,7 +22,8 @@ import path from "node:path";
 import { renderOutput, run } from "./smoke-process.mjs";
 import { PACKAGE_MANAGERS } from "./smoke-release-init-managers.mjs";
 import { withPoisonedVizePath } from "./smoke-release-path-poison.mjs";
-import { FRESH_INIT_MATRIX, PROJECT_SHAPES } from "./smoke-release-init-shapes.mjs";
+import { FRESH_INIT_MATRIX } from "./smoke-release-init-shapes.mjs";
+import { CONFIG_FREE_PROJECT_SHAPES as PROJECT_SHAPES } from "./smoke-release-init-config-free.mjs";
 import {
   assertFreshProject,
   assertMissingCorsaGuidance,
@@ -44,6 +45,14 @@ function runInit(context, projectRoot, args) {
     cwd: context.tempDir,
     env: projectEnv(),
   });
+}
+
+export function assertNoDedicatedConfig(projectRoot) {
+  assert.equal(
+    fs.readdirSync(projectRoot).some((name) => name.startsWith("vize.config.")),
+    false,
+    "the current initializer generated a dedicated Vize config",
+  );
 }
 
 /**
@@ -131,6 +140,7 @@ function runFreshProjectCell(context, cell) {
     assert.equal(fs.readFileSync(path.join(projectRoot, name), "utf8"), source, `${name} mismatch`);
   }
   assert.deepEqual(readJson(path.join(projectRoot, "package.json")).scripts, shape.expectedScripts);
+  assertNoDedicatedConfig(projectRoot);
 
   installPlannedDependencies(context, projectRoot, manager, shape);
   assertProjectLocalToolchain(context, projectRoot, shape);
@@ -164,10 +174,16 @@ function runFreshProjectCell(context, cell) {
     afterInit,
     "a second init run changed the project",
   );
+  assertNoDedicatedConfig(projectRoot);
 
   writeFiles(projectRoot, shape.check.broken);
   const broken = checkReport(projectRoot);
-  assert.notEqual(broken.status, 0, "the broken project passed vize:check");
+  assert.equal(
+    broken.status,
+    1,
+    `broken project did not return diagnostic exit one\n${broken.rendered}`,
+  );
+  assert.equal(broken.signal, null, "the broken project was terminated by a signal");
   assert.deepEqual(reportedDiagnostics(broken.report, projectRoot), shape.check.brokenDiagnostics);
   assert.equal(
     broken.report.errorCount,

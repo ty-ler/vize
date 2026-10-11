@@ -11,11 +11,17 @@ import type { ArtFileInfo } from "./types/index.js";
 import { generatePreviewModule, generatePreviewHtml } from "./preview/index.js";
 import { generateArtModule } from "./art-module.js";
 import { decodeUrlComponent, HttpError, resolveUrlPathInside } from "./security.js";
-import { toPascalCase } from "./utils.js";
+import { variantComponentNames } from "./variant-bindings.js";
+import { previewModuleId } from "./preview-module-id.js";
+import {
+  sendArtModuleFallback,
+  sendPreviewError,
+  sendPreviewModule,
+} from "./middleware-response.js";
 import type { MuseaTokenPreviewConfig } from "./tokens/preview.js";
 import { generateDevGlobalsScript } from "./gallery/globals.js";
+import { rewriteDevGalleryAsset, rewriteGalleryBase } from "./static-base.js";
 export { generateDevGlobalsScript } from "./gallery/globals.js";
-
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const galleryAssetMimeTypes: Record<string, string> = {
   ".js": "application/javascript",
@@ -84,6 +90,7 @@ export async function serveGalleryAsset(
   galleryDistDir: string,
   requestUrl: string,
   res: ServerResponse,
+  basePath = "/__musea__",
 ): Promise<boolean> {
   try {
     const filePath = resolveUrlPathInside(galleryDistDir, requestUrl, "asset path");
@@ -96,7 +103,7 @@ export async function serveGalleryAsset(
     const ext = path.extname(filePath);
     res.setHeader("Content-Type", galleryAssetMimeTypes[ext] || "application/octet-stream");
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    res.end(content);
+    res.end(rewriteDevGalleryAsset(content, filePath, basePath));
     return true;
   } catch (error) {
     if (error instanceof HttpError) {
@@ -140,7 +147,7 @@ export function registerMiddleware(devServer: ViteDevServer, ctx: MiddlewareCont
 
       try {
         await fs.promises.access(indexHtmlPath);
-        let html = await fs.promises.readFile(indexHtmlPath, "utf-8");
+        let html = rewriteGalleryBase(await fs.promises.readFile(indexHtmlPath, "utf-8"), basePath);
         html = html.replace(
           "</head>",
           `<script>${generateDevGlobalsScript(basePath, devSessionToken, themeConfig, tokenPreviewConfig, toolbar)}</script></head>`,
@@ -179,7 +186,7 @@ export function registerMiddleware(devServer: ViteDevServer, ctx: MiddlewareCont
 
     // Serve gallery static assets (JS, CSS) from built SPA
     if (url.startsWith("/assets/")) {
-      if (await serveGalleryAsset(resolveGalleryDistDir(), url, res)) {
+      if (await serveGalleryAsset(resolveGalleryDistDir(), url, res, basePath)) {
         return;
       }
     }
@@ -228,7 +235,13 @@ export function registerMiddleware(devServer: ViteDevServer, ctx: MiddlewareCont
       return;
     }
 
-    const variantComponentName = toPascalCase(variant.name);
+    let variantComponentName: string;
+    try {
+      variantComponentName = variantComponentNames(art.variants).get(variant.name)!;
+    } catch (error) {
+      sendPreviewError(res, error);
+      return;
+    }
     const moduleCode = generatePreviewModule(
       art,
       variantComponentName,
@@ -240,22 +253,16 @@ export function registerMiddleware(devServer: ViteDevServer, ctx: MiddlewareCont
     );
 
     try {
-      const result = await devServer.transformRequest(
-        `virtual:musea-preview:${artPath}:${variantName}`,
-      );
+      const result = await devServer.transformRequest(previewModuleId(artPath, variantName));
       if (result) {
-        res.setHeader("Content-Type", "application/javascript");
-        res.setHeader("Cache-Control", "no-cache");
-        res.end(result.code);
+        sendPreviewModule(res, result.code);
         return;
       }
     } catch {
       // Fall through to manual response
     }
 
-    res.setHeader("Content-Type", "application/javascript");
-    res.setHeader("Cache-Control", "no-cache");
-    res.end(moduleCode);
+    sendPreviewModule(res, moduleCode);
   });
 
   // --- VRT preview route ---
@@ -321,25 +328,23 @@ export function registerMiddleware(devServer: ViteDevServer, ctx: MiddlewareCont
       const virtualId = `virtual:musea-art:${artPath}`;
       const result = await devServer.transformRequest(virtualId);
       if (result) {
-        res.setHeader("Content-Type", "application/javascript");
-        res.setHeader("Cache-Control", "no-cache");
-        res.end(result.code);
+        sendPreviewModule(res, result.code);
       } else {
-        const moduleCode = generateArtModule(art, artPath, {
-          root: devServer.config.root,
-          scanRoots: ctx.scanRoots,
-        });
-        res.setHeader("Content-Type", "application/javascript");
-        res.end(moduleCode);
+        sendArtModuleFallback(res, () =>
+          generateArtModule(art, artPath, {
+            root: devServer.config.root,
+            scanRoots: ctx.scanRoots,
+          }),
+        );
       }
     } catch (err) {
       console.error("[musea] Failed to transform art module:", err);
-      const moduleCode = generateArtModule(art, artPath, {
-        root: devServer.config.root,
-        scanRoots: ctx.scanRoots,
-      });
-      res.setHeader("Content-Type", "application/javascript");
-      res.end(moduleCode);
+      sendArtModuleFallback(res, () =>
+        generateArtModule(art, artPath, {
+          root: devServer.config.root,
+          scanRoots: ctx.scanRoots,
+        }),
+      );
     }
   });
 }

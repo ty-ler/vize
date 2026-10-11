@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -16,6 +17,9 @@ import {
 } from "./n8n-replay-inputs.mjs";
 import { expectedHostCalls, qualifyN8nHost, verifyNativeCalls } from "./n8n-host-replay.mjs";
 import { prepareReferenceSource } from "./n8n-reference-source.mjs";
+import { aggregateNativeEvidence, hostVersions } from "./ci-host-concurrency.mjs";
+import { baselineMode } from "./n8n-baseline-partitions.mjs";
+import { runBaselineWorkers } from "./n8n-baseline-workers.mjs";
 
 const activeNames = (rules) =>
   Object.entries(rules)
@@ -36,7 +40,7 @@ const nativeOptions = (rules, names) => {
   return result;
 };
 
-export function beginN8nReplay({ root, packageDir, artifacts, receipt, binary }) {
+export async function beginN8nReplay({ root, packageDir, artifacts, receipt, binary }) {
   assert.equal(process.env.GITHUB_ACTIONS, "true");
   assert.equal(receipt.source.head, process.env.GITHUB_SHA);
   for (const key of [
@@ -44,13 +48,20 @@ export function beginN8nReplay({ root, packageDir, artifacts, receipt, binary })
     "VIZE_N8N_REPLAY_OUTPUT",
     "VIZE_N8N_REPLAY_PHASE",
     "VIZE_PREFER_WORKSPACE_BINDING",
+    "VIZE_N8N_BASELINE_PARTITION",
   ])
     assert.ok(!process.env[key], `ambient ${key} cannot qualify the replay`);
   const output = path.join(artifacts, "n8n");
   fs.mkdirSync(output, { recursive: true });
   const laws = spawnSync(
     process.execPath,
-    ["--test", "scripts/n8n-replay-inputs.test.mjs", "scripts/n8n-native-custody.test.cjs"],
+    [
+      "--test",
+      "scripts/n8n-replay-inputs.test.mjs",
+      "scripts/n8n-native-custody.test.cjs",
+      "scripts/ci-host-concurrency.test.mjs",
+      "scripts/n8n-baseline-partitions.test.mjs",
+    ],
     {
       cwd: packageDir,
       encoding: "utf8",
@@ -103,29 +114,63 @@ export function beginN8nReplay({ root, packageDir, artifacts, receipt, binary })
     VIZE_N8N_REPLAY_OUTPUT: path.join(output, "bridge"),
     VIZE_N8N_REPLAY_PHASE: "frozenPerRule",
   };
-  const result = spawnSync("vp", ["test", "run", "src/n8n-full-replay.test.ts"], {
-    cwd: packageDir,
-    env: { ...process.env, ...environment },
-    encoding: "utf8",
-    timeout: 900_000,
-    maxBuffer: 32 * 1024 * 1024,
-  });
-  fs.writeFileSync(path.join(output, "bridge-tests.json"), JSON.stringify(result, null, 2) + "\n");
-  process.stdout.write(result.stdout ?? "");
-  process.stderr.write(result.stderr ?? "");
-  assert.equal(result.error, undefined);
-  assert.equal(result.signal, null);
-  assert.equal(result.status, 0);
+  if (baselineMode() === "partitioned") {
+    await runBaselineWorkers({ packageDir, output, custody, inventory, environment });
+  } else {
+    const result = spawnSync("vp", ["test", "run", "src/n8n-full-replay.test.ts"], {
+      cwd: packageDir,
+      env: { ...process.env, ...environment },
+      encoding: "utf8",
+      timeout: 900_000,
+      maxBuffer: 32 * 1024 * 1024,
+    });
+    fs.writeFileSync(
+      path.join(output, "bridge-tests.json"),
+      JSON.stringify(result, null, 2) + "\n",
+    );
+    process.stdout.write(result.stdout ?? "");
+    process.stderr.write(result.stderr ?? "");
+    assert.equal(result.error, undefined);
+    assert.equal(result.signal, null);
+    assert.equal(result.status, 0);
+  }
   const reference = prepareReferenceSource(output);
-  return { output, custody, environment, inventory, reference, hosts: [] };
+  return { output, custody, inventory, reference, hosts: [], hostCustodies: [] };
 }
 
 export function replayN8nHost(replay, engine, version) {
   const output = path.join(replay.output, version);
-  replay.hosts.push(qualifyN8nHost(engine, version, output, replay.environment, replay.reference));
+  fs.mkdirSync(output, { recursive: true });
+  // Keep complete append-only ledgers and source stores private to each host.
+  // The parent verifies each ledger before combining the observed proof maps.
+  const custody = {
+    ...replay.custody,
+    calls: path.join(output, "native-calls.jsonl"),
+    sources: path.join(output, "sources"),
+  };
+  const custodyPath = path.join(output, "custody.json");
+  fs.writeFileSync(custodyPath, JSON.stringify(custody, null, 2) + "\n");
+  const preload = fileURLToPath(new URL("./n8n-native-custody.cjs", import.meta.url));
+  const environment = {
+    NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ""} --require=${JSON.stringify(preload)}`.trim(),
+    VIZE_N8N_NATIVE_CUSTODY: custodyPath,
+    VIZE_N8N_REPLAY_OUTPUT: path.join(output, "replay"),
+  };
+  const host = qualifyN8nHost(engine, version, output, environment, replay.reference);
+  replay.hosts.push(host);
+  replay.hostCustodies.push({ version, custody });
+  return { host, custody };
 }
 
 export function finishN8nReplay(replay) {
+  assert.deepEqual(
+    replay.hosts.map(({ version }) => version),
+    hostVersions.map(({ version }) => version),
+  );
+  assert.deepEqual(
+    replay.hostCustodies.map(({ version }) => version),
+    hostVersions.map(({ version }) => version),
+  );
   const bridgePhases = [
     "frozenPerRule",
     "frozenBatch",
@@ -139,11 +184,17 @@ export function finishN8nReplay(replay) {
       (mode) => `host:${version}:${mode}`,
     ),
   );
-  const observed = verifyNativeCalls(replay.custody, [
-    ...bridgePhases,
-    "cacheControls",
-    ...hostPhases,
-  ]);
+  const segments = [
+    { custody: replay.custody, phases: [...bridgePhases, "cacheControls"] },
+    ...replay.hostCustodies.map(({ version, custody }) => ({
+      custody,
+      phases: hostPhases.filter((phase) => phase.startsWith(`host:${version}:`)),
+    })),
+  ].map((segment) => ({
+    ...segment,
+    observed: verifyNativeCalls(segment.custody, segment.phases),
+  }));
+  const observed = aggregateNativeEvidence(replay.custody, replay.inventory, segments);
   assert.deepEqual(observed.inventory, replay.inventory);
   const totals = {};
   for (const phase of [...bridgePhases, ...hostPhases]) {
@@ -223,6 +274,17 @@ export function finishN8nReplay(replay) {
     controls.reduce((sum, row) => sum + row.calls, 0),
   );
   assert.deepEqual(verifyCorpus(), replay.inventory);
+  const callsHash = createHash("sha256");
+  const nativeCallLedgers = segments.map(({ custody, observed: segment }) => {
+    const bytes = fs.readFileSync(custody.calls);
+    callsHash.update(bytes);
+    return {
+      path: custody.calls,
+      sha256: sha256(bytes),
+      events: segment.events,
+      processes: segment.processes,
+    };
+  });
   const qualification = {
     source: replay.custody.source,
     toolchain: replay.custody.toolchain,
@@ -238,7 +300,9 @@ export function finishN8nReplay(replay) {
     totals,
     events: observed.events,
     processes: observed.processes,
-    nativeCallsSha256: sha256(fs.readFileSync(replay.custody.calls)),
+    // Digest of the complete ordered baseline + pinned-host ledger bytes.
+    nativeCallsSha256: callsHash.digest("hex"),
+    nativeCallLedgers,
     hosts: replay.hosts,
     reference: replay.reference,
     limits: [

@@ -4,11 +4,14 @@ title: WASM Bindings
 
 # WASM Bindings
 
-> **⚠️ Work in Progress:** Vize is under active development and is not yet ready for production use. WASM APIs may change without notice.
+Use `@vizejs/wasm` to compile, lint, or format Vue source inside a browser, for example in a
+playground or an interactive documentation page. It runs the Rust compiler through WebAssembly
+without requiring a compiler server.
 
-`@vizejs/wasm` provides WebAssembly bindings for running the Vue compiler directly in the browser. This enables real-time SFC compilation, linting, and formatting without a server — ideal for playgrounds, documentation, and educational tools.
-
-The WASM bindings are compiled from the same Rust codebase as the CLI and NAPI bindings (`vize_vitrine`), ensuring identical compilation output across all platforms.
+[Install the package](#installation), initialize it once, then try the
+[complete SFC compilation example](#compile-sfc). For a normal application build, follow the
+[Vite Plugin guide](./vite-plugin.md). The WASM API is experimental; consult the
+[package support tiers](../stability.md#package-support-tiers) when choosing an integration.
 
 ## Installation
 
@@ -19,18 +22,6 @@ vp install @vizejs/wasm
 ```
 
 ## API
-
-### Compiler option compatibility
-
-The `CompilerOptions` type is the supported option inventory for `compile`, `compileVapor`,
-`parseTemplate`, and `compileSfc`. Unknown object keys are ignored at the JavaScript boundary and
-are not compatibility promises. `vueParserQuirks` remains as a deprecated alias for
-`templateSyntax: "quirks"`; an explicit `templateSyntax` always takes precedence. The shared Rust
-field `experimentalServerScript` is reserved and is not exposed until a WASM compiler stage
-implements it. Each facade ignores supported fields that do not apply to its compiler stage:
-`bindingMetadata` only applies to direct template compilation. Runtime names apply to generated
-VDOM modules and SFC client output (VDOM or Vapor); source maps apply to VDOM output, including the
-template result returned by `compileSfc`. `outputMode` and `scriptExt` only apply to SFC compilation.
 
 ### Compile SFC
 
@@ -175,7 +166,7 @@ wasm-bindgen \
 
 ## Internationalization
 
-All WASM APIs that produce diagnostics (lint, compile errors) support localized messages:
+The `locale` option on `lintSfc` localizes lint diagnostics. The supported languages are:
 
 | Code | Language          |
 | ---- | ----------------- |
@@ -183,7 +174,7 @@ All WASM APIs that produce diagnostics (lint, compile errors) support localized 
 | `ja` | Japanese (日本語) |
 | `zh` | Chinese (中文)    |
 
-Pass the `locale` option to any API that produces diagnostics:
+Pass `locale` when calling `lintSfc`. `CompilerOptions` does not include `locale`; compilation and parsing use their existing diagnostic messages:
 
 ```javascript
 const result = lintSfc(source, {
@@ -196,7 +187,9 @@ console.log(result.diagnostics);
 
 ## Bundle Size
 
-The WASM module includes the full Vue compiler pipeline (parser, semantic analyzer, code generator) compiled to WebAssembly. The gzipped bundle size is approximately **1.5 MB**, which is suitable for non-critical-path loading (e.g., loaded after the page is interactive).
+The WASM module includes the Vue compiler pipeline (parser, semantic analyzer, code generator). The compressed size depends on the build and generated artifact. After following the source-build recipe, run `gzip -c npm/wasm/vize_vitrine_bg.wasm | wc -c` to measure the gzip size of that exact module in bytes.
+
+For interactive pages, load it after the page is ready or when the user first needs the compiler.
 
 For production use, consider lazy-loading the WASM module:
 
@@ -207,3 +200,17 @@ await compiler.default(); // init()
 const result = compiler.compileSfc(source, opts);
 console.log(result.script.code, result.template?.code, result.css);
 ```
+
+## Compiler option reference
+
+### Compiler option compatibility
+
+The `CompilerOptions` type is the supported option inventory for `compile`, `compileVapor`,
+`parseTemplate`, and `compileSfc`. Unknown object keys are ignored at the JavaScript boundary and
+are not compatibility promises. `vueParserQuirks` remains as a deprecated alias for
+`templateSyntax: "quirks"`; an explicit `templateSyntax` always takes precedence. The shared Rust
+field `experimentalServerScript` is reserved and is not exposed until a WASM compiler stage
+implements it. Each facade ignores supported fields that do not apply to its compiler stage:
+`bindingMetadata` only applies to direct template compilation. Runtime names apply to generated
+VDOM modules and SFC client output (VDOM or Vapor); source maps apply to VDOM output, including the
+template result returned by `compileSfc`. `outputMode` and `scriptExt` only apply to SFC compilation.

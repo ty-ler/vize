@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
+import { resolveSnapshotIdentity } from "./vrt/snapshot-identity.js";
 import type { ResolvedConfig } from "vite";
 
 import { handleTokensGet, handleTokensUsage } from "./api-tokens.js";
@@ -15,6 +16,8 @@ import type { ArtFileInfo } from "./types/index.js";
 
 export interface StaticGalleryPayload {
   arts: ArtFileInfo[];
+  snapshotIdentityVersion: 1;
+  snapshotIdentities: Record<string, string>;
   previews: Record<string, Record<string, string>>;
   details: Record<string, StaticArtDetails>;
   tokens: unknown;
@@ -68,11 +71,16 @@ export async function createStaticGalleryPayload(
 ): Promise<StaticGalleryPayload> {
   const apiCtx = createApiContext(ctx);
   const arts = sortedArts(ctx.artFiles.values());
-  const previews: StaticGalleryPayload["previews"] = {};
+  const previews: StaticGalleryPayload["previews"] = Object.create(null);
   const details: StaticGalleryPayload["details"] = {};
+  const snapshotIdentities: Record<string, string> = Object.create(null);
 
   for (const art of arts) {
-    previews[art.path] = {};
+    snapshotIdentities[art.path] = resolveSnapshotIdentity(
+      art.path,
+      ctx.projectRoot ?? ctx.config.root,
+    );
+    previews[art.path] = Object.create(null);
 
     for (const variant of art.variants) {
       const id = staticPreviewId(art.path, variant.name);
@@ -103,6 +111,8 @@ export async function createStaticGalleryPayload(
 
   return {
     arts,
+    snapshotIdentityVersion: 1,
+    snapshotIdentities,
     previews,
     details,
     tokens: await captureJson((sendJson) => handleTokensGet(apiCtx, sendJson), emptyTokens()),

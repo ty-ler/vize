@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Page } from "playwright";
+import { verifyRenderedVueRulePackets } from "./vue-rule-render-assertions.ts";
 
 export const ruleRenderRoutes = [
   "/rules/all",
@@ -17,6 +18,8 @@ export const ruleRenderRoutes = [
 const root = resolve(import.meta.dirname, "../..");
 
 export async function verifyRenderedRulePackets(page: Page, route: string) {
+  if (/^\/(?:ja\/|zh-CN\/|pt-BR\/|fr\/)?rules\/vue$/.test(route))
+    return verifyRenderedVueRulePackets(page, route);
   if (!/^\/(?:ja\/)?rules\/all$/.test(route)) return null;
   const ja = route.startsWith("/ja/");
   const locale = ja ? "ja/" : "";
@@ -67,6 +70,11 @@ export async function verifyRenderedRulePackets(page: Page, route: string) {
             good: Boolean(document.getElementById(`${element.id}-good`)),
           };
         } else if (element.parentElement?.tagName === "PRE" && current) {
+          if (
+            element.closest(".vize-command-tabs") &&
+            !element.hasAttribute("data-command-tabs-original")
+          )
+            continue;
           const text = element.textContent;
           if (text === null) throw new Error(`Missing inline rule code ${current}`);
           packets[current].code.push(text.replace(/\n$/, ""));

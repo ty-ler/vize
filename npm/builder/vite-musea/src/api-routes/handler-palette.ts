@@ -13,6 +13,8 @@ import {
   resolveReadableArtPath,
 } from "../component-source.js";
 import { loadNative, analyzeSfcFallback } from "../native-loader.js";
+import { parseScriptSetupForArt } from "../art-module.js";
+import { resolveArtComponent } from "../art-component.js";
 import { analyzeScriptComponent } from "../script-component-analysis.js";
 import { decodeUrlComponent, HttpError, isVueSourcePath } from "../security.js";
 
@@ -29,6 +31,8 @@ type PaletteControl = {
 
 type PaletteResponse = {
   title: string;
+  componentTagName?: string;
+  unsupportedProps?: string[];
   controls: PaletteControl[];
   groups: string[];
   json: string;
@@ -75,6 +79,13 @@ export async function handleArtPalette(
       };
     }
 
+    palette.componentTagName = resolveArtComponent(
+      art,
+      artPath,
+      art.scriptSetupContent ? parseScriptSetupForArt(art.scriptSetupContent) : null,
+      { root: ctx.config.root, scanRoots: ctx.scanRoots },
+    ).componentTagName;
+
     const resolvedComponentPath = resolveComponentSourcePath(
       art,
       artPath,
@@ -95,6 +106,12 @@ export async function handleArtPalette(
 
       if (analysis.props.length > 0) {
         mergeSfcPropsIntoPalette(palette, analysis.props);
+      }
+      if (
+        isVueSourcePath(resolvedComponentPath) &&
+        analysis.props.some((prop) => prop.name === "__proto__")
+      ) {
+        palette.unsupportedProps = ["__proto__"];
       }
     } catch {
       // Ignore errors reading component file.
@@ -204,7 +221,12 @@ function normalizePropName(name: string): string {
 
 function generateTypescript(palette: PaletteResponse): string {
   const fields = palette.controls
-    .map((control) => `  ${control.name}${control.required ? "" : "?"}: ${controlTsType(control)};`)
+    .map((control) => {
+      const name = /^[$_\p{ID_Start}][$\u200c\u200d\p{ID_Continue}]*$/u.test(control.name)
+        ? control.name
+        : JSON.stringify(control.name);
+      return `  ${name}${control.required ? "" : "?"}: ${controlTsType(control)};`;
+    })
     .join("\n");
   return `export interface ${pascalCase(palette.title)}Props {\n${fields}\n}\n`;
 }

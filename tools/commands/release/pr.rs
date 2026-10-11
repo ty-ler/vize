@@ -6,7 +6,7 @@
 //! [package]
 //! edition = "2024"
 //! ```
-//! Driver source pin: jsr-channel-v14.
+//! Driver source pin: jsr-channel-parent-custody-v15.
 
 #[path = "../../support/release/pr_budget.rs"]
 mod pr_budget;

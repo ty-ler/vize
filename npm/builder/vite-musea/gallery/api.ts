@@ -26,6 +26,8 @@ export interface PaletteControl {
 
 export interface PaletteApiResponse {
   title: string;
+  componentTagName?: string;
+  unsupportedProps?: string[];
   controls: PaletteControl[];
   groups: string[];
   json: string;
