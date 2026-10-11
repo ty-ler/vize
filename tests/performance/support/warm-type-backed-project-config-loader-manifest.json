@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "parentSource": "2b367c41b569e3d4a1bc78d03f3d9f4c8698f13c",
+  "composedSource": "752bf8bd6993252cd17835d17ea188213e425f52",
+  "originalConfigManifestSHA256": "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc",
+  "legacyContext": [
+    [
+      "crates/vize_carton/src/config/loader/js.rs",
+      "65e125669983ed80a259bee73f206becf17ad7cd5f225c8c90ccb87207839386",
+      "65e125669983ed80a259bee73f206becf17ad7cd5f225c8c90ccb87207839386"
+    ],
+    ["crates/vize_carton/src/config/loader/module-runtime.mjs", null, null]
+  ],
+  "composedContext": [
+    [
+      "crates/vize_carton/src/config/loader/js.rs",
+      "df49c1e9b603ce50011ecde9dac116987ab32ee48d3a4b2b4c5818e7e1876f5e",
+      "df49c1e9b603ce50011ecde9dac116987ab32ee48d3a4b2b4c5818e7e1876f5e"
+    ],
+    [
+      "crates/vize_carton/src/config/loader/module-runtime.mjs",
+      "a5d247f627f4a45924f61d72253114349b512c23817487b45c0a068db69f7eda",
+      "a5d247f627f4a45924f61d72253114349b512c23817487b45c0a068db69f7eda"
+    ]
+  ]
+}
