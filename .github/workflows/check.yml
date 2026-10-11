@@ -18,7 +18,7 @@ jobs:
         with: { fetch-depth: 0 }
       - name: Select exact four-layer public source with only read-only observers
         run: |
-          git checkout 36661df72b1705781c6af73d2a9daff7aace4ad3
+          git checkout 9691df5b92f7daf25f5d71286b27aa299322929f
           git diff --exit-code
           git diff --cached --exit-code
           mkdir evidence
