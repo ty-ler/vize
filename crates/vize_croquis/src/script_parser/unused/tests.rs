@@ -22,6 +22,7 @@ fn generic_scopes_resolve_free_reads_without_spelling_based_admission() {
         ),
     ] {
         let result = parse_script_setup_for_unused::<false>(
+            &oxc_allocator::Allocator::default(),
             SOURCE,
             Some(generic),
             false,
@@ -42,6 +43,7 @@ fn generic_scopes_resolve_free_reads_without_spelling_based_admission() {
 fn invalid_or_escaped_type_parameters_do_not_prove_an_unread_binding() {
     for generic in ["T extends", "T>() {}); Kind; (function<U", "T, T"] {
         let result = parse_script_setup_for_unused::<false>(
+            &oxc_allocator::Allocator::default(),
             SOURCE,
             Some(generic),
             false,
@@ -57,8 +59,15 @@ fn invalid_or_escaped_type_parameters_do_not_prove_an_unread_binding() {
 fn unused_demand_preserves_all_other_owned_script_metadata() {
     let generic = Some("T extends Kind.A");
     let ordinary = parse_script_setup_with_generic(SOURCE, generic);
-    let mut demanded =
-        parse_script_setup_for_unused::<false>(SOURCE, generic, false, true, false, false);
+    let mut demanded = parse_script_setup_for_unused::<false>(
+        &oxc_allocator::Allocator::default(),
+        SOURCE,
+        generic,
+        false,
+        true,
+        false,
+        false,
+    );
     assert_eq!(
         demanded
             .unused_bindings

@@ -6,6 +6,7 @@ use oxc_span::{SourceType, Span};
 use tower_lsp::lsp_types::{Location, Position, Range, SymbolInformation, SymbolKind, Url};
 use vize_l0::Allocator;
 
+#[cfg(test)]
 pub(super) fn collect(uri: &Url, source: &str, query: &str, symbols: &mut Vec<SymbolInformation>) {
     let allocator = Allocator::default();
     collect_in(uri, source, query, symbols, &allocator);

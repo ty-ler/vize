@@ -1,6 +1,12 @@
 fn parse_builtin(source: &str) -> crate::script_parser::ScriptParseResult {
     crate::script_parser::parse_script_setup_for_unused::<true>(
-        source, None, false, false, false, false,
+        &oxc_allocator::Allocator::default(),
+        source,
+        None,
+        false,
+        false,
+        false,
+        false,
     )
 }
 
