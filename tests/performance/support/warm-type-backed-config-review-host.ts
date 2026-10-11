@@ -23,12 +23,12 @@ export const configReviewManifest = freeze(raw as Manifest);
 export const configReviewManifestSHA256 = hash(configReviewManifest);
 assert.equal(
   configReviewManifestSHA256,
-  "77aa537eec533d7c5d814e88320238c7cebb68163e06e6f1a545f60e1f38fe12",
+  "1e3adcb1df0d9433add5e0903fe5d1b631787fc7df8bce094b677466e5d4a754",
 );
 assert.equal(configReviewManifest.version, 1);
 assert.equal(configReviewManifest.actualBaseline, "df7f2e83722371a71c75bc29208be0ed51491579");
 assert.equal(configReviewManifest.predecessorSource, "ad9efeef994cb58b39a76c84fc9cac497f65f695");
-assert.equal(configReviewManifest.reviewedSource, "a5d96d1d48e8e18b9515d909305c50c734d891c6");
+assert.equal(configReviewManifest.reviewedSource, "27243d0b5ed2e0ba24bf90a3904615f3ab628a6b");
 assert.equal(hash(original), configReviewManifest.originalConfigManifestSHA256);
 assert.equal(hash(issued), configReviewManifest.issuedCompletionManifestSHA256);
 const originalProduction = new Set([
@@ -36,8 +36,8 @@ const originalProduction = new Set([
   ...issued.producerBodies.map(([file]) => file),
 ]);
 assert.equal(originalProduction.size, 96);
-assert.equal(configReviewManifest.productionBodies.length, 10);
-assert.equal(configReviewManifest.harnessBodies.length, 3);
+assert.equal(configReviewManifest.productionBodies.length, 27);
+assert.equal(configReviewManifest.harnessBodies.length, 4);
 const rows = [...configReviewManifest.productionBodies, ...configReviewManifest.harnessBodies];
 const reviewed = new Map(rows.map((row) => [row[0], row]));
 assert.equal(reviewed.size, rows.length);
@@ -52,14 +52,14 @@ assert.deepEqual(
   configReviewManifest.reviewedProductionFiles,
   productionRows.filter(([file]) => !originalProduction.has(file)).map(([file]) => file),
 );
-assert.equal(configReviewManifest.reviewedProductionFiles.length, 5);
+assert.equal(configReviewManifest.reviewedProductionFiles.length, 16);
 assert.deepEqual(
   configReviewManifest.newProductionFiles,
   productionRows
     .filter(([, before, predecessor]) => before === null && predecessor === null)
     .map(([file]) => file),
 );
-assert.equal(configReviewManifest.newProductionFiles.length, 3);
+assert.equal(configReviewManifest.newProductionFiles.length, 6);
 const removed = new Set(configReviewManifest.reviewedProductionFiles);
 
 /** Extend only exact reviewed bodies; the complete original qualifier remains mandatory. */
@@ -78,6 +78,7 @@ export function qualifyConfigReviewHost<T extends { files: readonly string[] }>(
   if (new Set(production).size !== production.length) return null;
   if (scope === "parent-pair" && productionRows.some(([file]) => !production.includes(file)))
     return null;
+  if (scope === "inherited" && production.some((file) => removed.has(file))) return null;
   for (const [file, before, , after] of rows)
     if (
       digest("before", file) !== (scope === "inherited" ? after : before) ||
@@ -111,7 +112,7 @@ export function qualifyConfigReviewHost<T extends { files: readonly string[] }>(
         : witness.files,
     reviewedProductionFiles: configReviewManifest.reviewedProductionFiles,
     configReviewContext: {
-      authority: "finite-reviewed-config-lock-and-overlay-successor",
+      authority: "finite-reviewed-config-lock-overlay-and-navigation-successor",
       manifestSHA256: configReviewManifestSHA256,
       actualBaseline: configReviewManifest.actualBaseline,
       predecessorSource: configReviewManifest.predecessorSource,

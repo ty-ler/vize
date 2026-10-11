@@ -2,7 +2,7 @@
   "version": 1,
   "actualBaseline": "df7f2e83722371a71c75bc29208be0ed51491579",
   "predecessorSource": "ad9efeef994cb58b39a76c84fc9cac497f65f695",
-  "reviewedSource": "a5d96d1d48e8e18b9515d909305c50c734d891c6",
+  "reviewedSource": "27243d0b5ed2e0ba24bf90a3904615f3ab628a6b",
   "originalConfigManifestSHA256": "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc",
   "issuedCompletionManifestSHA256": "ef1ffd5636c09cb276a5f8365c24a899691a161ebc70839713e7a8721a0d7c48",
   "baselineWitness": {
@@ -16,12 +16,13 @@
       "e530e84859afdd84942af1895ec3d912728e617b",
       "c1d303841bccad6cc915cafdf5c444699fc1c38a"
     ],
-    "review": "Actual main never removed the inflight root registration or root/ordered-array tests. Reviewed predecessor and after retain every complete original-after test body; only two exact actual-main before bodies project to the frozen original before."
+    "review": "Actual main never removed the inflight root registration or root/ordered-array tests. Reviewed predecessor and after retain every complete original-after test body. The two actual-main before bodies are not admitted or projected by this qualifier; that composition is explicitly deferred pending a separate closed review."
   },
   "reviewedCommits": [
     "fe5c2636af7cb7abd9bba45eefac7a13bde6987e",
     "a121ff7fd5b2182d70be8b689c263eee322cb13e",
-    "a5d96d1d48e8e18b9515d909305c50c734d891c6"
+    "a5d96d1d48e8e18b9515d909305c50c734d891c6",
+    "27243d0b5ed2e0ba24bf90a3904615f3ab628a6b"
   ],
   "productionBodies": [
     [
@@ -67,10 +68,40 @@
       "91786a3cd73bf8cf7a35ba5a5da589d67bbd445336db1d4f8b356215b99ef5d7"
     ],
     [
+      "crates/vize_maestro/src/server.rs",
+      "595d000b2308ed303a79fdf3add227d1a1b4faf24d42a92344a7e61faeffc820",
+      "43695c2b9ec4cbbbad5a565417fefe5612cfa97ae5fde10dd283ab6c700fdde9",
+      "316cafb173898c41f29a4aa06233172d06e29dc7d7a9cf28f778d96b6694be58"
+    ],
+    [
+      "crates/vize_maestro/src/server/native_navigation.rs",
+      "c0557a296af7a7444cdfbea62b8385005f95a046262cd90abdbdbf0381869251",
+      "754ff4c665603dfdab4b16d51268f83d8b3d2293204bd68841fe4bd25715273b",
+      "5446fff47d574260d7455e7305ff47d70e4084c66269d27e1bc13ac6c48457b1"
+    ],
+    [
+      "crates/vize_maestro/src/server/native_navigation/module_links.rs",
+      "87b37032c2a4184a6f68892602897f9a45c27a1ac75bec84bf7e9e292da5e572",
+      "66f7b2c17cd5dc74ecadf8f12abca0dbfd4f5d95e04ed998c309e6179dc1014c",
+      "b83aafd2f3b77204f5c019313793a902dcca02ac8bc847872ea3119eac71cec1"
+    ],
+    [
+      "crates/vize_maestro/src/server/project_contexts.rs",
+      null,
+      "c2c4b8da7ef59e7743a4db131512c70a2a1b7a25f71b624024b47ee9912945db",
+      "8561d4c2f7021d824bd6fbc7e0157ed562ca53446a168177a7d7b204bd1a339e"
+    ],
+    [
+      "crates/vize_maestro/src/server/project_contexts/tests.rs",
+      null,
+      null,
+      "53d2b77273839800c6b318066337d19479473999c468ae2aefcf97349aa323fe"
+    ],
+    [
       "crates/vize_maestro/src/server/state/project_contexts.rs",
       null,
       "be61b16ba68870439deef13332cad7b1f7a5ce0039430ac75aa1764b6fb328ce",
-      "a86eefde9cf8ba776f784e2cead446ec2a8a28870157a7362270714b0df78957"
+      "46a1f8e6b7a2f06475cf6dafceffd8fcec21b10d41ed78c9ab03ba083e4da97d"
     ],
     [
       "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs",
@@ -79,10 +110,82 @@
       "860ad749f0e1349c152a36178f0dd9b4778e179a0b953d9dcb4decaeb2bef799"
     ],
     [
+      "crates/vize_maestro/src/server/state/project_contexts/navigation.rs",
+      null,
+      null,
+      "59b2d3a7283c13574e48ff62c15ee0567b353a4f2e162ae96f8f275956ff1587"
+    ],
+    [
+      "crates/vize_maestro/src/server/state/project_contexts/registry.rs",
+      null,
+      "4b19b6bf3ccf525837d08bc10d37edd0f2ef41658a1e8c1dfea09fcb2636240e",
+      "aee306011925882c00c79c664c1108a5c2e6e1390c1c6efec93b2097a745f2e8"
+    ],
+    [
       "crates/vize_maestro/src/server/state/project_contexts/watched.rs",
       null,
       "64652f984ea0a9b42ecfbea07b9b9e040e2c2f80d55a44dc789db6097a310522",
       "1ceaefe9ed9c1961721c5b4e1f596570b80e91f97ef9414d40091b8c2c6562ce"
+    ],
+    [
+      "crates/vize_maestro/src/server/workspace_files/watched.rs",
+      null,
+      "984b63036baebd930d67b0c6875ec1547de3225a1fa9538cef9c157800382d08",
+      "0d1b689018c2a76c29ccaa4823fccc0cb6ebb826b23bbaba751e6e8b0d2bcc75"
+    ],
+    [
+      "crates/vize_maestro/src/source_project/navigation.rs",
+      "c48ab273040f62cb574e2f4da6d56b523007f78c002e2e09c199a29eeabfe541",
+      "c48ab273040f62cb574e2f4da6d56b523007f78c002e2e09c199a29eeabfe541",
+      "51de5327b754ff2bc9ef43613c65176a66e915187d3d538b5487248a07f200f9"
+    ],
+    [
+      "crates/vize_maestro/src/source_project/navigation/tests.rs",
+      "69c9465bd99c33836da6ae70fc6c20a3f96b51a0b263b2288a26038ba44ec9e7",
+      "69c9465bd99c33836da6ae70fc6c20a3f96b51a0b263b2288a26038ba44ec9e7",
+      "9cd1d0e3f78277af497058ab01b1c2bfc986b1641ce500d5ba05b28996bfcead"
+    ],
+    [
+      "crates/vize_maestro/src/source_project/navigation/tests/retirement.rs",
+      null,
+      null,
+      "6d7ea01fdcb495c2c6bd97ea528ac3fff9cb686a98ad601a8f3f25dca4245ec8"
+    ],
+    [
+      "crates/vize_maestro/src/source_project/project.rs",
+      "0225949f2677c1156857a0b32c76b1f825d0409017df9f5c2ecb0bf689a394e5",
+      "0225949f2677c1156857a0b32c76b1f825d0409017df9f5c2ecb0bf689a394e5",
+      "7d293f2411f4a1f997379fa2d48124e869e4e53a0eac9bf1b160897a885058ea"
+    ],
+    [
+      "crates/vize_maestro/src/source_project/project/host.rs",
+      "0696dc0bb927709e18ed7734c84f1d49606e51764d6e090ae0bdcfbad665aad4",
+      "0696dc0bb927709e18ed7734c84f1d49606e51764d6e090ae0bdcfbad665aad4",
+      "10cb1da1a6490b1576196b929236d4c536dc3886562cc1e643e19242725c59ea"
+    ],
+    [
+      "crates/vize_maestro/src/source_project/project/notify.rs",
+      "cccf0b639bb6f75d4e16cc9fa0f2512b0bf8b272f81f8b2809bcaff063f85c60",
+      "cccf0b639bb6f75d4e16cc9fa0f2512b0bf8b272f81f8b2809bcaff063f85c60",
+      "3760e9dec02c2199f67a85ab58ac49ecf3065b41c2260eb8f68545711c4bc613"
+    ],
+    [
+      "crates/vize_maestro/src/source_project/project/tracked.rs",
+      "ec1b3d22074cce63ee4317c713f06afe582c188915499676ccade0d1dddf1558",
+      "ec1b3d22074cce63ee4317c713f06afe582c188915499676ccade0d1dddf1558",
+      "c10807023bbf2a6f6d98983e77ea9e75cc0bbe584d93dd95a7a96abd35c26152"
+    ],
+    [
+      "crates/vize_maestro/src/source_project/project/tracked/modules.rs",
+      "13d94f7d4724296c0865a7fb2efca4b158250ffdbb53d074ce71a0de54009f44",
+      "13d94f7d4724296c0865a7fb2efca4b158250ffdbb53d074ce71a0de54009f44",
+      "f781221d804350b00395d4597cb798d73e040053ddff82923191093d5bebec45"
+    ],
+    [
+      "crates/vize_maestro/src/source_project/project/tracked/targets.rs",
+      "e75eba31565526d5841ea4de5f57a189cc19ff297f6c18e4e8510db30667f344",
+      "e75eba31565526d5841ea4de5f57a189cc19ff297f6c18e4e8510db30667f344",
+      "0b8527b112bdc8a31bb84759ec0a226f017404be2cd153db1d64e8dd3ed916cd"
     ]
   ],
   "harnessBodies": [
@@ -99,6 +202,12 @@
       "4b62b7496aedff6cfdbf2f609ba5dc9fda401171b71a41f3ad2bff8dc78ce713"
     ],
     [
+      "tests/_fixtures/differential/lsp/project-navigation-cache-8371.json",
+      null,
+      null,
+      "e4dfc41866f67ed107a86ad96b38b031883948d40908fc30f0358cbb0da17966"
+    ],
+    [
       "tests/tooling/project-config-native-triggers.test.ts",
       null,
       null,
@@ -108,11 +217,18 @@
   "newProductionFiles": [
     "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport/tests/native/replay.rs",
     "crates/vize_canon/src/lsp_client/session/replay.rs",
-    "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs"
+    "crates/vize_maestro/src/server/project_contexts/tests.rs",
+    "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs",
+    "crates/vize_maestro/src/server/state/project_contexts/navigation.rs",
+    "crates/vize_maestro/src/source_project/navigation/tests/retirement.rs"
   ],
   "excludedDecisionAndGeneratedPaths": [
+    "docs/davinci/decisions/2026-09-27-level-restructure.md",
+    "docs/davinci/decisions/2026-10-11-8371-issued-completion-authority.md",
     "docs/davinci/decisions/2026-10-11-config-native-overlay-replay.md",
+    "docs/davinci/decisions/2026-10-11-config-stack-delivery-record.md",
     "docs/davinci/decisions/2026-10-11-project-context-lock-order.md",
+    "docs/davinci/decisions/2026-10-11-project-navigation-cache.md",
     "docs/davinci/plan/consumer-migration-surfaces/typechecker/vize_canon.tsv"
   ],
   "deferredActualMainComposition": {
@@ -138,6 +254,17 @@
     "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport/tests/native/replay.rs",
     "crates/vize_canon/src/lsp_client/queries.rs",
     "crates/vize_canon/src/lsp_client/session/replay.rs",
-    "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs"
+    "crates/vize_maestro/src/server/project_contexts/tests.rs",
+    "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs",
+    "crates/vize_maestro/src/server/state/project_contexts/navigation.rs",
+    "crates/vize_maestro/src/source_project/navigation.rs",
+    "crates/vize_maestro/src/source_project/navigation/tests.rs",
+    "crates/vize_maestro/src/source_project/navigation/tests/retirement.rs",
+    "crates/vize_maestro/src/source_project/project.rs",
+    "crates/vize_maestro/src/source_project/project/host.rs",
+    "crates/vize_maestro/src/source_project/project/notify.rs",
+    "crates/vize_maestro/src/source_project/project/tracked.rs",
+    "crates/vize_maestro/src/source_project/project/tracked/modules.rs",
+    "crates/vize_maestro/src/source_project/project/tracked/targets.rs"
   ]
 }

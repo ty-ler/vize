@@ -20,6 +20,9 @@ type Digest = (side: Side, file: string) => string | null;
 type Pair = [string, string | null, string | null];
 const hash = (body: string | Uint8Array) => createHash("sha256").update(body).digest("hex");
 const root = new URL("../../", import.meta.url);
+const baseline = "df7f2e83722371a71c75bc29208be0ed51491579";
+const predecessor = "ad9efeef994cb58b39a76c84fc9cac497f65f695";
+const reviewedSource = "27243d0b5ed2e0ba24bf90a3904615f3ab628a6b";
 const bodies = new Map<string, string | null>();
 function gitDigest(ref: string, file: string) {
   const key = `${ref}:${file}`;
@@ -31,7 +34,7 @@ function gitDigest(ref: string, file: string) {
   return bodies.get(key)!;
 }
 const digest: Digest = (side, file) =>
-  gitDigest(side === "before" ? review.actualBaseline : review.reviewedSource, file);
+  gitDigest(side === "before" ? baseline : reviewedSource, file);
 const production = [
   ...new Set([...issuedCompletionProduction, ...review.reviewedProductionFiles]),
 ].toSorted();
@@ -39,7 +42,7 @@ const reviewedRows = [...review.productionBodies, ...review.harnessBodies];
 const qualify = (files = production, current: Digest = digest, owned = new Set<string>()) =>
   qualifyConfigReviewHost(files, owned, current, qualifyIssuedCompletionHost);
 
-await test("the authentic reviewed pair retains the complete original96/51/3 witness and closed five-path extension", () => {
+await test("the authentic reviewed pair retains the complete original96/51/3 witness and closed sixteen-path extension", () => {
   const result = qualify();
   assert.ok(result);
   assert.equal(result.completeBodyPairs, 96);
@@ -51,8 +54,38 @@ await test("the authentic reviewed pair retains the complete original96/51/3 wit
   assert.deepEqual(result.configReviewContext.completeProductionBodyPairs, review.productionBodies);
   assert.deepEqual(result.configReviewContext.completeHarnessBodyPairs, review.harnessBodies);
   assert.equal(result.configReviewContext.scope, "parent-pair");
-  assert.equal(review.newProductionFiles.length, 3);
-  assert.equal(review.reviewedProductionFiles.length, 5);
+  assert.equal(review.newProductionFiles.length, 6);
+  assert.equal(review.reviewedProductionFiles.length, 16);
+  assert.equal(result.files.length, 112);
+});
+
+await test("literal reviewed source bodies and the complete genuine production diff authenticate every finite row", () => {
+  assert.equal(review.actualBaseline, baseline);
+  assert.equal(review.predecessorSource, predecessor);
+  assert.equal(review.reviewedSource, reviewedSource);
+  for (const [file, before, prior, after] of reviewedRows)
+    assert.deepEqual(
+      [gitDigest(baseline, file), gitDigest(predecessor, file), gitDigest(reviewedSource, file)],
+      [before, prior, after],
+      file,
+    );
+  const changed = (before: string, paths: string[]) => {
+    const result = spawnSync(
+      "git",
+      ["diff", "--name-only", before, reviewedSource, "--", ...paths],
+      {
+        cwd: root,
+        encoding: "utf8",
+      },
+    );
+    assert.equal(result.status, 0);
+    return result.stdout.trim().split("\n").toSorted();
+  };
+  assert.deepEqual(changed(baseline, ["crates"]), production);
+  assert.deepEqual(
+    changed(predecessor, []),
+    [...reviewedRows.map(([file]) => file), ...review.excludedDecisionAndGeneratedPaths].toSorted(),
+  );
 });
 
 await test("every whole reviewed before/after body, including new absent-before owners, is mandatory", () => {
@@ -213,4 +246,26 @@ await test("inherited context preserves the child's complete own pairs and uncha
   assert.equal(run(inheritedDigest, componentFiles.slice(1)), null);
   assert.equal(run(inheritedDigest, [...componentFiles, componentFiles[0]]), null);
   assert.equal(run(inheritedDigest, [...componentFiles, "crates/unreviewed-child.rs"]), null);
+});
+
+await test("an inherited delta cannot append any covered parent path, even when it is already qualified", () => {
+  for (const file of review.reviewedProductionFiles)
+    for (const owned of [new Set<string>(), new Set([file])]) {
+      let delegated = false;
+      assert.equal(
+        qualifyConfigReviewHost(
+          [...componentFiles, file],
+          owned,
+          inheritedDigest,
+          (...args) => {
+            delegated = true;
+            return inheritedOriginal(...args);
+          },
+          "inherited",
+        ),
+        null,
+        file,
+      );
+      assert.equal(delegated, false, file);
+    }
 });
