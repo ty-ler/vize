@@ -33,7 +33,38 @@ def prepare(root):
     return 0  # Observation failure must not suppress any original build/test command.
 
 
-def start(root):
+def tooling_selection(root, shard):
+    plan = Path(os.environ["RUNNER_TEMP"]) / "tooling-plan.json"
+    result = subprocess.run(["vp", "node", "tools/support/compat/github/docker-phase-selection.mjs", str(plan), shard],
+                            cwd=root, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=5, check=True)
+    if len(result.stdout) > 262144:
+        raise ValueError("Selected tooling evidence exceeded finite bound")
+    return json.loads(result.stdout)
+
+
+def lifecycle_outcome(stream, selection):
+    counters = stream["counters"]
+    names = {"received", "observed", "unowned", "refused", "inspectionUnavailable", "inspectionQueueFull"}
+    if set(counters) != names or any(type(value) is not int or value < 0 or value > 4096 for value in counters.values()):
+        raise ValueError("Actual bounded event counters required")
+    if counters["observed"] > counters["received"]:
+        raise ValueError("Observed event count exceeds received stream")
+    if stream["status"] != "observed" or stream.get("failureType") or stream["finalPartialFrameBytes"]:
+        raise ValueError("Docker stream observation was unavailable")
+    if any(counters[key] for key in ("unowned", "refused", "inspectionUnavailable", "inspectionQueueFull")):
+        raise ValueError("Docker observation contains refused or omitted evidence")
+    if counters["observed"] == 0:
+        if any(counters.values()) or stream["phases"] or stream["containers"] or stream["inspections"] or stream["events"]["bytes"]:
+            raise ValueError("Empty observation contains inconsistent lifecycle evidence")
+        if selection["mandatoryDockerTests"]:
+            raise ValueError("Selected mandatory Docker consumer has no actual observations")
+        return "no-eligible-container-observations", "none"
+    if not stream["phases"] or any(item["lifecycleStatus"] != "complete" for item in stream["phases"]):
+        raise ValueError("Observed Docker lifecycle remains partial")
+    return "observed", "observed-containers-complete"
+
+
+def start(root, shard):
     directory = capture_directory(root)
     started = time.monotonic()
     configuration = {"root": str(root), "schemaVersion": 1}
@@ -48,6 +79,8 @@ def start(root):
                               "since": str(time.time_ns() // 1000000000),
                               "workflow": {key: os.environ.get(key) for key in
                                            ("GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT", "GITHUB_JOB")}})
+        configuration["setupStage"] = "tooling-selection"
+        configuration["selection"] = tooling_selection(root, shard)
         configuration["setupStage"] = "runner-ownership"
         configuration["ancestryQueries"] = []
         configuration["ancestry"] = process_ancestry(os.getpid(), privileged=True, retain_gaps=True,
@@ -104,23 +137,24 @@ def finish(root):
             time.sleep(0.02)
         stream = json.loads((directory / "stream.json").read_text())
         receipt["stream"] = stream
-        receipt["lifecycleCoverage"] = "partial" if (any(
-            item["lifecycleStatus"] != "complete" for item in stream["phases"]) or
-            any(stream["counters"][key] for key in ("refused", "inspectionUnavailable", "inspectionQueueFull"))) else "observed-containers-complete"
+        receipt["lifecycleCoverage"] = "none" if not stream["phases"] else "partial"
+        selection = tooling_selection(root, configuration["selection"]["shard"])
+        receipt["selectionAfter"] = selection
+        if selection != configuration["selection"]:
+            raise ValueError("Actual selected tooling plan changed during observation")
         after = source_identity(root, configuration["checkout"]["identity"])
         receipt["sourceAfter"] = after
         for key in ("head", "tree", "cliReceiptSha256", "cliReceipt", "cliMembers", "differentialReceipt", "generatedDeclaration", "trackedChanges"):
             if after[key] != configuration["source"][key]:
                 raise ValueError("Source or authenticated producer identity changed")
-        if stream["status"] != "observed" or stream["counters"]["observed"] == 0:
-            raise ValueError("No complete real Docker observation")
-        receipt["status"] = "observed"
+        receipt["status"], receipt["lifecycleCoverage"] = lifecycle_outcome(stream, selection)
+        receipt["lifecycleQualification"] = receipt["status"] == "observed"
     except Exception as error:
         receipt["failureType"] = type(error).__name__
     finally:
         receipt["finishSeconds"] = time.monotonic() - started
         write_json(directory / "receipt.json", receipt)
-    return 0 if receipt["status"] == "observed" else 1
+    return 0 if receipt["status"] in ("observed", "no-eligible-container-observations") else 1
 
 
 if __name__ == "__main__":
@@ -130,7 +164,7 @@ if __name__ == "__main__":
         observe(capture_directory(root))
     else:
         try:
-            result = prepare(root) if command == "prepare" else start(root) if command == "start" else finish(root) if command == "finish" else 1
+            result = prepare(root) if command == "prepare" else start(root, sys.argv[2]) if command == "start" else finish(root) if command == "finish" else 1
         except Exception as error:
             print("Docker phase observation unavailable: " + type(error).__name__, file=sys.stderr)
             result = 0 if command in ("prepare", "start") else 1

@@ -37,7 +37,7 @@ void test("passive Docker capture keeps original tooling commands, full gates an
   assert(steps.indexOf(plan) < steps.indexOf(prepare));
   assert.equal(
     prepare.run,
-    'vp exec node tools/support/compat/davinci/plugin-sandbox-image.mjs && if [[ "$VIZE_DOCKER_PHASE_CAPTURE" == true ]]; then python3 tools/support/compat/github/docker-phase-evidence.py start; fi',
+    'vp exec node tools/support/compat/davinci/plugin-sandbox-image.mjs && if [[ "$VIZE_DOCKER_PHASE_CAPTURE" == true ]]; then python3 tools/support/compat/github/docker-phase-evidence.py start "${{ matrix.index }}/${{ matrix.total }}"; fi',
   );
   const [product, finish, diagnostic] = upload.runs.steps;
   assert.equal(product.name, "Upload differential product corpus evidence");

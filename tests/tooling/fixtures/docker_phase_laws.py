@@ -96,11 +96,12 @@ class DockerPhaseLaws(unittest.TestCase):
             with patch.dict(os.environ, env), \
                     patch.object(capture, "process_ancestry", return_value=ancestry), \
                     patch.object(capture, "source_identity", return_value={"head": "authenticated"}), \
+                    patch.object(capture, "tooling_selection", return_value={"mandatoryDockerTests": []}), \
                     patch.object(capture, "runner_owner", side_effect=ValueError("private-control")):
                 directory = capture.capture_directory(root)
                 directory.mkdir(parents=True)
                 stream.write_json(directory / "checkout.json", {"status": "authenticated", "identity": {}})
-                self.assertEqual(capture.start(root), 0)
+                self.assertEqual(capture.start(root, "1/1"), 0)
                 record = json.loads((capture.capture_directory(root) / "configuration.json").read_text())
                 self.assertEqual(record["failureType"], "ValueError")
                 self.assertEqual(record["setupStage"], "runner-ownership")
@@ -201,7 +202,7 @@ class DockerPhaseLaws(unittest.TestCase):
                 witness = directory / "configuration.json"
                 witness.write_text('"preserved"')
                 with self.assertRaises(FileExistsError):
-                    capture.start(root)
+                    capture.start(root, "1/1")
                 self.assertEqual(witness.read_text(), '"preserved"')
 
     def test_finish_refuses_reused_observer_pid_without_signalling_it(self):

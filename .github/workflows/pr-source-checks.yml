@@ -205,7 +205,7 @@ jobs:
         uses: ./.github/actions/test-native-scoped-css
       - name: Prepare the pinned plugin isolation runtime
         if: ${{ needs.pr-source-plan.outputs.tooling == 'true' }}
-        run: vp exec node tools/support/compat/davinci/plugin-sandbox-image.mjs && if [[ "$VIZE_DOCKER_PHASE_CAPTURE" == true ]]; then python3 tools/support/compat/github/docker-phase-evidence.py start; fi
+        run: vp exec node tools/support/compat/davinci/plugin-sandbox-image.mjs && if [[ "$VIZE_DOCKER_PHASE_CAPTURE" == true ]]; then python3 tools/support/compat/github/docker-phase-evidence.py start "${{ matrix.index }}/${{ matrix.total }}"; fi
       - name: Test source-bound native JS setup modules and runtime
         if: ${{ always() && needs.pr-source-plan.outputs.tooling == 'true' && matrix.index == 1 && (github.event_name == 'merge_group' || (github.event_name == 'pull_request' && needs.pr-source-plan.outputs.native-setup-capture == 'true')) }}
         uses: ./.github/actions/test-native-js-setup

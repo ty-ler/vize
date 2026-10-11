@@ -111,11 +111,36 @@ same-size preserved-time member corruption, permissions and symlinks refuse;
 the original whole-source, staged-declaration and no-bytecode controls remain.
 This authenticates transport wiring, not a Rust build or live Docker capture.
 
-TODO: capture one qualified exact-source four-shard run, retain the original
-outcome and source/provider receipts, and attribute create/start/guest/cleanup
-costs only when the actual events prove them. No causal repair or CI speed gain
-is claimed. Whole #6830 targets, release qualification and other original gates
-remain unfinished.
+Source `6453d309`, Check `38183866525`, retained all four successful original
+tooling commands. Its first two shards authenticated 14 and 21 containers,
+respectively, with all 56 and 84 create/start/die/destroy events complete.
+Every refusal, omitted inspection and unowned event counter was zero.
+Create-to-start maxima were 93.922 and 110.553 milliseconds. These healthy
+observations do not establish the cause of the earlier five-second failures.
+
+The remaining two shards had valid source, owner, daemon and stream custody,
+but no eligible events. Their additional finalizers rejected zero observations
+after incorrectly describing the empty lifecycle as complete. Preserve both
+original diagnostic failures and all four original command outcomes.
+The unchanged actual tooling planner and shard selector assign the mandatory
+native sandbox law to shard one and the complete sandbox law to shard two.
+
+Bind the actual selected plan bytes and shard through the original tooling
+command selector before and after observation. If a selected known mandatory
+Docker law has no observations, refuse. Otherwise a valid stream with every
+counter zero and no container, phase, inspection or event bytes may record
+`no-eligible-container-observations`, with lifecycle coverage `none` and
+qualification false. This supplies no lifecycle or causal credit and makes
+no claim that unknown future tests cannot invoke Docker. Unavailable streams,
+malformed or refused frames, overflow, omitted inspections, partial lifecycle,
+changed plans and source/producer changes remain diagnostic failures.
+Authored finalizer controls retain all those refusals and the actual original
+selection, including complete merge-suite admission.
+
+TODO: qualify the corrected exact-source four-shard receipts and actual merge,
+then attribute costs only from complete observed intervals. No causal repair
+or CI speed gain is claimed. Whole #6830 targets, release qualification and
+other original gates remain unfinished.
 
 Docker's [event filtering](https://docs.docker.com/reference/cli/docker/system/events/)
 and [inspection templates](https://docs.docker.com/reference/cli/docker/inspect/)
