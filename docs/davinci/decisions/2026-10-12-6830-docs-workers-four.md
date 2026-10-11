@@ -31,7 +31,19 @@ capture timing observation and fresh separate directories. Neither filters route
 nor rebuilds between arms. Four still executes after a baseline render failure;
 such a pair cannot qualify.
 
-The observer authenticates the actual Actions checkout, clean tracked source,
+The observer authenticates the clean entire tracked Actions checkout before build,
+including every original Git blob, the two exact committed logo link objects and
+their physical tracked targets, and unchanged empty fixture gitlink commit pins.
+Staged changes, untracked source, new links and populated fixture roots refuse.
+The unchanged build regenerates exactly eight tracked component preview PNGs and
+`npm/native/index.d.ts`. Preserve their complete old/new bytes and hashes, whole
+producer source identities, actual NAPI CLI package tree and Node executable.
+Only those nine ordinary generated files may differ from the clean input;
+every other source and its physical ancestors must remain unchanged. Nearby
+unknown outputs, altered producers, source changes and raw-byte substitutions
+are covered by a successful real temporary-Git transition plus refusal controls.
+
+Before and after both arms, authenticate the resulting checkout and generated files,
 built OG source manifest, complete physical Docs distribution, renderer sources,
 installed Playwright libraries, Node/browser executable and all installed font
 files before and after both arms. Substituted links and reused output directories
@@ -68,3 +80,14 @@ requests, disk or live snapshot memory. Ordered two-then-four may benefit from
 warm caches. Report that ordered observation only; a broader causal claim needs
 qualified reverse/repeated evidence. No historical 90-to-41-minute attribution,
 aggregate CI speed claim or default-four rollout follows from this slice.
+
+## Initial hosted refusal
+
+Run [38161125832](https://github.com/ubugeeei-prod/vize/actions/runs/38161125832)
+at `1c223398a063f0782d65c00656e72fff010a46f5` passed the actual one/two/four
+browser scheduling laws and built Docs, then refused before either full arm:
+the observer incorrectly required tracked cleanliness after those nine original
+build outputs regenerated. Artifact `11710497798` retains the complete browser
+law packets and failed qualification. This run provides no 119-route timing.
+The corrected prebuild custody keeps the original build/captures unchanged;
+fresh exact-source paired qualification remains required.

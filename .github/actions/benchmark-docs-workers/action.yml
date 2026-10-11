@@ -23,7 +23,12 @@ runs:
         sudo apt-get install -y --no-install-recommends fonts-noto-cjk
     - name: Verify original and four-worker browser scheduling laws
       shell: bash
-      run: node --test tests/tooling/docs-render-concurrency.test.ts tests/tooling/docs-render-concurrency-browser.test.ts tests/tooling/docs-render-workers-qualification.test.ts
+      run: node --test tests/tooling/docs-render-concurrency.test.ts tests/tooling/docs-render-concurrency-browser.test.ts tests/tooling/docs-render-workers-qualification.test.ts tests/tooling/docs-render-workers-source.test.ts
+    - name: Authenticate the clean entire checkout and original generated inputs
+      shell: bash
+      env:
+        VIZE_DOCS_WORKERS_OUTPUT: target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}
+      run: vp node docs/scripts/qualify-navigation-render-workers.ts --phase checkout --output "$VIZE_DOCS_WORKERS_OUTPUT"
     - name: Build the same native packages and Docs once
       shell: bash
       run: |

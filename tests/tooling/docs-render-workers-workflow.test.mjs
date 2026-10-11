@@ -47,6 +47,8 @@ void test("whole Docs two/four comparison is manual-only, builds once and preser
   for (const step of steps) assert.equal(step["continue-on-error"], undefined);
   const build = commands.filter(({ run }) => run.includes("build:ci"));
   assert.equal(build.length, 1);
+  const checkout = steps.find(({ run }) => run?.includes("--phase checkout"));
+  assert(checkout && steps.indexOf(checkout) < steps.indexOf(build[0]));
   assert.equal(
     build[0].run,
     "rust-script tools/commands/ci/github/run-many.rs vp run --filter './npm/native' build:ci -- vp run --filter './npm/cli' build -- vp run --filter './npm/builder/vite' build\nvp run --no-cache --filter './docs' build\n",
