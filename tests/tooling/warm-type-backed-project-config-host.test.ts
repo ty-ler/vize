@@ -1,3 +1,4 @@
+import { qualifyCurrentConfigReviewHost } from "./support/config-reviewed-source.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -52,7 +53,8 @@ await test("qualification binds every current source and whole unchanged corpus 
   assert.ok(
     qualifyProjectConfigHost(production, new Set(), actual) ??
       qualifyProjectConfigNullCompletionHost(production, new Set(), actual) ??
-      qualifyIssuedCompletionHost(issuedCompletionProduction, new Set(), actual),
+      qualifyIssuedCompletionHost(issuedCompletionProduction, new Set(), actual) ??
+      qualifyCurrentConfigReviewHost(new Set(), actual),
   );
 });
 
