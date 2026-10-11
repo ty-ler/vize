@@ -6,6 +6,7 @@ mod minimal;
 mod packets;
 mod replay;
 mod tree;
+mod type_imports;
 
 use super::{CONFIG_PATH, GENERIC, ROOT_PATH, STORY_PATH, root_source, source};
 use crate::{BatchTypeChecker, BatchTypeCheckerOptions, BatchTypeCheckerTrait};
