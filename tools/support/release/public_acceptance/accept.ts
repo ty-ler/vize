@@ -23,6 +23,8 @@ import { materializeLiteralVrtInputs } from "./vrt_literal.ts";
 import { prepareLspSource } from "./lsp_source.ts";
 import { archiveValidatorSha256, assertInstalledLsp } from "./lsp.ts";
 import { rejectLspOverrides } from "./lsp_assets.ts";
+import { componentHarness, componentSource } from "./component_source.ts";
+import { assertComponentReceipt } from "./component_seal.ts";
 
 rejectOverrides();
 rejectLspOverrides();
@@ -66,6 +68,7 @@ const consumerHarness = [
   "vrt_trusted_color_build.ts",
   "vrt_trusted_color_capture.ts",
   "vrt_trusted_colors.ts",
+  ...componentHarness.filter((file) => file !== "installed.ts"),
 ];
 
 if (process.argv[2] === "prepare") {
@@ -160,6 +163,23 @@ export default function publicSetup(app, context) {
 `,
     { flag: "wx" },
   );
+  let component: { success: boolean; receipt?: unknown; error?: string };
+  try {
+    const eligible = await componentSource(root, source.cut, source.head);
+    writeFileSync(path.join(consumer, "component-cases.json"), eligible.original, { flag: "wx" });
+    component = { success: true, receipt: eligible.receipt };
+  } catch (error) {
+    component = {
+      success: false,
+      error: error instanceof Error ? (error.stack ?? error.message) : JSON.stringify(error),
+    };
+  }
+  writeFileSync(
+    path.join(consumer, "component-source.json"),
+    JSON.stringify(component, null, 2) + "\n",
+    { flag: "wx" },
+  );
+  save("component-preparation.json", component);
   for (const name of consumerHarness) {
     copyFileSync(path.join(toolDirectory, name), path.join(consumer, name));
   }
@@ -171,6 +191,8 @@ export default function publicSetup(app, context) {
     "package.json",
     "preview.setup.ts",
     "preview.one-argument.ts",
+    "component-source.json",
+    ...(component.success ? ["component-cases.json"] : []),
     ...fixtures.map((fixture) => fixture.file.slice(fixturePrefix.length)),
     ...vrtInputs.map((entry) => entry.file),
     ...trustedInputs.map((entry) => entry.file),
@@ -184,6 +206,7 @@ export default function publicSetup(app, context) {
     fixtures,
     vrtInputs,
     trustedInputs,
+    component,
     consumerSources,
     authority: authority(),
     toolingCommit: execFileSync("git", ["--no-replace-objects", "-C", root, "rev-parse", "HEAD"], {
@@ -223,6 +246,15 @@ export default function publicSetup(app, context) {
     assert.equal(receipt.success, true);
   }
   const publication = load("publication.json");
+  const component = JSON.parse(
+    readFileSync(path.join(output, "component-context/component-context.json"), "utf8"),
+  );
+  assertComponentReceipt(
+    component,
+    source,
+    preparation.consumer,
+    path.join(output, "component-context"),
+  );
   for (const item of native.packages) {
     const publicItem = publication.npm.find((entry: { name: string }) => entry.name === item.name);
     assert.ok(publicItem, item.name);
@@ -251,10 +283,11 @@ export default function publicSetup(app, context) {
     musea,
     vrt,
     lsp,
+    component,
     lockSha256: digest(lock),
     success: true,
     scope:
-      "Postpublication exact public native/Musea/VRT and original 32 owned event-rename contexts, plus mandatory planned channels. Stock-host null remains a separate limitation. Optional Open VSX is recorded separately. No cryptographic signature claim.",
+      "Postpublication exact public native/Musea/VRT and original 32 owned event-rename contexts and complete configured component CLI/LSP policies, plus mandatory planned channels. Stock-host null remains a separate limitation. Optional Open VSX is recorded separately. No cryptographic signature claim.",
   });
   console.log(JSON.stringify({ source, version: preparation.version, success: true }));
 } else {
