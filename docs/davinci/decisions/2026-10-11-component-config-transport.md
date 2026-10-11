@@ -166,3 +166,25 @@ eight additional resolves, eight refusals and all 20 owner fields remain
 required on both actual sources. Source laws and a truth table do not prove
 those Linux native packets ran. Preserve the parent wrapper failure and the
 4b29 green run that omitted all 16 additional controls; neither is completion.
+
+## Issued completion producer composition
+
+The final child preserves its original 28 production bodies and the complete
+113-body component/owner authority. Its distinct issued-completion successor
+binds the exact seven selected Canon producer/test/fixture bodies from the
+parent, forming a closed 119-body composition. The original bcf/433/a7/8d/6d
+manifests and all 90/51/3/4 source and corpus authorities remain unchanged.
+Parent-relative qualification requires all seven current producer bodies on
+both sides; complete qualification requires their exact original preimages
+and current whole bodies. Missing, mixed, foreign and duplicate owners refuse.
+The original strict parent 96 and component 113 qualifiers run first; their
+failure grants no authority without the independently qualified whole successor.
+
+The bd77 full source gates retained the complete original CLI/LSP/component
+packets and passed the original 128/384 MiB resource caps. Its authentic 400
+qualification failed two foreign-native-position refusals, and the full check
+also failed Nix, the original 20-second editor restart and the rendered policy
+URL law. Those failures remain preserved. The source-only successor and local
+closure laws do not supply native six-law, original 79+16/20, RSS, merge or
+released-consumer acceptance. Those checks must run on the actual final source;
+#8142 stays open until its included public release passes the installed observer.
