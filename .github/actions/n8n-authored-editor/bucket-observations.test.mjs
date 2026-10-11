@@ -8,7 +8,7 @@ import { observations, retain } from "./bucket-observations.mjs";
 const event =
   '2026-10-12T01:02:03.123456Z  INFO vize_editor_preparation: event="diagnostic_native_fact_buckets" pid=42 observe=true qualified=false full_facts=4 full_buckets=3 full_max=2 full_pairs=1 suffix_facts=4 suffix_buckets=2 suffix_max=3 suffix_pairs=3 suffix_over_eight_buckets=0 suffix_over_eight_facts=0 complete=true elapsed_us=199';
 
-test("whole diagnostic events retain literal counts, false qualification and raw bytes", () => {
+void test("whole diagnostic events retain literal counts, false qualification and raw bytes", () => {
   assert.deepEqual(observations(`unrelated\n${event}\n`, { pid: 42 }), [
     {
       timestamp: "2026-10-12T01:02:03.123456Z",
@@ -32,7 +32,7 @@ test("whole diagnostic events retain literal counts, false qualification and raw
   ]);
 });
 
-test("different provider, missing whole fields and falsely complete prefixes refuse", () => {
+void test("different provider, missing whole fields and falsely complete prefixes refuse", () => {
   for (const line of [
     event.replace("pid=42", "pid=43"),
     event.replace(" full_pairs=1", ""),
@@ -43,7 +43,7 @@ test("different provider, missing whole fields and falsely complete prefixes ref
   assert.throws(() => observations("unrelated", { pid: 42 }), assert.AssertionError);
 });
 
-test("incomplete cap refusal retains its actual prefix and never gains acceptance credit", (t) => {
+void test("incomplete cap refusal retains its actual prefix and never gains acceptance credit", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-bucket-observation-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const output = path.join(root, "diagnostic-native-fact-buckets");

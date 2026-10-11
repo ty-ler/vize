@@ -152,8 +152,23 @@ The original flag-unset 1,391-file cold `alias_build` interval is
 These executions have different cache/order and diagnostic conditions and are
 not a qualified performance comparison. Both keep `graph_takeover=0` and
 `graph_guard=0`; the first campaign still fails its original typecheck deadline.
-The exact-parent source qualification repair awaits fresh Actions, preserving
-all 195 whole source pairs and all 45 original workload bodies.
+At exact successor `b63d18511ce087e5ef9f6b1da17031f258ef7276`, the
+[original400 pair](https://github.com/ubugeeei-prod/vize/actions/runs/38159508543)
+passes. Its complete `warm-pair/workflow-source.json` authenticates actual
+baseline `aaf051206778b1f189dcc51386e992eb342ee8b0`, precisely two production
+paths and the named diagnostic qualification with all 195 whole source pairs
+and 45 original workload bodies. Artifact `11708929716` has archive SHA-256
+`b55dc4d721470b4d33bf5fafa9929f6e1b419fe22f924c215f00e1dc4274f56b`,
+matching GitHub's digest. This source and workload qualification does not turn
+the original authored failure into acceptance.
+
+The same successor's `check-js` job `114529289956` reports eleven
+`no-floating-promises` warnings on observer test registration. Explicitly
+mark only the eleven Node test-registration promises with `void`; keep every
+test body, process refusal, raw event, assertion and Node runner unchanged.
+All seven portable observer controls still pass locally, with four Linux laws
+left for fresh Actions. Publication waits for the in-flight native qualification
+to finish; no optional occupancy capture is repeated.
 
 TODO: investigate the current singleton bucket's per-entry vector allocation
 as a narrow candidate. Any proposed storage change must preserve the existing

@@ -23,7 +23,7 @@ function workspace(t, receipt) {
   return output;
 }
 
-test("actual clock receipts bracket UTC with increasing monotonic samples", () => {
+void test("actual clock receipts bracket UTC with increasing monotonic samples", () => {
   const before = process.hrtime.bigint();
   const first = clockReceipt();
   const second = clockReceipt();
@@ -39,13 +39,13 @@ test("actual clock receipts bracket UTC with increasing monotonic samples", () =
   }
 });
 
-test("the actual receipt refuses a different checkout before any process observation", (t) => {
+void test("the actual receipt refuses a different checkout before any process observation", (t) => {
   const output = workspace(t, { checkout: "different-checkout", pid: process.pid });
   assert.throws(() => authenticateProcess(output, process.execPath), assert.AssertionError);
   assert.equal(fs.existsSync(path.join(output, "owned-process.json")), false);
 });
 
-test("the actual receipt refuses unsafe or nonpositive process IDs", (t) => {
+void test("the actual receipt refuses unsafe or nonpositive process IDs", (t) => {
   for (const pid of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, "123"]) {
     const output = workspace(t, { checkout, pid });
     assert.throws(() => authenticateProcess(output, process.execPath), assert.AssertionError);
@@ -53,13 +53,13 @@ test("the actual receipt refuses unsafe or nonpositive process IDs", (t) => {
   }
 });
 
-test("Linux birth parsing retains starttime beyond process names with closing parentheses", () => {
+void test("Linux birth parsing retains starttime beyond process names with closing parentheses", () => {
   const stat = `42 (name ) has spaces) S ${Array.from({ length: 19 }, (_, n) => n + 1).join(" ")} 999`;
   assert.deepEqual(processBirthIdentity(stat), ["42", "19"]);
   assert.throws(() => processBirthIdentity("invalid"), assert.AssertionError);
 });
 
-test(
+void test(
   "the actual Linux child retains its executable, checkout and complete process stat",
   {
     skip: process.platform !== "linux",
@@ -90,7 +90,7 @@ test(
   },
 );
 
-test(
+void test(
   "the actual Linux process refuses a different executable without recording ownership",
   {
     skip: process.platform !== "linux",
@@ -102,7 +102,7 @@ test(
   },
 );
 
-test(
+void test(
   "Linux cleanup refuses a changed birth and signals only the authenticated child",
   {
     skip: process.platform !== "linux",
@@ -150,7 +150,7 @@ test(
   },
 );
 
-test(
+void test(
   "Linux post-stat disappearance accepts only exact ENOENT/ESRCH and preserves mismatches",
   {
     skip: process.platform !== "linux",
