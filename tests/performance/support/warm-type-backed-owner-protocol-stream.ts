@@ -54,7 +54,12 @@ export class NativeProtocolStream {
       assert.ok(descriptor, "undecorated or unknown writes cannot qualify");
       if (/^pipe:\[\d+\]$/u.test(descriptor)) selected = true;
       else if (/^UNIX-STREAM:\[\d+(?:->\d+)?(?:,"[^"\n]+")?\]$/u.test(descriptor)) selected = true;
-      else if (descriptor.startsWith("/")) {
+      else if (
+        descriptor.startsWith("/") ||
+        (/^(?:\\x[0-9a-f]{2})+$/u.test(descriptor) &&
+          descriptor.startsWith("\\x2f") &&
+          !descriptor.includes("\\x00"))
+      ) {
         selected = false;
         this.fileWrites++;
       } else if (descriptor === "anon_inode:[eventfd]") {

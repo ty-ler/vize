@@ -169,6 +169,32 @@ await test("the bounded observer retains every protocol byte and hashes excluded
   assert.deepEqual(nativeApiAttachments(selected, [native], [parent])[0].response, response);
 });
 
+await test("complete kernel -xx filesystem paths retain trace custody without granting API authority", () => {
+  const path = "/home/runner/work/_temp/warm-before/node_modules/.vize/lsp.log";
+  const escaped = [...Buffer.from(path)]
+    .map((byte) => `\\x${byte.toString(16).padStart(2, "0")}`)
+    .join("");
+  const regular = write(11, escaped, Buffer.from("synthetic log"));
+  const trace = input + regular + output;
+  const { selected, scope } = protocolStream(trace);
+  assert.equal(selected, input + output);
+  assert.equal(scope.inputSHA256, sha256(Buffer.from(trace)));
+  assert.equal(scope.inputBytes, Buffer.byteLength(trace));
+  assert.equal(scope.excludedFileWrites, 1);
+  assert.deepEqual(nativeApiAttachments(selected, [native], [parent])[0].response, response);
+});
+
+await test("partial, relative, NUL and mixed escaped paths remain unknown kernel descriptors", () => {
+  for (const descriptor of [
+    "\\x66\\x6f\\x6f",
+    "\\x2f\\x00",
+    "\\x2f\\x6",
+    "\\x2fraw",
+    '"\\x2f\\x61"',
+  ])
+    assert.throws(() => protocolStream(write(11, descriptor, Buffer.from("a"))));
+});
+
 await test("unfinished filesystem and protocol writes retain independent exact thread custody", () => {
   const nativeLine = output.replace(/\) = (\d+)\n$/u, " <unfinished ...>\n");
   const fileLine = write(11, "/fixture/source.ts", Buffer.from("a")).replace(

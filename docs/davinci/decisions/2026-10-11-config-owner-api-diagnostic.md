@@ -81,3 +81,13 @@ prefix remains an explicit kernel identity; missing PID prefixes still refuse
 authority. This adds no child launch and retains the existing five-second
 attachment/retirement windows and all transcript limits. See the pinned
 [strace 6.8 manual](https://github.com/strace/strace/blob/v6.8/doc/strace.1.in).
+
+Actual source `199e69b5` and run `38115788141` built both original shipping
+binaries but rejected the first fully hex-escaped filesystem descriptor from
+strace's `-xx` output. The exact kernel path was the fixture's `.vize/lsp.log`.
+A complete all-hex absolute path is now classified as a filesystem write;
+relative, NUL, truncated, mixed and quoted forms still refuse. Every incoming
+byte remains hashed/counted and no filesystem payload grants API authority.
+Two added controls retain complete selected protocol bytes and reject each
+invalid form. All sixteen controls pass locally; actual capture and the original
+20-field migration remain unqualified until fresh complete Actions evidence.
