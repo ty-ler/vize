@@ -3,6 +3,11 @@ name: Davinci Canon distinct-host scaling
 on:
   workflow_dispatch:
     inputs:
+      native_owner_diagnostic:
+        description: "Private unchanged-source original79/16 native API owner probe; never primary acceptance"
+        required: false
+        default: false
+        type: boolean
       original_control_sha:
         description: "Literal published v0.433 control commit for the original400 pair"
         required: false
@@ -101,6 +106,7 @@ env:
 
 jobs:
   compare:
+    if: ${{ inputs.native_owner_diagnostic != true }}
     name: ${{ matrix.case }} / ${{ matrix.files }} open and warmed providers
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 30
@@ -245,4 +251,58 @@ jobs:
             ${{ runner.temp }}/lsp-resource.json
             ${{ runner.temp }}/source-methodology.json
             ${{ runner.temp }}/warm-pair/**
+          if-no-files-found: warn
+  native-owner-diagnostic:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.native_owner_diagnostic == true }}
+    name: Private original native API ownership diagnostic
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 30
+    env:
+      VIZE_TRACE_EDITOR_PREPARATION: "1"
+      WARM_REQUEST_BUILD_PROFILE: release
+      VIZE_LSP_BUILD_RECIPE: "cargo build --release -p vize"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: false
+      - name: Install identical JS dependencies and diagnostic syscall observer
+        run: |
+          vp install --frozen-lockfile --prefer-offline
+          if ! command -v strace >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends strace
+          fi
+          strace --version
+      - name: Install the exact repository Rust toolchain
+        run: rustup toolchain install || rustup show active-toolchain
+      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
+        with:
+          wild-version: "0.9.0"
+      - uses: ./.github/actions/setup-rust-sticky-cache
+        with:
+          key: davinci-canon-scaling
+          cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}-private-owner-diagnostic-400
+      - name: Verify closed native protocol witness refusal controls
+        run: vp exec node --test tests/tooling/warm-type-backed-owner-syscalls.test.ts
+      - name: Pin original and actual reviewed production/helper/input bodies
+        run: vp exec node tests/performance/support/warm-type-backed-owner-diagnostic.ts prepare
+      - name: Build unchanged original source with the existing shipping custody recipe
+        run: vp exec node tests/performance/support/warm-type-backed-build.ts before
+      - name: Build unchanged actual source with the identical shipping custody recipe
+        run: vp exec node tests/performance/support/warm-type-backed-build.ts after
+      - name: Replay all original79 packets and16 complete native resolve/refusal packets
+        run: timeout --signal=TERM --kill-after=30s 20m vp exec node tests/performance/support/warm-type-backed-owner-diagnostic.ts measure
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: ${{ always() }}
+        with:
+          name: original-native-api-owner-diagnostic
+          path: |
+            ${{ runner.temp }}/warm-pair/**
+            !${{ runner.temp }}/warm-pair/**/native-api-syscalls.private
           if-no-files-found: warn

@@ -21,8 +21,10 @@ import {
 import { awaitRetired, nativeIdentities } from "./warm-type-backed-processes.ts";
 import { generateWorkspace, runtimeIdentity } from "./warm-type-backed-source.ts";
 import { startup } from "./warm-type-backed-startup.ts";
+import { NativeApiSyscallObserver } from "./warm-type-backed-owner-tracer.ts";
 
 class OwnerRecorder extends QueryRecorder {
+  observer: NativeApiSyscallObserver | undefined;
   readonly additional: Array<Record<string, unknown>> = [];
   readonly refusalFailures: string[] = [];
   private currentMain: Record<string, unknown> | undefined;
@@ -58,6 +60,11 @@ class OwnerRecorder extends QueryRecorder {
     following?: (id: number) => JsonRpcMessage[],
   ) {
     const packet: Packet = await super.query(stage, spec, following);
+    if (this.observer) {
+      const row = this.rows.at(-1);
+      assert.ok(row);
+      this.observer.sample(row);
+    }
     if (spec.method !== "textDocument/completion") return packet;
     const items = Array.isArray(packet.result) ? packet.result : object(packet.result).items;
     if (!Array.isArray(items) || !items.length) return packet;
@@ -110,7 +117,12 @@ class OwnerRecorder extends QueryRecorder {
 }
 
 /** A separate real process repeats the original protocol and resolves all eight migrated items. */
-export async function runOwnerResolveFixture(repoRoot: string, workspace: string, output: string) {
+export async function runOwnerResolveFixture(
+  repoRoot: string,
+  workspace: string,
+  output: string,
+  observeNativeAPI = false,
+) {
   const runtime = runtimeIdentity();
   const binary = path.join(repoRoot, "target/ci/vize");
   const captureRoot = path.join(repoRoot, "target/differential/lsp-sessions");
@@ -123,8 +135,16 @@ export async function runOwnerResolveFixture(repoRoot: string, workspace: string
   const recorder = new OwnerRecorder(session, runtime.executable, binary, true);
   let initialization: unknown;
   let failure: unknown;
+  let observerFailure: unknown;
+  let nativeAPIObserver: unknown;
   const native = new Map<string, ReturnType<typeof nativeIdentities>[number]>();
   try {
+    if (observeNativeAPI)
+      recorder.observer = await NativeApiSyscallObserver.start(
+        session.processId,
+        path.join(output, "native-api"),
+        runtime.executable,
+      );
     ({ initialization } = await startup(recorder, workspace, uri, source, true));
     await waitForInitialTypes(session, uri);
     assertTypedPackets(await recorder.sweep("prime", requests(uri, source)), workspace);
@@ -144,8 +164,18 @@ export async function runOwnerResolveFixture(repoRoot: string, workspace: string
         if (item.executable === runtime.executable)
           native.set(`${item.pid}:${item.birth_ticks}`, item);
     recorder.sampler.stop();
+    try {
+      await recorder.observer?.stop();
+    } catch (error) {
+      observerFailure = error instanceof Error ? error.stack : String(error);
+    }
     await session.shutdown();
     await awaitRetired([...native.values()]);
+  }
+  try {
+    nativeAPIObserver = recorder.observer?.receipt();
+  } catch (error) {
+    observerFailure = error instanceof Error ? error.stack : String(error);
   }
   const wire = await finishWire(repoRoot, previous, captureRoot);
   const capture = wire.capture;
@@ -159,6 +189,8 @@ export async function runOwnerResolveFixture(repoRoot: string, workspace: string
     refusalFailures: recorder.refusalFailures,
     failure,
     wire,
+    nativeAPIObserver,
+    observerFailure,
   };
   fs.writeFileSync(path.join(output, "resolved.json"), `${JSON.stringify(receipt, null, 2)}\n`);
   const client = decodeFrames(fs.readFileSync(path.join(capture, "client.bin"))).messages;
@@ -182,6 +214,7 @@ export async function runOwnerResolveFixture(repoRoot: string, workspace: string
     );
   }
   assert.equal(failure, undefined, "all supplemental resolve/refusal outcomes are required");
+  assert.equal(observerFailure, undefined, "missing or partial native API facts cannot qualify");
   assert.equal(recorder.rows.length, 79);
   assert.equal(recorder.additional.filter((row) => !row.refusal).length, 8);
   assert.equal(recorder.additional.filter((row) => row.refusal).length, 8);
