@@ -114,8 +114,18 @@ jobs:
             exit "${vrt_status:-1}"
           fi
           exit "${vrt_status:-0}"
+      - name: Replay installed public component CLI and LSP policies
+        id: component
+        if: >-
+          ${{ !cancelled() &&
+              steps.guard.outcome == 'success' &&
+              steps.prepare.outcome == 'success' &&
+              steps.install.outcome == 'success' }}
+        working-directory: ${{ env.PUBLIC_CONSUMER }}
+        shell: bash
+        run: node component_observer.ts 2>&1 | tee "$PUBLIC_OUTPUT/component-context.log"
       - name: Seal installed public acceptance
-        if: ${{ success() && steps.native.outcome == 'success' && steps.browser.outcome == 'success' && steps.lsp.outcome == 'success' }}
+        if: ${{ success() && steps.native.outcome == 'success' && steps.browser.outcome == 'success' && steps.lsp.outcome == 'success' && steps.component.outcome == 'success' }}
         shell: bash
         run: node tools/support/release/public_acceptance/accept.ts finish 2>&1 | tee "$PUBLIC_OUTPUT/finish.log"
       - name: Retain actual public observations
