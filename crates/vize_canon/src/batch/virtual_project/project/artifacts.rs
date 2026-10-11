@@ -15,12 +15,7 @@ impl VirtualProject {
         self.package_routes
             .values()
             .filter_map(|binding| binding.route.as_ref())
-            .any(|route| {
-                route
-                    .all_source_paths()
-                    .into_iter()
-                    .any(|source| source == path)
-            })
+            .any(|route| route.contains_source_path(path))
     }
 
     pub(super) fn absorb_registered_file(&mut self, registered: RegisteredFile) {

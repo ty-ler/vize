@@ -255,6 +255,8 @@ fn build_consumed(
         });
         package_bindings.dedup_by(|left, right| left == right);
     }
+    // No later registration or fact join consumes these pure parser packets.
+    drop(parsed_sources);
     if observe {
         facts.record(
             project.set_package_routes_observed(package_bindings),

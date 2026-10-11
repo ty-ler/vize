@@ -196,6 +196,18 @@ impl PackageRoute {
         paths
     }
 
+    #[cfg(feature = "native")]
+    pub(crate) fn contains_source_path(&self, path: &Path) -> bool {
+        self.source_paths
+            .iter()
+            .chain(&self.dependency_paths)
+            .any(|source| source.as_path() == path)
+            || self
+                .nested_routes
+                .iter()
+                .any(|route| route.contains_source_path(path))
+    }
+
     pub fn requires_workspace_source_shadow(&self) -> bool {
         (self.workspace_source
             && self.source_targets.iter().any(|source| {

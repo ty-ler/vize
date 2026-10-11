@@ -71,3 +71,29 @@ export function expectedFiles(item, contract) {
     ? matched.cliFiles
     : successor.cases.find(({ id }) => id === item.id).files;
 }
+
+// Pending only in the original full eight-case producer; the ledger above stays exact.
+export const reviewedResolver = Object.freeze({
+  resolverSha256: "c6fd563657ff482e17deeb6a32a5c23f58d2c46216e875db9e95e02d7354d857",
+  candidatesSha256: "74e808bfccea1d5427baf35acef0b2946e565af483ede8ffc0a255a461950013",
+});
+
+export function pendingSourceContract(resolverSha256, candidatesSha256, collectorSha256, side) {
+  if (resolverSha256 !== reviewedResolver.resolverSha256)
+    return sourceContract(resolverSha256, collectorSha256, side);
+  assert.equal(candidatesSha256, reviewedResolver.candidatesSha256, "Unknown Canon resolver pair");
+  const reference = sourceContract(successor.resolverSources.selected, collectorSha256, side);
+  return { ...reference, resolverSha256 };
+}
+
+export function qualificationReference(contract) {
+  const reference = sourceContract(
+    contract.resolverSha256 === reviewedResolver.resolverSha256
+      ? successor.resolverSources.selected
+      : contract.resolverSha256,
+    contract.collectorSha256,
+    contract.side,
+  );
+  assert.deepEqual(contract, { ...reference, resolverSha256: contract.resolverSha256 });
+  return reference;
+}

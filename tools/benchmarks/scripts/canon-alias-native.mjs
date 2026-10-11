@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Literal base/head CLI inputs, stock TS/native oracles and whole raw packets. */
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
@@ -14,7 +15,9 @@ import { prepareRun } from "./type-snapshot-cli-runner.mjs";
 import { normalizeTypecheckResult } from "./typecheck-command.mjs";
 import {
   expectedFiles,
-  sourceContract,
+  pendingSourceContract,
+  qualificationReference,
+  reviewedResolver,
   successorSha256,
   successorUrl,
 } from "./canon-alias-collector.mjs";
@@ -40,13 +43,12 @@ export function captureAliasCorpus({
 }) {
   assert.deepEqual(Object.keys(commands), ["base", "head"]);
   assert.deepEqual(Object.keys(sourceContracts), ["base", "head"]);
-  for (const side of ["base", "head"]) {
-    const contract = sourceContracts[side];
-    assert.deepEqual(
-      contract,
-      sourceContract(contract.resolverSha256, contract.collectorSha256, side),
-    );
-  }
+  const references = Object.fromEntries(
+    ["base", "head"].map((side) => {
+      assert.equal(sourceContracts[side].side, side);
+      return [side, qualificationReference(sourceContracts[side])];
+    }),
+  );
   let sequence = 0;
   const samples = [];
   const ts = createRequire(import.meta.url)(join(dirname(typescriptPath), "../lib/typescript.js"));
@@ -124,7 +126,7 @@ export function captureAliasCorpus({
         item,
         project.root,
         expected,
-        expectedFiles(item, sourceContracts[side]),
+        expectedFiles(item, references[side]),
       );
       assert.deepEqual(
         report,
@@ -231,23 +233,36 @@ export function captureAliasCorpus({
   };
 }
 
-export function readSourceContracts(binaries) {
+export function readSourceContracts(binaries, directory) {
+  const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
   return Object.fromEntries(
     ["base", "head"].map((side) => {
       const checkout = resolve(dirname(realpathSync(binaries[side])), "../..");
-      return [
+      const resolverPath =
+        "crates/vize_canon/src/batch/virtual_project/dependency_scan/resolution.rs";
+      const resolver = readFileSync(join(checkout, resolverPath));
+      const resolverSha256 = hash(resolver);
+      const candidates =
+        resolverSha256 === reviewedResolver.resolverSha256
+          ? readFileSync(join(checkout, resolverPath.replace(/\.rs$/u, "/candidates.rs")))
+          : null;
+      const collector = readFileSync(
+        join(checkout, "crates/vize/src/commands/check/imports_aliases.rs"),
+      );
+      const contract = pendingSourceContract(
+        resolverSha256,
+        candidates == null ? null : hash(candidates),
+        hash(collector),
         side,
-        sourceContract(
-          fileSha256(
-            join(
-              checkout,
-              "crates/vize_canon/src/batch/virtual_project/dependency_scan/resolution.rs",
-            ),
-          ),
-          fileSha256(join(checkout, "crates/vize/src/commands/check/imports_aliases.rs")),
-          side,
-        ),
-      ];
+      );
+      if (directory) {
+        mkdirSync(join(directory, "raw"), { recursive: true });
+        writeFileSync(join(directory, "raw", `${side}-resolver.rs`), resolver);
+        writeFileSync(join(directory, "raw", `${side}-collector.rs`), collector);
+        if (candidates)
+          writeFileSync(join(directory, "raw", `${side}-resolver-candidates.rs`), candidates);
+      }
+      return [side, contract];
     }),
   );
 }
@@ -261,7 +276,7 @@ export function main(argv = process.argv.slice(2)) {
   let metadata;
   try {
     // Reject an unknown source before preparation can invoke either CLI/runtime.
-    const sourceContracts = readSourceContracts({ base: argv[0], head: argv[1] });
+    const sourceContracts = readSourceContracts({ base: argv[0], head: argv[1] }, directory);
     assert.equal(fileSha256(fileURLToPath(successorUrl)), successorSha256);
     const prepared = prepareRun(argv[0], argv[1], directory, ROOT);
     assert.deepEqual(readSourceContracts(prepared.binarySources), sourceContracts);

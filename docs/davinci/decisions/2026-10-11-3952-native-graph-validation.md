@@ -100,3 +100,53 @@ stateless unit. It adds no production Debug implementation or pipeline,
 removes no original assertion, and retains the complete callback/fact/owner
 comparisons. The complete 188-body source manifest must be pinned again to
 these actual source bytes before the coherent corrective head is published.
+
+## Compiled cold result and remaining allocations
+
+At exact `96806fb06f7cab56aab36706996e290eece96865`, n8n run
+`38137685774` executes the complete Canon library: 2029 pass and one existing
+ignored test, followed by all nine original filters and strict production
+Clippy. Native `38137685748` and all four PR Rust shards pass. The original
+authored lifecycle still fails RunData.vue version 5 with a real
+`typecheck-timed-out` diagnostic under the unchanged 10 s deadline.
+
+The original three authored bodies are byte-exact against `9112`. The first
+419-source project build is 12.358 s versus 13.010 s in the earlier run.
+The first three 1391-source/4130-edge alias builds are 78.996, 80.547 and
+81.837 s; their package-route phases still take 42.197–44.266 s. These are
+separate-run observations, with later wave membership differing; they do not
+prove a paired whole-workload speed gain or meet the target. Original400
+`38137685755` retains all whole packets, with warm medians 19.479032 and
+19.4791295 ms, effectively neutral. Its startup observation is separate.
+
+Earlier `fc381266` Full `38136293761` genuinely fails the original Misskey
+server RSS cap: 130.5117 MiB exceeds 128 MiB; tree RSS is 339.6953 MiB against
+384 MiB. The complete source/metrics and 40 cycles are retained. That peak
+occurs after lifecycle diagnostics and symbol fences, so a live parser-cache
+cause is unproved. The operation-local cache never enters AliasContext.
+
+Release its complete temporary buffers immediately after their last discovery
+use, before the unchanged final setters, registrations and fact joins. Replace
+only package classification's allocating/sorting/deduplicating membership
+predicate with direct recursion over the same current source/dependency/nested
+fields. Compare against the entire original getter, including duplicates,
+normalized spelling, absent targets and topology removal/readdition; retain
+every original walker/fact/owner law. This adds no persistent index or freshness
+authority. The changes shorten live allocation overlap and remove unnecessary
+ordered-packet construction; actual 10 s and 128/384 MiB results remain pending.
+
+The old alias ledger correctly refuses the current resolver body. Its negative
+trap had incorrectly seeded that foreign current body before mutating the CLI
+collector, masking the intended independent collector refusal. Seed the whole
+selected resolver from the unchanged authenticated fixture archive instead.
+Keep the original ledger, `sourceContract()` and eight complete case vectors
+unchanged. The existing mandatory alias producer admits only the reviewed
+current resolution/candidates pair as a pending input, retaining both whole
+bodies and actual source hashes before preparation. Its expectations use the
+original selected contract; its result retains the actual current five-field
+contract. Unknown or changed bodies still refuse before any CLI runs. Only
+after all eight original TS6/native7/CLI/server whole-packet laws and final
+source/binary/input rechecks pass may that producer write a qualified result.
+This is pending current-source qualification, not historical-ledger approval.
+The five pure source/refusal controls pass locally; actual native eight-case,
+10 s lifecycle and 128/384 MiB gates remain unqualified for this private slice.
