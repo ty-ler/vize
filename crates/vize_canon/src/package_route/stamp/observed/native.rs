@@ -88,7 +88,7 @@ impl InputStamp {
         }
         if (matches!(
             owner.role,
-            FactRole::LocalImporter | FactRole::DependencyImporter
+            FactRole::LocalImporter | FactRole::DependencyImporter | FactRole::EditorImporter
         ) || (owner.role == FactRole::AuthoredSource && owner.path == self.path))
             && deleted_sources
                 .iter()

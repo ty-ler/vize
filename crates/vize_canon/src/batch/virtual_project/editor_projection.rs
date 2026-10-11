@@ -100,13 +100,20 @@ impl VirtualProject {
         self.finalize_editor_imports_consumed(false);
     }
 
-    pub(crate) fn finalize_editor_imports_observed(&mut self) -> Consumed<()> {
+    #[cfg(test)]
+    pub(crate) fn finalize_editor_imports_observed(&mut self) -> Consumed<Vec<PathBuf>> {
         self.finalize_editor_imports_consumed(true)
     }
 
-    fn finalize_editor_imports_consumed(&mut self, observe: bool) -> Consumed<()> {
+    pub(in crate::batch::virtual_project) fn finalize_editor_imports_with_completed_observed(
+        &mut self,
+    ) -> Consumed<Vec<PathBuf>> {
+        self.finalize_editor_imports_consumed(true)
+    }
+
+    fn finalize_editor_imports_consumed(&mut self, observe: bool) -> Consumed<Vec<PathBuf>> {
         let mut facts = Consumed {
-            value: (),
+            value: Vec::new(),
             stamps: Vec::new(),
             qualified: observe,
         };
@@ -212,7 +219,7 @@ impl VirtualProject {
                 if observe {
                     let owner = Shared::new(FactOwner {
                         path: file.original_path.clone(),
-                        role: FactRole::LocalImporter,
+                        role: FactRole::EditorImporter,
                     });
                     rewritten.stamps = rewritten
                         .stamps
@@ -227,13 +234,22 @@ impl VirtualProject {
                         .collect();
                 }
                 let rewritten = Self::consume_configuration(&mut facts, rewritten);
-                Some((file.virtual_path.clone(), rewritten))
+                Some((
+                    file.original_path.clone(),
+                    file.virtual_path.clone(),
+                    rewritten,
+                ))
             })
             .collect::<Vec<_>>();
-        for (path, rewritten) in rewrites {
+        for (source, path, rewritten) in rewrites {
             if let Some(file) = self.virtual_files.get_mut(&path) {
                 file.content = rewritten.code;
                 file.source_map.import_map = rewritten.source_map;
+                if observe {
+                    facts.value.push(source);
+                }
+            } else if observe {
+                facts.qualified = false;
             }
         }
         facts

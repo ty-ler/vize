@@ -173,3 +173,14 @@ The completed original dependency walk now labels only its own probes as
 `DependencyImporter`, so that exact finished edge scope can replace its old
 inputs while all configuration, callback, shadow and rewrite facts retain
 their original lifetimes. Unknown packets remain monotonically unqualified.
+
+Run `38111271953` on `027491ab19` compiled all 1,997 library tests and
+passed scoped production Clippy. The original workspace-runtime-prop and both
+zero-owner package-shadow laws now pass. The separate editor import rewrite
+records the exact original sources whose current artifacts were actually
+updated; only that completed `EditorImporter` scope retires its previous
+inputs. Host-native dependency classification keeps the dependency selection
+scope, while package callbacks and shadow predicates remain `LocalImporter`.
+The original independent deleted-probe law now uses the actual dependency
+owner emitted by its original walk; every canonical/negative/stale assertion
+and the genuinely independent resolver operation is retained.

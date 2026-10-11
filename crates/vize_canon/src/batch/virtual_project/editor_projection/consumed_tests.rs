@@ -108,7 +108,7 @@ fn a_missing_then_present_sfc_replaces_the_exact_fallback_probe_facts() {
     assert!(old.qualified);
     let owner = Arc::new(FactOwner {
         path: host.clone(),
-        role: FactRole::LocalImporter,
+        role: FactRole::EditorImporter,
     });
     assert!(old.stamps.contains(
         &InputStamp::observed_try_exists(missing.clone(), Ok(false),).with_owner(owner.clone())
@@ -153,7 +153,7 @@ fn actual_try_exists_errors_keep_original_code_and_refuse_qualification() {
     let expected = InputStamp::observed_try_exists(root.join("./invalid\0.vue"), Err(actual))
         .with_owner(Arc::new(FactOwner {
             path: host,
-            role: FactRole::LocalImporter,
+            role: FactRole::EditorImporter,
         }));
     assert!(packet.stamps.contains(&expected));
 }

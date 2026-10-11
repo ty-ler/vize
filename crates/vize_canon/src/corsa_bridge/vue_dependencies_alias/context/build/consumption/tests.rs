@@ -253,3 +253,26 @@ fn completed_dependency_walk_replaces_only_its_actual_probe_scope() {
         assert_eq!(packet.qualified, qualified);
     }
 }
+
+#[test]
+fn editor_completion_and_dependency_completion_have_independent_input_lifetimes() {
+    let importer = Path::new("/project/Host.vue");
+    let target = Path::new("/project/Child.vue");
+    let probe = |role| {
+        InputStamp::observed_is_file(target.to_path_buf(), true).with_owner(Arc::new(FactOwner {
+            path: importer.to_path_buf(),
+            role,
+        }))
+    };
+    let dependency = probe(FactRole::DependencyImporter);
+    let editor = probe(FactRole::EditorImporter);
+    let shadow = probe(FactRole::LocalImporter);
+    let old = [dependency.clone(), editor.clone(), shadow.clone()];
+    let complete = [importer.to_path_buf()];
+    let mut edge_only = NativeFacts::new(true);
+    edge_only.retain_previous_with_completed_editor(&old, (&complete, &[]), &[], &[], &[], &[]);
+    assert_eq!(edge_only.finish(()).stamps, vec![editor, shadow.clone()]);
+    let mut rewrite_only = NativeFacts::new(true);
+    rewrite_only.retain_previous_with_completed_editor(&old, (&[], &complete), &[], &[], &[], &[]);
+    assert_eq!(rewrite_only.finish(()).stamps, vec![dependency, shadow]);
+}

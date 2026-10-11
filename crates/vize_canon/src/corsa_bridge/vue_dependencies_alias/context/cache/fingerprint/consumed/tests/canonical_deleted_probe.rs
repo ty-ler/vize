@@ -70,6 +70,7 @@ fn actual_deleted_probe_carrier_and_independent_resolver_close_only_the_exact_ca
         .unwrap();
     assert!(preflight.stamps.contains(carrier));
     assert_eq!(carrier.owner().unwrap().path, host);
+    assert_eq!(carrier.owner().unwrap().role, FactRole::DependencyImporter);
     let old = previous
         .stamps
         .iter()
@@ -78,7 +79,7 @@ fn actual_deleted_probe_carrier_and_independent_resolver_close_only_the_exact_ca
     let mut rebuilt = NativeFacts::new(true);
     let resolver = resolve_dependency_observed("./target.ts", root, root, &[]);
     assert!(resolver.value.0.is_none());
-    rebuilt.record(resolver, FactRole::LocalImporter, &host);
+    rebuilt.record(resolver, FactRole::DependencyImporter, &host);
     rebuilt.retain_previous_with_validated_deleted(
         &previous.stamps,
         &[],

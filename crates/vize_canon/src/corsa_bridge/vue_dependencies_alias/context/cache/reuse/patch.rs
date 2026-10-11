@@ -116,11 +116,11 @@ pub(super) fn apply_observed(
     completed.dedup();
     let replaced = replacement.regenerated.into_iter().collect::<Vec<_>>();
     let routes = crate::corsa_bridge::preparation_trace::Phase::start("alias_package_routes", 1);
-    facts.record_owned(mirror.finalize_package_routes_observed().ok()?);
+    let editors = facts.record_owned(mirror.finalize_package_routes_observed().ok()?);
     routes.finish();
-    facts.retain_previous_with_validated_deleted(
+    facts.retain_previous_with_completed_editor(
         previous.0,
-        &completed,
+        (&completed, &editors),
         &replaced,
         &removed,
         &changes.deleted,

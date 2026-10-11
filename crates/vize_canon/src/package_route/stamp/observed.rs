@@ -23,6 +23,8 @@ pub(crate) enum FactRole {
     LocalImporter,
     /// Probes consumed by one completed original dependency-edge walk only.
     DependencyImporter,
+    /// Inputs of one actual completed editor import rewrite.
+    EditorImporter,
 }
 
 /// One owner value is shared by facts emitted by the same original operation.
@@ -267,7 +269,12 @@ impl InputStamp {
         &self,
         deleted: &vize_carton::FxHashSet<PathBuf>,
     ) -> Option<Self> {
-        if !self.consumed_only || self.owner()?.role != FactRole::LocalImporter {
+        if !self.consumed_only
+            || !matches!(
+                self.owner()?.role,
+                FactRole::LocalImporter | FactRole::DependencyImporter
+            )
+        {
             return None;
         }
         match self.fact.as_ref()? {

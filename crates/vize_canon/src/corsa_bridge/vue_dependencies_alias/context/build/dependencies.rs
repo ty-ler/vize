@@ -107,7 +107,7 @@ pub(super) fn register_host(
                                 root,
                                 &aliases.value,
                             ),
-                            FactRole::LocalImporter,
+                            FactRole::DependencyImporter,
                             source_path,
                         )
                         .0

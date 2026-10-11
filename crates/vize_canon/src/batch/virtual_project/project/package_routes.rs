@@ -135,16 +135,16 @@ impl VirtualProject {
     /// Retain the facts consumed by the same final shadow and import passes.
     pub(crate) fn finalize_package_routes_observed(
         &mut self,
-    ) -> CorsaResult<crate::package_route::stamp::Consumed<()>> {
+    ) -> CorsaResult<crate::package_route::stamp::Consumed<Vec<PathBuf>>> {
         let shadow = self.rebuild_package_shadows_observed()?;
         let editor = if self.editor_document_options.is_some() {
-            self.finalize_editor_imports_observed()
+            self.finalize_editor_imports_with_completed_observed()
         } else {
             // Other callers retain their original finalizer. Its raw reads
             // have no complete native operation witness and cannot qualify.
             self.finalize_module_imports();
             crate::package_route::stamp::Consumed {
-                value: (),
+                value: Vec::new(),
                 stamps: Vec::new(),
                 qualified: false,
             }
@@ -152,7 +152,7 @@ impl VirtualProject {
         let mut stamps = shadow.stamps;
         stamps.extend(editor.stamps);
         Ok(crate::package_route::stamp::Consumed {
-            value: (),
+            value: editor.value,
             stamps,
             qualified: shadow.qualified && editor.qualified,
         })

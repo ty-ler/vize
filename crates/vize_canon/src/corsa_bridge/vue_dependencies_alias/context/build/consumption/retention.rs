@@ -56,6 +56,25 @@ impl NativeFacts {
         proven_deleted_sources: &[PathBuf],
         validated_probes: &[InputStamp],
     ) {
+        self.retain_previous_with_completed_editor(
+            stamps,
+            (completed_importers, &[]),
+            replaced_sources,
+            removed_sources,
+            proven_deleted_sources,
+            validated_probes,
+        );
+    }
+
+    pub(in crate::corsa_bridge::vue_dependencies_alias::context) fn retain_previous_with_completed_editor(
+        &mut self,
+        stamps: &[InputStamp],
+        completed_importers: (&[PathBuf], &[PathBuf]),
+        replaced_sources: &[PathBuf],
+        removed_sources: &[PathBuf],
+        proven_deleted_sources: &[PathBuf],
+        validated_probes: &[InputStamp],
+    ) {
         if !self.observe {
             return;
         }
@@ -74,7 +93,8 @@ impl NativeFacts {
             }
         }
         let actual_count = self.stamps.len();
-        let completed = completed_importers.iter().collect::<FxHashSet<_>>();
+        let completed = completed_importers.0.iter().collect::<FxHashSet<_>>();
+        let editors = completed_importers.1.iter().collect::<FxHashSet<_>>();
         let replaced = replaced_sources
             .iter()
             .chain(removed_sources)
@@ -96,6 +116,7 @@ impl NativeFacts {
                 // This exact original walk has replaced its whole edge/probe
                 // scope. Shadow/rewrite observations retain LocalImporter.
                 FactRole::DependencyImporter => completed.contains(&owner.path),
+                FactRole::EditorImporter => editors.contains(&owner.path),
                 FactRole::AuthoredSource => replaced.contains(&owner.path),
             };
             if !released {
