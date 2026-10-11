@@ -3,11 +3,11 @@
 set -euo pipefail
 [[ "$GITHUB_EVENT_NAME" == pull_request ]] || exit 0
 export VIZE_TEST_REQUIRE_TSGO=1
-export VIZE_NATIVE_SYNTAX_CAPTURE_DIR="$RUNNER_TEMP/config-scoped-vue-helpers/declaration-imports/packets"
+export VIZE_NATIVE_SYNTAX_CAPTURE_DIR="$RUNNER_TEMP/native-source-recipe-declaration-imports/packets"
 unset VIZE_TEST_DISABLE_TSGO
 cd "$NATIVE_PHASE_SOURCE_ROOT"
 [[ "$(git rev-parse HEAD)" == "$SOURCE_SHA" ]]
-capture="$RUNNER_TEMP/config-scoped-vue-helpers/declaration-imports"
+capture="$RUNNER_TEMP/native-source-recipe-declaration-imports"
 mkdir -p "$capture"
 git rev-parse HEAD > "$capture/source.sha"
 common=(--locked --profile ci-opt -p vize_canon --config 'profile.ci-opt.inherits="release"' --config 'profile.ci-opt.lto="thin"' --config 'profile.ci-opt.codegen-units=16')
