@@ -241,7 +241,7 @@ export async function pairedWarmRequests(beforeRoot: string, outputRoot: string)
   const originals = inputAuthority();
   const workspace = path.join(outputRoot, "workspace");
   fs.mkdirSync(outputRoot, { recursive: true });
-  const captureOwners = Boolean(sourceBinding.projectConfigHost);
+  const captureOwners = !!(sourceBinding.projectConfigHost || sourceBinding.componentContextHost);
   const run = (root: string, side: string) =>
     runSide(root, workspace, runtime, path.join(outputRoot, side), undefined, true, captureOwners);
   const before = await run(beforeRoot, "before");
