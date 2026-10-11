@@ -1,8 +1,6 @@
 //! Exclusive deletion ownership and original retirement boundaries.
 #![expect(
     clippy::disallowed_types,
-    clippy::disallowed_methods,
-    clippy::unwrap_used,
     reason = "owned native bridge lifecycle controls"
 )]
 
