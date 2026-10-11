@@ -235,3 +235,23 @@ root refusal. Configure the fixture through the real editor option setter,
 retaining its whole expected values and negative facts. Keep the original
 requested-root guard first, then refuse changed package bodies. No assertion or
 production cold-refusal category is broadened. Fresh Actions remains required.
+
+Exact fresh-main composition `f82ef3e2bf`, run `38112906542`, compiled
+all 2,007 Canon lib tests. The eight source filters passed 6/2/9/13/11/5/107/36,
+and strict scoped production Clippy passed. Navigation, whole CLI/RPC controls,
+compiler before/after and genuine pinned pnpm dependency hydration also passed.
+The unchanged authored lifecycle still failed after 540,610ms: deleted import
+diagnostics for RunData.vue version 5 were empty instead of the required TS2307.
+All three original source inputs were restored byte-for-byte. Complete raw
+stderr first loses qualification at actual inferred registration reason 76;
+the earlier configuration reason 40 is absent. Keep every original failure
+refusal and record the first actual registration path/error through a separate
+explicit diagnostic flag before repairing the source operation.
+
+Full Check `38113203551` passed production workspace Clippy but stopped its
+test lane on two stale Maestro test-header expectations; remove just those
+attributes, retaining every test body and assertion. Its generated Canon
+consumer inventory also became stale after the actual source changes. Run the
+official generator and retain its complete output check; this changes source
+inventory only. Full test/allocation gates and the original lifecycle remain
+unfinished, so these partial successes do not permit queue or release admission.

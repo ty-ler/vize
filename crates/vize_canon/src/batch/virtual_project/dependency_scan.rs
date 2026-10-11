@@ -322,10 +322,9 @@ impl VirtualProject {
                         None => self.register_path(&key),
                     }
                 };
-                if registered.is_ok() {
-                    queue.push(key);
-                } else {
-                    facts.unknown_at(76);
+                match registered {
+                    Ok(()) => queue.push(key),
+                    Err(error) => facts.failed_registration(&key, &error),
                 }
             }
             let released = self.replace_dependency_edges(&importer, dependency_targets);

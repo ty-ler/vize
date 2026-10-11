@@ -316,7 +316,7 @@ jobs:
           fs.writeFileSync(path.join(receipt, 'selected-config.json'), `${JSON.stringify({ packageManager: original.packageManager, selected, authored, sha256 }, null, 2)}\n`);
           NODE
       - name: Observe the existing authored registry provider on original n8n components
-        env: { VIZE_TRACE_EDITOR_PREPARATION: "1" }
+        env: { VIZE_TRACE_EDITOR_PREPARATION: "1", VIZE_TRACE_NATIVE_FACT_REFUSAL: "1" }
         run: vp node tests/tooling/support/n8n-authored-registry-acceptance.ts "target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}/authored-registry"
       - name: Upload whole CLI and independent oracle packets
         if: ${{ !cancelled() }}

@@ -72,6 +72,21 @@ impl WalkFacts {
         self.unknown();
     }
 
+    /// A separate opt-in diagnostic retains the actual first failed operation.
+    pub(super) fn failed_registration(
+        &mut self,
+        path: &Path,
+        error: &crate::batch::error::CorsaError,
+    ) {
+        if self.qualified
+            && std::env::var("VIZE_TRACE_NATIVE_FACT_REFUSAL").is_ok_and(|value| value == "1")
+        {
+            tracing::info!(target: "vize_native_fact_refusal", event = "inferred_registration",
+                path = %path.display(), error = %error);
+        }
+        self.unknown_at(76);
+    }
+
     fn append<T>(&mut self, consumed: Consumed<T>) -> T {
         if self.qualified && !consumed.qualified {
             crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(
