@@ -24,6 +24,8 @@ export interface MeterStateOptions {
 
   /**
    * Raw maximum. Values less than or equal to `min` are repaired to `min + 1`.
+   * If that addition rounds back to `min`, retain the finite collapsed range
+   * with zero percent and mark it invalid.
    *
    * @default METER_DEFAULT_MAX
    */
@@ -95,8 +97,8 @@ export function getMeterState(options: MeterStateOptions = {}): MeterSlotState {
   if (finite(options.max) && options.max > min) {
     max = options.max;
   } else {
-    invalid = invalid || options.max != null;
     max = min + 1;
+    invalid = invalid || options.max != null || max === min;
   }
   const value = finite(options.value) ? clamp(options.value, min, max) : min;
   invalid =
@@ -114,7 +116,13 @@ export function getMeterState(options: MeterStateOptions = {}): MeterSlotState {
     [low, high] = [high, low];
   }
 
-  const percent = ((value - min) / (max - min)) * 100;
+  const span = max - min;
+  const percent =
+    max === min
+      ? 0
+      : (Number.isFinite(span)
+          ? (value - min) / span
+          : (value / 2 - min / 2) / (max / 2 - min / 2)) * 100;
   const range = rangeFor(value, low, high);
   const optimumRange =
     optimumResult.value === null ? null : rangeFor(optimumResult.value, low, high);

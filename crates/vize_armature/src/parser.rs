@@ -33,6 +33,8 @@ mod whitespace_context;
 
 pub use entry::*;
 #[doc(hidden)]
+pub use expression::retain_slot_parameters_in;
+#[doc(hidden)]
 pub use frozen::FrozenElements;
 pub use whitespace_context::{
     current_legacy_line_breaks, current_whitespace_strategy, with_whitespace_mode,

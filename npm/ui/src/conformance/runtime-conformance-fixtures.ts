@@ -47,7 +47,7 @@ import { richTextRuntimeFixtures } from "../families/editor/rich-text/runtime-co
 import { treeRuntimeFixtures } from "../families/data/tree/runtime-conformance-tree-fixtures.ts";
 import { layoutRuntimeFixtures } from "./runtime-conformance-layout-fixtures.ts";
 import { menusRuntimeFixtures } from "../families/menus/runtime-conformance-menus-fixtures.ts";
-import { meterRuntimeFixture } from "../families/feedback/meter/runtime-conformance-meter-fixtures.ts";
+import { meterRuntimeFixtures } from "../families/feedback/meter/runtime-conformance-meter-fixtures.ts";
 import { selectionRuntimeFixtures } from "../families/selection/runtime-conformance-selection-fixtures.ts";
 import { paginationRuntimeFixtures } from "../families/navigation/pagination/runtime-conformance-pagination-fixtures.ts";
 import PrimitiveElement from "../families/foundations/primitive/primitive-element.vue";
@@ -281,7 +281,7 @@ export const controlRuntimeFixtures: readonly RuntimeFixture[] = [
     },
   },
   skipLinkRuntimeFixture,
-  meterRuntimeFixture,
+  ...meterRuntimeFixtures,
   ...paginationRuntimeFixtures,
   spinnerRuntimeFixture,
   statusLightRuntimeFixture,
