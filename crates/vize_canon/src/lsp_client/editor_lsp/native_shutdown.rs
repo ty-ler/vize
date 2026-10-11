@@ -1,5 +1,6 @@
 //! Native 7.0.2 shutdown capability, bound to actual binary and initialize bytes.
 
+use corsa_lsp::process::ProcessObserver;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
@@ -7,18 +8,33 @@ use std::{fs, path::Path};
 const LINUX_X64: &str = "4f2de678286401759b3fb4475bafe35b8f32b4b3a07d92642bbf37eadc9b34a4";
 const DARWIN_ARM64: &str = "a82f731365ad69d5c4c15f5e18fba4584bf3b7b839960172a76c3462b5114bf2";
 
-pub(super) fn eof_capability(executable: &Path, initialized: &Value) -> bool {
+#[cfg(target_os = "linux")]
+mod owned_image;
+
+pub(super) fn eof_capability(
+    executable: &Path,
+    initialized: &Value,
+    observer: &ProcessObserver,
+) -> bool {
     if !known_initialize(initialized) {
         return false;
     }
-    let Ok(bytes) = fs::read(executable) else {
-        return false;
-    };
-    let digest: vize_l0::String = Sha256::digest(bytes)
-        .iter()
-        .map(|byte| vize_l0::cstr!("{byte:02x}"))
-        .collect();
-    known_binary(digest.as_str())
+    if let Ok(bytes) = fs::read(executable) {
+        let digest: vize_l0::String = Sha256::digest(bytes)
+            .iter()
+            .map(|byte| vize_l0::cstr!("{byte:02x}"))
+            .collect();
+        if known_binary(digest.as_str()) {
+            return true;
+        }
+    }
+    #[cfg(target_os = "linux")]
+    return owned_image::eof_capability(observer);
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = observer;
+        false
+    }
 }
 
 fn known_initialize(initialized: &Value) -> bool {
@@ -181,11 +197,16 @@ mod tests {
         assert!(!known_initialize(&changed));
         let temp = tempfile::tempdir().unwrap();
         let fake = temp.path().join("native");
+        let observer = ProcessObserver::default();
         fs::write(&fake, b"Version 7.0.2\n").unwrap();
-        assert!(!eof_capability(&fake, &initialized));
+        assert!(!eof_capability(&fake, &initialized, &observer));
         fs::write(&fake, b"Version 7.0.2\n\0\xff").unwrap();
-        assert!(!eof_capability(&fake, &initialized));
-        assert!(!eof_capability(&temp.path().join("absent"), &initialized));
+        assert!(!eof_capability(&fake, &initialized, &observer));
+        assert!(!eof_capability(
+            &temp.path().join("absent"),
+            &initialized,
+            &observer
+        ));
         for digest in ["", "4f2de678", &"f".repeat(64), &format!("{LINUX_X64}00")] {
             assert!(!known_binary(digest));
         }

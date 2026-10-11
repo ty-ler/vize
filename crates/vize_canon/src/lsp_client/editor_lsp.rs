@@ -115,7 +115,8 @@ impl EditorLspSession {
                 return Err(error);
             }
         };
-        let shutdown_to_eof = native_shutdown::eof_capability(Path::new(executable), &initialized);
+        let shutdown_to_eof =
+            native_shutdown::eof_capability(Path::new(executable), &initialized, &process_observer);
         crate::corsa_session_cache::note_typescript_project_init();
 
         Ok(Self {
