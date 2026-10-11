@@ -144,3 +144,22 @@ Observer timings and the second campaign's status grant no acceptance credit,
 and the first campaign's failure stays failed. Ordinary jobs keep 20 minutes;
 only this optional diagnostic job has a 35-minute envelope. All original
 consumer deadlines, caps and registry remain unchanged.
+
+The next producer, `5cad0b6a7fa267a489e7b58eb8cf3f6ceb6a1428`, preserves the same finite 193
+producer pairs and 45 bodies. Only the existing fallback test's after body
+changes: current SHA-2 returns a digest without `LowerHex`, so the earlier
+test failed to compile in [PR Check 38147350153](https://github.com/ubugeeei-prod/vize/actions/runs/38147350153)
+and [authored run 38147350140](https://github.com/ubugeeei-prod/vize/actions/runs/38147350140).
+Compare all 32 digest bytes directly against the same fixed complete corpus
+digest; the fixture, actual API/CLI packets, metrics and refusal laws do not
+change. Regenerate the canonical ledger for this removal of a test-only macro
+use. Fresh source and runtime qualification is required.
+
+Diagnostic run 38146821370 retains the original authored timeout, but its
+optional observer exits before launching the second process: Ubuntu installs
+`perf` below symlink directories skipped by `rg --files`. Artifact
+`11704789763` retains six pre-probe provenance files and no CPU or syscall
+observations. Diagnostic source `88a39e897c4dc86c70932e34e7b399d9d03fe1a8`
+follows those directories and reports missing tools explicitly. Repeat the
+unchanged original campaign before sampling; no cost attribution or improvement
+is claimed from the failed observer.

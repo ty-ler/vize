@@ -57,7 +57,7 @@ typechecker	Typechecker	source	crates/vize_canon/src/batch/executor/session/nati
 typechecker	Typechecker	source	crates/vize_canon/src/batch/executor/session/snapshot.rs	6	carton	Carton host/compatibility	old	vize_carton	legacy	1
 typechecker	Typechecker	test/dev	crates/vize_canon/src/batch/executor/session/tests.rs	4	carton	Carton host/compatibility	old	vize_carton	legacy	1
 typechecker	Typechecker	test/dev	crates/vize_canon/src/batch/executor/tests.rs	10	carton	Carton host/compatibility	old	vize_carton	legacy	1
-typechecker	Typechecker	test/dev	crates/vize_canon/src/batch/executor/tests/incremental_fallback.rs	84	carton	Carton host/compatibility	old	vize_carton	legacy	3
+typechecker	Typechecker	test/dev	crates/vize_canon/src/batch/executor/tests/incremental_fallback.rs	134	carton	Carton host/compatibility	old	vize_carton	legacy	2
 typechecker	Typechecker	test/dev	crates/vize_canon/src/batch/executor/tests/nested_generated_config.rs	22	l0	L0	stage	vize_l0	preferred	6
 typechecker	Typechecker	test/dev	crates/vize_canon/src/batch/executor/tests/nested_generated_config.rs	22	carton	Carton host/compatibility	old	vize_carton	legacy	2
 typechecker	Typechecker	source	crates/vize_canon/src/batch/import_rewriter_authored_vue_ts.rs	7	carton	Carton host/compatibility	old	vize_carton	legacy	1
