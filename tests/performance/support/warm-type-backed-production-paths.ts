@@ -1,3 +1,6 @@
+import { aliasHostPaths } from "./warm-type-backed-alias-host.ts";
+import { htmlHoverPaths } from "./warm-type-backed-html-hover-host.ts";
+
 export const allowed = new Set([
   ...htmlHoverPaths,
   ...aliasHostPaths,

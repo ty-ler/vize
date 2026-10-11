@@ -2,12 +2,10 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { aliasHostPaths } from "./warm-type-backed-alias-host.ts";
 import { unqualifiedReceiptPaths } from "./warm-type-backed-build-receipt-extension.ts";
 import { finiteCut } from "./warm-type-backed-cut.ts";
 import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
 import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
-import { htmlHoverPaths } from "./warm-type-backed-html-hover-host.ts";
 import { allowed } from "./warm-type-backed-production-paths.ts";
 import { qualifyProjectConfigHost } from "./warm-type-backed-project-config-host.ts";
 import {

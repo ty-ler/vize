@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { test } from "node:test";
 import { qualifyProjectConfigHost } from "../performance/support/warm-type-backed-project-config-host.ts";
+import { allowed } from "../performance/support/warm-type-backed-production-paths.ts";
 
 const manifest = JSON.parse(
   fs.readFileSync(
@@ -30,6 +31,12 @@ test("the complete reviewed configuration slice qualifies for actual original400
   assert.equal(result.completeBodyPairs, 90);
   assert.equal(result.preservedBodyPairs, 51);
   assert.deepEqual(result.files, production);
+});
+
+test("the actual composed production selector admits the complete configuration source pair", () => {
+  assert.ok(qualifyProjectConfigHost(production, allowed, digest));
+  assert.ok(allowed.has("crates/vize_canon/src/lsp_client.rs"));
+  assert.equal(allowed.has("crates/vize/tests/project_config_cli.rs"), false);
 });
 
 test("qualification binds every current source and whole unchanged corpus and recipe", () => {
