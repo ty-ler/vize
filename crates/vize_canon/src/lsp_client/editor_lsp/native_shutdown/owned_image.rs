@@ -122,6 +122,27 @@ mod tests {
     use super::*;
     use std::{os::unix::fs::PermissionsExt, process::ExitStatus, time::Duration};
 
+    fn capture(name: &str, value: serde_json::Value) {
+        if let Some(root) = std::env::var_os("VIZE_NATIVE_OWNED_IMAGE_CAPTURE") {
+            fs::create_dir_all(&root).unwrap();
+            fs::write(
+                Path::new(&root).join(name),
+                serde_json::to_vec(&value).unwrap(),
+            )
+            .unwrap();
+        }
+    }
+
+    fn complete_receipt(row: &ProcessReceipt) -> serde_json::Value {
+        use std::os::unix::process::ExitStatusExt;
+        serde_json::json!({"pid": row.pid, "completed": row.completed,
+            "stderr": row.stderr, "stderr_complete": row.stderr_complete,
+            "stderr_error": row.stderr_error, "exit_status": row.exit_status.map(ExitStatus::into_raw),
+            "process_error": row.process_error, "timed_out": row.timed_out,
+            "kill_requested": row.kill_requested, "reaped": row.reaped,
+            "elapsed_nanos": row.elapsed.as_nanos().to_string()})
+    }
+
     fn receipt() -> ProcessReceipt {
         ProcessReceipt {
             pid: 41,
@@ -144,6 +165,7 @@ mod tests {
         assert_eq!(live_pid(&[receipt()]), Some(41));
         assert_eq!(live_pid(&[]), None);
         assert_eq!(live_pid(&[receipt(), receipt()]), None);
+        let mut denied = Vec::new();
         for change in 0..9 {
             let mut row = receipt();
             match change {
@@ -158,11 +180,22 @@ mod tests {
                 8 => row.pid = 0,
                 _ => unreachable!(),
             }
-            assert_eq!(live_pid(&[row]), None, "change {change}");
+            assert_eq!(
+                live_pid(std::slice::from_ref(&row)),
+                None,
+                "change {change}"
+            );
+            denied.push(complete_receipt(&row));
         }
         assert!(!eof_capability(&ProcessObserver::default()));
         assert_eq!(image_digest(std::process::id()), None);
         assert_eq!(image_digest(u32::MAX), None);
+        capture(
+            "ownership.json",
+            serde_json::json!({"original": complete_receipt(&receipt()),
+                "wholeDeniedReceipts": denied, "absentObserver": false, "selfPid": std::process::id(),
+            "selfImage": null, "missingPid": u32::MAX, "missingImage": null}),
+        );
     }
 
     #[test]
@@ -192,10 +225,18 @@ mod tests {
             assert_eq!(life(41, &value), None);
         }
         assert_eq!(life(42, &stat("S", std::process::id(), 512)), None);
+        capture(
+            "life.json",
+            serde_json::json!({"pid": 41, "parent": std::process::id(),
+            "birth": 512, "wholePositiveStat": stat("S", std::process::id(), 512),
+            "deniedStates": ["Z", "X", "?"], "foreignParent": std::process::id()+1,
+            "deniedBirth": 0, "deniedPid": 42}),
+        );
     }
 
     #[test]
     fn an_actual_owned_foreign_image_and_a_reaped_child_do_not_get_native_capability() {
+        use std::os::unix::process::ExitStatusExt;
         use std::process::{Command, Stdio};
         let mut child = Command::new("/bin/cat")
             .stdin(Stdio::piped())
@@ -204,12 +245,20 @@ mod tests {
             .spawn()
             .unwrap();
         let pid = child.id();
+        let stat =
+            fs::read_to_string(Path::new("/proc").join(pid.to_string()).join("stat")).unwrap();
         let digest = image_digest(pid).unwrap();
         drop(child.stdin.take());
         let terminal = child.wait().unwrap();
         assert!(!super::super::known_binary(digest.as_str()));
         assert!(terminal.success());
         assert_eq!(image_digest(pid), None);
+        capture(
+            "foreign.json",
+            serde_json::json!({"pid": pid, "wholeLiveStat": stat,
+            "imageSHA256": digest, "knownNative": false, "terminalRaw": terminal.into_raw(),
+            "reapedImage": null, "killRequested": false}),
+        );
     }
 
     #[test]
@@ -257,6 +306,9 @@ mod tests {
             super::super::known_contract()
         );
         let pid = live_pid(&session.process_observer.receipts()).unwrap();
+        let stat =
+            fs::read_to_string(Path::new("/proc").join(pid.to_string()).join("stat")).unwrap();
+        let before = session.process_observer.receipts();
         let digest = image_digest(pid).unwrap();
         assert!(super::super::known_binary(digest.as_str()));
         let mut unknown = session.native_initialize_response.clone();
@@ -285,5 +337,14 @@ mod tests {
         assert!(!eof_capability(&session.process_observer));
         assert_eq!(image_digest(pid), None);
         assert_eq!(fs::read_to_string(wrapper).unwrap(), body);
+        capture(
+            "native.json",
+            serde_json::json!({"pid": pid, "wholeLiveStat": stat,
+            "imageSHA256": digest, "nativePath": backend, "wholeWrapper": body,
+            "wholeInitialize": session.native_initialize_response,
+            "wholeChangedInitialize": unknown, "before": complete_receipt(&before[0]),
+            "terminal": complete_receipt(row), "knownNative": true,
+            "unknownInitialize": false, "absentObserver": false, "reapedImage": null}),
+        );
     }
 }
