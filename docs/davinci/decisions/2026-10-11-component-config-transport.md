@@ -188,3 +188,22 @@ URL law. Those failures remain preserved. The source-only successor and local
 closure laws do not supply native six-law, original 79+16/20, RSS, merge or
 released-consumer acceptance. Those checks must run on the actual final source;
 #8142 stays open until its included public release passes the installed observer.
+
+## Current-main composition (2026-10-11)
+
+The six settings layers are replayed together onto actual protected main
+`fc551dc09f`. Keep the incoming complete All Rules overview and readable Japanese
+text; policy examples remain in their rule groups and registration source links
+follow the current producer. The public collector retains the original 32
+installed event-rename contexts and now requires both that LSP receipt and the
+complete component receipt in its final seal. Both failure/refusal controls stay
+mandatory; neither campaign receives release credit before its own actual run.
+
+The finite settings editorial succession reconstructs every original #8587
+editorial byte, leaves the original fixture and all measurements unchanged, and
+keeps all original code examples published. Native five-locale reading checks,
+52 settings/source/public-receipt laws and 29 owner/completion/editor trace laws
+pass locally. The independent ESLint oracle could not start in the isolated local
+tree because its benchmark dependency installation is absent; Actions must run
+that original oracle, the native editor deadlines, complete source/full suites
+and protected queue. No native producer qualification or threshold is relaxed.
