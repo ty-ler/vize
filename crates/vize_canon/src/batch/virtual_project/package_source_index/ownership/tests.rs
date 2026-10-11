@@ -155,6 +155,11 @@ fn source_index_insertion_and_removal_match_whole_legacy_values() {
             .value
     );
     assert_eq!(registry(&legacy), registry(&observed));
+    // The same complete original operation preserves an absent binding result.
+    assert_eq!(legacy.remove_package_route_binding(&value.key()), None);
+    let absent = observed.remove_package_route_binding_observed(&value.key());
+    assert_eq!(absent.value, None);
+    assert_eq!(registry(&legacy), registry(&observed));
 }
 
 #[cfg(unix)]

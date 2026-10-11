@@ -140,8 +140,8 @@ impl VirtualProject {
         key: &PackageRouteKey,
     ) -> Consumed<Option<crate::PackageRouteBinding>> {
         let mut facts = empty(true);
-        self.remove_package_route_binding_with_consumption(key, true, &mut facts);
-        finish(facts, ())
+        let value = self.remove_package_route_binding_with_consumption(key, true, &mut facts);
+        finish(facts, value)
     }
 
     pub(in crate::batch::virtual_project) fn remove_package_route_binding_with_consumption(
@@ -221,6 +221,9 @@ impl VirtualProject {
         self.restore_rebound_package_sources(retained);
     }
 
+    // Route-owned entry points are only a subset of a package's registered
+    // relative sources. Keep that bounded topology across an atomic rebind
+    // when removing its final owner would otherwise discard the whole index.
     pub(in crate::batch::virtual_project) fn take_rebound_package_sources_with_consumption(
         &mut self,
         keys: &FxHashSet<PackageRouteKey>,
