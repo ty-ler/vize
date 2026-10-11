@@ -1234,17 +1234,16 @@
           "sha256": "e36b280dce185f4be85cbff1838c0ee06d8d7a46b38b3e63df995c0decd7b13b"
         }
       ]
-    },
+    }
+  ],
+  "supplementalCases": [
     {
       "id": "typechecker/native-semantic-completion/complete-original-escaped-import-keyword",
       "state": "active",
       "targets": [
-        "batch"
+        "source-cli",
+        "configured-lsp-owner"
       ],
-      "adapters": {
-        "legacy": "batch-typechecker-fixture-v1",
-        "native": null
-      },
       "pack": "native-semantic-completion",
       "case": "complete-original-escaped-import-keyword",
       "test": "native_semantic_completion_keeps_frozen_full_vector_and_actual_terminal_owner",
@@ -1295,7 +1294,8 @@
           "path": "native-semantic-completion/inputs/tsconfig.json.txt",
           "sha256": "0365b71721cff6e83c1ec517601a8234df71f6dfba7cc0e67a5763a16a1b6f30"
         }
-      ]
+      ],
+      "contract": "source-canon-semantic-completion-v1"
     }
   ]
 }
