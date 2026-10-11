@@ -4,8 +4,6 @@ mod shadow_lifetime;
 mod witness;
 
 use super::{Consumed, FactOwner, FactRole, InputStamp, NativeFacts};
-
-mod inline_bucket;
 use std::{
     path::{Path, PathBuf},
     sync::Arc,

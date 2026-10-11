@@ -158,3 +158,7 @@ impl NativeFacts {
 #[cfg(test)]
 #[path = "tests/private_bucket.rs"]
 mod private_bucket;
+
+#[cfg(test)]
+#[path = "tests/inline_bucket.rs"]
+mod inline_bucket;
