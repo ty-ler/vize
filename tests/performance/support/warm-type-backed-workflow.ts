@@ -7,7 +7,7 @@ import { finiteCut } from "./warm-type-backed-cut.ts";
 import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
 import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
 import { allowed } from "./warm-type-backed-production-paths.ts";
-import { qualifyProjectConfigHost } from "./warm-type-backed-project-config-host.ts";
+import { qualifyProjectConfigLoaderHost } from "./warm-type-backed-project-config-loader-host.ts";
 import {
   driverRoot,
   git,
@@ -118,7 +118,7 @@ if (process.argv[2] === "prepare") {
     (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
   );
   const projectConfigHost = !cut
-    ? qualifyProjectConfigHost(production, allowed, (side, file) =>
+    ? qualifyProjectConfigLoaderHost(production, allowed, (side, file) =>
         gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
       )
     : null;
