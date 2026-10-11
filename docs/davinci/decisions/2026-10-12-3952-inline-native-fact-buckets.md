@@ -9,6 +9,9 @@ The actual branch parent is the repaired
 workload bodies remain identical to that minimum parent. Linux tooling job
 `114535135317` passes all 16 hydration, owned-process, diagnostic and literal
 workflow/document preservation controls, including all four Linux process laws.
+Exact-parent Check `38161304606`, original 400-provider `38161304519` and native
+backend phases `38161304623` all pass. The original authored failure below is
+retained separately; the optional capture is not repeated.
 The actual reviewed source is `ab497e944cbfb57952db8dad1f787b0f6df5cd9b`.
 The preceding [Linux occupancy receipt](./2026-10-12-3952-native-fact-occupancy-diagnostic.md)
 counts the whole full-key index, unlike its explicitly incomplete prospective
