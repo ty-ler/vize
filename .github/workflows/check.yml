@@ -43,6 +43,7 @@ jobs:
         run: |
           vp run --filter './npm/native' build:ci
           node /tmp/ui-scoped-union-proof.mjs binding before
+          node /tmp/ui-scoped-union-proof.mjs emitted before
           git diff -- npm/native > evidence/before-generated-native-entry.diff
           git diff --exit-code -- Cargo.toml Cargo.lock crates davinci npm/ui pnpm-lock.yaml pnpm-workspace.yaml
       - name: Require the unchanged whole golden test to fail before correction
@@ -71,7 +72,7 @@ jobs:
           git diff --name-only > evidence/before-generated-paths.txt
           test "$(cat evidence/before-generated-paths.txt)" = 'npm/native/index.d.ts'
           git restore -- npm/native/index.d.ts
-          git checkout 63af12fba86b26c9cb27de424391d1e34e7fa882
+          git checkout 73cb0c7e79c60040e248c4be0e59ada78ab54073
           git diff --exit-code
           git diff --cached --exit-code
           git status --porcelain > evidence/after-source-status.txt
@@ -80,12 +81,15 @@ jobs:
         run: |
           vp run --filter './npm/native' build:ci
           node /tmp/ui-scoped-union-proof.mjs binding after
+          node /tmp/ui-scoped-union-proof.mjs emitted after
           git diff -- npm/native > evidence/after-generated-native-entry.diff
           git diff --exit-code -- Cargo.toml Cargo.lock crates davinci npm/ui pnpm-lock.yaml pnpm-workspace.yaml
       - name: Validate Rust formatting and all original scoped-world controls
         run: |
           cargo fmt --all -- --check
           cargo test --release -p vize_atelier_sfc --lib script::context::type_world 2>&1 | tee evidence/scoped-world-tests.log
+          cargo test --release -p vize_atelier_sfc --lib script::type_resolution 2>&1 | tee evidence/type-resolution-tests.log
+          cargo test --release -p vize_atelier_sfc --lib compile_script::props 2>&1 | tee evidence/runtime-prop-tests.log
       - name: Execute the complete native and official whole golden regression
         run: vp exec node --test npm/ui/scripts/vapor-runtime/scoped-union-props.test.ts 2>&1 | tee evidence/after-golden.log
       - name: Execute all original standard and production UI tests

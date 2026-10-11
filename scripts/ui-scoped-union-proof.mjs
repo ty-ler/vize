@@ -1,16 +1,17 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import path from 'node:path';
 
 const root = process.cwd();
 const read = file => JSON.parse(readFileSync(`${root}/${file}`, 'utf8'));
 const digest = value => createHash('sha256').update(value).digest('hex');
 const head = () => execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const before = '2eed646c3293d83bf14d005c02b068e81909867f';
-const after = '63af12fba86b26c9cb27de424391d1e34e7fa882';
+const after = '73cb0c7e79c60040e248c4be0e59ada78ab54073';
 const command = process.argv[2];
 
 if (command === 'binding') {
@@ -23,6 +24,32 @@ if (command === 'binding') {
   const receipt = { head: head(), expected, loaded, sha256: digest(readFileSync(expected)) };
   writeFileSync(`evidence/${process.argv[3]}-binding.json`, JSON.stringify(receipt, null, 2));
   console.log(JSON.stringify(receipt));
+} else if (command === 'emitted') {
+  const require = createRequire(`${root}/npm/ui/package.json`);
+  const native = await import(pathToFileURL(require.resolve('@vizejs/native')).href);
+  const expected = realpathSync(`${root}/npm/native/vize-vitrine.linux-x64-gnu.node`);
+  assert.ok(Object.keys(require.cache).some(name => name.endsWith('.node') && realpathSync(name) === expected));
+  const packetRoot = `${root}/tests/_fixtures/differential/compiler/scoped-union-props`;
+  const packet = JSON.parse(readFileSync(`${packetRoot}/fixture.json`, 'utf8'));
+  const inputRoot = `${root}/evidence/union-inputs`;
+  mkdirSync(inputRoot, { recursive: true });
+  const inputs = {};
+  for (const { path: name, sha256 } of packet.inputs) {
+    const source = readFileSync(`${packetRoot}/${name}`, 'utf8');
+    assert.equal(digest(source), sha256);
+    inputs[name] = { source, sha256 };
+    writeFileSync(`${inputRoot}/${name.replace(/\.txt$/, '')}`, source);
+  }
+  const results = [];
+  for (const name of ['Inline', 'Imported', 'Plain']) {
+    for (const lane of ['ssr', 'dom', 'vapor']) {
+      const source = inputs[`${name}.vue.txt`].source;
+      const result = native.compileSfc(source, { filename: path.join(inputRoot, `${name}.vue`), mode: 'module', isTs: true, ssr: lane === 'ssr', vapor: lane === 'vapor' });
+      assert.deepEqual(result.errors, []);
+      results.push({ name, lane, sourceSha256: digest(source), moduleSha256: digest(result.code), result });
+    }
+  }
+  writeFileSync(`evidence/${process.argv[3]}-emitted.json`, JSON.stringify({ head: head(), inputs, results }, null, 2));
 } else if (command === 'golden-negative') {
   assert.equal(head(), before);
   const log = readFileSync('evidence/before-golden.log', 'utf8');
@@ -42,6 +69,22 @@ if (command === 'binding') {
   assert.equal(beforeBinding.head, before);
   assert.equal(afterBinding.head, after);
   assert.notEqual(beforeBinding.sha256, afterBinding.sha256);
+  const beforeEmitted = read('evidence/before-emitted.json');
+  const afterEmitted = read('evidence/after-emitted.json');
+  assert.equal(beforeEmitted.head, before);
+  assert.equal(afterEmitted.head, after);
+  assert.deepEqual(beforeEmitted.inputs, afterEmitted.inputs);
+  assert.equal(beforeEmitted.results.length, 9);
+  assert.equal(afterEmitted.results.length, 9);
+  for (let index = 0; index < 9; index++) {
+    const old = beforeEmitted.results[index];
+    const current = afterEmitted.results[index];
+    assert.equal(old.name, current.name);
+    assert.equal(old.lane, current.lane);
+    assert.equal(old.sourceSha256, current.sourceSha256);
+    if (old.name === 'Plain') assert.deepEqual(old.result, current.result);
+    else assert.notEqual(old.moduleSha256, current.moduleSha256);
+  }
   const targetNames = ['icon', 'icon-button'];
   const progressNames = ['progress-bar-collapsed-negative', 'progress-bar-collapsed-positive', 'progress-bar-wide-endpoint', 'progress-bar-wide-range'];
   const ledgers = {
