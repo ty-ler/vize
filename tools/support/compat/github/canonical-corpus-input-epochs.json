@@ -1,0 +1,2039 @@
+{
+  "schema": "vize.canonical-corpus-input-epochs",
+  "version": 1,
+  "epochs": [
+    {
+      "name": "npmx-c9e8be91",
+      "sourceArtifact": {
+        "artifactId": 11705104759,
+        "runId": 38147452278,
+        "attempt": 1,
+        "sha": "5fea783a661d67d94a7d6c00c34fdc1c173f13bd",
+        "tree": "bb705b0c21a409456417eb061ee02a0bc2c38186",
+        "providerSha": "137c1576dfa702e5f8a42bab2c7332dba8520df0",
+        "repositoryId": 1123610216
+      },
+      "repository": "ubugeeei-prod/vize",
+      "gitlinks": [
+        {
+          "path": "tests/_fixtures/_git/airi",
+          "sha": "b6011381bc34a6b85ad669363513cb1a2eea6438"
+        },
+        {
+          "path": "tests/_fixtures/_git/alexandrie",
+          "sha": "4624adefe95c9ab19c85255c6ffff532c739a119"
+        },
+        {
+          "path": "tests/_fixtures/_git/ant-design-vue",
+          "sha": "7483836f0adac76516e527df893c3d84a7cd4005"
+        },
+        {
+          "path": "tests/_fixtures/_git/antares",
+          "sha": "954b455f612d170742c1a1065276132f2cc115ea"
+        },
+        {
+          "path": "tests/_fixtures/_git/arco-design-pro-vue",
+          "sha": "27020819af653243b7b1a3e8e2481d6b3d798749"
+        },
+        {
+          "path": "tests/_fixtures/_git/automa",
+          "sha": "a4cbe34a60c92873c48c2470ca8ab1d96c22c7a0"
+        },
+        {
+          "path": "tests/_fixtures/_git/better-scroll",
+          "sha": "f87fbd161d4bebb1d1e90fc1675db1b0f90174d0"
+        },
+        {
+          "path": "tests/_fixtures/_git/bootstrap-vue",
+          "sha": "9a246f45fc813f161df291fc7d6197febf8afaf4"
+        },
+        {
+          "path": "tests/_fixtures/_git/buefy",
+          "sha": "4f094cd51a229a0ac16097c77bf537ab4e94f701"
+        },
+        {
+          "path": "tests/_fixtures/_git/bym-vue-echarts",
+          "sha": "c7326b0146c21452a0ff89512d3a49a0ab6f24f6"
+        },
+        {
+          "path": "tests/_fixtures/_git/crater",
+          "sha": "05d5ce26fdd8d9466009163444e944259bc0cc2a"
+        },
+        {
+          "path": "tests/_fixtures/_git/create-vue",
+          "sha": "3ee62adffdcdfa4a37b2ed4e9c30636655d5fcd1"
+        },
+        {
+          "path": "tests/_fixtures/_git/cssgridgenerator",
+          "sha": "be1e0a53497a7381ed5e60ba6c759bed0f271baf"
+        },
+        {
+          "path": "tests/_fixtures/_git/cube-ui",
+          "sha": "77c342462be8f97c62f37e33abbe4824756bf057"
+        },
+        {
+          "path": "tests/_fixtures/_git/dashy",
+          "sha": "9b72c045e6368517f1e81c42d757835f88f2c272"
+        },
+        {
+          "path": "tests/_fixtures/_git/datav",
+          "sha": "417ade755ceba9a30031e6d5fddac5e6bcbcd44a"
+        },
+        {
+          "path": "tests/_fixtures/_git/dbx",
+          "sha": "5173bbafd1e2dcb67a3be557c569adcc15021193"
+        },
+        {
+          "path": "tests/_fixtures/_git/dho-web-client",
+          "sha": "94a804ee650cb49990f6fcd4f4c54afa3a925abe"
+        },
+        {
+          "path": "tests/_fixtures/_git/directus",
+          "sha": "8030b7053927e1d87b4d42575c35636738ce3d77"
+        },
+        {
+          "path": "tests/_fixtures/_git/docsify",
+          "sha": "a8f151ed79dff0ad8d857f99f073ef7969c14d80"
+        },
+        {
+          "path": "tests/_fixtures/_git/douyin",
+          "sha": "8cc6172c737dfaf0c914a2b27cdfee4eb2306f2e"
+        },
+        {
+          "path": "tests/_fixtures/_git/element",
+          "sha": "c345bb453bf11badb4831a6a3f600c9372b3a336"
+        },
+        {
+          "path": "tests/_fixtures/_git/element-plus",
+          "sha": "20298a21ae54a5417955373b80130ae7c548a6bb"
+        },
+        {
+          "path": "tests/_fixtures/_git/element-plus-x",
+          "sha": "c3e0177d101d4dbc039b7cd668c676839f6595f1"
+        },
+        {
+          "path": "tests/_fixtures/_git/elk",
+          "sha": "8aa2b4650760eeba4ea1fdd9dc18d8a88ca5d7f0"
+        },
+        {
+          "path": "tests/_fixtures/_git/epic-spinners",
+          "sha": "3a4dda1d72fbeb2da9ac75bdd53df948e9c3f869"
+        },
+        {
+          "path": "tests/_fixtures/_git/filebrowser",
+          "sha": "833d908884d5c801f30f5c098d7977177eb3a36b"
+        },
+        {
+          "path": "tests/_fixtures/_git/frappe-builder",
+          "sha": "ed705f9dddc9a78867fb672c342ee025368ac6a1"
+        },
+        {
+          "path": "tests/_fixtures/_git/frappe-crm",
+          "sha": "2e6a6a216af7cdbd17a1468389686cd2f8452a45"
+        },
+        {
+          "path": "tests/_fixtures/_git/frontend-phpcon-do-website",
+          "sha": "d5b35ab40b4c4ff5b51a94bf1efd656a3e4160a1"
+        },
+        {
+          "path": "tests/_fixtures/_git/frpc-desktop",
+          "sha": "2c971ba7238cdfe2d1033e4ffe2e20eb7266ef17"
+        },
+        {
+          "path": "tests/_fixtures/_git/gogocode",
+          "sha": "6b94d4d05ee4facc935fe2c3e4965655913afd6e"
+        },
+        {
+          "path": "tests/_fixtures/_git/gridea",
+          "sha": "48e4ab573bfa709816ffd688233b2f570c085e2d"
+        },
+        {
+          "path": "tests/_fixtures/_git/gui-for-singbox",
+          "sha": "1be4816dea1e8793d8e08ae4f8f016c28101672d"
+        },
+        {
+          "path": "tests/_fixtures/_git/habitica",
+          "sha": "19b2ce531c3bb1c3f95a75388b1176b345cbbca2"
+        },
+        {
+          "path": "tests/_fixtures/_git/heyui",
+          "sha": "dcd5fe97b7908200beda88a26700b14a41a17429"
+        },
+        {
+          "path": "tests/_fixtures/_git/hoppscotch",
+          "sha": "1acb8a3a7581e4db32ba0d529170c4669a2e1053"
+        },
+        {
+          "path": "tests/_fixtures/_git/inertia",
+          "sha": "59bb8cbff028b9b405cf606588f1f713806f9187"
+        },
+        {
+          "path": "tests/_fixtures/_git/inspira-ui",
+          "sha": "5650bfd050743ffaee02a471a1406b58c98b2ef5"
+        },
+        {
+          "path": "tests/_fixtures/_git/jellyfin-vue",
+          "sha": "6b35d977335cab224c4536d18dc22d15a63d5185"
+        },
+        {
+          "path": "tests/_fixtures/_git/koel",
+          "sha": "dfec91ff290509c622ff7cf392fb5e506841ee2b"
+        },
+        {
+          "path": "tests/_fixtures/_git/laravel-breeze",
+          "sha": "727b746ac1fb8693b7a910eb562dc856ead9e1a7"
+        },
+        {
+          "path": "tests/_fixtures/_git/layoutit-grid",
+          "sha": "bac9964b1d23a361f3ef9e67b0fdd2d990b48a1a"
+        },
+        {
+          "path": "tests/_fixtures/_git/lew-ui",
+          "sha": "abdcecdcdf611211b0502383a6dbfacded2c9608"
+        },
+        {
+          "path": "tests/_fixtures/_git/lx-music-desktop",
+          "sha": "9c364b482e5621a1d38b50e8610d2fb974457e6e"
+        },
+        {
+          "path": "tests/_fixtures/_git/mall-admin-web",
+          "sha": "81fc17e5a19f452bd854b106a9d59fa1ed5c7eac"
+        },
+        {
+          "path": "tests/_fixtures/_git/mavon-editor",
+          "sha": "aaaafa97c43c26aaa3da3c3fdfddb74f272e09d6"
+        },
+        {
+          "path": "tests/_fixtures/_git/mealie",
+          "sha": "b9b3ac9b286a61527f6cf821453933af577b628f"
+        },
+        {
+          "path": "tests/_fixtures/_git/mint-ui",
+          "sha": "c875541634c15f1f2e47e69f1e857eccdbe25e23"
+        },
+        {
+          "path": "tests/_fixtures/_git/misskey",
+          "sha": "810faa8e5db4bbf9d6d408a61df148559340ee99"
+        },
+        {
+          "path": "tests/_fixtures/_git/mobile-web-best-practice",
+          "sha": "34a793b13492405f75c97b46253df5ee142014cc"
+        },
+        {
+          "path": "tests/_fixtures/_git/motion-vue",
+          "sha": "836a2fbcc39abf13027f25d55e4b106a037f646d"
+        },
+        {
+          "path": "tests/_fixtures/_git/multiple-select",
+          "sha": "47a3a3b621b1a7a07e078ad306506d4db8fd0011"
+        },
+        {
+          "path": "tests/_fixtures/_git/muse-ui",
+          "sha": "e799a4ff3854b9341e2207720c0937b1ba040bbc"
+        },
+        {
+          "path": "tests/_fixtures/_git/music-website",
+          "sha": "93e78b1b42e2963b19e08a0d9258c8b32184cdca"
+        },
+        {
+          "path": "tests/_fixtures/_git/n8n",
+          "sha": "e882e8a483f433facb47bab9b407d0ec00a81172"
+        },
+        {
+          "path": "tests/_fixtures/_git/naive-ui",
+          "sha": "b26496a26536918204722cb9b9e5dd9bfe31c893"
+        },
+        {
+          "path": "tests/_fixtures/_git/nativescript-vue",
+          "sha": "7cba9651cfff27d9819cafe76f67e09bfd19fdbe"
+        },
+        {
+          "path": "tests/_fixtures/_git/npmx.dev",
+          "sha": "c9e8be91e61eeeae956e2068722caa09e293cc68"
+        },
+        {
+          "path": "tests/_fixtures/_git/nutui",
+          "sha": "212c7c3af6d0c3b5bc5cdfe00c7eaf8dd86a78cf"
+        },
+        {
+          "path": "tests/_fixtures/_git/nuxt-ui",
+          "sha": "3dbca020969582d577c7df9698dc8cd484f76dc1"
+        },
+        {
+          "path": "tests/_fixtures/_git/petite-vue",
+          "sha": "9ff3b98b844033b935143c221176c81244aae32e"
+        },
+        {
+          "path": "tests/_fixtures/_git/piclist",
+          "sha": "3a26cc882983af899e97b4f492d06355c2a89077"
+        },
+        {
+          "path": "tests/_fixtures/_git/pinia",
+          "sha": "59ec7da3f0130caa66fae6541557cf3c5b10f78b"
+        },
+        {
+          "path": "tests/_fixtures/_git/pinry",
+          "sha": "05476b112401cf34a38bfbffc67c37f5f6c3b38f"
+        },
+        {
+          "path": "tests/_fixtures/_git/portal-vue",
+          "sha": "024509fa1545c43ea2c306827ab718229814d2b3"
+        },
+        {
+          "path": "tests/_fixtures/_git/prevue",
+          "sha": "deedda8b44e97f51b06ad6e2da17baf4997bf281"
+        },
+        {
+          "path": "tests/_fixtures/_git/primevue",
+          "sha": "d4374cb7c1267f35eba7cee5d0a266f50ca8ec84"
+        },
+        {
+          "path": "tests/_fixtures/_git/reka-ui",
+          "sha": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2"
+        },
+        {
+          "path": "tests/_fixtures/_git/scalar",
+          "sha": "62753f5528c30d7cef9cfd9461b6611bc5a2b4de"
+        },
+        {
+          "path": "tests/_fixtures/_git/shadcn-vue",
+          "sha": "3f048dfb495703f39e191b25a69307fba72822eb"
+        },
+        {
+          "path": "tests/_fixtures/_git/sigma-file-manager",
+          "sha": "1a9108db3719a90152243dba3e014620f9a13c63"
+        },
+        {
+          "path": "tests/_fixtures/_git/solidtime",
+          "sha": "de13c07855bbaacb1cced918003a0a15b5a48aba"
+        },
+        {
+          "path": "tests/_fixtures/_git/soybean-admin",
+          "sha": "3d3613f20cd4add3cd20fd6cc884abead165c6d2"
+        },
+        {
+          "path": "tests/_fixtures/_git/splayer",
+          "sha": "40d9ec606cc1e323c964ffea7bf0ab02f137e93b"
+        },
+        {
+          "path": "tests/_fixtures/_git/splitpanes",
+          "sha": "c13526b5d751ad188e19c6b6797466a7559a88d4"
+        },
+        {
+          "path": "tests/_fixtures/_git/tailwind-config-viewer",
+          "sha": "56d6d2e0b97efb27ffff474dcb951a5ac441a9ac"
+        },
+        {
+          "path": "tests/_fixtures/_git/tdesign",
+          "sha": "11c76ad6c632e55843f921b683f16ea3c01eecda"
+        },
+        {
+          "path": "tests/_fixtures/_git/tiny-rdm",
+          "sha": "4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc"
+        },
+        {
+          "path": "tests/_fixtures/_git/uni-app",
+          "sha": "b6cc3df9c10fb058510cc13d7648d4abb50a4fbb"
+        },
+        {
+          "path": "tests/_fixtures/_git/v-charts",
+          "sha": "f3c31e0cc0bc85e2685caaaf8e2fe658030f744c"
+        },
+        {
+          "path": "tests/_fixtures/_git/v-viewer",
+          "sha": "9d51fe98f9d2b5d7c836a637cbb3b11d20bf4899"
+        },
+        {
+          "path": "tests/_fixtures/_git/vant",
+          "sha": "29cd8c2119139851495550b9bf6bd5bd9f678b2f"
+        },
+        {
+          "path": "tests/_fixtures/_git/vant-demo",
+          "sha": "c382aeba3cfea6ea31f6fee98a99b1c6604accc4"
+        },
+        {
+          "path": "tests/_fixtures/_git/varlet",
+          "sha": "1007097bde3f6c06326e0057ac6a7cf4ab7ff519"
+        },
+        {
+          "path": "tests/_fixtures/_git/vaul-vue",
+          "sha": "fafb0507c8845c34d232ebed51068428685329f1"
+        },
+        {
+          "path": "tests/_fixtures/_git/vee-validate",
+          "sha": "7d8cc524f9204655ad00a466090738e43b44ff2a"
+        },
+        {
+          "path": "tests/_fixtures/_git/vitepress",
+          "sha": "9ee401d7adefc39fd960990cc032be5464e4eb27"
+        },
+        {
+          "path": "tests/_fixtures/_git/voicevox",
+          "sha": "0a7fcc8523410ad294b51b70a46575c4d21371ac"
+        },
+        {
+          "path": "tests/_fixtures/_git/vonic",
+          "sha": "6ed81779655796459b4e807582ed26332cbaaf25"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-apexcharts",
+          "sha": "182f8ce43d4f6e15446d39712c7a1e514aaa8627"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-benchmarks",
+          "sha": "5489aee433cd1054b9d72973457498544da7c467"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-bits",
+          "sha": "05668fee962070e4edc4c4fbfed53893d7987d6d"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-cal-v4",
+          "sha": "b88c9f840cc43e6eccda0651c1d062b0c5bd8107"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-calendar",
+          "sha": "e980b2f4deee02fe1b9cb4b802897a245d3daaef"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-chartjs",
+          "sha": "ebf26ede933ebd3672afc0309ec24537b28eec40"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-charts",
+          "sha": "ecf3d2690f34d3eef75ab6dbed451088be2fad5b"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-core-vapor",
+          "sha": "3adb225775c9b28223a56e07f7a2f874b6fbb138"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-cropper",
+          "sha": "29edd081e6a0293801bc2f692c93141f96532cb1"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-data-ui",
+          "sha": "14628946a8185252a7051b40be931e93a0b480a1"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-datepicker",
+          "sha": "f1a5c11028885e02e81ed379ff04107a7d99d964"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-devtools-v6",
+          "sha": "dd2ab5d4275187cbd81952a2a3d53c335643c1f4"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-draggable-next",
+          "sha": "8687d34f3182a1a0bfb138e995609f32ffe3ce6b"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-draggable-plus",
+          "sha": "1b82b5f115fda6c2137698d823d59be7b895868b"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-draggable-resizable",
+          "sha": "72cda0844f765c85df7ae423de12bb54790bcc75"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-dropzone",
+          "sha": "c88b8b08922cca4743a7fde03a0213e8c7a34f0f"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-echarts",
+          "sha": "4d70d2f86d9fbf08798fc2d87f73b06621f58bfe"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-element-admin",
+          "sha": "6858a9ad67483025f6a9432a926beb9327037be3"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-fabric-editor",
+          "sha": "b3bdcfb0bd6d8f98e7483cf561ac03ba56c0d889"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-flow",
+          "sha": "17953c329db2d5dc5f5097370cbf5e1173bab520"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-fullpage-js",
+          "sha": "e3ef972dad5b6b07d28bf725068182e2347b7bde"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-grid-layout",
+          "sha": "6e536767937fbde7f1f18435a185e2b9a00c27ef"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-js-modal",
+          "sha": "2dcc67984a65ec6ad351f8a2b13bb84582a0800d"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-jsx-vapor",
+          "sha": "817e137c2847c7e4cca7d283637660f176060453"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-lottie",
+          "sha": "d66265f6d31f50dab4269f5a1fef7c7e29d5299d"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-manage-system",
+          "sha": "6a7019ec1a74cc05297d18647a5f944c242d468a"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-material",
+          "sha": "7b1efd058abaccc826bcf856e2a879936bf0fcd3"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-multiselect",
+          "sha": "8092917041f0ae02cbe4c6982deddc931c6adecd"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-native-core",
+          "sha": "0c705bebec66789696830f501870ec66c144240f"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-netcore",
+          "sha": "a5512b75501bcc5f98c2b52aa498c4c07877f9ec"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-pure-admin",
+          "sha": "e40eb37d606174099906aecfa891159b2d5b434e"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-router",
+          "sha": "feed382f2fbfe38b3892ea780f5aea3d5459986a"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-select",
+          "sha": "35897ade99e750a452e67df3b38e156d0c1fff42"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-sonner",
+          "sha": "4f6e3038981d7c748048913f259470fefa204b7a"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-storefront",
+          "sha": "220341f4c15d9f6ddb8d5e4c2fd225f5dd4d6f76"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-termui",
+          "sha": "26b9b8e402132ca440d7c80e7e8521e1a90175be"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-tui",
+          "sha": "9b9d417913cdf2a568deff28ba826c6a147878bf"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-uploader",
+          "sha": "0be2f9571644ac2f7d3348420baf8fb8105c5555"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-vben-admin",
+          "sha": "748b182e440863711dc9624924e92440f5ddc4d3"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-vine",
+          "sha": "65980df127ec4b834ebd7d0ce72b19e562684fe3"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-virtual-scroller",
+          "sha": "bc1ada96dc3b7831d8931b9e9b84139bfac98200"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue2-elm",
+          "sha": "b85ff0220366be863868269177a4abf74c7a85ca"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue3-admin-design",
+          "sha": "d368ff2f1680414ae9b9fed93ced7cfba8b76b7f"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue3-antd-admin",
+          "sha": "64c03db76710e70b85aedf40a9ca87101946d70d"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuefes-2025",
+          "sha": "8eff3cd7dd79a7f47bbf2b78202b9aa2070ec5a6"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuefes-japan-speakers",
+          "sha": "ab9367c8768c8c61977785157d03a71034ff93ad"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuelidate",
+          "sha": "1c7bac7121060dd95ea3e1484fc2031634f667d8"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuepress",
+          "sha": "9fb4bb00925d9409e6732118e996411c6a82c85d"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuesax",
+          "sha": "3f03427ca3a66110c17d78c9b12093176b8683d1"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuestic-admin",
+          "sha": "9c5b44f3674d4c3e7ad01cc043d5331cee953c49"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuestic-ui",
+          "sha": "c5337ed8e7e24ea294221326fe2ca6af8d3b8e1b"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuetify",
+          "sha": "2c05206eda516e5f5236b846b7b1718802cd8e3c"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuetorrent",
+          "sha": "e92249f36ea40e2c71c68439831143a6d9517ae9"
+        },
+        {
+          "path": "tests/_fixtures/_git/vux",
+          "sha": "881e6803832b535aff3ef90a9aee9fba6aae1a9a"
+        },
+        {
+          "path": "tests/_fixtures/_git/wakapi",
+          "sha": "1a08af5f78d4161f8b573de6ad82615b4f2b76f4"
+        },
+        {
+          "path": "tests/_fixtures/_git/wave-ui",
+          "sha": "a95a3bb1d65369de9befed6341bdc56bb5de075a"
+        },
+        {
+          "path": "tests/_fixtures/_git/youtube-dl-gui",
+          "sha": "c402ee39c0eabab68934c48f8b787ff37a1577b0"
+        },
+        {
+          "path": "tests/_fixtures/_git/zy-player",
+          "sha": "68fd0d0c6ae79de3d1a7400a85d704f3717e1140"
+        }
+      ],
+      "gitlinksSha256": "87bf3fca438483c5422dbbae5eda00d1281014a77c6261f3d84b6f24aac0082a",
+      "modulesSha256": "f23d681d78f5153d31e62fc78d9a0cf696c8b7c6c7d3e4fe5fdcd6002398ba39",
+      "files": 44367,
+      "filesSha256": "ccd98e9ff918661b9c8d547a09b457a13b82701815cb0b88b15af5d35f6a2508",
+      "membershipSha256": "30df21cd1f239ce5840f27258ca0f5044ae1bff9eec4f3ca89a4357cea7379ce",
+      "committedSha256": "4d088d4c45c6baf64be8cb5c820d8314e367a26fdd4c085ad6c54b3088906331",
+      "nativeWalk": {
+        "sourceSha256": "c5c5193aef57cfba009ff07c8ac9d7d59a9377d012775e5116efe721d1d8b0ad",
+        "bodySha256": "57025442bcce202e436c98b95d29770afe696166d12a37b23463ad0a0ac8ecac",
+        "vectorSha256": "7838356ee9c1a27bff13d3f348486c7760e4d9ac5438f722b0401caae379e1e5",
+        "boundarySha256": "7dfc45fca22bb6fabc26a4860e18d3f00e471c63920d6b878d077a90b651e332"
+      },
+      "jellyfinFiles": 5576
+    },
+    {
+      "name": "npmx-83e38d9d",
+      "sourceArtifact": {
+        "artifactId": 11705404503,
+        "runId": 38147490520,
+        "attempt": 1,
+        "sha": "67f7d10edd9c64a9ef4bd838fc47bd258af666f7",
+        "tree": "6aef30c002c6da2922b39300c208c389fd463ce8",
+        "providerSha": "0ee44bd70f0db2138190b22fcb586d7b640b0d82",
+        "repositoryId": 1123610216
+      },
+      "repository": "ubugeeei-prod/vize",
+      "gitlinks": [
+        {
+          "path": "tests/_fixtures/_git/airi",
+          "sha": "b6011381bc34a6b85ad669363513cb1a2eea6438"
+        },
+        {
+          "path": "tests/_fixtures/_git/alexandrie",
+          "sha": "4624adefe95c9ab19c85255c6ffff532c739a119"
+        },
+        {
+          "path": "tests/_fixtures/_git/ant-design-vue",
+          "sha": "7483836f0adac76516e527df893c3d84a7cd4005"
+        },
+        {
+          "path": "tests/_fixtures/_git/antares",
+          "sha": "954b455f612d170742c1a1065276132f2cc115ea"
+        },
+        {
+          "path": "tests/_fixtures/_git/arco-design-pro-vue",
+          "sha": "27020819af653243b7b1a3e8e2481d6b3d798749"
+        },
+        {
+          "path": "tests/_fixtures/_git/automa",
+          "sha": "a4cbe34a60c92873c48c2470ca8ab1d96c22c7a0"
+        },
+        {
+          "path": "tests/_fixtures/_git/better-scroll",
+          "sha": "f87fbd161d4bebb1d1e90fc1675db1b0f90174d0"
+        },
+        {
+          "path": "tests/_fixtures/_git/bootstrap-vue",
+          "sha": "9a246f45fc813f161df291fc7d6197febf8afaf4"
+        },
+        {
+          "path": "tests/_fixtures/_git/buefy",
+          "sha": "4f094cd51a229a0ac16097c77bf537ab4e94f701"
+        },
+        {
+          "path": "tests/_fixtures/_git/bym-vue-echarts",
+          "sha": "c7326b0146c21452a0ff89512d3a49a0ab6f24f6"
+        },
+        {
+          "path": "tests/_fixtures/_git/crater",
+          "sha": "05d5ce26fdd8d9466009163444e944259bc0cc2a"
+        },
+        {
+          "path": "tests/_fixtures/_git/create-vue",
+          "sha": "3ee62adffdcdfa4a37b2ed4e9c30636655d5fcd1"
+        },
+        {
+          "path": "tests/_fixtures/_git/cssgridgenerator",
+          "sha": "be1e0a53497a7381ed5e60ba6c759bed0f271baf"
+        },
+        {
+          "path": "tests/_fixtures/_git/cube-ui",
+          "sha": "77c342462be8f97c62f37e33abbe4824756bf057"
+        },
+        {
+          "path": "tests/_fixtures/_git/dashy",
+          "sha": "9b72c045e6368517f1e81c42d757835f88f2c272"
+        },
+        {
+          "path": "tests/_fixtures/_git/datav",
+          "sha": "417ade755ceba9a30031e6d5fddac5e6bcbcd44a"
+        },
+        {
+          "path": "tests/_fixtures/_git/dbx",
+          "sha": "5173bbafd1e2dcb67a3be557c569adcc15021193"
+        },
+        {
+          "path": "tests/_fixtures/_git/dho-web-client",
+          "sha": "94a804ee650cb49990f6fcd4f4c54afa3a925abe"
+        },
+        {
+          "path": "tests/_fixtures/_git/directus",
+          "sha": "8030b7053927e1d87b4d42575c35636738ce3d77"
+        },
+        {
+          "path": "tests/_fixtures/_git/docsify",
+          "sha": "a8f151ed79dff0ad8d857f99f073ef7969c14d80"
+        },
+        {
+          "path": "tests/_fixtures/_git/douyin",
+          "sha": "8cc6172c737dfaf0c914a2b27cdfee4eb2306f2e"
+        },
+        {
+          "path": "tests/_fixtures/_git/element",
+          "sha": "c345bb453bf11badb4831a6a3f600c9372b3a336"
+        },
+        {
+          "path": "tests/_fixtures/_git/element-plus",
+          "sha": "20298a21ae54a5417955373b80130ae7c548a6bb"
+        },
+        {
+          "path": "tests/_fixtures/_git/element-plus-x",
+          "sha": "c3e0177d101d4dbc039b7cd668c676839f6595f1"
+        },
+        {
+          "path": "tests/_fixtures/_git/elk",
+          "sha": "8aa2b4650760eeba4ea1fdd9dc18d8a88ca5d7f0"
+        },
+        {
+          "path": "tests/_fixtures/_git/epic-spinners",
+          "sha": "3a4dda1d72fbeb2da9ac75bdd53df948e9c3f869"
+        },
+        {
+          "path": "tests/_fixtures/_git/filebrowser",
+          "sha": "833d908884d5c801f30f5c098d7977177eb3a36b"
+        },
+        {
+          "path": "tests/_fixtures/_git/frappe-builder",
+          "sha": "ed705f9dddc9a78867fb672c342ee025368ac6a1"
+        },
+        {
+          "path": "tests/_fixtures/_git/frappe-crm",
+          "sha": "2e6a6a216af7cdbd17a1468389686cd2f8452a45"
+        },
+        {
+          "path": "tests/_fixtures/_git/frontend-phpcon-do-website",
+          "sha": "d5b35ab40b4c4ff5b51a94bf1efd656a3e4160a1"
+        },
+        {
+          "path": "tests/_fixtures/_git/frpc-desktop",
+          "sha": "2c971ba7238cdfe2d1033e4ffe2e20eb7266ef17"
+        },
+        {
+          "path": "tests/_fixtures/_git/gogocode",
+          "sha": "6b94d4d05ee4facc935fe2c3e4965655913afd6e"
+        },
+        {
+          "path": "tests/_fixtures/_git/gridea",
+          "sha": "48e4ab573bfa709816ffd688233b2f570c085e2d"
+        },
+        {
+          "path": "tests/_fixtures/_git/gui-for-singbox",
+          "sha": "1be4816dea1e8793d8e08ae4f8f016c28101672d"
+        },
+        {
+          "path": "tests/_fixtures/_git/habitica",
+          "sha": "19b2ce531c3bb1c3f95a75388b1176b345cbbca2"
+        },
+        {
+          "path": "tests/_fixtures/_git/heyui",
+          "sha": "dcd5fe97b7908200beda88a26700b14a41a17429"
+        },
+        {
+          "path": "tests/_fixtures/_git/hoppscotch",
+          "sha": "1acb8a3a7581e4db32ba0d529170c4669a2e1053"
+        },
+        {
+          "path": "tests/_fixtures/_git/inertia",
+          "sha": "59bb8cbff028b9b405cf606588f1f713806f9187"
+        },
+        {
+          "path": "tests/_fixtures/_git/inspira-ui",
+          "sha": "5650bfd050743ffaee02a471a1406b58c98b2ef5"
+        },
+        {
+          "path": "tests/_fixtures/_git/jellyfin-vue",
+          "sha": "6b35d977335cab224c4536d18dc22d15a63d5185"
+        },
+        {
+          "path": "tests/_fixtures/_git/koel",
+          "sha": "dfec91ff290509c622ff7cf392fb5e506841ee2b"
+        },
+        {
+          "path": "tests/_fixtures/_git/laravel-breeze",
+          "sha": "727b746ac1fb8693b7a910eb562dc856ead9e1a7"
+        },
+        {
+          "path": "tests/_fixtures/_git/layoutit-grid",
+          "sha": "bac9964b1d23a361f3ef9e67b0fdd2d990b48a1a"
+        },
+        {
+          "path": "tests/_fixtures/_git/lew-ui",
+          "sha": "abdcecdcdf611211b0502383a6dbfacded2c9608"
+        },
+        {
+          "path": "tests/_fixtures/_git/lx-music-desktop",
+          "sha": "9c364b482e5621a1d38b50e8610d2fb974457e6e"
+        },
+        {
+          "path": "tests/_fixtures/_git/mall-admin-web",
+          "sha": "81fc17e5a19f452bd854b106a9d59fa1ed5c7eac"
+        },
+        {
+          "path": "tests/_fixtures/_git/mavon-editor",
+          "sha": "aaaafa97c43c26aaa3da3c3fdfddb74f272e09d6"
+        },
+        {
+          "path": "tests/_fixtures/_git/mealie",
+          "sha": "b9b3ac9b286a61527f6cf821453933af577b628f"
+        },
+        {
+          "path": "tests/_fixtures/_git/mint-ui",
+          "sha": "c875541634c15f1f2e47e69f1e857eccdbe25e23"
+        },
+        {
+          "path": "tests/_fixtures/_git/misskey",
+          "sha": "810faa8e5db4bbf9d6d408a61df148559340ee99"
+        },
+        {
+          "path": "tests/_fixtures/_git/mobile-web-best-practice",
+          "sha": "34a793b13492405f75c97b46253df5ee142014cc"
+        },
+        {
+          "path": "tests/_fixtures/_git/motion-vue",
+          "sha": "836a2fbcc39abf13027f25d55e4b106a037f646d"
+        },
+        {
+          "path": "tests/_fixtures/_git/multiple-select",
+          "sha": "47a3a3b621b1a7a07e078ad306506d4db8fd0011"
+        },
+        {
+          "path": "tests/_fixtures/_git/muse-ui",
+          "sha": "e799a4ff3854b9341e2207720c0937b1ba040bbc"
+        },
+        {
+          "path": "tests/_fixtures/_git/music-website",
+          "sha": "93e78b1b42e2963b19e08a0d9258c8b32184cdca"
+        },
+        {
+          "path": "tests/_fixtures/_git/n8n",
+          "sha": "e882e8a483f433facb47bab9b407d0ec00a81172"
+        },
+        {
+          "path": "tests/_fixtures/_git/naive-ui",
+          "sha": "b26496a26536918204722cb9b9e5dd9bfe31c893"
+        },
+        {
+          "path": "tests/_fixtures/_git/nativescript-vue",
+          "sha": "7cba9651cfff27d9819cafe76f67e09bfd19fdbe"
+        },
+        {
+          "path": "tests/_fixtures/_git/npmx.dev",
+          "sha": "83e38d9d40025ba45d800caf066012c0e7bef753"
+        },
+        {
+          "path": "tests/_fixtures/_git/nutui",
+          "sha": "212c7c3af6d0c3b5bc5cdfe00c7eaf8dd86a78cf"
+        },
+        {
+          "path": "tests/_fixtures/_git/nuxt-ui",
+          "sha": "3dbca020969582d577c7df9698dc8cd484f76dc1"
+        },
+        {
+          "path": "tests/_fixtures/_git/petite-vue",
+          "sha": "9ff3b98b844033b935143c221176c81244aae32e"
+        },
+        {
+          "path": "tests/_fixtures/_git/piclist",
+          "sha": "3a26cc882983af899e97b4f492d06355c2a89077"
+        },
+        {
+          "path": "tests/_fixtures/_git/pinia",
+          "sha": "59ec7da3f0130caa66fae6541557cf3c5b10f78b"
+        },
+        {
+          "path": "tests/_fixtures/_git/pinry",
+          "sha": "05476b112401cf34a38bfbffc67c37f5f6c3b38f"
+        },
+        {
+          "path": "tests/_fixtures/_git/portal-vue",
+          "sha": "024509fa1545c43ea2c306827ab718229814d2b3"
+        },
+        {
+          "path": "tests/_fixtures/_git/prevue",
+          "sha": "deedda8b44e97f51b06ad6e2da17baf4997bf281"
+        },
+        {
+          "path": "tests/_fixtures/_git/primevue",
+          "sha": "d4374cb7c1267f35eba7cee5d0a266f50ca8ec84"
+        },
+        {
+          "path": "tests/_fixtures/_git/reka-ui",
+          "sha": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2"
+        },
+        {
+          "path": "tests/_fixtures/_git/scalar",
+          "sha": "62753f5528c30d7cef9cfd9461b6611bc5a2b4de"
+        },
+        {
+          "path": "tests/_fixtures/_git/shadcn-vue",
+          "sha": "3f048dfb495703f39e191b25a69307fba72822eb"
+        },
+        {
+          "path": "tests/_fixtures/_git/sigma-file-manager",
+          "sha": "1a9108db3719a90152243dba3e014620f9a13c63"
+        },
+        {
+          "path": "tests/_fixtures/_git/solidtime",
+          "sha": "de13c07855bbaacb1cced918003a0a15b5a48aba"
+        },
+        {
+          "path": "tests/_fixtures/_git/soybean-admin",
+          "sha": "3d3613f20cd4add3cd20fd6cc884abead165c6d2"
+        },
+        {
+          "path": "tests/_fixtures/_git/splayer",
+          "sha": "40d9ec606cc1e323c964ffea7bf0ab02f137e93b"
+        },
+        {
+          "path": "tests/_fixtures/_git/splitpanes",
+          "sha": "c13526b5d751ad188e19c6b6797466a7559a88d4"
+        },
+        {
+          "path": "tests/_fixtures/_git/tailwind-config-viewer",
+          "sha": "56d6d2e0b97efb27ffff474dcb951a5ac441a9ac"
+        },
+        {
+          "path": "tests/_fixtures/_git/tdesign",
+          "sha": "11c76ad6c632e55843f921b683f16ea3c01eecda"
+        },
+        {
+          "path": "tests/_fixtures/_git/tiny-rdm",
+          "sha": "4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc"
+        },
+        {
+          "path": "tests/_fixtures/_git/uni-app",
+          "sha": "b6cc3df9c10fb058510cc13d7648d4abb50a4fbb"
+        },
+        {
+          "path": "tests/_fixtures/_git/v-charts",
+          "sha": "f3c31e0cc0bc85e2685caaaf8e2fe658030f744c"
+        },
+        {
+          "path": "tests/_fixtures/_git/v-viewer",
+          "sha": "9d51fe98f9d2b5d7c836a637cbb3b11d20bf4899"
+        },
+        {
+          "path": "tests/_fixtures/_git/vant",
+          "sha": "29cd8c2119139851495550b9bf6bd5bd9f678b2f"
+        },
+        {
+          "path": "tests/_fixtures/_git/vant-demo",
+          "sha": "c382aeba3cfea6ea31f6fee98a99b1c6604accc4"
+        },
+        {
+          "path": "tests/_fixtures/_git/varlet",
+          "sha": "1007097bde3f6c06326e0057ac6a7cf4ab7ff519"
+        },
+        {
+          "path": "tests/_fixtures/_git/vaul-vue",
+          "sha": "fafb0507c8845c34d232ebed51068428685329f1"
+        },
+        {
+          "path": "tests/_fixtures/_git/vee-validate",
+          "sha": "7d8cc524f9204655ad00a466090738e43b44ff2a"
+        },
+        {
+          "path": "tests/_fixtures/_git/vitepress",
+          "sha": "9ee401d7adefc39fd960990cc032be5464e4eb27"
+        },
+        {
+          "path": "tests/_fixtures/_git/voicevox",
+          "sha": "0a7fcc8523410ad294b51b70a46575c4d21371ac"
+        },
+        {
+          "path": "tests/_fixtures/_git/vonic",
+          "sha": "6ed81779655796459b4e807582ed26332cbaaf25"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-apexcharts",
+          "sha": "182f8ce43d4f6e15446d39712c7a1e514aaa8627"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-benchmarks",
+          "sha": "5489aee433cd1054b9d72973457498544da7c467"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-bits",
+          "sha": "05668fee962070e4edc4c4fbfed53893d7987d6d"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-cal-v4",
+          "sha": "b88c9f840cc43e6eccda0651c1d062b0c5bd8107"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-calendar",
+          "sha": "e980b2f4deee02fe1b9cb4b802897a245d3daaef"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-chartjs",
+          "sha": "ebf26ede933ebd3672afc0309ec24537b28eec40"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-charts",
+          "sha": "ecf3d2690f34d3eef75ab6dbed451088be2fad5b"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-core-vapor",
+          "sha": "3adb225775c9b28223a56e07f7a2f874b6fbb138"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-cropper",
+          "sha": "29edd081e6a0293801bc2f692c93141f96532cb1"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-data-ui",
+          "sha": "14628946a8185252a7051b40be931e93a0b480a1"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-datepicker",
+          "sha": "f1a5c11028885e02e81ed379ff04107a7d99d964"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-devtools-v6",
+          "sha": "dd2ab5d4275187cbd81952a2a3d53c335643c1f4"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-draggable-next",
+          "sha": "8687d34f3182a1a0bfb138e995609f32ffe3ce6b"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-draggable-plus",
+          "sha": "1b82b5f115fda6c2137698d823d59be7b895868b"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-draggable-resizable",
+          "sha": "72cda0844f765c85df7ae423de12bb54790bcc75"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-dropzone",
+          "sha": "c88b8b08922cca4743a7fde03a0213e8c7a34f0f"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-echarts",
+          "sha": "4d70d2f86d9fbf08798fc2d87f73b06621f58bfe"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-element-admin",
+          "sha": "6858a9ad67483025f6a9432a926beb9327037be3"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-fabric-editor",
+          "sha": "b3bdcfb0bd6d8f98e7483cf561ac03ba56c0d889"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-flow",
+          "sha": "17953c329db2d5dc5f5097370cbf5e1173bab520"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-fullpage-js",
+          "sha": "e3ef972dad5b6b07d28bf725068182e2347b7bde"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-grid-layout",
+          "sha": "6e536767937fbde7f1f18435a185e2b9a00c27ef"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-js-modal",
+          "sha": "2dcc67984a65ec6ad351f8a2b13bb84582a0800d"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-jsx-vapor",
+          "sha": "817e137c2847c7e4cca7d283637660f176060453"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-lottie",
+          "sha": "d66265f6d31f50dab4269f5a1fef7c7e29d5299d"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-manage-system",
+          "sha": "6a7019ec1a74cc05297d18647a5f944c242d468a"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-material",
+          "sha": "7b1efd058abaccc826bcf856e2a879936bf0fcd3"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-multiselect",
+          "sha": "8092917041f0ae02cbe4c6982deddc931c6adecd"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-native-core",
+          "sha": "0c705bebec66789696830f501870ec66c144240f"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-netcore",
+          "sha": "a5512b75501bcc5f98c2b52aa498c4c07877f9ec"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-pure-admin",
+          "sha": "e40eb37d606174099906aecfa891159b2d5b434e"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-router",
+          "sha": "feed382f2fbfe38b3892ea780f5aea3d5459986a"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-select",
+          "sha": "35897ade99e750a452e67df3b38e156d0c1fff42"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-sonner",
+          "sha": "4f6e3038981d7c748048913f259470fefa204b7a"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-storefront",
+          "sha": "220341f4c15d9f6ddb8d5e4c2fd225f5dd4d6f76"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-termui",
+          "sha": "26b9b8e402132ca440d7c80e7e8521e1a90175be"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-tui",
+          "sha": "9b9d417913cdf2a568deff28ba826c6a147878bf"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-uploader",
+          "sha": "0be2f9571644ac2f7d3348420baf8fb8105c5555"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-vben-admin",
+          "sha": "748b182e440863711dc9624924e92440f5ddc4d3"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-vine",
+          "sha": "65980df127ec4b834ebd7d0ce72b19e562684fe3"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue-virtual-scroller",
+          "sha": "bc1ada96dc3b7831d8931b9e9b84139bfac98200"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue2-elm",
+          "sha": "b85ff0220366be863868269177a4abf74c7a85ca"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue3-admin-design",
+          "sha": "d368ff2f1680414ae9b9fed93ced7cfba8b76b7f"
+        },
+        {
+          "path": "tests/_fixtures/_git/vue3-antd-admin",
+          "sha": "64c03db76710e70b85aedf40a9ca87101946d70d"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuefes-2025",
+          "sha": "8eff3cd7dd79a7f47bbf2b78202b9aa2070ec5a6"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuefes-japan-speakers",
+          "sha": "ab9367c8768c8c61977785157d03a71034ff93ad"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuelidate",
+          "sha": "1c7bac7121060dd95ea3e1484fc2031634f667d8"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuepress",
+          "sha": "9fb4bb00925d9409e6732118e996411c6a82c85d"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuesax",
+          "sha": "3f03427ca3a66110c17d78c9b12093176b8683d1"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuestic-admin",
+          "sha": "9c5b44f3674d4c3e7ad01cc043d5331cee953c49"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuestic-ui",
+          "sha": "c5337ed8e7e24ea294221326fe2ca6af8d3b8e1b"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuetify",
+          "sha": "2c05206eda516e5f5236b846b7b1718802cd8e3c"
+        },
+        {
+          "path": "tests/_fixtures/_git/vuetorrent",
+          "sha": "e92249f36ea40e2c71c68439831143a6d9517ae9"
+        },
+        {
+          "path": "tests/_fixtures/_git/vux",
+          "sha": "881e6803832b535aff3ef90a9aee9fba6aae1a9a"
+        },
+        {
+          "path": "tests/_fixtures/_git/wakapi",
+          "sha": "1a08af5f78d4161f8b573de6ad82615b4f2b76f4"
+        },
+        {
+          "path": "tests/_fixtures/_git/wave-ui",
+          "sha": "a95a3bb1d65369de9befed6341bdc56bb5de075a"
+        },
+        {
+          "path": "tests/_fixtures/_git/youtube-dl-gui",
+          "sha": "c402ee39c0eabab68934c48f8b787ff37a1577b0"
+        },
+        {
+          "path": "tests/_fixtures/_git/zy-player",
+          "sha": "68fd0d0c6ae79de3d1a7400a85d704f3717e1140"
+        }
+      ],
+      "gitlinksSha256": "9a5346e57ff626cad02981c4bbe1f165b3dc00303143be2bd381f8e1ba96d36c",
+      "modulesSha256": "f23d681d78f5153d31e62fc78d9a0cf696c8b7c6c7d3e4fe5fdcd6002398ba39",
+      "files": 44379,
+      "filesSha256": "be49fc468115b73a8bbd3a02f5fa3bda1b1a759f8199f717d2ed383b6887c2a9",
+      "membershipSha256": "34dd9cc31905861d0f180440518e0af83ee987756be8285773403835d7f78b7f",
+      "committedSha256": "98241c68717e903168ec76f8993bde6563b28b2d74f49adac8b3ee8dd0ec02d0",
+      "nativeWalk": {
+        "sourceSha256": "c5c5193aef57cfba009ff07c8ac9d7d59a9377d012775e5116efe721d1d8b0ad",
+        "bodySha256": "57025442bcce202e436c98b95d29770afe696166d12a37b23463ad0a0ac8ecac",
+        "vectorSha256": "85249d969cb79d06d40be14ec51968258289a62a19f88b3ec1816f6d25c24017",
+        "boundarySha256": "7dfc45fca22bb6fabc26a4860e18d3f00e471c63920d6b878d077a90b651e332"
+      },
+      "jellyfinFiles": 5576
+    }
+  ],
+  "migration": {
+    "owner": "npmx.dev",
+    "from": "npmx-c9e8be91",
+    "to": "npmx-83e38d9d",
+    "added": [
+      [
+        "npmx.dev/app/components/Button/CopyMd.vue",
+        "c1adeffca1ba47044d44c1a576e63753d59a66b66c3887cc011b2e216518703c",
+        2015,
+        "23ce1f2e73e06a2dc57b28bc5b1c6a6dca408750"
+      ],
+      [
+        "npmx.dev/app/components/DepsStats/DependencyList.vue",
+        "14aa415db3eb0c48e5acce5307b42d1e6944fd12b0f8f1cb83726cf2b85c0729",
+        10696,
+        "eb6251721a7f424e0c4b157ae29e4b2d9f3b9161"
+      ],
+      [
+        "npmx.dev/app/components/DepsStats/DependencyStats.vue",
+        "86b53ff449a59e2ec95b9203785b0f1031afe4174179d1fe427afa92f5a744b6",
+        1438,
+        "afa34914378802dc56fabed77b7a4ab953715d8e"
+      ],
+      [
+        "npmx.dev/app/components/DepsStats/DependencyStatsPanel.vue",
+        "083bf63e56a04b9a757fd2f669085eb841cb2daa1c40e4be180758c70b472802",
+        5848,
+        "7dd1cacdeac8c4d29b816c0cbc318fb9cccdcd11"
+      ],
+      [
+        "npmx.dev/app/components/DepsStats/PackageJsonUpload.vue",
+        "018abcc7442a875e44c33a184ccfa3da7fe7f32ccfe909262f5387311e51f46f",
+        2545,
+        "47738b079becff3c61fc95cbbb7eab2e68f7a0c5"
+      ],
+      [
+        "npmx.dev/app/components/Noodle/Blender/Art.vue",
+        "3ea8dead5a6e6a4ec3a352fb8f441d14d69b90c19c0a2b0bc4e1654e8d8df302",
+        7611,
+        "161f06a56aa87cf86b7ceeb20ffb6257598f8d6e"
+      ],
+      [
+        "npmx.dev/app/components/Noodle/Blender/Logo.vue",
+        "1a089c46ac36421be60ec5e79169df1e22835485657be5eb4fe29c1b67dddf91",
+        1000,
+        "327e6520fa608993922a45d51adb343e25975728"
+      ],
+      [
+        "npmx.dev/app/components/Noodle/IojsNodejs/Logo.vue",
+        "3b42de84a53210a4eee45e994a6318a9b9106aaee1c4dbb8b30a83f21f75f5b0",
+        1411,
+        "9fcb64ddd75c98624211fd70badfbf5f109580b3"
+      ],
+      [
+        "npmx.dev/app/components/Package/Install/AdditionalCommands.vue",
+        "4101b5d50562820c042ce1602dfd934675fe21b2ba8987ef8d09dc409e0f7fa2",
+        11042,
+        "413659440eee3317e0b22a0dd611a747d2a63703"
+      ],
+      [
+        "npmx.dev/app/components/Package/Install/DownloadTarball.vue",
+        "acf65a89b923b76bb158919a056988a8d43d6fc842bb2bfb8fd5be716a4d184b",
+        1513,
+        "4fbb181f282aca7c3dd99f4c2051a6f4653625c4"
+      ],
+      [
+        "npmx.dev/app/components/Package/Install/Dropdown.vue",
+        "6711a9c3b1f258bba329e7877976d16f0f8b956bb94940ea9080d044b8173b2f",
+        7931,
+        "3d7c46d85afca1c3afd3631ccac7f0ed1af67bd6"
+      ],
+      [
+        "npmx.dev/app/components/Package/SecurityDowngradeAlert.vue",
+        "4063d5ea4c650012acd4bfbfb13c9c3c23410dfe62b10d736bff5294f8c162a3",
+        4320,
+        "4ca0e8cf4bd3f362c666a897e7ad9475a9d2a4bb"
+      ],
+      [
+        "npmx.dev/app/pages/tools/deps-stats.vue",
+        "ee61fe15d30ff381720f4ba248e0879d837a8e5c28eb74f401bf8bec7b55968f",
+        3034,
+        "1706410b0d95b6a9192e3a3279fafd46964a2d9a"
+      ],
+      [
+        "npmx.dev/app/pages/tools/index.vue",
+        "ae83d045fd611960be58f3f83319cb6bc720516e4be207ecc468d9861464ec2a",
+        1777,
+        "405e6257940fa1e9c7c03f26ae5e3cfe91019a91"
+      ]
+    ],
+    "removed": [
+      [
+        "npmx.dev/app/components/Package/DownloadButton.vue",
+        "b9069379fcaacefcec5573930115794936e3df1677f35f816198211a571ac9f0",
+        1066,
+        "dd4a24660558ee566247e71f32c6bf4d484ba5dc"
+      ],
+      [
+        "npmx.dev/app/components/Terminal/Install.vue",
+        "0d62b8c7562e497b4fd471a4982e8f96b91de17e76c467a653c745fe264d0e0a",
+        15499,
+        "53820015045ec1a378fb5252573f1ebf1b023b7a"
+      ]
+    ],
+    "changed": [
+      {
+        "old": [
+          "npmx.dev/app/app.vue",
+          "70e25a899ee3ec784055546bb9b330c1fd726477ce5222c867feda0f1f5c2fec",
+          5049,
+          "03fc939fb5aea407fed1c0c5d077a1349aad53d4"
+        ],
+        "new": [
+          "npmx.dev/app/app.vue",
+          "85b379728c8264d9923219ed5443b317bbefa97cc3ca95c1d3a6e2591cf23d33",
+          5058,
+          "738d2785291fbc43fcd8c00a931f5d958891a48b"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/AppFooter.vue",
+          "7e86094ceca915c5e506308293d0a559fc9bd58a3cf4b71013675c419aa788c9",
+          9188,
+          "4580671cd3818e4b7d10eb255abb8c495f830c5b"
+        ],
+        "new": [
+          "npmx.dev/app/components/AppFooter.vue",
+          "185398abd78c6b72d73ad45cc5d66458fcb591c40327532cb540ac3fe8a60ca1",
+          9262,
+          "67590100eebea24b42e86a94caa1b63f586fe614"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/AppHeader.vue",
+          "a3c534549485ce2c5f1eb7624dc1a7841dfe4ef7d26d907da430eb00f9e0933b",
+          10329,
+          "46a8d4cf9e680b33dc3047c64fe59e37866e18ab"
+        ],
+        "new": [
+          "npmx.dev/app/components/AppHeader.vue",
+          "3750e188da7e2c961eeba90748bbe95d6ecd978ee2db76354df11819352e8c42",
+          10541,
+          "223a2be7ef86c80c748ca4ed34280a82bf7e8782"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Changelog/Card.vue",
+          "c8b58c4e6182dcf07aa2acdfa4760fc9a2aa9987960099752ac2a3c700e2bff9",
+          2680,
+          "307a2ae7c1f5ab8bbc108a0a4e96a4aa03c7f973"
+        ],
+        "new": [
+          "npmx.dev/app/components/Changelog/Card.vue",
+          "2fbb2c3ce5d2237112abf55d93a8ccf7a4d4a0785144391bf00ce2265dbd15cc",
+          3123,
+          "c4dcfbb51f067b95bab5c6ba24886428f1a9d32b"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Changelog/ErrorMsg.vue",
+          "1e213cb76bddc872d3a16c493d72b224bfbe768f99c1db73cd8c380e890994d6",
+          473,
+          "22000d6cf911a737de1aa355b53057d5efb6941d"
+        ],
+        "new": [
+          "npmx.dev/app/components/Changelog/ErrorMsg.vue",
+          "1be17df47608efb106a64e9da63da5a502fbb63be24b8910f4a09d2e69495947",
+          474,
+          "901e846696307263303cc27fc99682398e42a002"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Changelog/Markdown.vue",
+          "1c0c206398cc382d95efad402f6c251b74f5438007ebbd2450fa7e138544e7e9",
+          1934,
+          "a81fd865414a2999675d8e6fa42cf60bc9cd131d"
+        ],
+        "new": [
+          "npmx.dev/app/components/Changelog/Markdown.vue",
+          "09b3c8a7cd4088e80759214bf66ef5bb07a7b087d067051f9c580c75ba7985c7",
+          2500,
+          "7c5dc9558efae2ce5fe2e8876b1654adefb3ae23"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Changelog/Releases.vue",
+          "100ff5e4a09346d89815d600a6744f10a39d7ce042a0d72a865e84dde97d7f4d",
+          2507,
+          "f89504d7ff89c1f91a690905eac5da6d2d9b8f0c"
+        ],
+        "new": [
+          "npmx.dev/app/components/Changelog/Releases.vue",
+          "51b5877e754db8e89f6bb35513dacb9f52a7c7f33969c0708200120caa43ad6b",
+          2753,
+          "0d0388ccd15437e71a6a658a495536c70453f7af"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Chart/SplitSparkline.vue",
+          "a6a5d3acc41448d54ff7e06393699c505f860426b6d92246678727b193b86777",
+          7954,
+          "7b9fee5c6fecda45ac0de9454034a1a2d2302a85"
+        ],
+        "new": [
+          "npmx.dev/app/components/Chart/SplitSparkline.vue",
+          "5c7d3d9a7ebe03a2777443c29ac77d41c6f5a8305655a19ff0a3d86fff099dc5",
+          11755,
+          "9cb6761efdcf9ee64dacc2ffdeec489206d60934"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Compare/LineChart.vue",
+          "2a3819fc27dcf92c32c3c3bbf872fb7b2d72d55a7fa41274e73b5d93339a8dad",
+          293,
+          "deeda8ed921f30b0efcf99a5e50e61d160adc46c"
+        ],
+        "new": [
+          "npmx.dev/app/components/Compare/LineChart.vue",
+          "379d15c55176522af9aede0fe627e3e1dd3f9cc92d35949c8fcc1bb03c6b9643",
+          275,
+          "5f440ee4e22739d7d1b02aaa31157916b6e4fbb0"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/LogoContextMenu.vue",
+          "c6276e622704a4b84a7b07eb3fca2e82fc8b3e1a2d81aca09159669539e04868",
+          3559,
+          "873c8d322dc4acb89c4fbd31ecb3a9ba00b13dd6"
+        ],
+        "new": [
+          "npmx.dev/app/components/LogoContextMenu.vue",
+          "a537d1d854dad2163037705b87dc88f3f1805a3d4252731beed63285b7609968",
+          4032,
+          "c659342e771db902f25b78ca4430706b0ef988c8"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/OgImage/Package.takumi.vue",
+          "068dec1fec411f5663827c2c8c1a79f303dd1faf7cfb9c566e8f162c4d2fa68b",
+          15447,
+          "8597c7bca3ed1a00927cbe4ecc5a5f1c8fcd3553"
+        ],
+        "new": [
+          "npmx.dev/app/components/OgImage/Package.takumi.vue",
+          "71b4b198f28e96595a84c6c989a5c17b40a51154c0d0335582f71b0f1f9734ba",
+          15533,
+          "adf9bb11a7e2c7248dfd37d502cae1d71a70f405"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/Dependencies.vue",
+          "042206580aff1155ed8e3f950f8380d3477d4303b9ea64b081a0e3d4d40ffdc7",
+          11218,
+          "649bfb34a5c85e5bd5f7de9a957a6d1f9863de7a"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/Dependencies.vue",
+          "8a0e1bc51b45a949bc35a2bc6360433c21226f6d5196c5b9673fe32c89157390",
+          14473,
+          "35657daadbed81a1ab3c4f6248578d69f9106641"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/Header.vue",
+          "814c405eb09ff0b3a41652dad5744278bf0c15ff6259b72a55dda4596e11325f",
+          14395,
+          "e01e0dc03b5ba03ac213280e96c384b5e51312d6"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/Header.vue",
+          "e709d041d42e1c0d3c1229fb4084817400bbcfda45b0e17d74d92d3fa0972eb5",
+          13979,
+          "1e0a0e813f370ab8d9be6178e21ad9edcf427bc8"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/ManagerSelect.vue",
+          "94bac4bd575a4fd3a2f5016b70cd58b320984cab5ad48c21d08dcc740597f642",
+          6073,
+          "11b1bfb93a1dbeff89bb4d76b0bfa624639bd28c"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/ManagerSelect.vue",
+          "8634556b3805addaafdda6c2a7d6c7f29bd1c75fde20f9ecf76ff9c898ed8075",
+          6132,
+          "d554ea439fafc099baf6e3c91713ff01e4ebef23"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/SelectionCheckbox.vue",
+          "9e1e39b568b4fdacf87960e23721cc00c13fbab2a005f85fc2f19511593e61a9",
+          1443,
+          "dddebc46728e0965ca92b5ec3b26690f1a4311b3"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/SelectionCheckbox.vue",
+          "5ac09a5a4394d669d5f8bc211c5c2a9fda2f543122faec1cb0c35850d05ef720",
+          1469,
+          "2c1718a8c259b7193d52b038df6e6b29d58a6330"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/Skeleton.vue",
+          "d6c966d45286f518baa9463e2408a60e6e7301c1adda39e42937fa9370b5fbd2",
+          17326,
+          "0c2409fd64b5c462a3869a912e589fef4c4a810b"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/Skeleton.vue",
+          "ceae735da7f496506aea988e493859789488dc1d95f28a1d5c8f9835d77cfa07",
+          16254,
+          "77a5963e5435c78cca8dcf9bd177e0d03caecf1b"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/SkillsModal.vue",
+          "296eb83843a8be1d206011ea081873cbfa08d9989d4f3ab35cea07aaefcfc483",
+          9676,
+          "34892bb8d90d7201846e8a75db7d3a91f3656894"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/SkillsModal.vue",
+          "e837b0aa0e5a35a1ffced8f179860e59efb253988fda96f27bdc96bb201d56b6",
+          9638,
+          "76aca381637fd64385a77d2e71acdfb2c6faba28"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/TimelineChart.vue",
+          "ac46621572df667eda0e51d8acfb96060dee6e90044191c0bac72c25ee061bc5",
+          37629,
+          "db081e3741b908bd61b75e2ff5e06a70e463961f"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/TimelineChart.vue",
+          "39c713746c5392debba2fb922216aae30d3616caff77c467906c5b251b6cdd33",
+          38641,
+          "645b7687f85c59eef71e0a4df7edfa2eb311bbcc"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/TimelineChartXySvgSlot.vue",
+          "212dab1e997fbc12a16fd1692c75c883af75923476d78dab1b329a9a614adc54",
+          2562,
+          "ec38d6badda7182ac9fa9726151a3b8830ca2699"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/TimelineChartXySvgSlot.vue",
+          "9054ae3fffc1f5704ef1639fcdbefff394b9418d9f6781f69d24c30af01fa491",
+          3398,
+          "e9e2886930089533ada44b6fca5218fc7d67e558"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/TimelineChartXyTooltip.vue",
+          "d7491192ce5fb3c015ce82e63bd3f8070fd85fac401efe4404783bbbdeb22ad8",
+          2526,
+          "b6824429f02a80a289670f6185a5ff126ff6fea3"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/TimelineChartXyTooltip.vue",
+          "871cd74fc49c829e24cf3962f3d89c7a04c2660051304721ffedd4d56a42494e",
+          2757,
+          "3ad2cdaf48d3fd2574393618448abde112f81c58"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/TrendsChart.vue",
+          "5803cdbeb059265af00cd35167135e18062f0ab98be1028124320832004263cb",
+          71453,
+          "35ee116b3dae86a096db83609dc71270a09968b4"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/TrendsChart.vue",
+          "0bc9048571e5507062bbd52ccb767b05811369f235b9aa35df4d7f1f36894889",
+          80140,
+          "ceda0bfcebe64f1816b885c4077476a046d85d20"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/VersionDistribution.vue",
+          "ded08ce4ba6437987506ee1a17f13040cfa749220ed9d53f0b8a766f283b5d3b",
+          24949,
+          "7602331cc849fe18f103121c2d31c9e84dce78cf"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/VersionDistribution.vue",
+          "c9e022ecd25a6aa54c4b7b01178f3647b3e3247ba9d7de1392909f1aa472b579",
+          20018,
+          "ec01aa78f9ceea9a7146d3bc6e4b648be0d3e0e7"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Package/WeeklyDownloadStats.vue",
+          "74d02200444212d9629f20f6b744dfb8cf3e0e261908bc89266896c43209c565",
+          12225,
+          "0f7877f5cd0be954a54146ed93030a881a462678"
+        ],
+        "new": [
+          "npmx.dev/app/components/Package/WeeklyDownloadStats.vue",
+          "024c99268b715fd9e7ea098cb432820a3640a959f4a031b712cd508b3f62434c",
+          12465,
+          "2dca910742d6ae14a43b5981ae7258d8c3b12787"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/ReadmeTocDropdown.vue",
+          "0b59af4fad6ab0764f89a77d3d9958b66ff20c218b84f2e036cb5d9690dd9c33",
+          7998,
+          "3e86018230f0e3d74eb37a15a1bb335ee294a053"
+        ],
+        "new": [
+          "npmx.dev/app/components/ReadmeTocDropdown.vue",
+          "6da714e592ddd5263a47cd9469b154ccda4bbdbd8ba52e8f256601082c0708da",
+          8018,
+          "d40268d715f5256ef2d017ab50d7d663268e2eb2"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/Terminal/Execute.vue",
+          "bf7595b2c6b3a5d4da65a60338b606b407e265b67922eff4db513c58f9fb0abc",
+          3071,
+          "c9106d0126a76e5feeda56ed87c1979a8b162c49"
+        ],
+        "new": [
+          "npmx.dev/app/components/Terminal/Execute.vue",
+          "11bb7804fac0c28e55b31510bf68b060aeb73213426da391661faf78cd340e3f",
+          3083,
+          "5dc5260a06ba72fa85d52d9d01c60ed887ee0da0"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/components/global/BlogPostWrapper.vue",
+          "744829cf298214a4041699078494cfcdb820e233432cce845d6026cb4171499a",
+          3156,
+          "f00a912577294efb11d30861c972ad323003d252"
+        ],
+        "new": [
+          "npmx.dev/app/components/global/BlogPostWrapper.vue",
+          "e30f00faf3e5d241051192224e8ec2fee214ff25a4996cf685c4a6d69cd42100",
+          3209,
+          "9947b51790823f5c0687ddd16fd6b85519fde0a7"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/pages/org/[org].vue",
+          "81895a6de01be99300bcaa6bf73e7f375d62b8a19c96499d46154ff212a17fe1",
+          11467,
+          "47c2fa2fc9bbda7ff5d3fdc42ec92403aa59278d"
+        ],
+        "new": [
+          "npmx.dev/app/pages/org/[org].vue",
+          "11704a8649ab90ffd8a59815820b2f88dcd83b0d4645e11e52f75fde80d4d828",
+          14545,
+          "a7082c829667bd55c20014d0bbf333185fc7b4c2"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/pages/package/[[org]]/[name]/versions.vue",
+          "a18bd9293f0b88d01ce4f90e4bcf7d2b16fe0dcb64a37667a938a42d48f6f91c",
+          31407,
+          "8687ccec183d13335d2cc568a91bf73140c6929d"
+        ],
+        "new": [
+          "npmx.dev/app/pages/package/[[org]]/[name]/versions.vue",
+          "4030a6d6ecc2d47ddec5c76c2fdfed168915fc9082bfe4b5a36a42de92d5f876",
+          31773,
+          "fdbe0a01728477b39c53b498b6fa998b48a37248"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/pages/package/[[org]]/[name].vue",
+          "7f183b0235667d5de3d851cb13e742b0de92e7518768cbb89521f57d3da4850d",
+          45254,
+          "23de9e3b0bd37d54558dbc2a67ec18bc0d54b2dc"
+        ],
+        "new": [
+          "npmx.dev/app/pages/package/[[org]]/[name].vue",
+          "4a148e10098f9f79a300992056b4846ca233a1879f42c7029378a760fe46ab9c",
+          38983,
+          "ac88e3c315bf10849bb90381b9b031c62f58373e"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/pages/package-changelog/[[org]]/[name].vue",
+          "a4376d2b0c86f3df0c8c5adca8d59521ff64d0bafdb24665b30bb5493c76792e",
+          6069,
+          "a1c0ed6661d2d498452a05e913856f981a76b5b0"
+        ],
+        "new": [
+          "npmx.dev/app/pages/package-changelog/[[org]]/[name].vue",
+          "1a55eb86911b9a0ee0f1fe90662518fd9622126cb36353b369994a8774d5923e",
+          6521,
+          "73e4ad2a7a2aa4e486fedbd021dae98d15c8513e"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/pages/package-docs/[...path].vue",
+          "c83f9c623c52b0c1610029974c88b75807ff5406354982e5e4cf0e9167e9f66d",
+          13458,
+          "76e50e38db2bde7126a115953c6ba1d2c6eaa4cf"
+        ],
+        "new": [
+          "npmx.dev/app/pages/package-docs/[...path].vue",
+          "15729540849ea3db6d929f02a1f8500948058d7feb9aabf35524eb52767c8e2e",
+          14235,
+          "e8e3799724472926e0898bf61cd67e6384ad1a5a"
+        ]
+      },
+      {
+        "old": [
+          "npmx.dev/app/pages/package-timeline/[[org]]/[packageName].vue",
+          "01f89bba16e3e4164552d8e9ced142e68a1e513be270e67067b92c59a2558c0a",
+          14976,
+          "a86c3f2af3c843e092c5f190d16686089ed287a1"
+        ],
+        "new": [
+          "npmx.dev/app/pages/package-timeline/[[org]]/[packageName].vue",
+          "50910ae8e00da781656487777f7bd3c3a6790b18d333bd5c44b96001719e0ae1",
+          18710,
+          "596e6370da23b4975962ebd2151e503815533275"
+        ]
+      }
+    ],
+    "targetMembership": [
+      "npmx.dev/app/app.vue",
+      "npmx.dev/app/components/About/GovernanceList.vue",
+      "npmx.dev/app/components/About/LogoImg.vue",
+      "npmx.dev/app/components/About/LogoList.vue",
+      "npmx.dev/app/components/Alert.vue",
+      "npmx.dev/app/components/AppFooter.vue",
+      "npmx.dev/app/components/AppHeader.vue",
+      "npmx.dev/app/components/AppLogo.vue",
+      "npmx.dev/app/components/AppMark.vue",
+      "npmx.dev/app/components/AuthorAvatar.vue",
+      "npmx.dev/app/components/AuthorList.vue",
+      "npmx.dev/app/components/BackButton.vue",
+      "npmx.dev/app/components/BaseCard.vue",
+      "npmx.dev/app/components/BlogPostListCard.vue",
+      "npmx.dev/app/components/BlueskyComment.vue",
+      "npmx.dev/app/components/BlueskyComments.vue",
+      "npmx.dev/app/components/Brand/Customize.vue",
+      "npmx.dev/app/components/BuildEnvironment.vue",
+      "npmx.dev/app/components/Button/Base.vue",
+      "npmx.dev/app/components/Button/CopyMd.vue",
+      "npmx.dev/app/components/Button/Group.vue",
+      "npmx.dev/app/components/CallToAction.vue",
+      "npmx.dev/app/components/Changelog/Card.vue",
+      "npmx.dev/app/components/Changelog/ErrorMsg.vue",
+      "npmx.dev/app/components/Changelog/Markdown.vue",
+      "npmx.dev/app/components/Changelog/Releases.vue",
+      "npmx.dev/app/components/Changelog/Skeleton.vue",
+      "npmx.dev/app/components/Chart/CopyPngButton.vue",
+      "npmx.dev/app/components/Chart/SplitSparkline.vue",
+      "npmx.dev/app/components/Code/DirectoryListing.vue",
+      "npmx.dev/app/components/Code/FileTree.vue",
+      "npmx.dev/app/components/Code/Header.vue",
+      "npmx.dev/app/components/Code/MobileTreeDrawer.vue",
+      "npmx.dev/app/components/Code/SkeletonLoader.vue",
+      "npmx.dev/app/components/Code/Viewer.vue",
+      "npmx.dev/app/components/CollapsibleSection.vue",
+      "npmx.dev/app/components/ColorScheme/Img.vue",
+      "npmx.dev/app/components/ColumnPicker.vue",
+      "npmx.dev/app/components/CommandPalette.client.vue",
+      "npmx.dev/app/components/Compare/ComparisonGrid.vue",
+      "npmx.dev/app/components/Compare/FacetBarChart.vue",
+      "npmx.dev/app/components/Compare/FacetCard.vue",
+      "npmx.dev/app/components/Compare/FacetRow.vue",
+      "npmx.dev/app/components/Compare/FacetScatterChart.vue",
+      "npmx.dev/app/components/Compare/FacetSelector.vue",
+      "npmx.dev/app/components/Compare/LineChart.vue",
+      "npmx.dev/app/components/Compare/PackageSelector.vue",
+      "npmx.dev/app/components/Compare/ReplacementSuggestion.vue",
+      "npmx.dev/app/components/CopyToClipboardButton.vue",
+      "npmx.dev/app/components/DateTime.vue",
+      "npmx.dev/app/components/DependencyPathPopup.vue",
+      "npmx.dev/app/components/DepsStats/DependencyList.vue",
+      "npmx.dev/app/components/DepsStats/DependencyStats.vue",
+      "npmx.dev/app/components/DepsStats/DependencyStatsPanel.vue",
+      "npmx.dev/app/components/DepsStats/PackageJsonUpload.vue",
+      "npmx.dev/app/components/Diff/FileTree.vue",
+      "npmx.dev/app/components/Diff/Hunk.vue",
+      "npmx.dev/app/components/Diff/Line.vue",
+      "npmx.dev/app/components/Diff/MobileSidebarDrawer.vue",
+      "npmx.dev/app/components/Diff/SidebarPanel.vue",
+      "npmx.dev/app/components/Diff/SkipBlock.vue",
+      "npmx.dev/app/components/Diff/Table.vue",
+      "npmx.dev/app/components/Diff/ViewerPanel.vue",
+      "npmx.dev/app/components/Filter/Chips.vue",
+      "npmx.dev/app/components/Filter/Panel.vue",
+      "npmx.dev/app/components/Header/AccountMenu.client.vue",
+      "npmx.dev/app/components/Header/AccountMenu.server.vue",
+      "npmx.dev/app/components/Header/AuthModal.client.vue",
+      "npmx.dev/app/components/Header/ConnectorModal.vue",
+      "npmx.dev/app/components/Header/MobileMenu.client.vue",
+      "npmx.dev/app/components/Header/OrgsDropdown.vue",
+      "npmx.dev/app/components/Header/PackagesDropdown.vue",
+      "npmx.dev/app/components/Header/SearchBox.vue",
+      "npmx.dev/app/components/Input/Base.vue",
+      "npmx.dev/app/components/InstantSearch.vue",
+      "npmx.dev/app/components/Landing/IntroHeader.vue",
+      "npmx.dev/app/components/LicenseChangeWarning.vue",
+      "npmx.dev/app/components/LicenseDisplay.vue",
+      "npmx.dev/app/components/Link/Base.vue",
+      "npmx.dev/app/components/LoadingSpinner.vue",
+      "npmx.dev/app/components/LogoContextMenu.vue",
+      "npmx.dev/app/components/Modal.client.vue",
+      "npmx.dev/app/components/Noodle/Artemis/Logo.vue",
+      "npmx.dev/app/components/Noodle/Blender/Art.vue",
+      "npmx.dev/app/components/Noodle/Blender/Logo.vue",
+      "npmx.dev/app/components/Noodle/EmojiDay/Logo.vue",
+      "npmx.dev/app/components/Noodle/EmojiDay/ThemedLogo.vue",
+      "npmx.dev/app/components/Noodle/GifDay/GifText.vue",
+      "npmx.dev/app/components/Noodle/GifDay/Logo.vue",
+      "npmx.dev/app/components/Noodle/IojsNodejs/Logo.vue",
+      "npmx.dev/app/components/Noodle/Kawaii/Logo.vue",
+      "npmx.dev/app/components/Noodle/Lens.vue",
+      "npmx.dev/app/components/Noodle/ListCard.vue",
+      "npmx.dev/app/components/Noodle/Nodejs/Logo.vue",
+      "npmx.dev/app/components/Noodle/Press/Logo.vue",
+      "npmx.dev/app/components/Noodle/Pride1/Logo.vue",
+      "npmx.dev/app/components/Noodle/Pride2/Logo.vue",
+      "npmx.dev/app/components/Noodle/Pride3/Logo.vue",
+      "npmx.dev/app/components/Noodle/Tetris/Logo.vue",
+      "npmx.dev/app/components/Noodle/TransgenderVisibility/Logo.vue",
+      "npmx.dev/app/components/OgBrand.vue",
+      "npmx.dev/app/components/OgImage/BlogPost.takumi.vue",
+      "npmx.dev/app/components/OgImage/Compare.takumi.vue",
+      "npmx.dev/app/components/OgImage/Noodle.takumi.vue",
+      "npmx.dev/app/components/OgImage/Package.takumi.vue",
+      "npmx.dev/app/components/OgImage/Page.takumi.vue",
+      "npmx.dev/app/components/OgImage/Profile.takumi.vue",
+      "npmx.dev/app/components/OgImage/Splash.takumi.vue",
+      "npmx.dev/app/components/OgImage/UserProfile.takumi.vue",
+      "npmx.dev/app/components/OgLayout.vue",
+      "npmx.dev/app/components/Org/MembersPanel.vue",
+      "npmx.dev/app/components/Org/OperationsQueue.vue",
+      "npmx.dev/app/components/Org/TeamsPanel.vue",
+      "npmx.dev/app/components/Package/AccessControls.vue",
+      "npmx.dev/app/components/Package/ActionBar.vue",
+      "npmx.dev/app/components/Package/Card.vue",
+      "npmx.dev/app/components/Package/ClaimPackageModal.vue",
+      "npmx.dev/app/components/Package/Compatibility.vue",
+      "npmx.dev/app/components/Package/Dependencies.vue",
+      "npmx.dev/app/components/Package/DeprecatedTree.vue",
+      "npmx.dev/app/components/Package/ExternalLinks.vue",
+      "npmx.dev/app/components/Package/Header.vue",
+      "npmx.dev/app/components/Package/Install/AdditionalCommands.vue",
+      "npmx.dev/app/components/Package/Install/DownloadTarball.vue",
+      "npmx.dev/app/components/Package/Install/Dropdown.vue",
+      "npmx.dev/app/components/Package/InstallScripts.vue",
+      "npmx.dev/app/components/Package/Keywords.vue",
+      "npmx.dev/app/components/Package/LikeCard.vue",
+      "npmx.dev/app/components/Package/Likes.vue",
+      "npmx.dev/app/components/Package/List.vue",
+      "npmx.dev/app/components/Package/ListControls.vue",
+      "npmx.dev/app/components/Package/ListToolbar.vue",
+      "npmx.dev/app/components/Package/Maintainers.vue",
+      "npmx.dev/app/components/Package/ManagerSelect.vue",
+      "npmx.dev/app/components/Package/MetricsBadges.vue",
+      "npmx.dev/app/components/Package/Playgrounds.vue",
+      "npmx.dev/app/components/Package/Replacement.vue",
+      "npmx.dev/app/components/Package/SecurityDowngradeAlert.vue",
+      "npmx.dev/app/components/Package/SelectionCheckbox.vue",
+      "npmx.dev/app/components/Package/SelectionView.vue",
+      "npmx.dev/app/components/Package/Sidebar.vue",
+      "npmx.dev/app/components/Package/SizeDecrease.vue",
+      "npmx.dev/app/components/Package/SizeIncrease.vue",
+      "npmx.dev/app/components/Package/Skeleton.vue",
+      "npmx.dev/app/components/Package/SkillsCard.vue",
+      "npmx.dev/app/components/Package/SkillsModal.vue",
+      "npmx.dev/app/components/Package/Table.vue",
+      "npmx.dev/app/components/Package/TableRow.vue",
+      "npmx.dev/app/components/Package/TimelineChart.vue",
+      "npmx.dev/app/components/Package/TimelineChartDepSizeSvgSlot.vue",
+      "npmx.dev/app/components/Package/TimelineChartDepSizeTooltip.vue",
+      "npmx.dev/app/components/Package/TimelineChartXySvgSlot.vue",
+      "npmx.dev/app/components/Package/TimelineChartXyTooltip.vue",
+      "npmx.dev/app/components/Package/TrendsChart.vue",
+      "npmx.dev/app/components/Package/VersionDistribution.vue",
+      "npmx.dev/app/components/Package/Versions.vue",
+      "npmx.dev/app/components/Package/VulnerabilityTree.vue",
+      "npmx.dev/app/components/Package/WeeklyDownloadStats.vue",
+      "npmx.dev/app/components/PackageProvenanceSection.vue",
+      "npmx.dev/app/components/PaginationControls.vue",
+      "npmx.dev/app/components/ProgressBar.vue",
+      "npmx.dev/app/components/ProvenanceBadge.vue",
+      "npmx.dev/app/components/Readme.vue",
+      "npmx.dev/app/components/ReadmeTocDropdown.vue",
+      "npmx.dev/app/components/ScrollToTop.client.vue",
+      "npmx.dev/app/components/SearchProviderToggle.client.vue",
+      "npmx.dev/app/components/SearchProviderToggle.server.vue",
+      "npmx.dev/app/components/SearchSuggestionCard.vue",
+      "npmx.dev/app/components/Select/Base.vue",
+      "npmx.dev/app/components/Select/Field.vue",
+      "npmx.dev/app/components/Settings/AccentColorPicker.vue",
+      "npmx.dev/app/components/Settings/BgThemePicker.vue",
+      "npmx.dev/app/components/Settings/FgThemePicker.vue",
+      "npmx.dev/app/components/Settings/Toggle.client.vue",
+      "npmx.dev/app/components/Settings/Toggle.server.vue",
+      "npmx.dev/app/components/Settings/TranslationHelper.vue",
+      "npmx.dev/app/components/SkeletonBlock.vue",
+      "npmx.dev/app/components/SkeletonInline.vue",
+      "npmx.dev/app/components/Tab/Item.vue",
+      "npmx.dev/app/components/Tab/List.vue",
+      "npmx.dev/app/components/Tab/Panel.vue",
+      "npmx.dev/app/components/Tab/Root.vue",
+      "npmx.dev/app/components/Tag/RadioButton.vue",
+      "npmx.dev/app/components/Tag/Static.vue",
+      "npmx.dev/app/components/Terminal/Execute.vue",
+      "npmx.dev/app/components/Tooltip/Announce.vue",
+      "npmx.dev/app/components/Tooltip/App.vue",
+      "npmx.dev/app/components/Tooltip/Base.vue",
+      "npmx.dev/app/components/Translation/StatusByFile.unused.vue",
+      "npmx.dev/app/components/User/Avatar.vue",
+      "npmx.dev/app/components/UserCombobox.vue",
+      "npmx.dev/app/components/VersionSelector.vue",
+      "npmx.dev/app/components/VideoPlayer.vue",
+      "npmx.dev/app/components/ViewModeToggle.vue",
+      "npmx.dev/app/components/global/BlogPostFederatedArticles.vue",
+      "npmx.dev/app/components/global/BlogPostWrapper.vue",
+      "npmx.dev/app/components/global/BlueskyPostEmbed.client.vue",
+      "npmx.dev/app/error.vue",
+      "npmx.dev/app/pages/about.vue",
+      "npmx.dev/app/pages/accessibility.vue",
+      "npmx.dev/app/pages/blog/index.vue",
+      "npmx.dev/app/pages/brand.vue",
+      "npmx.dev/app/pages/compare.vue",
+      "npmx.dev/app/pages/diff/[[org]]/[packageName]/v/[versionRange].vue",
+      "npmx.dev/app/pages/index.vue",
+      "npmx.dev/app/pages/leaderboard/likes.vue",
+      "npmx.dev/app/pages/noodles/[slug].vue",
+      "npmx.dev/app/pages/noodles/index.vue",
+      "npmx.dev/app/pages/org/[org].vue",
+      "npmx.dev/app/pages/package/[[org]]/[name]/index.vue",
+      "npmx.dev/app/pages/package/[[org]]/[name]/v/[version].vue",
+      "npmx.dev/app/pages/package/[[org]]/[name]/versions.vue",
+      "npmx.dev/app/pages/package/[[org]]/[name].vue",
+      "npmx.dev/app/pages/package-changelog/[[org]]/[name]/index.vue",
+      "npmx.dev/app/pages/package-changelog/[[org]]/[name]/v/[version].vue",
+      "npmx.dev/app/pages/package-changelog/[[org]]/[name].vue",
+      "npmx.dev/app/pages/package-code/[[org]]/[packageName]/v/[version]/[...filePath].vue",
+      "npmx.dev/app/pages/package-docs/[...path].vue",
+      "npmx.dev/app/pages/package-stats/[[org]]/[packageName].vue",
+      "npmx.dev/app/pages/package-timeline/[[org]]/[packageName].vue",
+      "npmx.dev/app/pages/pds.vue",
+      "npmx.dev/app/pages/privacy.vue",
+      "npmx.dev/app/pages/profile/[identity]/index.vue",
+      "npmx.dev/app/pages/recharging.vue",
+      "npmx.dev/app/pages/search.vue",
+      "npmx.dev/app/pages/settings.vue",
+      "npmx.dev/app/pages/sponsors.vue",
+      "npmx.dev/app/pages/tools/deps-stats.vue",
+      "npmx.dev/app/pages/tools/index.vue",
+      "npmx.dev/app/pages/translation-status.vue",
+      "npmx.dev/app/pages/~[username]/index.vue",
+      "npmx.dev/app/pages/~[username]/orgs.vue",
+      "npmx.dev/docs/app/components/AppHeaderCTA.vue",
+      "npmx.dev/docs/app/components/AppHeaderLogo.vue",
+      "npmx.dev/docs/app/components/BadgeGenerator.vue",
+      "npmx.dev/docs/app/components/BadgeGeneratorParameters.vue"
+    ]
+  }
+}

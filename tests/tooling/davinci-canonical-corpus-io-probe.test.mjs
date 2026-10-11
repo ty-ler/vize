@@ -52,6 +52,9 @@ void test("serialized IO evidence retains source custody without becoming a snap
     assert.equal(receipt[key], identity[key]);
   assert.deepEqual(receipt.summaries, summaries);
   assert.equal(receipt.success, false, "A failing original case cannot be reported as successful");
+  assert.equal(receipt.files, 44367);
+  assert.equal(receipt.jellyfinFiles, 5576);
+  assert.equal(receipt.gitlinks, 148);
   assert.equal(identity.schema, "vize.canonical-corpus-identity");
 });
 
