@@ -1,21 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import fs from "node:fs";
+import { projectConfigManifest as manifest } from "./warm-type-backed-project-config-manifest.ts";
 
 type BodyDigest = (side: "before" | "after", file: string) => string | null;
-const manifest = JSON.parse(
-  fs.readFileSync(
-    new URL("./warm-type-backed-project-config-manifest.json", import.meta.url),
-    "utf8",
-  ),
-) as {
-  version: number;
-  originalSource: string;
-  reviewedSource: string;
-  files: Array<[string, string | null, string]>;
-  preservedBodies: Array<[string, string, string]>;
-  harnessExtensions: Array<[string, null, string]>;
-};
 const manifestSHA256 = createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
 assert.equal(manifestSHA256, "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc");
 assert.equal(manifest.version, 2);
