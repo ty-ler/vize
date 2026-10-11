@@ -1,7 +1,7 @@
 {
   "version": 1,
   "originalSource": "d45d45908a09cf8931b141fbc92fea8d11c56414",
-  "reviewedSource": "001619c2b7975f02c7e9bf0d08c10959d6bd4556",
+  "reviewedSource": "12a45db2c5d46319a6267625d6569df12cb01ff4",
   "files": [
     "crates/vize/tests/lsp_generic_prop_hover_cli.rs\t3a2a4fae64ef23c1b444e4268fbe4416fbc3f5d8e5b9e2f90bcd018e65d4a865\t0f58949907c9a06b5feb7e9d4369c816b36fcc6dec62f662b3d03742c241c8f3",
     "crates/vize/tests/lsp_generic_prop_hover_cli/template_props.rs\t-\t5520a11484d30a7b07163e3391abcc41e862ef5dc278a753fee4e1ffeb22ea56",
@@ -29,7 +29,7 @@
     "crates/vize_canon/src/batch/virtual_project/dependency_scan/package_roots/tests.rs\t-\tfa35860b588eaacc8a5e8a4923de785d91db8456c21f920109f860c2f9d2a529",
     "crates/vize_canon/src/batch/virtual_project/dependency_scan/parsed_sources.rs\t-\t32635a244cf2d20bd8fc2d2bd438e81dd0ea5c1f32039e6c81d1bc3dabe840b2",
     "crates/vize_canon/src/batch/virtual_project/dependency_scan/parsed_sources/tests.rs\t-\t4566e3a77f791234b3c363af1280af26d3d5585aff3ba0d8183e7672ca48c809",
-    "crates/vize_canon/src/batch/virtual_project/dependency_scan/parsed_sources/tests/walk.rs\t-\td30cba0e299a8c17cac793ae95f271c35d189f75c32f0c18a44d8ab3a680377b",
+    "crates/vize_canon/src/batch/virtual_project/dependency_scan/parsed_sources/tests/walk.rs\t-\t490638294467629fb3c255978a42c496cb6e68efd971d8edb4068ee4fb567018",
     "crates/vize_canon/src/batch/virtual_project/dependency_scan/resolution.rs\t3d97f55712486403c0accc0db1121391ab70140177deb8630ce591e4df4781e8\tc6fd563657ff482e17deeb6a32a5c23f58d2c46216e875db9e95e02d7354d857",
     "crates/vize_canon/src/batch/virtual_project/dependency_scan/resolution/candidates.rs\t-\t74e808bfccea1d5427baf35acef0b2946e565af483ede8ffc0a255a461950013",
     "crates/vize_canon/src/batch/virtual_project/editor_projection.rs\t8226892a84e1568ced70ac4e93d440d500d17774eead9a666e4b16d85a004574\t71fef572014532d9b1278e690b5f640e4ea6f1c0c33d94b34a2a3e00aef48a47",
