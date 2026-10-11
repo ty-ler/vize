@@ -27,6 +27,8 @@ use std::{
     },
 };
 use vize_l0::{FxHashMap, FxHashSet, String, cstr};
+#[cfg(all(test, unix))]
+mod batch_provider_receipt;
 #[cfg(test)]
 mod batch_test_receipt;
 mod call_hierarchy;
