@@ -106,3 +106,14 @@ cannot rely on native type-check dependency watchers. The real extension-host
 fixture adds complete initialization-option vectors for Vite, dedicated and
 nested TypeScript content edits; all original seven discovery inputs, complete
 assertions and deadlines remain intact. Actual Actions execution is required.
+
+## Editor configuration supersession
+
+An older nested marker search must not replace a completed newer result. The
+discovery owner commits only its latest invocation, including callers without
+a lifecycle generation. Release resolution receives the caller's generation
+and refuses further status changes, downloads, checksum verification or archive
+extraction after an awaited operation is superseded by disable or restart.
+Production-function tests reverse both nested creation/deletion completions and
+disable at every asynchronous release boundary. The original successful
+discovery traces, download/checksum sequence and editor-host deadlines remain.
