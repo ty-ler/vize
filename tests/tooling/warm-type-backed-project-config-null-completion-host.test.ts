@@ -51,7 +51,8 @@ await test("the current whole bodies qualify only with the explicit successor an
       return null;
     }
   };
-  const result = qualifyProjectConfigNullCompletionHost(production, new Set(), actual) ??
+  const result =
+    qualifyProjectConfigNullCompletionHost(production, new Set(), actual) ??
     qualifyIssuedCompletionHost(issuedCompletionProduction, new Set(), actual) ??
     qualifyCurrentConfigReviewHost(new Set(), actual);
   if (result) {
@@ -62,7 +63,10 @@ await test("the current whole bodies qualify only with the explicit successor an
       await import("./support/component-issued-source.ts");
     const child = qualifyCurrentComponentOwnerSource();
     assert.ok(child);
-    assert.equal(child.files.length, "issuedCompletionContext" in child ? 119 : 113);
+    if ("configReviewContext" in child) {
+      assert.equal(child.files.length, 135);
+      assert.equal(child.originalQualification.files.length, 119);
+    } else assert.equal(child.files.length, "issuedCompletionContext" in child ? 119 : 113);
     assert.equal(child.completeComponentBodies, 28);
     assert.equal(child.inheritedProductionBodies, 90);
     assert.equal(child.inheritedCustodyBodies, 51);

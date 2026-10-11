@@ -146,6 +146,19 @@ if (process.argv[2] === "prepare") {
       ) ??
       qualifyComponentIssuedHost(production, allowed, (side, file) =>
         gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+      ) ??
+      qualifyConfigReviewHost(
+        production,
+        allowed,
+        (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+        qualifyComponentIssuedHost,
+        "inherited",
+      ) ??
+      qualifyConfigReviewHost(
+        production,
+        allowed,
+        (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+        qualifyComponentIssuedHost,
       ))
     : null;
   if (!cut) {
