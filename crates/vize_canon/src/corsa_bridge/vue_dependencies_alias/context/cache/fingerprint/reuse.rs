@@ -270,6 +270,10 @@ impl ContextFingerprint {
                 return Err(SourceGuard::PackageInput);
             }
             if !known.contains(path) {
+                #[cfg(test)]
+                eprintln!(
+                    "original weak resolution refusal: path={path:?}; known={known:?}; stamp={stamp:?}"
+                );
                 return Err(SourceGuard::ResolutionInput);
             }
             changes.changed.push(path.to_path_buf());

@@ -149,3 +149,11 @@ later inferred-dependency failures are independent defects.
 #3952, #8142 and #8520 remain unfinished until their exact-head gates, actual merge
 and fresh released-consumer acceptance succeed. The 10x target is separate from
 any measurement in this record.
+
+Run `38110438552` on `6b747c4c00` retained exactly the same six context
+failures with production Clippy passing. Rename preflight accepted the original
+deleted-body/probe proof, then source patch refused. Test-only phase evidence
+and uncaptured original law output now identify that refusal and the separate
+weak-resolution guard; all predicates, complete values and assertions remain.
+The callback carries all thirteen original provenance fields inline again,
+under the approved enum-local Clippy expectation, with no extra Box allocation.

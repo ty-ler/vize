@@ -32,14 +32,18 @@ pub(super) fn apply_observed(
         .collect::<FxHashSet<_>>();
     // No package binding or directory-wide route is substituted for this
     // complete original callback-output join, including deleted old owners.
-    package_aggregates_match_old(
+    let old_aggregate = package_aggregates_match_old(
         previous.0,
         previous.1,
         &original,
         &context.package_routes,
         &context.route_inputs,
-    )
-    .ok()?;
+    );
+    #[cfg(test)]
+    if let Err(error) = &old_aggregate {
+        eprintln!("original patch old aggregate refusal: {error:?}");
+    }
+    old_aggregate.ok()?;
     let replacement = inputs::replace(
         mirror,
         host,
@@ -48,7 +52,12 @@ pub(super) fn apply_observed(
         requested,
         &changes.changed,
         facts,
-    )?;
+    );
+    #[cfg(test)]
+    if replacement.is_none() {
+        eprintln!("original patch input replacement refusal");
+    }
+    let replacement = replacement?;
     // Deletion was proved by the original authored-body validation. A later
     // directory/non-file race cannot invent an additional deletion exception.
     if replacement
@@ -56,20 +65,32 @@ pub(super) fn apply_observed(
         .iter()
         .any(|path| !changes.deleted.contains(path))
     {
+        #[cfg(test)]
+        eprintln!(
+            "original patch deletion proof refusal: actual={:?}; validated={:?}",
+            replacement.deleted, changes.deleted
+        );
         return None;
     }
     let protected = seeds.iter().cloned().collect::<FxHashSet<_>>();
     if !replacement.deleted.is_disjoint(&protected) {
+        #[cfg(test)]
+        eprintln!("original patch protected deletion refusal");
         return None;
     }
-    let mut completed = packages::reconcile(
+    let completed = packages::reconcile(
         mirror,
         &replacement.frontier,
         overlays,
         &protected,
         resolver,
         facts,
-    )?;
+    );
+    #[cfg(test)]
+    if completed.is_none() {
+        eprintln!("original patch package reconciliation refusal");
+    }
+    let mut completed = completed?;
     let current = mirror
         .registered_original_paths_sorted()
         .into_iter()
@@ -77,6 +98,10 @@ pub(super) fn apply_observed(
     if !protected.is_subset(&current)
         || !inputs::supplied_are_current(mirror, &replacement.supplied)
     {
+        #[cfg(test)]
+        eprintln!(
+            "original patch supplied/root refusal: protected={protected:?}; current={current:?}"
+        );
         return None;
     }
     let removed = replacement
@@ -105,16 +130,22 @@ pub(super) fn apply_observed(
     // Final admission includes the actual later alias reload and shadow /
     // rewrite predicates. Earlier construction facts cannot replace them.
     let witness = facts.witness();
-    if !mirror.registered_sources_have_root_ownership(&protected, &witness)
-        || !super::super::fingerprint::consumed::reconciled_are_current(
+    let owned = mirror.registered_sources_have_root_ownership(&protected, &witness);
+    let current_facts = owned
+        && super::super::fingerprint::consumed::reconciled_are_current(
             &witness,
             &current,
             &replacement.host,
             content.as_bytes(),
             overlays,
             requested,
-        )
-    {
+        );
+    if !owned || !current_facts {
+        #[cfg(test)]
+        eprintln!(
+            "original patch final witness refusal: owned={owned}; current_facts={current_facts}; qualified={}; current={current:?}; protected={protected:?}",
+            witness.qualified
+        );
         return None;
     }
     let aggregate = package_aggregates(&witness.stamps, witness.qualified, &current).ok()?;
