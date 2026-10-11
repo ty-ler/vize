@@ -27,7 +27,7 @@
  * that now passes (remove it from the ledger). Requires a native binding.
  */
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -117,6 +117,9 @@ for (const lane of ["mount", "hydrate"] as const) {
   ) as VaporOutput;
   lanes[lane] = output.results;
   for (const failure of output.compileFailures) failures.push(`[compile:vapor] ${failure}`);
+}
+if (process.env.VIZE_UI_VAPOR_EVIDENCE_DIRECTORY !== undefined) {
+  cpSync(workDirectory, process.env.VIZE_UI_VAPOR_EVIDENCE_DIRECTORY, { recursive: true });
 }
 rmSync(workDirectory, { recursive: true, force: true });
 
