@@ -2,25 +2,11 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { test } from "node:test";
+import { componentContextManifest as manifest } from "../performance/support/warm-type-backed-component-context-manifest.ts";
 import { qualifyComponentContextHost } from "../performance/support/warm-type-backed-component-context-host.ts";
 import { allowed } from "../performance/support/warm-type-backed-production-paths.ts";
 
 type Pair = [string, string | null, string];
-const manifest = JSON.parse(
-  fs.readFileSync(
-    new URL(
-      "../performance/support/warm-type-backed-component-context-manifest.json",
-      import.meta.url,
-    ),
-    "utf8",
-  ),
-) as {
-  componentBodies: Array<[string, string | null, string, string | null]>;
-  inheritedProductionBodies: Array<[string, string | null, string, string]>;
-  inheritedCustodyBodies: Array<[string, string, string]>;
-  inheritedHarnessExtensions: Pair[];
-  originalComponentBodies: Array<[string, string]>;
-};
 
 function sourcePair(composed: boolean) {
   const production = new Map<string, Pair>();
@@ -51,7 +37,7 @@ for (const composed of [false, true]) {
   test(`${scope} admits all complete source and retained authority bodies`, () => {
     const result = qualifyComponentContextHost(production, allowed, digest);
     assert.ok(result);
-    assert.equal(result.completeComponentBodies, 27);
+    assert.equal(result.completeComponentBodies, 28);
     assert.equal(result.inheritedProductionBodies, 90);
     assert.equal(result.inheritedCustodyBodies, 51);
     assert.equal(result.originalComponentBodies, 4);
