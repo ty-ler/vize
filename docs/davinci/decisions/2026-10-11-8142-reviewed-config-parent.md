@@ -36,3 +36,7 @@ receipt keeps the original before bodies; an inherited receipt requires the
 same repaired bytes on both sides. Both keep their genuine 135- and 28-path
 footprints and every original witness. No additional parent path is credited
 to the child, and no source or fixture absence substitutes for a body pair.
+Parent refusal controls read the complete preserved repair commit, since the
+component layer deliberately changes some parent bodies. Separate current-file
+controls require the entire actual component successor and both real scopes;
+the child's files never substitute for the parent's literal source evidence.
