@@ -7,6 +7,10 @@ import {
 import { issuedCompletionManifest as issued } from "../../performance/support/warm-type-backed-issued-completion-host.ts";
 import successor from "../../performance/support/warm-type-backed-component-issued-manifest.json" with { type: "json" };
 import { qualifyComponentIssuedHost } from "../../performance/support/warm-type-backed-component-issued-host.ts";
+import {
+  configReviewManifest,
+  qualifyConfigReviewHost,
+} from "../../performance/support/warm-type-backed-config-review-host.ts";
 
 /** Preserve every original pinned pair and add only the seven explicit complete producer bodies. */
 export function componentIssuedSourcePair(composed: boolean) {
@@ -39,7 +43,27 @@ export function componentIssuedSourcePair(composed: boolean) {
 
 export function qualifyCurrentComponentIssuedSource(composed = true) {
   const pair = componentIssuedSourcePair(composed);
-  return qualifyComponentIssuedHost(pair.production, new Set(), pair.actual);
+  const original = qualifyComponentIssuedHost(pair.production, new Set(), pair.actual);
+  if (original) return original;
+  const reviewed = new Map(
+    [...configReviewManifest.productionBodies, ...configReviewManifest.harnessBodies].map((row) => [
+      row[0],
+      row,
+    ]),
+  );
+  const production = composed
+    ? [...new Set([...pair.production, ...configReviewManifest.reviewedProductionFiles])].toSorted()
+    : pair.production;
+  return qualifyConfigReviewHost(
+    production,
+    new Set(),
+    (side, file) =>
+      side === "before" && reviewed.has(file)
+        ? reviewed.get(file)![composed ? 1 : 3]
+        : pair.actual(side, file),
+    qualifyComponentIssuedHost,
+    composed ? "parent-pair" : "inherited",
+  );
 }
 
 /** Historical authority is tried first; only the independently closed new footprint can follow it. */
