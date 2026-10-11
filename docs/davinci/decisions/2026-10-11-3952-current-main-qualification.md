@@ -186,3 +186,34 @@ Its full run remains unqualified because the added test does not compile;
 cancel the remaining stale full work after retaining the terminal resource
 packet. Neither that historical pass nor the observer grants current-source
 acceptance or a measured performance improvement.
+
+[Authored run 38148936197](https://github.com/ubugeeei-prod/vize/actions/runs/38148936197)
+passes the existing 2,034 tests and refusal controls, but the added whole-error
+comparison uses two independent API handshakes. Their complete initial errors
+can be either broken-pipe or closed-reader packets depending on process exit
+timing. Comparing different operations cannot establish error retention.
+
+Producer `b36455f360d41b89d9cdf3e9dc12b9a4b32fe78c` observes the actual first
+`SessionToCli` warning inside each same incremental invocation, then compares
+the complete returned error and retained-error event to that exact packet.
+Its scoped subscriber also captures the complete second failure. The corpus
+retains the unchanged actual runtime and raw process/public CLI packets, and
+pins the only two complete fallback packets for the original CLI executor and
+the reviewed current-main combined completion refusal. Full string membership
+is required; no prefix, substring or IO-error normalization qualifies them.
+The corpus digest is
+`d01c7161242104de9126728ac4282c75cb921dbf7224c2771a336fb483af2ae0`.
+The original successful-fallback body and frontier-transfer controls are exact.
+A small offline tracing-adapter compile executes the same recording helper and
+verifies complete Display fields; actual native corpus Actions remain required.
+Only the same test after pair changes in the finite 193, with all 45 preserved
+bodies unchanged.
+
+Diagnostic source `92f0c981ac` moves owned-process checking into one executable
+module, replacing the invalid shadowed global `process` variable from the
+previous observer. Early Linux controls in
+[run 38149506949](https://github.com/ubugeeei-prod/vize/actions/runs/38149506949)
+pass actual child `/proc` executable/stat custody and wrong-checkout, unsafe-PID
+and wrong-executable refusals before the original campaign. Its native producer
+remains unchanged; a successful CPU/syscall archive is still required before
+attributing the cold graph cost.
