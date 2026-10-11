@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import fs from "node:fs";
 import { test } from "node:test";
 import {
   configRepairManifest as repair,
@@ -30,15 +29,18 @@ const before = new Map(
 for (const [file, value] of issued.producerBodies) before.set(file, value);
 for (const [file, value] of [...review.productionBodies, ...review.harnessBodies])
   before.set(file, value);
+const literalBodies = new Map<string, string | null>();
 const digest: Digest = (side, file) => {
   if (side === "before") return before.get(file) ?? null;
-  try {
-    return createHash("sha256")
-      .update(fs.readFileSync(new URL(file, root)))
-      .digest("hex");
-  } catch {
-    return null;
+  if (!literalBodies.has(file)) {
+    const source = spawnSync("git", ["show", `${repair.repairedSource}:${file}`], { cwd: root });
+    assert.ok(source.status === 0 || source.status === 128);
+    literalBodies.set(
+      file,
+      source.status === 0 ? createHash("sha256").update(source.stdout).digest("hex") : null,
+    );
   }
+  return literalBodies.get(file)!;
 };
 const qualify = (current: Digest = digest, files = production, owned = new Set<string>()) =>
   qualifyConfigRepairedReviewHost(files, owned, current, qualifyIssuedCompletionHost);
@@ -69,7 +71,7 @@ test("the preserved literal repair commit authenticates every named complete bod
   }
 });
 
-test("complete current repaired bodies retain the immutable original112/96/51/3 witness", () => {
+test("complete literal repaired bodies retain the immutable original112/96/51/3 witness", () => {
   const result = qualify();
   assert.ok(result && "configRepairContext" in result);
   assert.equal(result.files.length, 112);
