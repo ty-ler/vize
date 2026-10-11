@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-export type RenderWorkers = 1 | 2;
+export type RenderWorkers = 1 | 2 | 4;
 export type RenderDevice = "desktop" | "mobile";
 export type RenderJob = {
   index: number;
@@ -50,8 +50,11 @@ export type RenderJobResult<T> = { job: RenderJob; timing: RenderJobTiming; rece
 export type MeasureRenderPhase = <T>(phase: RenderPhase, operation: () => Promise<T>) => Promise<T>;
 
 export function parseRenderWorkers(value: string | undefined): RenderWorkers {
-  assert(value === undefined || value === "1" || value === "2", "--workers must be exactly 1 or 2");
-  return value === "1" ? 1 : 2;
+  assert(
+    value === undefined || value === "1" || value === "2" || value === "4",
+    "--workers must be exactly 1, 2 or 4",
+  );
+  return value === "4" ? 4 : value === "1" ? 1 : 2;
 }
 
 export function createRenderJobs(routes: string[]): RenderJob[] {

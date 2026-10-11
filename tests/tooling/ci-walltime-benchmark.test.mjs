@@ -51,7 +51,15 @@ void test("baseline input partitions are manual-only, build once and retain both
   );
   const input = workflow.on.workflow_dispatch.inputs.component;
   assert.equal(input.default, "all");
-  assert.deepEqual(input.options, ["all", "js", "docs", "rust", "native", "n8n-baseline"]);
+  assert.deepEqual(input.options, [
+    "all",
+    "js",
+    "docs",
+    "rust",
+    "native",
+    "n8n-baseline",
+    "docs-workers",
+  ]);
   assert.equal(workflow.concurrency["cancel-in-progress"], false);
   const job = workflow.jobs["n8n-baseline"];
   assert.equal(

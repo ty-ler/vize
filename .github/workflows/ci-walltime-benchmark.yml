@@ -8,7 +8,7 @@ on:
       component:
         description: Compare serial and concurrent execution on the same source
         type: choice
-        options: [all, js, docs, rust, native, n8n-baseline]
+        options: [all, js, docs, rust, native, n8n-baseline, docs-workers]
         default: all
 permissions: { contents: read }
 concurrency:
@@ -45,7 +45,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   docs:
-    if: ${{ (github.event_name == 'pull_request' && (github.event.label.name == 'ci-walltime-benchmark' || (github.event.action != 'labeled' && startsWith(github.head_ref, 'ci/optimize-')))) || (github.event_name == 'workflow_dispatch' && (inputs.component == 'all' || inputs.component == 'docs')) }}
+    if: ${{ (github.event_name == 'pull_request' && (github.event.label.name == 'ci-walltime-benchmark' || (github.event.action != 'labeled' && startsWith(github.head_ref, 'ci/optimize-')))) || (github.event_name == 'workflow_dispatch' && (inputs.component == 'all' || inputs.component == 'docs' || inputs.component == 'docs-workers')) }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 120
     steps:
@@ -73,10 +73,23 @@ jobs:
           rust-script tools/commands/ci/github/run-many.rs vp run --filter './npm/native' build:ci -- vp run --filter './npm/cli' build -- vp run --filter './npm/builder/vite' build
           vp run --no-cache --filter './docs' build
       - name: Serial complete navigation proof
+        if: ${{ inputs.component != 'docs-workers' }}
         run: vp node docs/scripts/verify-navigation-render.ts --workers 1 --output docs-render-evidence/ci-walltime/serial
       - name: Concurrent complete navigation proof
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.component != 'docs-workers' }}
         run: vp node docs/scripts/verify-navigation-render.ts --workers 2 --output docs-render-evidence/ci-walltime/concurrent
+      - name: Verify bounded workers and original real-browser failure controls
+        if: ${{ inputs.component == 'docs-workers' }}
+        run: vp node --test tests/tooling/docs-render-concurrency.test.ts tests/tooling/docs-render-concurrency-browser.test.ts tests/tooling/docs-render-worker-measurement.test.ts
+      - name: Measure complete original two-worker navigation
+        if: ${{ inputs.component == 'docs-workers' }}
+        run: vp node tools/support/compat/github/docs-render-worker-resources.mjs --workers 2 --output docs-render-evidence/ci-walltime/workers-2
+      - name: Measure complete original four-worker navigation
+        if: ${{ !cancelled() && inputs.component == 'docs-workers' }}
+        run: vp node tools/support/compat/github/docs-render-worker-resources.mjs --workers 4 --output docs-render-evidence/ci-walltime/workers-4
+      - name: Require complete same-site worker equivalence
+        if: ${{ !cancelled() && inputs.component == 'docs-workers' }}
+        run: vp node tools/support/compat/github/compare-docs-render-workers.mjs --baseline docs-render-evidence/ci-walltime/workers-2 --candidate docs-render-evidence/ci-walltime/workers-4 --output docs-render-evidence/ci-walltime/worker-equivalence.json
       - name: Preserve both complete render proofs and timings
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

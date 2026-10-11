@@ -16,11 +16,26 @@ function deferred() {
   return { promise, resolve };
 }
 
-test("render workers accepts only the bounded 1/2 contract", () => {
+test("render workers defaults to two and accepts only bounded 1/2/4 controls", () => {
   assert.equal(parseRenderWorkers(undefined), 2);
   assert.equal(parseRenderWorkers("1"), 1);
   assert.equal(parseRenderWorkers("2"), 2);
-  for (const invalid of ["", "0", "3", "4", "01", "2.0", " 2", "2workers", "-1", "Infinity"])
+  assert.equal(parseRenderWorkers("4"), 4);
+  for (const invalid of [
+    "",
+    "0",
+    "3",
+    "5",
+    "8",
+    "01",
+    "04",
+    "2.0",
+    "4.0",
+    " 2",
+    "2workers",
+    "-1",
+    "Infinity",
+  ])
     assert.throws(() => parseRenderWorkers(invalid), /workers/);
 });
 
@@ -102,6 +117,52 @@ test("one worker executes the same complete jobs sequentially", async () => {
   assert.equal(collectRenderReceipts(jobs, results).length, jobs.length);
   assert(results.every(({ timing }) => timing.worker === 0));
   await assert.rejects(() => runRenderJobs(jobs, 3 as 2, async (job) => job), /workers/);
+});
+
+void test("four contexts overlap, stay bounded and drain a failed job without a success receipt", async () => {
+  const jobs = createRenderJobs(["/a", "/b", "/c", "/d", "/e"]);
+  const release = deferred();
+  const fourStarted = deferred();
+  let active = 0;
+  let maximum = 0;
+  const closed: number[] = [];
+  const running = runRenderJobs(jobs, 4, async (job, phase) => {
+    active += 1;
+    maximum = Math.max(maximum, active);
+    if (active === 4) fourStarted.resolve();
+    return withRenderContext(
+      async () => ({
+        close: async () => {
+          closed.push(job.index);
+          active -= 1;
+        },
+      }),
+      async () => {
+        await phase("navigation", async () => {
+          await release.promise;
+          if (job.index === 1) throw new Error("authored failed navigation");
+        });
+        return { route: job.route, device: job.device };
+      },
+      (close) => phase("context-close", close),
+    );
+  });
+  await fourStarted.promise;
+  assert.equal(maximum, 4, "four jobs start before any original context closes");
+  release.resolve();
+  const results = await running;
+  assert.equal(maximum, 4);
+  assert.equal(active, 0);
+  assert.deepEqual(
+    closed.toSorted((a, b) => a - b),
+    jobs.map(({ index }) => index),
+  );
+  assert.equal(results.length, jobs.length);
+  assert.equal(collectRenderReceipts(jobs, results).length, jobs.length - 1);
+  assert.equal(results[1].receipt, undefined);
+  assert.equal(results[1].timing.status, "failed");
+  assert.match(results[1].timing.error ?? "", /authored failed navigation/);
+  assert(results.every(({ timing }) => timing.phases.at(-1)?.phase === "context-close"));
 });
 
 test("failed pages retain failed timings, close their contexts and do not get success receipts", async () => {

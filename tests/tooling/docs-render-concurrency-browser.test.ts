@@ -110,7 +110,7 @@ test(
       await prepareLocaleControls(dir);
       const receipts = [];
       const durations = [];
-      for (const workers of ["1", "2"]) {
+      for (const workers of ["1", "2", "4"]) {
         const output = path.join(temporary, `workers-${workers}`);
         const result = await verify(dir, output, workers, routes);
         assert.equal(result.status, 0, result.log);
@@ -152,7 +152,7 @@ test(
         assert.equal(control.capture.tiles[0].top, 0);
         const last = control.capture.tiles.at(-1);
         assert.equal(last.top + last.height, 10_000);
-        if (workers === "2") {
+        if (workers !== "1") {
           const [first, second] = timings.jobs;
           assert(
             Date.parse(second.startedAt) < Date.parse(first.startedAt) + first.durationMs,
@@ -176,6 +176,7 @@ test(
         receipts[1],
         "parallel execution retains identical complete evidence",
       );
+      assert.deepEqual(receipts[0], receipts[2], "four workers retain identical complete evidence");
       console.log(`Docs render fixture measurements: ${JSON.stringify(durations)}`);
 
       const output = path.join(temporary, "failure");
