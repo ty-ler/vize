@@ -14,6 +14,7 @@ impl WorkspaceFolderConfig {
             global_ignores: Vec::new(),
             project_ignores: None,
             features: Default::default(),
+            custom_elements: Default::default(),
         }
     }
 
@@ -74,6 +75,9 @@ impl WorkspaceFolderConfig {
             global_ignores,
             project_ignores,
             features,
+            custom_elements: vize_relief::options::CustomElementMatcher::from_patterns(
+                document.clone().into_compiler_custom_elements(),
+            ),
         }
     }
 }

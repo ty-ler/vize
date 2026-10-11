@@ -17,6 +17,7 @@ use vize_l0::config::{
     ConfigDocument, ConfigLintRuleOptions, LinterConfig, LinterConfigPlanWithConfigRuleOptions,
     LinterFeatureFlags,
 };
+use vize_relief::options::CustomElementMatcher;
 
 use super::ServerState;
 mod config;
@@ -29,6 +30,7 @@ pub(super) struct WorkspaceFolderConfig {
     global_ignores: Vec<LintPlanScope>,
     project_ignores: Option<ProjectIgnoreSet>,
     features: LinterFeatureFlags,
+    custom_elements: CustomElementMatcher,
 }
 
 impl WorkspaceFolderConfig {
@@ -45,7 +47,12 @@ impl WorkspaceFolderConfig {
     fn linter_for_path(
         &self,
         path: &Path,
-    ) -> Option<(LinterConfig, ConfigLintRuleOptions, LinterFeatureFlags)> {
+    ) -> Option<(
+        LinterConfig,
+        ConfigLintRuleOptions,
+        LinterFeatureFlags,
+        CustomElementMatcher,
+    )> {
         if self
             .project_ignores
             .as_ref()
@@ -61,7 +68,12 @@ impl WorkspaceFolderConfig {
             .filter_map(|(index, scope)| scope.matches(path).then_some(index))
             .collect::<Vec<_>>();
         let resolved = self.plan.resolve_matching_entries(&matching);
-        Some((resolved.config, resolved.rule_options, self.features))
+        Some((
+            resolved.config,
+            resolved.rule_options,
+            self.features,
+            self.custom_elements.clone(),
+        ))
     }
 }
 
@@ -227,14 +239,33 @@ impl ServerState {
         &self,
         uri: &Url,
     ) -> Option<(LinterConfig, ConfigLintRuleOptions, LinterFeatureFlags)> {
+        self.linter_context_for_uri(uri)
+            .map(|(config, options, features, _)| (config, options, features))
+    }
+
+    /// Compiler policy and lint settings from the same selected project snapshot.
+    pub(crate) fn linter_context_for_uri(
+        &self,
+        uri: &Url,
+    ) -> Option<(
+        LinterConfig,
+        ConfigLintRuleOptions,
+        LinterFeatureFlags,
+        CustomElementMatcher,
+    )> {
         if let Ok(path) = uri.to_file_path() {
             let contexts = self.workspace_folder_configs.read();
             if let Some(context) = deepest_enclosing_folder(&contexts, &path) {
                 return context.linter_for_path(&path);
             }
         }
-        let (config, features) = self.get_linter_config_and_features();
-        Some((config, self.get_linter_rule_options(), features))
+        let (config, features, custom_elements) = self.get_linter_context();
+        Some((
+            config,
+            self.get_linter_rule_options(),
+            features,
+            custom_elements,
+        ))
     }
 }
 

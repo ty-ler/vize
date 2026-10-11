@@ -16,8 +16,10 @@ The public compiler matcher is used unchanged: `compiler.customElements` has
 case-sensitive literal/glob semantics; a static Rust predicate is used as
 given. The literal and glob controls were still diagnosed by the actual public
 0.440 CLI despite their compiler configuration. This source slice borrows an
-already-owned matcher in the template lint pass; CLI/LSP loaded-project
-snapshot transfer is a separate unfinished integration boundary.
+already-owned matcher in the template lint pass. The separate loaded-project
+transport law reuses these exact 30 original inputs for 180 CLI packets and 90
+JSON-RPC publications; actual execution and delivery must pass before that
+boundary is qualified.
 
 Original `eslint-plugin-vue` 10.9.2 `vue/no-undef-components` accepts
 `ignorePatterns` JavaScript regular expressions. The case-specific original
