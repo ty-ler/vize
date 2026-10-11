@@ -14,10 +14,14 @@ The original failure upload only covered the real host, which had not
 started. No complete mocked event artifact exists; the raw failed job
 retains only the last ten events. That evidence does not prove whether
 the native event was lost, the glob filtered it, or the lifecycle failed.
-The isolated diagnostic retains the full mocked event log and controlled
-workspace at failure, records original configuration watcher callbacks,
-and compares passive broad and named-tsconfig observers. These observers
-make no server requests and change no expectations or deadlines.
+The first traced source `dc0de59837` passed the complete editor composite
+in [38113203604](https://github.com/ubugeeei-prod/vize/actions/runs/38113203604).
+Its passive watcher probes can affect timing; this does not prove a cause
+or qualify a production fix. The next control restores the production
+watcher byte for byte and retains each content-edit control's complete
+before/after LSP messages and authored configuration, including successful
+controls. Failure custody also keeps the mocked workspace and raw events.
+No expectation, original 20-second deadline, or 100-ms poll changes.
 
 The diagnostic starts from exact config bottom
 `04b15e087766bfcf29662b01e829fa79c1931100`, whose editor source is preserved
