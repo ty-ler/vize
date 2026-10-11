@@ -8,6 +8,7 @@
 use super::{native, packets};
 use crate::{BatchTypeChecker, BatchTypeCheckerOptions, BatchTypeCheckerTrait};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 use vize_carton::cstr;
 
@@ -30,6 +31,11 @@ fn declaration_barrel_and_direct_ts_vue_imports_keep_missing_neighbors_and_type_
         .unwrap();
     let provider = repo.join("tests/node_modules").canonicalize().unwrap();
     assert!(provider.join("vue/package.json").is_file());
+    let native_bytes = fs::read(&native).unwrap();
+    let native_sha256: vize_carton::String = Sha256::digest(&native_bytes)
+        .iter()
+        .map(|byte| cstr!("{byte:02x}"))
+        .collect();
     let mut outcomes = Vec::new();
     for barrel in [false, true] {
         for broken in [false, true] {
@@ -78,6 +84,8 @@ fn declaration_barrel_and_direct_ts_vue_imports_keep_missing_neighbors_and_type_
                     "scope":"independently authored complete TS/SFC project, same concrete import topology as retained Nuxt useToast/useFormField/useContentSearch",
                     "wholeVueManifest":fs::read_to_string(provider.join("vue/package.json")).unwrap(),
                     "providerCanonicalPath":provider.join("vue").canonicalize().unwrap(),
+                    "nativeCanonicalPath":native,"nativeExecutableSha256":native_sha256,
+                    "nativeExecutableBytes":native_bytes.len(),
                     "wholeAuthoredConfig":source("tsconfig.json.txt"),
                     "wholeAuthoredBarrel":source("imports.d.ts.txt"),
                     "wholePublicResult":cstr!("{public:#?}"),
@@ -104,6 +112,7 @@ fn declaration_barrel_and_direct_ts_vue_imports_keep_missing_neighbors_and_type_
                 &paths,
             );
             let authority = &packet["nativeAuthority"];
+            assert_eq!(authority["nativeBinary"], json!(native), "{authority}");
             assert_eq!(
                 authority["normalizedRequestedOptions"]["strict"], true,
                 "{authority}"
