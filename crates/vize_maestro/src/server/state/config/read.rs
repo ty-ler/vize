@@ -51,14 +51,15 @@ impl ServerState {
             vize_l0::config::LinterFeatureFlags::from_config_features(features, None, None);
     }
 
-    pub(crate) fn get_linter_config_and_features(
+    pub(crate) fn get_linter_context(
         &self,
     ) -> (
         vize_l0::config::LinterConfig,
         vize_l0::config::LinterFeatureFlags,
+        vize_relief::options::CustomElementMatcher,
     ) {
         let snapshot = self.linter_config.read();
-        (snapshot.0.clone(), snapshot.1)
+        (snapshot.0.clone(), snapshot.1, snapshot.2.clone())
     }
 
     /// Get the enabled LSP feature set.

@@ -175,8 +175,15 @@ impl ServerState {
         LspConfigSection::from(config).with_signature_help(unstable.signature_help)
     }
 
-    fn apply_linter_config(&self, config: LinterConfig, source: &str) {
-        self.linter_config.write().0 = config;
+    fn apply_linter_config(
+        &self,
+        config: LinterConfig,
+        custom_elements: vize_relief::options::CustomElementMatcher,
+        source: &str,
+    ) {
+        let mut snapshot = self.linter_config.write();
+        snapshot.0 = config;
+        snapshot.2 = custom_elements;
         tracing::info!("Loaded linter config from {}", source);
     }
 
@@ -247,7 +254,13 @@ impl ServerState {
                 );
                 tracing::info!("Loaded format config from {}", source);
             }
-            self.apply_linter_config(loaded.linter, &source);
+            self.apply_linter_config(
+                loaded.linter,
+                vize_relief::options::CustomElementMatcher::from_patterns(
+                    loaded.project.document.into_compiler_custom_elements(),
+                ),
+                &source,
+            );
             *self.linter_rule_options.write() = loaded.lint_rule_options;
             self.apply_global_types_config(config.global_types, &source);
             self.apply_type_checker_config(
@@ -280,7 +293,13 @@ impl ServerState {
         if let Some(source_path) = loaded.source_path {
             let source = source_path.display().to_string();
             let config = loaded.config;
-            self.apply_linter_config(loaded.linter, &source);
+            self.apply_linter_config(
+                loaded.linter,
+                vize_relief::options::CustomElementMatcher::from_patterns(
+                    loaded.project.document.into_compiler_custom_elements(),
+                ),
+                &source,
+            );
             *self.linter_rule_options.write() = loaded.lint_rule_options;
             self.apply_global_types_config(config.global_types, &source);
             self.apply_type_checker_config(
