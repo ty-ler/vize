@@ -85,6 +85,11 @@ source bodies. Every other original after-body remains exact. Only the explicit
 final comparison import is enrolled over its original whole guard; original
 Cargo lock pairs and every unrelated provider lock keep the same refusal.
 
+The candidate composes actual main
+`22100ba22b419e2ec502500ff6660bb4a48c2e42`. Its newer documentation/release
+inputs preserve every whole original source/runtime/lock authority and incoming
+canonical clause; they supply no transferred runtime qualification.
+
 The source-only production review is commit
 `16928856f1758f0d625ee5af9dc1b1d73af19547`; required Linux capture/enrollment
 and source inventory are bound at `497c1fca3194717b75f9fc3e4bbaa04354d9df0c`. The new finite manifest and whole
