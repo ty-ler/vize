@@ -13,6 +13,7 @@ import { projectConfigManifest as original } from "../performance/support/warm-t
 import nullCompletion from "../performance/support/warm-type-backed-project-config-null-completion-manifest.json" with { type: "json" };
 import loader from "../performance/support/warm-type-backed-project-config-loader-manifest.json" with { type: "json" };
 import { qualifyProjectConfigLoaderHost } from "../performance/support/warm-type-backed-project-config-loader-host.ts";
+import { qualifyCurrentComponentIssuedSource } from "./support/component-issued-source.ts";
 import { allowed } from "../performance/support/warm-type-backed-production-paths.ts";
 
 type Pair = [string, string | null, string | null];
@@ -62,7 +63,8 @@ await test("every current whole source body matches the distinct whole96 authori
   };
   assert.ok(
     qualifyIssuedCompletionHost(production, allowed, actual) ??
-      qualifyCurrentConfigReviewHost(allowed, actual),
+      qualifyCurrentConfigReviewHost(allowed, actual) ??
+      qualifyCurrentComponentIssuedSource(),
   );
 });
 

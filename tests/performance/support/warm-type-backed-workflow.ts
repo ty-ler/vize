@@ -13,6 +13,7 @@ import { qualifyConfigRepairedReviewHost } from "./warm-type-backed-config-repai
 import { qualifyConfigReviewHost } from "./warm-type-backed-config-review-host.ts";
 import { qualifyComponentContextHost } from "./warm-type-backed-component-context-host.ts";
 import { qualifyComponentOwnerMigrationHost } from "./warm-type-backed-component-owner-migration-host.ts";
+import { qualifyComponentIssuedHost } from "./warm-type-backed-component-issued-host.ts";
 import {
   driverRoot,
   git,
@@ -141,6 +142,9 @@ if (process.argv[2] === "prepare") {
         gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
       ) ??
       qualifyComponentOwnerMigrationHost(production, allowed, (side, file) =>
+        gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+      ) ??
+      qualifyComponentIssuedHost(production, allowed, (side, file) =>
         gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
       ))
     : null;
