@@ -7,11 +7,21 @@ use tower_lsp::lsp_types::{Location, Position, Range, SymbolInformation, SymbolK
 use vize_l0::Allocator;
 
 pub(super) fn collect(uri: &Url, source: &str, query: &str, symbols: &mut Vec<SymbolInformation>) {
+    let allocator = Allocator::default();
+    collect_in(uri, source, query, symbols, &allocator);
+}
+
+pub(super) fn collect_in(
+    uri: &Url,
+    source: &str,
+    query: &str,
+    symbols: &mut Vec<SymbolInformation>,
+    allocator: &Allocator,
+) {
     let Ok(source_type) = SourceType::from_path(uri.path()) else {
         return;
     };
-    let allocator = Allocator::default();
-    let parsed = Parser::new(&allocator, source, source_type).parse();
+    let parsed = Parser::new(allocator, source, source_type).parse();
     if parsed.panicked || !parsed.diagnostics.is_empty() {
         return;
     }

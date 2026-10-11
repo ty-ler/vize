@@ -11,7 +11,6 @@ mod disk;
 mod rank;
 #[cfg(feature = "native")]
 mod script;
-#[cfg(feature = "native")]
 mod sources;
 #[cfg(test)]
 mod tests;

@@ -121,14 +121,19 @@ fn collect_sources_filtered<Text: AsRef<str>>(
     uris.sort_by(|left, right| left.as_str().cmp(right.as_str()));
     uris.dedup();
     let mut symbols = Vec::new();
+    let mut allocator = vize_l0::Allocator::default();
     for uri in uris {
+        // Every collector returns owned symbols; no AST borrow crosses this
+        // boundary. Reuse scratch capacity only for this worker request.
+        allocator.reset();
         let before = symbols.len();
         if let Some(source) = open.get(&uri) {
-            WorkspaceSymbolsService::collect_source(
+            WorkspaceSymbolsService::collect_source_in(
                 &uri,
                 source.as_ref(),
                 query_lower,
                 &mut symbols,
+                &allocator,
             );
             if symbols.len() > before && !filter(&uri) {
                 symbols.truncate(before);
@@ -142,7 +147,13 @@ fn collect_sources_filtered<Text: AsRef<str>>(
             continue;
         }
         let Some(source) = read(&path) else { continue };
-        WorkspaceSymbolsService::collect_source(&uri, source.as_ref(), query_lower, &mut symbols);
+        WorkspaceSymbolsService::collect_source_in(
+            &uri,
+            source.as_ref(),
+            query_lower,
+            &mut symbols,
+            &allocator,
+        );
         if symbols.len() > before && !filter(&uri) {
             symbols.truncate(before);
         }

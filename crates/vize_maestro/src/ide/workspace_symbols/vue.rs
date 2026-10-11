@@ -7,17 +7,28 @@ use super::WorkspaceSymbolsService;
 
 impl WorkspaceSymbolsService {
     /// Collect symbols from a single document.
-    #[expect(
-        deprecated,
-        reason = "SymbolInformation.deprecated is deprecated in favor of tags"
-    )]
     pub(super) fn collect_symbols_from_document(
         uri: &Url,
         content: &str,
         query: &str,
         symbols: &mut Vec<SymbolInformation>,
     ) {
-        let Some(descriptor) = vize_incremental::parse_descriptor(uri.path(), content) else {
+        let allocator = vize_l0::Allocator::default();
+        Self::collect_symbols_from_document_in(uri, content, query, symbols, &allocator);
+    }
+
+    #[expect(
+        deprecated,
+        reason = "SymbolInformation.deprecated is deprecated in favor of tags"
+    )]
+    pub(super) fn collect_symbols_from_document_in(
+        uri: &Url,
+        content: &str,
+        query: &str,
+        symbols: &mut Vec<SymbolInformation>,
+        allocator: &vize_l0::Allocator,
+    ) {
+        let Some(descriptor) = super::sources::borrowed_descriptor(uri.path(), content) else {
             return;
         };
 
@@ -87,7 +98,7 @@ impl WorkspaceSymbolsService {
         // workspace symbol search surfaces component contracts, not just
         // script bindings. Foundation for #697 — currently covers emits and
         // slot names; provide/inject and template refs follow the same shape.
-        Self::collect_vue_specific_symbols(uri, &descriptor, query, symbols);
+        Self::collect_vue_specific_symbols(uri, &descriptor, query, symbols, allocator);
     }
 
     /// Surface Vue-specific entities (emits, slots) discovered by Croquis.
@@ -100,6 +111,7 @@ impl WorkspaceSymbolsService {
         descriptor: &vize_atelier_sfc::SfcDescriptor<'_>,
         query: &str,
         symbols: &mut Vec<SymbolInformation>,
+        allocator: &vize_l0::Allocator,
     ) {
         let Some(ref script_setup) = descriptor.script_setup else {
             return;
@@ -109,7 +121,7 @@ impl WorkspaceSymbolsService {
             analyze_script: true,
             ..Default::default()
         });
-        analyzer.analyze_script_setup(&script_setup.content);
+        analyzer.draw_script_setup_in(&script_setup.content, allocator.as_oxc());
         let croquis = analyzer.finish();
 
         let container = Self::extract_component_name(uri);

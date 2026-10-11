@@ -31,10 +31,12 @@ pub fn parse_script_setup_with_generic_and_jsx(
     generic: Option<&str>,
     jsx: bool,
 ) -> ScriptParseResult {
-    parse_script_setup_for_unused::<false>(source, generic, jsx, false, false, false)
+    let allocator = Allocator::default();
+    parse_script_setup_for_unused::<false>(&allocator, source, generic, jsx, false, false, false)
 }
 
 pub(crate) fn parse_script_setup_for_unused<const BUILTIN_TYPES: bool>(
+    allocator: &Allocator,
     source: &str,
     generic: Option<&str>,
     jsx: bool,
@@ -42,13 +44,12 @@ pub(crate) fn parse_script_setup_for_unused<const BUILTIN_TYPES: bool>(
     skip_diagnostics: bool,
     occurrences: bool,
 ) -> ScriptParseResult {
-    let allocator = Allocator::default();
     let path = if jsx { "script.tsx" } else { "script.ts" };
     let source_type = SourceType::from_path(path).unwrap_or_default();
 
     let ret = profile!(
         "croquis.script_setup.oxc_parse",
-        parse_program_for_analysis(&allocator, source, source_type)
+        parse_program_for_analysis(allocator, source, source_type)
     );
 
     if ret.panicked {

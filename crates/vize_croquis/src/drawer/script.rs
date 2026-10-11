@@ -54,6 +54,27 @@ impl Drawer {
         generic: Option<&str>,
         jsx: bool,
     ) -> &mut Self {
+        let allocator = oxc_allocator::Allocator::default();
+        self.draw_script_setup_with_allocator::<BUILTIN_TYPES>(source, generic, jsx, &allocator)
+    }
+
+    /// Draw script setup with a caller-owned scratch arena. No AST references
+    /// are retained in the resulting Croquis, so the arena can then be reused.
+    pub fn draw_script_setup_in(
+        &mut self,
+        source: &str,
+        allocator: &oxc_allocator::Allocator,
+    ) -> &mut Self {
+        self.draw_script_setup_with_allocator::<false>(source, None, false, allocator)
+    }
+
+    fn draw_script_setup_with_allocator<const BUILTIN_TYPES: bool>(
+        &mut self,
+        source: &str,
+        generic: Option<&str>,
+        jsx: bool,
+        allocator: &oxc_allocator::Allocator,
+    ) -> &mut Self {
         if !self.options.analyze_script {
             return self;
         }
@@ -64,6 +85,7 @@ impl Drawer {
         let result = profile!(
             "croquis.drawer.script_setup",
             crate::script_parser::parse_script_setup_for_unused::<BUILTIN_TYPES>(
+                allocator,
                 source,
                 generic,
                 jsx,

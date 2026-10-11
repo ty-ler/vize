@@ -1,4 +1,8 @@
 #![expect(clippy::string_slice, reason = "tests assert by panicking")]
+mod borrowed_descriptor;
+#[cfg(feature = "native")]
+mod navigation_arena;
+
 use super::WorkspaceSymbolsService;
 use tower_lsp::lsp_types::{Position, Range, SymbolKind};
 
