@@ -307,6 +307,8 @@ mod capabilities;
 mod current;
 #[cfg(test)]
 mod lock_order_tests;
+#[cfg(feature = "experimental-source-navigation")]
+mod navigation;
 mod paths;
 mod pool;
 mod registry;
