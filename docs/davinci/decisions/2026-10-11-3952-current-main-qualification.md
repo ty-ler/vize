@@ -266,3 +266,30 @@ The new complete fixture digest is
 `33be59fba66746bdbac199d4e2541ce826f5b8a657b204ef505dc7cd2fa9868e`.
 Native source Actions still must execute the full regression. Change only this
 existing test's after body in the same finite193; preserve all45 original bodies.
+
+Exact head `1efe3f1980` passes the actual Linux authored source-control step,
+including the deterministic complete first/secondary refusal regression, all
+existing Canon laws and Clippy. Continue its original n8n campaign; no speed
+acceptance is inferred from test success.
+
+Source `c27476a1a5083d85101a49fd7e160eefd74d9e79` changes only the private
+NativeFacts collision-bucket hash in insertion and bounded membership lookup.
+Use the existing FxHashMap BuildHasher instead of a separate DefaultHasher;
+full InputStamp Eq still resolves every bucket collision, and the original
+ordered vector, cutoff, qualification and owner/route Arc identity remain exact.
+Filesystem operations, body digests, callbacks, guards and lifecycle observations
+are unchanged. Two literal original DefaultHasher controls compare every prefix,
+all cutoffs, real coarse nested-route collisions, distinct/equal owners, all roles,
+false observation/qualification and configuration/unowned retirement, including
+rebuilt indices. This targets sampled SipHasher/path hashing, with no claim that
+it solves the cold package/reachability cost. Require same-workload unprofiled
+Actions before reporting any improvement.
+
+Merge immutable actual main `765ded0e` into that successor, producing combined
+source `9326b9ba289f60f3b636045b53113a5ea9bd5df6`. All 193 preceding before bodies
+and 45 original workload bodies remain exact on that main; among existing after
+pairs, only the two named hash implementations change. Add the complete new
+297-line literal-control body with an absent original before blob: finite194
+pairs, same45, immutable original `fc551dc`. Preserve the native error law,
+original 10-second requests, 400-request workloads and 128/384 MiB resource caps.
+Do not admit the draft PR to the queue while the original campaign is red.
