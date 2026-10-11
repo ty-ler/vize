@@ -16,14 +16,14 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with: { fetch-depth: 0 }
-      - name: Select exact public source composition with only original ProgressBar layer and observers
+      - name: Select exact three-layer public source with only read-only observers
         run: |
           git checkout 7a344c767388c1308c609a1dc73865cfa7332751
           git diff --exit-code
           git diff --cached --exit-code
           mkdir evidence
           git rev-parse HEAD > evidence/source-head.txt
-          git diff 85e3b56903d94f68fc3044937304dab4b02a12f6 HEAD > evidence/public-source-composition.diff
+          git diff 3ed139a7c3ee40f51335905b9ca4970650cefdfd HEAD > evidence/public-source-composition.diff
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: scoped-union-props-original-source-receipt-656010281c745dd3df7905be0d8ff16af680d1d0
@@ -51,7 +51,7 @@ jobs:
           git diff --exit-code -- Cargo.toml Cargo.lock crates davinci npm/ui pnpm-lock.yaml pnpm-workspace.yaml
       - name: Execute unchanged standard and production UI tests
         run: vp run --filter './npm/ui' test 2>&1 | tee evidence/ui-tests.log
-      - name: Execute all original UI gates and both mandatory native and official packets
+      - name: Execute all original UI gates and all mandatory native, official and boundary packets
         run: vp run --filter './npm/ui' check 2>&1 | tee evidence/supported.log
       - name: Require the whole original rc9 controls and four numerical ProgressBar negatives
         env: { VIZE_UI_VAPOR_RUNTIME: reference }

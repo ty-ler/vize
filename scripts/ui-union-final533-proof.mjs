@@ -4,8 +4,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-const publicHead = '85e3b56903d94f68fc3044937304dab4b02a12f6';
-const progressSource = '0aee09660364f9e8dcfa954b226674e341adc618';
+const publicHead = '3ed139a7c3ee40f51335905b9ca4970650cefdfd';
+const progressSource = '7aa24063f56de5a674bcfa4a0de315ae9611be02';
 const head = () => execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const digest = value => createHash('sha256').update(value).digest('hex');
 const read = file => JSON.parse(readFileSync(file, 'utf8'));
@@ -65,6 +65,21 @@ if (process.argv[2] === 'binding') {
     assert.equal(summary.length, 1);
     assert.equal(JSON.parse(summary[0]).failures, track === 'supported' ? 0 : 4);
   }
+  const supportedLog = readFileSync('evidence/supported.log', 'utf8');
+  const controlsLines = supportedLog.split('\n').filter(line => line.startsWith('{"check":"whole scoped-union boundaries"'));
+  assert.equal(controlsLines.length, 1);
+  const controls = JSON.parse(controlsLines[0]);
+  const controlFixture = read('tests/_fixtures/differential/compiler/scoped-union-props/controls.json');
+  assert.deepEqual(controls.inputs, controlFixture);
+  assert.deepEqual(controls.official, controlFixture.official);
+  assert.equal(controls.native.length, 18);
+  for (const observation of controls.native) {
+    assert.deepEqual(observation.result.errors, []);
+    assert.equal(typeof observation.result.code, 'string');
+    assert.ok(observation.result.code.length > 0);
+  }
+  writeFileSync('evidence/whole-union-boundaries.json', JSON.stringify({ actualSource: head(), binding: result.binding, ...controls }, null, 2));
+  result.unionBoundaryControls = { nativeWholeResults: 18, officialWholeResults: 30, officialRefusals: controls.official.filter(row => row.error !== undefined).length, inheritedNativeRefusalAndForeignAliasGaps: true };
   const { installDomGlobals } = await import(pathToFileURL(`${process.cwd()}/npm/ui/scripts/vapor-runtime/dom-env.ts`).href);
   installDomGlobals();
   const { registerSfcHooks } = await import(pathToFileURL(`${process.cwd()}/npm/ui/scripts/vapor-runtime/sfc-hooks.ts`).href);
