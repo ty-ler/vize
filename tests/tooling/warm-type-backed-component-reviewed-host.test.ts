@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { configReviewManifest as review } from "../performance/support/warm-type-backed-config-review-host.ts";
 import {
-  configReviewManifest as review,
-  qualifyConfigReviewHost,
-} from "../performance/support/warm-type-backed-config-review-host.ts";
+  configRepairManifest as repair,
+  qualifyConfigRepairedReviewHost,
+} from "../performance/support/warm-type-backed-config-repair-host.ts";
 import { qualifyComponentIssuedHost } from "../performance/support/warm-type-backed-component-issued-host.ts";
 import { componentIssuedSourcePair } from "./support/component-issued-source.ts";
 
@@ -15,20 +16,32 @@ const reviewed = new Map(
 for (const composed of [false, true]) {
   const pair = componentIssuedSourcePair(composed);
   const production = composed
-    ? [...new Set([...pair.production, ...review.reviewedProductionFiles])].toSorted()
+    ? [...new Set([...pair.production, ...review.reviewedProductionFiles])].toSorted(
+        (left, right) => (left < right ? -1 : left > right ? 1 : 0),
+      )
     : pair.production;
   const scope = composed ? "parent-pair" : "inherited";
+  const repairedBefore = new Map([
+    ...repair.productionBodies.map(
+      ([file, before, , after]) => [file, composed ? before : after] as const,
+    ),
+    ...repair.corpusBodies.map(
+      ([file, before, after]) => [file, composed ? before : after] as const,
+    ),
+  ]);
   const digest: Digest = (side, file) =>
-    side === "before" && reviewed.has(file)
-      ? reviewed.get(file)![composed ? 1 : 3]
-      : pair.actual(side, file);
+    side === "before" && repairedBefore.has(file)
+      ? repairedBefore.get(file)!
+      : side === "before" && reviewed.has(file)
+        ? reviewed.get(file)![composed ? 1 : 3]
+        : pair.actual(side, file);
   const qualify = (current = digest, files = production, allowed = new Set<string>()) =>
-    qualifyConfigReviewHost(files, allowed, current, qualifyComponentIssuedHost, scope);
+    qualifyConfigRepairedReviewHost(files, allowed, current, qualifyComponentIssuedHost, scope);
 
   await test(`${scope} reviewed component qualification retains the complete original witness and actual source footprint`, () => {
     assert.equal(qualifyComponentIssuedHost(production, new Set(), digest), null);
     const result = qualify();
-    assert.ok(result);
+    assert.ok(result && "configRepairContext" in result);
     assert.deepEqual(result.files, production);
     assert.deepEqual(result.originalQualification.files, pair.production);
     assert.equal(result.files.length, composed ? 135 : 28);
@@ -42,10 +55,20 @@ for (const composed of [false, true]) {
     assert.equal(result.supplementalResolves, 8);
     assert.equal(result.supplementalRefusals, 8);
     assert.equal(result.originalComparedFields, 20);
+    assert.deepEqual(
+      result.configRepairContext.completeProductionBodyPairs,
+      repair.productionBodies,
+    );
+    assert.deepEqual(result.configRepairContext.completeCorpusBodyPairs, repair.corpusBodies);
+    assert.equal(result.configRepairContext.scope, scope);
   });
 
   await test(`${scope} reviewed component qualification refuses context drift, child drift and forged extra ownership`, () => {
-    for (const file of new Set([...reviewed.keys(), ...pair.bodies.keys()]))
+    for (const file of new Set([
+      ...reviewed.keys(),
+      ...pair.bodies.keys(),
+      ...repairedBefore.keys(),
+    ]))
       for (const side of ["before", "after"] as const) {
         const replacement = digest(side, file) === null ? "f".repeat(64) : null;
         // Original after-only metadata has no declared before-side obligation.

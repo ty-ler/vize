@@ -28,3 +28,11 @@ component CLI/editor lifecycle, performance gates or installed release.
 Fresh exact-head Actions, protected Stack delivery and public acceptance
 after the actual component merge remain required. Historical authorities and
 reviewed source commits remain reachable through explicit source-custody refs.
+
+The [native repair qualification](./2026-10-12-config-native-requalification.md)
+requires seven named complete repaired bodies and the complete additive
+two-buffer corpus fixture before replaying that unchanged authority. A composed
+receipt keeps the original before bodies; an inherited receipt requires the
+same repaired bytes on both sides. Both keep their genuine 135- and 28-path
+footprints and every original witness. No additional parent path is credited
+to the child, and no source or fixture absence substitutes for a body pair.
