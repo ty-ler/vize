@@ -44,6 +44,21 @@ does not qualify the actual 400-provider packets or a performance improvement.
 The original source preparation was backed up before replay; all original
 fixtures and incoming decisions are retained.
 
+The existing `rust-full-workspace-${github.sha}-${github.run_attempt}` artifact
+retains `target/nextest/full/` and the exact component-context packet directory.
+No extra upload, job or compilation is added. Its component receipt must bind
+the actual source SHA, run/attempt, artifact ID/archive digest and each full
+member's SHA256 after download:
+
+| Member in `differential/component-registration-context-8142/` | Required observations                                        |
+| ------------------------------------------------------------- | ------------------------------------------------------------ |
+| `whole-packets.json`                                          | Original 120 API packets                                     |
+| `jsx-whole-packets.json`                                      | Original eight JSX/TSX packets                               |
+| `cli-transport.json`                                          | 180 CLI packets                                              |
+| `cli-one-evaluation.json`                                     | Six CLI calls and evaluation counters                        |
+| `lsp-transport.json`                                          | 90 versioned publications and complete protocol              |
+| `lsp-policy-replacement.json`                                 | Four required workspace/reload packets and complete protocol |
+
 Local formatting and the 12 config-host boundary controls pass. Actual consumer
 execution, fresh source/full Actions, unchanged instruction ceilings, protected
 queue, signed merge and genuinely included installed release acceptance remain
