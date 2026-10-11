@@ -92,16 +92,18 @@ def runtime_receipts():
     for root in [SOURCE / "node_modules", SOURCE / "playground/node_modules"]:
         if not root.exists():
             continue
-        for pattern in ["@typescript/typescript-linux-x64/lib/tsgo",
-                        ".pnpm/@typescript+typescript-linux-x64*/node_modules/@typescript/typescript-linux-x64/lib/tsgo"]:
+        for pattern in ["@typescript/typescript-linux-x64/lib/tsc",
+                        ".pnpm/@typescript+typescript-linux-x64*/node_modules/@typescript/typescript-linux-x64/lib/tsc"]:
             candidates.update(path.resolve() for path in root.glob(pattern) if path.is_file())
     assert candidates, "No frozen actual native TypeScript executable"
     result = []
     for binary in sorted(candidates):
         package = binary.parent.parent / "package.json"
+        manifest = json.loads(package.read_text())
+        assert manifest["name"] == "@typescript/typescript-linux-x64" and manifest["version"] == "7.0.2"
         version = subprocess.run([str(binary), "--version"], capture_output=True, check=True)
         result.append({"binary": str(binary), "sha256": sha(binary),
-                       "packageSha256": sha(package), "package": json.loads(package.read_text()),
+                       "packageSha256": sha(package), "package": manifest,
                        "versionStdout": version.stdout.decode(), "versionStderr": version.stderr.decode()})
     vue = (SOURCE / "playground/node_modules/vue").resolve()
     return {"native": result, "vuePath": str(vue),
