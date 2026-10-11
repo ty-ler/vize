@@ -68,7 +68,7 @@ fn complete_report(
 }
 
 fn api_type(client: &CorsaProjectClient, root: &Path, source: &str) -> vize_l0::String {
-    let session = client.project_session().unwrap();
+    let session = client.session.as_ref().unwrap();
     let uri = crate::file_uri::path_to_file_uri(&root.join("source.ts"));
     let session_uri = client
         .session_document_uris
@@ -294,3 +294,5 @@ fn native_editor_resolves_package_alias_from_monorepo_root_keeps_memberless_api_
     control::assert_reaped(&owner);
     assert_eq!(fs::read(config).unwrap(), configuration.as_bytes());
 }
+
+mod replay;

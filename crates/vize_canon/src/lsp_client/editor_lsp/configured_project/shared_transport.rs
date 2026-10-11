@@ -92,6 +92,15 @@ impl CorsaProjectClient {
         if self.shared_editor_transport {
             self.retire_project_session()?;
             self.replace_project_transport(&config, &root)?;
+            if let Err(error) = self.replay_retained_project_documents() {
+                if self.project_session_attached_to_editor {
+                    let _ = self.retire_shared_editor_transport(true);
+                } else {
+                    let _ = self.retire_project_session();
+                    let _ = self.discard_editor_lsp();
+                }
+                return Err(error);
+            }
         }
         if self.editor_lsp.is_none() {
             self.editor_lsp = Some(EditorLspSession::spawn_with_config(

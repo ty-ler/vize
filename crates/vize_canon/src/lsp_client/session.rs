@@ -23,6 +23,7 @@ use vize_l0::{String, cstr};
 mod bootstrap;
 mod canon_document;
 mod capabilities;
+mod replay;
 pub(super) use bootstrap::{
     ProjectSessionSpawnError, api_mode_for_executable, spawn_project_session,
 };
@@ -45,13 +46,15 @@ impl CorsaProjectClient {
         self.session.is_some()
     }
 
-    pub(super) fn project_session(&self) -> Result<&ProjectSession, String> {
+    pub(super) fn project_session(&mut self) -> Result<&ProjectSession, String> {
+        self.ensure_project_transport()?;
         self.session
             .as_ref()
             .ok_or_else(|| cstr!("Corsa project-session API is unavailable"))
     }
 
     pub(super) fn project_session_mut(&mut self) -> Result<&mut ProjectSession, String> {
+        self.ensure_project_transport()?;
         self.session
             .as_mut()
             .ok_or_else(|| cstr!("Corsa project-session API is unavailable"))
