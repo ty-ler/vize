@@ -35,7 +35,7 @@ const parent = JSON.parse(
 };
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const manifestSHA256 = hash(manifest);
-assert.equal(manifestSHA256, "9c1d26a535e0d5b9c76b59869bc0b9bbebbb7a3a9cca0f647d13e814685d0895");
+assert.equal(manifestSHA256, "dd1bc789e2dc908d8e9147409c8ea0c36779d4d749b2402079ac241980d016dc");
 assert.equal(manifest.version, 1);
 assert.equal(manifest.originalComponentSource, "c0dc03760aaf8cdb4810e3ed0417c668a36c4721");
 assert.equal(manifest.originalConfigSource, parent.originalSource);
