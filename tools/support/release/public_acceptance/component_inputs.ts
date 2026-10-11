@@ -69,7 +69,7 @@ function position(source: string, byte: number, utf16: boolean) {
   );
   const parts = prefix.split("\n"),
     tail = parts.at(-1)!;
-  return { line: parts.length - 1, character: utf16 ? tail.length : [...tail].length };
+  return { line: parts.length - 1, character: utf16 ? tail.length : Array.from(tail).length };
 }
 export function cliPacket(entry: ComponentCase, filename = entry.filename) {
   const expected = entry.authoredExpectedPacket;
