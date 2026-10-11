@@ -167,8 +167,34 @@ The same successor's `check-js` job `114529289956` reports eleven
 mark only the eleven Node test-registration promises with `void`; keep every
 test body, process refusal, raw event, assertion and Node runner unchanged.
 All seven portable observer controls still pass locally, with four Linux laws
-left for fresh Actions. Publication waits for the in-flight native qualification
-to finish; no optional occupancy capture is repeated.
+left for fresh Actions. The exact native backend phases in
+[38159508554](https://github.com/ubugeeei-prod/vize/actions/runs/38159508554)
+also pass, and all four PR Rust test shards pass. No optional occupancy capture
+is repeated.
+
+The same head's tooling checks identify two observer delivery defects. Preserve
+the complete CPU/parser section in a linked companion, with a byte-exact split
+control, so the main record stays below 350 lines. Extract the original five
+contiguous authored-editor setup/verification steps into a local composite
+action. A deep-equality control retains their complete command order, conditions,
+shell (`bash -e {0}`, as recorded by the original Actions), environment and
+working directory, along with every other first-campaign step. Move only the
+optional diagnostic's unchanged observer-control command into its existing
+script, keeping the workflow below 350 lines.
+
+The tooling runners use shallow checkouts and lack the diagnostic authority's
+pinned parent Git object. Add one coordinated line after the existing tooling
+plan generation to prepare only the actual shard's named source authorities.
+Validate their full frozen SHA identities, check existing complete commits,
+fetch only missing exact SHAs with `--no-tags --depth=1`, then refuse if any
+complete object remains unavailable. The current source/byte/mode authorities
+are unchanged. No broad history or skipped qualification is introduced.
+Literal controls cover unrelated shards, present commits, missing commits,
+malformed plans/identities, original process errors, failed fetch and falsely
+successful incomplete fetch. The normal tooling test imports these controls and
+all original eleven observer laws, allowing fresh Linux execution without
+repeating the optional original-workload capture. CI lane clearance preserves
+its separate Docker observer clause; the combined workflow stays at 350 lines.
 
 TODO: investigate the current singleton bucket's per-entry vector allocation
 as a narrow candidate. Any proposed storage change must preserve the existing

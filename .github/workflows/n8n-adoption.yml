@@ -297,19 +297,7 @@ jobs:
         with:
           key: n8n-authored-editor
           cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
-      - name: Install pinned source and typechecker dependencies
-        run: vp install --frozen-lockfile --prefer-offline
-      - name: Build and authenticate the current-source LSP
-        run: cargo build --profile ci -p vize && vp node tests/differential/build-receipt.ts
-      - name: Verify actual configuration and native fact refusal controls
-        run: . .github/actions/n8n-authored-editor/source-controls.sh
-      - name: Check actual Canon production source with Clippy
-        if: ${{ !cancelled() }}
-        run: |
-          rustup component add clippy
-          cargo clippy --locked --profile ci -p vize_canon --lib -- -D warnings -D clippy::wildcard_imports
-      - name: Preserve ordinary default-export navigation
-        run: cargo test --profile ci -p vize_maestro --lib ide::definition::service::import_target::default_export::tests -- --nocapture
+      - uses: ./.github/actions/n8n-authored-editor
       - name: Check original n8n navigation and unsaved diagnostic repair
         run: vp node --test tests/tooling/n8n-authored-editor.test.ts
       - name: Build the current public CLI config export
@@ -346,10 +334,7 @@ jobs:
           VIZE_TRACE_EDITOR_PREPARATION: "1"
           VIZE_TRACE_NATIVE_FACT_REFUSAL: "1"
           VIZE_DIAGNOSTIC_NATIVE_FACT_BUCKETS: "1"
-        run: |
-          vp node --test .github/actions/n8n-authored-editor/owned-process.test.mjs .github/actions/n8n-authored-editor/bucket-observations.test.mjs
-          .github/actions/n8n-authored-editor/capture-buckets.sh \
-            "target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}/diagnostic-native-fact-buckets"
+        run: .github/actions/n8n-authored-editor/capture-buckets.sh "target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}/diagnostic-native-fact-buckets"
       - name: Upload whole CLI and independent oracle packets
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

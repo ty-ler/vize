@@ -2,6 +2,7 @@
 # The second original workload is diagnostic; preserve the first acceptance result.
 set -euo pipefail
 
+vp node --test .github/actions/n8n-authored-editor/owned-process.test.mjs .github/actions/n8n-authored-editor/bucket-observations.test.mjs
 [[ "${VIZE_DIAGNOSTIC_NATIVE_FACT_BUCKETS:-}" == 1 ]]
 output=$(realpath -m "${1:?diagnostic output directory is required}")
 first="$(dirname "$output")/authored-registry"

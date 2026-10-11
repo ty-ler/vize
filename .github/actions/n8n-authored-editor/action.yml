@@ -1,0 +1,23 @@
+name: Build and verify the current-source n8n editor
+description: Preserve the authored editor's source controls and original native commands.
+runs:
+  using: composite
+  steps:
+    - name: Install pinned source and typechecker dependencies
+      shell: bash -e {0}
+      run: vp install --frozen-lockfile --prefer-offline
+    - name: Build and authenticate the current-source LSP
+      shell: bash -e {0}
+      run: cargo build --profile ci -p vize && vp node tests/differential/build-receipt.ts
+    - name: Verify actual configuration and native fact refusal controls
+      shell: bash -e {0}
+      run: . .github/actions/n8n-authored-editor/source-controls.sh
+    - name: Check actual Canon production source with Clippy
+      if: ${{ !cancelled() }}
+      shell: bash -e {0}
+      run: |
+        rustup component add clippy
+        cargo clippy --locked --profile ci -p vize_canon --lib -- -D warnings -D clippy::wildcard_imports
+    - name: Preserve ordinary default-export navigation
+      shell: bash -e {0}
+      run: cargo test --profile ci -p vize_maestro --lib ide::definition::service::import_target::default_export::tests -- --nocapture

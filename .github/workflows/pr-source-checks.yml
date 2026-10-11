@@ -182,6 +182,7 @@ jobs:
         run: |
           if [[ ! "$BASE_SHA" =~ ^0+$ ]]; then git fetch --no-tags --depth=1 origin "$BASE_SHA"; fi
           node tools/support/compat/github/plan-tooling-tests.mjs "$BASE_SHA" "$GITHUB_SHA" --tier "$TOOLING_TIER" --output "$RUNNER_TEMP/tooling-plan.json"
+          node .github/actions/n8n-authored-editor/git-authority.mjs "$RUNNER_TEMP/tooling-plan.json" "${{ matrix.index }}/${{ matrix.total }}"
       - name: Install fixture and JS dependencies
         if: ${{ needs.pr-source-plan.outputs.tooling == 'true' }}
         run: git submodule update --init --force --depth 1 -- tests/_fixtures/_git/ant-design-vue tests/_fixtures/_git/create-vue tests/_fixtures/_git/vue-select tests/_fixtures/_git/vue-router && vp install --frozen-lockfile --prefer-offline
