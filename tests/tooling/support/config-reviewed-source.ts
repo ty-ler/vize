@@ -1,3 +1,4 @@
+import { qualifyOwnedCompletionHost } from "../../performance/support/warm-type-backed-owned-completion-host.ts";
 import { configReviewManifest } from "../../performance/support/warm-type-backed-config-review-host.ts";
 import {
   issuedCompletionProduction,
@@ -28,23 +29,30 @@ export const canonBatchConfigProduction = [
 
 /** Current files remain actual reads; only the explicitly frozen before fixture is extended. */
 export function qualifyCurrentConfigReviewHost(allowed: ReadonlySet<string>, digest: Digest) {
-  const runtimeBefore = new Map(
-    runtimeRepairManifest.inheritedBodies.map(([file, , after]) => [file, after]),
-  );
-  const runtimeRepaired = [...runtimeBefore].every(
-    ([file, after]) => digest("after", file) === after,
-  );
-  return qualifyConfigRepairedReviewHost(
+  return qualifyOwnedCompletionHost(
     canonBatchConfigProduction,
     allowed,
-    (side, file) =>
-      side === "before" && runtimeRepaired && runtimeBefore.has(file)
-        ? runtimeBefore.get(file)!
-        : side === "before" && batchBefore.has(file)
-          ? batchBefore.get(file)!
-          : side === "before" && bodies.has(file)
-            ? bodies.get(file)![1]
-            : digest(side, file),
-    qualifyIssuedCompletionHost,
+    digest,
+    (_files, _owned, authenticated) => {
+      const runtimeBefore = new Map(
+        runtimeRepairManifest.inheritedBodies.map(([file, , after]) => [file, after]),
+      );
+      const runtimeRepaired = [...runtimeBefore].every(
+        ([file, after]) => authenticated("after", file) === after,
+      );
+      return qualifyConfigRepairedReviewHost(
+        canonBatchConfigProduction,
+        allowed,
+        (side, file) =>
+          side === "before" && runtimeRepaired && runtimeBefore.has(file)
+            ? runtimeBefore.get(file)!
+            : side === "before" && batchBefore.has(file)
+              ? batchBefore.get(file)!
+              : side === "before" && bodies.has(file)
+                ? bodies.get(file)![1]
+                : authenticated(side, file),
+        qualifyIssuedCompletionHost,
+      );
+    },
   );
 }

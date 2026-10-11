@@ -1,0 +1,189 @@
+Content-Length: 413
+
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"processId":14982,"rootUri":"file:///home/runner/_work/_temp/warm-pair/workspace","capabilities":{"textDocument":{"completion":{"completionItem":{"documentationFormat":["markdown","plaintext"]}}}},"initializationOptions":{"editor":true,"typecheck":true},"workspaceFolders":[{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace","name":"workspace"}]}}Content-Length: 52
+
+{"jsonrpc":"2.0","method":"initialized","params":{}}Content-Length: 1276
+
+{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue","languageId":"vue","version":1,"text":"<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp21 from \"./Comp21.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp21 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n"}}}Content-Length: 194
+
+{"jsonrpc":"2.0","id":2,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 194
+
+{"jsonrpc":"2.0","id":3,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 196
+
+{"jsonrpc":"2.0","id":4,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 201
+
+{"jsonrpc":"2.0","id":5,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 201
+
+{"jsonrpc":"2.0","id":6,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 194
+
+{"jsonrpc":"2.0","id":7,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 196
+
+{"jsonrpc":"2.0","id":8,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 201
+
+{"jsonrpc":"2.0","id":9,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":10,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":11,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":12,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":13,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":14,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":15,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":16,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":17,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":18,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":19,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":20,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":21,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":22,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":23,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":24,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":25,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":26,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":27,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":28,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":29,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":30,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 1276
+
+{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue","version":2},"contentChanges":[{"text":"<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp21 from \"./Comp21.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(0);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp21 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n"}]}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":31,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":32,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":33,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":34,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 1280
+
+{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue","version":3},"contentChanges":[{"text":"<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp21 from \"./Comp21.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp21 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n"}]}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":35,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":36,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":37,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":38,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":39,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":40,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":41,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":42,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 634
+
+{"jsonrpc":"2.0","id":43,"method":"completionItem/resolve","params":{"data":{"vizeCompletion":{"item":{"data":{"fileName":"/tmp/vize-canon/editor/sessions/session-1XRcLQ/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts","name":"count","position":15363},"kind":5,"label":"count","sortText":"11"},"requestUri":"file:///tmp/vize-canon/editor/sessions/session-1XRcLQ/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts","revision":3,"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"}},"kind":5,"label":"count","sortText":"11"}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":44,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":45,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":46,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":47,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 634
+
+{"jsonrpc":"2.0","id":48,"method":"completionItem/resolve","params":{"data":{"vizeCompletion":{"item":{"data":{"fileName":"/tmp/vize-canon/editor/sessions/session-1XRcLQ/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts","name":"count","position":15363},"kind":5,"label":"count","sortText":"11"},"requestUri":"file:///tmp/vize-canon/editor/sessions/session-1XRcLQ/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts","revision":3,"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"}},"kind":5,"label":"count","sortText":"11"}}Content-Length: 1307
+
+{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue","version":4},"contentChanges":[{"text":"<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp21 from \"./Comp21.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst configProbe = null;\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp21 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n"}]}}Content-Length: 196
+
+{"jsonrpc":"2.0","id":49,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":9}}}Content-Length: 196
+
+{"jsonrpc":"2.0","id":50,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":9}}}Content-Length: 196
+
+{"jsonrpc":"2.0","id":51,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":9}}}Content-Length: 1280
+
+{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue","version":5},"contentChanges":[{"text":"<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp21 from \"./Comp21.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp21 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n"}]}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":52,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":53,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":54,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":55,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":56,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 63
+
+{"jsonrpc":"2.0","method":"$/cancelRequest","params":{"id":56}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":57,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":58,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":59,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":60,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 154
+
+{"jsonrpc":"2.0","method":"textDocument/didClose","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"}}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":61,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":62,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":63,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":64,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 1276
+
+{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue","languageId":"vue","version":1,"text":"<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp21 from \"./Comp21.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp21 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n"}}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":65,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":66,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":67,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":68,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 196
+
+{"jsonrpc":"2.0","method":"workspace/didChangeWorkspaceFolders","params":{"event":{"added":[{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace-other","name":"original20"}],"removed":[]}}}Content-Length: 1279
+
+{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue","languageId":"vue","version":1,"text":"<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp1 from \"./Comp1.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp1 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n"}}}Content-Length: 201
+
+{"jsonrpc":"2.0","id":69,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 203
+
+{"jsonrpc":"2.0","id":70,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 208
+
+{"jsonrpc":"2.0","id":71,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 208
+
+{"jsonrpc":"2.0","id":72,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":73,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":74,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":75,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":76,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 1280
+
+{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue","version":2},"contentChanges":[{"text":"<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp21 from \"./Comp21.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp21 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n"}]}}Content-Length: 195
+
+{"jsonrpc":"2.0","id":77,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":9,"character":8}}}Content-Length: 197
+
+{"jsonrpc":"2.0","id":78,"method":"textDocument/hover","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":20,"character":36}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":79,"method":"textDocument/definition","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":10,"character":18}}}Content-Length: 202
+
+{"jsonrpc":"2.0","id":80,"method":"textDocument/completion","params":{"textDocument":{"uri":"file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"},"position":{"line":11,"character":48}}}Content-Length: 45
+
+{"jsonrpc":"2.0","id":81,"method":"shutdown"}Content-Length: 33
+
+{"jsonrpc":"2.0","method":"exit"}

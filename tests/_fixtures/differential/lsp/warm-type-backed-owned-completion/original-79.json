@@ -1,0 +1,3950 @@
+[
+  {
+    "stage": "cold",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 2,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 2
+    }
+  },
+  {
+    "stage": "background",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 3,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 3
+    }
+  },
+  {
+    "stage": "cold",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 4,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 4
+    }
+  },
+  {
+    "stage": "cold",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 5,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 5
+    }
+  },
+  {
+    "stage": "cold",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 6,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 6
+    }
+  },
+  {
+    "stage": "prime",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 7,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 7
+    }
+  },
+  {
+    "stage": "prime",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 8,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 8
+    }
+  },
+  {
+    "stage": "prime",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 9,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 9
+    }
+  },
+  {
+    "stage": "prime",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 10,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 10
+    }
+  },
+  {
+    "stage": "warm-1",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 11,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 11
+    }
+  },
+  {
+    "stage": "warm-1",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 12,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 12
+    }
+  },
+  {
+    "stage": "warm-1",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 13,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 13
+    }
+  },
+  {
+    "stage": "warm-1",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 14,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 14
+    }
+  },
+  {
+    "stage": "warm-2",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 15,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 15
+    }
+  },
+  {
+    "stage": "warm-2",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 16,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 16
+    }
+  },
+  {
+    "stage": "warm-2",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 17,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 17
+    }
+  },
+  {
+    "stage": "warm-2",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 18,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 18
+    }
+  },
+  {
+    "stage": "warm-3",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 19,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 19
+    }
+  },
+  {
+    "stage": "warm-3",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 20,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 20
+    }
+  },
+  {
+    "stage": "warm-3",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 21,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 21
+    }
+  },
+  {
+    "stage": "warm-3",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 22,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 22
+    }
+  },
+  {
+    "stage": "warm-4",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 23,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 23
+    }
+  },
+  {
+    "stage": "warm-4",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 24,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 24
+    }
+  },
+  {
+    "stage": "warm-4",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 25,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 25
+    }
+  },
+  {
+    "stage": "warm-4",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 26,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 26
+    }
+  },
+  {
+    "stage": "warm-5",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 27,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 27
+    }
+  },
+  {
+    "stage": "warm-5",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 28,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 28
+    }
+  },
+  {
+    "stage": "warm-5",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 29,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 29
+    }
+  },
+  {
+    "stage": "warm-5",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 30,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 1,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 30
+    }
+  },
+  {
+    "stage": "unsaved-host",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 31,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<number, number>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 31
+    }
+  },
+  {
+    "stage": "unsaved-host",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 32,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 32
+    }
+  },
+  {
+    "stage": "unsaved-host",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 33,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 33
+    }
+  },
+  {
+    "stage": "unsaved-host",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 34,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15359
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 2,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15359
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 2,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15359
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 2,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15359
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 2,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 34
+    }
+  },
+  {
+    "stage": "restored-host",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 35,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 35
+    }
+  },
+  {
+    "stage": "restored-host",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 36,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 36
+    }
+  },
+  {
+    "stage": "restored-host",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 37,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 37
+    }
+  },
+  {
+    "stage": "restored-host",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 38,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 38
+    }
+  },
+  {
+    "stage": "same-stamp-dependency",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 39,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 39
+    }
+  },
+  {
+    "stage": "same-stamp-dependency",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 40,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 40
+    }
+  },
+  {
+    "stage": "same-stamp-dependency",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 41,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 41
+    }
+  },
+  {
+    "stage": "same-stamp-dependency",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 42,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 42
+    }
+  },
+  {
+    "stage": "same-stamp-dependency-resolve",
+    "name": "resolved count",
+    "method": "completionItem/resolve",
+    "requestId": 43,
+    "params": {
+      "data": {
+        "vizeCompletion": {
+          "item": {
+            "data": {
+              "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "name": "count",
+              "position": 15363
+            },
+            "kind": 5,
+            "label": "count",
+            "sortText": "11"
+          },
+          "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+          "revision": 3,
+          "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+        }
+      },
+      "kind": 5,
+      "label": "count",
+      "sortText": "11"
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 3,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) count: Ref<string, string>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) count: Ref<string, string>\n```"
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "id": 43
+    }
+  },
+  {
+    "stage": "restored-dependency",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 44,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 44
+    }
+  },
+  {
+    "stage": "restored-dependency",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 45,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 45
+    }
+  },
+  {
+    "stage": "restored-dependency",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 46,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 46
+    }
+  },
+  {
+    "stage": "restored-dependency",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 47,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 3,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 47
+    }
+  },
+  {
+    "stage": "restored-dependency-resolve",
+    "name": "resolved count",
+    "method": "completionItem/resolve",
+    "requestId": 48,
+    "params": {
+      "data": {
+        "vizeCompletion": {
+          "item": {
+            "data": {
+              "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "name": "count",
+              "position": 15363
+            },
+            "kind": 5,
+            "label": "count",
+            "sortText": "11"
+          },
+          "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+          "revision": 3,
+          "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+        }
+      },
+      "kind": 5,
+      "label": "count",
+      "sortText": "11"
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 3,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) count: Ref<number, number>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) count: Ref<number, number>\n```"
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "id": 48
+    }
+  },
+  {
+    "stage": "strict-config",
+    "name": "configuration probe",
+    "method": "textDocument/hover",
+    "requestId": 49,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 9
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst configProbe: null\n```"
+        },
+        "range": {
+          "end": {
+            "character": 17,
+            "line": 10
+          },
+          "start": {
+            "character": 6,
+            "line": 10
+          }
+        }
+      },
+      "id": 49
+    }
+  },
+  {
+    "stage": "same-stamp-config",
+    "name": "configuration probe",
+    "method": "textDocument/hover",
+    "requestId": 50,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 9
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst configProbe: any\n```"
+        },
+        "range": {
+          "end": {
+            "character": 17,
+            "line": 10
+          },
+          "start": {
+            "character": 6,
+            "line": 10
+          }
+        }
+      },
+      "id": 50
+    }
+  },
+  {
+    "stage": "restored-config",
+    "name": "configuration probe",
+    "method": "textDocument/hover",
+    "requestId": 51,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 9
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst configProbe: null\n```"
+        },
+        "range": {
+          "end": {
+            "character": 17,
+            "line": 10
+          },
+          "start": {
+            "character": 6,
+            "line": 10
+          }
+        }
+      },
+      "id": 51
+    }
+  },
+  {
+    "stage": "after-config-restore",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 52,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 52
+    }
+  },
+  {
+    "stage": "after-config-restore",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 53,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 53
+    }
+  },
+  {
+    "stage": "after-config-restore",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 54,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 54
+    }
+  },
+  {
+    "stage": "after-config-restore",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 55,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 5,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 5,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 5,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 5,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 55
+    }
+  },
+  {
+    "stage": "cancel",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 56,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": -32800,
+        "message": "Canceled"
+      },
+      "id": 56
+    }
+  },
+  {
+    "stage": "after-cancel",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 57,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 57
+    }
+  },
+  {
+    "stage": "after-cancel",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 58,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 58
+    }
+  },
+  {
+    "stage": "after-cancel",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 59,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 59
+    }
+  },
+  {
+    "stage": "after-cancel",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 60,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 5,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 5,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 5,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 5,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 60
+    }
+  },
+  {
+    "stage": "closed-refusal",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 61,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": null,
+      "id": 61
+    }
+  },
+  {
+    "stage": "closed-refusal",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 62,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": null,
+      "id": 62
+    }
+  },
+  {
+    "stage": "closed-refusal",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 63,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": null,
+      "id": 63
+    }
+  },
+  {
+    "stage": "closed-refusal",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 64,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": null,
+      "id": 64
+    }
+  },
+  {
+    "stage": "reopened-host",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 65,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 65
+    }
+  },
+  {
+    "stage": "reopened-host",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 66,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 66
+    }
+  },
+  {
+    "stage": "reopened-host",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 67,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 67
+    }
+  },
+  {
+    "stage": "reopened-host",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 68,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 6,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 6,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 6,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 6,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 68
+    }
+  },
+  {
+    "stage": "cross-root",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 69,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 69
+    }
+  },
+  {
+    "stage": "cross-root",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 70,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 70
+    }
+  },
+  {
+    "stage": "cross-root",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 71,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/lib/mod0.ts"
+      },
+      "id": 71
+    }
+  },
+  {
+    "stage": "cross-root",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 72,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15633
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15633
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15633
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15633
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 72
+    }
+  },
+  {
+    "stage": "original-root-after-foreign",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 73,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 73
+    }
+  },
+  {
+    "stage": "original-root-after-foreign",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 74,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 74
+    }
+  },
+  {
+    "stage": "original-root-after-foreign",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 75,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 75
+    }
+  },
+  {
+    "stage": "original-root-after-foreign",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 76,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 6,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 6,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 6,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_1/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 6,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 76
+    }
+  },
+  {
+    "stage": "native-epoch-recovered",
+    "name": "script hover open",
+    "method": "textDocument/hover",
+    "requestId": 77,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 9,
+        "character": 8
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst open: Ref<boolean, boolean>\n```"
+        },
+        "range": {
+          "end": {
+            "character": 10,
+            "line": 9
+          },
+          "start": {
+            "character": 6,
+            "line": 9
+          }
+        }
+      },
+      "id": 77
+    }
+  },
+  {
+    "stage": "native-epoch-recovered",
+    "name": "template hover label",
+    "method": "textDocument/hover",
+    "requestId": 78,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 20,
+        "character": 36
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "contents": {
+          "kind": "markdown",
+          "value": "```typescript\nconst label: string\n```"
+        },
+        "range": {
+          "end": {
+            "character": 39,
+            "line": 20
+          },
+          "start": {
+            "character": 34,
+            "line": 20
+          }
+        }
+      },
+      "id": 78
+    }
+  },
+  {
+    "stage": "native-epoch-recovered",
+    "name": "definition useThing0",
+    "method": "textDocument/definition",
+    "requestId": 79,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 10,
+        "character": 18
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": {
+        "range": {
+          "end": {
+            "character": 25,
+            "line": 3
+          },
+          "start": {
+            "character": 16,
+            "line": 3
+          }
+        },
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/lib/mod0.ts"
+      },
+      "id": 79
+    }
+  },
+  {
+    "stage": "native-epoch-recovered",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 80,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_2/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_2/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_2/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_2/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_2/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_2/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_2/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_2/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 80
+    }
+  }
+]

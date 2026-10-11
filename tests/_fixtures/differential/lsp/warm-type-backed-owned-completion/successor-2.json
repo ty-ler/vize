@@ -1,0 +1,220 @@
+[
+  {
+    "stage": "cross-root",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 72,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_2/projects/41e3b84db2abaa159bcfd6b2b9a0960e5f14b6912bf87bd8b84992036404bd87/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15361
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_2/projects/41e3b84db2abaa159bcfd6b2b9a0960e5f14b6912bf87bd8b84992036404bd87/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_2/projects/41e3b84db2abaa159bcfd6b2b9a0960e5f14b6912bf87bd8b84992036404bd87/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15361
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_2/projects/41e3b84db2abaa159bcfd6b2b9a0960e5f14b6912bf87bd8b84992036404bd87/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_2/projects/41e3b84db2abaa159bcfd6b2b9a0960e5f14b6912bf87bd8b84992036404bd87/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15361
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_2/projects/41e3b84db2abaa159bcfd6b2b9a0960e5f14b6912bf87bd8b84992036404bd87/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_2/projects/41e3b84db2abaa159bcfd6b2b9a0960e5f14b6912bf87bd8b84992036404bd87/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15361
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_2/projects/41e3b84db2abaa159bcfd6b2b9a0960e5f14b6912bf87bd8b84992036404bd87/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 72
+    }
+  },
+  {
+    "stage": "native-epoch-recovered",
+    "name": "completion thing.",
+    "method": "textDocument/completion",
+    "requestId": 80,
+    "params": {
+      "textDocument": {
+        "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+      },
+      "position": {
+        "line": 11,
+        "character": 48
+      }
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "result": [
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_3/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_3/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_3/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_3/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_3/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_3/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "$EDITOR_SESSION_3/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file://$EDITOR_SESSION_3/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        }
+      ],
+      "id": 80
+    }
+  }
+]

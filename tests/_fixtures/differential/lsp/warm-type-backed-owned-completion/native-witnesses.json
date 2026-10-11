@@ -1,0 +1,94 @@
+[
+  {
+    "side": "before",
+    "stage": "cross-root",
+    "requestId": 72,
+    "authored": {
+      "file": "/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue",
+      "code": "<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp1 from \"./Comp1.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp1 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n",
+      "sha256": "3789075ef862cfdd79436a34f148f54daa68b92c670aae10cc7c1d1240517b5b"
+    },
+    "requestPosition": {
+      "line": 11,
+      "character": 48
+    },
+    "root": "/tmp/vize-canon/editor/sessions/session-TXbzoc/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0",
+    "virtualFile": "/tmp/vize-canon/editor/sessions/session-TXbzoc/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+    "position": 15633,
+    "virtualBody": "before-cross-root.vue.ts.txt",
+    "virtualSHA256": "6d368837e2292c0e3edf5bb653a066a69b1e8802c8c84fdd0eef9513beb65661",
+    "configBody": "before-cross-root-tsconfig.json",
+    "configSHA256": "a9828d408b06d127a2f7dc0e73c8b73091fbce90278d9261ad37da16b19b19ff",
+    "portableVirtualSHA256": "69ecf2a22d989803cfd12e8327984267a119e52b0d1d88c806d030ae59e3a0af",
+    "portableConfigSHA256": "a9828d408b06d127a2f7dc0e73c8b73091fbce90278d9261ad37da16b19b19ff"
+  },
+  {
+    "side": "before",
+    "stage": "native-epoch-recovered",
+    "requestId": 80,
+    "authored": {
+      "file": "/home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue",
+      "code": "<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp21 from \"./Comp21.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp21 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n",
+      "sha256": "93d788ab91ae76bdeffce64ebf6368883bde79885969a121e76c8be173e1979a"
+    },
+    "requestPosition": {
+      "line": 11,
+      "character": 48
+    },
+    "root": "/tmp/vize-canon/editor/sessions/session-kaTHrW/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8",
+    "virtualFile": "/tmp/vize-canon/editor/sessions/session-kaTHrW/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+    "position": 15363,
+    "virtualBody": "before-native-epoch-recovered.vue.ts.txt",
+    "virtualSHA256": "950cb517115f33a1aa5fd8a36515b0cf40cc862a81614be541d50d01c0f20b38",
+    "configBody": "before-native-epoch-recovered-tsconfig.json",
+    "configSHA256": "8e267fefcce710418391f8dc91fbdbd7fccea435e41291d65fe3908a2928b656",
+    "portableVirtualSHA256": "351f54a6ef7e2ca42bedc986560225456f9a2f4b6e2fdc853ca6cf83fa21bbd8",
+    "portableConfigSHA256": "8e267fefcce710418391f8dc91fbdbd7fccea435e41291d65fe3908a2928b656"
+  },
+  {
+    "side": "after",
+    "stage": "cross-root",
+    "requestId": 72,
+    "authored": {
+      "file": "/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue",
+      "code": "<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp1 from \"./Comp1.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp1 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n",
+      "sha256": "3789075ef862cfdd79436a34f148f54daa68b92c670aae10cc7c1d1240517b5b"
+    },
+    "requestPosition": {
+      "line": 11,
+      "character": 48
+    },
+    "root": "/tmp/vize-canon/editor/sessions/session-3qP4jc/projects/41e3b84db2abaa159bcfd6b2b9a0960e5f14b6912bf87bd8b84992036404bd87",
+    "virtualFile": "/tmp/vize-canon/editor/sessions/session-3qP4jc/projects/41e3b84db2abaa159bcfd6b2b9a0960e5f14b6912bf87bd8b84992036404bd87/src/c/Comp0.vue.ts",
+    "position": 15361,
+    "virtualBody": "after-cross-root.vue.ts.txt",
+    "virtualSHA256": "12177729aa4fb4b730eca9346a7063ae5f94746322c6857c4762cc8db4f7227a",
+    "configBody": "after-cross-root-tsconfig.json",
+    "configSHA256": "aef25f5f6a055e125f4af4617b567462c9ae4d0c1cbeb980b21ae247b25ad352",
+    "portableVirtualSHA256": "e626d4a5a99ac454045162f47fe539ba80d1ffc74cbd222e8870697b1d74b6f1",
+    "portableConfigSHA256": "aef25f5f6a055e125f4af4617b567462c9ae4d0c1cbeb980b21ae247b25ad352"
+  },
+  {
+    "side": "after",
+    "stage": "native-epoch-recovered",
+    "requestId": 80,
+    "authored": {
+      "file": "/home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue",
+      "code": "<script setup lang=\"ts\">\nimport { computed, ref } from \"vue\";\nimport { useThing0 } from \"../lib/mod0\";\nimport Comp7 from \"./Comp7.vue\";\nimport Comp14 from \"./Comp14.vue\";\nimport Comp21 from \"./Comp21.vue\";\n\nconst { title, size = 1 } = defineProps<{ title: string; size?: number }>();\nconst emit = defineEmits<{ select: [id: number] }>();\nconst open = ref(false);\nconst thing = useThing0(size);\nconst label = computed(() => `${title} (${thing.count.value})`);\nfunction toggle(next: boolean): void {\n  open.value = next;\n  emit(\"select\", thing.items.value.length);\n}\n</script>\n\n<template>\n  <section :class=\"{ open }\">\n    <h2 @click=\"toggle(!open)\">{{ label }}</h2>\n    <ul v-if=\"open\">\n      <li v-for=\"item in thing.items.value\" :key=\"item.id\">{{ item.label }}</li>\n    </ul>\n    <Comp7 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp14 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n    <Comp21 v-if=\"size < 0\" :title=\"title\" @select=\"toggle(false)\" />\n  </section>\n</template>\n",
+      "sha256": "93d788ab91ae76bdeffce64ebf6368883bde79885969a121e76c8be173e1979a"
+    },
+    "requestPosition": {
+      "line": 11,
+      "character": 48
+    },
+    "root": "/tmp/vize-canon/editor/sessions/session-uKgPIU/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8",
+    "virtualFile": "/tmp/vize-canon/editor/sessions/session-uKgPIU/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+    "position": 15363,
+    "virtualBody": "after-native-epoch-recovered.vue.ts.txt",
+    "virtualSHA256": "62f0cebdf51420f4ebae25775f8c10c4ce0eb0e1d68f8fc164a2abbc481ea97b",
+    "configBody": "after-native-epoch-recovered-tsconfig.json",
+    "configSHA256": "8e267fefcce710418391f8dc91fbdbd7fccea435e41291d65fe3908a2928b656",
+    "portableVirtualSHA256": "1c38e6874df9be1c9d188d116f4a2e4e00f77ed1d9e70dcbea94ac2a48ccead5",
+    "portableConfigSHA256": "8e267fefcce710418391f8dc91fbdbd7fccea435e41291d65fe3908a2928b656"
+  }
+]
