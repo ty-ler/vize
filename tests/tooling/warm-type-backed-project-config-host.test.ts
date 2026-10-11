@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { test } from "node:test";
 import { qualifyProjectConfigHost } from "../performance/support/warm-type-backed-project-config-host.ts";
+import { qualifyProjectConfigNullCompletionHost } from "../performance/support/warm-type-backed-project-config-null-completion-host.ts";
 import { projectConfigManifest as manifest } from "../performance/support/warm-type-backed-project-config-manifest.ts";
 import { allowed } from "../performance/support/warm-type-backed-production-paths.ts";
 
@@ -38,7 +39,10 @@ await test("qualification binds every current source and whole unchanged corpus 
       : createHash("sha256")
           .update(fs.readFileSync(new URL("../../" + file, import.meta.url)))
           .digest("hex");
-  assert.ok(qualifyProjectConfigHost(production, new Set(), actual));
+  assert.ok(
+    qualifyProjectConfigHost(production, new Set(), actual) ??
+      qualifyProjectConfigNullCompletionHost(production, new Set(), actual),
+  );
 });
 
 await test("each original and current source body including absent new owners is mandatory", () => {

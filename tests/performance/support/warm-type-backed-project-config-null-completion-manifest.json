@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "originalConfigManifestSHA256": "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc",
+  "predecessorSource": "47e3f2a4c3f5c4ebfbdf8ccd4354781ef517ee13",
+  "harnessSuccessor": [
+    "tests/performance/support/warm-type-backed-owner-resolve.ts",
+    "61921cd757075d18507898458332dc1130590a619285b0862a8be719708ea44a",
+    "d200def1f5420e0b1547ea37c00400339da517c2ab400860bfc8981300166e5b"
+  ],
+  "original400": 400,
+  "originalPackets": 79,
+  "supplementalResolves": 8,
+  "supplementalRefusals": 8,
+  "originalComparedFields": 20
+}
