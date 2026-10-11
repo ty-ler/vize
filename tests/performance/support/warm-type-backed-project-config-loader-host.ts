@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { qualifyProjectConfigHost } from "./warm-type-backed-project-config-host.ts";
+import { qualifyProjectConfigNullCompletionHost } from "./warm-type-backed-project-config-null-completion-host.ts";
 
 type BodyDigest = (side: "before" | "after", file: string) => string | null;
 type BodyPair = [string, string | null, string | null];
@@ -40,9 +41,16 @@ export function qualifyProjectConfigLoaderHost(
   alreadyQualified: ReadonlySet<string>,
   digest: BodyDigest,
 ) {
-  const original = qualifyProjectConfigHost(production, alreadyQualified, digest);
+  const original =
+    qualifyProjectConfigHost(production, alreadyQualified, digest) ??
+    qualifyProjectConfigNullCompletionHost(production, alreadyQualified, digest);
   if (!original) return null;
-  assert.equal(original.manifestSHA256, manifest.originalConfigManifestSHA256);
+  assert.equal(
+    "originalConfigManifestSHA256" in original
+      ? original.originalConfigManifestSHA256
+      : original.manifestSHA256,
+    manifest.originalConfigManifestSHA256,
+  );
   const context = [
     ["original-reviewed-loader", manifest.legacyContext],
     ["complete-composed-vite-loader", manifest.composedContext],
