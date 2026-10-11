@@ -652,7 +652,12 @@ async function findServerPath(
       return matchingCandidate.path;
     }
 
-    const releaseCandidate = await resolveReleaseServerCandidate(context, exeName, expectedVersion);
+    const releaseCandidate = await resolveReleaseServerCandidate(
+      context,
+      exeName,
+      expectedVersion,
+      generation,
+    );
     if (generation !== configurationSyncGeneration) return undefined;
     if (releaseCandidate) {
       logSelectedServer(releaseCandidate, expectedVersion);
@@ -934,6 +939,7 @@ async function resolveReleaseServerCandidate(
   context: ExtensionContext,
   exeName: string,
   expectedVersion: string,
+  generation: number,
 ): Promise<InspectedServerCandidate | undefined> {
   const target = getReleaseServerTarget();
   if (!target) {
@@ -951,6 +957,7 @@ async function resolveReleaseServerCandidate(
   );
   const serverPath = path.join(installDir, exeName);
   const cachedCandidate = await inspectCachedReleaseServer(serverPath, expectedVersion);
+  if (generation !== configurationSyncGeneration) return undefined;
   if (cachedCandidate) {
     return cachedCandidate;
   }
@@ -965,14 +972,19 @@ async function resolveReleaseServerCandidate(
     outputChannel.appendLine(`Downloading Vize language server ${expectedVersion}: ${downloadUrl}`);
     fs.rmSync(installDir, { force: true, recursive: true });
     await fs.promises.mkdir(installDir, { recursive: true });
+    if (generation !== configurationSyncGeneration) return undefined;
     await downloadFile(downloadUrl, archivePath);
+    if (generation !== configurationSyncGeneration) return undefined;
 
     // Verify SHA-256 sidecars before executing downloaded servers.
     // Missing, malformed, or mismatched checksums fail closed. (#969)
     await downloadFile(checksumUrl, checksumPath);
+    if (generation !== configurationSyncGeneration) return undefined;
     await verifyArchiveChecksum(archivePath, checksumPath);
+    if (generation !== configurationSyncGeneration) return undefined;
 
     await extractReleaseArchive(archivePath, installDir, exeName);
+    if (generation !== configurationSyncGeneration) return undefined;
 
     const candidate = await inspectServerCandidate({
       path: serverPath,

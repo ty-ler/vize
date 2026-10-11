@@ -136,3 +136,24 @@ await test("actual findFiles keeps original arguments, commits only completed re
   assert.equal(refusal.discovery.hasConfig, false);
   assert.deepEqual(refusal.trace, ["findFiles enter generation=8", "findFiles error generation=8"]);
 });
+
+for (const [olderResult, latestResult] of [
+  [[{ path: "deleted nested config" }], []],
+  [[], [{ path: "created nested config" }]],
+]) {
+  await test(`out-of-order nested discovery retains the latest ${latestResult.length ? "creation" : "deletion"}`, async () => {
+    const searches = [];
+    const { discovery, trace } = createDiscovery(
+      () => new Promise((resolve) => searches.push(resolve)),
+    );
+    const older = discovery.refresh();
+    const latest = discovery.refresh();
+    searches[1](latestResult);
+    await latest;
+    assert.equal(discovery.hasConfig, latestResult.length > 0);
+    searches[0](olderResult);
+    await older;
+    assert.equal(discovery.hasConfig, latestResult.length > 0);
+    assert.equal(trace.at(-1), "findFiles refused generation=undefined stage=superseded");
+  });
+}
