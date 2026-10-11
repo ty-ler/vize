@@ -22,6 +22,7 @@ use super::type_world::ParsedTypeModule;
 
 type ModuleCell = Arc<OnceLock<Option<ParsedTypeModule>>>;
 type ResolutionCell = Arc<OnceLock<Option<PathBuf>>>;
+type SourceCell = Arc<OnceLock<Option<Arc<str>>>>;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum ResolutionScope {
@@ -32,7 +33,7 @@ enum ResolutionScope {
 #[derive(Debug, Default)]
 pub struct TypeSourceSnapshot {
     overlays: FxHashMap<PathBuf, Arc<str>>,
-    disk: Mutex<FxHashMap<PathBuf, Option<Arc<str>>>>,
+    disk: Mutex<FxHashMap<PathBuf, SourceCell>>,
     resolutions: Mutex<FxHashMap<(ResolutionScope, String), ResolutionCell>>,
     pub(super) summaries: Mutex<FxHashMap<PathBuf, FileTypeSummary>>,
     /// Unresolved dependency facts; each world resolves targets on its own clone.
@@ -59,9 +60,17 @@ impl TypeSourceSnapshot {
         if let Some(source) = self.overlays.get(&path) {
             return Some(Arc::clone(source));
         }
-        let mut disk = self.disk.lock().ok()?;
-        disk.entry(path.clone())
-            .or_insert_with(|| std::fs::read_to_string(path).ok().map(Arc::from))
+        let entry = self
+            .disk
+            .lock()
+            .ok()?
+            .entry(path.clone())
+            .or_default()
+            .clone();
+        // Capture each file once without serializing independent disk reads.
+        // Waiters for this path share its source or miss after the map unlocks.
+        entry
+            .get_or_init(|| std::fs::read_to_string(path).ok().map(Arc::from))
             .clone()
     }
 }

@@ -59,3 +59,82 @@ fn new_unsaved_modules_follow_disk_extension_precedence_and_js_substitution() {
     );
     assert_eq!(sources.resolve_import(&root, "./new.js"), Some(unsaved_new));
 }
+
+#[test]
+fn concurrent_readers_share_one_captured_disk_source() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("shared.ts");
+    std::fs::write(&path, "export type Shared = string").unwrap();
+    let sources = TypeSourceSnapshot::default();
+    let start = std::sync::Barrier::new(16);
+    let reads = std::thread::scope(|scope| {
+        let workers: Vec<_> = (0..16)
+            .map(|_| {
+                scope.spawn(|| {
+                    start.wait();
+                    sources.read(&path).unwrap()
+                })
+            })
+            .collect();
+        workers
+            .into_iter()
+            .map(|worker| worker.join().unwrap())
+            .collect::<Vec<_>>()
+    });
+    for source in &reads {
+        assert_eq!(source.as_ref(), "export type Shared = string");
+        assert!(Arc::ptr_eq(&reads[0], source));
+    }
+    std::fs::write(&path, "export type Shared = number").unwrap();
+    assert!(Arc::ptr_eq(&reads[0], &sources.read(&path).unwrap()));
+    assert_eq!(
+        TypeSourceSnapshot::default().read(&path).as_deref(),
+        Some("export type Shared = number")
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn blocked_disk_read_does_not_block_an_unrelated_dependency() {
+    use std::io::Write;
+    use std::sync::mpsc;
+    use std::time::Duration;
+
+    let dir = tempfile::tempdir().unwrap();
+    let blocked = dir.path().join("blocked.ts");
+    let independent = dir.path().join("independent.ts");
+    assert!(
+        std::process::Command::new("mkfifo")
+            .arg(&blocked)
+            .status()
+            .unwrap()
+            .success()
+    );
+    std::fs::write(&independent, "export type Independent = boolean").unwrap();
+    let sources = Arc::new(TypeSourceSnapshot::default());
+    let blocked_sources = Arc::clone(&sources);
+    let blocked_path = blocked.clone();
+    let blocked_reader = std::thread::spawn(move || blocked_sources.read(&blocked_path));
+    // Opening the writer completes only after the reader enters filesystem I/O.
+    // Keep it open without bytes so that the source read cannot finish yet.
+    let mut writer = std::fs::OpenOptions::new()
+        .write(true)
+        .open(&blocked)
+        .unwrap();
+    let (ready, completed) = mpsc::channel();
+    let independent_sources = Arc::clone(&sources);
+    let independent_reader = std::thread::spawn(move || {
+        ready.send(independent_sources.read(&independent)).unwrap();
+    });
+    let observed = completed.recv_timeout(Duration::from_secs(5));
+    // Release and join both readers even when the concurrency assertion fails.
+    writer.write_all(b"export type Blocked = number").unwrap();
+    drop(writer);
+    let captured = blocked_reader.join().unwrap();
+    independent_reader.join().unwrap();
+    assert_eq!(captured.as_deref(), Some("export type Blocked = number"));
+    assert_eq!(
+        observed.unwrap().as_deref(),
+        Some("export type Independent = boolean")
+    );
+}
