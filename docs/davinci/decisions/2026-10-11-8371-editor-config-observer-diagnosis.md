@@ -32,6 +32,13 @@ The temporary probes and scoped workflow will be excluded from any source
 fix handed to the config owner. A production cause and the original
 positive and refusal controls must be qualified before readiness.
 
+The faithful watcher control `aaef834399` passed the complete editor
+composite in [38113920929](https://github.com/ubugeeei-prod/vize/actions/runs/38113920929).
+Artifact `11692487779` retains all three edits' complete before/after
+messages and authored configs; each original control has exactly one
+replacement initialization with `{ typecheck: false }` and unchanged
+shutdown/exit ownership. The original failure cause is still unproved.
+
 An independent startup ownership candidate remains unqualified: the
 original `startClient` publishes `client` only after asynchronous
 initialization. An overlapping explicit disable can observe no client,
@@ -41,3 +48,12 @@ completion with the full initialization options, original 20-second
 poll helper, exact shutdown/exit messages, and the owned child process
 exit. Its before/after messages are retained. This does not yet establish
 the cause of the original nested-file content-edit failure.
+
+The first pending-startup attempt
+[38114194553](https://github.com/ubugeeei-prod/vize/actions/runs/38114194553)
+failed on VS Code download transport before the host. The next
+[38114363742](https://github.com/ubugeeei-prod/vize/actions/runs/38114363742)
+reached the new test but exposed its incorrect expectation of recommended
+defaults after an explicit typecheck switch. Correcting only that new
+complete packet expectation to the existing `{ typecheck: false }`
+contract retains every shutdown/exit assertion and the original controls.

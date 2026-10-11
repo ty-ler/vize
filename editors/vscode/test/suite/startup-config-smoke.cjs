@@ -2,7 +2,6 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vscode = require("vscode");
-const { recommendedInitializationOptions } = require("./extension-host-fixtures.cjs");
 const {
   assertInitializationOptions,
   disableVizeAndWaitForShutdown,
@@ -22,7 +21,7 @@ exports.runStartupConfigSmoke = async function runStartupConfigSmoke() {
   const directory = path.join(path.dirname(logPath), "existing-config-events", "pending-startup");
   fs.mkdirSync(directory, { recursive: true });
   const gate = path.join(directory, "initialize-release");
-  const options = { ...recommendedInitializationOptions, typecheck: false };
+  const options = { typecheck: false };
 
   try {
     for (const disableWhilePending of [true, false]) {
