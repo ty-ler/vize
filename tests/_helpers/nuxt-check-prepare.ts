@@ -6,6 +6,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { execNpxCommand } from "./app-fixture-runtime.ts";
+import { selectNuxtPrepareRuntime } from "./nuxt-check-runtime.ts";
 import {
   assertNoSourceMutation,
   blobOid,
@@ -86,7 +87,7 @@ export function prepareNuxtCheckFixture(options: PrepareOptions): string {
   const commands: Array<Record<string, unknown>> = [];
   const sourceMutations: string[] = [];
   const lockChanges: Array<Record<string, unknown>> = [];
-  const env = {
+  let env: NodeJS.ProcessEnv = {
     ...process.env,
     ...options.env,
     GIT_CEILING_DIRECTORIES: path.dirname(cwd),
@@ -137,7 +138,11 @@ export function prepareNuxtCheckFixture(options: PrepareOptions): string {
     }
   }
   let failure: unknown;
+  let runtime: ReturnType<typeof selectNuxtPrepareRuntime>["observation"] | undefined;
   try {
+    const selected = selectNuxtPrepareRuntime(packageJson.engines?.node, env);
+    env = selected.env;
+    runtime = selected.observation;
     // Retain the actual unlocked result; do not describe this as a frozen install.
     // Lifecycle scripts can rewrite authored app sources. The explicit Nuxt
     // preparation below invokes the real modules without those unrelated scripts.
@@ -279,6 +284,7 @@ export function prepareNuxtCheckFixture(options: PrepareOptions): string {
           })),
           authoredPreserved: true,
           lockedInstallation: false,
+          runtime,
           commands,
           lockChanges,
           sourceMutations,
