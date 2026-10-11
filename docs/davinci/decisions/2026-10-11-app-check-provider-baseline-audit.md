@@ -21,9 +21,9 @@ at `f0b776df7275011ab59cfe59bb455a5c684ad6c9`. Both explicitly report
 `Snapshot matched` for all three projects. Their source pins and golden blobs
 equal those at `8170fd3e` and observed main `d55b8238f89bab4418a1a961bd8db1c84911cb42`.
 
-| Project | Authored source pin | Original golden Git blob |
-| --- | --- | --- |
-| elk | `8aa2b4650760eeba4ea1fdd9dc18d8a88ca5d7f0` | `6e329a716a454f9457ceea445452a62d2848c021` |
+| Project | Authored source pin                        | Original golden Git blob                   |
+| ------- | ------------------------------------------ | ------------------------------------------ |
+| elk     | `8aa2b4650760eeba4ea1fdd9dc18d8a88ca5d7f0` | `6e329a716a454f9457ceea445452a62d2848c021` |
 | nuxt-ui | `3dbca020969582d577c7df9698dc8cd484f76dc1` | `6aa6be3bdb9702e59ea5f5ea9d87549c8f515856` |
 | reka-ui | `c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2` | `211c75eaeb898c3f5d61c4fc5bb1bbe063c7d30e` |
 
@@ -40,10 +40,10 @@ describe reported membership, not independently proved native root membership:
 the snapshot formatter removes `programs`, and `fileCount` counts reported files.
 
 | Project | Report files before / after | Identical original file objects | Changed original file objects | Errors before / after |
-| --- | --- | --- | --- | --- |
-| elk | 262 / 279 | 123 | 139 | 286 / 3 |
-| nuxt-ui | 231 / 398 | 16 | 215 | 1677 / 551 |
-| reka-ui | 913 / 928 | 157 | 756 | 3113 / 280 |
+| ------- | --------------------------- | ------------------------------- | ----------------------------- | --------------------- |
+| elk     | 262 / 279                   | 123                             | 139                           | 286 / 3               |
+| nuxt-ui | 231 / 398                   | 16                              | 215                           | 1677 / 551            |
+| reka-ui | 913 / 928                   | 157                             | 756                           | 3113 / 280            |
 
 Elk adds seventeen authored TypeScript files; ReKa adds fifteen authored
 TypeScript files. Without historical whole native programs, their cause cannot
