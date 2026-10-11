@@ -363,7 +363,7 @@ vize fmt src --write
 
 À la prochaine version, `vize check` et `vize lsp` activeront la vérification Vue JSX sans `vize.config.*` dédié. Les configurations dédiées conserveront `typeChecker.jsxTypecheck: false`, sauf activation explicite.
 Les versions publiées conservent leur comportement actuel. Consultez les [valeurs par défaut du projet et de l'éditeur](../../guide/configuration.md#project-and-editor-defaults) (en anglais).
-Pour un projet React ou mixte, définissez explicitement `vize.typeChecker.jsxTypecheck` à `false` dans Vite. La syntaxe JSX ne permet pas d'identifier le framework ; la vérification des SFC Vue reste disponible.
+Pour un projet React ou mixte, définissez explicitement `typeChecker.jsxTypecheck` à `false` dans la configuration utilisée. Dans la configuration Vite, utilisez `vize.typeChecker.jsxTypecheck`. La syntaxe JSX ne permet pas d'identifier le framework ; la vérification des SFC Vue reste disponible.
 
 ```ts
 // vize.config.ts

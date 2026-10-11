@@ -350,7 +350,7 @@ vize fmt src --write
 新規プロジェクトの既定値のリリース検証は未完了です。Vue と React が混在する場合は、[Vue JSX の型チェックを明示的に無効にしてください](https://github.com/ubugeeei-prod/vize/blob/main/docs/davinci/decisions/2026-10-10-fresh-lsp-capability-policy.md#react-owned-projects)。Vue SFC の型チェックは引き続き利用できます。
 
 公開済みリリースは従来の動作を維持します。[プロジェクトの既定値](./configuration.md#プロジェクトとエディターの既定値)を参照してください。
-React 用、または React と Vue JSX が混在するプロジェクトでは、Vite 設定の `vize.typeChecker.jsxTypecheck` を明示的に `false` にします。JSX 構文からフレームワークは判別しません。Vue SFC の型チェックは引き続き利用できます。
+React 用、または React と Vue JSX が混在するプロジェクトでは、利用する設定の `typeChecker.jsxTypecheck` を明示的に `false` にします。Vite 設定では `vize.typeChecker.jsxTypecheck` を指定します。JSX 構文からフレームワークは判別しません。Vue SFC の型チェックは引き続き利用できます。
 
 ```ts
 // vize.config.ts

@@ -66,3 +66,10 @@ peer review verifies the English-labeled default link resolves from each locale
 JSX route to the existing English guide fragment. These paragraphs retain the
 next-release boundary and require explicit React opt-out; they do not establish
 published behavior.
+
+A post-restack source review retains every incoming Japanese JSX compiler
+paragraph and corrects four locale opt-out instructions to name the selected
+configuration. A dedicated `vize.config.*` takes precedence over the Vite
+projection; set `typeChecker.jsxTypecheck: false` there when present. Vite
+configuration uses the nested `vize.typeChecker.jsxTypecheck` path. Original
+code examples and heading targets remain byte-exact.
