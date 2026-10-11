@@ -32,6 +32,7 @@ unset VIZE_TEST_DISABLE_TSGO VIZE_NESTED_BATCH_CAPTURE_DIR
 export CORSA_PATH="$VIZE_TEST_TSGO_PATH"
 export VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR="$RUNNER_TEMP/native-semantic-completion"
 mkdir "$VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR"
+node tests/_fixtures/corsa-process-receipt/verify-vendor.mjs > "$VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR/vendor-custody.json"
 printf '%s\n' "$SOURCE_SHA" > "$VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR/source-sha.txt"
 options=(--locked --profile ci-opt --config 'profile.ci-opt.inherits="release"' --config 'profile.ci-opt.lto="thin"' --config 'profile.ci-opt.codegen-units=16')
 # The already source-built libtest and CLI targets share profile, features and cache.
