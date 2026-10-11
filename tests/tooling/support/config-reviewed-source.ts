@@ -6,6 +6,7 @@ import {
 
 import { qualifyConfigRepairedReviewHost } from "../../performance/support/warm-type-backed-config-repair-host.ts";
 import { canonBatchManifest } from "../../performance/support/warm-type-backed-config-canon-batch-host.ts";
+import { runtimeRepairManifest } from "../../performance/support/warm-type-backed-project-config-runtime-repair.ts";
 
 type Digest = (side: "before" | "after", file: string) => string | null;
 const bodies = new Map(
@@ -27,15 +28,23 @@ export const canonBatchConfigProduction = [
 
 /** Current files remain actual reads; only the explicitly frozen before fixture is extended. */
 export function qualifyCurrentConfigReviewHost(allowed: ReadonlySet<string>, digest: Digest) {
+  const runtimeBefore = new Map(
+    runtimeRepairManifest.inheritedBodies.map(([file, , after]) => [file, after]),
+  );
+  const runtimeRepaired = [...runtimeBefore].every(
+    ([file, after]) => digest("after", file) === after,
+  );
   return qualifyConfigRepairedReviewHost(
     canonBatchConfigProduction,
     allowed,
     (side, file) =>
-      side === "before" && batchBefore.has(file)
-        ? batchBefore.get(file)!
-        : side === "before" && bodies.has(file)
-          ? bodies.get(file)![1]
-          : digest(side, file),
+      side === "before" && runtimeRepaired && runtimeBefore.has(file)
+        ? runtimeBefore.get(file)!
+        : side === "before" && batchBefore.has(file)
+          ? batchBefore.get(file)!
+          : side === "before" && bodies.has(file)
+            ? bodies.get(file)![1]
+            : digest(side, file),
     qualifyIssuedCompletionHost,
   );
 }
