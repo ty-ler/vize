@@ -47,3 +47,13 @@ credit. The original failed comparison remains evidence; the scaler remains
 red until every live causal and refusal control passes. Protected Stack
 delivery, actual merge, release and installed consumer acceptance remain
 separate requirements for #8371 and #8370.
+
+The exact-head replay in [38110650295](https://github.com/ubugeeei-prod/vize/actions/runs/38110650295)
+retained both complete 79-row primary sides but exposed a supplemental capture
+race: OS exit precedes stream close, when the existing capture writes its complete
+bytes. The owner replay now reuses the original `finishWire` contract and its
+unchanged five-second close deadline, checks complete untruncated streams and
+normal exit, and writes the raw capture and partial outcome receipt before
+whole-frame assertions. Additional resolve calls return the empty following-frame
+array required by the unchanged client. The same full 79-row and 16 extra-request
+workflow remains the regression check; no notification, frame or refusal is waived.

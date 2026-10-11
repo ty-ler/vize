@@ -11,6 +11,7 @@ import { QueryRecorder } from "./warm-type-backed-measure.ts";
 import {
   assertOriginalFrames,
   assertTypedPackets,
+  finishWire,
   object,
   requests,
   waitForInitialTypes,
@@ -31,6 +32,7 @@ class OwnerRecorder extends QueryRecorder {
     let id!: number;
     const result = await this.session.request("completionItem/resolve", params, 60_000, (value) => {
       id = value;
+      return [];
     });
     const responses = this.responses.filter((response) => response.id === id);
     assert.equal(responses.length, 1);
@@ -145,9 +147,20 @@ export async function runOwnerResolveFixture(repoRoot: string, workspace: string
     await session.shutdown();
     await awaitRetired([...native.values()]);
   }
-  const captures = fs.readdirSync(captureRoot).filter((name) => !previous.includes(name));
-  assert.equal(captures.length, 1);
-  const capture = path.join(captureRoot, captures[0]);
+  const wire = await finishWire(repoRoot, previous, captureRoot);
+  const capture = wire.capture;
+  fs.mkdirSync(output, { recursive: true });
+  fs.cpSync(capture, path.join(output, "wire"), { recursive: true });
+  const receipt = {
+    input,
+    initialization,
+    rows: recorder.rows,
+    additional: recorder.additional,
+    refusalFailures: recorder.refusalFailures,
+    failure,
+    wire,
+  };
+  fs.writeFileSync(path.join(output, "resolved.json"), `${JSON.stringify(receipt, null, 2)}\n`);
   const client = decodeFrames(fs.readFileSync(path.join(capture, "client.bin"))).messages;
   const server = decodeFrames(fs.readFileSync(path.join(capture, "server.bin"))).messages;
   const additional = new Set(recorder.additional.map((row) => row.id));
@@ -168,17 +181,6 @@ export async function runOwnerResolveFixture(repoRoot: string, workspace: string
       [row.response],
     );
   }
-  fs.mkdirSync(output, { recursive: true });
-  fs.cpSync(capture, path.join(output, "wire"), { recursive: true });
-  const receipt = {
-    input,
-    initialization,
-    rows: recorder.rows,
-    additional: recorder.additional,
-    refusalFailures: recorder.refusalFailures,
-    failure,
-  };
-  fs.writeFileSync(path.join(output, "resolved.json"), `${JSON.stringify(receipt, null, 2)}\n`);
   assert.equal(failure, undefined, "all supplemental resolve/refusal outcomes are required");
   assert.equal(recorder.rows.length, 79);
   assert.equal(recorder.additional.filter((row) => !row.refusal).length, 8);
