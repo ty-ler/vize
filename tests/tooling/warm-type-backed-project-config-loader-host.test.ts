@@ -100,7 +100,10 @@ await test("every current config, corpus and loader body matches its complete pi
         : "complete-project-config-and-component-owner-migration-successor",
   );
   if ("configReviewContext" in successor) {
-    assert.equal(successor.files.length, 135);
+    assert.ok("configCanonBatchContext" in successor);
+    assert.equal(successor.configCanonBatchContext.completeProductionBodyPairs.length, 2);
+    assert.equal(successor.configCanonBatchContext.completeCorpusBodyPairs.length, 1);
+    assert.equal(successor.files.length, 136);
     assert.equal(successor.originalQualification.files.length, 119);
   } else assert.equal(successor.files.length, "issuedCompletionContext" in successor ? 119 : 113);
   assert.equal(successor.completeComponentBodies, 28);

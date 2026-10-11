@@ -8,6 +8,7 @@ import {
 import { qualifyComponentIssuedHost } from "../performance/support/warm-type-backed-component-issued-host.ts";
 import { componentIssuedSourcePair } from "./support/component-issued-source.ts";
 import { canonBatchManifest as batch } from "../performance/support/warm-type-backed-config-canon-batch-host.ts";
+import { configFixtureManifest as fixture } from "../performance/support/warm-type-backed-config-fixture-host.ts";
 import { runtimeRepairManifest } from "../performance/support/warm-type-backed-project-config-runtime-repair.ts";
 
 type Digest = (side: "before" | "after", file: string) => string | null;
@@ -40,6 +41,9 @@ for (const composed of [false, true]) {
     ...batch.corpusBodies.map(
       ([file, before, after]) => [file, composed ? before : after] as const,
     ),
+    ...fixture.productionBodies.map(
+      ([file, before, , after]) => [file, composed ? before : after] as const,
+    ),
   ]);
   const runtimeBefore = new Map(
     runtimeRepairManifest.inheritedBodies.map(([file, , after]) => [file, after]),
@@ -61,7 +65,12 @@ for (const composed of [false, true]) {
   await test(`${scope} reviewed component qualification retains the complete original witness and actual source footprint`, () => {
     assert.equal(qualifyComponentIssuedHost(production, new Set(), digest), null);
     const result = qualify();
-    assert.ok(result && "configRepairContext" in result && "configCanonBatchContext" in result);
+    assert.ok(
+      result &&
+        "configRepairContext" in result &&
+        "configCanonBatchContext" in result &&
+        "configFixtureContext" in result,
+    );
     assert.deepEqual(result.files, production);
     assert.deepEqual(result.originalQualification.files, pair.production);
     assert.equal(result.files.length, composed ? 136 : 28);
@@ -87,6 +96,11 @@ for (const composed of [false, true]) {
     );
     assert.deepEqual(result.configCanonBatchContext.completeCorpusBodyPairs, batch.corpusBodies);
     assert.equal(result.configCanonBatchContext.scope, scope);
+    assert.deepEqual(
+      result.configFixtureContext.completeProductionBodyPairs,
+      fixture.productionBodies,
+    );
+    assert.equal(result.configFixtureContext.scope, scope);
   });
 
   await test(`${scope} reviewed component qualification refuses context drift, child drift and forged extra ownership`, () => {

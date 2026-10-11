@@ -50,6 +50,9 @@ for (const composed of [false, true]) {
       assert.ok("configCanonBatchContext" in current);
       assert.equal(current.configCanonBatchContext.completeProductionBodyPairs.length, 2);
       assert.equal(current.configCanonBatchContext.completeCorpusBodyPairs.length, 1);
+      assert.ok("configFixtureContext" in current);
+      assert.equal(current.configFixtureContext.completeProductionBodyPairs.length, 1);
+      assert.equal(current.configFixtureContext.scope, composed ? "parent-pair" : "inherited");
     }
     if (composed) assert.deepEqual(pair.production, componentIssuedProduction);
   });

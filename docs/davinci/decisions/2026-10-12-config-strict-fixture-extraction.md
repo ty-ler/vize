@@ -23,6 +23,13 @@ and the original 96 source / 51 custody / 3 harness witnesses; inherited
 children require the exact repaired fixture body on both sides. Missing,
 changed, duplicated or foreign paths cannot grant ownership.
 
+The remaining component context retains all 136 composed paths and the
+original 119-path authority, or all 28 inherited paths and their complete
+original bodies. Its before-side fixture selection uses only this named
+one-body context; its after-side always hashes the actual source. Both modes
+still require all 90 inherited production / 51 custody / 3 harness witnesses,
+seven issued-completion bodies and the original 79 packets with all 20 fields.
+
 TODO: preserve the terminal original Linux native and paired-400 packets,
 restack the remaining children with this complete context, rerun exact-head
 strict source/native gates, then verify protected merge and installed release

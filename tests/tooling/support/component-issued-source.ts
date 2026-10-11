@@ -9,6 +9,7 @@ import successor from "../../performance/support/warm-type-backed-component-issu
 import { qualifyComponentIssuedHost } from "../../performance/support/warm-type-backed-component-issued-host.ts";
 import { configReviewManifest } from "../../performance/support/warm-type-backed-config-review-host.ts";
 import { canonBatchManifest } from "../../performance/support/warm-type-backed-config-canon-batch-host.ts";
+import { configFixtureManifest } from "../../performance/support/warm-type-backed-config-fixture-host.ts";
 import { runtimeRepairManifest } from "../../performance/support/warm-type-backed-project-config-runtime-repair.ts";
 import {
   configRepairManifest,
@@ -75,6 +76,9 @@ export function qualifyCurrentComponentIssuedSource(composed = true) {
     ),
     ...canonBatchManifest.corpusBodies.map(
       ([file, before, after]) => [file, composed ? before : after] as const,
+    ),
+    ...configFixtureManifest.productionBodies.map(
+      ([file, before, , after]) => [file, composed ? before : after] as const,
     ),
   ]);
   const runtimeBefore = new Map(

@@ -64,7 +64,10 @@ await test("the current whole bodies qualify only with the explicit successor an
     const child = qualifyCurrentComponentOwnerSource();
     assert.ok(child);
     if ("configReviewContext" in child) {
-      assert.equal(child.files.length, 135);
+      assert.ok("configCanonBatchContext" in child);
+      assert.equal(child.configCanonBatchContext.completeProductionBodyPairs.length, 2);
+      assert.equal(child.configCanonBatchContext.completeCorpusBodyPairs.length, 1);
+      assert.equal(child.files.length, 136);
       assert.equal(child.originalQualification.files.length, 119);
     } else assert.equal(child.files.length, "issuedCompletionContext" in child ? 119 : 113);
     assert.equal(child.completeComponentBodies, 28);
