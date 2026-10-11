@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { aliasHostPaths } from "./warm-type-backed-alias-host.ts";
 import { unqualifiedReceiptPaths } from "./warm-type-backed-build-receipt-extension.ts";
 import { finiteCut } from "./warm-type-backed-cut.ts";
 import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
 import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
-import { htmlHoverPaths } from "./warm-type-backed-html-hover-host.ts";
+import { allowed } from "./warm-type-backed-production-paths.ts";
+import { qualifyProjectConfigHost } from "./warm-type-backed-project-config-host.ts";
 import {
   driverRoot,
   git,
@@ -74,136 +74,6 @@ if (process.argv[2] === "prepare") {
   ])
     .split("\n")
     .filter(Boolean);
-  const allowed = new Set([
-    ...htmlHoverPaths,
-    ...aliasHostPaths,
-    // Reviewed #3952 workspace-symbol producer and exact helper/test footprint;
-    // complete original 400-provider inputs and whole oracles remain unchanged.
-    "crates/vize_maestro/src/ide/workspace_symbols.rs",
-    "crates/vize_maestro/src/ide/workspace_symbols/sources.rs",
-    "crates/vize_maestro/src/server/state/workspace_project_files.rs",
-    "crates/vize_maestro/src/server/state/workspace_project_files/paths.rs",
-    "crates/vize_maestro/src/server/state/workspace_project_files/symbols.rs",
-    "crates/vize_maestro/src/server/state/workspace_project_files/worker.rs",
-    "crates/vize_maestro/src/server/state/workspace_project_files/worker/tests.rs",
-    "crates/vize_maestro/src/server/state/workspace_project_files/symbols/tests.rs",
-    "crates/vize_maestro/src/server/workspace_symbols.rs",
-    // Art lint delivery retains the original 400-provider protocol corpus.
-    "crates/vize_maestro/src/ide/diagnostics/art_lint_tests.rs",
-    "crates/vize_maestro/src/ide/diagnostics/art_lint.rs",
-    "crates/vize_maestro/src/ide/diagnostics/service.rs",
-    "crates/vize_canon/src/lsp_client.rs",
-    "crates/vize_canon/src/corsa_bridge/worker.rs",
-    "crates/vize_canon/src/corsa_bridge/worker/async_reply.rs",
-    "crates/vize_canon/src/corsa_bridge/worker/retirement.rs",
-    "crates/vize_canon/src/corsa_bridge/worker/retirement/tests.rs",
-    "crates/vize_canon/src/lsp_client/diagnostics_lsp/readiness_workers/retirement_tests.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp/retry.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp/retry/retirement_tests.rs",
-    "crates/vize_maestro/src/ide/rename/corsa_session_tests/harness/protocol/readiness.rs",
-    "crates/vize_canon/src/corsa_bridge.rs",
-    "crates/vize_canon/src/corsa_bridge/preparation_trace.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/prepare.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp/client.rs",
-    "crates/vize_canon/src/lsp_client/diagnostics_lsp.rs",
-    "crates/vize_canon/src/lsp_client/diagnostics_lsp/readiness_workers.rs",
-    "crates/vize_canon/src/lsp_client/diagnostics_lsp/readiness_workers/tests.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp/readiness.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp/synchronize.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/cache.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/cache/catalog.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/cache/fingerprint.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_document.rs",
-    "crates/vize_canon/src/corsa_bridge/script_document.rs",
-    "crates/vize_canon/src/corsa_bridge/bridge/documents.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_document/build.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_document/build/tests.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_document/types.rs",
-    "crates/vize_canon/src/batch/import_rewriter.rs",
-    "crates/vize_canon/src/batch/import_rewriter_dependency_tests.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_dependencies.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_dependency_specifiers.rs",
-    "crates/vize_canon/src/corsa_bridge/vue_dependency_specifiers/original.rs",
-    "crates/vize_maestro/src/ide/corsa_support/canonical/open.rs",
-    "crates/vize_maestro/src/ide/diagnostics.rs",
-    "crates/vize_maestro/src/ide/diagnostics/assembly_parity_tests.rs",
-    "crates/vize_maestro/src/ide/diagnostics/assembly_parity_custody.rs",
-    "crates/vize_maestro/src/ide/diagnostics/corsa/collect_virtual.rs",
-    "crates/vize_maestro/src/ide/diagnostics/native.rs",
-    "crates/vize_maestro/src/ide/diagnostics/native/timeout.rs",
-    "crates/vize_maestro/src/ide/diagnostics/native/timeout/tests.rs",
-    "crates/vize_maestro/src/ide/diagnostics/corsa/collect.rs",
-    "crates/vize_maestro/src/ide/diagnostics/editor_reference_options_tests.rs",
-    "crates/vize_maestro/src/server/state/global_components.rs",
-    "crates/vize_maestro/src/server/state/global_components/editor_options.rs",
-    "crates/vize_maestro/src/server/state/global_components/editor_options/custody.rs",
-    "crates/vize_maestro/src/server/state/global_components/editor_options/tests.rs",
-    // Explicit global-component configuration retains the full original provider gate.
-    "crates/vize/src/commands/lint/entry_rules.rs",
-    "crates/vize/tests/lint_global_components_cli.rs",
-    "crates/vize_maestro/src/ide/diagnostics/configured_global_components_tests.rs",
-    "crates/vize_maestro/src/ide/diagnostics/linter_options.rs",
-    "crates/vize_patina/src/linter/restricted_rules.rs",
-    "crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs",
-    "crates/vize_patina/tests/fixtures/global-component-registration/Card.art.vue",
-    "crates/vize_patina/tests/fixtures/global-component-registration/vize.config.json",
-    "crates/vize_patina/tests/global_component_registration.rs",
-    "davinci/vize_l0/src/config/model/linter_rule_options.rs",
-    "davinci/vize_l0/src/config/model/linter_rule_options/component_registration.rs",
-    "npm/cli/pkl/LinterConfig.pkl",
-    "npm/cli/pkl/jsonschema/LintRuleOptionsSchemaDefinitions.pkl",
-    "npm/cli/pkl/vize.pkl",
-    "npm/cli/schemas/vize.config.schema.json",
-    "npm/cli/src/types/generated.ts",
-    "crates/vize_canon/src/corsa_server/reuse_tests.rs",
-    "crates/vize_canon/src/lsp_client/bootstrap.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp/native_vue.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp/original_program.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp/project_configuration.rs",
-    "crates/vize_canon/src/lsp_client/lifecycle.rs",
-    "crates/vize_canon/src/lsp_client/workspace_project.rs",
-    "crates/vize_canon/tests/original_program_check.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp/original_program/key_tests.rs",
-    "crates/vize_canon/src/lsp_client/editor_lsp/original_program/process_tests.rs",
-    "crates/vize_canon/tests/original_program_check/process_reuse.rs",
-    "crates/vize_canon/tests/original_program_check/process_admission.rs",
-    "crates/vize_canon/tests/support/original_diagnosing_process.rs",
-    // Reviewed event navigation/rename ownership; original400 remains unchanged.
-    "crates/vize/tests/lsp_component_attribute_authority_cli.rs",
-    "crates/vize/tests/lsp_component_attribute_authority_cli/native_probe.rs",
-    "crates/vize/tests/lsp_library_rename_refusal_cli/cold_collision.rs",
-    "crates/vize/tests/lsp_library_rename_refusal_cli/diagnostic_witness.rs",
-    "crates/vize/tests/lsp_library_rename_refusal_cli/original.rs",
-    "crates/vize/tests/lsp_library_rename_refusal_cli/safe_update.rs",
-    "crates/vize/tests/lsp_library_rename_refusal_cli/safety_controls.rs",
-    "crates/vize/tests/lsp_original_event_rename_cli.rs",
-    "crates/vize_canon/src/virtual_ts.rs",
-    "crates/vize_canon/src/virtual_ts/generator.rs",
-    "crates/vize_canon/src/virtual_ts/generator/anchors.rs",
-    "crates/vize_canon/src/virtual_ts/generator/setup_helpers.rs",
-    "crates/vize_canon/src/virtual_ts/generator/setup_helpers/declarations.rs",
-    "crates/vize_canon/src/virtual_ts/generator/setup_helpers/emit_navigation.rs",
-    "crates/vize_canon/src/virtual_ts/generator/setup_helpers/emit_navigation/tests.rs",
-    "crates/vize_maestro/src/ide/corsa_support/canonical/component_project.rs",
-    "crates/vize_maestro/src/ide/diagnostics/editor_event_partial_diagnostics_tests.rs",
-    "crates/vize_maestro/src/ide/diagnostics/editor_event_partial_diagnostics_tests/fixture.rs",
-    // Reviewed dependent bound-call casing and authored event-key geometry.
-    "crates/vize_canon/src/virtual_ts/generator/authored_events.rs",
-    "crates/vize_maestro/src/ide/rename/canonical/event_rename.rs",
-    "crates/vize/tests/lsp_bound_event_casing_cli.rs",
-    "crates/vize/tests/lsp_bound_event_casing_cli/application.rs",
-    "crates/vize/tests/lsp_bound_event_casing_cli/session.rs",
-    "crates/vize_maestro/src/ide/definition/import_resolver.rs",
-    "crates/vize_maestro/src/ide/definition/service/import_target.rs",
-    "crates/vize_maestro/src/ide/definition/import_resolver_tests.rs",
-    "crates/vize_maestro/src/server/handlers/tests.rs",
-    "crates/vize_maestro/src/server/handlers/tests/open_buffer_alias.rs",
-    "crates/vize/tests/lsp_open_buffer_alias_definition_cli.rs",
-  ]);
   const harnessOnly = !cut && production.length === 0;
   if (harnessOnly) {
     const changed = git(driverRoot, ["diff", "--name-only", baseline, head])
@@ -247,13 +117,19 @@ if (process.argv[2] === "prepare") {
     !cut,
     (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
   );
+  const projectConfigHost = !cut
+    ? qualifyProjectConfigHost(production, allowed, (side, file) =>
+        gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+      )
+    : null;
   if (!cut) {
     for (const file of production)
       assert.ok(
         allowed.has(file) ||
           pathHostMove?.files.includes(file) ||
           timingHostMove?.files.includes(file) ||
-          defaultMigrationHost?.files.includes(file),
+          defaultMigrationHost?.files.includes(file) ||
+          projectConfigHost?.files.includes(file),
         `unqualified production delta: ${file}`,
       );
   }
@@ -297,6 +173,7 @@ if (process.argv[2] === "prepare") {
         pathHostMove,
         timingHostMove,
         defaultMigrationHost,
+        projectConfigHost,
         afterRoot,
         driverSource: driver,
         authority: cut
@@ -337,7 +214,7 @@ if (process.argv[2] === "prepare") {
           ? "Literal published v0.433 and root-frozen release cut; complete changed Git-entry manifest, independent driver, identical fresh ci builds, original400 and one recorded runtime"
           : harnessOnly
             ? "Same production source; closed reviewed harness-only delta and unchanged original inputs/locks. Qualification only, no performance or source-effect gain."
-            : "Actual common ancestor and current source, only owned prepared-surface, readiness-ack, shared editor reference-options, document-batch transfer, streamed workspace-symbol producer, event navigation/rename ownership or exact authenticated path-host move delta or exact authenticated timing-observer host move delta or complete authenticated default-migration slice; one worker, identical release recipe, original400 inputs and current locked runtime",
+            : "Actual common ancestor and current source, only owned prepared-surface, readiness-ack, shared editor reference-options, document-batch transfer, streamed workspace-symbol producer, event navigation/rename ownership or exact authenticated path-host move delta or exact authenticated timing-observer host move delta or complete authenticated default-migration slice or complete authenticated project-config slice; one worker, identical release recipe, original400 inputs and current locked runtime",
       },
       null,
       2,

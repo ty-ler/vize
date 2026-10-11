@@ -7,6 +7,7 @@ import type { JsonRpcMessage } from "../../tooling/support/lsp/protocol.ts";
 import { LspRequestError, LspSession } from "../../tooling/support/lsp/session.ts";
 import { SessionRoots, type Packet, type RequestSpec } from "./warm-type-backed-packets.ts";
 import { observeWork } from "./warm-type-backed-work.ts";
+import { captureCompletionOwnership } from "./warm-type-backed-owner-capture.ts";
 
 export class QueryRecorder {
   readonly rows: Array<Record<string, unknown>> = [];
@@ -15,14 +16,21 @@ export class QueryRecorder {
   readonly session: LspSession;
   readonly nativeExecutable: string;
   readonly parentExecutable: string;
+  readonly captureOwners: boolean;
   readonly roots = new SessionRoots();
   readonly notifications: Array<{ method: string; params: unknown }> = [];
   readonly responses: JsonRpcMessage[] = [];
 
-  constructor(session: LspSession, nativeExecutable: string, parentExecutable: string) {
+  constructor(
+    session: LspSession,
+    nativeExecutable: string,
+    parentExecutable: string,
+    captureOwners = false,
+  ) {
     this.session = session;
     this.nativeExecutable = nativeExecutable;
     this.parentExecutable = fs.realpathSync(parentExecutable);
+    this.captureOwners = captureOwners;
     this.sampler = createSampler(session.processId);
     session.notificationObservers.push((method, params) =>
       this.notifications.push({ method, params }),
@@ -136,6 +144,16 @@ export class QueryRecorder {
         after: workAfter,
       },
       processes,
+      ownerMigration: this.captureOwners
+        ? captureCompletionOwnership(
+            stage,
+            spec.method,
+            spec.params,
+            result,
+            processes,
+            this.session.stderrText,
+          )
+        : null,
     });
     if (error && stage !== "cancel")
       this.failures.push(`${stage}/${spec.name}: ${JSON.stringify(error)}`);
