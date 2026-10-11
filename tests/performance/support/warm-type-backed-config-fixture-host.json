@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "originalRepairManifestSHA256": "9858bd7d0c5cfc24c2722c58bdc629f7125d2e40bfc64d6f47c67423bfb2bc9f",
+  "predecessorSource": "e4be66d676dbbb9f97fff8f7f718fc5bad9b3b19",
+  "repairedSource": "c1c8fed86a78f7eaac75338b67f74be7c64585ef",
+  "productionBodies": [
+    [
+      "crates/vize_maestro/src/server/project_contexts/tests.rs",
+      null,
+      "587354f60a8511d41fd1db1aa512c19616da07c16878def7cb820e0cbb6458e3",
+      "8627adccae1f3e8965838f2718c06e6d5d63321f5f2d63843f9a631b99627443"
+    ]
+  ]
+}
