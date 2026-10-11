@@ -23,9 +23,11 @@ use vize_l0::{String, cstr};
 mod bootstrap;
 mod canon_document;
 mod capabilities;
-pub(super) use bootstrap::{ProjectSessionSpawnError, spawn_project_session};
+pub(super) use bootstrap::{
+    ProjectSessionSpawnError, api_mode_for_executable, spawn_project_session,
+};
 #[cfg(test)]
-use bootstrap::{api_mode_for_executable, classify_project_session_error, should_retry_json_rpc};
+use bootstrap::{classify_project_session_error, should_retry_json_rpc};
 
 pub(super) fn uri_document_identifier(uri: &str) -> DocumentIdentifier {
     if let Some(path) = file_uri_to_path(uri) {
