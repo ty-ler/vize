@@ -14,7 +14,10 @@ pub fn cases() -> Vec<Value> {
     for case in &cases {
         let source = case["source"].as_str().unwrap();
         assert_eq!(
-            format!("{:x}", Sha256::digest(source.as_bytes())),
+            Sha256::digest(source.as_bytes())
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>(),
             case["sourceSha256"].as_str().unwrap()
         );
     }

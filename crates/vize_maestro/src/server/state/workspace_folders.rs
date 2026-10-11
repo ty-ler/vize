@@ -47,12 +47,7 @@ impl WorkspaceFolderConfig {
     fn linter_for_path(
         &self,
         path: &Path,
-    ) -> Option<(
-        LinterConfig,
-        ConfigLintRuleOptions,
-        LinterFeatureFlags,
-        CustomElementMatcher,
-    )> {
+    ) -> Option<(LinterConfig, ConfigLintRuleOptions, LinterFeatureFlags)> {
         if self
             .project_ignores
             .as_ref()
@@ -68,12 +63,7 @@ impl WorkspaceFolderConfig {
             .filter_map(|(index, scope)| scope.matches(path).then_some(index))
             .collect::<Vec<_>>();
         let resolved = self.plan.resolve_matching_entries(&matching);
-        Some((
-            resolved.config,
-            resolved.rule_options,
-            self.features,
-            self.custom_elements.clone(),
-        ))
+        Some((resolved.config, resolved.rule_options, self.features))
     }
 }
 
@@ -239,8 +229,14 @@ impl ServerState {
         &self,
         uri: &Url,
     ) -> Option<(LinterConfig, ConfigLintRuleOptions, LinterFeatureFlags)> {
-        self.linter_context_for_uri(uri)
-            .map(|(config, options, features, _)| (config, options, features))
+        if let Ok(path) = uri.to_file_path() {
+            let contexts = self.workspace_folder_configs.read();
+            if let Some(context) = deepest_enclosing_folder(&contexts, &path) {
+                return context.linter_for_path(&path);
+            }
+        }
+        let (config, features) = self.get_linter_config_and_features();
+        Some((config, self.get_linter_rule_options(), features))
     }
 
     /// Compiler policy and lint settings from the same selected project snapshot.
@@ -256,7 +252,11 @@ impl ServerState {
         if let Ok(path) = uri.to_file_path() {
             let contexts = self.workspace_folder_configs.read();
             if let Some(context) = deepest_enclosing_folder(&contexts, &path) {
-                return context.linter_for_path(&path);
+                return context
+                    .linter_for_path(&path)
+                    .map(|(config, options, features)| {
+                        (config, options, features, context.custom_elements.clone())
+                    });
             }
         }
         let (config, features, custom_elements) = self.get_linter_context();
