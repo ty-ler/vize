@@ -27,8 +27,9 @@ observes its configuration. The corpus retains ordinary nested config changes
 and open buffer versions as positive controls.
 
 The native project workflow also watches its build-receipt/hash dependencies,
-Canon editor transport and Maestro IDE sources. Explicit recursive patterns
-cover the original nested CLI contracts and native process support modules.
+Canon editor transport and Maestro IDE sources. The original embedded `**`
+patterns already cover nested CLI contracts and native process support modules
+under GitHub's documented path-filter semantics; they stay unchanged.
 The trigger test exercises those concrete paths rather than merely requiring
 particular YAML strings. Original native contracts, process custody and budgets
 remain unchanged. Actual product compilation and native qualification are

@@ -1,7 +1,18 @@
 import assert from "node:assert/strict";
-import { matchesGlob } from "node:path";
 import test from "node:test";
 import { readRepoFile } from "./support/github-workflows.ts";
+
+// GitHub filter ** also spans slashes when embedded in a path segment.
+// https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#patterns-to-match-file-paths
+function matchesWorkflowPath(file: string, pattern: string): boolean {
+  const expression = pattern
+    .split(/(\*\*|\*)/u)
+    .map((part) =>
+      part === "**" ? ".*" : part === "*" ? "[^/]*" : part.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"),
+    )
+    .join("");
+  return new RegExp(`^${expression}$`, "u").test(file);
+}
 
 test("native configuration qualification covers nested contracts and runtime custody dependencies", () => {
   const workflow = readRepoFile(".github/workflows/project-config-native.yml");
@@ -32,12 +43,24 @@ test("native configuration qualification covers nested contracts and runtime cus
   ];
   for (const owner of owners) {
     assert.ok(
-      paths.some((pattern) => matchesGlob(owner, pattern)),
+      paths.some((pattern) => matchesWorkflowPath(owner, pattern)),
       `${owner} must trigger native qualification`,
     );
   }
   assert.equal(
-    paths.some((pattern) => matchesGlob("docs/guide/unrelated.md", pattern)),
+    paths.some((pattern) => matchesWorkflowPath("docs/guide/unrelated.md", pattern)),
     false,
+  );
+});
+
+test("workflow matcher follows GitHub's embedded double-star semantics", () => {
+  assert.equal(matchesWorkflowPath("src/nested/file.js", "**.js"), true);
+  assert.equal(matchesWorkflowPath("src/nested/file.js", "*.js"), false);
+  assert.equal(
+    matchesWorkflowPath(
+      "crates/vize/tests/project_config_cli/nested_lsp/native.rs",
+      "crates/vize/tests/project_config_cli**",
+    ),
+    true,
   );
 });
