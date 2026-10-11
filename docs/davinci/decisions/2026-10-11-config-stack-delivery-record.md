@@ -107,3 +107,20 @@ refusing retirement from ignored descendants. The
 replays every retained authored buffer before API capability checks after a native
 transport replacement. These corrections need fresh native Actions qualification;
 previous receipts describe their literal earlier source bodies.
+
+The [project-owned native navigation cache](./2026-10-11-project-navigation-cache.md)
+retains one cache for each exact initialized owner, shares that owner across request
+views, and drains its three worker families when retired. Stale views receive the
+existing superseded refusal; fresh document routing selects the replacement owner.
+The nine additive native controls exercise actual reuse, owner isolation, reaping
+and destruction. Existing capacity and publication laws stay required.
+
+A distinct finite source successor binds all reviewed production and harness
+bodies before delegating to the complete immutable original qualification. It
+retains the original 90/51/3 authority, issued 96-body authority, complete inputs,
+recipes and ceilings. Missing, duplicate, foreign, changed or mixed body pairs
+refuse. Parent-relative component work must independently retain every reviewed
+body unchanged on both sides and its complete original component witness.
+The actual parent baseline has every original before body; the main-only two-body
+root test difference is recorded as deferred composition and is not admitted.
+Fresh literal-source native Actions and installed release replay remain required.
