@@ -194,7 +194,11 @@ fn native_editor_resolves_package_alias_from_monorepo_root_without_cross_owner_a
         .as_ref()
         .unwrap()
         .session;
-    assert_ne!(a_api.session_id, b_api.session_id);
+    // Session counters belong to each native server; the pipe scopes their IDs.
+    assert_ne!(
+        (&a_api.pipe, &a_api.session_id),
+        (&b_api.pipe, &b_api.session_id)
+    );
     assert_ne!(a_api.pipe, b_api.pipe);
     assert_eq!(
         Path::new(&first.project_session().unwrap().project().config_file_name),
