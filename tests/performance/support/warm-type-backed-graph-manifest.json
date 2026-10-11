@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "originalSource": "d45d45908a09cf8931b141fbc92fea8d11c56414",
-  "reviewedSource": "0dae782fb45530a7b5d872d99a97fb31ee94f7f0",
+  "originalSource": "fc551dc09faaa3187cd37a3a02cb94ebab0c3352",
+  "reviewedSource": "bbf94a5c634fd2859daaeb62e43a06cdce60844c",
   "files": [
     "crates/vize/tests/lsp_generic_prop_hover_cli.rs\t3a2a4fae64ef23c1b444e4268fbe4416fbc3f5d8e5b9e2f90bcd018e65d4a865\t0f58949907c9a06b5feb7e9d4369c816b36fcc6dec62f662b3d03742c241c8f3",
     "crates/vize/tests/lsp_generic_prop_hover_cli/template_props.rs\t-\t5520a11484d30a7b07163e3391abcc41e862ef5dc278a753fee4e1ffeb22ea56",
@@ -196,7 +196,7 @@
     "Cargo.lock\tff89684d784eef5066edb7596fae1aaeac2331295d62891531d25a2c70f74c8b",
     "Cargo.toml\t2299add36b011596296e4546ef065148104dd017bdaa033f5ef6222f31925381",
     "package.json\td3a2188046e21c5dfe8d1117292136eb8ad0232c42490aed3e994fba71fac34f",
-    "pnpm-lock.yaml\t707f79a339e4962596cd10f6b1ccfb79c4e795cc2d90e88edd55daedf1318fbf",
+    "pnpm-lock.yaml\t12e66667fc82ac9a5b72d1e9ab2aa59f7c1466ea8be689f17a67678bf31a0915",
     "rust-toolchain.toml\t3cd5d0cc3a4440d9200bd1515826fc106e0499317556fb35dfde2f30f85fdcb9",
     "tests/_fixtures/differential/lsp/warm-type-backed-requests/case.json\tba2a49365dd6e3ec9fb5077fbcd6f68101166a2d18030138bcb0a94857713470",
     "tests/_fixtures/differential/lsp/warm-type-backed-requests/gen.mjs\t4d0e14d66ce6e7b0b5d2e32a51c39bbe985283aa94934616b4da0ff587d34649",
