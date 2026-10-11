@@ -38,7 +38,7 @@ fn declaration_barrel_and_direct_ts_vue_imports_keep_missing_neighbors_and_type_
             std::os::unix::fs::symlink(&provider, root.join("node_modules")).unwrap();
             for (path, fixture) in [
                 ("tsconfig.json", "tsconfig.json.txt"),
-                ("generated/imports.d.ts", "imports.d.ts.txt"),
+                (".generated/imports.d.ts", "imports.d.ts.txt"),
                 ("src/components/Widget.vue", "Widget.vue.txt"),
                 ("src/composables/useWidget.ts", "useWidget.ts.txt"),
                 ("src/composables/useMissing.ts", "useMissing.ts.txt"),
