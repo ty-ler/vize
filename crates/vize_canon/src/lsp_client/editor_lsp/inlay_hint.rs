@@ -98,7 +98,7 @@ impl CorsaProjectClient {
     }
 }
 
-fn trace_native_inlay(stage: &str, value: impl FnOnce() -> Value) {
+pub(super) fn trace_native_inlay(stage: &str, value: impl FnOnce() -> Value) {
     if std::env::var_os("VIZE_TRACE_EDITOR_PREPARATION").as_deref()
         == Some(std::ffi::OsStr::new("1"))
     {

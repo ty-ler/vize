@@ -10,14 +10,20 @@ mod control;
 
 fn only_owner(root: &Path, native: &Path) -> control::ProcessLife {
     let owner = control::native_lsp(root, native);
-    let children = fs::read_to_string(cstr!(
-        "/proc/{}/task/{}/children",
-        std::process::id(),
-        std::process::id()
-    ))
-    .unwrap();
+    let mut children = Vec::<u32>::new();
+    for task in fs::read_dir(cstr!("/proc/{}/task", std::process::id())).unwrap() {
+        let path = task.unwrap().path().join("children");
+        let content = match fs::read_to_string(path) {
+            Ok(content) => content,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => panic!("cannot observe task children: {error}"),
+        };
+        children.extend(content.split_whitespace().map(|pid| pid.parse().unwrap()));
+    }
+    children.sort_unstable();
+    children.dedup();
     let lives: Vec<_> = children
-        .split_whitespace()
+        .into_iter()
         .filter_map(|pid| {
             let base = std::path::PathBuf::from(cstr!("/proc/{pid}").as_str());
             if fs::read_link(base.join("exe")).ok()?.as_path() != native
@@ -25,10 +31,7 @@ fn only_owner(root: &Path, native: &Path) -> control::ProcessLife {
             {
                 return None;
             }
-            Some((
-                pid.parse::<u32>().unwrap(),
-                fs::read(base.join("cmdline")).unwrap(),
-            ))
+            Some((pid, fs::read(base.join("cmdline")).unwrap()))
         })
         .collect();
     assert_eq!(
@@ -255,4 +258,28 @@ fn native_editor_resolves_package_alias_from_monorepo_root_reaps_stopped_shared_
     assert_ne!(replacement, owner);
     client.shutdown().unwrap();
     control::assert_reaped(&replacement);
+}
+
+#[test]
+fn native_editor_resolves_package_alias_from_monorepo_root_keeps_memberless_api_fallback() {
+    if !control::enabled() {
+        return;
+    }
+    let root = tempfile::tempdir().unwrap();
+    let config = root.path().join("tsconfig.json");
+    let configuration = r#"{"files":[],"compilerOptions":{"noEmit":true}}"#;
+    fs::write(&config, configuration).unwrap();
+    let native = control::runtime();
+    let mut client =
+        CorsaProjectClient::new_for_editor_workspace(native.to_str(), root.path()).unwrap();
+    assert!(!client.shared_editor_transport);
+    assert!(!client.project_session_attached_to_editor);
+    assert!(client.editor_lsp.is_none());
+    let session = client.project_session().unwrap();
+    assert_eq!(Path::new(&session.project().config_file_name), config);
+    block_on(session.describe_capabilities()).unwrap();
+    let owner = control::native_process(root.path(), &native, b"--api");
+    client.shutdown().unwrap();
+    control::assert_reaped(&owner);
+    assert_eq!(fs::read(config).unwrap(), configuration.as_bytes());
 }

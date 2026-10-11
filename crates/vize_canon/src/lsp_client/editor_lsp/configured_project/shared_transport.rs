@@ -48,7 +48,8 @@ fn spawn_shared_editor_project(
     root: &Path,
     config: &Path,
 ) -> Result<SharedProject, String> {
-    let mut editor = EditorLspSession::spawn_with_config(executable, cwd, root, Some(config))?;
+    let mut editor =
+        EditorLspSession::spawn_with_startup_configuration(executable, cwd, root, config)?;
     let result = (|| {
         let api = editor
             .configured_api
