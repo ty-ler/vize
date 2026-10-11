@@ -104,14 +104,17 @@ for (const composed of [false, true]) {
       );
   });
 
-  await test(`${scope} binds actual current source and complete original component corpus`, () => {
+  await test(`${scope} binds actual current source and complete original component corpus`, async () => {
     const actual = (side: "before" | "after", file: string) =>
       side === "before"
         ? digest(side, file)
         : createHash("sha256")
             .update(fs.readFileSync(new URL("../../" + file, import.meta.url)))
             .digest("hex");
-    assert.ok(qualifyComponentContextHost(production, allowed, actual));
+    if (qualifyComponentContextHost(production, allowed, actual)) return;
+    const { qualifyCurrentComponentOwnerSource } =
+      await import("./support/component-owner-migration-source.ts");
+    assert.ok(qualifyCurrentComponentOwnerSource(composed));
   });
 }
 

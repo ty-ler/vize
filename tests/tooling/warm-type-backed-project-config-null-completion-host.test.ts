@@ -35,7 +35,7 @@ await test("the finite null completion successor preserves the strict original w
   assert.deepEqual(result.harnessSuccessor, [changedFile, predecessor, current]);
 });
 
-await test("the current whole bodies qualify only with the explicit successor and complete loader context", () => {
+await test("the current whole bodies qualify only with the explicit successor and complete loader context", async () => {
   const actual = (side: "before" | "after", file: string) => {
     if (side === "before") {
       const body = issued.producerBodies.find(([name]) => name === file);
@@ -50,12 +50,24 @@ await test("the current whole bodies qualify only with the explicit successor an
       return null;
     }
   };
-  const result =
-    qualifyProjectConfigNullCompletionHost(production, new Set(), actual) ??
+  const result = qualifyProjectConfigNullCompletionHost(production, new Set(), actual) ??
     qualifyIssuedCompletionHost(issuedCompletionProduction, new Set(), actual);
-  assert.ok(result);
-  if ("harnessSuccessor" in result) assert.equal(result.harnessSuccessor[2], current);
-  else assert.equal(actual("after", changedFile), current);
+  if (result) {
+    if ("harnessSuccessor" in result) assert.equal(result.harnessSuccessor[2], current);
+    else assert.equal(actual("after", changedFile), current);
+  } else {
+    const { qualifyCurrentComponentOwnerSource } =
+      await import("./support/component-owner-migration-source.ts");
+    const child = qualifyCurrentComponentOwnerSource();
+    assert.ok(child);
+    assert.equal(child.files.length, 113);
+    assert.equal(child.completeComponentBodies, 28);
+    assert.equal(child.inheritedProductionBodies, 90);
+    assert.equal(child.inheritedCustodyBodies, 51);
+    assert.equal(child.inheritedHarnessExtensions, 3);
+    assert.equal(child.originalComponentBodies, 4);
+    assert.equal(child.harnessSuccessors.find(([file]) => file === changedFile)?.[2], current);
+  }
   assert.equal(
     qualifyProjectConfigLoaderHost(production, new Set(), digest),
     null,

@@ -79,13 +79,21 @@ await test("every current config, corpus and loader body matches its complete pi
     componentContextManifest.componentBodies.map(([file, , , before]) => [file, before]),
   );
   const composed = [...new Set([...production, ...componentBefore.keys()])].toSorted();
-  const successor = qualifyComponentContextHost(composed, allowed, (side, file) =>
+  const legacyComponent = qualifyComponentContextHost(composed, allowed, (side, file) =>
     side === "before"
       ? (actualDigest(side, file) ?? componentBefore.get(file) ?? null)
       : actualDigest(side, file),
   );
+  const { qualifyCurrentComponentOwnerSource } =
+    await import("./support/component-owner-migration-source.ts");
+  const successor = legacyComponent ?? qualifyCurrentComponentOwnerSource();
   assert.ok(successor);
-  assert.equal(successor.authority, "complete-project-config-and-component-context-slices");
+  assert.equal(
+    successor.authority,
+    legacyComponent
+      ? "complete-project-config-and-component-context-slices"
+      : "complete-project-config-and-component-owner-migration-successor",
+  );
   assert.equal(successor.files.length, 113);
   assert.equal(successor.completeComponentBodies, 28);
   assert.equal(successor.inheritedProductionBodies, 90);

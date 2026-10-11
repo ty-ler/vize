@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "originalComponentManifestSHA256": "bcf13b6eaf587647a1ef04068b49c264156967f37278292ff2720bf14ef17686",
+  "originalConfigManifestSHA256": "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc",
+  "loaderManifestSHA256": "a7ff805231e2d318d4bebbbce3926a2bbdb0d4f0d5209c458bedb268ceef66c4",
+  "nullCompletionManifestSHA256": "8d3677de4d6cfa8e5d1a1a18f4eaf93c3c88fb5c7db454d55adae26968054d30",
+  "nullCompletionManifestBodySHA256": "44e42cdcadfd3163c544b92c9d157c14b1bb07206ab5be7374b2a81e3ba6372a",
+  "harnessSuccessors": [
+    [
+      "tests/performance/support/warm-type-backed-owner-migration.ts",
+      "22f522d1d1a2a0ed4266fd424c5d6ed681bdfc73a5bb03deb2aeff7bfdf9d39e",
+      "e265b8ac80199886662f64b7bd36c21b81f56f1d84ec11f5975a3a3dca80d3f7"
+    ],
+    [
+      "tests/performance/support/warm-type-backed-owner-resolve.ts",
+      "61921cd757075d18507898458332dc1130590a619285b0862a8be719708ea44a",
+      "d200def1f5420e0b1547ea37c00400339da517c2ab400860bfc8981300166e5b"
+    ],
+    [
+      "tests/performance/support/warm-type-backed-requests.ts",
+      "623e0447ccf2879566b05919faf3d334952514c8dd14dff08aa1a6b94d8ddce8",
+      "cf50fe30df23323a650775359761e784473e87442bb9d0c02ade15349297cf83"
+    ]
+  ],
+  "original400": 400,
+  "originalPackets": 79,
+  "supplementalResolves": 8,
+  "supplementalRefusals": 8,
+  "originalComparedFields": 20
+}
