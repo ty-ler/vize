@@ -15,6 +15,7 @@ jobs:
     defaults: { run: { shell: bash } }
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with: { fetch-depth: 0 }
       - name: Preserve clean source identity before building
         run: |
           mkdir -p evidence
@@ -72,7 +73,13 @@ jobs:
         env:
           VIZE_UI_VAPOR_RUNTIME: reference
           VIZE_UI_VAPOR_EVIDENCE_DIRECTORY: ${{ github.workspace }}/evidence/reference
-        run: vp run --filter './npm/ui' check:vapor-runtime 2>&1 | tee evidence/ui-reference.log
+        run: |
+          set +e
+          vp run --filter './npm/ui' check:vapor-runtime 2>&1 | tee evidence/ui-reference.log
+          reference_status=${PIPESTATUS[0]}
+          set -e
+          test "$reference_status" -eq 1
+          node scripts/ui-vapor-reference-negative.mjs
       - name: Preserve every original fixture record and complete log
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

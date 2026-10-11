@@ -118,9 +118,11 @@ for (const lane of ["mount", "hydrate"] as const) {
   lanes[lane] = output.results;
   for (const failure of output.compileFailures) failures.push(`[compile:vapor] ${failure}`);
 }
-if (process.env.VIZE_UI_VAPOR_EVIDENCE_DIRECTORY !== undefined) {
-  cpSync(workDirectory, process.env.VIZE_UI_VAPOR_EVIDENCE_DIRECTORY, { recursive: true });
-}
+// Private diagnostic capture: preserve raw results even when nested vp tasks
+// filter an optional environment variable. No conformance oracle changes.
+cpSync(workDirectory, path.resolve(packageRoot, "../../evidence", runtimeTrack()), {
+  recursive: true,
+});
 rmSync(workDirectory, { recursive: true, force: true });
 
 // 4. Ratchet against the known-failure ledger.
