@@ -363,7 +363,7 @@ vize fmt src --write
 
 下一版本中，没有专用 `vize.config.*` 时，`vize check` 和 `vize lsp` 将默认启用 Vue JSX 类型检查。专用配置仍保留 `typeChecker.jsxTypecheck: false`，除非显式启用。
 已发布版本保持现有行为。请参阅[项目和编辑器的默认设置](../../guide/configuration.md#project-and-editor-defaults)（英文）。
-React 项目或混合项目需要在 Vite 中将 `vize.typeChecker.jsxTypecheck` 显式设为 `false`。JSX 语法无法判断所用框架；Vue SFC 类型检查仍然可用。
+React 项目或混合项目需要在所用配置中将 `typeChecker.jsxTypecheck` 显式设为 `false`。在 Vite 配置中使用 `vize.typeChecker.jsxTypecheck`。JSX 语法无法判断所用框架；Vue SFC 类型检查仍然可用。
 
 ```ts
 // vize.config.ts
