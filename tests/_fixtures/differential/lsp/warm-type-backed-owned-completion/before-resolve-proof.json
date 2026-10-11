@@ -1,0 +1,1410 @@
+{
+  "additional": [
+    {
+      "stage": "cross-root/resolve/count",
+      "id": 73,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15633
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(property) count: Ref<number, number>",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(property) count: Ref<number, number>\n```"
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        "id": 73
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) count: Ref<number, number>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) count: Ref<number, number>\n```"
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "refusal": false
+    },
+    {
+      "stage": "cross-root/resolve/double",
+      "id": 74,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "double",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "double",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "double",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15633
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(property) double: Readonly<Ref<number, number>>",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(property) double: Readonly<Ref<number, number>>\n```"
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        "id": 74
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "double",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "double",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) double: Readonly<Ref<number, number>>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) double: Readonly<Ref<number, number>>\n```"
+        },
+        "kind": 5,
+        "label": "double",
+        "sortText": "11"
+      },
+      "refusal": false
+    },
+    {
+      "stage": "cross-root/resolve/items",
+      "id": 75,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "items",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "items",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "items",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15633
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(property) items: Ref<Item0[], Item0[]>",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(property) items: Ref<Item0[], Item0[]>\n```"
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        "id": 75
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "items",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "items",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) items: Ref<Item0[], Item0[]>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) items: Ref<Item0[], Item0[]>\n```"
+        },
+        "kind": 5,
+        "label": "items",
+        "sortText": "11"
+      },
+      "refusal": false
+    },
+    {
+      "stage": "cross-root/resolve/add",
+      "id": 76,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "add",
+                "position": 15633
+              },
+              "kind": 2,
+              "label": "add",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "kind": 2,
+        "label": "add",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15633
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(method) add(label: string): void",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(method) add(label: string): void\n```"
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        },
+        "id": 76
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "add",
+                "position": 15633
+              },
+              "kind": 2,
+              "label": "add",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(method) add(label: string): void",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(method) add(label: string): void\n```"
+        },
+        "kind": 2,
+        "label": "add",
+        "sortText": "11"
+      },
+      "refusal": false
+    },
+    {
+      "stage": "cross-root/stale-revision",
+      "id": 77,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15633
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        "id": 77
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "refusal": true
+    },
+    {
+      "stage": "cross-root/foreign-native-file",
+      "id": 78,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts.foreign",
+                "name": "count",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts.foreign",
+                  "name": "count",
+                  "position": 15633
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        "id": 78
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts.foreign",
+                "name": "count",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "refusal": true
+    },
+    {
+      "stage": "cross-root/foreign-native-position",
+      "id": 79,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15634
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15634
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 7,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(property) count: Ref<number, number>",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(property) count: Ref<number, number>\n```"
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        "id": 79
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15634
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 7,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) count: Ref<number, number>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) count: Ref<number, number>\n```"
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "refusal": true
+    },
+    {
+      "stage": "cross-root/foreign-authored-owner",
+      "id": 80,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 6,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15633
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+              "revision": 6,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(property) count: Ref<number, number>",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(property) count: Ref<number, number>\n```"
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        "id": 80
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15633
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+            "revision": 6,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) count: Ref<number, number>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) count: Ref<number, number>\n```"
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "refusal": true
+    },
+    {
+      "stage": "native-epoch-recovered/resolve/count",
+      "id": 89,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(property) count: Ref<number, number>",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(property) count: Ref<number, number>\n```"
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        "id": 89
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) count: Ref<number, number>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) count: Ref<number, number>\n```"
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "refusal": false
+    },
+    {
+      "stage": "native-epoch-recovered/resolve/double",
+      "id": 90,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "double",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "double",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "double",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "double",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "double",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(property) double: Readonly<Ref<number, number>>",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(property) double: Readonly<Ref<number, number>>\n```"
+          },
+          "kind": 5,
+          "label": "double",
+          "sortText": "11"
+        },
+        "id": 90
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "double",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "double",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) double: Readonly<Ref<number, number>>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) double: Readonly<Ref<number, number>>\n```"
+        },
+        "kind": 5,
+        "label": "double",
+        "sortText": "11"
+      },
+      "refusal": false
+    },
+    {
+      "stage": "native-epoch-recovered/resolve/items",
+      "id": 91,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "items",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "items",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "items",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "items",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "items",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(property) items: Ref<Item0[], Item0[]>",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(property) items: Ref<Item0[], Item0[]>\n```"
+          },
+          "kind": 5,
+          "label": "items",
+          "sortText": "11"
+        },
+        "id": 91
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "items",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "items",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) items: Ref<Item0[], Item0[]>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) items: Ref<Item0[], Item0[]>\n```"
+        },
+        "kind": 5,
+        "label": "items",
+        "sortText": "11"
+      },
+      "refusal": false
+    },
+    {
+      "stage": "native-epoch-recovered/resolve/add",
+      "id": 92,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "add",
+                "position": 15363
+              },
+              "kind": 2,
+              "label": "add",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 2,
+        "label": "add",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "add",
+                  "position": 15363
+                },
+                "kind": 2,
+                "label": "add",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(method) add(label: string): void",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(method) add(label: string): void\n```"
+          },
+          "kind": 2,
+          "label": "add",
+          "sortText": "11"
+        },
+        "id": 92
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "add",
+                "position": 15363
+              },
+              "kind": 2,
+              "label": "add",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(method) add(label: string): void",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(method) add(label: string): void\n```"
+        },
+        "kind": 2,
+        "label": "add",
+        "sortText": "11"
+      },
+      "refusal": false
+    },
+    {
+      "stage": "native-epoch-recovered/stale-revision",
+      "id": 93,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 9,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 9,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        "id": 93
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 9,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "refusal": true
+    },
+    {
+      "stage": "native-epoch-recovered/foreign-native-file",
+      "id": 94,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts.foreign",
+                "name": "count",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts.foreign",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        "id": 94
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts.foreign",
+                "name": "count",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "refusal": true
+    },
+    {
+      "stage": "native-epoch-recovered/foreign-native-position",
+      "id": 95,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15364
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15364
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 8,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "detail": "(property) count: Ref<number, number>",
+          "documentation": {
+            "kind": "markdown",
+            "value": "```typescript\n(property) count: Ref<number, number>\n```"
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        "id": 95
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15364
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-TZvejl/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 8,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "detail": "(property) count: Ref<number, number>",
+        "documentation": {
+          "kind": "markdown",
+          "value": "```typescript\n(property) count: Ref<number, number>\n```"
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "refusal": true
+    },
+    {
+      "stage": "native-epoch-recovered/retired-process",
+      "id": 96,
+      "params": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 6,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "result": {
+          "data": {
+            "vizeCompletion": {
+              "item": {
+                "data": {
+                  "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                  "name": "count",
+                  "position": 15363
+                },
+                "kind": 5,
+                "label": "count",
+                "sortText": "11"
+              },
+              "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+              "revision": 6,
+              "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+            }
+          },
+          "kind": 5,
+          "label": "count",
+          "sortText": "11"
+        },
+        "id": 96
+      },
+      "result": {
+        "data": {
+          "vizeCompletion": {
+            "item": {
+              "data": {
+                "fileName": "/tmp/vize-canon/editor/sessions/session-LQ176O/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+                "name": "count",
+                "position": 15363
+              },
+              "kind": 5,
+              "label": "count",
+              "sortText": "11"
+            },
+            "requestUri": "file:///tmp/vize-canon/editor/sessions/session-LQ176O/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+            "revision": 6,
+            "uri": "file:///home/runner/_work/_temp/warm-pair/workspace/src/c/Comp0.vue"
+          }
+        },
+        "kind": 5,
+        "label": "count",
+        "sortText": "11"
+      },
+      "refusal": true
+    }
+  ],
+  "refusalFailures": [
+    "AssertionError [ERR_ASSERTION]: cross-root/foreign-native-position must retain the whole refused item\n+ actual - expected\n... Skipped lines\n\n  {\n    data: {\n      vizeCompletion: {\n        item: {\n          data: {\n...\n    },\n+   detail: '(property) count: Ref<number, number>',\n+   documentation: {\n+     kind: 'markdown',\n+     value: '```typescript\\n(property) count: Ref<number, number>\\n```'\n+   },\n    kind: 5,\n    label: 'count',\n    sortText: '11'\n  }\n\n    at OwnerRecorder.extra (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-resolve.ts:42:16)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async OwnerRecorder.query (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-resolve.ts:95:5)\n    at async OwnerRecorder.sweep (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-measure.ts:184:44)\n    at async file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-controls.ts:218:7\n    at async step (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-controls.ts:30:7)\n    at async controls (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-controls.ts:203:3)\n    at async runOwnerResolveFixture (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-resolve.ts:133:5)\n    at async completeOwnerPackets (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-migration.ts:23:7)\n    at async pairedWarmRequests (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-requests.ts:311:27)",
+    "AssertionError [ERR_ASSERTION]: cross-root/foreign-authored-owner must retain the whole refused item\n+ actual - expected\n... Skipped lines\n\n  {\n    data: {\n      vizeCompletion: {\n        item: {\n          data: {\n...\n    },\n+   detail: '(property) count: Ref<number, number>',\n+   documentation: {\n+     kind: 'markdown',\n+     value: '```typescript\\n(property) count: Ref<number, number>\\n```'\n+   },\n    kind: 5,\n    label: 'count',\n    sortText: '11'\n  }\n\n    at OwnerRecorder.extra (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-resolve.ts:42:16)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async OwnerRecorder.query (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-resolve.ts:103:7)\n    at async OwnerRecorder.sweep (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-measure.ts:184:44)\n    at async file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-controls.ts:218:7\n    at async step (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-controls.ts:30:7)\n    at async controls (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-controls.ts:203:3)\n    at async runOwnerResolveFixture (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-resolve.ts:133:5)\n    at async completeOwnerPackets (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-migration.ts:23:7)\n    at async pairedWarmRequests (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-requests.ts:311:27)",
+    "AssertionError [ERR_ASSERTION]: native-epoch-recovered/foreign-native-position must retain the whole refused item\n+ actual - expected\n... Skipped lines\n\n  {\n    data: {\n      vizeCompletion: {\n        item: {\n          data: {\n...\n    },\n+   detail: '(property) count: Ref<number, number>',\n+   documentation: {\n+     kind: 'markdown',\n+     value: '```typescript\\n(property) count: Ref<number, number>\\n```'\n+   },\n    kind: 5,\n    label: 'count',\n    sortText: '11'\n  }\n\n    at OwnerRecorder.extra (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-resolve.ts:42:16)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async OwnerRecorder.query (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-resolve.ts:95:5)\n    at async OwnerRecorder.sweep (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-measure.ts:184:44)\n    at async sweep (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-controls.ts:45:21)\n    at async file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-controls.ts:234:5\n    at async step (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-controls.ts:30:7)\n    at async controls (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-controls.ts:225:3)\n    at async runOwnerResolveFixture (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-resolve.ts:133:5)\n    at async completeOwnerPackets (file:///home/runner/_work/vize/vize/tests/performance/support/warm-type-backed-owner-migration.ts:23:7)"
+  ],
+  "failure": null,
+  "wire": {
+    "capture": "/home/runner/_work/_temp/warm-before/target/differential/lsp-sessions/14982-3-gfezZG",
+    "observation": {
+      "schema": "vize.lsp.session.observation",
+      "version": 1,
+      "state": "process-closed",
+      "sourceRevision": "67e3d0e6775cc3a1f29bfb9309d991252f9e75ff",
+      "buildReceipt": {
+        "schema": "vize.differential.build",
+        "version": 1,
+        "recipe": "cargo build --release -p vize",
+        "sourceRevision": "67e3d0e6775cc3a1f29bfb9309d991252f9e75ff",
+        "binaryPath": "target/ci/vize",
+        "binarySha256": "0be80750b1af27eccd6a2aabe7829c2c786f67758b4b33d2b6792f0a3110fe97",
+        "cliVersion": "vize 0.443.0"
+      },
+      "binary": {
+        "sourceRevision": "67e3d0e6775cc3a1f29bfb9309d991252f9e75ff",
+        "binaryPath": "target/ci/vize",
+        "binarySha256": "0be80750b1af27eccd6a2aabe7829c2c786f67758b4b33d2b6792f0a3110fe97",
+        "cliVersion": "vize 0.443.0"
+      },
+      "versionProbe": {
+        "exitStatus": 0,
+        "signal": null,
+        "stdoutBase64": "dml6ZSAwLjQ0My4wCg==",
+        "stderrBase64": "",
+        "processError": null
+      },
+      "argv": [
+        "lsp"
+      ],
+      "clientWireMeaning": "attempted-existing-stdin-write",
+      "captureByteLimit": 16777216,
+      "sourceWitnesses": [],
+      "sourceOrigins": {
+        "state": "pending-original-input-and-session-reconciliation",
+        "catalog": {
+          "path": "docs/davinci/plan/lsp-retained-session-candidates.tsv",
+          "sha256": "0bc776ff5fc1e1d7bde32bfae865b1b87e8c84e99a6bcf5c8e2cfb4652daf4ba",
+          "sourceRevision": "cc87bb5960ea9e49e82672205df919de58bb4b24",
+          "present": true
+        },
+        "candidates": []
+      },
+      "streams": {
+        "client": {
+          "path": "client.bin",
+          "capturedBytes": 41618,
+          "observedBytes": 41618,
+          "sha256": "6524b095025cd74b0eabebca4c6bab62c330e729f99dca8c6e470269e22ab850",
+          "truncated": false,
+          "framing": {
+            "state": "complete",
+            "messageCount": 110
+          }
+        },
+        "server": {
+          "path": "server.bin",
+          "capturedBytes": 94780,
+          "observedBytes": 94780,
+          "sha256": "99e78f2449a6a5496e72d913f512be8cf374f5b94b1dd68d5ea34452c888d26a",
+          "truncated": false,
+          "framing": {
+            "state": "complete",
+            "messageCount": 115
+          }
+        },
+        "stderr": {
+          "path": "stderr.bin",
+          "capturedBytes": 187273,
+          "observedBytes": 187273,
+          "sha256": "bce772bb89e86fb9024edcc51f5b1d49935ac2c95eb66b033dc7d044647fe64c",
+          "truncated": false
+        }
+      },
+      "process": {
+        "exitStatus": 0,
+        "signal": null,
+        "error": null
+      },
+      "acceptance": {
+        "state": "pending-original-input-and-session-reconciliation",
+        "wholeFixesClosed": 0,
+        "nativeHandled": 0,
+        "nativeEquivalent": 0,
+        "workspaceDependenciesCaptured": false
+      }
+    }
+  }
+}

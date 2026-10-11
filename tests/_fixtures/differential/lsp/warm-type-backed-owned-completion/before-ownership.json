@@ -1,0 +1,250 @@
+{
+  "sessionRoots": {
+    "physical": [
+      "/tmp/vize-canon/editor/sessions/session-TXbzoc",
+      "/tmp/vize-canon/editor/sessions/session-kaTHrW"
+    ],
+    "spellings": [
+      [
+        "/tmp/vize-canon/editor/sessions/session-TXbzoc/",
+        "$EDITOR_SESSION_1/"
+      ],
+      [
+        "///tmp/vize-canon/editor/sessions/session-TXbzoc/",
+        "$EDITOR_SESSION_1/"
+      ],
+      [
+        "/tmp/vize-canon/editor/sessions/session-kaTHrW/",
+        "$EDITOR_SESSION_2/"
+      ],
+      [
+        "///tmp/vize-canon/editor/sessions/session-kaTHrW/",
+        "$EDITOR_SESSION_2/"
+      ]
+    ]
+  },
+  "events": [
+    {
+      "name": "retired-native-epoch",
+      "processes": [
+        {
+          "pid": 15582,
+          "parent": 15209,
+          "birth_ticks": 60049,
+          "rss_bytes": 550502400,
+          "cpu_seconds": 3.02,
+          "command": "tsgo"
+        },
+        {
+          "pid": 15622,
+          "parent": 15209,
+          "birth_ticks": 60069,
+          "rss_bytes": 805568512,
+          "cpu_seconds": 4.15,
+          "command": "tsgo"
+        }
+      ],
+      "signals": [
+        {
+          "pid": 15582,
+          "parent": 15209,
+          "birth_ticks": 60049,
+          "rss_bytes": 550502400,
+          "cpu_seconds": 3.02,
+          "command": "tsgo",
+          "signal": "SIGKILL",
+          "immediatelyVerifiedDescendants": [
+            {
+              "pid": 15582,
+              "parent": 15209,
+              "birth_ticks": 60049,
+              "rss_bytes": 550502400,
+              "cpu_seconds": 3.02,
+              "command": "tsgo"
+            },
+            {
+              "pid": 15622,
+              "parent": 15209,
+              "birth_ticks": 60069,
+              "rss_bytes": 805568512,
+              "cpu_seconds": 4.15,
+              "command": "tsgo"
+            }
+          ]
+        },
+        {
+          "pid": 15622,
+          "parent": 15209,
+          "birth_ticks": 60069,
+          "rss_bytes": 805568512,
+          "cpu_seconds": 4.15,
+          "command": "tsgo",
+          "signal": "SIGKILL",
+          "immediatelyVerifiedDescendants": [
+            {
+              "pid": 15622,
+              "parent": 15209,
+              "birth_ticks": 60069,
+              "rss_bytes": 805568512,
+              "cpu_seconds": 4.15,
+              "command": "tsgo"
+            }
+          ]
+        }
+      ],
+      "retired": [
+        {
+          "pid": 15582,
+          "parent": 15209,
+          "birth_ticks": 60049,
+          "rss_bytes": 550502400,
+          "cpu_seconds": 3.02,
+          "command": "tsgo",
+          "current": {
+            "birth_ticks": 60049,
+            "state": "Z"
+          }
+        },
+        {
+          "pid": 15622,
+          "parent": 15209,
+          "birth_ticks": 60069,
+          "rss_bytes": 805568512,
+          "cpu_seconds": 4.15,
+          "command": "tsgo",
+          "current": {
+            "birth_ticks": 60069,
+            "state": "Z"
+          }
+        }
+      ]
+    },
+    {
+      "name": "recovered-native-epoch",
+      "processes": [
+        {
+          "pid": 15725,
+          "parent": 15209,
+          "birth_ticks": 60224,
+          "rss_bytes": 574095360,
+          "cpu_seconds": 3.3,
+          "command": "tsgo"
+        },
+        {
+          "pid": 15766,
+          "parent": 15209,
+          "birth_ticks": 60242,
+          "rss_bytes": 879230976,
+          "cpu_seconds": 4.22,
+          "command": "tsgo"
+        }
+      ]
+    }
+  ],
+  "projections": [
+    {
+      "stage": "cross-root",
+      "root": "/tmp/vize-canon/editor/sessions/session-TXbzoc/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0",
+      "virtualFile": "/tmp/vize-canon/editor/sessions/session-TXbzoc/projects/bb29a15edd6ddab27a82bf0303d9cbeeba8a814fe64bfc44b2d947d05cc804e0/__vize_external__/home/runner/_work/_temp/warm-pair/workspace-other/src/c/Comp0.vue.ts",
+      "startup": [],
+      "sockets": []
+    },
+    {
+      "stage": "native-epoch-recovered",
+      "root": "/tmp/vize-canon/editor/sessions/session-kaTHrW/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8",
+      "virtualFile": "/tmp/vize-canon/editor/sessions/session-kaTHrW/projects/45af72dccdbb15990e18250ca27560c393dd64cc2894428eff01ab9b97e40bb8/src/c/Comp0.vue.ts",
+      "startup": [],
+      "sockets": []
+    }
+  ],
+  "wire": {
+    "capture": "/home/runner/_work/_temp/warm-before/target/differential/lsp-sessions/14982-1-UcenYg",
+    "observation": {
+      "schema": "vize.lsp.session.observation",
+      "version": 1,
+      "state": "process-closed",
+      "sourceRevision": "67e3d0e6775cc3a1f29bfb9309d991252f9e75ff",
+      "buildReceipt": {
+        "schema": "vize.differential.build",
+        "version": 1,
+        "recipe": "cargo build --release -p vize",
+        "sourceRevision": "67e3d0e6775cc3a1f29bfb9309d991252f9e75ff",
+        "binaryPath": "target/ci/vize",
+        "binarySha256": "0be80750b1af27eccd6a2aabe7829c2c786f67758b4b33d2b6792f0a3110fe97",
+        "cliVersion": "vize 0.443.0"
+      },
+      "binary": {
+        "sourceRevision": "67e3d0e6775cc3a1f29bfb9309d991252f9e75ff",
+        "binaryPath": "target/ci/vize",
+        "binarySha256": "0be80750b1af27eccd6a2aabe7829c2c786f67758b4b33d2b6792f0a3110fe97",
+        "cliVersion": "vize 0.443.0"
+      },
+      "versionProbe": {
+        "exitStatus": 0,
+        "signal": null,
+        "stdoutBase64": "dml6ZSAwLjQ0My4wCg==",
+        "stderrBase64": "",
+        "processError": null
+      },
+      "argv": [
+        "lsp"
+      ],
+      "clientWireMeaning": "attempted-existing-stdin-write",
+      "captureByteLimit": 16777216,
+      "sourceWitnesses": [],
+      "sourceOrigins": {
+        "state": "pending-original-input-and-session-reconciliation",
+        "catalog": {
+          "path": "docs/davinci/plan/lsp-retained-session-candidates.tsv",
+          "sha256": "0bc776ff5fc1e1d7bde32bfae865b1b87e8c84e99a6bcf5c8e2cfb4652daf4ba",
+          "sourceRevision": "cc87bb5960ea9e49e82672205df919de58bb4b24",
+          "present": true
+        },
+        "candidates": []
+      },
+      "streams": {
+        "client": {
+          "path": "client.bin",
+          "capturedBytes": 29966,
+          "observedBytes": 29966,
+          "sha256": "8cf9f6043dbf9ffa526cf0de740db18b1484b4c3a012c0b721256faf6cffc1fc",
+          "truncated": false,
+          "framing": {
+            "state": "complete",
+            "messageCount": 94
+          }
+        },
+        "server": {
+          "path": "server.bin",
+          "capturedBytes": 81953,
+          "observedBytes": 81953,
+          "sha256": "30cbe9de9b870c81bd2dd4c49b92f5f6ecbb9bd23ffd926f67d71c043b1e5b14",
+          "truncated": false,
+          "framing": {
+            "state": "complete",
+            "messageCount": 99
+          }
+        },
+        "stderr": {
+          "path": "stderr.bin",
+          "capturedBytes": 187390,
+          "observedBytes": 187390,
+          "sha256": "19862e5cf7fa551415b166be19a51cd9567b92a2f58cfaa8d78d9c67f2e5dba9",
+          "truncated": false
+        }
+      },
+      "process": {
+        "exitStatus": 0,
+        "signal": null,
+        "error": null
+      },
+      "acceptance": {
+        "state": "pending-original-input-and-session-reconciliation",
+        "wholeFixesClosed": 0,
+        "nativeHandled": 0,
+        "nativeEquivalent": 0,
+        "workspaceDependenciesCaptured": false
+      }
+    }
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "source": "e4be66d676dbbb9f97fff8f7f718fc5bad9b3b19",
+  "baseline": "67e3d0e6775cc3a1f29bfb9309d991252f9e75ff",
+  "run": 38159145126,
+  "job": 114528212252,
+  "artifact": 11709881408,
+  "archiveSHA256": "ba0c181db790434d53e0f89941630f0a2b84c88542950d5a0ed34e6930f4b489",
+  "originalPackets": 79,
+  "successorPackets": [
+    72,
+    80
+  ],
+  "originalComparedFields": 20,
+  "unchangedPackets": 77,
+  "original79SHA256": "afb2f01660d9af813c1ee488edc02bab99dc31a1aada3cf630931d858b711bd0",
+  "normalization": "unchanged SessionRoots physical-root bijection only",
+  "files": [
+    [
+      "after-client.bin",
+      "df1386d5725ed4f659ae3014b4fff9ec49c57803373683df7e20944e4c1fefd4"
+    ],
+    [
+      "after-cross-root-tsconfig.json",
+      "aef25f5f6a055e125f4af4617b567462c9ae4d0c1cbeb980b21ae247b25ad352"
+    ],
+    [
+      "after-cross-root.vue.ts.txt",
+      "12177729aa4fb4b730eca9346a7063ae5f94746322c6857c4762cc8db4f7227a"
+    ],
+    [
+      "after-native-epoch-recovered-tsconfig.json",
+      "8e267fefcce710418391f8dc91fbdbd7fccea435e41291d65fe3908a2928b656"
+    ],
+    [
+      "after-native-epoch-recovered.vue.ts.txt",
+      "62f0cebdf51420f4ebae25775f8c10c4ce0eb0e1d68f8fc164a2abbc481ea97b"
+    ],
+    [
+      "after-ownership.json",
+      "08c5f4146445c2db3c3e47f3e0fa6bd3d0457b8a6f08487d1421bbd50a7cf2d4"
+    ],
+    [
+      "after-resolve-issuers.json",
+      "02365cce34b34e98cdf3b049a03c83994f18216f36228b958a9270a88da2236e"
+    ],
+    [
+      "after-resolve-proof.json",
+      "8d35ac08277ee47c2396619696a92df90d4a050eb925e3bd6d6a2d9ac6845016"
+    ],
+    [
+      "before-client.bin",
+      "8cf9f6043dbf9ffa526cf0de740db18b1484b4c3a012c0b721256faf6cffc1fc"
+    ],
+    [
+      "before-cross-root-tsconfig.json",
+      "a9828d408b06d127a2f7dc0e73c8b73091fbce90278d9261ad37da16b19b19ff"
+    ],
+    [
+      "before-cross-root.vue.ts.txt",
+      "6d368837e2292c0e3edf5bb653a066a69b1e8802c8c84fdd0eef9513beb65661"
+    ],
+    [
+      "before-native-epoch-recovered-tsconfig.json",
+      "8e267fefcce710418391f8dc91fbdbd7fccea435e41291d65fe3908a2928b656"
+    ],
+    [
+      "before-native-epoch-recovered.vue.ts.txt",
+      "950cb517115f33a1aa5fd8a36515b0cf40cc862a81614be541d50d01c0f20b38"
+    ],
+    [
+      "before-ownership.json",
+      "042e128ee2a9dce6c65df5f16b737066ce46740f8f10889034275f02c355763d"
+    ],
+    [
+      "before-resolve-issuers.json",
+      "8e9ebc2baa94d0583fa439a165564b21c7d2d1ffbf102450c0ff91c275ee30a0"
+    ],
+    [
+      "before-resolve-proof.json",
+      "6526986d83f08b17851273d81c76a3a5c19a5e4b19cb7c6b6546b1d7fb8637d4"
+    ],
+    [
+      "historical-owner-migration.ts.txt",
+      "22f522d1d1a2a0ed4266fd424c5d6ed681bdfc73a5bb03deb2aeff7bfdf9d39e"
+    ],
+    [
+      "historical-requests.ts.txt",
+      "623e0447ccf2879566b05919faf3d334952514c8dd14dff08aa1a6b94d8ddce8"
+    ],
+    [
+      "native-witnesses.json",
+      "7df74f4c7067a0250be06c034ad1cf06a01ebd8df846023229215c0825fbab6a"
+    ],
+    [
+      "original-79.json",
+      "afb2f01660d9af813c1ee488edc02bab99dc31a1aada3cf630931d858b711bd0"
+    ],
+    [
+      "raw-responses.json",
+      "a95eaf0c100d6de85746968928b9ab2bffff7bc88886a453bcc9ddf7c79b7395"
+    ],
+    [
+      "successor-2.json",
+      "d1526e854efa67b3681eeb9f797627b71309679f7a9b920a840e94800d8e604c"
+    ]
+  ]
+}
