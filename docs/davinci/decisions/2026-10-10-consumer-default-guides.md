@@ -73,3 +73,11 @@ configuration. A dedicated `vize.config.*` takes precedence over the Vite
 projection; set `typeChecker.jsxTypecheck: false` there when present. Vite
 configuration uses the nested `vize.typeChecker.jsxTypecheck` path. Original
 code examples and heading targets remain byte-exact.
+
+The inherited Japanese compiler law compared the English React policy link by
+literal `.md` spelling and rejected its retained `%2Emd` external destination.
+The successor keeps every original default, dedicated-config and React opt-out
+assertion, binds both authored links to the exact decoded GitHub policy URL, and
+requires native SSG to retain that destination with `_blank` and
+`noopener noreferrer`. An encoded link or a plain Markdown link must satisfy the
+same complete external-link contract; a generated local route cannot pass.
