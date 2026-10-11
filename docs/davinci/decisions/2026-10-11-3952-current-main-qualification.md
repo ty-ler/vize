@@ -99,3 +99,48 @@ the preceding 190 pairs; the new literal control is the additional body. The
 canonical consumer ledger is regenerated. New native/full/n8n/original400 and
 resource Actions remain required; this allocation change has no measured
 performance or acceptance result yet.
+
+At actual source `a5e97ffb987e923a3b93bf8692ce7d1967f395ab`,
+[authored run 38144668819](https://github.com/ubugeeei-prod/vize/actions/runs/38144668819)
+passes all 2,034 ordinary Canon tests and retained native controls. Artifact
+`11704194238` still shows 419-source graphs at 11.083 to 11.828 seconds and
+1,391-source graphs at 81.619 to 82.476 seconds. DELETE's 1,390/1,389-source
+graphs take 83.812/83.940 seconds; every graph has guard/takeover zero.
+[Original400](https://github.com/ubugeeei-prod/vize/actions/runs/38144668858)
+and [native CLI evidence](https://github.com/ubugeeei-prod/vize/actions/runs/38144668825)
+pass independently. Full Check's artifact `11704341693` retains all 287
+publications but fails the unchanged Misskey server cap at 133,956 KiB
+(130.81640625 MiB); process tree peak is 347,944 KiB. The authored timeout and
+resource failure remain release blockers.
+
+The PR merge's two full frontier-transfer laws expose another failure:
+the current main CLI-first executor combines failed CLI and native completion
+packets into exit code 1. Incremental checking first encounters the unchanged
+API spawn refusal, then its failed fallback replaces that original refusal
+with the combined second failure. Retain the complete first error when both
+paths fail, while recording both complete errors in a structured event.
+Successful CLI fallback and its metrics stay unchanged. The original
+frontier-transfer bodies and their exact terminal error assertions are retained.
+
+Producer `3fdec59f217c0aae6b90f30b03e46f3e85d6e99e` adds the complete existing
+executor session and fallback-test bodies to the finite qualification. The
+earlier 191 before/after pairs and all 45 preserved bodies remain identical;
+the complete pair now has 193 producer bodies. The new actual executable
+corpus pins its complete JSON bytes, preserves an independently observed whole
+CLI exit-17 packet, and compares the whole original API error after two
+incremental attempts. The existing successful-fallback metric law remains.
+Fresh default/full/PR native Actions must execute these laws; no result is
+claimed from their source qualification alone.
+
+Before another structural optimization, use the separate optional diagnostic
+workflow at source `b9fb08a3ffac9ac961ab23e92ba792189a2996df` in
+[run 38146821370](https://github.com/ubugeeei-prod/vize/actions/runs/38146821370).
+Its native producer remains `a5e97ff` unchanged. It first runs the original
+campaign, then repeats the same driver, source-build recipe, original bytes,
+oracle, requests and deadlines in a distinct owned process. Attach 49 Hz CPU
+sampling and syscall summaries only to the published PID after executable and
+checkout verification; retain complete custody, packets and binary/lock hashes.
+Observer timings and the second campaign's status grant no acceptance credit,
+and the first campaign's failure stays failed. Ordinary jobs keep 20 minutes;
+only this optional diagnostic job has a 35-minute envelope. All original
+consumer deadlines, caps and registry remain unchanged.

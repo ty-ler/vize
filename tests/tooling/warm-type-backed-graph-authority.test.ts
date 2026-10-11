@@ -36,7 +36,7 @@ await test("the complete graph qualification retains all actual after blobs and 
   };
   const receipt = qualifyGraphHost(files, actual);
   assert.ok(receipt);
-  assert.equal(receipt.completeBodyPairs, 191);
+  assert.equal(receipt.completeBodyPairs, 193);
   assert.equal(receipt.preservedBodyPairs, 45);
   assert.deepEqual(receipt.files, files);
   assert.deepEqual(qualifyHostMoves(files, new Set(), true, actual), {
