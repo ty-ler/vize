@@ -188,6 +188,15 @@ jobs:
         working-directory: npm/cli
       - name: Hydrate unchanged licensed n8n CLI inputs
         run: git submodule update --init --depth 1 -- tests/_fixtures/_git/n8n
+      - name: Verify current-source CLI configuration, entries and independent witnesses
+        run: |
+          vp node --test tests/tooling/n8n-cli-config-contract.test.mjs tests/tooling/n8n-cli-config-failure-custody.test.mjs
+          vp node tests/tooling/support/n8n-cli-config-acceptance.mjs \
+            "target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}"
+          vp node tests/tooling/support/n8n-cli-config-semantic-acceptance.mjs \
+            "target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}/semantic-routing"
+      - name: Verify both slot modifier options through whole source CLI and JSON-RPC packets
+        run: vp node tests/tooling/support/n8n-slot-options-acceptance.ts "target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}/slot-options"
       - name: Install the original pinned n8n editor workspace dependencies
         run: |
           fixture="$GITHUB_WORKSPACE/tests/_fixtures/_git/n8n"
@@ -235,15 +244,6 @@ jobs:
           const sha256 = crypto.createHash('sha256').update(fs.readFileSync(selected)).digest('hex');
           fs.writeFileSync(path.join(receipt, 'selected-config.json'), `${JSON.stringify({ packageManager: original.packageManager, selected, authored, sha256 }, null, 2)}\n`);
           NODE
-      - name: Verify current-source CLI configuration, entries and independent witnesses
-        run: |
-          vp node --test tests/tooling/n8n-cli-config-contract.test.mjs tests/tooling/n8n-cli-config-failure-custody.test.mjs
-          vp node tests/tooling/support/n8n-cli-config-acceptance.mjs \
-            "target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}"
-          vp node tests/tooling/support/n8n-cli-config-semantic-acceptance.mjs \
-            "target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}/semantic-routing"
-      - name: Verify both slot modifier options through whole source CLI and JSON-RPC packets
-        run: vp node tests/tooling/support/n8n-slot-options-acceptance.ts "target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}/slot-options"
       - name: Observe the existing authored registry provider on original n8n components
         env: { VIZE_TRACE_EDITOR_PREPARATION: "1" }
         run: vp node tests/tooling/support/n8n-authored-registry-acceptance.ts "target/n8n-cli-config/${{ github.run_id }}-${{ github.run_attempt }}/authored-registry"
