@@ -12,13 +12,6 @@ use tower_lsp::lsp_types::{TextDocumentPositionParams, Url};
 
 use super::MaestroServer;
 
-#[cfg_attr(
-    all(feature = "native", feature = "experimental-source-navigation"),
-    expect(
-        clippy::large_enum_variant,
-        reason = "stack views avoid allocation on every document request"
-    )
-)]
 pub(super) enum DocumentServer<'a> {
     Primary(&'a MaestroServer),
     #[cfg(feature = "native")]
