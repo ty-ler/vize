@@ -15,7 +15,7 @@ use super::{
     language_id::for_uri as language_id_for_uri,
 };
 use corsa::runtime::block_on;
-use corsa_lsp::{LspClient, LspOverlay, LspSpawnConfig, VirtualDocument};
+use corsa_lsp::{LspClient, LspOverlay, LspSpawnConfig, VirtualDocument, process::ProcessObserver};
 use lsp_types::{DocumentDiagnosticReportResult, Uri};
 use serde_json::Value;
 use std::{
@@ -43,6 +43,7 @@ mod materialized;
 mod native_vue;
 mod original_program;
 mod process_close;
+mod process_receipt;
 mod project_configuration;
 mod project_identity;
 mod readiness;
@@ -65,6 +66,7 @@ use responder::spawn_responder;
 /// requests.
 pub(super) struct EditorLspSession {
     client: LspClient,
+    process_observer: ProcessObserver,
     overlay: LspOverlay,
     stop: Arc<AtomicBool>,
     responder: Option<std::thread::JoinHandle<()>>,
@@ -89,10 +91,13 @@ pub(super) struct EditorLspSession {
 
 impl EditorLspSession {
     fn spawn(executable: &str, cwd: &Path, project_root: &Path) -> Result<Self, String> {
-        let client = block_on(LspClient::spawn(
-            LspSpawnConfig::new(executable).with_cwd(cwd.to_path_buf()),
-        ))
-        .map_err(|error| cstr!("Failed to start Corsa editor LSP session: {error}"))?;
+        let process_observer = ProcessObserver::default();
+        let mut spawn = LspSpawnConfig::new(executable).with_cwd(cwd.to_path_buf());
+        spawn.command = spawn
+            .command
+            .with_process_observer(process_observer.clone());
+        let client = block_on(LspClient::spawn(spawn))
+            .map_err(|error| cstr!("Failed to start Corsa editor LSP session: {error}"))?;
         let stop = Arc::new(AtomicBool::new(false));
         let responder = spawn_responder(client.clone(), stop.clone());
 
@@ -100,6 +105,7 @@ impl EditorLspSession {
             stop.store(true, Ordering::Relaxed);
             let _ = block_on(client.close());
             let _ = responder.join();
+            let _ = process_receipt::report(&process_observer, false, false);
             return Err(error);
         }
         crate::corsa_session_cache::note_typescript_project_init();
@@ -107,6 +113,7 @@ impl EditorLspSession {
         Ok(Self {
             overlay: client.overlay(),
             client,
+            process_observer,
             stop,
             responder: Some(responder),
             configured_api: None,

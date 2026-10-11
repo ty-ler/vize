@@ -1,6 +1,6 @@
 //! Closing and reaping the native editor process.
 
-use super::{EditorLspSession, configured_project};
+use super::{EditorLspSession, configured_project, process_receipt};
 use corsa::runtime::block_on;
 use std::sync::atomic::Ordering;
 use vize_l0::{String, cstr};
@@ -15,12 +15,20 @@ impl EditorLspSession {
         }
 
         let mut first_error = None;
-        if let Err(error) = block_on(self.client.graceful_close()) {
+        let close_result = block_on(self.client.graceful_close());
+        let graceful_acknowledged = close_result.is_ok();
+        if let Err(error) = close_result {
             first_error = Some(cstr!(
                 "Failed to gracefully close editor LSP process: {error}"
             ));
         }
-        self.finish_close(first_error)
+        let result = self.finish_close(first_error);
+        let receipt_result =
+            process_receipt::report(&self.process_observer, graceful_acknowledged, true);
+        match (result, receipt_result) {
+            (Err(error), Err(receipt_error)) => Err(cstr!("{error}; {receipt_error}")),
+            (result, receipt_result) => result.and(receipt_result),
+        }
     }
 
     /// Tear down the editor process without waiting for a protocol shutdown
@@ -36,7 +44,9 @@ impl EditorLspSession {
         if let Err(error) = block_on(self.client.close()) {
             first_error = Some(cstr!("Failed to close editor LSP process: {error}"));
         }
-        self.finish_close(first_error)
+        let result = self.finish_close(first_error);
+        let receipt_result = process_receipt::report(&self.process_observer, false, false);
+        result.and(receipt_result)
     }
 
     fn finish_close(&mut self, mut first_error: Option<String>) -> Result<(), String> {
@@ -66,6 +76,8 @@ impl EditorLspSession {
 
 impl Drop for EditorLspSession {
     fn drop(&mut self) {
-        let _ = self.shutdown();
+        if let Err(error) = self.shutdown() {
+            eprintln!("{error}");
+        }
     }
 }
