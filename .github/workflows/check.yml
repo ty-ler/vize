@@ -6,7 +6,6 @@ env:
   CARGO_BUILD_JOBS: '12'
   CARGO_INCREMENTAL: '0'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  NAPI_RS_NATIVE_LIBRARY_PATH: ${{ github.workspace }}/npm/native/vize-vitrine.linux-x64-gnu.node
 jobs:
   ui-vapor-pairing:
     name: Full original UI controls and paired Vapor source diagnostic
@@ -36,7 +35,9 @@ jobs:
       - name: Install immutable dependencies
         run: vp install --frozen-lockfile --prefer-offline
       - name: Build the actual source native binding
-        run: vp run --filter './npm/native' build:ci
+        run: |
+          vp run --filter './npm/native' build:ci
+          printf 'NAPI_RS_NATIVE_LIBRARY_PATH=%s/npm/native/vize-vitrine.linux-x64-gnu.node\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
       - name: Verify the source-built binding is actually loaded
         run: |
           node --input-type=module <<'JS'
