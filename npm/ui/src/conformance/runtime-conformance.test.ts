@@ -57,9 +57,10 @@ test("declares an SSR and hydration fixture for every source SFC", async () => {
   assert.deepEqual(fixtureFiles, sourceFiles);
 });
 
-test("gives every runtime conformance case a unique name", () => {
+test("identifies every runtime conformance case within its canonical source", () => {
   assert.equal(
-    new Set(runtimeFixtures.map((fixture) => fixture.name)).size,
+    new Set(runtimeFixtures.map((fixture) => JSON.stringify([fixture.sourceFile, fixture.name])))
+      .size,
     runtimeFixtures.length,
   );
 });

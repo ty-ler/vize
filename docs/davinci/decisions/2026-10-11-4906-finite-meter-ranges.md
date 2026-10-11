@@ -26,9 +26,10 @@ state. Bundle budgets, focus, announcement policy, and package exports are
 unchanged.
 
 The source-coverage test now compares the unique fixture source paths with
-every original canonical SFC, and separately requires unique fixture names.
+every original canonical SFC, and separately requires unique source/name pairs.
 This permits multiple edge cases for one component without dropping any
 source from the SSR and hydration sweep or replacing its original case.
+Historical labels can repeat across different SFCs; they remain unchanged.
 
 This is one bounded feedback-family correctness slice. #4906 and #4913 remain
 open: component presence alone does not establish the full family acceptance
