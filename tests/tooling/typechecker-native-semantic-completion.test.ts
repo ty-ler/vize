@@ -53,10 +53,10 @@ test("missing, duplicate, unknown and false lane registrations refuse", () => {
     ["adapters", { legacy: "batch-typechecker-fixture-v1", native: "claimed" }],
     ["regressionCommit", "0".repeat(40)],
     ["sourceRevision", "0".repeat(40)],
-  ]) {
+  ] satisfies [string, unknown][]) {
     const changed = structuredClone(original);
-    Object.assign(changed[0], { [key as string]: replacement });
-    assert.throws(() => loadNativeSemanticCompletionCases(root, changed), String(key));
+    Object.assign(changed[0], { [key]: replacement });
+    assert.throws(() => loadNativeSemanticCompletionCases(root, changed), key);
   }
 });
 

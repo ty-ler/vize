@@ -21,12 +21,14 @@ The unchanged expected public stdout is the entire original packet: TS1260 at
 `Comp0.vue` 1:59, TS2304 at `shared.ts` 1:21, all five file rows, complete
 program/config/options membership and both aggregate errors. Required parser
 completion retains public exit 1 and produces empty stderr after the repair.
-The malformed input's `LeafGlobal` diagnosis remains an intentional negative;
-its eight original inputs remain byte exact. A separate ordinary-import control
-must resolve that global with a complete clean vector. A normal TS2322 case and
+The original authored `shared.ts` program's `LeafGlobal` diagnosis remains an
+intentional negative; its eight original inputs remain byte exact. A separate
+ordinary-import control in the generated program must resolve that global with
+a complete clean vector. A normal TS2322 case and
 its actual repaired source require complete wrong and clean public packets.
 
-The private batch law uses the normal factory and the exact same config. Its
+The private batch law uses the normal factory and the public path's complete
+requested URI workload. Its
 test-only writer retains every generated and physical file, source maps, the
 whole raw diagnostic response, selected config bytes, full normalized options
 and roots, and `getSourceFileNames` request/response from the diagnosing LSP's
@@ -35,9 +37,18 @@ The initial `041d5df` Actions qualification found the original leaf declaration
 in native source membership, disproving the test's assumed absence. The revised
 law reads its complete encoded source text through that retained attachment,
 matches all 55 original physical bytes, and compares the complete project and
-source membership. Loading a source does not erase the frozen malformed-import
-diagnosis. A second actual configured session uses only the ordinary import
-correction and requires no diagnostics while proving the same loaded declaration.
+source membership. The `b872794` full artifact disproved another test assumption:
+the generated program genuinely loads that global and has no TS2304, while the
+public path also requests the original authored `shared.ts` program, which
+produces the frozen TS2304. The private law now requests those same six URIs,
+retains both complete configured-project receipts from the one diagnosing owner,
+and requires the unchanged whole two-diagnostic vector. Its source view uses the
+reviewed test-only unique whole-descriptor selection and preserves the actual
+production singleton admission or refusal with the full native project vector.
+A second actual configured session uses only the ordinary import correction and
+requests the five generated-program URIs; it requires no diagnostics while
+proving the same loaded declaration. This positive is generated-program scoped,
+not an authored-public-program clean claim.
 After explicit close, require exactly one completed receipt, full empty stderr,
 actual exit 0, reap, no timeout or kill and no reader/process errors. The
 [authenticated native close capability](./2026-10-12-native-shutdown-eof-capability.md)

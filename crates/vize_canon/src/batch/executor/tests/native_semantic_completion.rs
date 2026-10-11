@@ -61,6 +61,8 @@ fn native_semantic_completion_keeps_frozen_full_vector_and_actual_terminal_owner
     project.register_paths(&files).unwrap();
     project.register_reachable_dependencies().unwrap();
     project.ensure_included_sources().unwrap();
+    // Match the public runner's authored TS/JS diagnostic workload.
+    project.set_diagnostic_paths(files.iter().map(PathBuf::as_path));
     let executor = CorsaExecutor::with_corsa_path(&root, Some(&native)).unwrap();
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         executor.check_with_servers(&project, Some(1))
@@ -86,8 +88,9 @@ fn native_semantic_completion_keeps_frozen_full_vector_and_actual_terminal_owner
     assert_eq!(json!(whole), case["expectedDiagnostics"]);
     assert_eq!((result.success, result.exit_code), (false, 1));
 
-    // A separate configured session observes the same full declaration while an
-    // ordinary import makes its global visible. Keep the malformed input intact.
+    // This separate positive control checks only the five generated program
+    // URIs. An ordinary import exposes the leaf global there; it does not claim
+    // authored shared.ts is clean. The negative keeps all eight frozen inputs.
     let valid_root = root.parent().unwrap().join("factory-valid-import");
     fs::create_dir_all(&valid_root).unwrap();
     for entry in case["inputFiles"].as_array().unwrap() {

@@ -14,12 +14,7 @@ pub(super) fn eof_capability(executable: &Path, initialized: &Value) -> bool {
     let Ok(bytes) = fs::read(executable) else {
         return false;
     };
-    const HEX: &[u8] = b"0123456789abcdef";
-    let mut digest = vize_l0::String::with_capacity(64);
-    for byte in Sha256::digest(bytes) {
-        digest.push(HEX[usize::from(byte >> 4)] as char);
-        digest.push(HEX[usize::from(byte & 15)] as char);
-    }
+    let digest = vize_l0::cstr!("{:x}", Sha256::digest(bytes));
     known_binary(digest.as_str())
 }
 
