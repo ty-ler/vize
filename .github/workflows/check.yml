@@ -18,7 +18,7 @@ jobs:
         with: { fetch-depth: 0 }
       - name: Select exact three-layer public source with only read-only observers
         run: |
-          git checkout 7a344c767388c1308c609a1dc73865cfa7332751
+          git checkout 36661df72b1705781c6af73d2a9daff7aace4ad3
           git diff --exit-code
           git diff --cached --exit-code
           mkdir evidence
