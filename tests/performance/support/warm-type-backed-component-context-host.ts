@@ -1,27 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
+import { componentContextManifest as manifest } from "./warm-type-backed-component-context-manifest.ts";
 
 type BodyDigest = (side: "before" | "after", file: string) => string | null;
 type Pair = [string, string | null, string];
-const manifest = JSON.parse(
-  fs.readFileSync(
-    new URL("./warm-type-backed-component-context-manifest.json", import.meta.url),
-    "utf8",
-  ),
-) as {
-  version: number;
-  originalComponentSource: string;
-  originalConfigSource: string;
-  parentSource: string;
-  reviewedSource: string;
-  parentManifestSHA256: string;
-  componentBodies: Array<[string, string | null, string, string | null]>;
-  inheritedProductionBodies: Array<[string, string | null, string, string]>;
-  inheritedCustodyBodies: Array<[string, string, string]>;
-  inheritedHarnessExtensions: Pair[];
-  originalComponentBodies: Array<[string, string]>;
-};
 const parent = JSON.parse(
   fs.readFileSync(
     new URL("./warm-type-backed-project-config-manifest.json", import.meta.url),
@@ -35,12 +18,12 @@ const parent = JSON.parse(
 };
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const manifestSHA256 = hash(manifest);
-assert.equal(manifestSHA256, "dd1bc789e2dc908d8e9147409c8ea0c36779d4d749b2402079ac241980d016dc");
+assert.equal(manifestSHA256, "1d45ed852781630883c10343e90c7315920cbc097b4e18b628c04dfb01d42805");
 assert.equal(manifest.version, 1);
 assert.equal(manifest.originalComponentSource, "c0dc03760aaf8cdb4810e3ed0417c668a36c4721");
 assert.equal(manifest.originalConfigSource, parent.originalSource);
 assert.equal(hash(parent), manifest.parentManifestSHA256);
-assert.equal(manifest.componentBodies.length, 27);
+assert.equal(manifest.componentBodies.length, 28);
 assert.equal(manifest.inheritedProductionBodies.length, 90);
 assert.equal(manifest.inheritedCustodyBodies.length, 51);
 assert.equal(manifest.originalComponentBodies.length, 4);
