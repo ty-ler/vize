@@ -58,7 +58,7 @@ class OwnerRecorder extends QueryRecorder {
     following?: (id: number) => JsonRpcMessage[],
   ) {
     const packet: Packet = await super.query(stage, spec, following);
-    if (spec.method !== "textDocument/completion") return packet;
+    if (spec.method !== "textDocument/completion" || packet.result === null) return packet;
     const items = Array.isArray(packet.result) ? packet.result : object(packet.result).items;
     if (!Array.isArray(items) || !items.length) return packet;
     if (stage !== "cross-root" && stage !== "native-epoch-recovered") {
