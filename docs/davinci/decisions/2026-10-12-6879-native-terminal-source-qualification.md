@@ -11,10 +11,10 @@ separate review. Filename permission alone would admit unrelated SDK changes.
 
 ## Complete source authority
 
-The finite manifest records all 118 complete before/after production bodies
+The finite manifest records all 120 complete before/after production bodies
 against main `006c564067bacd05be9eac5660e34992e0bdabe8`. Its
 `reviewedSource` identifies the complete committed source; the two ordered
-59-member files preserve full bodies and original absence without exceeding
+60-member files preserve full bodies and original absence without exceeding
 the existing 350-line file limit. A hardcoded digest binds the merged metadata
 and complete ordered membership. This includes the complete vendored SDK,
 Cargo manifests, production adapters and native execution laws. Unknown,
@@ -84,3 +84,11 @@ Actual exact-head native Actions, all original 400 inputs, complete
 diagnostic/request vectors, fixed timeouts/budgets and protected delivery
 remain required. Input/source admission alone gives no correctness,
 performance, merge, release or public consumer acceptance credit.
+
+The reviewed source is `e1d0bb3c98874140caf0fc17b0fcccdc451fc6c5`. The two additional exact body pairs
+are the existing snapshot test registration and its reviewed cfg(test) whole
+descriptor child, shared with Stack provider custody. All original118 before
+bodies,23 original request/runtime/recipe bodies and two exact final-guard
+body pairs remain fixed. Altered, partial or unknown bodies still refuse
+before any original400 execution. New source qualification gives no native,
+performance, protected queue or release credit.

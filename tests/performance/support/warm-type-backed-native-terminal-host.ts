@@ -30,10 +30,10 @@ export const nativeTerminalManifest = {
 };
 const manifest = nativeTerminalManifest;
 const manifestSHA256 = createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
-assert.equal(manifestSHA256, "4ef2ff1e0098dfe030b2c96ef784fd826c200c23ec5fd6c888565b39ec5cd14d");
+assert.equal(manifestSHA256, "73f06e91009af8394309bfc3a5d9801855cb04c31c009962cb36578d0b783183");
 assert.equal(manifest.version, 1);
 assert.equal(manifest.originalSource, "006c564067bacd05be9eac5660e34992e0bdabe8");
-assert.equal(manifest.files.length, 118);
+assert.equal(manifest.files.length, 120);
 assert.equal(new Set(manifest.files.map(([file]) => file)).size, manifest.files.length);
 assert.equal(manifest.preservedBodies.length, 23);
 assert.equal(manifest.qualifiedHarnessBodies.length, 2);

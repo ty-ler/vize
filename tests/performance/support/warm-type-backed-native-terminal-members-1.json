@@ -12,7 +12,7 @@
   [
     "crates/vize/tests/check_canon_native_completion_cli.rs",
     null,
-    "ce2045bfc308bfd909249ffc1e1fae74a16abd33d4fb492bde84e7af3e298480"
+    "b24e6d200b4826bbca032f86a69f5a991e13cbd707428fda8c9b7bec72b462c0"
   ],
   [
     "crates/vize_canon/src/batch/executor.rs",
@@ -52,12 +52,12 @@
   [
     "crates/vize_canon/src/batch/executor/session/semantic_completion_receipt.rs",
     null,
-    "ad46cc258a1796ba102f62bf827be0de7a09dfee80ebfdcf21642e1dbe17f913"
+    "07f7a32b6ad0e470797fa1f8f69452c0875562c1572e031d67c3e3ba2a95f58a"
   ],
   [
     "crates/vize_canon/src/batch/executor/tests/native_semantic_completion.rs",
     null,
-    "45d77a87b3724181609b7a259e32d1b721a1d22b2d13c38ed324abf9c637583b"
+    "e936611738672bd2954dc126e6c6295e990cb34586f297370e27b3169c1d5c0d"
   ],
   [
     "crates/vize_canon/src/lsp_client/diagnostics_lsp.rs",
@@ -72,7 +72,7 @@
   [
     "crates/vize_canon/src/lsp_client/editor_lsp/batch_test_receipt.rs",
     "02623d26b73a9d7eb34645756358828f00d9f995efb80f8982068538540f8731",
-    "3d4af4b75ed52a38e9b57bdf5a45edae8954241b8b0d5e9eba9177625efe058d"
+    "e81465b0ad0e077ae3ef20bd20ef79c97174c463a6cf5ffb9076684088072655"
   ],
   [
     "crates/vize_canon/src/lsp_client/editor_lsp/configured_project.rs",
@@ -82,7 +82,7 @@
   [
     "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown.rs",
     null,
-    "56ed26d37ba9b84b520f75cbe6d3b0f85710fb74e3885e321bae55844616e1b6"
+    "0bf8389c244d2189ca5fb85b75e4a1872f086a9b29f5e70e17b9d74e087c9e9b"
   ],
   [
     "crates/vize_canon/src/lsp_client/editor_lsp/process_close.rs",
@@ -93,6 +93,16 @@
     "crates/vize_canon/src/lsp_client/editor_lsp/process_receipt.rs",
     null,
     "16c36d4a0d4519480fe6b5ce182b1bed582e2896cb578fd3ac05ec0a51d601b5"
+  ],
+  [
+    "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests.rs",
+    "eb0e6a39fad15a090d0f763ee5ab262f63f1263db22da69604116e7244dbe0a2",
+    "78bf613b865bb249241ee87a941e2cb4616350a161f4a3206b3ff3ccd8ce5343"
+  ],
+  [
+    "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests/batch_receipt.rs",
+    null,
+    "e784b9c902b477190fa4c8f0e36f2ee99f69a27c00f73c0be43dbd8bfaea934e"
   ],
   [
     "vendor/corsa-published-custody.json",
@@ -288,10 +298,5 @@
     "vendor/corsa_core/src/lint/rules/no_unnecessary_type_assertion.rs",
     null,
     "483f29e8dede036b42696a7a0d00f956ff3a15b6fbc4a9eb82fbd5233fa3fd76"
-  ],
-  [
-    "vendor/corsa_core/src/lint/rules/no_unnecessary_type_conversion.rs",
-    null,
-    "e21568438810620574d5ffb5f4e8bbb2de54e82844ac2cca856991739cd72bfe"
   ]
 ]

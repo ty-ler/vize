@@ -1,5 +1,10 @@
 [
   [
+    "vendor/corsa_core/src/lint/rules/no_unnecessary_type_conversion.rs",
+    null,
+    "e21568438810620574d5ffb5f4e8bbb2de54e82844ac2cca856991739cd72bfe"
+  ],
+  [
     "vendor/corsa_core/src/lint/rules/no_unnecessary_type_parameters.rs",
     null,
     "f3640783c63462b0419e4f938d36644f6f6aa00d42a09811842db52df834f88f"

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "originalSource": "006c564067bacd05be9eac5660e34992e0bdabe8",
-  "reviewedSource": "38ea52dcfba3ae6ca3e2784344367f1858493e38",
+  "reviewedSource": "e1d0bb3c98874140caf0fc17b0fcccdc451fc6c5",
   "preservedBodies": [
     [
       "tests/_fixtures/differential/lsp/warm-type-backed-requests/case.json",
