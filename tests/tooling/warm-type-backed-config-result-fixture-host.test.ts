@@ -1,3 +1,7 @@
+import {
+  frozenResultFixtureBody,
+  proveCurrentUnitFixtureSource,
+} from "./warm-type-backed-config-unit-test-fixture-host.test.ts";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -17,6 +21,13 @@ import { projectConfigManifest } from "../performance/support/warm-type-backed-p
 import nullCompletion from "../performance/support/warm-type-backed-project-config-null-completion-manifest.json" with { type: "json" };
 import loader from "../performance/support/warm-type-backed-project-config-loader-manifest.json" with { type: "json" };
 import { canonBatchConfigProduction as production } from "./support/config-reviewed-source.ts";
+
+// Actual current Unit113 and all refusals close before the two archived Result
+// body reads. The unchanged old113 laws below grant only their f1 source receipt.
+proveCurrentUnitFixtureSource();
+const frozenResultFiles = new Set(
+  [...fixture.productionBodies, ...fixture.harnessBodies].map(([file]) => file),
+);
 
 type Digest = (side: "before" | "after", file: string) => string | null;
 type Scope = "parent-pair" | "inherited";
@@ -46,6 +57,7 @@ const gitDigest = (revision: string, file: string) => {
   return cache.get(key)!;
 };
 const current = (file: string) => {
+  if (frozenResultFiles.has(file)) return sha(frozenResultFixtureBody(file));
   try {
     return sha(fs.readFileSync(new URL(file, root)));
   } catch (error) {
@@ -106,7 +118,7 @@ test("the fallible fixture is the one actual complete successor with its exact n
     assert.equal(gitDigest(fixture.fixtureSource, file), after);
   const filename = fixture.harnessBodies[0][0];
   const original = gitSource(fixture.predecessorSource, filename)!.toString();
-  const successor = fs.readFileSync(new URL(filename, root), "utf8");
+  const successor = frozenResultFixtureBody(filename).toString();
   const marker = "  const historical = qualifyOriginal(production, alreadyQualified, digest);";
   assert.equal(
     successor.slice(successor.indexOf(marker)),
@@ -117,7 +129,7 @@ test("the fallible fixture is the one actual complete successor with its exact n
 test("all three original native tests retain every statement and assertion with fallible setup", () => {
   const filename = fixture.productionBodies[0][0];
   const original = gitSource(fixture.predecessorSource, filename)!.toString();
-  const successor = fs.readFileSync(new URL(filename, root), "utf8");
+  const successor = frozenResultFixtureBody(filename).toString();
   const originalHelpers = original.slice(0, original.indexOf("#[test]"));
   assert.equal((originalHelpers.match(/\bpanic!\(/gu) ?? []).length, 14);
   const helpers = successor.slice(0, successor.indexOf("#[test]"));

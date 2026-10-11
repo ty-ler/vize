@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "originalResultManifestSHA256": "92e269db5823d79ea30899889125053310001b13b4ef6f988ddc895f28241d48",
+  "predecessorSource": "d0fc55afc5c6178a436a4612fb41518dad12762c",
+  "fixtureSource": "50b3f93772e74ec5c1a67372ebdc531328ae457d",
+  "productionBodies": [
+    [
+      "crates/vize_maestro/src/server/project_contexts/tests.rs",
+      null,
+      "b7e07394097fa6aaba969d03cae0f7e50ccf40dc77033adb30da4b96ab0a3b33",
+      "18efb3283f8c1cc4fd14ca954290b37762be810e61c81d2d9c552ecd95f0e11e"
+    ]
+  ],
+  "harnessBodies": [
+    [
+      "tests/performance/support/warm-type-backed-config-fixture-host.ts",
+      null,
+      "46041b1d3940ed0313864ce4346dd69170033f22fe2871b50d9c82ff2f178a67",
+      "84b2660c4c9177cba56ff8ca3d0531704c23c2b2fdff1a7205a959b5d5ad1b38"
+    ]
+  ]
+}

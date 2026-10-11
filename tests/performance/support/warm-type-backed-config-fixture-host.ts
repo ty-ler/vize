@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import raw from "./warm-type-backed-config-fixture-host.json" with { type: "json" };
 import original from "./warm-type-backed-config-repair-host.json" with { type: "json" };
 import { qualifyConfigResultFixtureHost } from "./warm-type-backed-config-result-fixture-host.ts";
+import { qualifyConfigUnitTestFixtureHost } from "./warm-type-backed-config-unit-test-fixture-host.ts";
 
 type Digest = (side: "before" | "after", file: string) => string | null;
 type Scope = "parent-pair" | "inherited";
@@ -46,12 +47,25 @@ export function qualifyConfigFixtureHost<T extends { files: readonly string[] }>
   ) => T | null,
   scope: Scope,
 ) {
-  return qualifyConfigResultFixtureHost(
+  return qualifyConfigUnitTestFixtureHost(
     production,
     alreadyQualified,
     digest,
     (files, owned, actual) =>
-      qualifyConfigFixtureContext(files, owned, actual, qualifyOriginal, scope),
+      qualifyConfigResultFixtureHost(
+        files,
+        owned,
+        actual,
+        (originalFiles, originalOwned, originalDigest) =>
+          qualifyConfigFixtureContext(
+            originalFiles,
+            originalOwned,
+            originalDigest,
+            qualifyOriginal,
+            scope,
+          ),
+        scope,
+      ),
     scope,
   );
 }
