@@ -5,6 +5,14 @@ use super::{CorsaProjectClient, project_identity::ProjectIdentityError};
 use serde_json::{Value, json};
 
 impl CorsaProjectClient {
+    pub(crate) fn batch_test_process_observer(
+        &self,
+    ) -> Option<corsa_lsp::process::ProcessObserver> {
+        self.editor_lsp
+            .as_ref()
+            .map(|editor| editor.process_observer.clone())
+    }
+
     pub(crate) fn batch_test_receipt(&mut self, uri: &str) -> Value {
         let mut receipt = json!({
             "nativeBinary": self.executable, "cwd": self.cwd,
@@ -17,6 +25,8 @@ impl CorsaProjectClient {
                 return receipt;
             };
             receipt["mode"] = json!("editor-lsp");
+            let processes = editor.process_observer.receipts();
+            receipt["processPid"] = json!(processes.first().map(|r| r.pid));
             let selected = editor.diagnosing_configuration(uri);
             match selected {
                 Ok(path) => receipt["selectedConfig"] = json!(path),
@@ -37,6 +47,8 @@ impl CorsaProjectClient {
                         "normalizedRequestedOptions",
                         "normalizedRequestedFiles",
                         "attachment",
+                        "sourceNamesRequest",
+                        "sourceNamesResponse",
                     ] {
                         receipt[key] = observed[key].clone();
                     }
