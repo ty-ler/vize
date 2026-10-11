@@ -53,7 +53,8 @@ await test("qualification binds every current source and whole unchanged corpus 
     qualifyProjectConfigHost(production, new Set(), actual) ??
     qualifyProjectConfigNullCompletionHost(production, new Set(), actual) ??
     qualifyIssuedCompletionHost(issuedCompletionProduction, new Set(), actual)
-  ) return;
+  )
+    return;
 
   // The existing 90-body authority stays frozen; an explicitly bound child
   // must qualify its entire composed footprint and every inherited control.
@@ -87,13 +88,15 @@ await test("qualification binds every current source and whole unchanged corpus 
     assert.equal(result.authority, "complete-project-config-and-component-context-slices");
     return;
   }
-  const { qualifyCurrentComponentOwnerSource } =
-    await import("./support/component-owner-migration-source.ts");
+  const { qualifyCurrentComponentSuccessorSource: qualifyCurrentComponentOwnerSource } =
+    await import("./support/component-issued-source.ts");
   const successor = qualifyCurrentComponentOwnerSource();
   assert.ok(successor);
   assert.equal(
     successor.authority,
-    "complete-project-config-and-component-owner-migration-successor",
+    "issuedCompletionContext" in successor
+      ? "complete-project-config-component-issued-completion-successor"
+      : "complete-project-config-and-component-owner-migration-successor",
   );
 });
 

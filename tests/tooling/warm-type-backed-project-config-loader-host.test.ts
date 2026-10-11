@@ -61,7 +61,8 @@ await test("original whole90/51/3 authority retains its exact legacy loader cont
 });
 
 await test("every current config, corpus and loader body matches its complete pinned authority", async () => {
-  const result = qualifyProjectConfigLoaderHost(production, allowed, actualDigest) ??
+  const result =
+    qualifyProjectConfigLoaderHost(production, allowed, actualDigest) ??
     qualifyIssuedCompletionHost(issuedCompletionProduction, allowed, actualDigest);
   if (result) {
     assert.equal(result.loaderContext.authority, "complete-composed-vite-loader");
@@ -84,17 +85,19 @@ await test("every current config, corpus and loader body matches its complete pi
       ? (actualDigest(side, file) ?? componentBefore.get(file) ?? null)
       : actualDigest(side, file),
   );
-  const { qualifyCurrentComponentOwnerSource } =
-    await import("./support/component-owner-migration-source.ts");
+  const { qualifyCurrentComponentSuccessorSource: qualifyCurrentComponentOwnerSource } =
+    await import("./support/component-issued-source.ts");
   const successor = legacyComponent ?? qualifyCurrentComponentOwnerSource();
   assert.ok(successor);
   assert.equal(
     successor.authority,
     legacyComponent
       ? "complete-project-config-and-component-context-slices"
-      : "complete-project-config-and-component-owner-migration-successor",
+      : "issuedCompletionContext" in successor
+        ? "complete-project-config-component-issued-completion-successor"
+        : "complete-project-config-and-component-owner-migration-successor",
   );
-  assert.equal(successor.files.length, 113);
+  assert.equal(successor.files.length, "issuedCompletionContext" in successor ? 119 : 113);
   assert.equal(successor.completeComponentBodies, 28);
   assert.equal(successor.inheritedProductionBodies, 90);
   assert.equal(successor.inheritedCustodyBodies, 51);

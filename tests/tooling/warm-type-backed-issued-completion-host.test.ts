@@ -12,6 +12,7 @@ import { projectConfigManifest as original } from "../performance/support/warm-t
 import nullCompletion from "../performance/support/warm-type-backed-project-config-null-completion-manifest.json" with { type: "json" };
 import loader from "../performance/support/warm-type-backed-project-config-loader-manifest.json" with { type: "json" };
 import { qualifyProjectConfigLoaderHost } from "../performance/support/warm-type-backed-project-config-loader-host.ts";
+import { qualifyCurrentComponentIssuedSource } from "./support/component-issued-source.ts";
 import { allowed } from "../performance/support/warm-type-backed-production-paths.ts";
 
 type Pair = [string, string | null, string | null];
@@ -59,7 +60,10 @@ await test("every current whole source body matches the distinct whole96 authori
       return null;
     }
   };
-  assert.ok(qualifyIssuedCompletionHost(production, allowed, actual));
+  assert.ok(
+    qualifyIssuedCompletionHost(production, allowed, actual) ??
+      qualifyCurrentComponentIssuedSource(),
+  );
 });
 
 await test("every original production/custody/extension and all seven producer pairs are mandatory", () => {
