@@ -71,6 +71,7 @@ pub(super) struct EditorLspSession {
     closed: bool,
     /// Last text mirrored into the server, keyed by session document URI.
     documents: FxHashMap<String, String>,
+    issued_completions: completion_resolve::IssuedCompletions,
     /// Latest notification generation written to this transport.
     document_generation: u64,
     /// Generation acknowledged by a response-backed semantic request.
@@ -111,6 +112,7 @@ impl EditorLspSession {
             configured_api: None,
             closed: false,
             documents: Default::default(),
+            issued_completions: Default::default(),
             document_generation: 0,
             ready_generation: None,
             dirty_documents: Default::default(),
@@ -317,6 +319,7 @@ impl EditorLspSession {
             first_error = Some(cstr!("Editor LSP responder panicked during shutdown"));
         }
         self.closed = true;
+        self.issued_completions.invalidate();
 
         match first_error {
             Some(error) => Err(error),
