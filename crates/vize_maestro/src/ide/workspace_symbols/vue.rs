@@ -1,0 +1,231 @@
+//! SFC workspace symbols and their authored declaration ranges.
+
+use tower_lsp::lsp_types::{Location, Position, Range, SymbolInformation, SymbolKind, Url};
+use vize_l0::cstr;
+
+use super::WorkspaceSymbolsService;
+
+impl WorkspaceSymbolsService {
+    /// Collect symbols from a single document.
+    #[expect(
+        deprecated,
+        reason = "SymbolInformation.deprecated is deprecated in favor of tags"
+    )]
+    pub(super) fn collect_symbols_from_document(
+        uri: &Url,
+        content: &str,
+        query: &str,
+        symbols: &mut Vec<SymbolInformation>,
+    ) {
+        let Some(descriptor) = vize_incremental::parse_descriptor(uri.path(), content) else {
+            return;
+        };
+
+        // Extract component name from file path
+        if let Some(component_name) = Self::extract_component_name(uri)
+            && component_name.to_lowercase().contains(query)
+        {
+            symbols.push(SymbolInformation {
+                name: component_name,
+                kind: SymbolKind::CLASS,
+                tags: None,
+                deprecated: None,
+                location: Location {
+                    uri: uri.clone(),
+                    range: Range {
+                        start: Position {
+                            line: 0,
+                            character: 0,
+                        },
+                        end: Position {
+                            line: 0,
+                            character: 0,
+                        },
+                    },
+                },
+                container_name: None,
+            });
+        }
+
+        // Collect from script setup
+        if let Some(ref script_setup) = descriptor.script_setup {
+            Self::collect_script_symbols(
+                uri,
+                &script_setup.content,
+                script_setup.loc.start_line as u32,
+                query,
+                Some("script setup"),
+                symbols,
+            );
+        }
+
+        // Collect from script
+        if let Some(ref script) = descriptor.script {
+            Self::collect_script_symbols(
+                uri,
+                &script.content,
+                script.loc.start_line as u32,
+                query,
+                Some("script"),
+                symbols,
+            );
+        }
+
+        // Collect from styles
+        for (idx, style) in descriptor.styles.iter().enumerate() {
+            Self::collect_style_symbols(
+                uri,
+                &style.content,
+                style.loc.start_line as u32,
+                query,
+                Some(&cstr!("style[{idx}]")),
+                symbols,
+            );
+        }
+
+        // Vue-specific symbols (emits, slots, provide/inject keys, …) so
+        // workspace symbol search surfaces component contracts, not just
+        // script bindings. Foundation for #697 — currently covers emits and
+        // slot names; provide/inject and template refs follow the same shape.
+        Self::collect_vue_specific_symbols(uri, &descriptor, query, symbols);
+    }
+
+    /// Surface Vue-specific entities (emits, slots) discovered by Croquis.
+    #[expect(
+        deprecated,
+        reason = "SymbolInformation.deprecated is deprecated in favor of tags"
+    )]
+    fn collect_vue_specific_symbols(
+        uri: &Url,
+        descriptor: &vize_atelier_sfc::SfcDescriptor<'_>,
+        query: &str,
+        symbols: &mut Vec<SymbolInformation>,
+    ) {
+        let Some(ref script_setup) = descriptor.script_setup else {
+            return;
+        };
+
+        let mut analyzer = vize_croquis::Drawer::with_options(vize_croquis::DrawerOptions {
+            analyze_script: true,
+            ..Default::default()
+        });
+        analyzer.analyze_script_setup(&script_setup.content);
+        let croquis = analyzer.finish();
+
+        let container = Self::extract_component_name(uri);
+
+        // Fallback for Croquis symbols that do not yet carry a declaration
+        // span, on top of the line-0-character-0 placeholder from #715.
+        let script_setup_position =
+            Self::offset_to_position(descriptor.source.as_ref(), script_setup.loc.start);
+        let placeholder_range = Range {
+            start: script_setup_position,
+            end: script_setup_position,
+        };
+
+        // Emits declared via defineEmits<{...}>(). The macro tracker keeps the
+        // raw names; expose each as an EVENT symbol so `@symbol` searches
+        // discover "update:modelValue", "submit", etc.
+        for emit in croquis.macros.emits() {
+            let name = emit.name.as_str();
+            if !query.is_empty() && !name.to_lowercase().contains(query) {
+                continue;
+            }
+            let range = Self::macro_declaration_range(
+                descriptor.source.as_ref(),
+                script_setup.content.as_ref(),
+                script_setup.loc.start,
+                croquis.macros.emit_declaration(name),
+                placeholder_range,
+            );
+            symbols.push(SymbolInformation {
+                name: name.to_string(),
+                kind: SymbolKind::EVENT,
+                tags: None,
+                deprecated: None,
+                location: Location {
+                    uri: uri.clone(),
+                    range,
+                },
+                container_name: container.clone(),
+            });
+        }
+
+        // Slots declared via defineSlots<{...}>(). Expose each as an
+        // INTERFACE symbol — slots define the parent-child contract, much
+        // like a TypeScript interface.
+        for slot in croquis.macros.slots() {
+            let name = slot.name.as_str();
+            if !query.is_empty() && !name.to_lowercase().contains(query) {
+                continue;
+            }
+            symbols.push(SymbolInformation {
+                name: name.to_string(),
+                kind: SymbolKind::INTERFACE,
+                tags: None,
+                deprecated: None,
+                location: Location {
+                    uri: uri.clone(),
+                    range: placeholder_range,
+                },
+                container_name: container.clone(),
+            });
+        }
+    }
+
+    pub(super) fn macro_declaration_range(
+        source: &str,
+        script: &str,
+        script_start: usize,
+        declaration: Option<(u32, u32)>,
+        fallback: Range,
+    ) -> Range {
+        let Some((start, end)) = declaration else {
+            return fallback;
+        };
+        let start = start as usize;
+        let end = end as usize;
+        if start >= end || script.get(start..end).is_none() {
+            return fallback;
+        }
+
+        let (start, end) = Self::trim_paired_quotes(script, start, end);
+        let (Some(source_start), Some(source_end)) = (
+            script_start.checked_add(start),
+            script_start.checked_add(end),
+        ) else {
+            return fallback;
+        };
+        if source_start > source_end || source.get(source_start..source_end).is_none() {
+            return fallback;
+        }
+
+        Range {
+            start: Self::offset_to_position(source, source_start),
+            end: Self::offset_to_position(source, source_end),
+        }
+    }
+
+    fn trim_paired_quotes(source: &str, start: usize, end: usize) -> (usize, usize) {
+        let Some(raw) = source.get(start..end) else {
+            return (start, end);
+        };
+        match raw.as_bytes() {
+            [first @ (b'\'' | b'"'), .., last] if last == first => (start + 1, end - 1),
+            _ => (start, end),
+        }
+    }
+
+    /// Convert a byte offset in `source` to an LSP `Position`. Simple line/
+    /// column calculator — workspace symbols don't go through the heavier
+    /// position mapping used by diagnostics.
+    pub(super) fn offset_to_position(source: &str, offset: usize) -> Position {
+        let prefix = source
+            .get(..source.floor_char_boundary(offset))
+            .unwrap_or_default();
+        let line = prefix.matches('\n').count() as u32;
+        let last_nl = prefix.rfind('\n').map(|p| p + 1).unwrap_or(0);
+        let character = (prefix.len() - last_nl) as u32;
+        Position { line, character }
+    }
+}
