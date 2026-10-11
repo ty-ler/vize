@@ -3,18 +3,10 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { test } from "node:test";
 import { qualifyProjectConfigLoaderHost } from "../performance/support/warm-type-backed-project-config-loader-host.ts";
+import { projectConfigManifest as original } from "../performance/support/warm-type-backed-project-config-manifest.ts";
 import { allowed } from "../performance/support/warm-type-backed-production-paths.ts";
 
 type Pair = [string, string | null, string | null];
-const original = JSON.parse(
-  fs.readFileSync(
-    new URL(
-      "../performance/support/warm-type-backed-project-config-manifest.json",
-      import.meta.url,
-    ),
-    "utf8",
-  ),
-) as { files: Pair[]; preservedBodies: Pair[]; harnessExtensions: Pair[] };
 const loader = JSON.parse(
   fs.readFileSync(
     new URL(

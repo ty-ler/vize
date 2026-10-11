@@ -1,0 +1,17 @@
+[
+  [
+    "tests/performance/support/warm-type-backed-owner-capture.ts",
+    null,
+    "0dcd21bd83b856ef7b5bce2ef44d74ae13aafada77e28cb9dd5cd25eb5217e37"
+  ],
+  [
+    "tests/performance/support/warm-type-backed-owner-migration.ts",
+    null,
+    "22f522d1d1a2a0ed4266fd424c5d6ed681bdfc73a5bb03deb2aeff7bfdf9d39e"
+  ],
+  [
+    "tests/performance/support/warm-type-backed-owner-resolve.ts",
+    null,
+    "61921cd757075d18507898458332dc1130590a619285b0862a8be719708ea44a"
+  ]
+]
