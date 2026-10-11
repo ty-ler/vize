@@ -6,16 +6,48 @@ use oxc_span::SourceType;
 use vize_carton::FxHashSet;
 
 use super::VirtualProject;
-use super::dependency_scan::resolve_dependency;
+use super::dependency_scan::{resolve_dependency, resolve_dependency_observed};
 use super::package_route_reachability::{PackageRouteReachability, package_route_reaches_vue};
+use crate::package_route::stamp::Shared;
+use crate::package_route::stamp::{Consumed, FactOwner, FactRole};
 
 impl VirtualProject {
     pub(super) fn reconcile_package_routes_for_importers_inner(
         &mut self,
         changed: &FxHashSet<PathBuf>,
     ) {
+        self.reconcile_package_routes_for_importers_consumed(changed, false, None);
+    }
+
+    pub(super) fn reconcile_package_routes_for_importers_inner_observed(
+        &mut self,
+        changed: &FxHashSet<PathBuf>,
+    ) -> Consumed<()> {
+        self.reconcile_package_routes_for_importers_consumed(changed, true, None)
+    }
+
+    pub(super) fn reconcile_package_routes_for_importers_inner_observed_with_inputs(
+        &mut self,
+        changed: &FxHashSet<PathBuf>,
+        inputs: &Consumed<()>,
+    ) -> Consumed<()> {
+        self.reconcile_package_routes_for_importers_consumed(changed, true, Some(inputs))
+    }
+
+    fn reconcile_package_routes_for_importers_consumed(
+        &mut self,
+        changed: &FxHashSet<PathBuf>,
+        observe: bool,
+        inputs: Option<&Consumed<()>>,
+    ) -> Consumed<()> {
+        // Only the original caller can witness mapped-input and policy owners.
+        let mut facts = Consumed {
+            value: (),
+            stamps: inputs.map_or_else(Vec::new, |inputs| inputs.stamps.clone()),
+            qualified: inputs.is_some_and(|inputs| inputs.qualified),
+        };
         if changed.is_empty() {
-            return;
+            return facts;
         }
         let removed_keys = changed
             .iter()
@@ -29,7 +61,11 @@ impl VirtualProject {
             .collect::<Vec<_>>();
         let previous = removed_keys.len();
         for key in removed_keys {
-            self.remove_package_route_binding(&key);
+            if observe {
+                take_registration(&mut facts, self.remove_package_route_binding_observed(&key));
+            } else {
+                self.remove_package_route_binding(&key);
+            }
         }
 
         let importers = changed
@@ -48,8 +84,34 @@ impl VirtualProject {
                 Some((path.clone(), file.content.clone(), source_type))
             })
             .collect::<Vec<_>>();
-        let aliases = self.dependency_alias_map();
-        let resolution = self.package_resolution_settings();
+        let mut aliases = if observe {
+            self.dependency_alias_map_observed()
+        } else {
+            Consumed {
+                value: self.dependency_alias_map(),
+                stamps: Vec::new(),
+                qualified: false,
+            }
+        };
+        if observe {
+            assign_configuration(&mut aliases, &self.project_root);
+        }
+        facts.stamps.extend(aliases.stamps.iter().cloned());
+        facts.qualified &= aliases.qualified;
+        let mut resolution = if observe {
+            self.package_resolution_settings_observed()
+        } else {
+            Consumed {
+                value: self.package_resolution_settings(),
+                stamps: Vec::new(),
+                qualified: false,
+            }
+        };
+        if observe {
+            assign_configuration(&mut resolution, &self.project_root);
+        }
+        facts.stamps.extend(resolution.stamps.iter().cloned());
+        facts.qualified &= resolution.qualified;
         let source_options = crate::PackageSourceOptions::new(
             self.source_policy.allows_javascript(),
             self.jsx_typecheck,
@@ -68,21 +130,80 @@ impl VirtualProject {
                 if is_vue_runtime_support_specifier(&specifier) {
                     continue;
                 }
-                if specifier.starts_with('.')
-                    || Path::new(specifier.as_str()).is_absolute()
-                    || resolve_dependency(&specifier, importer_dir, &self.project_root, &aliases)
-                        .is_some()
-                {
+                if specifier.starts_with('.') || Path::new(specifier.as_str()).is_absolute() {
                     continue;
                 }
-                let (context, context_inputs) =
-                    resolution.context(&mut resolver, &importer, occurrence_mode);
-                let lookup = resolver.lookup_with_context(
-                    importer_dir,
-                    &specifier,
-                    source_options,
-                    context.clone(),
-                );
+                let mut local = if observe {
+                    let local = resolve_dependency_observed(
+                        &specifier,
+                        importer_dir,
+                        &self.project_root,
+                        &aliases.value,
+                    );
+                    Consumed {
+                        value: local.value.0,
+                        stamps: local.stamps,
+                        qualified: local.qualified && aliases.qualified,
+                    }
+                } else {
+                    Consumed {
+                        value: resolve_dependency(
+                            &specifier,
+                            importer_dir,
+                            &self.project_root,
+                            &aliases.value,
+                        ),
+                        stamps: Vec::new(),
+                        qualified: false,
+                    }
+                };
+                if observe {
+                    Self::assign_root_importer(&mut local, &importer);
+                }
+                if take_registration(&mut facts, local).is_some() {
+                    continue;
+                }
+                let mut context = if observe {
+                    super::package_resolution::PackageResolutionSettings::context_with_configuration_observed(
+                        &resolution, &mut resolver, &importer, occurrence_mode,
+                    )
+                } else {
+                    Consumed {
+                        value: resolution
+                            .value
+                            .context(&mut resolver, &importer, occurrence_mode),
+                        stamps: Vec::new(),
+                        qualified: false,
+                    }
+                };
+                if observe {
+                    Self::assign_root_importer(&mut context, &importer);
+                }
+                let (context, context_inputs) = take_registration(&mut facts, context);
+                let mut lookup = if observe {
+                    resolver.lookup_with_context_observed(
+                        importer_dir,
+                        &specifier,
+                        source_options,
+                        context.clone(),
+                    )
+                } else {
+                    Consumed {
+                        value: resolver.lookup_with_context(
+                            importer_dir,
+                            &specifier,
+                            source_options,
+                            context.clone(),
+                        ),
+                        stamps: Vec::new(),
+                        qualified: false,
+                    }
+                };
+                if observe {
+                    Self::assign_root_importer(&mut lookup, &importer);
+                }
+                let raw_lookup_qualified = lookup.qualified;
+                let lookup = take_registration(&mut facts, lookup);
                 let watchable_negative = lookup.is_watchable_negative();
                 let (route, mut invalidation_paths) = lookup.into_parts();
                 let has_route = route.is_some();
@@ -90,13 +211,22 @@ impl VirtualProject {
                     route
                         .as_ref()
                         .map_or_else(PackageRouteReachability::default, |route| {
-                            package_route_reaches_vue(
-                                route,
-                                &aliases,
-                                &resolution,
-                                &mut resolver,
-                                source_options,
-                            )
+                            if observe {
+                                let mut scanned = super::package_route_reachability::package_route_reaches_vue_observed(
+                                    route, &aliases.value, &resolution.value, &mut resolver,
+                                    source_options, super::package_route_reachability::ReachabilityAuthority {
+                                        aliases_qualified: aliases.qualified,
+                                        configuration: Some(&resolution),
+                                        route_qualified: raw_lookup_qualified,
+                                    },
+                                );
+                                Self::assign_root_importer(&mut scanned, &importer);
+                                take_registration(&mut facts, scanned).reachability
+                            } else {
+                                package_route_reaches_vue(
+                                    route, &aliases.value, &resolution.value, &mut resolver, source_options,
+                                )
+                            }
                         });
                 if has_route {
                     reachability.record_work(&mut resolver);
@@ -113,7 +243,7 @@ impl VirtualProject {
                     continue;
                 }
                 invalidation_paths.extend(reachability.inputs);
-                invalidation_paths.extend(resolution.input_paths().iter().cloned());
+                invalidation_paths.extend(resolution.value.input_paths().iter().cloned());
                 invalidation_paths.extend(context_inputs);
                 invalidation_paths.push(importer.clone());
                 invalidation_paths.sort();
@@ -131,7 +261,14 @@ impl VirtualProject {
         drop(resolver);
         let discovered_count = discovered.len();
         for binding in discovered {
-            self.insert_package_route_binding(binding);
+            if observe {
+                take_registration(
+                    &mut facts,
+                    self.insert_package_route_binding_observed(binding),
+                );
+            } else {
+                self.insert_package_route_binding(binding);
+            }
         }
         self.package_route_refresh_keys
             .retain(|key| !changed.contains(&key.importer_path));
@@ -142,7 +279,26 @@ impl VirtualProject {
         {
             resolver.record_refresh_scope(self.package_routes.len(), reconciled, reconciled);
         }
+        facts
     }
+}
+
+fn assign_configuration<T>(packet: &mut Consumed<T>, root: &Path) {
+    let owner = Shared::new(FactOwner {
+        path: root.to_path_buf(),
+        role: FactRole::Configuration,
+    });
+    for stamp in &mut packet.stamps {
+        if stamp.owner().is_none() {
+            *stamp = stamp.clone().with_owner(owner.clone());
+        }
+    }
+}
+
+fn take_registration<T>(facts: &mut Consumed<()>, consumed: Consumed<T>) -> T {
+    facts.stamps.extend(consumed.stamps);
+    facts.qualified &= consumed.qualified;
+    consumed.value
 }
 
 fn route_requires_invalidation_binding(has_route: bool, watchable_negative: bool) -> bool {
@@ -163,39 +319,9 @@ pub fn is_vue_runtime_support_specifier(specifier: &str) -> bool {
 }
 
 #[cfg(test)]
-mod runtime_support_tests {
-    use super::{
-        is_vue_runtime_support_specifier as is_support, route_requires_invalidation_binding,
-    };
+#[path = "package_route_discovery/runtime_support_tests.rs"]
+mod runtime_support_tests;
 
-    #[test]
-    fn generated_runtime_support_filter_is_exact() {
-        for specifier in [
-            "vue",
-            "vue/dist/vue.cjs.js",
-            "vue/server-renderer",
-            "vue/jsx-runtime",
-            "@vue/runtime-core",
-            "@vue/runtime-dom",
-            "vite/client",
-        ] {
-            assert!(is_support(specifier), "{specifier}");
-        }
-        for specifier in [
-            "vue-router",
-            "@vueuse/core",
-            "@vue",
-            "vite",
-            "vite/plugin-vue",
-        ] {
-            assert!(!is_support(specifier), "{specifier}");
-        }
-    }
-
-    #[test]
-    fn positive_non_vue_routes_keep_an_invalidation_binding() {
-        assert!(route_requires_invalidation_binding(true, false));
-        assert!(route_requires_invalidation_binding(false, true));
-        assert!(!route_requires_invalidation_binding(false, false));
-    }
-}
+#[cfg(test)]
+#[path = "package_route_discovery/consumed_owner_tests.rs"]
+mod consumed_owner_tests;

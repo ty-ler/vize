@@ -23,6 +23,7 @@ use std::path::{Path, PathBuf};
 use vize_carton::{FxHashMap, FxHashSet, String as CompactString};
 
 use super::VirtualProject;
+use super::package_shadow::observed::ShadowFacts;
 
 /// The physical package one bare specifier resolved to: canonical package root
 /// and the manifest that selected it. Two routes agreeing on both name the same
@@ -32,7 +33,10 @@ type ShadowIdentity = (PathBuf, PathBuf);
 impl VirtualProject {
     /// Shared scope directories per package name, for names whose every
     /// resolved route in this project is the same physical package.
-    pub(super) fn shared_package_shadow_scopes(&self) -> FxHashMap<CompactString, Vec<PathBuf>> {
+    pub(super) fn shared_package_shadow_scopes(
+        &self,
+        facts: &mut ShadowFacts,
+    ) -> FxHashMap<CompactString, Vec<PathBuf>> {
         let mut identities: FxHashMap<CompactString, FxHashSet<ShadowIdentity>> =
             FxHashMap::default();
         let mut importer_dirs: FxHashMap<CompactString, Vec<PathBuf>> = FxHashMap::default();
@@ -54,23 +58,25 @@ impl VirtualProject {
             else {
                 continue;
             };
+            facts.binding(binding);
             let package_name = CompactString::from(package_name);
             identities
                 .entry(package_name.clone())
                 .or_default()
-                .insert(shadow_identity(route));
+                .insert(shadow_identity(route, facts));
             importer_dirs
                 .entry(package_name)
                 .or_default()
                 .push(importer_dir);
         }
 
+        facts.configuration();
         let hoistable = identities
             .into_iter()
             .filter(|(_, identities)| identities.len() == 1)
             .filter_map(|(package_name, _)| {
                 let dirs = importer_dirs.remove(&package_name)?;
-                let scopes = self.hoisted_scope_dirs(&package_name, &dirs, 0);
+                let scopes = self.hoisted_scope_dirs(&package_name, &dirs, 0, facts);
                 (!scopes.is_empty()).then_some((package_name, scopes))
             })
             .collect::<Vec<_>>();
@@ -105,6 +111,7 @@ impl VirtualProject {
         package_name: &str,
         dirs: &[PathBuf],
         depth: usize,
+        facts: &mut ShadowFacts,
     ) -> Vec<PathBuf> {
         const MAX_SPLIT_DEPTH: usize = 32;
         let Some(common) = shared_scope_dir(dirs, &self.virtual_root) else {
@@ -113,7 +120,7 @@ impl VirtualProject {
         if dirs.iter().all(|dir| *dir == common) {
             return vec![common];
         }
-        let refused = self.scope_dir_reaches_real_install(&common)
+        let refused = self.scope_dir_reaches_real_install(&common, facts)
             || (common == self.virtual_root && is_canon_runtime_entry(package_name));
         if depth >= MAX_SPLIT_DEPTH || !refused {
             return vec![common];
@@ -129,7 +136,7 @@ impl VirtualProject {
         }
         let mut scopes = groups
             .into_values()
-            .flat_map(|group| self.hoisted_scope_dirs(package_name, &group, depth + 1))
+            .flat_map(|group| self.hoisted_scope_dirs(package_name, &group, depth + 1, facts))
             .collect::<Vec<_>>();
         scopes.sort();
         scopes.dedup();
@@ -138,13 +145,13 @@ impl VirtualProject {
 
     /// Whether a mirrored directory's real counterpart owns a `node_modules`
     /// tree, which the package-link pass mirrors into the virtual project.
-    fn scope_dir_reaches_real_install(&self, scope: &Path) -> bool {
+    fn scope_dir_reaches_real_install(&self, scope: &Path, facts: &mut ShadowFacts) -> bool {
         let real = match scope.strip_prefix(&self.virtual_root) {
             Ok(relative) => self.project_root.join(relative),
             Err(_) => return true,
         };
         let real = super::external_mirror::external_mirror_original_path(scope).unwrap_or(real);
-        real.join("node_modules").exists()
+        facts.exists(&real.join("node_modules"))
     }
 
     /// The directories whose `node_modules/<name>` host this importer's shadow.
@@ -221,10 +228,10 @@ fn is_canon_runtime_entry(package_name: &str) -> bool {
     )
 }
 
-fn shadow_identity(route: &crate::PackageRoute) -> ShadowIdentity {
+fn shadow_identity(route: &crate::PackageRoute, facts: &mut ShadowFacts) -> ShadowIdentity {
     (
-        vize_carton::path::canonicalize_non_verbatim(&route.package_root),
-        vize_carton::path::canonicalize_non_verbatim(&route.manifest_path),
+        facts.canonical(&route.package_root),
+        facts.canonical(&route.manifest_path),
     )
 }
 

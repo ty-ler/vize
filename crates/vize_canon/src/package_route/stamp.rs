@@ -4,7 +4,25 @@ use std::path::{Path, PathBuf};
 
 use vize_carton::FxHashMap;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+/// Immutable facts outlive the operation and cache lock that produced them.
+#[expect(
+    clippy::disallowed_types,
+    reason = "one immutable fact owner/route is shared by retained native snapshots across threads"
+)]
+pub(crate) type Shared<T> = std::sync::Arc<T>;
+
+#[path = "stamp/observed.rs"]
+mod observed;
+#[cfg(test)]
+pub(crate) use observed::membership::PackageContributionRef;
+#[cfg(any(feature = "native", test))]
+pub(crate) use observed::membership::{
+    package_aggregates, record_editor_route_write, record_package_input_members,
+    verify_package_aggregates_match_old,
+};
+pub(crate) use observed::{Consumed, FactOwner, FactRole, SourceRevisionFact};
+
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub(crate) struct InputStamp {
     path: PathBuf,
     modified: Option<std::time::SystemTime>,
@@ -13,9 +31,12 @@ pub(crate) struct InputStamp {
     content_digest: Option<u64>,
     symlink_target: Option<PathBuf>,
     source_content: bool,
+    fact: Option<observed::InputFact>,
+    owner: Option<Shared<FactOwner>>,
+    consumed_only: bool,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 enum InputKind {
     File,
     Directory,
@@ -64,6 +85,11 @@ impl InputStampCache {
 }
 
 impl InputStamp {
+    #[cfg(feature = "native")]
+    pub(crate) fn path(&self) -> &Path {
+        &self.path
+    }
+
     pub(crate) fn capture(path: impl Into<PathBuf>) -> Self {
         Self::capture_input(path.into(), None, false)
     }
@@ -115,19 +141,29 @@ impl InputStamp {
             content_digest,
             symlink_target,
             source_content,
+            fact: None,
+            owner: None,
+            consumed_only: false,
         }
     }
 
     pub(crate) fn is_current(&self) -> bool {
-        *self == Self::capture_input(self.path.clone(), None, self.source_content)
+        if self.fact.is_some() {
+            return self.fact_is_current();
+        }
+        self.same_observation(Self::capture_input(
+            self.path.clone(),
+            None,
+            self.source_content,
+        ))
     }
 
     pub(crate) fn is_current_with_cache(&self, cache: &mut InputStampCache) -> bool {
         // Route-cache epochs hold filesystem stamps, not registered-source stamps.
-        if self.source_content {
+        if self.source_content || self.fact.is_some() {
             return self.is_current();
         }
-        *self == cache.capture(&self.path)
+        self.same_observation(cache.capture(&self.path))
     }
 }
 
@@ -178,19 +214,6 @@ pub(super) fn stamp_paths_with_cache(
     cache: &mut InputStampCache,
 ) -> Vec<InputStamp> {
     paths.iter().map(|path| cache.capture(path)).collect()
-}
-
-pub(super) fn stamps_are_current(stamps: &[InputStamp]) -> bool {
-    stamps.iter().all(InputStamp::is_current)
-}
-
-pub(super) fn stamps_are_current_with_cache(
-    stamps: &[InputStamp],
-    cache: &mut InputStampCache,
-) -> bool {
-    stamps
-        .iter()
-        .all(|stamp| stamp.is_current_with_cache(cache))
 }
 
 pub(super) fn manifest_path(root: &Path) -> PathBuf {

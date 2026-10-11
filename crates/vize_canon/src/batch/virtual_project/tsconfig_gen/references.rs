@@ -20,13 +20,27 @@ use super::super::tsconfig_paths::{
 
 /// The transitive project configs referenced by `tsconfig_path`, in stable
 /// declaration order. The solution shell itself is omitted.
+#[cfg(test)]
 pub(in super::super) fn referenced_project_configs(tsconfig_path: &Path) -> Vec<PathBuf> {
+    referenced_project_configs_consumed(tsconfig_path, false).value
+}
+
+pub(in super::super) fn referenced_project_configs_consumed(
+    tsconfig_path: &Path,
+    observe: bool,
+) -> crate::package_route::stamp::Consumed<Vec<PathBuf>> {
+    use super::super::project::consumption::{empty, finish, take};
     let mut cache = TsconfigOwnershipCache::default();
-    cache
-        .project_paths(tsconfig_path)
-        .into_iter()
-        .skip(1)
-        .collect()
+    let mut facts = empty(observe);
+    let value = take(
+        &mut facts,
+        cache.project_paths_consumed(tsconfig_path, observe),
+    )
+    .into_iter()
+    .skip(1)
+    .collect();
+    // The default case option executes unchanged and cannot change this graph value.
+    finish(facts, value)
 }
 
 /// Authored sources under `project_root` that this tsconfig's `files` /
@@ -87,14 +101,24 @@ fn included_source_kind(path: &Path) -> Option<TsconfigSourceKind> {
 
 /// Select the unique effective project that owns an authored source. Missing
 /// or ambiguous ownership fails closed to the solution shell.
+#[cfg(test)]
 pub(in super::super) fn effective_config_for_source(
     tsconfig_path: &Path,
     source_path: &Path,
 ) -> PathBuf {
-    TsconfigOwnershipCache::default().effective_config_for_source(
+    effective_config_for_source_consumed(tsconfig_path, source_path, false).value
+}
+
+pub(in super::super) fn effective_config_for_source_consumed(
+    tsconfig_path: &Path,
+    source_path: &Path,
+    observe: bool,
+) -> crate::package_route::stamp::Consumed<PathBuf> {
+    TsconfigOwnershipCache::default().effective_config_for_source_consumed(
         tsconfig_path,
         source_path,
         TsconfigSourceKind::Typed,
+        observe,
     )
 }
 

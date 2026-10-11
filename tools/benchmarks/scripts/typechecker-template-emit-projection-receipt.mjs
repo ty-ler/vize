@@ -3,7 +3,8 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-// Reconstruct only the prior generated initializer and its generated offsets.
+// Compose the independently authored typed emit initializer and concrete props
+// annotation onto the unchanged original producer packet, with exact inverses.
 // Actual current text/maps remain raw and frozen by the complete TS-40 snapshots.
 const root = process.env.VIZE_TEMPLATE_EMIT_TS40_CAPTURE;
 const baseline = JSON.parse(
@@ -38,28 +39,68 @@ function spanDigest(text) {
   return `${count}:${hash(text)}`;
 }
 
-function rewind(text, declaration, allowAbsent = false) {
+const concretePropsDeclaration =
+  'const props: __VizePrettify<__WithDefaultsResult<Props, Pick<Props, "modelValue">>> & {} = {} as __WithDefaultsResult<Props, Pick<Props, "modelValue">>;';
+const originalPropsDeclaration =
+  'const props: __WithDefaultsResult<Props, Pick<Props, "modelValue">> = {} as __WithDefaultsResult<Props, Pick<Props, "modelValue">>;';
+function rewind(text, declaration, allowAbsent = false, requireConcreteProps = false) {
   const index = text.indexOf(declaration);
   if (allowAbsent && index === -1) {
     assert(!text.includes("const $emit = "));
-    return { text, cut: Infinity, end: Infinity, delta: 0 };
+    assert(!text.includes(concretePropsDeclaration));
+    return { text, cut: Infinity, end: Infinity, delta: 0, edits: [], propsBytesAdded: 0 };
   }
-  assert(index >= 0, "the independently authored typed initializer is absent");
+  assert(index >= 0);
   assert.equal(text.indexOf(declaration, index + declaration.length), -1);
   const cut = byteLength(text.slice(0, index));
+  const delta = byteLength(declaration) - byteLength(oldDeclaration);
+  const edits = [{ cut, end: cut + byteLength(declaration), delta }];
+  const propsIndex = text.indexOf(concretePropsDeclaration);
+  assert.equal(
+    propsIndex !== -1,
+    requireConcreteProps,
+    "the source-derived concrete annotation must be present exactly in its authored projection",
+  );
+  let propsBytesAdded = 0;
+  if (propsIndex !== -1) {
+    assert.equal(text.indexOf(concretePropsDeclaration, propsIndex + 1), -1);
+    const prefix = "__VizePrettify<";
+    const type = '__WithDefaultsResult<Props, Pick<Props, "modelValue">>';
+    const prefixStart = byteLength(text.slice(0, propsIndex) + "const props: ");
+    const suffixStart = prefixStart + byteLength(prefix + type);
+    edits.push({
+      cut: prefixStart,
+      end: prefixStart + byteLength(prefix),
+      delta: byteLength(prefix),
+    });
+    edits.push({
+      cut: suffixStart,
+      end: suffixStart + byteLength("> & {}"),
+      delta: byteLength("> & {}"),
+    });
+    propsBytesAdded = byteLength(concretePropsDeclaration) - byteLength(originalPropsDeclaration);
+    assert.equal(propsBytesAdded, 21);
+  }
   return {
-    text: text.slice(0, index) + oldDeclaration + text.slice(index + declaration.length),
+    text: text
+      .replace(declaration, oldDeclaration)
+      .replace(concretePropsDeclaration, originalPropsDeclaration),
     cut,
     end: cut + byteLength(declaration),
-    delta: byteLength(declaration) - byteLength(oldDeclaration),
+    delta,
+    edits,
+    propsBytesAdded,
   };
 }
-
 function offset(value, edit) {
   const number = Number(value);
-  if (number <= edit.cut) return number;
-  assert(number >= edit.end, "an authored mapping endpoint entered the synthetic initializer");
-  return number - edit.delta;
+  let result = number;
+  for (const part of edit.edits) {
+    if (number <= part.cut) continue;
+    assert(number >= part.end, "endpoint entered an expressly reconstructed synthetic segment");
+    result -= part.delta;
+  }
+  return result;
 }
 
 function generatedPairs(text, edit) {
@@ -90,8 +131,13 @@ for (const [name, expected] of Object.entries(baseline)) {
   assert.equal(hash(read(name, "original.vue")), expected["source-sha256"]);
   const declaration = declarations[name];
   assert(declaration);
-  const canon = rewind(read(name, "canon", "text.ts"), declaration);
-  const preRewrite = rewind(read(name, "canon", "pre-rewrite-text.ts"), declaration);
+  const canon = rewind(read(name, "canon", "text.ts"), declaration, false, name === "define-model");
+  const preRewrite = rewind(
+    read(name, "canon", "pre-rewrite-text.ts"),
+    declaration,
+    false,
+    name === "define-model",
+  );
   assert.equal(canon.delta, name === "dual-scripts-emits" ? 50 : 97);
   assert.equal(digest(canon.text, true), expected.canon.text);
   assert.equal(digest(preRewrite.text, true), expected.canon["pre-rewrite-text"]);
@@ -128,7 +174,12 @@ for (const [name, expected] of Object.entries(baseline)) {
     expected.canon["import-source-map-probes"],
   );
 
-  const mapper = rewind(read(name, "content-mapper", "text.ts"), declaration);
+  const mapper = rewind(
+    read(name, "content-mapper", "text.ts"),
+    declaration,
+    false,
+    name === "define-model",
+  );
   assert.equal(digest(mapper.text, true), expected["content-mapper"].text);
   const mapperMappings = read(name, "content-mapper", "mappings.txt")
     .split("\n")
@@ -164,7 +215,7 @@ for (const [name, expected] of Object.entries(baseline)) {
     const [uri, language, size, sha] = line.split("|");
     const text = read(name, `maestro-document-${index}`, "text.ts");
     assert.equal(`${byteLength(text)}:${hash(text)}`, `${size}:${sha}`);
-    const edit = rewind(text, declaration, true);
+    const edit = rewind(text, declaration, true, name === "define-model");
     edits.set(uri, edit);
     previousBytes += byteLength(edit.text);
     return `${uri}|${language}|${byteLength(edit.text)}|${hash(edit.text)}`;
@@ -190,6 +241,7 @@ for (const [name, expected] of Object.entries(baseline)) {
     name,
     sourceSha256: expected["source-sha256"],
     initializerBytesAdded: canon.delta,
+    concretePropsAnnotationBytesAdded: canon.propsBytesAdded,
     restoredPriorTextAndEveryMapping: true,
   });
 }

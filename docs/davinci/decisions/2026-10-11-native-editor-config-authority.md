@@ -1,0 +1,331 @@
+# Native editor configuration authority
+
+Tracked by [#8142](https://github.com/ubugeeei-prod/vize/issues/8142) and
+[#3952](https://github.com/ubugeeei-prod/vize/issues/3952); the original authored
+campaign remains in draft [#8520](https://github.com/ubugeeei-prod/vize/pull/8520).
+
+An ordinary Vue configuration does not require the optional typed-page router
+plugin. Its actual absence must produce `None` without making the consumed
+configuration unknown. An enabled plugin still requires its original supported
+root and configuration-chain facts. Missing, malformed or unsupported inputs
+remain a refusal.
+
+## Source defect and correction
+
+`typed_router::configured_root_consumed` previously ended with
+`facts.qualified &= value.is_some()`. That conflated a known absent plugin with
+an unsupported root or loader error. `refresh_vue_compiler_options_consumed`
+combines this packet with the actual selected chain, so an otherwise complete
+ordinary project becomes unqualified before graph construction.
+
+The correction distinguishes these outcomes during the same configuration
+operation. It preserves the original optional root value and every generated
+output. It does not add a fallback, a parser, a pipeline stage or another index.
+
+| Actual configuration outcome                                     | Root value            | Configuration authority |
+| ---------------------------------------------------------------- | --------------------- | ----------------------- |
+| Missing `plugins` field in a loaded options map                  | `None`                | Known                   |
+| Empty plugin array or supported foreign plugin entries           | `None`                | Known                   |
+| Unsupported plugin field or entry shape                          | `None`                | Unknown                 |
+| Selected typed-router plugin with malformed `rootDir`            | `None`                | Unknown                 |
+| Selected plugin whose default-root loader cannot complete        | Original loader value | Unknown                 |
+| Selected plugin with an actual supported root and complete chain | Original root         | Known                   |
+| Options map unavailable                                          | `None`                | Unknown                 |
+
+Unknown chain, source, owner and registration packets remain monotonic refusals.
+Retired-owner filtering cannot repair a configuration packet that was already
+unknown. No diagnostic timeout, lifecycle expectation or resource budget changes.
+
+## Original campaign evidence
+
+The pinned licensed n8n source is
+`e882e8a483f433facb47bab9b407d0ec00a81172`. Upstream remains read-only. The
+original registry, three authored components and requested lifecycle are retained.
+
+| Source and control                                                  | Terminal evidence                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Original `b27e356647514d7fe3cc3d7f26f5643b31ae3ea3`                 | [Run 38104231472](https://github.com/ubugeeei-prod/vize/actions/runs/38104231472): deleted RunData dependency diagnostic timed out; producer was killed during shutdown.                                                                                                                                                                                                                                             |
+| Numeric first-loss trace `6ec6d0c0d29b2e8bed59e397b592517b2e8c1961` | [Run 38106505497](https://github.com/ubugeeei-prod/vize/actions/runs/38106505497): configuration reason 40 precedes aggregate reason 21 in all fourteen cold graph constructions. No first-loss walker or retired-owner failure.                                                                                                                                                                                     |
+| Authentic installed control `329864a0fb`                            | [Run 38107871386](https://github.com/ubugeeei-prod/vize/actions/runs/38107871386): original CLI, slot, fixture and compiler checks pass; authored lifecycle fails in 538688 ms. Configuration reason 40 remains, with no unresolved-extends reason 95/96; actual dependency registration reason 76 follows. RunData version 5 produces an empty diagnostic packet instead of the required deleted-module diagnostic. |
+
+The installed control uses n8n's declared pnpm 12.4.2 and original frozen lockfile.
+It records wrapper/native producer hashes, original manifest/config/lock hashes,
+and selected config/package-manifest equality against the pinned workspace files.
+Installation takes place after the fixed original CLI and slot corpus checks,
+immediately before the original authored lifecycle. The fixed CLI corpus correctly
+refuses an installed `node_modules/qrcode.vue` entry; its oracle is preserved.
+
+The installed control artifact is
+[11691200656](https://github.com/ubugeeei-prod/vize/actions/runs/38107871386/artifacts/11691200656),
+with digest
+`sha256:bf1a8e8bb6d544d20ca5e0716c1eceefd67a8a940de387f2c90cd8961f3b68bd`.
+These are source-build observations, not installed-release acceptance.
+
+## Validation and remaining work
+
+The source correction has local formatting and diff checks. Composed source
+`0e5818c8233c49a81974d74a6420b0d5c2dbbc8e` passes the production build, complete
+compiler corpus and pinned fixture jobs in
+[run 38109170762](https://github.com/ubugeeei-prod/vize/actions/runs/38109170762).
+Canon's newly enabled whole-library test compilation exposes eight retained test
+access/signature errors; it fails before any control executes. These failures and
+the earlier composed production compilation failure in
+[run 38109011157](https://github.com/ubugeeei-prod/vize/actions/runs/38109011157)
+remain explicit failed receipts. Test access corrections keep the original
+assertions and supply the same facts to the unchanged underlying operations.
+
+[Run 38109427658](https://github.com/ubugeeei-prod/vize/actions/runs/38109427658)
+compiles all 1994 Canon library tests and passes six compiler-chain controls,
+two constructor controls and eight typed-router controls. The remaining new
+typed-router control incorrectly expects a missing compiler config to erase the
+legacy default root. The original operation preserves that value but refuses
+qualification. Its corrected control compares the complete original root value,
+requires the cold refusal, and proves later creation invalidates the absence fact.
+This failed test receipt remains recorded; later filters have not yet executed.
+
+The hosted job compiles the library once, then collects all seven independent
+filter results and fails admission if any fail. A failed early law cannot hide
+later configuration/ownership refusals. Canon production Clippy follows in the
+same cached job with the original warning and wildcard-import errors enforced;
+this scoped evidence does not replace the eventual full-workspace gate.
+
+[Run 38109645576](https://github.com/ubugeeei-prod/vize/actions/runs/38109645576)
+executes all seven filters: compiler-chain 6/6, construction 2/2, typed-router
+9/9, package-index 10/10 and stamp 35/35 pass. Dependency-consumption passes
+6/7 and native-context passes 95/104. The new bare-package control compares a
+lazy alias lookup after installation; its correction takes the actual original
+alias snapshot before installation and retains the whole-value comparisons.
+The other nine existing laws expose real initial-key, scoped-negative, shadow,
+materialization, rename, retained-buffer and repeated-occurrence failures.
+Their original assertions remain. Clippy was skipped after the failed law step;
+its independent source check will still run after failed tests, and every failed
+law continues to block lifecycle admission.
+
+[Run 38109914318](https://github.com/ubugeeei-prod/vize/actions/runs/38109914318)
+passes the corrected actual-chain and original-key laws: filters are 6/6, 2/2,
+9/9, 10/10, 7/7, 96/104 and 35/35. Canon Clippy actually runs and leaves only
+two stale impl-level lint expectations after the argument packet extraction.
+The remaining original shadow control supplied `missing.json`, but the real
+setter replaces the supplied scope with its actually resolved `package.json`.
+Its authentic negative now deletes that selected manifest after registration,
+then restores the same manifest before the positive original shadow operation.
+The raw-negative control used a configured absent `.vue` target, which the
+original resolver deliberately preserves as positive native topology. Its
+negative uses an actually unmapped private specifier; the configured missing
+Vue target remains explicitly covered as positive. All original refusal,
+membership and empty-reachability assertions remain. Six other context laws
+still require source fixes; no diagnostic or instruction budget is changed.
+
+[Run 38110261974](https://github.com/ubugeeei-prod/vize/actions/runs/38110261974)
+at `ed5b396cba` compiles all 1995 library tests, passes production Canon Clippy,
+and passes the authentic shadow and private-negative/positive laws. Filters are
+6/6, 2/2, 9/9, 10/10, 7/7, 99/105 and 35/35. The six unchanged context failures
+are workspace imported-prop invalidation, rename admission, deleted live-buffer
+whole-output mismatch, doubled package regeneration and two missing canonical
+shadow materializations. Temporary test-only failure diagnostics retain actual
+returned stamp kinds/owners and canonical source indexes to identify those
+causes. They compile out of production and do not qualify any missing facts.
+
+Hosted qualification is pending. The n8n job compiles Canon's actual library test
+module, then executes compiler-options, construction, typed-router, package-index,
+dependency-consumption, native-context and package-stamp controls before the
+unchanged original authored lifecycle. The regression keeps
+missing bare config packages cold, qualifies only the installed actual chain,
+invalidates later parent changes, and compares complete configuration fields with
+the original factory.
+
+The temporary aggregate and unresolved-extends numeric trace exports are removed
+after their exact failed packets establish the first loss. Every underlying
+qualification, observed stamp and cold refusal remains. Retained dependency fact
+tests move unchanged into their own module to satisfy the existing 350-line gate.
+
+The existing #8520 draft also requires its 85 Clippy failures to be repaired and
+its full source/allocation/instruction controls to pass. Callback boxing in that
+separate cleanup adds an allocation and needs the original composed workload
+qualification. Its original registration-failure refusal remains intact. The
+unmerged n8n compiler prefix must be incorporated before deciding whether the
+later inferred-dependency failures are independent defects.
+
+#3952, #8142 and #8520 remain unfinished until their exact-head gates, actual merge
+and fresh released-consumer acceptance succeed. The 10x target is separate from
+any measurement in this record.
+
+Run `38110438552` on `6b747c4c00` retained exactly the same six context
+failures with production Clippy passing. Rename preflight accepted the original
+deleted-body/probe proof, then source patch refused. Test-only phase evidence
+and uncaptured original law output now identify that refusal and the separate
+weak-resolution guard; all predicates, complete values and assertions remain.
+The callback carries all thirteen original provenance fields inline again,
+under the approved enum-local Clippy expectation, with no extra Box allocation.
+
+Uncaptured run `38110979972` on `f3a6fe241d` proves the exact weak guard
+rejected the resolver's logical `src/../packages/props/index.ts`, while the
+original file-key operation selected the registered authored source. The join
+now borrows only an unchanged validated original `CanonicalFile(..., true)`
+with a known importer and one unambiguous registered target; no guard-side
+canonicalization or broader CanonicalPath authority is introduced.
+
+The same run proves package targets actually reached zero owners but dropped
+old binding keys lost their shadow retirement work when replacement cleared
+the dirty set. Keep those exact original keys until the existing shadow owner
+operation removes their complete topology; no owner or file is filtered out.
+The completed original dependency walk now labels only its own probes as
+`DependencyImporter`, so that exact finished edge scope can replace its old
+inputs while all configuration, callback, shadow and rewrite facts retain
+their original lifetimes. Unknown packets remain monotonically unqualified.
+
+Run `38111271953` on `027491ab19` compiled all 1,997 library tests and
+passed scoped production Clippy. The original workspace-runtime-prop and both
+zero-owner package-shadow laws now pass. The separate editor import rewrite
+records the exact original sources whose current artifacts were actually
+updated; only that completed `EditorImporter` scope retires its previous
+inputs. Host-native dependency classification keeps the dependency selection
+scope, while package callbacks and shadow predicates remain `LocalImporter`.
+The original independent deleted-probe law now uses the actual dependency
+owner emitted by its original walk; every canonical/negative/stale assertion
+and the genuinely independent resolver operation is retained.
+
+Package registration now receives a transient value from the actual completed
+source-regeneration operation: its consumed package-generation classification,
+exact retained root/binding maps and current returned authored-body facts.
+Only an unchanged exact registry and matching completed package generation can
+retain a target; new targets, changed classification, missing/unknown body
+packets and ordinary cold registration take the original build path. Both
+original registration waves still perform their complete importer/route
+reconciliation and return their real registry snapshot. The original four-node
+work limit, whole hot/cold output and source/refusal laws remain mandatory.
+
+The exact `2a45c003da` source run `38111615858` failed production compilation
+before laws: the new completed-editor return value was incorrectly used as
+the original unit fact accumulator. Keep that accumulator unchanged and finish
+with the actual completed-source vector. This repair also keeps the legacy
+consumption wrapper test-only; no input fact or refusal is discarded. Package
+generation controls now require actual package-classified regeneration, its
+complete authored-body packet and the unchanged registry. Missing completion,
+body, qualification, a changed registry, and first-party classification all
+retain ordinary registration. Their Actions results remain pending.
+
+Exact `a064f97d63`, run `38112023745`, compiled all 2,001 Canon lib tests
+and passed scoped production Clippy. Original rename and four-node package
+work laws now pass, alongside all three new package generation controls. The
+context filter still failed 3/107: a dependency-role canonical replacement was
+not retired after its independently observed negative probe, deleted reachable
+buffers were omitted by the cold producer, and a changed unsaved package body
+incorrectly reused the old route-input authority.
+
+Keep the exact independent canonical replacement rule for dependency probes
+as for the original callback probe, without granting importer completion.
+Changed package bodies, including supplied buffers, retain the original cold
+producer policy. The dependency walk may resolve an absent path only through
+the exact caller-owned overlay key while retaining the actual negative IsFile,
+TryExists and CanonicalFile facts. Directories and inaccessible paths never
+gain file authority. Existing disk-only resolver APIs and target ordering are
+unchanged; the consumed and ordinary overlay walks share the same operation.
+The authored `editor-deleted-overlay` corpus fixture and whole-projection
+comparison cover the reachable buffer, untouched overlay, directory refusal,
+TypeScript-before-JavaScript precedence and an exact alias. All original cold
+refusals and the original lifecycle campaign remain required.
+
+Exact `169bd09056`, run `38112395991`, compiled 2,005 Canon tests and
+passed scoped production Clippy. All three prior original failures now pass.
+Two controls still failed: the new editor fixture omitted the actual editor
+projection options, so its generated missing-import stub concealed the authored
+edge; and the new package-body guard took precedence over the original requested
+root refusal. Configure the fixture through the real editor option setter,
+retaining its whole expected values and negative facts. Keep the original
+requested-root guard first, then refuse changed package bodies. No assertion or
+production cold-refusal category is broadened. Fresh Actions remains required.
+
+Exact fresh-main composition `f82ef3e2bf`, run `38112906542`, compiled
+all 2,007 Canon lib tests. The eight source filters passed 6/2/9/13/11/5/107/36,
+and strict scoped production Clippy passed. Navigation, whole CLI/RPC controls,
+compiler before/after and genuine pinned pnpm dependency hydration also passed.
+The unchanged authored lifecycle still failed after 540,610ms: deleted import
+diagnostics for RunData.vue version 5 were empty instead of the required TS2307.
+All three original source inputs were restored byte-for-byte. Complete raw
+stderr first loses qualification at actual inferred registration reason 76;
+the earlier configuration reason 40 is absent. Keep every original failure
+refusal and record the first actual registration path/error through a separate
+explicit diagnostic flag before repairing the source operation.
+
+Full Check `38113203551` passed production workspace Clippy but stopped its
+test lane on two stale Maestro test-header expectations; remove just those
+attributes, retaining every test body and assertion. Its generated Canon
+consumer inventory also became stale after the actual source changes. Run the
+official generator and retain its complete output check; this changes source
+inventory only. Full test/allocation gates and the original lifecycle remain
+unfinished, so these partial successes do not permit queue or release admission.
+
+Exact `8d69f4c6e2`, run `38113877965`, retains every original source and
+refusal control but the original DELETE still fails after 541,112ms. The
+separate first-refusal observation identifies actual readable UTF-8
+`anthropic.svg`, `en.json`, and `easy_ai_starter.json` dependencies. Each
+original registration returns its exact `PathError` because it is not a Vue or
+JS/TS program. The consumed body was discarded with that negative result,
+wrongly losing authority for the actual completed requesting import walk.
+
+The minimal authored `native-inferred-assets` corpus retains the complete
+original project value, dependency edges, diagnostic vector and unregistered
+asset topology. On authentic unchanged production `8d69f4c6e2`, test-only head
+`7bdf7187c0a`, run `38115143565`, fails exactly its new readable SVG/JSON
+qualification assertion: 13/14 dependency laws pass; invalid UTF-8 and malformed
+Vue remain cold. All other seven original filters and production Clippy pass.
+Retain the whole log and exact six-file test packet custody.
+
+Retain the actual inferred registration's complete positive or negative result
+and its original read facts. Only the pure unsupported-program classification,
+the exact returned `PathError`, an unregistered target and the actual known
+requesting `DependencyImporter` authorize that readable negative packet. Its
+body facts share that existing importer's exact Arc identity; it creates no
+source node, target completion, filesystem probe or recovery of an earlier
+unknown packet. Changed/deleted asset bodies remain incompatible; missing or
+wrong owner, read failure and malformed Vue retain their original cold refusal.
+
+The full `38113203551` source-coverage lane ran 2,007 Canon laws: 2,004 passed,
+one failed and two original laws were ignored. The retained no-scope shadow
+fixture supplied default context but the real setter resolved its existing
+root package manifest. Remove only that fixture's own scope manifest before
+the original setter, keeping every original absence/predicate assertion and
+adding the whole original shadow-value comparison. The source job now executes
+all Canon lib laws as well as every original filter and independent Clippy;
+whole workspace, allocation/instruction and original n8n lifecycle gates remain
+required. This source composition has not yet qualified for queue or release.
+
+Actual merged-main `c492469763`, run `38115554985`, executes every Canon
+lib law: 2,011 pass, zero fail and one original law is ignored. All nine
+filters pass 6/2/2/9/13/14/5/107/36, including exact importer identity, the
+complete readable-asset negative result and all cold guards. The authentic
+missing nearest-scope shadow fixture passes its unchanged original predicates
+and complete legacy-value comparison. Strict production Clippy then rejects
+the newly test-only original registration wrapper and a success-only match;
+gate only that retained wrapper with `cfg(test)` and keep the original success
+conditional. Full Check `38115557045` also rejects formatting in the authored
+corpus and this record; apply the formatter to those exact seven files without
+changing assertions, baselines or any source/refusal policy. Fresh exact-source
+workspace and lifecycle evidence is still required.
+
+Exact `d495e4bb455`, run `38115924788`, passes all Canon laws, retained filters
+and strict production Clippy, with all three complete authored inputs unchanged.
+The original lifecycle now fails at the first `RunData.vue` version 1 diagnostic
+notification, after 143,028ms, with zero native-fact refusals. Its actual cold
+walk takes 30,376ms and package-route work 46,832ms; the build remains unfinished
+at shutdown. Earlier `RunDataItemCount` construction rebuilds 419 sources in
+17,168ms and exceeds the unchanged 10s native diagnostic deadline. Replace only
+the source-by-fact authored coverage scan with a borrowed exact-path set;
+preserve all original owner checks, fact kinds and per-fact freshness operations.
+This is a bounded work reduction, pending original exact-source lifecycle proof.
+Full `38115926416` also fails the existing Misskey churn RSS law at 128.3MiB
+against its unchanged 128MiB cap; keep that failure and every performance gate.
+
+That full run is now terminal: every other executed workspace, JS, editor,
+coverage and playground check succeeds. The same original cold construction
+also clones complete accumulated fact packets for synchronous registration and
+clones complete nested package routes merely to compare old outputs. Lend the
+actual existing fact vector through one scoped owner operation, restoring the
+same allocation and collision indices on success, error and unwinding. Compare
+old outputs through temporary borrowed route/input views, preserving every
+field, nested route, coverage refusal and original error order. Keep the
+original owned join as the complete differential oracle. The authored controls
+cover all route fields and packet/Arc identity across all exits; no read, owner,
+configuration guard, registration, deadline or budget is removed. Original
+exact-source lifecycle and allocation/instruction qualification remain pending.

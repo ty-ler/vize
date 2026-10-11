@@ -17,6 +17,8 @@ impl VirtualProject {
         canonical_path: &Path,
     ) -> CorsaResult<CompactString> {
         let file = self.virtual_files.get(canonical_path).ok_or_else(|| {
+            #[cfg(test)]
+            eprintln!("original package shadow canonical missing: {canonical_path:?}; original index={:?}; target owners={:?}", self.original_index, self.package_route_source_owners);
             crate::batch::error::CorsaError::PathError {
                 path: canonical_path.to_path_buf(),
             }

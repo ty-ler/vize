@@ -10,15 +10,48 @@ use crate::virtual_ts::{VirtualTsCheckOptions, VirtualTsOptions};
 
 use super::super::VirtualProject;
 
+mod selection;
+
 impl VirtualProject {
     pub(crate) fn scope_editor_namespace(&mut self, storage_root: &Path, identity: u64) {
+        self.scope_editor_namespace_consumed(storage_root, identity, false);
+    }
+
+    pub(crate) fn scope_editor_namespace_observed(
+        &mut self,
+        storage_root: &Path,
+        identity: u64,
+    ) -> crate::package_route::stamp::Consumed<()> {
+        self.scope_editor_namespace_consumed(storage_root, identity, true)
+    }
+
+    fn scope_editor_namespace_consumed(
+        &mut self,
+        storage_root: &Path,
+        identity: u64,
+        observe: bool,
+    ) -> crate::package_route::stamp::Consumed<()> {
+        use super::consumption::{empty, finish, take};
+        let mut facts = empty(observe);
         debug_assert!(self.virtual_files.is_empty());
         debug_assert!(self.package_routes.is_empty());
-        self.virtual_root = super::super::identity::project_virtual_root_with_identity(
-            storage_root,
-            &self.project_root,
-            identity,
-        );
+        self.virtual_root = if observe {
+            take(
+                &mut facts,
+                super::super::identity::project_virtual_root_with_identity_observed(
+                    storage_root,
+                    &self.project_root,
+                    identity,
+                ),
+            )
+        } else {
+            super::super::identity::project_virtual_root_with_identity(
+                storage_root,
+                &self.project_root,
+                identity,
+            )
+        };
+        finish(facts, ())
     }
 
     /// Initial batch bindings carry source authority but no virtual artifacts.
@@ -33,28 +66,8 @@ impl VirtualProject {
         );
     }
 
-    pub(crate) fn use_effective_tsconfig_for_source(&mut self, source_path: &Path) {
-        let Some(shell) = self.resolved_tsconfig_path() else {
-            return;
-        };
-        let effective = super::super::tsconfig_gen::references::effective_config_for_source(
-            &shell,
-            source_path,
-        );
-        self.set_tsconfig_path(Some(effective));
-    }
-
     pub(crate) fn effective_tsconfig_path(&self) -> Option<PathBuf> {
         self.resolved_tsconfig_path()
-    }
-
-    /// Set the tsconfig path to extend.
-    pub fn set_tsconfig_path(&mut self, tsconfig_path: Option<PathBuf>) {
-        self.tsconfig_path = tsconfig_path.map(vize_carton::path::normalize_windows_verbatim_path);
-        self.preserve_unused_diagnostics = self.resolve_tsconfig_preserves_unused_diagnostics();
-        self.source_policy = self.resolve_source_file_policy();
-        self.alias_rewrite_policy = self.resolve_alias_rewrite_policy();
-        self.refresh_vue_compiler_options();
     }
 
     pub(crate) fn source_file_policy(&self) -> SourceFilePolicy {
@@ -91,17 +104,6 @@ impl VirtualProject {
         })
     }
 
-    pub(super) fn resolve_source_file_policy(&self) -> SourceFilePolicy {
-        let Some(tsconfig_path) = self.resolved_tsconfig_path() else {
-            return SourceFilePolicy::default();
-        };
-        self.load_compiler_options(Some(tsconfig_path.as_path()))
-            .ok()
-            .as_ref()
-            .map(SourceFilePolicy::from_compiler_options)
-            .unwrap_or_default()
-    }
-
     /// Whether TypeScript diagnostics landing in `virtual_path` must be dropped
     /// because the file is a JavaScript SFC and the project does not enable
     /// `checkJs` (#3322).
@@ -130,7 +132,27 @@ impl VirtualProject {
         &mut self,
         routes: impl IntoIterator<Item = crate::PackageRouteBinding>,
     ) {
-        let resolution = self.package_resolution_settings();
+        self.set_package_routes_consumed(routes, false);
+    }
+
+    pub(crate) fn set_package_routes_observed(
+        &mut self,
+        routes: impl IntoIterator<Item = crate::PackageRouteBinding>,
+    ) -> crate::package_route::stamp::Consumed<()> {
+        self.set_package_routes_consumed(routes, true)
+    }
+
+    fn set_package_routes_consumed(
+        &mut self,
+        routes: impl IntoIterator<Item = crate::PackageRouteBinding>,
+        observe: bool,
+    ) -> crate::package_route::stamp::Consumed<()> {
+        use super::consumption::{empty, finish, take};
+        let mut facts = empty(observe);
+        let resolution = take(
+            &mut facts,
+            self.package_resolution_settings_consumed(observe),
+        );
         let mut resolver = self
             .package_route_resolver
             .lock()
@@ -138,11 +160,16 @@ impl VirtualProject {
         let bindings = routes
             .into_iter()
             .map(|mut binding| {
-                let (context, context_inputs) = resolution.context(
+                let mut context = resolution.context_consumed(
                     &mut resolver,
                     &binding.importer_path,
                     binding.occurrence_mode,
+                    observe,
                 );
+                if observe {
+                    Self::assign_root_importer(&mut context, &binding.importer_path);
+                }
+                let (context, context_inputs) = take(&mut facts, context);
                 binding.context = context;
                 binding
                     .invalidation_paths
@@ -157,9 +184,10 @@ impl VirtualProject {
             })
             .collect::<Vec<_>>();
         drop(resolver);
-        self.replace_package_route_bindings(bindings);
+        self.replace_package_route_bindings_with_consumption(bindings, observe, &mut facts);
         self.package_routes_need_refresh = false;
         self.package_route_refresh_keys.clear();
+        finish(facts, ())
     }
 
     // VirtualProject and its editor/check-server owners have independent
@@ -167,18 +195,6 @@ impl VirtualProject {
     #[expect(clippy::disallowed_types, reason = "shared across threads")]
     pub(crate) fn set_package_route_resolver(&mut self, resolver: crate::PackageRouteResolver) {
         self.package_route_resolver = std::sync::Arc::new(std::sync::Mutex::new(resolver));
-    }
-
-    pub(crate) fn set_declaration_roots(&mut self, paths: &[PathBuf]) {
-        let roots = paths
-            .iter()
-            .filter(|path| path.is_file())
-            .map(|path| vize_carton::path::canonicalize_non_verbatim(path))
-            .collect();
-        if self.declaration_roots.as_ref() != Some(&roots) {
-            self.mark_incremental_config_file();
-        }
-        self.declaration_roots = Some(roots);
     }
 
     pub(crate) fn is_declaration_root(&self, original_path: &Path) -> bool {

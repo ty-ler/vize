@@ -228,3 +228,74 @@ fn multiline_page_macro_keeps_generated_body_and_exact_diagnostic_anchors() {
         "mismatching authored and generated header prefixes remain unsupported",
     );
 }
+
+#[test]
+fn actual_absent_plugin_is_known_but_unsupported_plugin_configuration_stays_cold() {
+    for (config, qualified) in [
+        ("{}", true),
+        (r#"{"vueCompilerOptions":{"plugins":[]}}"#, true),
+        (
+            r#"{"vueCompilerOptions":{"plugins":["other-plugin"]}}"#,
+            true,
+        ),
+        (
+            r#"{"vueCompilerOptions":{"plugins":[{"name":"other-plugin"}]}}"#,
+            true,
+        ),
+        (r#"{"vueCompilerOptions":{"plugins":null}}"#, false),
+        (
+            r#"{"vueCompilerOptions":{"plugins":"other-plugin"}}"#,
+            false,
+        ),
+        (
+            r#"{"vueCompilerOptions":{"plugins":[["vue-router/volar/sfc-typed-router",{}]]}}"#,
+            false,
+        ),
+        (
+            r#"{"vueCompilerOptions":{"plugins":[{"name":"vue-router/volar/sfc-typed-router","options":{"rootDir":7}}]}}"#,
+            false,
+        ),
+    ] {
+        let (_root, project) = fixture_project(config);
+        let path = project.effective_tsconfig_path();
+        let options = project
+            .load_vue_compiler_options_observed(path.as_deref())
+            .unwrap();
+        assert!(options.qualified);
+        let actual =
+            configured_root_consumed(&project, Some(&options.value), path.as_deref(), true);
+        assert_eq!(actual.value, project.typed_router.root, "{config}");
+        assert!(
+            actual.value.is_none(),
+            "absence must not enable a guessed transform"
+        );
+        assert_eq!(actual.qualified, qualified, "{config}");
+    }
+    let (_root, project) = fixture_project("{}");
+    let unknown = configured_root_consumed(&project, None, None, true);
+    assert!(unknown.value.is_none());
+    assert!(!unknown.qualified);
+}
+
+#[test]
+fn an_enabled_plugin_still_requires_its_actual_complete_default_root_chain() {
+    let (_root, project) = fixture_project("{}");
+    let options = serde_json::json!({"plugins": ["vue-router/volar/sfc-typed-router"]});
+    let options = options.as_object().unwrap();
+    let known = configured_root_consumed(
+        &project,
+        Some(options),
+        project.effective_tsconfig_path().as_deref(),
+        true,
+    );
+    assert_eq!(known.value, Some(project.project_root.clone()));
+    assert!(known.qualified);
+    let missing = project.project_root.join("missing.json");
+    let legacy = configured_root_consumed(&project, Some(options), Some(&missing), false);
+    let cold = configured_root_consumed(&project, Some(options), Some(&missing), true);
+    assert_eq!(cold.value, legacy.value);
+    assert_eq!(cold.value, Some(project.project_root.clone()));
+    assert!(!cold.qualified);
+    std::fs::write(&missing, "{}").unwrap();
+    assert!(cold.stamps.iter().any(|stamp| !stamp.is_current()));
+}

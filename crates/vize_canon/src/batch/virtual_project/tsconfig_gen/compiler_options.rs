@@ -3,14 +3,15 @@
 use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value};
-use vize_carton::{FxHashMap, FxHashSet, profile};
+use vize_carton::profile;
 
 use crate::batch::error::CorsaResult;
+use crate::package_route::stamp::{Consumed, InputStamp};
 
 use super::super::VirtualProject;
 use super::super::tsconfig_paths::{
     normalize_path_lexically, normalize_tsconfig_path_target, parse_jsonc_value,
-    resolve_extended_tsconfig_path,
+    resolve_extended_tsconfig_path, resolve_extended_tsconfig_path_observed,
 };
 use super::path_rebase;
 
@@ -26,8 +27,7 @@ enum PathOptions {
 /// TypeScript resolves a relative `paths` target against the effective
 /// `baseUrl` when one is declared anywhere in the chain, and against the
 /// directory of the config declaring the winning `paths` map otherwise.
-/// `extends` merging replaces whole values, so each anchor is simply the
-/// directory of the config whose declaration won.
+/// `extends` replaces whole values; each anchor is the winning declaration's directory.
 #[derive(Clone, Default)]
 struct DeclarationDirs {
     paths: Option<PathBuf>,
@@ -50,22 +50,8 @@ impl DeclarationDirs {
 #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
 type FlattenedChain = (Map<std::string::String, Value>, DeclarationDirs);
 
-/// The state of one flattening operation.
-#[derive(Default)]
-struct ChainLoad {
-    /// The configs between the entry point and the one being flattened. Only
-    /// these can close a cycle.
-    active: FxHashSet<PathBuf>,
-    /// Chains already flattened during this operation. A config reachable
-    /// through several `extends` paths is read, parsed and merged once instead
-    /// of once per path, which keeps a diamond graph linear rather than
-    /// exponential in its depth.
-    completed: FxHashMap<PathBuf, FlattenedChain>,
-    /// Whether a cycle was cut while flattening the current chain. That result
-    /// depends on which configs happened to be active, so it is not reusable
-    /// from anywhere else in the graph and must not be cached.
-    cycle_cut: bool,
-}
+mod chain;
+use chain::ChainLoad;
 
 /// Flattened options plus the effective `baseUrl` (#3886).
 #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
@@ -80,13 +66,28 @@ pub(in super::super) struct FlattenedCompilerOptions {
     pub(in super::super) input_paths: Vec<PathBuf>,
 }
 
+impl ChainLoad {
+    fn resolve_parent(&mut self, config: &Path, extends: &str) -> Option<PathBuf> {
+        if !self.observe {
+            return resolve_extended_tsconfig_path(config, extends);
+        }
+        let consumed = resolve_extended_tsconfig_path_observed(config, extends);
+        self.unknown |= !consumed.qualified || consumed.value.is_none();
+        self.stamps.extend(consumed.stamps);
+        consumed.value
+    }
+}
+
 impl VirtualProject {
     #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
     pub(in super::super) fn load_compiler_options(
         &self,
         tsconfig_path: Option<&Path>,
     ) -> CorsaResult<Map<std::string::String, Value>> {
-        Ok(self.load_compiler_options_flattened(tsconfig_path)?.options)
+        Ok(self
+            .load_compiler_options_flattened_consumed(tsconfig_path, false)?
+            .value
+            .options)
     }
 
     /// Flatten the effective options without changing path spellings. The
@@ -96,13 +97,45 @@ impl VirtualProject {
         &self,
         tsconfig_path: Option<&Path>,
     ) -> CorsaResult<Map<std::string::String, Value>> {
+        self.load_compiler_options_verbatim_consumed(tsconfig_path, false)
+            .map(|consumed| consumed.value)
+    }
+
+    #[cfg(test)]
+    #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
+    pub(in super::super) fn load_compiler_options_verbatim_observed(
+        &self,
+        tsconfig_path: Option<&Path>,
+    ) -> CorsaResult<Consumed<Map<std::string::String, Value>>> {
+        self.load_compiler_options_verbatim_consumed(tsconfig_path, true)
+    }
+
+    #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
+    fn load_compiler_options_verbatim_consumed(
+        &self,
+        tsconfig_path: Option<&Path>,
+        observe: bool,
+    ) -> CorsaResult<Consumed<Map<std::string::String, Value>>> {
         let Some(tsconfig_path) = tsconfig_path else {
-            return Ok(Map::new());
+            return Ok(Consumed {
+                value: Map::new(),
+                stamps: Vec::new(),
+                qualified: false,
+            });
         };
-        let mut load = ChainLoad::default();
-        Ok(self
+        let mut load = ChainLoad {
+            observe,
+            unknown: observe && !tsconfig_path.is_absolute(),
+            ..Default::default()
+        };
+        let value = self
             .load_compiler_options_inner(tsconfig_path, &mut load, PathOptions::Verbatim)?
-            .0)
+            .0;
+        Ok(Consumed {
+            value,
+            stamps: load.stamps,
+            qualified: !load.unknown,
+        })
     }
 
     /// Flatten the chain and rebase `paths` targets onto the project root from
@@ -112,14 +145,38 @@ impl VirtualProject {
         &self,
         tsconfig_path: Option<&Path>,
     ) -> CorsaResult<FlattenedCompilerOptions> {
+        self.load_compiler_options_flattened_consumed(tsconfig_path, false)
+            .map(|consumed| consumed.value)
+    }
+
+    pub(in super::super) fn load_compiler_options_flattened_observed(
+        &self,
+        tsconfig_path: Option<&Path>,
+    ) -> CorsaResult<Consumed<FlattenedCompilerOptions>> {
+        self.load_compiler_options_flattened_consumed(tsconfig_path, true)
+    }
+
+    fn load_compiler_options_flattened_consumed(
+        &self,
+        tsconfig_path: Option<&Path>,
+        observe: bool,
+    ) -> CorsaResult<Consumed<FlattenedCompilerOptions>> {
         let Some(tsconfig_path) = tsconfig_path else {
-            return Ok(FlattenedCompilerOptions {
-                options: Map::new(),
-                base_url: None,
-                input_paths: Vec::new(),
+            return Ok(Consumed {
+                value: FlattenedCompilerOptions {
+                    options: Map::new(),
+                    base_url: None,
+                    input_paths: Vec::new(),
+                },
+                stamps: Vec::new(),
+                qualified: false,
             });
         };
-        let mut load = ChainLoad::default();
+        let mut load = ChainLoad {
+            observe,
+            unknown: observe && !tsconfig_path.is_absolute(),
+            ..Default::default()
+        };
         let (mut options, dirs) =
             self.load_compiler_options_inner(tsconfig_path, &mut load, PathOptions::Rebase)?;
 
@@ -149,10 +206,14 @@ impl VirtualProject {
         input_paths.push(normalize_path_lexically(tsconfig_path));
         input_paths.sort();
         input_paths.dedup();
-        Ok(FlattenedCompilerOptions {
-            options,
-            base_url,
-            input_paths,
+        Ok(Consumed {
+            value: FlattenedCompilerOptions {
+                options,
+                base_url,
+                input_paths,
+            },
+            stamps: load.stamps,
+            qualified: !load.unknown,
         })
     }
 
@@ -170,7 +231,15 @@ impl VirtualProject {
         load: &mut ChainLoad,
         path_options: PathOptions,
     ) -> CorsaResult<FlattenedChain> {
-        if !tsconfig_path.exists() {
+        let exists = tsconfig_path.exists();
+        if load.observe {
+            load.stamps.push(InputStamp::observed_exists(
+                tsconfig_path.to_path_buf(),
+                exists,
+            ));
+        }
+        if !exists {
+            load.unknown = true;
             return Ok((Map::new(), DeclarationDirs::default()));
         }
         let normalized = normalize_path_lexically(tsconfig_path);
@@ -178,6 +247,7 @@ impl VirtualProject {
             return Ok(cached.clone());
         }
         if !load.active.insert(normalized.clone()) {
+            load.unknown = true;
             load.cycle_cut = true;
             return Ok((Map::new(), DeclarationDirs::default()));
         }
@@ -201,6 +271,12 @@ impl VirtualProject {
         path_options: PathOptions,
     ) -> CorsaResult<FlattenedChain> {
         let content = profile!("canon.tsconfig.read", std::fs::read_to_string(normalized))?;
+        if load.observe {
+            load.stamps.push(InputStamp::observed_source(
+                normalized.to_path_buf(),
+                content.as_bytes(),
+            ));
+        }
         let config = profile!("canon.tsconfig.parse", parse_jsonc_value(&content))?;
         let mut compiler_options = config
             .get("compilerOptions")
@@ -241,7 +317,7 @@ impl VirtualProject {
         let mut inherited_dirs = DeclarationDirs::default();
         match config.get("extends") {
             Some(Value::String(extends)) => {
-                if let Some(parent_path) = resolve_extended_tsconfig_path(normalized, extends) {
+                if let Some(parent_path) = load.resolve_parent(normalized, extends) {
                     let (parent, parent_dirs) =
                         self.load_compiler_options_inner(&parent_path, load, path_options)?;
                     inherited = parent;
@@ -250,7 +326,7 @@ impl VirtualProject {
             }
             Some(Value::Array(entries)) => {
                 for extends in entries.iter().filter_map(Value::as_str) {
-                    if let Some(parent_path) = resolve_extended_tsconfig_path(normalized, extends) {
+                    if let Some(parent_path) = load.resolve_parent(normalized, extends) {
                         let (parent, parent_dirs) =
                             self.load_compiler_options_inner(&parent_path, load, path_options)?;
                         inherited.extend(parent);
@@ -269,3 +345,6 @@ impl VirtualProject {
         Ok((inherited, inherited_dirs))
     }
 }
+
+#[cfg(test)]
+mod consumed_tests;

@@ -2,12 +2,39 @@
 
 use std::path::{Component, Path, PathBuf};
 
-use vize_carton::{String as CompactString, cstr};
+use crate::package_route::stamp::{Consumed, InputStamp};
+use vize_carton::{FxHashMap, String as CompactString, cstr};
+
+#[path = "resolution/candidates.rs"]
+mod candidates;
+use candidates::probe_candidates_with_inputs_inner;
 
 /// First-party classification key: workspace symlinks use physical identity.
 pub(super) fn canonical_key(path: &Path) -> Option<PathBuf> {
+    canonical_key_inner(path, None)
+}
+
+pub(super) fn canonical_key_observed(path: &Path) -> Consumed<Option<PathBuf>> {
+    let mut stamps = Vec::new();
+    let value = canonical_key_inner(path, Some(&mut stamps));
+    Consumed {
+        value,
+        stamps,
+        qualified: true,
+    }
+}
+
+fn canonical_key_inner(path: &Path, stamps: Option<&mut Vec<InputStamp>>) -> Option<PathBuf> {
     let canonical = vize_carton::path::canonicalize_non_verbatim(path);
-    canonical.is_file().then_some(canonical)
+    let is_file = canonical.is_file();
+    if let Some(stamps) = stamps {
+        stamps.push(InputStamp::observed_canonical_file(
+            path.to_path_buf(),
+            canonical.clone(),
+            is_file,
+        ));
+    }
+    is_file.then_some(canonical)
 }
 
 pub(super) fn inside_node_modules(path: &Path) -> bool {
@@ -23,10 +50,21 @@ pub(super) fn is_declaration_file(path: &Path) -> bool {
         })
 }
 
+#[cfg(test)]
 pub(super) fn alias_may_reach_first_party(
     pattern: &str,
     target: &str,
     project_root: &Path,
+) -> bool {
+    alias_may_reach_first_party_inner(pattern, target, project_root, None, None)
+}
+
+fn alias_may_reach_first_party_inner(
+    pattern: &str,
+    target: &str,
+    project_root: &Path,
+    mut stamps: Option<&mut Vec<InputStamp>>,
+    overlays: Option<&FxHashMap<PathBuf, &str>>,
 ) -> bool {
     if pattern.contains('*') {
         return true;
@@ -36,10 +74,18 @@ pub(super) fn alias_may_reach_first_party(
     } else {
         project_root.join(target)
     };
-    let Some(resolved) = probe_candidates(&absolute) else {
+    let Some(resolved) =
+        probe_candidates_with_inputs_inner(&absolute, stamps.as_deref_mut(), overlays).0
+    else {
         return false;
     };
-    let Some(key) = canonical_key(&resolved) else {
+    let Some(key) = canonical_key_inner(&resolved, stamps).or_else(|| {
+        overlays.and_then(|overlays| {
+            overlays
+                .get_key_value(&resolved)
+                .map(|(path, _)| path.clone())
+        })
+    }) else {
         return false;
     };
     !inside_node_modules(&key) && !is_declaration_file(&key)
@@ -77,6 +123,41 @@ pub(crate) fn resolve_dependency_with_inputs(
     project_root: &Path,
     aliases: &[(std::string::String, std::string::String)],
 ) -> (Option<PathBuf>, Vec<PathBuf>) {
+    resolve_dependency_with_inputs_inner(specifier, importer_dir, project_root, aliases, None, None)
+}
+
+#[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
+pub(crate) fn resolve_dependency_observed(
+    specifier: &str,
+    importer_dir: &Path,
+    project_root: &Path,
+    aliases: &[(std::string::String, std::string::String)],
+) -> Consumed<(Option<PathBuf>, Vec<PathBuf>)> {
+    let mut stamps = Vec::new();
+    let value = resolve_dependency_with_inputs_inner(
+        specifier,
+        importer_dir,
+        project_root,
+        aliases,
+        Some(&mut stamps),
+        None,
+    );
+    Consumed {
+        value,
+        stamps,
+        qualified: true,
+    }
+}
+
+#[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
+fn resolve_dependency_with_inputs_inner(
+    specifier: &str,
+    importer_dir: &Path,
+    project_root: &Path,
+    aliases: &[(std::string::String, std::string::String)],
+    mut stamps: Option<&mut Vec<InputStamp>>,
+    overlays: Option<&FxHashMap<PathBuf, &str>>,
+) -> (Option<PathBuf>, Vec<PathBuf>) {
     let specifier = specifier
         .strip_suffix(".vue.ts")
         .map_or_else(|| specifier.to_owned(), |stem| cstr!("{stem}.vue").into());
@@ -84,7 +165,11 @@ pub(crate) fn resolve_dependency_with_inputs(
         || specifier.starts_with("../")
         || Path::new(&specifier).is_absolute()
     {
-        return probe_candidates_with_inputs(&importer_dir.join(&specifier));
+        return probe_candidates_with_inputs_inner(
+            &importer_dir.join(&specifier),
+            stamps,
+            overlays,
+        );
     }
 
     // Select the authored pattern before probing its targets. An exact key
@@ -141,7 +226,8 @@ pub(crate) fn resolve_dependency_with_inputs(
         } else {
             project_root.join(&substituted)
         };
-        let (resolved, consulted) = probe_candidates_with_inputs(&absolute);
+        let (resolved, consulted) =
+            probe_candidates_with_inputs_inner(&absolute, stamps.as_deref_mut(), overlays);
         inputs.extend(consulted);
         if resolved.is_some() {
             return (resolved, inputs);
@@ -150,62 +236,77 @@ pub(crate) fn resolve_dependency_with_inputs(
     (None, inputs)
 }
 
+#[cfg(test)]
 pub(super) fn probe_candidates(base: &Path) -> Option<PathBuf> {
     probe_candidates_with_inputs(base).0
 }
 
+#[cfg(test)]
 fn probe_candidates_with_inputs(base: &Path) -> (Option<PathBuf>, Vec<PathBuf>) {
-    let mut inputs = vec![base.to_path_buf()];
-    let extension = base.extension().and_then(|extension| extension.to_str());
-    // TypeScript substitutes type-bearing extensions before consulting the
-    // JavaScript runtime file, even when that runtime file exists.
-    let extensions: &[&str] = match extension {
-        Some("js" | "jsx") => &["ts", "tsx", "d.ts", "js", "jsx"],
-        Some("mjs") => &["mts", "d.mts", "mjs"],
-        Some("cjs") => &["cts", "d.cts", "cjs"],
-        _ if base.is_file() => return (Some(base.to_path_buf()), inputs),
-        Some("vue" | "ts" | "tsx" | "mts" | "cts" | "json") => return (None, inputs),
-        _ => &[
-            "ts", "tsx", "d.ts", "mts", "d.mts", "cts", "d.cts", "vue", "js", "jsx", "mjs", "cjs",
-        ],
-    };
-    let runtime_extension = matches!(extension, Some("js" | "jsx" | "mjs" | "cjs"));
-    let probe_base = if runtime_extension {
-        base.with_extension("")
-    } else {
-        base.to_path_buf()
-    };
-    for extension in extensions {
-        let candidate = PathBuf::from(cstr!("{}.{extension}", probe_base.display()).as_str());
-        inputs.push(candidate.clone());
-        if candidate.is_file() {
-            return (Some(candidate), inputs);
-        }
+    probe_candidates_with_inputs_inner(base, None, None)
+}
+
+/// Use the original resolver with the exact authoritative editor scope.
+#[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
+pub(super) fn resolve_dependency_with_overlays_consumed(
+    specifier: &str,
+    importer_dir: &Path,
+    project_root: &Path,
+    aliases: &[(std::string::String, std::string::String)],
+    overlays: &FxHashMap<PathBuf, &str>,
+    observe: bool,
+) -> Consumed<(Option<PathBuf>, Vec<PathBuf>)> {
+    let mut stamps = Vec::new();
+    let value = resolve_dependency_with_inputs_inner(
+        specifier,
+        importer_dir,
+        project_root,
+        aliases,
+        observe.then_some(&mut stamps),
+        Some(overlays),
+    );
+    Consumed {
+        value,
+        stamps,
+        qualified: observe,
     }
-    if runtime_extension {
-        return (None, inputs);
+}
+
+pub(super) fn probe_candidates_with_overlays_consumed(
+    base: &Path,
+    overlays: &FxHashMap<PathBuf, &str>,
+    observe: bool,
+) -> Consumed<Option<PathBuf>> {
+    let mut stamps = Vec::new();
+    let value =
+        probe_candidates_with_inputs_inner(base, observe.then_some(&mut stamps), Some(overlays)).0;
+    Consumed {
+        value,
+        stamps,
+        qualified: observe,
     }
-    for index in [
-        "index.ts",
-        "index.tsx",
-        "index.d.ts",
-        "index.mts",
-        "index.d.mts",
-        "index.cts",
-        "index.d.cts",
-        "index.vue",
-        "index.js",
-        "index.jsx",
-        "index.mjs",
-        "index.cjs",
-    ] {
-        let candidate = base.join(index);
-        inputs.push(candidate.clone());
-        if candidate.is_file() {
-            return (Some(candidate), inputs);
-        }
+}
+
+pub(super) fn alias_may_reach_with_overlays_consumed(
+    pattern: &str,
+    target: &str,
+    project_root: &Path,
+    overlays: &FxHashMap<PathBuf, &str>,
+    observe: bool,
+) -> Consumed<bool> {
+    let mut stamps = Vec::new();
+    let value = alias_may_reach_first_party_inner(
+        pattern,
+        target,
+        project_root,
+        observe.then_some(&mut stamps),
+        Some(overlays),
+    );
+    Consumed {
+        value,
+        stamps,
+        qualified: observe,
     }
-    (None, inputs)
 }
 
 #[cfg(test)]

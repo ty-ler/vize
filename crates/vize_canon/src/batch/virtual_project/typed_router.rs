@@ -94,30 +94,57 @@ impl Generation {
 }
 
 #[expect(clippy::disallowed_types, reason = "serde_json keys are std strings")]
-pub(super) fn configured_root(
+pub(super) fn configured_root_consumed(
     project: &VirtualProject,
     options: Option<&Map<std::string::String, Value>>,
     tsconfig: Option<&Path>,
-) -> Option<PathBuf> {
-    let plugin = options?.get("plugins")?.as_array()?.iter().find(|entry| {
-        entry.as_str() == Some(PLUGIN) || entry.get("name").and_then(Value::as_str) == Some(PLUGIN)
-    })?;
-    let explicit_root = plugin.get("options").and_then(|value| value.get("rootDir"));
-    let root = if let Some(value) = explicit_root {
-        // A malformed path is unsupported; it never enables a guessed transform.
-        PathBuf::from(value.as_str()?)
-    } else {
-        let compiler = project.load_compiler_options(tsconfig).ok()?;
-        compiler
-            .get("rootDir")
-            .map(|value| value.as_str().map(PathBuf::from))
-            .unwrap_or_else(|| Some(project.project_root.clone()))?
+    observe: bool,
+) -> crate::package_route::stamp::Consumed<Option<PathBuf>> {
+    use super::project::consumption::{empty, finish};
+    let mut facts = empty(observe && project.project_root.is_absolute());
+    let Some(options) = options else {
+        facts.qualified = false;
+        return finish(facts, None);
     };
-    Some(normalize_path_lexically(&if root.is_absolute() {
-        root
-    } else {
-        project.project_root.join(root)
-    }))
+    let Some(entries) = options.get("plugins") else {
+        return finish(facts, None);
+    };
+    let Some(entries) = entries.as_array() else {
+        facts.qualified = false;
+        return finish(facts, None);
+    };
+    let mut supported_entries = true;
+    let plugin = entries.iter().find(|entry| {
+        supported_entries &= entry.is_string() || entry.get("name").is_some_and(Value::is_string);
+        entry.as_str() == Some(PLUGIN) || entry.get("name").and_then(Value::as_str) == Some(PLUGIN)
+    });
+    let Some(plugin) = plugin else {
+        // Absence from the actual supported configuration is an authoritative
+        // no-op. Unsupported shapes cannot lend that absence to a guessed root.
+        facts.qualified &= supported_entries;
+        return finish(facts, None);
+    };
+    let value = (|| {
+        let explicit_root = plugin.get("options").and_then(|value| value.get("rootDir"));
+        let root = if let Some(value) = explicit_root {
+            // A malformed path is unsupported; it never enables a guessed transform.
+            PathBuf::from(value.as_str()?)
+        } else {
+            let compiler = project.configuration_options(tsconfig, observe, &mut facts)?;
+            compiler
+                .get("rootDir")
+                .map(|value| value.as_str().map(PathBuf::from))
+                .unwrap_or_else(|| Some(project.project_root.clone()))?
+        };
+        Some(normalize_path_lexically(&if root.is_absolute() {
+            root
+        } else {
+            project.project_root.join(root)
+        }))
+    })();
+    // An enabled plugin still needs its actual supported root and loader facts.
+    facts.qualified &= value.is_some();
+    finish(facts, value)
 }
 
 pub(super) fn file_literal(root: &Path, path: &Path) -> Option<String> {

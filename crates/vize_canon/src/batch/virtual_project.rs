@@ -82,7 +82,7 @@ pub(crate) mod package_resolution;
 mod package_route_discovery;
 pub use package_route_discovery::is_vue_runtime_support_specifier;
 mod package_route_reachability;
-pub(crate) use package_route_reachability::package_route_reaches_vue;
+pub(crate) use package_route_reachability::ReachabilityAuthority;
 pub use package_route_reachability::{
     PACKAGE_REACHABILITY_BUDGET_REVISION, PackageRouteReachability, ReachabilityOutcome,
     ReachabilityWork, scan_package_route_reachability,
@@ -91,7 +91,7 @@ mod package_shadow;
 mod package_shadow_owners;
 mod package_shadow_runtime;
 mod package_shadow_scope;
-mod package_source_index;
+pub(crate) mod package_source_index;
 mod passthrough;
 mod paths;
 pub(in crate::batch) use paths::script_virtual_path;

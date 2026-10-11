@@ -11,7 +11,7 @@ use serde_json::{Map, Value};
 
 use super::VirtualProject;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub(crate) struct PackageResolutionSettings {
     options: Map<String, Value>,
     config_paths: Vec<PathBuf>,
@@ -19,12 +19,33 @@ pub(crate) struct PackageResolutionSettings {
 
 impl VirtualProject {
     pub(crate) fn package_resolution_settings(&self) -> PackageResolutionSettings {
-        PackageResolutionSettings {
-            options: self
-                .load_compiler_options(self.resolved_tsconfig_path().as_deref())
-                .unwrap_or_default(),
-            config_paths: self.governing_config_paths(),
-        }
+        self.package_resolution_settings_consumed(false).value
+    }
+
+    pub(crate) fn package_resolution_settings_observed(
+        &self,
+    ) -> crate::package_route::stamp::Consumed<PackageResolutionSettings> {
+        self.package_resolution_settings_consumed(true)
+    }
+
+    pub(crate) fn package_resolution_settings_consumed(
+        &self,
+        observe: bool,
+    ) -> crate::package_route::stamp::Consumed<PackageResolutionSettings> {
+        use super::project::consumption::{empty, finish, take};
+        let mut facts = empty(observe);
+        let path = take(&mut facts, self.resolved_tsconfig_path_consumed(observe));
+        let options = self
+            .configuration_options(path.as_deref(), observe, &mut facts)
+            .unwrap_or_default();
+        let config_paths = take(&mut facts, self.governing_config_paths_consumed(observe));
+        finish(
+            facts,
+            PackageResolutionSettings {
+                options,
+                config_paths,
+            },
+        )
     }
 }
 
@@ -38,6 +59,52 @@ impl PackageResolutionSettings {
         context_from_options(resolver, importer, occurrence_mode, &self.options)
     }
 
+    pub(crate) fn context_observed(
+        &self,
+        resolver: &mut crate::PackageRouteResolver,
+        importer: &Path,
+        occurrence_mode: crate::PackageResolutionMode,
+    ) -> crate::package_route::stamp::Consumed<(crate::PackageResolutionContext, Vec<PathBuf>)>
+    {
+        let mut consumed = self.context_consumed(resolver, importer, occurrence_mode, true);
+        // A bare settings value has discarded the original compiler/governing authority.
+        consumed.qualified = false;
+        consumed
+    }
+
+    pub(crate) fn context_with_configuration_observed(
+        settings: &crate::package_route::stamp::Consumed<Self>,
+        resolver: &mut crate::PackageRouteResolver,
+        importer: &Path,
+        occurrence_mode: crate::PackageResolutionMode,
+    ) -> crate::package_route::stamp::Consumed<(crate::PackageResolutionContext, Vec<PathBuf>)>
+    {
+        use super::project::consumption::{finish, take};
+        let mut facts = crate::package_route::stamp::Consumed {
+            value: (),
+            stamps: settings.stamps.clone(),
+            qualified: settings.qualified,
+        };
+        let value = take(
+            &mut facts,
+            settings
+                .value
+                .context_consumed(resolver, importer, occurrence_mode, true),
+        );
+        finish(facts, value)
+    }
+
+    pub(super) fn context_consumed(
+        &self,
+        resolver: &mut crate::PackageRouteResolver,
+        importer: &Path,
+        occurrence_mode: crate::PackageResolutionMode,
+        observe: bool,
+    ) -> crate::package_route::stamp::Consumed<(crate::PackageResolutionContext, Vec<PathBuf>)>
+    {
+        context_from_options_consumed(resolver, importer, occurrence_mode, &self.options, observe)
+    }
+
     pub(crate) fn input_paths(&self) -> &[PathBuf] {
         &self.config_paths
     }
@@ -49,6 +116,16 @@ fn context_from_options(
     occurrence_mode: crate::PackageResolutionMode,
     options: &Map<String, Value>,
 ) -> (crate::PackageResolutionContext, Vec<PathBuf>) {
+    context_from_options_consumed(resolver, importer, occurrence_mode, options, false).value
+}
+
+fn context_from_options_consumed(
+    resolver: &mut crate::PackageRouteResolver,
+    importer: &Path,
+    occurrence_mode: crate::PackageResolutionMode,
+    options: &Map<String, Value>,
+    observe: bool,
+) -> crate::package_route::stamp::Consumed<(crate::PackageResolutionContext, Vec<PathBuf>)> {
     let module_resolution = option_string(options, "moduleResolution");
     let module = option_string(options, "module");
     let conditions = options
@@ -57,13 +134,27 @@ fn context_from_options(
         .into_iter()
         .flatten()
         .filter_map(Value::as_str);
-    resolver.resolution_context(
-        importer,
-        occurrence_mode,
-        module_resolution.as_deref(),
-        module.as_deref(),
-        conditions,
-    )
+    if observe {
+        resolver.resolution_context_observed(
+            importer,
+            occurrence_mode,
+            module_resolution.as_deref(),
+            module.as_deref(),
+            conditions,
+        )
+    } else {
+        crate::package_route::stamp::Consumed {
+            value: resolver.resolution_context(
+                importer,
+                occurrence_mode,
+                module_resolution.as_deref(),
+                module.as_deref(),
+                conditions,
+            ),
+            stamps: Vec::new(),
+            qualified: false,
+        }
+    }
 }
 
 fn option_string(options: &Map<String, Value>, name: &str) -> Option<String> {
@@ -132,3 +223,6 @@ mod tests {
         assert_eq!(context.mode, PackageResolutionMode::Require);
     }
 }
+
+#[cfg(test)]
+mod consumed_package_settings_tests;
