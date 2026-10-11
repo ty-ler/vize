@@ -182,6 +182,11 @@ impl RebuildCandidate {
             &mut facts,
         );
         if patched.is_none() {
+            #[cfg(test)]
+            eprintln!(
+                "original native source patch refused; changed={:?}; deleted={:?}",
+                changed.changed, changed.deleted
+            );
             return Err(RebuildFailure {
                 guard: ReuseGuard::SourcePatch,
                 work: context

@@ -206,15 +206,28 @@ impl ContextFingerprint {
             &known,
             &inputs,
         )
-        .map_err(|refusal| match refusal {
-            consumed::Refusal::UnknownAuthority => SourceGuard::UnknownAuthority,
-            consumed::Refusal::ChangedFact(path) if configurations.contains(&path) => {
-                SourceGuard::Configuration
+        .map_err(|refusal| {
+            #[cfg(test)]
+            if let consumed::Refusal::ChangedFact(path) = &refusal {
+                let original = self
+                    .stamps
+                    .iter()
+                    .filter(|stamp| stamp.path() == path)
+                    .collect::<Vec<_>>();
+                eprintln!(
+                    "original native fact refusal: {refusal:?}; returned facts: {original:?}"
+                );
             }
-            consumed::Refusal::ChangedFact(path) if context.route_inputs.contains(&path) => {
-                SourceGuard::PackageInput
+            match refusal {
+                consumed::Refusal::UnknownAuthority => SourceGuard::UnknownAuthority,
+                consumed::Refusal::ChangedFact(path) if configurations.contains(&path) => {
+                    SourceGuard::Configuration
+                }
+                consumed::Refusal::ChangedFact(path) if context.route_inputs.contains(&path) => {
+                    SourceGuard::PackageInput
+                }
+                consumed::Refusal::ChangedFact(_) => SourceGuard::ResolutionInput,
             }
-            consumed::Refusal::ChangedFact(_) => SourceGuard::ResolutionInput,
         })?;
         let mut changes = validated.value;
         // Only actual missing authored bodies can remove old requested roots.

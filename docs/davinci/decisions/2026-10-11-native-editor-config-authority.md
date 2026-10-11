@@ -116,6 +116,16 @@ Vue target remains explicitly covered as positive. All original refusal,
 membership and empty-reachability assertions remain. Six other context laws
 still require source fixes; no diagnostic or instruction budget is changed.
 
+[Run 38110261974](https://github.com/ubugeeei-prod/vize/actions/runs/38110261974)
+at `ed5b396cba` compiles all 1995 library tests, passes production Canon Clippy,
+and passes the authentic shadow and private-negative/positive laws. Filters are
+6/6, 2/2, 9/9, 10/10, 7/7, 99/105 and 35/35. The six unchanged context failures
+are workspace imported-prop invalidation, rename admission, deleted live-buffer
+whole-output mismatch, doubled package regeneration and two missing canonical
+shadow materializations. Temporary test-only failure diagnostics retain actual
+returned stamp kinds/owners and canonical source indexes to identify those
+causes. They compile out of production and do not qualify any missing facts.
+
 Hosted qualification is pending. The n8n job compiles Canon's actual library test
 module, then executes compiler-options, construction, typed-router, package-index,
 dependency-consumption, native-context and package-stamp controls before the
