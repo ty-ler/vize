@@ -88,11 +88,75 @@ The observer's output explicitly records `diagnosticOnly=true` and
 cannot replace the original authored failure, CLI stderr gate, source-origin
 reconciliation or any full protected-queue qualification.
 
-Local Node and four complete-source authority controls pass; four Linux-only
-process laws and the actual Rust controls still belong to Actions. Source and observer review are complete. The collector treats only exact
+Source and observer review are complete. The collector treats only exact
 `ENOENT`/`ESRCH` after a stat read as process disappearance; mismatched birth,
 executable, permissions and every other error still refuse. Actual Linux
-controls cover these post-stat races. Publication and capture are pending. TODO: inspect actual
-1,391-file populations and counting cost before proposing any bounded promotion
-strategy. Full equality, ordered ownership and retirement laws and an unprofiled
-comparison on the unchanged workload remain required for any later adoption.
+controls cover these post-stat races. Full equality, ordered ownership and
+retirement laws and an unprofiled comparison on the unchanged workload remain
+required for any later adoption.
+
+## Actual Linux receipt
+
+The single optional capture in
+[run 38156995382](https://github.com/ubugeeei-prod/vize/actions/runs/38156995382)
+completed at exact checkout `3f479326611b93adec3cc86848b3d012c1baf748`.
+Canon passed 2,058 controls (one ignored), Clippy passed, and all 11 observer
+controls passed on Linux with none skipped. Compiler full-source custody and
+fixture checkout passed. The unchanged first authored campaign failed; the
+second capture step succeeded and retained its consumer exit `1`. The overall
+workflow therefore remains failed. This is diagnostic evidence only, with
+`acceptanceCredit=none`.
+
+Artifact `11709776613` retains both complete raw campaigns and the diagnostic
+receipts. Its downloaded archive is 5,191,071 bytes and has SHA-256
+`7842f8c9a3ee30e5e3842082dd8d27d78a3f05ab737621ad3ad190325632bdfe`,
+matching GitHub's artifact digest. Within
+`n8n-cli-config/38156995382-1/diagnostic-native-fact-buckets/`,
+`owned-process.json` authenticates provider PID `93955`, its complete Linux
+birth stat, exact executable and clock interval. `source-binary.sha256` records
+`target/ci/vize` as
+`31a7c6b1614e337e94783117def9c966bc6e3ec8f077c028fa65f8c90997df4c`.
+`source-locks.sha256` records `Cargo.lock` as
+`ff89684d784eef5066edb7596fae1aaeac2331295d62891531d25a2c70f74c8b`
+and `pnpm-lock.yaml` as
+`12e66667fc82ac9a5b72d1e9ab2aa59f7c1466ea8be689f17a67678bf31a0915`.
+`observations.json` retains all nine original numeric event lines and both
+complete input/oracle packets. Those packets match exactly; the first has no
+diagnostic event. Its complete stderr SHA-256 is
+`9d7dbcf61ba89f5e9a3a826923d939b1afcb16dbe074bb163a25fe716cae0af8`.
+
+Every observed full index has maximum occupancy `1` and zero collision pairs.
+These are whole-index counts. The last-three-components histogram is a separate
+prospective prefix, whose completeness must be read independently:
+
+| Build              | Whole facts / full buckets | Prospective facts / keys | Prospective maximum / pairs | Prefix complete | Counting cost                |
+| ------------------ | -------------------------- | ------------------------ | --------------------------- | --------------- | ---------------------------- |
+| 1 file             | 53 / 53                    | 53 / 27                  | 10 / 69                     | yes             | 41 us                        |
+| 419 files, first   | 190,632 / 190,632          | 179,188 / 131,072        | 66 / 219,998                | no              | 100,172 us                   |
+| 1,391 files, first | 1,223,853 / 1,223,853      | 311,833 / 131,072        | 69 / 2,328,170              | no              | 181,360 us                   |
+| 1,391 files, later | 1,223,853 / 1,223,853      | 311,833 / 131,072        | 69 / 2,328,170              | no              | 189,484; 194,683; 185,008 us |
+| 419 files, later   | 190,632 / 190,632          | 179,188 / 131,072        | 66 / 219,998                | no              | 121,211 us                   |
+| 1,390 files        | 1,223,821 / 1,223,821      | 311,831 / 131,072        | 69 / 2,328,168              | no              | 196,416 us                   |
+| 1,389 files        | 1,223,818 / 1,223,818      | 311,829 / 131,072        | 69 / 2,328,165              | no              | 170,451 us                   |
+
+The first 1,391-file packet is timestamped
+`2026-10-11T17:01:24.833200Z`. Its prefix has 5,477 buckets over eight facts,
+containing 140,971 prefix facts; the first 419-file prefix has 414 such buckets
+and 10,362 prefix facts. Both stop at the existing key cap. These are not
+whole-population suffix statistics. Do not enlarge the cap, repeat the capture,
+adopt a suffix key or claim that a promotion threshold is justified by this
+incomplete prefix.
+
+The original flag-unset 1,391-file cold `alias_build` interval is
+`73,130.861536 ms`; the optional second process records `70,113.044316 ms`.
+These executions have different cache/order and diagnostic conditions and are
+not a qualified performance comparison. Both keep `graph_takeover=0` and
+`graph_guard=0`; the first campaign still fails its original typecheck deadline.
+The exact-parent source qualification repair awaits fresh Actions, preserving
+all 195 whole source pairs and all 45 original workload bodies.
+
+TODO: investigate the current singleton bucket's per-entry vector allocation
+as a narrow candidate. Any proposed storage change must preserve the existing
+full hash, complete equality, ordered stamp vector, owner allocations, negative
+probes, cutoff and retirement. No production adoption or speed claim follows
+from this receipt.
