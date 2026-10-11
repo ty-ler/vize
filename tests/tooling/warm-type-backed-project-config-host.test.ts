@@ -45,14 +45,40 @@ test("the actual composed production selector admits the complete configuration 
   assert.equal(allowed.has("crates/vize/tests/project_config_cli.rs"), false);
 });
 
-test("qualification binds every current source and whole unchanged corpus and recipe", () => {
+test("qualification binds every current source and whole unchanged corpus and recipe", async () => {
   const actual = (side: "before" | "after", file: string) =>
     side === "before"
       ? digest(side, file)
       : createHash("sha256")
           .update(fs.readFileSync(new URL("../../" + file, import.meta.url)))
           .digest("hex");
-  assert.ok(qualifyProjectConfigHost(production, new Set(), actual));
+  if (qualifyProjectConfigHost(production, new Set(), actual)) return;
+  // The existing 90-body authority stays frozen; an explicitly bound child
+  // must qualify its entire composed footprint and every inherited control.
+  const { qualifyComponentContextHost } =
+    await import("../performance/support/warm-type-backed-component-context-host.ts");
+  const component = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "../performance/support/warm-type-backed-component-context-manifest.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  ) as {
+    componentBodies: Array<[string, string | null, string, string | null]>;
+  };
+  const originalBodies = new Map(
+    component.componentBodies.map(([file, , , before]) => [file, before]),
+  );
+  const composed = [...new Set([...production, ...originalBodies.keys()])].toSorted();
+  const result = qualifyComponentContextHost(composed, new Set(), (side, file) =>
+    side === "before"
+      ? (digest(side, file) ?? originalBodies.get(file) ?? null)
+      : actual(side, file),
+  );
+  assert.ok(result);
+  assert.equal(result.authority, "complete-project-config-and-component-context-slices");
 });
 
 test("each original and current source body including absent new owners is mandatory", () => {
