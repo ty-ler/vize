@@ -12,7 +12,7 @@ One shard of the [Croquis consumption matrix](../croquis-consumption.md): resolv
 | ------------------------------ | ----- | ------------------- | ----: | ----: |
 | `Analyzer`                     | type  | `analyzer`          |    50 |   178 |
 | `AnalyzerOptions`              | type  | `analyzer`          |    50 |   174 |
-| `ComponentUsage`               | type  | `croquis::template` |    22 |    48 |
+| `ComponentUsage`               | type  | `croquis::template` |    22 |    49 |
 | `Croquis`                      | type  | `croquis`           |    95 |   226 |
 | `EventHandlerScopeData`        | type  | `scope`             |     7 |     9 |
 | `EventListener`                | type  | `croquis::template` |     2 |     3 |
@@ -21,7 +21,7 @@ One shard of the [Croquis consumption matrix](../croquis-consumption.md): resolv
 | `OptionGroup`                  | type  | `croquis`           |     2 |     7 |
 | `PassedProp`                   | type  | `croquis::template` |    11 |    25 |
 | `Scope`                        | type  | `scope`             |    14 |    25 |
-| `ScopeChain`                   | type  | `scope`             |     2 |     7 |
+| `ScopeChain`                   | type  | `scope`             |     3 |     8 |
 | `ScopeData`                    | type  | `scope`             |    19 |    35 |
 | `ScopeId`                      | type  | `scope`             |     8 |    23 |
 | `ScopeKind`                    | type  | `scope`             |    18 |    60 |
@@ -41,7 +41,7 @@ One shard of the [Croquis consumption matrix](../croquis-consumption.md): resolv
 | `Croquis.pattern_diagnostics`  | field | `croquis`           |     2 |     4 |
 | `Croquis.re_exports`           | field | `croquis`           |     1 |     1 |
 | `Croquis.reactivity`           | field | `croquis`           |     1 |     2 |
-| `Croquis.scopes`               | field | `croquis`           |    32 |    61 |
+| `Croquis.scopes`               | field | `croquis`           |    33 |    63 |
 | `Croquis.setup_context`        | field | `croquis`           |     1 |     1 |
 | `Croquis.template_expressions` | field | `croquis`           |    12 |    14 |
 | `Croquis.template_info`        | field | `croquis`           |     2 |     4 |

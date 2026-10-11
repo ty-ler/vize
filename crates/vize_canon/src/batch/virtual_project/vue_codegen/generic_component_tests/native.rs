@@ -5,6 +5,7 @@ mod install;
 mod minimal;
 mod packets;
 mod replay;
+mod tree;
 
 use super::{CONFIG_PATH, GENERIC, ROOT_PATH, STORY_PATH, root_source, source};
 use crate::{BatchTypeChecker, BatchTypeCheckerOptions, BatchTypeCheckerTrait};
@@ -128,6 +129,7 @@ fn qualify(
             }),
         );
         public.expect("the genuine configured public checker must complete");
+        let (mirror, config) = checker.native_project_paths_for_test();
         let files = checker.virtual_files();
         let child = files
             .iter()
@@ -142,6 +144,7 @@ fn qualify(
             &cstr!("{scope}-{name}"),
             "production-after",
             None,
+            (&mirror, &config),
         );
         let before = replay::prior_contract(child, &generic);
         fs::write(&child.virtual_path, before.as_str()).unwrap();
@@ -151,7 +154,12 @@ fn qualify(
             &files,
             &cstr!("{scope}-{name}"),
             "prior-contract-replay",
-            Some((&child.virtual_path, &before)),
+            Some(packets::Replay {
+                path: &child.virtual_path,
+                code: &before,
+                scope: "prior helper-contract declaration replay in the actual unmapped Root export tail; not an unavailable old factory/native execution",
+            }),
+            (&mirror, &config),
         );
         fs::write(&child.virtual_path, child.content.as_str()).unwrap();
         cases.push((

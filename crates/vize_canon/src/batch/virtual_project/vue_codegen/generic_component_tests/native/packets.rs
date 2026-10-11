@@ -14,6 +14,13 @@ use std::{
 };
 use vize_carton::{String, cstr};
 
+#[derive(Clone, Copy)]
+pub(super) struct Replay<'a> {
+    pub(super) path: &'a Path,
+    pub(super) code: &'a str,
+    pub(super) scope: &'a str,
+}
+
 pub(super) type Row = (String, u32, u32, Option<u32>, Option<i32>, String);
 
 fn directory() -> Option<PathBuf> {
@@ -59,28 +66,55 @@ pub(super) fn diagnose(
     files: &[&VirtualFile],
     case: &str,
     phase: &str,
-    replay: Option<(&Path, &str)>,
+    replay: Option<Replay<'_>>,
+    project_paths: (&Path, &Path),
 ) -> (Vec<Row>, Value) {
-    let config = crate::project_virtual_root(root).join("tsconfig.json");
-    let mirror = config.parent().unwrap();
+    diagnose_selected(
+        root,
+        native,
+        files,
+        case,
+        phase,
+        replay,
+        project_paths,
+        &[root.join(ROOT_PATH), root.join(STORY_PATH)],
+    )
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "complete native program and replay authority"
+)]
+pub(super) fn diagnose_selected(
+    root: &Path,
+    native: &Path,
+    files: &[&VirtualFile],
+    case: &str,
+    phase: &str,
+    replay: Option<Replay<'_>>,
+    project_paths: (&Path, &Path),
+    original_paths: &[PathBuf],
+) -> (Vec<Row>, Value) {
+    let (mirror, config) = project_paths;
+    assert!(
+        config.is_file(),
+        "the actual materialized config is required: {config:?}"
+    );
     let mut client = CorsaProjectClient::new_for_workspace_config(
         Some(native.to_str().unwrap()),
         mirror,
-        &config,
+        config,
     )
     .unwrap();
     let requested = files
         .iter()
-        .filter(|file| {
-            file.original_path == root.join(ROOT_PATH)
-                || file.original_path == root.join(STORY_PATH)
-        })
+        .filter(|file| original_paths.contains(&file.original_path))
         .map(|file| path_to_file_uri(&file.virtual_path))
         .collect::<Vec<_>>();
     assert_eq!(
         requested.len(),
-        2,
-        "both complete authored modules are required"
+        original_paths.len(),
+        "every selected complete authored module is required"
     );
     client.begin_batch_test_receipt(true);
     let raw = client.request_diagnostics_batch(&requested).unwrap();
@@ -89,11 +123,11 @@ pub(super) fn diagnose(
     let mut packet = json!({
         "case":case,"phase":phase,"requestedUris":requested,"nativeAuthority":authority,
         "wholeRawDiagnosticVector":raw,
-        "wholeGeneratedConfig":fs::read_to_string(&config).unwrap(),
+        "wholeGeneratedConfig":fs::read_to_string(config).unwrap(),
         "generatedConfigPath":config,
         "wholeGeneratedPackage":fs::read_to_string(mirror.join("package.json")).ok(),
         "wholeGeneratedProgram":files.iter().map(|file| {
-            let code = replay.filter(|(path,_)| *path == file.virtual_path).map_or(file.content.as_str(), |(_,code)|code);
+            let code = replay.filter(|replay| replay.path == file.virtual_path).map_or(file.content.as_str(), |replay| replay.code);
             json!({"originalPath":file.original_path,"virtualPath":file.virtual_path,
                 "completeCode":blob(code.as_bytes()),
                 "completeAuthoredSource":match fs::read(&file.original_path) {
@@ -102,7 +136,8 @@ pub(super) fn diagnose(
                 },
                 "completeSourceMap":blob(cstr!("{:#?}",file.source_map).as_bytes())})
         }).collect::<Vec<_>>(),
-        "beforeScope":"prior helper-contract declaration replay in the actual generated unmapped Root export tail; no claim of an unavailable old factory/native execution",
+        "replayScope":replay.map(|replay| replay.scope),
+        "productionScope":"actual whole-SFC factory and generated config; replay is explicitly separate from unavailable old factory/native execution",
     });
     retain(&phase, &packet);
     let rows = mapped_rows(root, files, &raw, replay);
@@ -126,9 +161,10 @@ pub(super) fn diagnose(
         "{authority}"
     );
     let roots = authority["project"]["rootFiles"].as_array().unwrap();
-    for file in files.iter().filter(|file| {
-        file.original_path == root.join(ROOT_PATH) || file.original_path == root.join(STORY_PATH)
-    }) {
+    for file in files
+        .iter()
+        .filter(|file| original_paths.contains(&file.original_path))
+    {
         assert!(roots.contains(&json!(file.virtual_path)), "{authority}");
     }
     (rows, packet)
@@ -138,7 +174,7 @@ fn mapped_rows(
     root: &Path,
     files: &[&VirtualFile],
     raw: &[(String, Vec<LspDiagnostic>)],
-    replay: Option<(&Path, &str)>,
+    replay: Option<Replay<'_>>,
 ) -> Vec<Row> {
     let mut rows = Vec::new();
     for (uri, diagnostics) in raw {
@@ -146,8 +182,8 @@ fn mapped_rows(
         let file = files.iter().find(|file| file.virtual_path == path).unwrap();
         let source = fs::read_to_string(&file.original_path).unwrap();
         let code = replay
-            .filter(|(path, _)| *path == file.virtual_path)
-            .map_or(file.content.as_str(), |(_, code)| code);
+            .filter(|replay| replay.path == file.virtual_path)
+            .map_or(file.content.as_str(), |replay| replay.code);
         for diagnostic in diagnostics {
             let start = &diagnostic.range.start;
             let Some(offset) =
