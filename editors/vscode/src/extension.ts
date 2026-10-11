@@ -55,7 +55,17 @@ let currentStatusDetail = "";
 let configurationSyncTimer: ReturnType<typeof setTimeout> | undefined;
 let configurationSyncGeneration = 0;
 let suppressConfigurationSync = false;
-const workspaceLspConfig = new WorkspaceLspConfigDiscovery(WORKSPACE_LSP_CONFIG_FILES);
+const workspaceLspConfig = new WorkspaceLspConfigDiscovery(WORKSPACE_LSP_CONFIG_FILES, traceConfig);
+
+function traceConfig(message: string): void {
+  if (process.env.VIZE_TEST_ENABLE_HOST_COMMANDS === "1") {
+    try {
+      outputChannel.appendLine(`[config ${new Date().toISOString()}] ${message}`);
+    } catch {
+      // Diagnostic logging must not replace an existing lifecycle result.
+    }
+  }
+}
 
 const RECOMMENDED_SETUP_ACTION = "Enable Recommended";
 const LINT_ONLY_SETUP_ACTION = "Enable Lint Only";
@@ -81,10 +91,13 @@ export async function activate(context: ExtensionContext): Promise<void> {
   context.subscriptions.push(
     workspace.onDidChangeConfiguration(async (event) => {
       if (!event.affectsConfiguration("vize")) {
+        traceConfig("configuration callback rejected unrelated");
         return;
       }
+      traceConfig("configuration callback accepted vize");
 
       if (suppressConfigurationSync) {
+        traceConfig("configuration callback rejected applying-profile");
         outputChannel.appendLine("Vize configuration changed while applying a profile.");
         return;
       }
@@ -144,11 +157,14 @@ export async function activate(context: ExtensionContext): Promise<void> {
   await syncClientToConfiguration(context, "initial activation");
 }
 function scheduleClientSync(context: ExtensionContext, reason: string): void {
+  traceConfig(`schedule reason=${reason} generation=${configurationSyncGeneration}`);
   if (configurationSyncTimer) {
+    traceConfig(`timer cancel generation=${configurationSyncGeneration}`);
     clearTimeout(configurationSyncTimer);
   }
 
   configurationSyncTimer = setTimeout(() => {
+    traceConfig(`timer fire reason=${reason} generation=${configurationSyncGeneration}`);
     configurationSyncTimer = undefined;
     void syncClientToConfiguration(context, reason);
   }, 150);
@@ -156,14 +172,22 @@ function scheduleClientSync(context: ExtensionContext, reason: string): void {
 
 async function syncClientToConfiguration(context: ExtensionContext, reason: string): Promise<void> {
   const generation = ++configurationSyncGeneration;
-  await workspaceLspConfig.refresh();
-  if (generation !== configurationSyncGeneration) return;
+  traceConfig(`sync enter generation=${generation} reason=${reason}`);
+  await workspaceLspConfig.refresh(generation);
+  traceConfig(`sync refreshed generation=${generation} current=${configurationSyncGeneration}`);
+  if (generation !== configurationSyncGeneration) {
+    traceConfig(`sync refused generation=${generation} stage=refresh`);
+    return;
+  }
   let config = workspace.getConfiguration("vize");
   let enabled = shouldStartFromConfiguration(config, workspaceLspConfig.hasConfig);
 
   if (!enabled) {
     await maybeOfferInitialSetup(context, config);
-    if (generation !== configurationSyncGeneration) return;
+    if (generation !== configurationSyncGeneration) {
+      traceConfig(`sync refused generation=${generation} stage=setup`);
+      return;
+    }
     config = workspace.getConfiguration("vize");
     enabled = shouldStartFromConfiguration(config, workspaceLspConfig.hasConfig);
 
@@ -172,7 +196,10 @@ async function syncClientToConfiguration(context: ExtensionContext, reason: stri
         updateStatusBar("starting", "Stopping language server");
         outputChannel.appendLine(`Stopping Vize language server (${reason}; extension disabled).`);
         await stopClient();
-        if (generation !== configurationSyncGeneration) return;
+        if (generation !== configurationSyncGeneration) {
+          traceConfig(`sync refused generation=${generation} stage=disabled-stop`);
+          return;
+        }
       } else {
         outputChannel.appendLine("Vize is disabled. Set vize.enable to true to start the server.");
       }
@@ -191,10 +218,14 @@ async function syncClientToConfiguration(context: ExtensionContext, reason: stri
     updateStatusBar("starting", "Restarting language server");
     outputChannel.appendLine(`Restarting Vize language server (${reason}).`);
     await stopClient();
-    if (generation !== configurationSyncGeneration) return;
+    if (generation !== configurationSyncGeneration) {
+      traceConfig(`sync refused generation=${generation} stage=restart-stop`);
+      return;
+    }
   }
 
   await startClient(context, config, generation);
+  traceConfig(`sync finish generation=${generation} current=${configurationSyncGeneration}`);
 }
 
 async function maybeOfferInitialSetup(
@@ -488,6 +519,7 @@ async function startClient(
   config: ReturnType<typeof workspace.getConfiguration>,
   generation: number,
 ): Promise<void> {
+  traceConfig(`start enter generation=${generation}`);
   const initializationOptions = getInitializationOptions(config, {
     hasWorkspaceLspConfig: workspaceLspConfig.hasConfig,
     log: (message) => outputChannel.appendLine(message),
@@ -502,7 +534,11 @@ async function startClient(
     }
   }
   const serverPath = await findServerPath(context, config, generation);
-  if (generation !== configurationSyncGeneration) return;
+  traceConfig(`start path-return generation=${generation} current=${configurationSyncGeneration}`);
+  if (generation !== configurationSyncGeneration) {
+    traceConfig(`start refused generation=${generation} stage=server-path`);
+    return;
+  }
   if (!serverPath) {
     updateStatusBar("missing-server", "Language server executable was not found");
     await showServerNotFoundMessage(context);
@@ -520,15 +556,22 @@ async function startClient(
   applyTraceSetting(nextClient, config);
 
   try {
+    traceConfig(`client start enter generation=${generation}`);
     await nextClient.start();
+    traceConfig(
+      `client start finish generation=${generation} current=${configurationSyncGeneration}`,
+    );
     if (generation !== configurationSyncGeneration) {
+      traceConfig(`unpublished client stop enter generation=${generation}`);
       await nextClient.stop();
+      traceConfig(`unpublished client stop finish generation=${generation}`);
       return;
     }
     client = nextClient;
     outputChannel.appendLine("Vize language server started successfully");
     updateStatusBar("ready", `Ready with ${capabilityDescription}`);
   } catch (error) {
+    traceConfig(`client start error generation=${generation}`);
     outputChannel.appendLine(`Failed to start language server: ${String(error)}`);
     if (generation !== configurationSyncGeneration) return;
     updateStatusBar("failed", "Failed to start language server");
@@ -537,6 +580,7 @@ async function startClient(
 }
 
 async function stopClient(): Promise<void> {
+  traceConfig(`stop enter generation=${configurationSyncGeneration} client=${Boolean(client)}`);
   if (!client) {
     return;
   }
@@ -544,6 +588,7 @@ async function stopClient(): Promise<void> {
   const activeClient = client;
   client = undefined;
   await activeClient.stop();
+  traceConfig(`stop finish generation=${configurationSyncGeneration}`);
 }
 
 function applyTraceSetting(
@@ -564,6 +609,7 @@ function applyTraceSetting(
 
 export async function deactivate(): Promise<void> {
   ++configurationSyncGeneration;
+  traceConfig(`deactivate generation=${configurationSyncGeneration}`);
   if (configurationSyncTimer) clearTimeout(configurationSyncTimer);
   configurationSyncTimer = undefined;
   await stopClient();
