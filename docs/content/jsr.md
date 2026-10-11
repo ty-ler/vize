@@ -75,19 +75,25 @@ offering. Other Vize packages continue to use their documented npm distribution.
 
 The initial registry setup requires a JSR scope administrator:
 
-1. Create the `@vizejs` scope and `@vizejs/vize` package on JSR under the project's
-   authorized ownership. Link the package to `ubugeeei-prod/vize` in its settings.
-2. Set package compatibility to Node supported and the other runtimes unsupported.
+1. Merge the prepared distribution and require fresh exact-head Actions before
+   dispatching from `main`. The requested version must match the manifests on
+   that checked-out source and already be published on npm.
+2. Sign in to [JSR](https://jsr.io/new) with the project's authorized account,
+   create the `@vizejs` scope and `@vizejs/vize` package, and link the package to
+   `ubugeeei-prod/vize` in its settings. Linking requires both JSR scope-admin
+   membership and GitHub repository-admin access; GitHub Actions OIDC cannot
+   create this initial ownership or repository binding.
+3. Set package compatibility to Node supported and the other runtimes unsupported.
    Retain the scope's default publishing restriction to authorized scope members.
-3. Set GitHub repository variable `VIZE_JSR_ENABLED=true` and dispatch **Release
+4. Set GitHub repository variable `VIZE_JSR_ENABLED=true` and dispatch **Release
    JSR** from `main` with the exact currently published npm version. No registry
    secret is required: publication uses repository-linked GitHub Actions OIDC.
-4. Require all four published consumer jobs to pass. Preserve their registry
+5. Require all four published consumer jobs to pass. Preserve their registry
    metadata, package locks, exact dependency identities, public TypeScript
    checks, native compilation, configuration loading and real Vite build results.
-5. Only then record the initial published version, source SHA and successful run
+6. Only then record the initial published version, source SHA and successful run
    on #8367 and replace this page's pending status with those concrete receipts.
-6. Review a change enabling `jsr/vize/channel.json`. Subsequent release source
+7. Review a change enabling `jsr/vize/channel.json`. Subsequent release source
    cuts freeze that policy and require exact-version JSR delivery.
 
 The committed channel policy starts disabled, so existing product releases

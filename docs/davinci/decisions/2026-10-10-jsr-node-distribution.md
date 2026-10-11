@@ -66,3 +66,29 @@ source and receipts in draft PR #8388 outside the queue, including the active
 0.441 publication window. Registry bootstrap, settings, publication and further
 JSR priority work are deferred; do not seek authorization again. Resume only
 with fresh source qualification and actual delivery, without historical credit.
+
+On 2026-10-11 the maintainer requested completion of all P0 issues and existing
+PRs. Resume source preparation under that instruction while preserving the
+previous deferral as history. The clean isolated refresh incorporates actual
+main `b7ec71ecd3981fdeffb5df816bd0e811e175b61e`, retaining its release-driver
+parent-custody repair, all original law bodies and release workflow changes.
+The original PR head `8a9a6703bd6637df4f2e0b66f5cf4f4517cfdc8b` passed Check
+`38038393847` and actual hosted JSR dry-run `38038393767`; those runs do not
+qualify the refreshed source. The refreshed local JSR laws pass 12/12 and real
+Deno 2.9.5 publication dry-run against public npm 0.443.0 succeeds with exactly
+seven files. Fresh Actions, protected merge and actual consumers remain required.
+
+The live JSR API on 2026-10-11 returns `scopeNotFound` for `vizejs` and
+`packageNotFound` for `vizejs/vize`; `VIZE_JSR_ENABLED` is absent. The external
+prerequisite is an authenticated project-authorized JSR account creating the
+scope and package at <https://jsr.io/new>. Repository linking requires that same
+account to be a JSR scope administrator and a GitHub repository administrator;
+the available GitHub credential has repository-admin permission, which alone
+does not establish JSR account ownership. The official requirements are
+<https://jsr.io/docs/packages#linked-github-repository> and
+<https://jsr.io/docs/publishing-packages#publishing-from-github-actions>.
+Do not replace the account binding with a registry secret or claim that dry-run
+delivers support. Once the source merges and ownership is linked, the initial
+exact-version Release JSR run must publish and pass all four Node consumers
+before the committed channel is enabled or #8367 closes. Registry creation,
+settings changes, publication and consumer receipts are still unfinished.
