@@ -81,8 +81,12 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
         "../../../../../../tests/_fixtures/differential/typechecker/incremental-fallback-precedence/case.json"
     );
     assert_eq!(
-        vize_carton::cstr!("{:x}", Sha256::digest(fixture.as_bytes())),
-        "c54bf3e05e78a37cd27b137e47e701b8bf5a1a1a6a610f99a4f26f00e9fad29a",
+        &Sha256::digest(fixture.as_bytes())[..],
+        &[
+            0xc5, 0x4b, 0xf3, 0xe0, 0x5e, 0x78, 0xa3, 0x7c, 0xd2, 0x7b, 0x13, 0x7e, 0x47, 0xe7,
+            0x01, 0xb8, 0xbf, 0x5a, 0x1a, 0x1a, 0x6a, 0x61, 0x0f, 0x99, 0xa4, 0xf2, 0x6f, 0x00,
+            0xe9, 0xfa, 0xd2, 0x9a,
+        ],
     );
     let case: serde_json::Value = serde_json::from_str(fixture).unwrap();
     assert_eq!(case["schemaVersion"], 1);
