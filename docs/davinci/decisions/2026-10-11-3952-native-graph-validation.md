@@ -92,7 +92,7 @@ cannot qualify the original n8n lifecycle, which was skipped behind those
 source failures; no current cold speed or successful deadline is inferred.
 
 The correction keeps the old wrapper body and all retained callers under
-`cfg(test)`. The whole-state law instead exhaustively binds all 64 actual
+`cfg(test)`. The whole-state law instead exhaustively binds all 65 actual
 project fields, including full source/maps/indices, options, edges, artifacts,
 shadow ownership and diagnostics. The unused resolver remains the same
 caller-owned Arc with its complete public metrics; the rewriter remains a

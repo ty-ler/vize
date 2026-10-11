@@ -66,6 +66,7 @@ fn state(project: &VirtualProject) -> Vec<(&'static str, std::string::String)> {
         session_scripts,
         editor_document_options,
         pre_rewrite_code,
+        legacy_vue2,
         jsx_typecheck,
         dialect,
         template_syntax,
@@ -134,6 +135,7 @@ fn state(project: &VirtualProject) -> Vec<(&'static str, std::string::String)> {
         session_scripts,
         editor_document_options,
         pre_rewrite_code,
+        legacy_vue2,
         jsx_typecheck,
         dialect,
         template_syntax,
@@ -218,15 +220,22 @@ fn run(
             ],
         }
     };
-    project
-        .register_reachable_dependencies_with_parsed_sources_observed(
+    match parsed {
+        None => project.register_reachable_dependencies_with_package_resolver_observed(
             overlays,
             &[],
             &mut resolver,
             None,
-            parsed,
-        )
-        .unwrap()
+        ),
+        Some(parsed) => project.register_reachable_dependencies_with_parsed_sources_observed(
+            overlays,
+            &[],
+            &mut resolver,
+            None,
+            Some(parsed),
+        ),
+    }
+    .unwrap()
 }
 
 fn equal_owner_sharing(left: &[InputStamp], right: &[InputStamp]) {
