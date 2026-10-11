@@ -50,3 +50,11 @@ This evidence is source-bound observation only. The new complete factory law,
 full native suites, fresh whole400 pair, Stack/App qualification, protected
 queue, actual merge and installed release acceptance remain required. It gives
 no 10x performance result, broader native equivalence or fix-history closure.
+
+Exact source `199e49f6904108b4fc2e82a4231965ef0974c7a9` failed before native
+execution because sha2 0.11 returns an array without a whole-array LowerHex
+implementation. The correction formats each actual digest byte with the
+existing repository two-digit conversion and collects the complete 64
+lowercase characters. Both official executable hashes and the entire
+initialize contract stay fixed; no digest prefix or alternate identity is
+admitted. Fresh source enrollment and exact-head native Actions are required.

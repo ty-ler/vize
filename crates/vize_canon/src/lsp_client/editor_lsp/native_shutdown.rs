@@ -14,7 +14,10 @@ pub(super) fn eof_capability(executable: &Path, initialized: &Value) -> bool {
     let Ok(bytes) = fs::read(executable) else {
         return false;
     };
-    let digest = vize_l0::cstr!("{:x}", Sha256::digest(bytes));
+    let digest: vize_l0::String = Sha256::digest(bytes)
+        .iter()
+        .map(|byte| vize_l0::cstr!("{byte:02x}"))
+        .collect();
     known_binary(digest.as_str())
 }
 
