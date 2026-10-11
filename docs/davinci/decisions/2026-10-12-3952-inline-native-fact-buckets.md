@@ -72,6 +72,18 @@ units. The original 400-request pair uses the shipping release recipe. Keep both
 recipes and their separate qualification: a release result cannot substitute
 for the original authored deadline or establish a speed ratio between profiles.
 
+The actual repaired parent runs the original campaign in
+[38161304560](https://github.com/ubugeeei-prod/vize/actions/runs/38161304560).
+Artifact `11710002695` has archive SHA-256
+`90f30bab52790c1cb222315c186b41f153086f9f3e9f4a06a42fbb00abd015cd`.
+Its producer receipt binds source `0d0c47b87cc6812f6897c4d354c2d432371ae606`
+to the unchanged recipe and binary SHA-256
+`5a143b63b4e3fba4642179e79bd5635de27da0c6509387a28f43d960b5d676ef`.
+The first complete 1,391-file cold build (id 48) takes 72,665.090965 ms with
+both graph guards zero; the original authored typecheck deadline still fails.
+The complete raw stderr and original input/oracle packets are retained for the
+future unchanged-workload comparison. This is a failed baseline, not acceptance.
+
 The original full warm/Misskey churn gate is also mandatory. On unchanged-main
 PR #8690 [Check 38158377107](https://github.com/ubugeeei-prod/vize/actions/runs/38158377107),
 job `114525951530` fails its existing 128 MiB server ceiling. Artifact
