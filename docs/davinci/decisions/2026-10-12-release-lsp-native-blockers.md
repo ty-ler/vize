@@ -30,18 +30,18 @@ Vue3 Antd Admin diagnostic-probe timeout. This is not a passing full Matrix;
 other tool surfaces also fail independently. Every packet below is
 `lsp-lifecycle-summary.json` inside its named artifact from run 38151581610.
 
-| Failed projects | Unresolved whole contract | Artifact |
-| --- | --- | --- |
-| varlet | Importer diagnostic publication timeout; final fields remain unknown. | `real-project-matrix-0`, 11707001959 |
-| vue3-antd-admin | Diagnostic-probe publication timeout; version 3 did not arrive. | `real-project-matrix-7`, 11707348762 |
-| primevue-volt | Definition timeout; stderr records conflicting Canon workspace aliases and EOF. | `real-project-matrix-6`, 11707665640 |
-| misskey | Complete references differ from the authored declaration/use vector. | `real-project-matrix-12`, 11707721243 |
-| lew-ui | Complete references differ from the authored declaration/use vector. | `real-project-matrix-13`, 11707700443 |
-| voicevox, portal-vue | Native typed hover differs from the frozen whole hover contract. | `real-project-matrix-10`, 11707386494 |
-| vue-virtual-scroller | Native typed hover differs from the frozen whole hover contract. | `real-project-matrix-11`, 11707032685 |
-| directus | Native typed hover differs from the frozen whole hover contract. | `real-project-matrix-13`, 11707700443 |
-| buefy | Native typed hover differs from the frozen whole hover contract. | `real-project-matrix-17`, 11707426430 |
-| primevue | Native typed hover differs from the frozen whole hover contract. | `real-project-matrix-5`, 11707037156 |
+| Failed projects      | Unresolved whole contract                                                       | Artifact                              |
+| -------------------- | ------------------------------------------------------------------------------- | ------------------------------------- |
+| varlet               | Importer diagnostic publication timeout; final fields remain unknown.           | `real-project-matrix-0`, 11707001959  |
+| vue3-antd-admin      | Diagnostic-probe publication timeout; version 3 did not arrive.                 | `real-project-matrix-7`, 11707348762  |
+| primevue-volt        | Definition timeout; stderr records conflicting Canon workspace aliases and EOF. | `real-project-matrix-6`, 11707665640  |
+| misskey              | Complete references differ from the authored declaration/use vector.            | `real-project-matrix-12`, 11707721243 |
+| lew-ui               | Complete references differ from the authored declaration/use vector.            | `real-project-matrix-13`, 11707700443 |
+| voicevox, portal-vue | Native typed hover differs from the frozen whole hover contract.                | `real-project-matrix-10`, 11707386494 |
+| vue-virtual-scroller | Native typed hover differs from the frozen whole hover contract.                | `real-project-matrix-11`, 11707032685 |
+| directus             | Native typed hover differs from the frozen whole hover contract.                | `real-project-matrix-13`, 11707700443 |
+| buefy                | Native typed hover differs from the frozen whole hover contract.                | `real-project-matrix-17`, 11707426430 |
+| primevue             | Native typed hover differs from the frozen whole hover contract.                | `real-project-matrix-5`, 11707037156  |
 
 Review packet custody: `/tmp/vize-8666-17bb-allmatrix-evidence/<artifact>/lsp-lifecycle-summary.json`.
 The original expectations and exact coordinates remain in source
@@ -100,8 +100,7 @@ synchronous fallback at line 81. Compare the pinned full Canvas and native
 projection prerequisites; retain the assertion while repairing the actual
 cause. The independent ElementPlus source authority also refuses the checkout
 SHA (actual `17bb0188`, expected `20298a21`). Preserve raw
-`/tmp/vize-8666-17bb-full-native-114508465496.log` and full-workspace artifact
-11707482627. Fast PR no-runtime entries do not establish native execution.
+`/tmp/vize-8666-17bb-full-native-114508465496.log` and full-workspace artifact 11707482627. Fast PR no-runtime entries do not establish native execution.
 TODO: finish all whole-provider contracts, qualify graph cost and crash cause,
 rebase onto fresh main, rerun exact-source gates and verify protected merge and
 released consumer acceptance. Keep #8666 outside the queue while required
