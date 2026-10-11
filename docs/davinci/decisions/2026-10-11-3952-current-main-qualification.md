@@ -64,3 +64,38 @@ test producers. Fresh Actions must compile and execute these controls and the
 unchanged real campaigns. This source change has no measured speed or memory
 claim yet. The preceding full Check also failed Misskey's unchanged 128 MiB
 server cap at 129 MiB; the resource gate remains required.
+
+At actual source `2d8eacaab295cf0d34d84d5a35425e5933dd837e`,
+[full Check 38143438572](https://github.com/ubugeeei-prod/vize/actions/runs/38143438572)
+still fails the unchanged Misskey server cap. Artifact `11704151997` retains
+all 287 publications and records 132,788 KiB server RSS at `file-lifecycle-0`
+(129.67578125 MiB); tree peak is 352,268 KiB against 384 MiB. The smaller route
+copies therefore do not establish resource acceptance. The source planner also
+found one generated `test/dev` dependency row for the two new Canon tests;
+regenerate the consumer-migration ledger without changing its generator.
+
+The [fresh authored run 38143432343](https://github.com/ubugeeei-prod/vize/actions/runs/38143432343)
+executes both new route laws and passes 2,032 ordinary Canon tests, then retains
+all native refusal controls. Actual artifact `11704280891` still shows DELETE
+version 5 receiving `typecheck-timed-out`, not the required missing-module
+packet: the first 419-source graph takes 11.887 seconds and later graphs take
+80.896 to 87.636 seconds, all with `graph_guard=0`. These observations do not
+establish a timing improvement from the smaller route copies.
+
+The next reviewed producer,
+`96da838e50a92008a8ef5c478a98669c327193ff`, borrows complete module source bytes
+until its owned occurrence packet is produced. The pure parsed-source cache
+still compares exact bytes and `SourceType`, returns the same owned ordered
+occurrences, and copies source only for retained misses. The existing guards,
+references, callbacks, probes, facts and graph-write order remain unchanged.
+A literal original owned-cache control compares every cache/source field and
+counter, equal-length edits, syntax changes and invalid parse packets; hits
+retain the actual saved source pointer and misses outlive caller mutation/drop.
+The original complete walk/cache/no-cache control is retained unchanged.
+
+This complete source pair contains 191 producer bodies and the same 45 identical
+preserved bodies. Only the four reviewed scanner/parser modules change among
+the preceding 190 pairs; the new literal control is the additional body. The
+canonical consumer ledger is regenerated. New native/full/n8n/original400 and
+resource Actions remain required; this allocation change has no measured
+performance or acceptance result yet.
