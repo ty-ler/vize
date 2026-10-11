@@ -9,7 +9,15 @@ use vize_l0::{FxHashMap, cstr};
 mod control;
 
 fn only_owner(root: &Path, native: &Path) -> control::ProcessLife {
-    let owner = control::native_lsp(root, native);
+    only_process_owner(root, native, b"--lsp")
+}
+
+fn only_process_owner(root: &Path, native: &Path, role: &[u8]) -> control::ProcessLife {
+    let owner = if role == b"--lsp" {
+        control::native_lsp(root, native)
+    } else {
+        control::native_process(root, native, role)
+    };
     let mut children = Vec::<u32>::new();
     for task in fs::read_dir(cstr!("/proc/{}/task", std::process::id())).unwrap() {
         let path = task.unwrap().path().join("children");
@@ -40,12 +48,7 @@ fn only_owner(root: &Path, native: &Path) -> control::ProcessLife {
         "one physical native child per owner: {lives:?}"
     );
     assert_eq!(lives[0].0, owner.pid);
-    assert!(
-        lives[0]
-            .1
-            .split(|byte| *byte == 0)
-            .any(|arg| arg == b"--lsp")
-    );
+    assert!(lives[0].1.split(|byte| *byte == 0).any(|arg| arg == role));
     owner
 }
 
@@ -278,7 +281,7 @@ fn native_editor_resolves_package_alias_from_monorepo_root_keeps_memberless_api_
     let session = client.project_session().unwrap();
     assert_eq!(Path::new(&session.project().config_file_name), config);
     block_on(session.describe_capabilities()).unwrap();
-    let owner = control::native_process(root.path(), &native, b"--api");
+    let owner = only_process_owner(root.path(), &native, b"--api");
     client.shutdown().unwrap();
     control::assert_reaped(&owner);
     assert_eq!(fs::read(config).unwrap(), configuration.as_bytes());

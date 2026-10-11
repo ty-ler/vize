@@ -34,13 +34,15 @@ The ordinary explicit editor factory, standard backend, fake API and Windows
 paths retain their previous startup operations. API functionality remains
 available before any editor request. Original constructor/API/editor,
 independent-owner and stopped-owner laws remain intact; an additive real
-memberless constructor law checks API availability and physical retirement.
+memberless constructor law checks API availability, exactly one physical
+native child across both API and LSP roles, and physical retirement.
 
 The process observer also enumerates children of every owning Linux task,
 deduplicating physical PIDs. It retains the original one-child limit, exact
 executable, cwd, argv, parent identity, birth and retirement checks. The
-previous main-task-only observation missed native children launched from
-another test thread; it did not prove that the process had no native child.
+previous main-task-only observation could miss a child launched from another
+thread. The hosted packet did not capture the spawning thread identity; its
+empty main-task observation did not prove that the process had no native child.
 
 The parity workflow's strict whole-environment assertion has an explicit
 passive-trace successor: its four original source/executable/build fields stay
