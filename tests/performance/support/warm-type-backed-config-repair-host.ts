@@ -12,6 +12,8 @@ import { issuedCompletionManifest } from "./warm-type-backed-issued-completion-h
 import { qualifyConfigCanonBatchHost } from "./warm-type-backed-config-canon-batch-host.ts";
 import { qualifyProjectConfigRuntimeRepairHost } from "./warm-type-backed-project-config-runtime-repair.ts";
 
+import { qualifyConfigFixtureHost } from "./warm-type-backed-config-fixture-host.ts";
+
 type Digest = (side: "before" | "after", file: string) => string | null;
 type Row = [file: string, originalBefore: string | null, reviewed: string, repaired: string];
 type CorpusRow = [file: string, originalBefore: null, repaired: string];
@@ -78,12 +80,25 @@ export function qualifyConfigRepairedReviewHost<T extends { files: readonly stri
     alreadyQualified,
     digest,
     (files, owned, current) =>
-      qualifyConfigCanonBatchHost(
+      qualifyConfigFixtureHost(
         files,
         owned,
         current,
-        (selected, qualified, actual) =>
-          qualifyConfigRepairedReviewContext(selected, qualified, actual, qualifyOriginal, scope),
+        (fixtureFiles, fixtureOwned, fixtureDigest) =>
+          qualifyConfigCanonBatchHost(
+            fixtureFiles,
+            fixtureOwned,
+            fixtureDigest,
+            (selected, qualified, actual) =>
+              qualifyConfigRepairedReviewContext(
+                selected,
+                qualified,
+                actual,
+                qualifyOriginal,
+                scope,
+              ),
+            scope,
+          ),
         scope,
       ),
   );
