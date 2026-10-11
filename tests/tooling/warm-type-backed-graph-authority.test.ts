@@ -15,7 +15,7 @@ const manifest = JSON.parse(
     new URL("../performance/support/warm-type-backed-graph-manifest.json", import.meta.url),
     "utf8",
   ),
-) as { files: string[]; preservedBodies: string[] };
+) as { reviewedSource: string; files: string[]; preservedBodies: string[] };
 const pairs = manifest.files.map((row) => row.split("\t"));
 const preserved = manifest.preservedBodies.map((row) => row.split("\t"));
 const files = pairs.map(([file]) => file);
@@ -25,14 +25,11 @@ const original = (side: "before" | "after", file: string) => {
   return preserved.find(([candidate]) => candidate === file)?.[1] ?? null;
 };
 
-await test("the complete graph qualification retains all actual after blobs and original inputs", () => {
+await test("the original complete graph qualification retains all reviewed Git blobs and original inputs", () => {
   const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
   const actual = (side: "before" | "after", file: string) => {
     if (side === "before") return original(side, file);
-    const full = path.join(root, file);
-    if (!fs.existsSync(full)) return null;
-    assert.ok(fs.lstatSync(full).isFile());
-    return createHash("sha256").update(fs.readFileSync(full)).digest("hex");
+    return gitBodyDigest(root, manifest.reviewedSource, file);
   };
   const receipt = qualifyGraphHost(files, actual);
   assert.ok(receipt);
