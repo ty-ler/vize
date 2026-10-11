@@ -69,6 +69,15 @@ impl Phase {
                 checked_roots, indexed_lookups, fallback_lookups);
         }
     }
+
+    /// Observe an existing admission refusal without recording source paths.
+    pub(crate) fn native_fact_guard(reason: u8, items: usize) {
+        if *ENABLED.get_or_init(|| {
+            std::env::var("VIZE_TRACE_EDITOR_PREPARATION").is_ok_and(|value| value == "1")
+        }) {
+            tracing::info!(target: "vize_editor_preparation", event = "native_fact_guard", reason, items);
+        }
+    }
 }
 
 impl Drop for Phase {

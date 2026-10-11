@@ -59,6 +59,17 @@ impl NativeFacts {
         if !self.observe {
             return packet.value;
         }
+        if self.qualified && !packet.qualified {
+            let reason = match role {
+                FactRole::Configuration => 40,
+                FactRole::AuthoredSource => 41,
+                FactRole::LocalImporter => 42,
+            };
+            crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(
+                reason,
+                packet.stamps.len(),
+            );
+        }
         self.qualified &= packet.qualified && path.is_absolute();
         let owner = Arc::new(FactOwner {
             path: path.to_path_buf(),
@@ -135,6 +146,12 @@ impl NativeFacts {
         if !self.observe {
             return packet.value;
         }
+        if self.qualified && !packet.qualified {
+            crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(
+                44,
+                packet.stamps.len(),
+            );
+        }
         self.qualified &= packet.qualified;
         for stamp in packet.stamps {
             let stamp = if stamp.is_consumed_only() {
@@ -146,6 +163,12 @@ impl NativeFacts {
                 continue;
             };
             if stamp.owner().is_none() || !stamp.path().is_absolute() {
+                if self.qualified {
+                    crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(
+                        45,
+                        self.stamps.len(),
+                    );
+                }
                 self.qualified = false;
             }
             self.insert(stamp);

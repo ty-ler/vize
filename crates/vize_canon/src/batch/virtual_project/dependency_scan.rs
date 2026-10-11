@@ -116,7 +116,7 @@ impl VirtualProject {
                 .filter(|path| {
                     let registered = self.find_by_original(path).is_some();
                     if !registered {
-                        facts.unknown();
+                        facts.unknown_at(71);
                     }
                     registered
                 })
@@ -150,7 +150,7 @@ impl VirtualProject {
             None => self.package_routes.is_empty() && self.package_route_roots.is_empty(),
         };
         if !roots_qualified {
-            facts.unknown();
+            facts.unknown_at(72);
         }
         let (raw_roots_indexed, checked_roots) = self.raw_package_roots_are_indexed();
         let mut indexed_package_root_lookups = 0usize;
@@ -166,7 +166,7 @@ impl VirtualProject {
                     )
                 })
             else {
-                facts.unknown();
+                facts.unknown_at(73);
                 continue;
             };
             facts.begin_importer(
@@ -204,7 +204,7 @@ impl VirtualProject {
                 continue;
             }
             let Some(importer_dir) = importer.parent().map(Path::to_path_buf) else {
-                facts.unknown();
+                facts.unknown_at(74);
                 continue;
             };
             let source_type = if virtual_path
@@ -253,7 +253,7 @@ impl VirtualProject {
                         if let Some(resolve) = observed_package_resolver.as_deref_mut() {
                             let _ = facts.package_result(resolve(&importer, &specifier, mode));
                         } else if let Some(resolve) = package_resolver.as_deref_mut() {
-                            facts.unknown();
+                            facts.unknown_at(75);
                             let _ = resolve(&importer, &specifier, mode);
                         }
                     }
@@ -320,7 +320,7 @@ impl VirtualProject {
                 if registered.is_ok() {
                     queue.push(key);
                 } else {
-                    facts.unknown();
+                    facts.unknown_at(76);
                 }
             }
             let released = self.replace_dependency_edges(&importer, dependency_targets);

@@ -63,7 +63,23 @@ impl WalkFacts {
         self.qualified = false;
     }
 
+    pub(super) fn unknown_at(&mut self, reason: u8) {
+        if self.qualified {
+            crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(
+                reason,
+                self.stamps.len(),
+            );
+        }
+        self.unknown();
+    }
+
     fn append<T>(&mut self, consumed: Consumed<T>) -> T {
+        if self.qualified && !consumed.qualified {
+            crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(
+                80,
+                consumed.stamps.len(),
+            );
+        }
         self.qualified &= consumed.qualified;
         self.stamps.extend(
             consumed
@@ -82,6 +98,12 @@ impl WalkFacts {
     }
 
     pub(super) fn registration(&mut self, result: Consumed<()>) {
+        if self.qualified && !result.qualified {
+            crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(
+                81,
+                result.stamps.len(),
+            );
+        }
         self.qualified &= result.qualified;
         // Source/index canonical observations are already owned by the actual
         // registered source; the current importer must not take their identity.
@@ -106,7 +128,7 @@ impl WalkFacts {
             role: FactRole::LocalImporter,
         }));
         let Some(body) = original else {
-            self.unknown();
+            self.unknown_at(77);
             return;
         };
         self.stamps.push(
@@ -131,7 +153,7 @@ impl WalkFacts {
             return resolution::canonical_key(path);
         }
         if !registered {
-            self.unknown();
+            self.unknown_at(78);
             return self.canonical_key(path);
         }
         let previous = self.owner.replace(Arc::new(FactOwner {

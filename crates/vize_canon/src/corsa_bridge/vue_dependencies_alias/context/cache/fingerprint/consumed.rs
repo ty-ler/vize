@@ -54,7 +54,12 @@ pub(super) fn validate(
     known: &FxHashSet<PathBuf>,
     inputs: &AuthoredInputs<'_>,
 ) -> Result<Consumed<SourceChanges>, Refusal> {
-    if !qualified || !known.contains(inputs.host_path) {
+    if !qualified {
+        crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(1, known.len());
+        return Err(Refusal::UnknownAuthority);
+    }
+    if !known.contains(inputs.host_path) {
+        crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(2, known.len());
         return Err(Refusal::UnknownAuthority);
     }
     // Legacy entries stay unobserved here and retain their original validator.
@@ -64,15 +69,21 @@ pub(super) fn validate(
         .collect();
     for stamp in &consumed {
         let Some(owner) = stamp.owner() else {
+            crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(3, consumed.len());
             return Err(Refusal::UnknownAuthority);
         };
         match owner.role {
             FactRole::AuthoredSource => {
                 if owner.path != stamp.path() || !known.contains(&owner.path) {
+                    crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(
+                        4,
+                        consumed.len(),
+                    );
                     return Err(Refusal::UnknownAuthority);
                 }
             }
             FactRole::LocalImporter if !known.contains(&owner.path) => {
+                crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(5, consumed.len());
                 return Err(Refusal::UnknownAuthority);
             }
             _ => {}
@@ -83,6 +94,7 @@ pub(super) fn validate(
             .iter()
             .any(|stamp| stamp.path() == source && stamp.is_authored_body_fact())
     }) {
+        crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(6, known.len());
         return Err(Refusal::UnknownAuthority);
     }
     let mut current = vec![None; consumed.len()];

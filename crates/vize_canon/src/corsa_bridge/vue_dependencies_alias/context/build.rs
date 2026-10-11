@@ -325,8 +325,24 @@ fn build_consumed(
             &known,
             &value.package_routes,
             &value.route_inputs,
-        )
-        .is_ok();
+        );
+        if let Err(ref refusal) = complete_output {
+            use crate::package_route::stamp::PackageAggregateError;
+            let reason = match refusal {
+                PackageAggregateError::Unqualified => 21,
+                PackageAggregateError::NoSources => 22,
+                PackageAggregateError::MissingSourceBody(_) => 23,
+                PackageAggregateError::MissingOwner(_) => 24,
+                PackageAggregateError::WrongOwnerRole(_) => 25,
+                PackageAggregateError::UnknownOwner(_) => 26,
+                PackageAggregateError::NonAbsolute(_) => 27,
+                PackageAggregateError::DirectoryMismatch(_) => 28,
+                PackageAggregateError::RouteConflict(_, _) => 29,
+                PackageAggregateError::OldInputs => 30,
+                PackageAggregateError::OldRoutes => 31,
+            };
+            crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(reason, known.len());
+        }
         let current_inputs = super::cache::reconciled_are_current(
             &witness,
             &known,
@@ -335,7 +351,7 @@ fn build_consumed(
             overlays,
             revision.requested_sources,
         );
-        if !complete_output || !current_inputs {
+        if complete_output.is_err() || !current_inputs {
             facts.incomplete();
         }
     }
