@@ -13,11 +13,11 @@ const manifest = JSON.parse(
   preservedBodies: string[];
 };
 const manifestSHA256 = createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
-assert.equal(manifestSHA256, "5baa64ace22bd962d71304e2e4bdd3cdfad2abae1adcf236861adc25b8f90fac");
+assert.equal(manifestSHA256, "e146e6a32431d3eececeaf108973f594ce4dd4028b2be3065d9e7f3f7694a9f1");
 assert.equal(manifest.version, 1);
 assert.equal(manifest.originalSource, "d45d45908a09cf8931b141fbc92fea8d11c56414");
-assert.equal(manifest.reviewedSource, "4b247875b49f13c7bf4bad0656d221b993d054a9");
-assert.equal(manifest.files.length, 185);
+assert.equal(manifest.reviewedSource, "2edb71023903ccdf81243d737917fa07f06abb8b");
+assert.equal(manifest.files.length, 188);
 assert.equal(manifest.preservedBodies.length, 45);
 const decode = (row: string, fields: number) => {
   const values = row.split("\t");
