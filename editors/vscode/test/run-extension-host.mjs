@@ -73,6 +73,19 @@ try {
       workspacePath,
     ],
   });
+} catch (error) {
+  const destination = path.join(testDataPath, "failure");
+  fs.mkdirSync(destination, { recursive: true });
+  fs.copyFileSync(fakeServerLogPath, path.join(destination, "events.jsonl"));
+  fs.writeFileSync(
+    path.join(destination, "error.json"),
+    JSON.stringify({ message: String(error), stack: error?.stack }, null, 2) + "\n",
+  );
+  fs.cpSync(workspacePath, path.join(destination, "workspace"), {
+    recursive: true,
+    filter: (input) => !input.split(path.sep).includes("node_modules"),
+  });
+  throw error;
 } finally {
   fs.rmSync(profilePath, { force: true, recursive: true });
 }
