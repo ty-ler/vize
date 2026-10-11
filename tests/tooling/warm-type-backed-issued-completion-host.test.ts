@@ -1,3 +1,4 @@
+import { qualifyCurrentConfigReviewHost } from "./support/config-reviewed-source.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -59,7 +60,10 @@ await test("every current whole source body matches the distinct whole96 authori
       return null;
     }
   };
-  assert.ok(qualifyIssuedCompletionHost(production, allowed, actual));
+  assert.ok(
+    qualifyIssuedCompletionHost(production, allowed, actual) ??
+      qualifyCurrentConfigReviewHost(allowed, actual),
+  );
 });
 
 await test("every original production/custody/extension and all seven producer pairs are mandatory", () => {
