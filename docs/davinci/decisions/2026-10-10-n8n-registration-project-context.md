@@ -50,14 +50,13 @@ now explicitly selects the global it previously assumed.
 The repository gallery now explicitly imports its existing Vue Router components;
 all template bytes and the oversized component line counts remain unchanged.
 
-CLI and per-document LSP transfer must derive the matcher from the already
-loaded `ConfigDocument` snapshot using
-`document.clone().into_compiler_custom_elements()`. Calling a separate config
-loader would reevaluate project configuration and is rejected. Shared loader
-and LSP snapshot paths currently belong to the config delivery lane; this
-integration waits for their genuine sealed ancestry or an explicit
-coordinated handoff. It is unfinished until whole actual CLI and JSON-RPC
-positive/negative context vectors pass.
+The [loaded-config transport](./2026-10-11-component-config-transport.md) derives
+the matcher from the already loaded `ConfigDocument` snapshot using
+`document.clone().into_compiler_custom_elements()`. It is a genuine child of the
+configuration Stack and keeps that parent's qualification separate. Calling a
+second loader would reevaluate configuration and is rejected. Whole actual CLI
+and JSON-RPC positive/negative vectors, parent qualification and protected
+delivery remain required before this boundary is complete.
 
 Fresh exact-head Actions, the strict instruction ceilings, protected queue
 and actual merge remain required before source delivery. Installed public
