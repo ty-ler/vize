@@ -49,11 +49,11 @@ impl MaestroServer {
         Self {
             client: self.client.clone(),
             #[cfg(feature = "experimental-source-navigation")]
-            navigation: Some(
-                crate::source_project::navigation::NativeNavigationProject::new(
-                    crate::source_project::SourceQueryProject::new_server(state.clone()),
-                ),
-            ),
+            navigation: if std::sync::Arc::ptr_eq(&state, &self.state) {
+                self.navigation.clone()
+            } else {
+                state.cached_project_navigation()
+            },
             state,
             initial_diagnostics: self.initial_diagnostics.clone(),
             #[cfg(feature = "experimental-source-navigation")]
@@ -71,3 +71,6 @@ impl MaestroServer {
         DocumentServer::Primary(self)
     }
 }
+
+#[cfg(all(test, feature = "native", feature = "experimental-source-navigation"))]
+mod tests;
