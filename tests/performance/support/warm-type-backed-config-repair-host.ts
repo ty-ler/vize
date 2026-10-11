@@ -10,6 +10,7 @@ import {
 import { projectConfigManifest } from "./warm-type-backed-project-config-manifest.ts";
 import { issuedCompletionManifest } from "./warm-type-backed-issued-completion-host.ts";
 import { qualifyConfigCanonBatchHost } from "./warm-type-backed-config-canon-batch-host.ts";
+import { qualifyProjectConfigRuntimeRepairHost } from "./warm-type-backed-project-config-runtime-repair.ts";
 
 type Digest = (side: "before" | "after", file: string) => string | null;
 type Row = [file: string, originalBefore: string | null, reviewed: string, repaired: string];
@@ -72,13 +73,19 @@ export function qualifyConfigRepairedReviewHost<T extends { files: readonly stri
   ) => T | null,
   scope: ConfigReviewScope = "parent-pair",
 ) {
-  return qualifyConfigCanonBatchHost(
+  return qualifyProjectConfigRuntimeRepairHost(
     production,
     alreadyQualified,
     digest,
     (files, owned, current) =>
-      qualifyConfigRepairedReviewContext(files, owned, current, qualifyOriginal, scope),
-    scope,
+      qualifyConfigCanonBatchHost(
+        files,
+        owned,
+        current,
+        (selected, qualified, actual) =>
+          qualifyConfigRepairedReviewContext(selected, qualified, actual, qualifyOriginal, scope),
+        scope,
+      ),
   );
 }
 
