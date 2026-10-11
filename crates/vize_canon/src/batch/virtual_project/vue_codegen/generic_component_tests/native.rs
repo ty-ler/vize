@@ -1,7 +1,8 @@
-//! Actual pinned projects qualify inferred and explicitly authored contracts.
+//! Mandatory native cause and explicitly required pinned-project qualification.
 #![expect(clippy::expect_used, reason = "required native fixture authority")]
 
 mod install;
+mod minimal;
 mod packets;
 mod replay;
 
@@ -33,12 +34,39 @@ fn native() -> Option<std::path::PathBuf> {
 }
 
 #[test]
-fn pinned_pin_input_native_contract_preserves_inference_number_checks_and_authored_defaults() {
+fn generic_native_contract_requires_the_self_contained_cause_and_requested_pinned_fixture() {
     let Some(native) = native() else { return };
-    let temporary = tempfile::tempdir().unwrap();
-    let (root, custody) = install::snapshot(temporary.path());
-    packets::retain("fixture", &custody);
-    let original = source("PinInput.story.vue.txt");
+    let minimal = tempfile::tempdir().unwrap();
+    let (root, custody) = minimal::install(minimal.path());
+    packets::retain("minimal-fixture", &custody);
+    qualify(
+        &root,
+        &native,
+        "minimal",
+        &source("minimal-story.vue.txt"),
+        minimal::root_source,
+    );
+    if std::env::var("VIZE_TEST_REQUIRE_PIN_INPUT_FIXTURE").as_deref() == Ok("1") {
+        let pinned = tempfile::tempdir().unwrap();
+        let (root, custody) = install::snapshot(pinned.path());
+        packets::retain("fixture", &custody);
+        qualify(
+            &root,
+            &native,
+            "pinned",
+            &source("PinInput.story.vue.txt"),
+            root_source,
+        );
+    }
+}
+
+fn qualify(
+    root: &Path,
+    native: &Path,
+    scope: &str,
+    original: &str,
+    child_source: fn(&str) -> String,
+) {
     let mut cases = Vec::new();
     for (name, generic, number_prop, number_value, expected_error) in [
         ("original-text", String::from(GENERIC), false, false, false),
@@ -60,7 +88,7 @@ fn pinned_pin_input_native_contract_preserves_inference_number_checks_and_author
             false,
         ),
     ] {
-        let mut story = original.clone();
+        let mut story = String::from(original);
         if number_value {
             story = story
                 .replace("ref<string[]>([])", "ref<number[]>([])")
@@ -71,16 +99,16 @@ fn pinned_pin_input_native_contract_preserves_inference_number_checks_and_author
                 .replace("id=\"otp\"", "id=\"otp\" type=\"number\"")
                 .into();
         }
-        let child = root_source(&generic);
+        let child = child_source(&generic);
         fs::write(root.join(ROOT_PATH), child.as_str()).unwrap();
         fs::write(root.join(STORY_PATH), story.as_str()).unwrap();
         let mut checker = BatchTypeChecker::with_options_and_corsa_path(
-            &root,
+            root,
             BatchTypeCheckerOptions {
                 tsconfig_path: Some(root.join(CONFIG_PATH)),
                 ..Default::default()
             },
-            Some(&native),
+            Some(native),
         )
         .unwrap();
         checker.set_server_count(Some(1));
@@ -90,10 +118,11 @@ fn pinned_pin_input_native_contract_preserves_inference_number_checks_and_author
             .unwrap();
         let public = checker.check_project();
         packets::retain(
-            &cstr!("{name}-public"),
+            &cstr!("{scope}-{name}-public"),
             &serde_json::json!({
                 "declaredSourceConfig":root.join(CONFIG_PATH),
-                "scope":"this native control explicitly selects core tsconfig.app.json; the unchanged full App row separately qualifies the original CLI's unspecified selection",
+                "scope":scope,
+                "configScope":"this control explicitly selects its own config; the unchanged full App row separately qualifies the original CLI's unspecified selection",
                 "wholePublicResult":cstr!("{public:#?}"),
             }),
         );
@@ -105,15 +134,21 @@ fn pinned_pin_input_native_contract_preserves_inference_number_checks_and_author
             .unwrap();
         // Retain the actual produced project before validating the replay's
         // unmapped-tail premise, so a failed premise cannot lose its packet.
-        let (after, after_packet) =
-            packets::diagnose(&root, &native, &files, name, "production-after", None);
+        let (after, after_packet) = packets::diagnose(
+            root,
+            native,
+            &files,
+            &cstr!("{scope}-{name}"),
+            "production-after",
+            None,
+        );
         let before = replay::prior_contract(child, &generic);
         fs::write(&child.virtual_path, before.as_str()).unwrap();
         let (old, old_packet) = packets::diagnose(
-            &root,
-            &native,
+            root,
+            native,
             &files,
-            name,
+            &cstr!("{scope}-{name}"),
             "prior-contract-replay",
             Some((&child.virtual_path, &before)),
         );
@@ -142,6 +177,14 @@ fn pinned_pin_input_native_contract_preserves_inference_number_checks_and_author
                     .5
                     .contains("Type 'string[]' is not assignable to type 'number[]'.")
         };
+        if scope == "minimal" {
+            assert_eq!(after.len(), usize::from(expected_error), "{after_packet}");
+            assert_eq!(
+                before.len(),
+                usize::from(expected_error || name == "original-text"),
+                "{before_packet}"
+            );
+        }
         if name == "original-text" {
             assert_eq!(
                 before.iter().filter(model_row).count(),

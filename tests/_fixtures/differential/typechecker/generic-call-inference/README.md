@@ -9,10 +9,18 @@ text default require the original story's string arrays to stay valid.
 conditional/default distinction separately from pending Canon/native proof.
 
 The required Canon filter is `vue_codegen::generic_component_tests::`.
-Its native law uses a tracked isolated fixture snapshot, authentic observed
-provider links, and the unchanged whole core config. `VIZE_TEST_REQUIRE_TSGO=1`
-requires the real runtime. `VIZE_NATIVE_SYNTAX_CAPTURE_DIR` retains complete
-content-addressed generated programs/maps/raw packets before temporary cleanup.
+Its native law always runs the tracked minimal root/story/strict-config cause
+through the actual generated project and returning native client, using the
+normal installed test Vue dependency and no ReKa checkout. Empty positive
+vectors and genuine singleton model TS2322 negatives remain mandatory.
+`VIZE_TEST_REQUIRE_TSGO=1` requires the real runtime. The single composed App
+qualifier additionally sets `VIZE_TEST_REQUIRE_PIN_INPUT_FIXTURE=1` to require
+the original tracked fixture snapshot, authentic provider links and whole
+core config; missing fixture/provider authority fails that required suite.
+Capture is optional for assertions: `VIZE_NATIVE_SYNTAX_CAPTURE_DIR` or the
+standard `VIZE_TEST_FIX_HISTORY_CAPTURE_DIR` retains complete generated
+programs/maps/raw packets before temporary cleanup. Without capture, complete
+bodies remain in the assertion packet. No cause assertion depends on capture.
 The declared core config control remains distinct from the original full App
 CLI's unspecified selected config. The native before is labeled as an exact
 prior-helper-declaration replay, not a missing historical factory capture.

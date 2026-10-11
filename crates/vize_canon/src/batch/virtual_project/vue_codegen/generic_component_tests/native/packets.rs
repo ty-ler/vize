@@ -16,22 +16,21 @@ use vize_carton::{String, cstr};
 
 pub(super) type Row = (String, u32, u32, Option<u32>, Option<i32>, String);
 
-fn directory() -> PathBuf {
-    PathBuf::from(
-        std::env::var_os("VIZE_NATIVE_SYNTAX_CAPTURE_DIR")
-            .expect("required generic controls retain complete packets"),
-    )
-    .join("generic-component")
+fn directory() -> Option<PathBuf> {
+    std::env::var_os("VIZE_NATIVE_SYNTAX_CAPTURE_DIR")
+        .or_else(|| std::env::var_os("VIZE_TEST_FIX_HISTORY_CAPTURE_DIR"))
+        .map(|directory| PathBuf::from(directory).join("generic-component"))
 }
 
 pub(super) fn retain(phase: &str, packet: &Value) {
-    let directory = directory();
-    fs::create_dir_all(&directory).unwrap();
-    fs::write(
-        directory.join(cstr!("{phase}.json").as_str()),
-        serde_json::to_vec_pretty(packet).unwrap(),
-    )
-    .unwrap();
+    if let Some(directory) = directory() {
+        fs::create_dir_all(&directory).unwrap();
+        fs::write(
+            directory.join(cstr!("{phase}.json").as_str()),
+            serde_json::to_vec_pretty(packet).unwrap(),
+        )
+        .unwrap();
+    }
 }
 
 fn blob(bytes: &[u8]) -> Value {
@@ -39,15 +38,19 @@ fn blob(bytes: &[u8]) -> Value {
         .iter()
         .map(|byte| cstr!("{byte:02x}"))
         .collect();
-    let directory = directory().join("bytes");
-    fs::create_dir_all(&directory).unwrap();
-    let path = directory.join(hash.as_str());
-    if path.exists() {
-        assert_eq!(fs::read(&path).unwrap(), bytes);
+    if let Some(directory) = directory() {
+        let directory = directory.join("bytes");
+        fs::create_dir_all(&directory).unwrap();
+        let path = directory.join(hash.as_str());
+        if path.exists() {
+            assert_eq!(fs::read(&path).unwrap(), bytes);
+        } else {
+            fs::write(&path, bytes).unwrap();
+        }
+        json!({"sha256":hash,"bytes":bytes.len(),"relativeBlob":cstr!("bytes/{hash}")})
     } else {
-        fs::write(&path, bytes).unwrap();
+        json!({"sha256":hash,"bytes":bytes.len(),"completeUtf8":std::str::from_utf8(bytes).unwrap()})
     }
-    json!({"sha256":hash,"bytes":bytes.len(),"relativeBlob":cstr!("bytes/{hash}")})
 }
 
 pub(super) fn diagnose(

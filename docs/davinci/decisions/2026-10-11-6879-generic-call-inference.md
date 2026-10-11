@@ -32,14 +32,28 @@ proof of the real Canon/native cause or a product acceptance result.
 
 Required `vue_codegen::generic_component_tests::` laws generate the complete
 authored SFC through the production document factory and preserve alias and
-legacy contracts. One required native law uses the tracked pinned fixture in
-an isolated snapshot, retaining its full Root/story/config/import context.
-Every observed ancestor provider scope is linked in its original nearest-first
-layout; providers are neither installed nor copied through symlinks. Their
-actual link targets, Vue manifests, config provider bodies and missing scopes
-are recorded. The authored fixture stays untouched.
+legacy contracts. The native law always qualifies a tracked minimal whole-SFC
+cause through the real public project factory and returning native client.
+It uses the normal installed test Vue provider, no ReKa checkout, and a declared
+strict standalone config. All six cases run: positive vectors must be empty,
+negative vectors contain only the genuine model TS2322, and prior-contract
+replay must differ only by the false text-model row. This mandatory standard
+Rust-shard control runs even when capture and upstream fixtures are absent.
 
-The native control explicitly selects the existing core `tsconfig.app.json`.
+The single composed App qualifier additionally sets
+`VIZE_TEST_REQUIRE_PIN_INPUT_FIXTURE=1`; the same law then requires the tracked
+pinned fixture in an isolated snapshot with its full Root/story/config/import
+context. Missing hydration or provider authority fails that suite. Every
+observed ancestor provider scope is linked in its original nearest-first
+layout; providers are neither installed nor copied through symlinks. Actual
+link targets, Vue manifests, config provider bodies and missing scopes are
+recorded. The authored fixture stays untouched. Capture is optional for native
+semantics: `VIZE_NATIVE_SYNTAX_CAPTURE_DIR` or the standard
+`VIZE_TEST_FIX_HISTORY_CAPTURE_DIR` retains the whole packets; without either,
+the same complete data remain in the assertion context. No standard cause
+assertion is conditioned on fixture availability or capture.
+
+The pinned native control explicitly selects the existing core `tsconfig.app.json`.
 That declared identity is distinct from the unchanged original full App CLI,
 which supplied no explicit config. The real public checker materializes the
 project; the returning native client attests that generated config, full
