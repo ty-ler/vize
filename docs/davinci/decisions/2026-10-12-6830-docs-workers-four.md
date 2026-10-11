@@ -91,3 +91,26 @@ build outputs regenerated. Artifact `11710497798` retains the complete browser
 law packets and failed qualification. This run provides no 119-route timing.
 The corrected prebuild custody keeps the original build/captures unchanged;
 fresh exact-source paired qualification remains required.
+
+## Postbuild source-census refusal
+
+Run [38162891440](https://github.com/ubugeeei-prod/vize/actions/runs/38162891440)
+at `dea3abb5a7d39eebd7c6847f769fee0b5dee51ac` authenticated the clean entire
+28,816-member checkout and original build producers, then completed the unchanged
+build. Postbuild source classification refused before both full arms. Artifact
+`11711406032` preserves the actual browser laws, original nine generated inputs,
+whole prebuild source census and failed qualification. The assertion omitted the
+offending Git status entry, so the extra path and its producer remain unproven.
+This run also supplies no 119-route timing.
+
+The next diagnostic retains exact original NUL-delimited Git status, complete
+index and source-path vectors before classification, with source/tree identity
+and raw-vector hashes. It retains all nine physical generated output bodies
+before that classification can refuse, alongside the authenticated old bodies.
+Every other tracked, staged or untracked change still refuses; the assertion now
+identifies its exact entry. New packet directories refuse reuse, and generated
+file/ancestor links refuse before copying. The actual temporary-Git law covers
+an untracked path containing newline/tab bytes, byte-exact vector retention,
+all old/new output bodies, refusal identity and generated-link substitution.
+Do not expand the generated census until the actual refused path, full old/new
+bytes and unchanged producer source have been reviewed.

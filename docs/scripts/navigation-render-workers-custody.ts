@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { createReadStream } from "node:fs";
+import { constants, createReadStream } from "node:fs";
 import { lstat, readdir, realpath, readFile, readlink, mkdir, copyFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -80,7 +80,7 @@ async function physicalCheckout(root: string, source: string, built: boolean) {
   for (const entry of status)
     assert(
       built && entry.startsWith(" M ") && generatedWorkersFiles.includes(entry.slice(3)),
-      "Only the exact authored generated output census may change; staged/untracked source refuses",
+      `Only the exact authored generated output census may change; staged/untracked source refuses: ${JSON.stringify(entry)}`,
     );
   const sourceFiles: (Awaited<ReturnType<typeof fileCustody>> & {
     mode: string;
@@ -199,11 +199,27 @@ export async function retainWorkersGeneratedBytes(
   output: string,
   phase: "inputs" | "outputs",
 ) {
+  assert.equal(await realpath(root), root, "Physical checkout root required");
+  const retained = [];
   for (const relative of generatedWorkersFiles) {
+    const file = path.join(root, relative);
+    assert.equal(
+      await realpath(path.dirname(file)),
+      path.dirname(file),
+      "Physical generated ancestor required",
+    );
+    assert.equal(await realpath(file), file, "Physical generated file required");
+    const original = await fileCustody(file);
     const destination = path.join(output, `build-${phase}`, relative);
     await mkdir(path.dirname(destination), { recursive: true });
-    await copyFile(path.join(root, relative), destination);
+    assert.equal(await realpath(path.dirname(destination)), path.dirname(destination));
+    await copyFile(file, destination, constants.COPYFILE_EXCL);
+    const raw = await fileCustody(destination);
+    assert.equal(raw.bytes, original.bytes);
+    assert.equal(raw.sha256, original.sha256, "Complete physical generated-byte copy required");
+    retained.push({ file: relative, source: original, raw });
   }
+  return retained;
 }
 export async function verifyWorkersGeneratedBytes(
   output: string,

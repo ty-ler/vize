@@ -11,6 +11,7 @@ import {
   retainWorkersGeneratedBytes,
   verifyWorkersGeneratedBytes,
 } from "../../docs/scripts/navigation-render-workers-custody.ts";
+import { retainWorkersGitObservation } from "../../docs/scripts/navigation-render-workers-git-observation.ts";
 
 void test("actual clean Git checkout, nine generated outputs and both arm custody remain complete", async () => {
   const temporary = await realpath(await mkdtemp(path.join(os.tmpdir(), "vize-workers-source-")));
@@ -59,6 +60,7 @@ void test("actual clean Git checkout, nine generated outputs and both arm custod
       const original = await readFile(path.join(root, file));
       await write(file, Buffer.concat([original, Buffer.from("complete authored build output\n")]));
     }
+    await retainWorkersGeneratedBytes(root, output, "outputs");
     const two = await workersGeneratedIdentity(root, source, before);
     assert.deepEqual(
       two.generated.map(({ file }) => file),
@@ -66,7 +68,6 @@ void test("actual clean Git checkout, nine generated outputs and both arm custod
     );
     assert(two.generated.every(({ before: old, after }) => old.sha256 !== after.sha256));
     assert.equal(two.producerFiles.length, 7);
-    await retainWorkersGeneratedBytes(root, output, "outputs");
     await verifyWorkersGeneratedBytes(output, two.generated);
     const four = await workersGeneratedIdentity(root, source, before);
     assert.deepEqual(two, four, "Both arms use every identical source/build output");
@@ -89,10 +90,44 @@ void test("actual clean Git checkout, nine generated outputs and both arm custod
       );
       await write(file, original);
     }
-    const unknown = "docs/public/component-previews/unknown.png";
+    const unknown = "docs/public/component-previews/unknown\nwith-tab\t.png";
     await write(unknown, "untracked adjacent output");
-    await assert.rejects(() => workersGeneratedIdentity(root, source, before), /staged\/untracked/);
+    const observation = await retainWorkersGitObservation(root, output, source, "prepare");
+    assert.equal(observation.source, source);
+    assert.equal(observation.tree, before.tree);
+    const rawStatus = await readFile(path.join(output, "git-prepare/status.z"));
+    assert.deepEqual(
+      rawStatus,
+      execFileSync("git", ["status", "--porcelain", "-z", "--untracked-files=all"], { cwd: root }),
+    );
+    assert(rawStatus.includes(Buffer.from(`?? ${unknown}\0`)));
+    const rawIndex = await readFile(path.join(output, "git-prepare/index.z"));
+    assert.deepEqual(rawIndex, execFileSync("git", ["ls-files", "--stage", "-z"], { cwd: root }));
+    assert.deepEqual(
+      await readFile(path.join(output, "git-prepare/source-paths.z")),
+      execFileSync("git", ["ls-files", "-z"], { cwd: root }),
+    );
+    await assert.rejects(
+      () => workersGeneratedIdentity(root, source, before),
+      (error: unknown) =>
+        error instanceof Error && error.message.includes(JSON.stringify(`?? ${unknown}`)),
+    );
+    await verifyWorkersGeneratedBytes(output, two.generated);
+    await assert.rejects(
+      () => retainWorkersGitObservation(root, output, source, "prepare"),
+      /EEXIST/,
+    );
     await rm(path.join(root, unknown));
+    const generated = path.join(root, generatedWorkersFiles[0]);
+    const generatedBytes = await readFile(generated);
+    await rm(generated);
+    await symlink(path.join(root, "assets/logo.svg"), generated);
+    await assert.rejects(
+      () => retainWorkersGeneratedBytes(root, path.join(temporary, "substituted"), "outputs"),
+      /Physical generated file/,
+    );
+    await rm(generated);
+    await writeFile(generated, generatedBytes);
     git("add", generatedWorkersFiles[0]);
     await assert.rejects(() => workersGeneratedIdentity(root, source, before), /staged\/untracked/);
     git("reset", "--quiet", "HEAD", "--", generatedWorkersFiles[0]); // Owned temporary authored fixture only.

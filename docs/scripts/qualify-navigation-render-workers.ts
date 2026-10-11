@@ -11,6 +11,7 @@ import {
   verifyWorkersGeneratedBytes,
 } from "./navigation-render-workers-custody.ts";
 import { packet, qualifyWorkersPair } from "./navigation-render-workers-evidence.ts";
+import { retainWorkersGitObservation } from "./navigation-render-workers-git-observation.ts";
 
 export async function qualifyNavigationRenderWorkers() {
   const { values } = parseArgs({
@@ -46,6 +47,16 @@ export async function qualifyNavigationRenderWorkers() {
   }
   let report: unknown;
   try {
+    assert(values.phase === "prepare" || values.phase === "qualify");
+    await retainWorkersGitObservation(root, output, source, values.phase);
+    if (values.phase === "prepare") {
+      const generated = await retainWorkersGeneratedBytes(root, output, "outputs");
+      await writeFile(
+        path.join(output, "generated-after-build.json"),
+        JSON.stringify({ schemaVersion: 1, source, generated }, null, 2) + "\n",
+        { flag: "wx" },
+      );
+    }
     const prebuild = packet(
       JSON.parse(await readFile(path.join(output, "source-before-build.json"), "utf8")),
     );
@@ -54,7 +65,6 @@ export async function qualifyNavigationRenderWorkers() {
     const identity = await workersSourceIdentity(root, dist, source, checkout);
     assert.deepEqual(prebuild.producers, identity.buildProducers, "Actual build producer changed");
     if (values.phase === "prepare") {
-      await retainWorkersGeneratedBytes(root, output, "outputs");
       await verifyWorkersGeneratedBytes(output, identity.generated);
       await writeFile(
         path.join(output, "source-before.json"),
