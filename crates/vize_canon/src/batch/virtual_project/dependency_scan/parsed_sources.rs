@@ -28,13 +28,13 @@ impl ParsedDependencySources {
         &mut self,
         rewriter: &ImportRewriter,
         path: &Path,
-        source: String,
+        source: &str,
         source_type: SourceType,
     ) -> Vec<(String, PackageResolutionMode)> {
         let entry = self.sources.entry(path.to_path_buf());
         if let std::collections::hash_map::Entry::Occupied(entry) = &entry
             && entry.get().source_type == source_type
-            && entry.get().source == source
+            && entry.get().source.as_str() == source
         {
             #[cfg(test)]
             {
@@ -42,13 +42,14 @@ impl ParsedDependencySources {
             }
             return entry.get().occurrences.clone();
         }
-        let occurrences = rewriter.collect_all_specifier_occurrences(&source, source_type);
+        let occurrences = rewriter.collect_all_specifier_occurrences(source, source_type);
         #[cfg(test)]
         {
             self.parses += 1;
         }
         entry.insert_entry(ParsedSource {
-            source,
+            // Only a retained miss needs its own complete source bytes.
+            source: source.into(),
             source_type,
             occurrences: occurrences.clone(),
         });

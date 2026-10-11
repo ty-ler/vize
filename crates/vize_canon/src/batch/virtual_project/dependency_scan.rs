@@ -160,10 +160,11 @@ impl VirtualProject {
         let mut fallback_package_root_lookups = 0usize;
 
         while let Some(importer) = queue.pop() {
+            // The owned occurrence packet ends this borrow before graph writes.
             let Some((virtual_content, virtual_path, generated_sfc)) =
                 self.find_by_original(&importer).map(|file| {
                     (
-                        self.module_source(file).unwrap_or(&file.content).clone(),
+                        self.module_source(file).unwrap_or(&file.content),
                         file.virtual_path.clone(),
                         file.source_map.sfc_map.is_some(),
                     )
@@ -188,11 +189,11 @@ impl VirtualProject {
                     .get(&virtual_path)
                     .map_or_else(Vec::new, |source| references::path_references(source))
             } else {
-                references::path_references(&virtual_content)
+                references::path_references(virtual_content)
             };
             if references.is_empty()
                 && !may_resolve_a_dependency(
-                    &virtual_content,
+                    virtual_content,
                     if is_declaration_file(&importer) {
                         &declaration_alias_prefixes
                     } else {

@@ -18,7 +18,7 @@ fn complete_projection_and_source_type_own_each_ordered_occurrence_packet() {
             let expected = rewriter.collect_all_specifier_occurrences(source, source_type);
             for _ in 0..3 {
                 assert_eq!(
-                    parsed.occurrences(&rewriter, path, source.into(), source_type),
+                    parsed.occurrences(&rewriter, path, source, source_type),
                     expected,
                 );
             }
@@ -45,7 +45,7 @@ fn equal_length_edits_and_changed_generated_syntax_reparse_the_actual_source() {
         (before, SourceType::ts()),
     ] {
         assert_eq!(
-            parsed.occurrences(&rewriter, path, source.into(), syntax),
+            parsed.occurrences(&rewriter, path, source, syntax),
             rewriter.collect_all_specifier_occurrences(source, syntax),
         );
     }
@@ -55,11 +55,12 @@ fn equal_length_edits_and_changed_generated_syntax_reparse_the_actual_source() {
     let authored = "<script setup lang='ts'>import './first';</script><template/>";
     let projection = "import './first'; import './generated'; export {};";
     assert_eq!(
-        parsed.occurrences(&rewriter, path, projection.into(), SourceType::ts()),
+        parsed.occurrences(&rewriter, path, projection, SourceType::ts()),
         rewriter.collect_all_specifier_occurrences(projection, SourceType::ts()),
     );
     assert!(!authored.contains("./generated"));
     assert_eq!(parsed.parses, 5);
 }
 
+mod borrowed;
 mod walk;

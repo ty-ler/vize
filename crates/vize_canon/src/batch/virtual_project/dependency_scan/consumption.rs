@@ -20,12 +20,12 @@ pub(super) fn occurrences(
     parsed: Option<&mut super::ParsedDependencySources>,
     rewriter: &crate::batch::ImportRewriter,
     path: &std::path::Path,
-    source: vize_carton::String,
+    source: &str,
     source_type: oxc_span::SourceType,
 ) -> Vec<(vize_carton::String, crate::PackageResolutionMode)> {
     match parsed {
         Some(parsed) => parsed.occurrences(rewriter, path, source, source_type),
-        None => rewriter.collect_all_specifier_occurrences(&source, source_type),
+        None => rewriter.collect_all_specifier_occurrences(source, source_type),
     }
 }
 
