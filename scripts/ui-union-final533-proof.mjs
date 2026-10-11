@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-const publicHead = '3ed139a7c3ee40f51335905b9ca4970650cefdfd';
+const publicHead = 'ab77d5c5bcbe033995212f4bb6b51293bfe21e72';
 const progressSource = '7aa24063f56de5a674bcfa4a0de315ae9611be02';
 const head = () => execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const digest = value => createHash('sha256').update(value).digest('hex');

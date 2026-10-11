@@ -16,14 +16,14 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with: { fetch-depth: 0 }
-      - name: Select exact three-layer public source with only read-only observers
+      - name: Select exact four-layer public source with only read-only observers
         run: |
           git checkout 36661df72b1705781c6af73d2a9daff7aace4ad3
           git diff --exit-code
           git diff --cached --exit-code
           mkdir evidence
           git rev-parse HEAD > evidence/source-head.txt
-          git diff 3ed139a7c3ee40f51335905b9ca4970650cefdfd HEAD > evidence/public-source-composition.diff
+          git diff ab77d5c5bcbe033995212f4bb6b51293bfe21e72 HEAD > evidence/public-source-composition.diff
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: scoped-union-props-original-source-receipt-656010281c745dd3df7905be0d8ff16af680d1d0
