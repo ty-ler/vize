@@ -1,6 +1,29 @@
 #!/usr/bin/env bash
 # Whole original parser handoff and observed native teardown, on the existing target.
 set -euo pipefail
+# The supplemental CLI/owner law qualifies PR source; manual phase inputs stay frozen.
+if [[ "${GITHUB_EVENT_NAME:-}" == workflow_dispatch ]]; then exit 0; fi
+export VIZE_TEST_REQUIRE_TSGO=1
+if [[ -z "${VIZE_TEST_TSGO_PATH:-}" ]]; then
+  export VIZE_TEST_TSGO_PATH="$(node --input-type=module <<'JS'
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import { readFileSync, realpathSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+const require = createRequire(join(process.cwd(), 'package.json'));
+const name = `@typescript/typescript-${process.platform}-${process.arch}`;
+const manifest = realpathSync(require.resolve(`${name}/package.json`));
+const metadata = JSON.parse(readFileSync(manifest, 'utf8'));
+assert.equal(metadata.name, name); assert.equal(metadata.version, '7.0.2');
+const native = realpathSync(join(dirname(manifest), 'lib/tsc'));
+const probe = spawnSync(native, ['--version'], { encoding: 'utf8', timeout: 15000 });
+assert.equal(probe.error, undefined); assert.equal(probe.status, 0);
+assert.equal(probe.stdout, 'Version 7.0.2\n'); assert.equal(probe.stderr, '');
+process.stdout.write(native);
+JS
+)"
+fi
 [[ "${VIZE_TEST_REQUIRE_TSGO:-}" == 1 ]]
 [[ -n "${SOURCE_SHA:-}" && -n "${RUNNER_TEMP:-}" ]]
 [[ "$(git rev-parse HEAD)" == "$SOURCE_SHA" ]]

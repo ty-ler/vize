@@ -1,4 +1,5 @@
 //! Frozen parser abort must complete semantics in the actual configured owner.
+#![cfg(unix)]
 use super::semantic_completion;
 use crate::batch::{VirtualProject, executor::CorsaExecutor};
 use serde_json::{Value, json};
@@ -83,6 +84,6 @@ fn native_semantic_completion_keeps_frozen_full_vector_and_actual_terminal_owner
             json!(b"error handling method 'exit': EOF\n".as_slice())
         );
     }
-    assert_eq!(whole, case["expectedDiagnostics"]);
+    assert_eq!(json!(whole), case["expectedDiagnostics"]);
     assert_eq!((result.success, result.exit_code), (false, 1));
 }
