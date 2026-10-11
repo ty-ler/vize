@@ -151,11 +151,7 @@ impl CorsaProjectClient {
             build_session_document_uri(uri, &self.project_root, overlay_supported) != *uri
         });
         if self.materialized_project_session || !overlay_supported || requires_materialization {
-            for (uri, content) in documents {
-                self.clear_document_state(uri);
-                self.sync_overlay_document(uri, content)?;
-            }
-            return Ok(());
+            return self.synchronize_materialized_project_documents(documents);
         }
 
         let mut summary = FileChangeSummary::default();
@@ -231,11 +227,7 @@ impl CorsaProjectClient {
                     self.document_texts.remove(*uri);
                     self.overlay_versions.remove(*uri);
                 }
-                for (uri, content) in documents {
-                    self.clear_document_state(uri);
-                    self.sync_overlay_document(uri, content)?;
-                }
-                Ok(())
+                self.synchronize_materialized_project_documents(documents)
             }
             Err(error) => Err(cstr!("Failed to refresh Corsa snapshot: {error}")),
         }
