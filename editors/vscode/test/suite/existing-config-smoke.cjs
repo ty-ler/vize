@@ -129,7 +129,10 @@ async function runExistingConfigurationContentChangeSmoke() {
     };
     retain("before");
     try {
-      await vscode.workspace.fs.writeFile(uri, Buffer.from('{"compilerOptions":{"strict":true}}\n'));
+      await vscode.workspace.fs.writeFile(
+        uri,
+        Buffer.from('{"compilerOptions":{"strict":true}}\n'),
+      );
       entries = await waitForLogEntries(
         logPath,
         (next) => initializeMessages(next).length > previousInitializations,
