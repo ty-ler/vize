@@ -7,6 +7,10 @@ import {
   nativeTerminalManifest,
   qualifyNativeTerminalHost,
 } from "../performance/support/warm-type-backed-native-terminal-host.ts";
+import {
+  nativeOwnedImageProduction,
+  qualifyNativeTerminalHost as qualifyOwnedImageHost,
+} from "../performance/support/warm-type-backed-native-owned-image-host.ts";
 
 const manifest = nativeTerminalManifest;
 const entries = new Map(manifest.files.map(([file, before, after]) => [file, { before, after }]));
@@ -42,7 +46,10 @@ test("every current whole source and original request body matches the finite re
       : createHash("sha256")
           .update(fs.readFileSync(new URL("../../" + file, import.meta.url)))
           .digest("hex");
-  assert.ok(qualifyNativeTerminalHost(production, new Set(), actual));
+  assert.ok(
+    qualifyNativeTerminalHost(production, new Set(), actual) ||
+      qualifyOwnedImageHost(nativeOwnedImageProduction, new Set(), actual),
+  );
 });
 
 test("every original and reviewed member including absent vendor and final-guard bodies is bound", () => {

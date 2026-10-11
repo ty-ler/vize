@@ -6,10 +6,8 @@ import { unqualifiedReceiptPaths } from "./warm-type-backed-build-receipt-extens
 import { finiteCut } from "./warm-type-backed-cut.ts";
 import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
 import { reviewedHostPaths } from "./warm-type-backed-reviewed-hosts.ts";
-import {
-  assertNativeTerminalLocks,
-  qualifyNativeTerminalHost,
-} from "./warm-type-backed-native-terminal-host.ts";
+import { assertNativeTerminalLocks } from "./warm-type-backed-native-terminal-host.ts";
+import { qualifyNativeTerminalHost } from "./warm-type-backed-native-owned-image-host.ts";
 import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
 import {
   driverRoot,
