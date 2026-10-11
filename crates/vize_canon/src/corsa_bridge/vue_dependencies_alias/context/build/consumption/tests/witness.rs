@@ -1,6 +1,6 @@
 //! Complete witness storage and collision indices survive borrowed operations.
 
-use super::{Consumed, FactRole, NativeFacts, fact};
+use super::{Consumed, FactOwner, FactRole, InputStamp, NativeFacts, fact};
 use std::{
     panic::{AssertUnwindSafe, catch_unwind},
     path::Path,
@@ -10,8 +10,12 @@ use std::{
 #[test]
 fn borrowed_witness_keeps_complete_packet_allocation_and_owner_identity_on_all_exits() {
     let path = Path::new("/project/tsconfig.json");
-    let stamp = fact(path, b"A", path, FactRole::Configuration);
-    let owner = Arc::clone(stamp.owner().unwrap());
+    let owner = Arc::new(FactOwner {
+        path: path.to_path_buf(),
+        role: FactRole::Configuration,
+    });
+    let stamp =
+        InputStamp::observed_source(path.to_path_buf(), b"A").with_owner(Arc::clone(&owner));
     let changed = fact(path, b"B", path, FactRole::Configuration);
     for qualified in [true, false] {
         let mut facts = NativeFacts::new(true);
@@ -26,7 +30,10 @@ fn borrowed_witness_keeps_complete_packet_allocation_and_owner_identity_on_all_e
             assert_eq!(packet.stamps.as_ptr(), allocation);
             assert_eq!(packet.stamps, expected.stamps);
             assert_eq!(packet.qualified, qualified);
-            assert!(Arc::ptr_eq(packet.stamps[0].owner().unwrap(), &owner));
+            assert!(std::ptr::eq(
+                packet.stamps[0].owner().unwrap(),
+                owner.as_ref()
+            ));
             17
         });
         assert_eq!(success, 17);
@@ -64,6 +71,9 @@ fn borrowed_witness_keeps_complete_packet_allocation_and_owner_identity_on_all_e
             vec![stamp.clone(), changed.clone(), third]
         );
         assert_eq!(completed.qualified, qualified);
-        assert!(Arc::ptr_eq(completed.stamps[0].owner().unwrap(), &owner));
+        assert!(std::ptr::eq(
+            completed.stamps[0].owner().unwrap(),
+            owner.as_ref()
+        ));
     }
 }
