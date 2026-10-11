@@ -31,3 +31,13 @@ is not a complete Check qualification and must not enter the merge queue.
 The temporary probes and scoped workflow will be excluded from any source
 fix handed to the config owner. A production cause and the original
 positive and refusal controls must be qualified before readiness.
+
+An independent startup ownership candidate remains unqualified: the
+original `startClient` publishes `client` only after asynchronous
+initialization. An overlapping explicit disable can observe no client,
+finish as disabled, and then receive a stale startup completion. A new
+controlled original initialize gate checks pending disable and ordinary
+completion with the full initialization options, original 20-second
+poll helper, exact shutdown/exit messages, and the owned child process
+exit. Its before/after messages are retained. This does not yet establish
+the cause of the original nested-file content-edit failure.

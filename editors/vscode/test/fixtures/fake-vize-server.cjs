@@ -87,7 +87,7 @@ function handleMessage(message) {
   if (message.method === "initialize") {
     activeInitializationOptions = message.params?.initializationOptions ?? {};
     workspaceRootUri = message.params?.rootUri ?? workspaceRootUri;
-    send({
+    const response = {
       id: message.id,
       jsonrpc: "2.0",
       result: {
@@ -97,7 +97,19 @@ function handleMessage(message) {
           version,
         },
       },
-    });
+    };
+    const gate = process.env.VIZE_TEST_SERVER_INITIALIZE_GATE;
+    if (gate && !fs.existsSync(gate)) {
+      appendLog({ event: "initialize-gated", gate });
+      const timer = setInterval(() => {
+        if (fs.existsSync(gate)) {
+          clearInterval(timer);
+          send(response);
+        }
+      }, 10);
+    } else {
+      send(response);
+    }
     return;
   }
 
