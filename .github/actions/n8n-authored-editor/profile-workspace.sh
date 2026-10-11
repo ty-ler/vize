@@ -18,10 +18,13 @@ while IFS= read -r candidate; do
     perf_executable="$candidate"
     break
   fi
-done < <(rg --files /usr/lib/linux-tools | sort | while IFS= read -r candidate; do
+done < <(rg --files --follow /usr/lib/linux-tools | sort | while IFS= read -r candidate; do
   [[ "$candidate" == */perf ]] && printf '%s\n' "$candidate"
 done)
-test -n "$perf_executable"
+if [[ -z "$perf_executable" ]]; then
+  printf '%s\n' 'No usable perf executable was found in the installed Linux tools.' >&2
+  exit 1
+fi
 strace --version > "$output/strace-version.txt"
 
 consumer_pid=""
