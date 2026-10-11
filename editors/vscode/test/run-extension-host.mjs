@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runTests } from "@vscode/test-electron";
+import { retainHostOutputBeforeCleanup } from "./host-output.mjs";
 
 const extensionDevelopmentPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixtureWorkspacePath = path.join(
@@ -87,5 +88,5 @@ try {
   });
   throw error;
 } finally {
-  fs.rmSync(profilePath, { force: true, recursive: true });
+  retainHostOutputBeforeCleanup(profilePath, path.join(testDataPath, "output-channel"));
 }
