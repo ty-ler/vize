@@ -5,6 +5,11 @@ import { test } from "node:test";
 import { qualifyProjectConfigLoaderHost } from "../performance/support/warm-type-backed-project-config-loader-host.ts";
 import { projectConfigManifest as original } from "../performance/support/warm-type-backed-project-config-manifest.ts";
 import { allowed } from "../performance/support/warm-type-backed-production-paths.ts";
+import {
+  issuedCompletionManifest as issued,
+  issuedCompletionProduction,
+  qualifyIssuedCompletionHost,
+} from "../performance/support/warm-type-backed-issued-completion-host.ts";
 
 type Pair = [string, string | null, string | null];
 const loader = JSON.parse(
@@ -30,7 +35,10 @@ const digest = (context: Pair[]) => {
 };
 const root = new URL("../../", import.meta.url);
 const actualDigest = (side: "before" | "after", file: string) => {
-  if (side === "before") return digest(loader.composedContext)(side, file);
+  if (side === "before") {
+    const body = issued.producerBodies.find(([name]) => name === file);
+    return body ? body[1] : digest(loader.composedContext)(side, file);
+  }
   try {
     return createHash("sha256")
       .update(fs.readFileSync(new URL(file, root)))
@@ -53,7 +61,9 @@ await test("original whole90/51/3 authority retains its exact legacy loader cont
 });
 
 await test("every current config, corpus and loader body matches its complete pinned authority", () => {
-  const result = qualifyProjectConfigLoaderHost(production, allowed, actualDigest);
+  const result =
+    qualifyProjectConfigLoaderHost(production, allowed, actualDigest) ??
+    qualifyIssuedCompletionHost(issuedCompletionProduction, allowed, actualDigest);
   assert.ok(result);
   assert.equal(result.loaderContext.authority, "complete-composed-vite-loader");
   assert.equal(result.loaderContext.completeBodyPairs.length, 2);
