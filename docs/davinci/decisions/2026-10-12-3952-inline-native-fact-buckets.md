@@ -4,6 +4,11 @@ Issue: [#3952](https://github.com/ubugeeei-prod/vize/issues/3952).
 This candidate is a separate draft child of
 [diagnostic PR #8688](https://github.com/ubugeeei-prod/vize/pull/8688),
 whose minimum source parent is `b63d18511ce087e5ef9f6b1da17031f258ef7276`.
+The actual branch parent is the repaired
+`0d0c47b87cc6812f6897c4d354c2d432371ae606`; its native producer and original
+workload bodies remain identical to that minimum parent. Linux tooling job
+`114535135317` passes all 16 hydration, owned-process, diagnostic and literal
+workflow/document preservation controls, including all four Linux process laws.
 The actual reviewed source is `ab497e944cbfb57952db8dad1f787b0f6df5cd9b`.
 The preceding [Linux occupancy receipt](./2026-10-12-3952-native-fact-occupancy-diagnostic.md)
 counts the whole full-key index, unlike its explicitly incomplete prospective
@@ -60,6 +65,12 @@ Run the original flag-unset n8n 1,391-file workload with its original bytes,
 oracle, 10-second typecheck deadline and full source/binary identities. Report
 its genuine cold timing separately from the 10x target. Preserve the original
 400-request pair and every native backend law.
+
+The original authored command builds with `--profile ci`. Its unchanged Cargo
+profile inherits `dev` with optimization level 0, debug assertions and 256 codegen
+units. The original 400-request pair uses the shipping release recipe. Keep both
+recipes and their separate qualification: a release result cannot substitute
+for the original authored deadline or establish a speed ratio between profiles.
 
 The original full warm/Misskey churn gate is also mandatory. On unchanged-main
 PR #8690 [Check 38158377107](https://github.com/ubugeeei-prod/vize/actions/runs/38158377107),
