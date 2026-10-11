@@ -89,15 +89,17 @@ Vite+ のプロジェクトでは、既存の Vite+ のクライアント型を�
 }
 ```
 
-Vite+ では `vite.config.ts` の helper の `compiler` フィールドに設定します。
+<span id="単独-cli-lsp-と共有する設定-任意"></span>
+
+## ネイティブ設定を共有する
+
+Vite+ では統合用の helper の `compiler` フィールドに設定します。
 通常の Vite では、`vize({ ... })` にオプションを直接渡します。
-CLI や LSP でも同じ設定を使う場合に限り、単独の共有設定を追加します。
-[設定ガイド](./configuration.md)に、統合ごとの設定場所をまとめています。
+CLI やエディターと共有するネイティブ設定は、同じ Vite 設定のトップレベルの `vize` にまとめます。
+[設定ガイド](./configuration.md)に、対応する記法、設定ファイルの検索方法、リリース状況をまとめています。
 
-## 単独 CLI/LSP と共有する設定（任意）
-
-CLI や LSP で同じ設定を使う場合は、`vize` の `defineConfig` と `vize.config.*` ファイルを使います。
-この helper を import する場合は、`vize` を直接の依存関係に追加してください。
+専用の `vize.config.*` ファイルも、必要に応じて使えます。
+`"vize"` から `defineConfig` を import する場合は、`vize` を直接の依存関係に追加してください。
 [単独設定リファレンス](./configuration-reference.md)に、ファイルの検索方法、TypeScript/JSON/PKL の例、スコープ別の設定をまとめています。
 Vite+ の統合タスクでは、`vite.config.ts` の helper を使います。
 
@@ -105,8 +107,9 @@ Vite+ の統合タスクでは、`vite.config.ts` の helper を使います。
 
 ## コンパイラ オプション
 
-`vize()` に直接渡したオプションは、`vize.config.*` の設定より優先します。
-優先順位は、直接渡したオプション、インラインの `config`、`vize.config.*`、既定値の順です。
+`vize()` に直接渡したオプションが優先され、次にインラインの `config`、検索で見つかったプロジェクト設定、既定値の順に適用します。
+同じディレクトリに両方ある場合は、`vize.config.*` が Vite 設定より優先されます。
+`config: false` で設定ファイルの自動検索を無効にできます。
 
 ```ts
 vize({
