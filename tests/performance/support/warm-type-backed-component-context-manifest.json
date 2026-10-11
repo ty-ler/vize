@@ -1,10 +1,10 @@
 {
   "version": 1,
   "originalComponentSource": "c0dc03760aaf8cdb4810e3ed0417c668a36c4721",
-  "parentSource": "416f16a50f5edfa4b163e0740365dda4649f51d4",
-  "reviewedSource": "4a89d85d3cf0e1799ecea17210e1e61786c52225",
+  "parentSource": "87280c063e6c49502b35f6f6fbe548a0e5a197aa",
+  "reviewedSource": "36486c694b5d8060f28b1997505cdd5528cc57f4",
   "originalConfigSource": "7386b2a79604ae5b74cb541be911eb19735e68b2",
-  "parentManifestSHA256": "e081fa0e43c2abce8da6a3e4318ca97e5b561f5dc8ef27daf48d53cdb266fa6a",
+  "parentManifestSHA256": "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc",
   "componentBodies": [
     [
       "crates/vize/src/commands/lint.rs",
@@ -194,7 +194,7 @@
     [
       "tests/performance/support/warm-type-backed-owner-resolve.ts",
       null,
-      "2d5d3d4a88ea8a0937ef8bcde1541b1ed5fed14f928ed1b2b7eb699925c12b77"
+      "61921cd757075d18507898458332dc1130590a619285b0862a8be719708ea44a"
     ]
   ],
   "originalComponentBodies": [
