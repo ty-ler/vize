@@ -101,6 +101,13 @@ test("public component archive refuses missing, duplicate, foreign or incomplete
     assert.throws(() => requireComponentChecksum(wrong, digest));
 });
 function processFixture(t: TestContext, suffix: string) {
+  // Isolate inherited NODE_OPTIONS only for this inert fixture, then restore it.
+  const nodeOptions = process.env.NODE_OPTIONS;
+  delete process.env.NODE_OPTIONS;
+  t.after(() => {
+    if (nodeOptions === undefined) delete process.env.NODE_OPTIONS;
+    else process.env.NODE_OPTIONS = nodeOptions;
+  });
   const root = mkdtempSync(path.join(os.tmpdir(), "vize-component-protocol-law-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const packet = { jsonrpc: "2.0", id: 2, result: null },
