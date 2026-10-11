@@ -195,24 +195,21 @@ mod tests {
                 .is_some()
         );
         assert!(project.find_by_original(&ambient).is_none());
-        assert!(
-            project
-                .find_by_original(&entry)
-                .unwrap()
-                .content
-                .contains(root.join(".generated/ambient").to_str().unwrap())
+        assert_eq!(
+            project.find_by_original(&entry).unwrap().content.as_str(),
+            format!(
+                "import {{ ready }} from '#imports';\nimport '{}';\nexport {{ ready }};\n",
+                root.join(".generated/ambient").display()
+            )
         );
         let code =
             std::fs::read_to_string(project.virtual_root().join(".generated/first.d.ts")).unwrap();
-        assert!(
-            code.contains(
-                project
-                    .virtual_root()
-                    .join(".generated/second")
-                    .to_str()
-                    .unwrap()
-            ),
-            "{code}"
+        assert_eq!(
+            code,
+            format!(
+                "export * from '{}';\n",
+                project.virtual_root().join(".generated/second").display()
+            )
         );
     }
 }
