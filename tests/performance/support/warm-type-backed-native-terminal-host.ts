@@ -4,7 +4,7 @@ import fs from "node:fs";
 
 type Digest = (side: "before" | "after", file: string) => string | null;
 type LockDigests = Record<string, string>;
-const manifest = JSON.parse(
+const metadata = JSON.parse(
   fs.readFileSync(
     new URL("./warm-type-backed-native-terminal-manifest.json", import.meta.url),
     "utf8",
@@ -13,15 +13,31 @@ const manifest = JSON.parse(
   version: number;
   originalSource: string;
   reviewedSource: string;
-  files: Array<[string, string | null, string]>;
   preservedBodies: Array<[string, string]>;
+  qualifiedHarnessBodies: Array<[string, string | null, string]>;
 };
+export const nativeTerminalManifest = {
+  ...metadata,
+  files: [1, 2].flatMap(
+    (part) =>
+      JSON.parse(
+        fs.readFileSync(
+          new URL(`./warm-type-backed-native-terminal-members-${part}.json`, import.meta.url),
+          "utf8",
+        ),
+      ) as Array<[string, string | null, string]>,
+  ),
+};
+const manifest = nativeTerminalManifest;
 const manifestSHA256 = createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
-assert.equal(manifestSHA256, "35a4edd0babaca30cb5e484e6724b6b4a700fbb36e783f340ed22498d1a21ac5");
+assert.equal(manifestSHA256, "933bef4b59149d9e9f659f40eea03ce301cb8c1899af43d3d472b00e7af04ede");
 assert.equal(manifest.version, 1);
 assert.equal(manifest.originalSource, "006c564067bacd05be9eac5660e34992e0bdabe8");
-assert.equal(manifest.files.length, 116);
+assert.equal(manifest.files.length, 118);
 assert.equal(new Set(manifest.files.map(([file]) => file)).size, manifest.files.length);
+assert.equal(manifest.preservedBodies.length, 23);
+assert.equal(manifest.qualifiedHarnessBodies.length, 2);
+assert.equal(new Set(manifest.qualifiedHarnessBodies.map(([file]) => file)).size, 2);
 for (const [, before, after] of manifest.files) {
   if (before !== null) assert.match(before, /^[a-f0-9]{64}$/u);
   assert.match(after, /^[a-f0-9]{64}$/u);
@@ -45,8 +61,14 @@ export function qualifyNativeTerminalHost(
     return null;
   for (const [file, before, after] of manifest.files)
     if (digest("before", file) !== before || digest("after", file) !== after) return null;
-  for (const [file, original] of manifest.preservedBodies)
-    if (digest("before", file) !== original || digest("after", file) !== original) return null;
+  for (const [file, original] of manifest.preservedBodies) {
+    const harness = manifest.qualifiedHarnessBodies.find(([path]) => path === file);
+    if (harness && harness[1] !== original) return null;
+    if (digest("before", file) !== original || digest("after", file) !== (harness?.[2] ?? original))
+      return null;
+  }
+  for (const [file, before, after] of manifest.qualifiedHarnessBodies)
+    if (digest("before", file) !== before || digest("after", file) !== after) return null;
   return {
     authority: "complete-reviewed-native-terminal-repair",
     manifestSHA256,
@@ -54,6 +76,7 @@ export function qualifyNativeTerminalHost(
     reviewedSource: manifest.reviewedSource,
     completeBodyPairs: manifest.files.length,
     preservedBodyPairs: manifest.preservedBodies.length,
+    qualifiedHarnessBodyPairs: manifest.qualifiedHarnessBodies.length,
     files: expected,
   };
 }

@@ -1,31 +1,22 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { test } from "node:test";
 import {
   assertNativeTerminalLocks,
+  nativeTerminalManifest,
   qualifyNativeTerminalHost,
 } from "../performance/support/warm-type-backed-native-terminal-host.ts";
 
-const manifest = JSON.parse(
-  fs.readFileSync(
-    new URL(
-      "../performance/support/warm-type-backed-native-terminal-manifest.json",
-      import.meta.url,
-    ),
-    "utf8",
-  ),
-) as {
-  originalSource: string;
-  files: Array<[string, string | null, string]>;
-  preservedBodies: Array<[string, string]>;
-};
+const manifest = nativeTerminalManifest;
 const entries = new Map(manifest.files.map(([file, before, after]) => [file, { before, after }]));
 const preserved = new Map(manifest.preservedBodies);
+const harness = new Map(
+  manifest.qualifiedHarnessBodies.map(([file, before, after]) => [file, { before, after }]),
+);
 const production = [...entries.keys()];
 const digest = (side: "before" | "after", file: string) =>
-  entries.get(file)?.[side] ?? preserved.get(file) ?? null;
+  entries.get(file)?.[side] ?? harness.get(file)?.[side] ?? preserved.get(file) ?? null;
 const locks = (side: "before" | "after") =>
   Object.fromEntries(
     ["Cargo.toml", "Cargo.lock", "package.json", "pnpm-lock.yaml", "rust-toolchain.toml"].map(
@@ -38,6 +29,7 @@ test("the complete reviewed repair preserves every original request and admits i
   assert.ok(receipt);
   assert.equal(receipt.completeBodyPairs, production.length);
   assert.equal(receipt.preservedBodyPairs, 23);
+  assert.equal(receipt.qualifiedHarnessBodyPairs, 2);
   assert.deepEqual(receipt.files, production);
   assertNativeTerminalLocks(locks("before"), locks("after"), receipt);
   assert.throws(() => assertNativeTerminalLocks(locks("before"), locks("after"), null));
@@ -53,8 +45,12 @@ test("every current whole source and original request body matches the finite re
   assert.ok(qualifyNativeTerminalHost(production, new Set(), actual));
 });
 
-test("every original and reviewed member including absent original vendor bodies is bound", () => {
-  for (const [file] of [...manifest.files, ...manifest.preservedBodies])
+test("every original and reviewed member including absent vendor and final-guard bodies is bound", () => {
+  for (const [file] of [
+    ...manifest.files,
+    ...manifest.preservedBodies,
+    ...manifest.qualifiedHarnessBodies,
+  ])
     for (const side of ["before", "after"] as const)
       assert.equal(
         qualifyNativeTerminalHost(production, new Set(), (candidate, name) =>
@@ -63,6 +59,27 @@ test("every original and reviewed member including absent original vendor bodies
         null,
         `${side}:${file}`,
       );
+});
+
+test("a final guard cannot be omitted or enrolled over a foreign original body", () => {
+  for (const [file, before, after] of manifest.qualifiedHarnessBodies) {
+    assert.notEqual(before, after);
+    for (const replacement of [null, "f".repeat(64)]) {
+      if (replacement !== before)
+        assert.equal(
+          qualifyNativeTerminalHost(production, new Set(), (side, name) =>
+            side === "before" && name === file ? replacement : digest(side, name),
+          ),
+          null,
+        );
+      assert.equal(
+        qualifyNativeTerminalHost(production, new Set(), (side, name) =>
+          side === "after" && name === file ? replacement : digest(side, name),
+        ),
+        null,
+      );
+    }
+  }
 });
 
 test("partial, duplicated and foreign production closures cannot enter the original400 run", () => {
@@ -120,9 +137,14 @@ test("original lock or provider changes still refuse even with a valid complete 
 });
 
 test("the Cargo lock changes only registry custody for the same two published 1.14 packages", () => {
-  const original = execFileSync("git", ["show", `${manifest.originalSource}:Cargo.lock`], {
-    encoding: "utf8",
-  });
+  const original = fs.readFileSync(
+    new URL("../_fixtures/corsa-process-receipt/original-006c-Cargo.lock", import.meta.url),
+    "utf8",
+  );
+  assert.equal(
+    createHash("sha256").update(original).digest("hex"),
+    entries.get("Cargo.lock")!.before,
+  );
   const expected = original
     .split("[[package]]")
     .map((section) => {
