@@ -195,6 +195,7 @@ jobs:
           done
           test "$controls_failed" -eq 0
       - name: Check actual Canon production source with Clippy
+        if: ${{ !cancelled() }}
         run: |
           rustup component add clippy
           cargo clippy --locked --profile ci -p vize_canon --lib -- -D warnings -D clippy::wildcard_imports

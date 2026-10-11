@@ -89,6 +89,18 @@ later configuration/ownership refusals. Canon production Clippy follows in the
 same cached job with the original warning and wildcard-import errors enforced;
 this scoped evidence does not replace the eventual full-workspace gate.
 
+[Run 38109645576](https://github.com/ubugeeei-prod/vize/actions/runs/38109645576)
+executes all seven filters: compiler-chain 6/6, construction 2/2, typed-router
+9/9, package-index 10/10 and stamp 35/35 pass. Dependency-consumption passes
+6/7 and native-context passes 95/104. The new bare-package control compares a
+lazy alias lookup after installation; its correction takes the actual original
+alias snapshot before installation and retains the whole-value comparisons.
+The other nine existing laws expose real initial-key, scoped-negative, shadow,
+materialization, rename, retained-buffer and repeated-occurrence failures.
+Their original assertions remain. Clippy was skipped after the failed law step;
+its independent source check will still run after failed tests, and every failed
+law continues to block lifecycle admission.
+
 Hosted qualification is pending. The n8n job compiles Canon's actual library test
 module, then executes compiler-options, construction, typed-router, package-index,
 dependency-consumption, native-context and package-stamp controls before the

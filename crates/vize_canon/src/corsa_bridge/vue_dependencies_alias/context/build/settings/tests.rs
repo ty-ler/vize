@@ -99,6 +99,8 @@ fn bare_config_package_is_qualified_only_after_its_actual_chain_is_installed() {
     let cold_legacy = configured_project(&source, options, environment).unwrap();
     let cold = configured_project_observed(&source, options, environment).unwrap();
     assert!(!cold.qualified, "a missing selected bare chain stays cold");
+    let cold_aliases = cold.value.dependency_alias_map();
+    assert_eq!(cold_aliases, cold_legacy.dependency_alias_map());
 
     let installed = editor.join("node_modules/@fixture/typescript-config");
     std::fs::create_dir_all(&installed).unwrap();
@@ -123,10 +125,7 @@ fn bare_config_package_is_qualified_only_after_its_actual_chain_is_installed() {
         cold.value.source_file_policy(),
         complete.value.source_file_policy()
     );
-    assert_ne!(
-        cold.value.dependency_alias_map(),
-        complete.value.dependency_alias_map()
-    );
+    assert_ne!(cold_aliases, complete.value.dependency_alias_map());
     for (actual, legacy) in [(&cold, &cold_legacy), (&complete, &complete_legacy)] {
         assert_eq!(legacy.project_root(), actual.value.project_root());
         assert_eq!(legacy.virtual_root(), actual.value.virtual_root());
