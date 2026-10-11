@@ -3,23 +3,9 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { test } from "node:test";
 import { qualifyProjectConfigHost } from "../performance/support/warm-type-backed-project-config-host.ts";
+import { projectConfigManifest as manifest } from "../performance/support/warm-type-backed-project-config-manifest.ts";
 import { allowed } from "../performance/support/warm-type-backed-production-paths.ts";
 
-const manifest = JSON.parse(
-  fs.readFileSync(
-    new URL(
-      "../performance/support/warm-type-backed-project-config-manifest.json",
-      import.meta.url,
-    ),
-    "utf8",
-  ),
-) as {
-  originalSource: string;
-  reviewedSource: string;
-  files: Array<[string, string | null, string]>;
-  preservedBodies: Array<[string, string, string]>;
-  harnessExtensions: Array<[string, null, string]>;
-};
 const entries = new Map(manifest.files.map(([file, before, after]) => [file, { before, after }]));
 const preserved = new Map(
   manifest.preservedBodies.map(([file, before, after]) => [file, { before, after }]),
@@ -31,7 +17,7 @@ const production = [...entries.keys()];
 const digest = (side: "before" | "after", file: string) =>
   entries.get(file)?.[side] ?? preserved.get(file)?.[side] ?? extensions.get(file)?.[side] ?? null;
 
-test("the complete reviewed configuration slice qualifies for actual original400 measurement", () => {
+await test("the complete reviewed configuration slice qualifies for actual original400 measurement", () => {
   const result = qualifyProjectConfigHost(production, new Set(), digest);
   assert.ok(result);
   assert.equal(result.completeBodyPairs, 90);
@@ -39,13 +25,13 @@ test("the complete reviewed configuration slice qualifies for actual original400
   assert.deepEqual(result.files, production);
 });
 
-test("the actual composed production selector admits the complete configuration source pair", () => {
+await test("the actual composed production selector admits the complete configuration source pair", () => {
   assert.ok(qualifyProjectConfigHost(production, allowed, digest));
   assert.ok(allowed.has("crates/vize_canon/src/lsp_client.rs"));
   assert.equal(allowed.has("crates/vize/tests/project_config_cli.rs"), false);
 });
 
-test("qualification binds every current source and whole unchanged corpus and recipe", () => {
+await test("qualification binds every current source and whole unchanged corpus and recipe", () => {
   const actual = (side: "before" | "after", file: string) =>
     side === "before"
       ? digest(side, file)
@@ -55,7 +41,7 @@ test("qualification binds every current source and whole unchanged corpus and re
   assert.ok(qualifyProjectConfigHost(production, new Set(), actual));
 });
 
-test("each original and current source body including absent new owners is mandatory", () => {
+await test("each original and current source body including absent new owners is mandatory", () => {
   for (const file of production)
     for (const side of ["before", "after"] as const)
       assert.equal(
@@ -67,7 +53,7 @@ test("each original and current source body including absent new owners is manda
       );
 });
 
-test("whole original400, config, native, build, ceiling and finite extension bodies cannot drift", () => {
+await test("whole original400, config, native, build, ceiling and finite extension bodies cannot drift", () => {
   for (const file of [...preserved.keys(), ...extensions.keys()])
     for (const side of ["before", "after"] as const)
       assert.equal(
@@ -79,7 +65,7 @@ test("whole original400, config, native, build, ceiling and finite extension bod
       );
 });
 
-test("unknown, omitted, duplicate and already-owned paths cannot receive partial qualification", () => {
+await test("unknown, omitted, duplicate and already-owned paths cannot receive partial qualification", () => {
   assert.equal(
     qualifyProjectConfigHost([...production, "crates/vize/src/unreviewed.rs"], new Set(), digest),
     null,
