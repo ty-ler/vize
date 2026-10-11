@@ -2,6 +2,7 @@
 
 use super::super::{
     FactRole, FxHashMap, FxHashSet, PackageRouteKey, PackageSources, Path, PathBuf, VirtualProject,
+    take,
 };
 use crate::{PackageResolutionContext, PackageRoute, PackageRouteBinding};
 

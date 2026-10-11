@@ -2,7 +2,7 @@
 //! the test, rather than inferred from filesystem timestamps or target visits.
 
 use super::observed::WalkFacts;
-use super::{FxHashSet, Path, PathBuf, VirtualProject};
+use super::{DependencyConsumption, FxHashSet, Path, PathBuf, VirtualProject};
 use crate::package_route::stamp::{Consumed, FactRole, SourceRevisionFact};
 
 #[expect(clippy::disallowed_types, reason = "whole source fixture packets")]
@@ -185,13 +185,15 @@ fn both_actual_initial_registered_lists_own_keys_without_completing_unwalked_sou
                 &Default::default(),
                 &[],
                 None,
-                Some(Consumed {
-                    value: Vec::new(),
-                    stamps: Vec::new(),
-                    qualified: true,
-                }),
-                None,
-                None,
+                DependencyConsumption {
+                    aliases: Some(Consumed {
+                        value: Vec::new(),
+                        stamps: Vec::new(),
+                        qualified: true,
+                    }),
+                    resolver: None,
+                    registered_roots: None,
+                },
             )
             .unwrap();
         let keys = consumed

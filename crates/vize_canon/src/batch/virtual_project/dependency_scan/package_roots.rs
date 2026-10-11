@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use super::VirtualProject;
 
 impl VirtualProject {
-    pub(super) fn raw_package_roots_are_indexed(&self) -> (bool, usize) {
+    pub(in super::super) fn raw_package_roots_are_indexed(&self) -> (bool, usize) {
         let mut checked_roots = 0;
         let complete = self.package_routes.iter().all(|(key, binding)| {
             binding
@@ -16,7 +16,7 @@ impl VirtualProject {
         (complete, checked_roots)
     }
 
-    pub(super) fn package_roots_for_importer(
+    pub(in super::super) fn package_roots_for_importer(
         &self,
         importer: &Path,
         use_root_index: bool,

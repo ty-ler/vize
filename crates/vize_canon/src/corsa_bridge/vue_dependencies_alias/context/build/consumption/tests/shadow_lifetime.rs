@@ -2,7 +2,7 @@
 
 use super::super::NativeFacts;
 use crate::batch::virtual_project::VirtualProject;
-use crate::corsa_bridge::vue_dependencies_alias::context::cache::fingerprint::consumed::reconciled_are_current;
+use crate::corsa_bridge::vue_dependencies_alias::context::cache::reconciled_are_current;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
 use crate::{PackageResolutionContext, PackageResolutionMode, PackageRoute, PackageRouteBinding};
 use std::{
