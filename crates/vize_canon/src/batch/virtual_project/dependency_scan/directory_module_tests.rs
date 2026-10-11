@@ -1,6 +1,6 @@
 //! Directory specifiers keep the same authored barrel graph as the native checker.
 
-use super::{may_resolve_a_dependency, resolve_dependency};
+use super::{canonical_key, may_resolve_a_dependency, resolve_dependency};
 use crate::batch::virtual_project::VirtualProject;
 use std::fs;
 
@@ -30,18 +30,19 @@ fn exact_directory_imports_register_both_barrels_and_their_vue_dependency() {
     );
     assert_eq!(
         resolve_dependency("..", &nested, root.path(), &[]),
+        Some(nested.join("../index.ts"))
+    );
+    assert_eq!(
+        resolve_dependency("..", &nested, root.path(), &[]).and_then(|path| canonical_key(&path)),
         Some(parent.clone())
     );
     let mut project = VirtualProject::new(root.path()).unwrap();
     project.register_path(&story).unwrap();
     project.register_reachable_dependencies().unwrap();
     let registered = project.registered_original_paths_sorted();
-    for dependency in [story, sibling, parent, component] {
-        assert!(
-            registered.contains(&dependency),
-            "missing {dependency:?}: {registered:?}"
-        );
-    }
+    let mut expected = vec![story, sibling, parent, component];
+    expected.sort();
+    assert_eq!(registered, expected);
 }
 
 #[test]
