@@ -22,15 +22,15 @@ The correction distinguishes these outcomes during the same configuration
 operation. It preserves the original optional root value and every generated
 output. It does not add a fallback, a parser, a pipeline stage or another index.
 
-| Actual configuration outcome | Root value | Configuration authority |
-| --- | --- | --- |
-| Missing `plugins` field in a loaded options map | `None` | Known |
-| Empty plugin array or supported foreign plugin entries | `None` | Known |
-| Unsupported plugin field or entry shape | `None` | Unknown |
-| Selected typed-router plugin with malformed `rootDir` | `None` | Unknown |
-| Selected plugin whose default-root loader cannot complete | `None` | Unknown |
-| Selected plugin with an actual supported root and complete chain | Original root | Known |
-| Options map unavailable | `None` | Unknown |
+| Actual configuration outcome                                     | Root value            | Configuration authority |
+| ---------------------------------------------------------------- | --------------------- | ----------------------- |
+| Missing `plugins` field in a loaded options map                  | `None`                | Known                   |
+| Empty plugin array or supported foreign plugin entries           | `None`                | Known                   |
+| Unsupported plugin field or entry shape                          | `None`                | Unknown                 |
+| Selected typed-router plugin with malformed `rootDir`            | `None`                | Unknown                 |
+| Selected plugin whose default-root loader cannot complete        | Original loader value | Unknown                 |
+| Selected plugin with an actual supported root and complete chain | Original root         | Known                   |
+| Options map unavailable                                          | `None`                | Unknown                 |
 
 Unknown chain, source, owner and registration packets remain monotonic refusals.
 Retired-owner filtering cannot repair a configuration packet that was already
@@ -42,11 +42,11 @@ The pinned licensed n8n source is
 `e882e8a483f433facb47bab9b407d0ec00a81172`. Upstream remains read-only. The
 original registry, three authored components and requested lifecycle are retained.
 
-| Source and control | Terminal evidence |
-| --- | --- |
-| Original `b27e356647514d7fe3cc3d7f26f5643b31ae3ea3` | [Run 38104231472](https://github.com/ubugeeei-prod/vize/actions/runs/38104231472): deleted RunData dependency diagnostic timed out; producer was killed during shutdown. |
-| Numeric first-loss trace `6ec6d0c0d29b2e8bed59e397b592517b2e8c1961` | [Run 38106505497](https://github.com/ubugeeei-prod/vize/actions/runs/38106505497): configuration reason 40 precedes aggregate reason 21 in all fourteen cold graph constructions. No first-loss walker or retired-owner failure. |
-| Authentic installed control `329864a0fb` | [Run 38107871386](https://github.com/ubugeeei-prod/vize/actions/runs/38107871386): original CLI, slot, fixture and compiler checks pass; authored lifecycle fails in 538688 ms. Configuration reason 40 remains, with no unresolved-extends reason 95/96; actual dependency registration reason 76 follows. RunData version 5 produces an empty diagnostic packet instead of the required deleted-module diagnostic. |
+| Source and control                                                  | Terminal evidence                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Original `b27e356647514d7fe3cc3d7f26f5643b31ae3ea3`                 | [Run 38104231472](https://github.com/ubugeeei-prod/vize/actions/runs/38104231472): deleted RunData dependency diagnostic timed out; producer was killed during shutdown.                                                                                                                                                                                                                                             |
+| Numeric first-loss trace `6ec6d0c0d29b2e8bed59e397b592517b2e8c1961` | [Run 38106505497](https://github.com/ubugeeei-prod/vize/actions/runs/38106505497): configuration reason 40 precedes aggregate reason 21 in all fourteen cold graph constructions. No first-loss walker or retired-owner failure.                                                                                                                                                                                     |
+| Authentic installed control `329864a0fb`                            | [Run 38107871386](https://github.com/ubugeeei-prod/vize/actions/runs/38107871386): original CLI, slot, fixture and compiler checks pass; authored lifecycle fails in 538688 ms. Configuration reason 40 remains, with no unresolved-extends reason 95/96; actual dependency registration reason 76 follows. RunData version 5 produces an empty diagnostic packet instead of the required deleted-module diagnostic. |
 
 The installed control uses n8n's declared pnpm 12.4.2 and original frozen lockfile.
 It records wrapper/native producer hashes, original manifest/config/lock hashes,
@@ -290,3 +290,16 @@ adding the whole original shadow-value comparison. The source job now executes
 all Canon lib laws as well as every original filter and independent Clippy;
 whole workspace, allocation/instruction and original n8n lifecycle gates remain
 required. This source composition has not yet qualified for queue or release.
+
+Actual merged-main `c492469763`, run `38115554985`, executes every Canon
+lib law: 2,011 pass, zero fail and one original law is ignored. All nine
+filters pass 6/2/2/9/13/14/5/107/36, including exact importer identity, the
+complete readable-asset negative result and all cold guards. The authentic
+missing nearest-scope shadow fixture passes its unchanged original predicates
+and complete legacy-value comparison. Strict production Clippy then rejects
+the newly test-only original registration wrapper and a success-only match;
+gate only that retained wrapper with `cfg(test)` and keep the original success
+conditional. Full Check `38115557045` also rejects formatting in the authored
+corpus and this record; apply the formatter to those exact seven files without
+changing assertions, baselines or any source/refusal policy. Fresh exact-source
+workspace and lifecycle evidence is still required.

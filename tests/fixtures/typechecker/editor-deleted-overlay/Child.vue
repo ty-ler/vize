@@ -1,2 +1,4 @@
-<script setup lang='ts'>defineProps<{ current: string }>();</script>
+<script setup lang="ts">
+defineProps<{ current: string }>();
+</script>
 <template>{{ current }}</template>

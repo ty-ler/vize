@@ -318,9 +318,8 @@ impl VirtualProject {
                         None => self.register_path(&key),
                     }
                 };
-                match registered {
-                    Ok(()) => queue.push(key),
-                    Err(_) => {}
+                if registered.is_ok() {
+                    queue.push(key);
                 }
             }
             let released = self.replace_dependency_edges(&importer, dependency_targets);

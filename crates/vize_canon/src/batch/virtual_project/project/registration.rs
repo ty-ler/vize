@@ -10,6 +10,7 @@ use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 mod inferred;
 
 impl VirtualProject {
+    #[cfg(test)]
     pub(crate) fn register_path_observed(&mut self, path: &Path) -> CorsaResult<Consumed<()>> {
         let mut facts = empty(true);
         self.register_path_with_consumption(path, true, &mut facts)?;
