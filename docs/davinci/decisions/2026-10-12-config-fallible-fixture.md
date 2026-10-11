@@ -75,3 +75,21 @@ The `d0fc55afc5` native phase, project-native campaign and paired original400
 workflow passed separately. These receipts do not qualify the changed unit-entry
 source. Fresh exact-head Actions, protected merge and installed acceptance
 remain mandatory; full Matrix and performance completion remain unfinished.
+
+## Authenticate fixed historical commits in shallow checkouts
+
+The new historical strict-source law failed on both actual `1ce00ee` and
+`e466e9` tooling workers because their shallow checkout lacked the exact
+`9445ec5997104d2b9bdd3accf492e9b193738272` predecessor. The same complete
+law was reproduced failing in a private shallow repository containing only
+the four previously declared commits. This is missing source custody, not a
+change to any approved body or expectation.
+
+Fetch that one declared same-repository commit by its exact SHA when absent.
+Before original source reads, authenticate every declared commit from its
+complete raw bytes with replacement objects disabled, then keep all historical
+body reads on that raw object path. The identical full historical law passes
+after the bounded fetch; a replacement ref cannot substitute another body.
+All existing source assertions, cases, manifests and production remain intact.
+The original two Actions failure packets remain failed. Exact-head full source,
+native consumers and protected Stack qualification must run again.

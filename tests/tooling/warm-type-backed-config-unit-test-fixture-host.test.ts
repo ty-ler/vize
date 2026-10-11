@@ -19,33 +19,38 @@ import { projectConfigManifest } from "../performance/support/warm-type-backed-p
 import nullCompletion from "../performance/support/warm-type-backed-project-config-null-completion-manifest.json" with { type: "json" };
 import loader from "../performance/support/warm-type-backed-project-config-loader-manifest.json" with { type: "json" };
 import { canonBatchConfigProduction as production } from "./support/config-reviewed-source.ts";
-
 type Digest = (side: "before" | "after", file: string) => string | null;
 type Scope = "parent-pair" | "inherited";
 const root = new URL("../../", import.meta.url);
+const git = (...args: string[]) =>
+  spawnSync("git", ["--no-replace-objects", ...args], { cwd: root });
 const baseline = "a6633fb68b110d07abd5ee5a6049bc15f20f9c7f";
 const frozenResultSource = "f1c12ca48658cf503076a2072f4fa709e11f177b";
 for (const revision of [
   baseline,
   frozenResultSource,
+  resultFixture.predecessorSource,
   fixture.predecessorSource,
   fixture.fixtureSource,
-])
-  if (spawnSync("git", ["cat-file", "-e", `${revision}^{commit}`], { cwd: root }).status !== 0) {
-    const fetched = spawnSync("git", ["fetch", "--no-tags", "--depth=1", "origin", revision], {
-      cwd: root,
-    });
+]) {
+  if (git("cat-file", "-e", `${revision}^{commit}`).status !== 0) {
+    const fetched = git("fetch", "--no-tags", "--depth=1", "origin", revision);
     assert.equal(fetched.status, 0, fetched.stderr.toString());
   }
+  const object = git("cat-file", "commit", revision);
+  assert.equal(object.status, 0, object.stderr.toString());
+  const identity = createHash("sha1").update(`commit ${object.stdout.length}\0`);
+  identity.update(object.stdout);
+  assert.equal(identity.digest("hex"), revision);
+}
 const sha = (body: Buffer | string) => createHash("sha256").update(body).digest("hex");
 const gitBodies = new Map<string, Buffer | null>();
 const gitBody = (revision: string, file: string) => {
   const key = `${revision}:${file}`;
-  if (!gitBodies.has(key)) {
-    const result = spawnSync("git", ["show", key], { cwd: root });
-    assert.ok(result.status === 0 || result.status === 128);
-    gitBodies.set(key, result.status === 0 ? result.stdout : null);
-  }
+  if (gitBodies.has(key)) return gitBodies.get(key)!;
+  const result = git("show", key);
+  assert.ok(result.status === 0 || result.status === 128);
+  gitBodies.set(key, result.status === 0 ? result.stdout : null);
   return gitBodies.get(key)!;
 };
 const gitDigest = (revision: string, file: string) => {
@@ -172,7 +177,6 @@ export function proveCurrentUnitFixtureSource() {
     refused: negatives,
   };
 }
-
 /** Only the two declared historical fixture bodies may follow the actual Unit proof. */
 export function frozenResultFixtureBody(file: string): Buffer {
   assert.ok(historicalReadsClosed, "actual Unit source and refusal laws must close first");
@@ -184,7 +188,6 @@ export function frozenResultFixtureBody(file: string): Buffer {
   assert.equal(sha(body), row[2]);
   return body;
 }
-
 test("the unit-entry guard binds both current bodies and preserves the complete frozen Result authority", () => {
   assert.equal(
     configUnitTestFixtureManifestSHA256,
@@ -212,7 +215,6 @@ test("the unit-entry guard binds both current bodies and preserves the complete 
     "5e1ff5a44fdd69a4ae765016da471c29319fe7caa29de4c0c6967d812807ec04",
   );
 });
-
 test("all three unit entries preserve the full helper prefix and every authored native test token", () => {
   const file = fixture.productionBodies[0][0];
   const before = gitBody(fixture.predecessorSource, file)!.toString();
@@ -270,7 +272,6 @@ test("the complete current native113 source passes both scopes and all missing/f
     assert.equal(sha(frozenResultFixtureBody(file)), gitDigest(frozenResultSource, file));
   assert.throws(() => frozenResultFixtureBody("crates/foreign.rs"));
 });
-
 test("both complete strict and Result predecessor receipts remain independent of the current unit-entry receipt", () => {
   for (const revision of [resultFixture.predecessorSource, frozenResultSource]) {
     const original = qualify("parent-pair", (side, file) =>
@@ -285,7 +286,6 @@ test("both complete strict and Result predecessor receipts remain independent of
     assert.equal("configResultFixtureContext" in original, revision === frozenResultSource);
   }
 });
-
 test("the unit guard cannot invoke an authority for mixed, missing or foreign body pairs", () => {
   const [producer, , resultProducer, unitProducer] = fixture.productionBodies[0];
   const [caller, , resultCaller, unitCaller] = fixture.harnessBodies[0];
