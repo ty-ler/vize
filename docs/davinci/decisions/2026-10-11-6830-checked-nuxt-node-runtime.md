@@ -38,3 +38,14 @@ shared check-row setup and its composed qualifier, without a new workflow or
 checker runtime change. Genuine original full App preparation/check acceptance
 is pending. npmX's exact Lunaria URL still returns 404 and is a separate blocker;
 no alternate package or lock-field change is authorized by this runtime repair.
+
+The composed publication supplies that runtime in the existing shared App check
+action after repository runtime setup. Its side install and explicit Node child
+retain complete stdout/stderr, actual CLI version, real executable/version and
+binary SHA-256. The selected checker executable/version must be byte-identical
+before and after provision. Only the check suite exports the helper's executable
+variable. The dedicated qualifier already invokes that original shared action
+and inherits the same provision; it has no separate runtime path. Removing the
+added step leaves every original action input and step object unchanged. Bash
+syntax and formatting pass; real runner provision and full Nuxt/native acceptance
+remain pending until the single composed qualification finishes.
