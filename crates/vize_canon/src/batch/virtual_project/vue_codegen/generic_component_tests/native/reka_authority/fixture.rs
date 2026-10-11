@@ -13,6 +13,8 @@ use std::{
     process::Command,
 };
 
+mod binding;
+
 pub(super) const TARGET: &str = "packages/core/src/Toast/story/ToastDemo.story.vue";
 
 fn sha256(bytes: &[u8]) -> String {
@@ -242,6 +244,7 @@ pub(super) fn bind_native(prepared: &Value, native: &Value) -> Value {
         .filter(|source| {
             source["nativeSourceName"].as_str().is_some_and(|name| {
                 name.ends_with("/vue/dist/vue.d.ts")
+                    || name.ends_with("/vue/dist/vue.d.mts")
                     || name.ends_with("/@vue/runtime-core/dist/runtime-core.d.ts")
             })
         })
@@ -250,11 +253,21 @@ pub(super) fn bind_native(prepared: &Value, native: &Value) -> Value {
                 file["role"] == "installed-vue-declaration-candidate"
                     && file["physical"] == source["physical"]
             });
-            let matches = expected
-                .is_some_and(|file| file["sha256"] == source["completeNativeText"]["sha256"]);
-            json!({"nativeSource":source,"wholePreparedIdentity":expected,"qualified":matches})
+            binding::provider(prepared, source, expected)
         })
         .collect::<Vec<_>>();
-    json!({"bindings":bindings,"qualified":bindings.len() >= 2 && bindings.iter().all(|binding| binding["qualified"] == true),
+    let has_vue = bindings.iter().any(|binding| {
+        binding["nativeSource"]["nativeSourceName"]
+            .as_str()
+            .is_some_and(|name| {
+                name.ends_with("/vue/dist/vue.d.ts") || name.ends_with("/vue/dist/vue.d.mts")
+            })
+    });
+    let has_runtime_core = bindings.iter().any(|binding| {
+        binding["nativeSource"]["nativeSourceName"]
+            .as_str()
+            .is_some_and(|name| name.ends_with("/@vue/runtime-core/dist/runtime-core.d.ts"))
+    });
+    json!({"bindings":bindings,"qualified":has_vue && has_runtime_core && bindings.iter().all(|binding| binding["qualified"] == true),
         "scope":"native Vue and runtime-core source identities/text must bind to genuine pinned fixture-owned prepared declarations, without ambient fallback"})
 }

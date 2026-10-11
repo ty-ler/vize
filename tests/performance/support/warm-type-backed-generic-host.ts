@@ -39,4 +39,8 @@ export const genericHostPaths = [
   "crates/vize_canon/src/lsp_client/editor_lsp/batch_provider_receipt.rs",
   "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests.rs",
   "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests/batch_receipt.rs",
+  // Actual pinned package-export observers and full receipt binding mutations.
+  // ESM/CJS selection remains test-only; original native inputs/oracles are fixed.
+  "crates/vize_canon/src/lsp_client/editor_lsp/batch_provider_receipt/provider_export.rs",
+  "crates/vize_canon/src/batch/virtual_project/vue_codegen/generic_component_tests/native/reka_authority/fixture/binding.rs",
 ];

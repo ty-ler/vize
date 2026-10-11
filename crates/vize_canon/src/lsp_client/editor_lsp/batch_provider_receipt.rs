@@ -16,6 +16,8 @@ use serde_json::{Value, json};
 use std::{fs, path::Path};
 use vize_l0::cstr;
 
+mod provider_export;
+
 impl CorsaProjectClient {
     pub(crate) fn batch_provider_receipt_for_test(
         &mut self,
@@ -111,6 +113,7 @@ fn read_sources(
         let mut sources = Vec::new();
         for name in project.source_names().iter().filter(|name| {
             name.ends_with("/vue/dist/vue.d.ts")
+                || name.ends_with("/vue/dist/vue.d.mts")
                 || name.ends_with("/@vue/runtime-core/dist/runtime-core.d.ts")
                 || name.ends_with("/.nuxt/imports.d.ts")
                 || name.ends_with("/__vize_shared_helpers.d.ts")
@@ -130,12 +133,19 @@ fn read_sources(
             let physical = fs::canonicalize(text.file_name()).unwrap();
             let disk = fs::read(&physical).unwrap();
             let matches = disk == text.text().as_bytes();
+            let export =
+                if name.ends_with("/vue/dist/vue.d.ts") || name.ends_with("/vue/dist/vue.d.mts") {
+                    provider_export::receipt(name.as_str(), &physical, &retain)
+                } else {
+                    json!({"qualified":true,"scope":"not a Vue package entrypoint"})
+                };
             sources.push(json!({
                 "nativeSourceName":name,"nativeFileName":text.file_name(),
                 "nativePath":text.path(),"nativeUri":text.uri(),"physical":physical,
                 "completeNativeText":retain(text.text().as_bytes()),
                 "wholeEncodedPayload":retain(text.encoded_bytes()),
                 "completePhysicalBytes":retain(&disk),"nativeMatchesPhysical":matches,
+                "providerExport":export,
             }));
         }
         let missing = [
@@ -145,9 +155,10 @@ fn read_sources(
         .into_iter()
         .filter(|suffix| {
             !sources.iter().any(|source| {
-                source["nativeSourceName"]
-                    .as_str()
-                    .is_some_and(|name| name.ends_with(suffix))
+                source["nativeSourceName"].as_str().is_some_and(|name| {
+                    name.ends_with(suffix)
+                        || *suffix == "/vue/dist/vue.d.ts" && name.ends_with("/vue/dist/vue.d.mts")
+                })
             })
         })
         .collect::<Vec<_>>();
@@ -164,7 +175,8 @@ fn read_sources(
                 && ["absentProjectRefused","foreignDescriptorRefused","duplicateProjectRefused","changedWholeDescriptorRefused"]
                     .iter().all(|name|controls[*name] == true)
                 && source_refusals.iter().all(|refusal|refusal["refused"] == true)
-                && sources.iter().all(|source| source["nativeMatchesPhysical"] == true),
+                && sources.iter().all(|source| source["nativeMatchesPhysical"] == true
+                    && source["providerExport"]["qualified"] == true),
             "additionalReadScope":"selected loaded Vue/Nuxt/helper providers only; all source names are retained, unqueried bytes receive no read credit",
         })
     })();
