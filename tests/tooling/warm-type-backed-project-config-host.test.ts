@@ -89,13 +89,15 @@ await test("qualification binds every current source and whole unchanged corpus 
     assert.equal(result.authority, "complete-project-config-and-component-context-slices");
     return;
   }
-  const { qualifyCurrentComponentOwnerSource } =
-    await import("./support/component-owner-migration-source.ts");
+  const { qualifyCurrentComponentSuccessorSource: qualifyCurrentComponentOwnerSource } =
+    await import("./support/component-issued-source.ts");
   const successor = qualifyCurrentComponentOwnerSource();
   assert.ok(successor);
   assert.equal(
     successor.authority,
-    "complete-project-config-and-component-owner-migration-successor",
+    "issuedCompletionContext" in successor
+      ? "complete-project-config-component-issued-completion-successor"
+      : "complete-project-config-and-component-owner-migration-successor",
   );
 });
 

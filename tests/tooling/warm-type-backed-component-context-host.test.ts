@@ -112,8 +112,8 @@ for (const composed of [false, true]) {
             .update(fs.readFileSync(new URL("../../" + file, import.meta.url)))
             .digest("hex");
     if (qualifyComponentContextHost(production, allowed, actual)) return;
-    const { qualifyCurrentComponentOwnerSource } =
-      await import("./support/component-owner-migration-source.ts");
+    const { qualifyCurrentComponentSuccessorSource: qualifyCurrentComponentOwnerSource } =
+      await import("./support/component-issued-source.ts");
     assert.ok(qualifyCurrentComponentOwnerSource(composed));
   });
 }
