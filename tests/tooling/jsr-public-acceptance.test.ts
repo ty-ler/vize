@@ -96,8 +96,8 @@ test("enabled frozen H requires exact public seven-file bytes and all five offic
   );
   assert.equal(result.jsr?.sources?.length, 7);
   assert.equal(fixture.calls.filter(({ url }) => url.startsWith("https://jsr.io/")).length, 9);
-  for (const { url, init } of fixture.calls.filter(({ url }) =>
-    url.startsWith("https://jsr.io/") || url.startsWith("https://api.jsr.io/"),
+  for (const { url, init } of fixture.calls.filter(
+    ({ url }) => url.startsWith("https://jsr.io/") || url.startsWith("https://api.jsr.io/"),
   )) {
     assert.equal(init?.credentials, "omit", url);
     assert.equal(init?.redirect, "error", url);
@@ -211,10 +211,7 @@ test("actual registry metadata and package repository binding are distinct autho
   assert.equal(Object.hasOwn(registry, "githubRepository"), false);
   const result = await verifyPublication(fixture.plan, fixture.options);
   assert.equal(result.jsr?.packageMetadataUrl, fixture.packageMetadataUrl);
-  assert.equal(
-    fixture.calls.filter(({ url }) => url === fixture.packageMetadataUrl).length,
-    1,
-  );
+  assert.equal(fixture.calls.filter(({ url }) => url === fixture.packageMetadataUrl).length, 1);
   const valid = fixture.responses.get(fixture.packageMetadataUrl) as Record<string, unknown>;
   for (const bad of [
     { ...valid, scope: "other" },

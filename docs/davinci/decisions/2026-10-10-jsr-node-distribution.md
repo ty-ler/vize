@@ -121,3 +121,11 @@ The empty uncovered-route assertion, every existing route, and existing
 rendering boundaries remain unchanged. This records page review scope rather
 than JSR delivery; fresh source/browser and eventual published support remain
 required.
+
+Corrected source `3e816303068bd4f9ee896ab02c84d99f9c105e2b` passed hosted JSR
+validation `38107085195`, including all 13 JSR laws and genuine publication
+dry-run. Its full Check `38107085231` failed formatting of the added regression
+in `jsr-public-acceptance.test.ts`. Apply the repository's locked Oxfmt 0.63.0
+reflow only; every assertion, input, negative control and product byte remains
+unchanged. The failed source stays failed and the formatting successor requires
+fresh full Actions before protected admission.
