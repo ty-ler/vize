@@ -1,35 +1,16 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
 import { sha256 } from "./docs-render-worker-resources.mjs";
 import { createRenderJobs } from "../../../../docs/scripts/navigation-render-concurrency.ts";
+import { normalizeOrigin, normalizeHtmlOrigins } from "./docs-render-origin.mjs";
+export { normalizeOrigin } from "./docs-render-origin.mjs";
 
 async function json(file) {
   return JSON.parse(await readFile(file, "utf8"));
-}
-
-/** Normalize only one authenticated invocation's transport origin, preserving all URL operands. */
-export function normalizeOrigin(value, origin) {
-  assert(
-    /^http:\/\/127\.0\.0\.1:\d+$/.test(origin),
-    "Authenticated ephemeral static-server origin",
-  );
-  if (typeof value === "string")
-    return value
-      .split(origin)
-      .map((part, index) => {
-        if (index === 0) return part;
-        return `${part === "" || /^[/?#"'\s<>)]/.test(part) ? "http://docs-render.invalid" : origin}${part}`;
-      })
-      .join("");
-  if (Array.isArray(value)) return value.map((entry) => normalizeOrigin(entry, origin));
-  if (value && typeof value === "object")
-    return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [key, normalizeOrigin(entry, origin)]),
-    );
-  return value;
 }
 
 export async function authenticateFiles(value, directory, origin, journal, files = new Map()) {
@@ -55,14 +36,16 @@ export async function authenticateFiles(value, directory, origin, journal, files
     if (value.file.endsWith(".html")) {
       const text = bytes.toString("utf8");
       assert.deepEqual(Buffer.from(text), bytes, `${file}: complete UTF8 HTML`);
-      const canonical = Buffer.from(normalizeOrigin(text, origin));
+      const canonicalText = normalizeHtmlOrigins(text, origin);
+      const canonical = Buffer.from(canonicalText);
       journal.push({
         file: value.file,
         rawSha256: value.sha256,
         rawBytes: bytes.length,
         canonicalSha256: sha256(canonical),
         canonicalBytes: canonical.length,
-        replacedOrigins: text.split(origin).length - 1,
+        canonicalizedAttributeOrigins:
+          text.split(origin).length - canonicalText.split(origin).length,
       });
       return { ...value, bytes: canonical.length, sha256: sha256(canonical) };
     }
@@ -196,6 +179,18 @@ async function compare(baseline, candidate, output) {
     result.expectedJobs = two.expected.length;
     result.rendererSha256 = rendererSha256;
     result.sourceSha = two.resources.sourceSha;
+    assert.equal(
+      result.sourceSha,
+      execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+      "Receiver checks out the actual measured source SHA",
+    );
+    result.verifier = {
+      workflowSourceSha: process.env.GITHUB_SHA ?? null,
+      comparatorSha256: sha256(await readFile(new URL(import.meta.url))),
+      originNormalizerSha256: sha256(
+        await readFile(new URL("./docs-render-origin.mjs", import.meta.url)),
+      ),
+    };
     result.arms = [two.resources, four.resources];
     result.htmlOriginCanonicalization = [two.journal, four.journal];
     assert.equal(four.resources.sourceSha, two.resources.sourceSha);

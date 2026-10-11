@@ -8,8 +8,12 @@ on:
       component:
         description: Compare serial and concurrent execution on the same source
         type: choice
-        options: [all, js, docs, rust, native, n8n-baseline, docs-workers]
+        options: [all, js, docs, rust, native, n8n-baseline, docs-workers, docs-workers-verify]
         default: all
+      measurement_run:
+        description: Completed original Docs worker measurement run to reauthenticate
+        type: string
+        default: ""
 permissions: { contents: read }
 concurrency:
   group: ci-walltime-${{ github.sha }}-${{ inputs.component || 'all' }}
@@ -96,6 +100,66 @@ jobs:
         with:
           name: ci-walltime-docs-${{ github.sha }}
           path: docs-render-evidence/ci-walltime/
+          if-no-files-found: error
+          retention-days: 14
+  docs-workers-verify:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.component == 'docs-workers-verify' }}
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 15
+    permissions: { contents: read, actions: read }
+    steps:
+      - name: Authenticate the completed original measurement source
+        id: measurement
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MEASUREMENT_RUN: ${{ inputs.measurement_run }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          from pathlib import Path
+          run_id = os.environ['MEASUREMENT_RUN']
+          assert re.fullmatch(r'[0-9]+', run_id), 'Exact original Actions run ID required'
+          repository = os.environ['GITHUB_REPOSITORY']
+          raw = subprocess.check_output(['gh', 'api', f'repos/{repository}/actions/runs/{run_id}'])
+          run = json.loads(raw)
+          assert run['repository']['full_name'] == repository
+          assert run['path'] == '.github/workflows/ci-walltime-benchmark.yml'
+          assert run['event'] == 'workflow_dispatch' and run['status'] == 'completed'
+          source = run['head_sha']
+          assert re.fullmatch(r'[0-9a-f]{40}', source)
+          Path(os.environ['RUNNER_TEMP'], 'docs-worker-original-run.json').write_bytes(raw)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'source_sha={source}\nartifact_name=ci-walltime-docs-{source}\n')
+          PY
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with: { ref: "${{ steps.measurement.outputs.source_sha }}" }
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with: { ref: "${{ github.sha }}", path: _verifier }
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with: { node-version-file: package.json, cache: false, run-install: false }
+      - name: Verify strict URL and whole-carrier receiver controls
+        run: vp node --test _verifier/tests/tooling/docs-render-worker-measurement.test.ts
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ steps.measurement.outputs.artifact_name }}
+          path: docs-render-evidence/ci-walltime
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.measurement_run }}
+      - name: Reauthenticate every original PNG and HTML with the corrected verifier
+        run: |
+          mkdir -p target/docs-worker-verification
+          cp "$RUNNER_TEMP/docs-worker-original-run.json" target/docs-worker-verification/original-run.json
+          for workers in 2 4; do
+            cp "docs-render-evidence/ci-walltime/workers-$workers/waited-resources.txt" "target/docs-worker-verification/workers-$workers-waited-resources.txt"
+            cp "docs-render-evidence/ci-walltime/workers-$workers/resources.json" "target/docs-worker-verification/workers-$workers-resources.json"
+          done
+          vp node _verifier/tools/support/compat/github/compare-docs-render-workers.mjs --baseline docs-render-evidence/ci-walltime/workers-2 --candidate docs-render-evidence/ci-walltime/workers-4 --output target/docs-worker-verification/worker-equivalence.json
+      - name: Preserve source-bound receiver evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docs-worker-verification-${{ github.sha }}-${{ inputs.measurement_run }}
+          path: target/docs-worker-verification/
           if-no-files-found: error
           retention-days: 14
   rust:

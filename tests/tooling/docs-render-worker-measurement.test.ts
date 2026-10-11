@@ -13,6 +13,7 @@ import {
   deriveDefaultJobs,
   normalizeOrigin,
 } from "../../tools/support/compat/github/compare-docs-render-workers.mjs";
+import { normalizeHtmlOrigins } from "../../tools/support/compat/github/docs-render-origin.mjs";
 
 void test("complete default manifest derives from authenticated original CLI without route selection", () => {
   const directory = path.resolve("measurement");
@@ -126,6 +127,54 @@ void test("ephemeral origin equivalence retains full URL paths, queries, anchors
   assert.notDeepEqual(
     normalizeOrigin({ ...original, sha256: "changed-PNG" }, "http://127.0.0.1:32100"),
     normalizeOrigin(original, "http://127.0.0.1:32100"),
+  );
+});
+
+void test("origin equivalence preserves foreign nested URLs and every authored literal", () => {
+  const origin = "http://127.0.0.1:32100";
+  const foreign = `https://foreign.example/redirect?next=${origin}/a`;
+  const otherForeign = "https://foreign.example/redirect?next=http://127.0.0.1:32101/a";
+  const literal = `${origin}/a`;
+  assert.deepEqual(normalizeOrigin({ href: foreign, code: literal, source: literal }, origin), {
+    href: foreign,
+    code: literal,
+    source: literal,
+  });
+  assert.notDeepEqual(
+    normalizeOrigin({ links: [foreign] }, origin),
+    normalizeOrigin({ links: [otherForeign] }, "http://127.0.0.1:32101"),
+  );
+  assert.equal(normalizeOrigin(literal, origin), literal);
+});
+
+void test("whole HTML changes only actual transport attributes and preserves text, code and foreign URLs", () => {
+  const origin = "http://127.0.0.1:32100";
+  const local = `${origin}/a?q=whole%20value&amp;other=retained#good`;
+  const foreign = `https://foreign.example/redirect?next=${origin}/a`;
+  const literal =
+    `<p>${origin}/literal</p><!-- <a href="${local}">comment</a> -->` +
+    `<script>const text='<a href="${local}">literal</a>';</script>` +
+    `<style>body{background:url(${local})}</style><textarea><a href="${local}"></textarea>` +
+    `<pre><code><a href="${local}">literal</a></code></pre>` +
+    `<code><code>nested</code><a href="${local}">literal</a></code>` +
+    `<a href="${foreign}" data-href="${local}">Foreign operand</a>` +
+    `<a title="literal href='${local}'" data-literal="text src='${local}'">Literal attributes</a>`;
+  const transport =
+    `<a href="${local}" title="angle > retained">Transport</a>` + `<img src='${origin}/image.png'>`;
+  assert.equal(normalizeHtmlOrigins(literal, origin), literal);
+  assert.equal(
+    normalizeHtmlOrigins(literal + transport, origin),
+    literal +
+      `<a href="http://docs-render.invalid/a?q=whole%20value&amp;other=retained#good" title="angle > retained">Transport</a>` +
+      "<img src='http://docs-render.invalid/image.png'>",
+  );
+  const other = "http://127.0.0.1:32101";
+  assert.notEqual(
+    normalizeHtmlOrigins(`<a href="${foreign}">Foreign</a>`, origin),
+    normalizeHtmlOrigins(
+      `<a href="https://foreign.example/redirect?next=${other}/a">Foreign</a>`,
+      other,
+    ),
   );
 });
 

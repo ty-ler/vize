@@ -61,9 +61,22 @@ outcomes; failure cannot establish a speedup.
 
 Authenticate every original PNG/HTML carrier hash before comparing complete
 receipts. Only the invocation's authenticated ephemeral static-server origin
-is canonicalized, retaining paths, queries, fragments and all foreign URLs.
+is canonicalized in measured URL fields and actual quoted DOM transport
+attributes, retaining paths, queries, fragments and all foreign URLs. Authored
+text, code, comments, raw script/style bodies and other attributes remain exact;
+a foreign URL's nested loopback operand is not a transport origin.
 Preserve the full original HTML bytes and a canonicalization journal; PNG
 hashes, layout rectangles, code and all remaining packet fields stay exact.
+
+Independent review found that a global origin substring replacement could erase
+authored or nested foreign operands. Add explicit negative controls and use the
+strict receiver for terminal acceptance. The immutable paired run
+`38111126388` measures source `4040e6b96a15d50680fa0dd93af272fe6cbd7276`;
+its original raw carriers remain authoritative. A manual `docs-workers-verify`
+invocation authenticates that completed run, checks out its measured source,
+downloads its original artifact and records the corrected verifier source and
+hashes separately. It neither rebuilds the site nor repeats browser measurements.
+The older comparator result alone cannot establish promotion readiness.
 
 Measured complete equivalence, peak resources and a useful walltime reduction
 are required before proposing four production workers. The unchanged-job-time

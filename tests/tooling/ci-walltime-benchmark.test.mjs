@@ -15,6 +15,7 @@ void test("walltime comparisons use the same source and runner without publishin
   assert.deepEqual(workflow.on.pull_request.types, ["opened", "reopened", "labeled"]);
   assert.deepEqual(Object.keys(workflow.jobs).sort(), [
     "docs",
+    "docs-workers-verify",
     "js",
     "n8n-baseline",
     "native",
@@ -59,6 +60,7 @@ void test("baseline input partitions are manual-only, build once and retain both
     "native",
     "n8n-baseline",
     "docs-workers",
+    "docs-workers-verify",
   ]);
   assert.equal(workflow.concurrency["cancel-in-progress"], false);
   const job = workflow.jobs["n8n-baseline"];
@@ -115,4 +117,32 @@ void test("baseline input partitions are manual-only, build once and retain both
     upload.with.path,
     "target/ci-walltime/\ntarget/oxlint-original-project-transport/\nnpm/native/.artifacts/native/formatter-history/build-receipt.json\nnpm/native/.artifacts/native/formatter-history/build-process.json\nnpm/native/.artifacts/native/formatter-history/cargo.stdout.bin\nnpm/native/.artifacts/native/formatter-history/cargo.stderr.bin\n",
   );
+});
+
+void test("Docs worker receiver is manual, source-bound and read-only without rebuilding measured workloads", () => {
+  const workflow = parse(
+    readFileSync(
+      new URL("../../.github/workflows/ci-walltime-benchmark.yml", import.meta.url),
+      "utf8",
+    ),
+  );
+  const job = workflow.jobs["docs-workers-verify"];
+  assert.equal(
+    job.if,
+    "${{ github.event_name == 'workflow_dispatch' && inputs.component == 'docs-workers-verify' }}",
+  );
+  assert.deepEqual(job.permissions, { contents: "read", actions: "read" });
+  assert.equal(job["timeout-minutes"], 15);
+  const [source, verifier] = job.steps.filter((step) => step.uses?.startsWith("actions/checkout@"));
+  assert.equal(source.with.ref, "${{ steps.measurement.outputs.source_sha }}");
+  assert.deepEqual(verifier.with, { ref: "${{ github.sha }}", path: "_verifier" });
+  const download = job.steps.find((step) => step.uses?.startsWith("actions/download-artifact@"));
+  assert.equal(download.with["run-id"], "${{ inputs.measurement_run }}");
+  const commands = job.steps.map((step) => step.run ?? "").join("\n");
+  assert.doesNotMatch(commands, /build:ci|verify-navigation-render\.ts|cargo test/);
+  assert.match(
+    commands,
+    /_verifier\/tools\/support\/compat\/github\/compare-docs-render-workers\.mjs/,
+  );
+  for (const step of job.steps) assert.equal(step["continue-on-error"], undefined);
 });
