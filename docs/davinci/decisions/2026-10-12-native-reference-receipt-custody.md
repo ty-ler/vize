@@ -76,6 +76,14 @@ absent, foreign, duplicate and changed whole descriptors must refuse. These
 metadata corruptions are refusal controls, not fabricated native answers or
 additional native diagnostic evidence.
 
+The original400 source gate keeps its original 26 generic members unchanged
+and explicitly adds nine provider-law members reachable only through
+`cfg(test)`. These are the six Vue Fes/ReKa law modules, provider reader, existing
+source-test registration and its new descriptor-binding child. The original
+3407 unknown-path refusal is preserved; no glob, benchmark input, response,
+timeout or budget changes. This admits the reviewed source to execute and
+does not qualify either native law or grant a measured performance result.
+
 ## Independent gates and remaining work
 
 The corrective original App row remains red: 32 tests, 26 passed, five failed,

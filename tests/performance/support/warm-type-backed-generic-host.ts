@@ -28,4 +28,15 @@ export const genericHostPaths = [
   "crates/vize_canon/src/virtual_ts/scope/component_event_navigation.rs",
   "crates/vize_canon/src/virtual_ts/scope/component_events/generic_inference.rs",
   "crates/vize_maestro/tests/snapshots/davinci_ts40_projection__davinci_ts40__generic-sfc__default.snap",
+  // Nine additive provider-law members, reachable only through cfg(test).
+  // The first full3407 pair refused before execution; original400 is unchanged.
+  "crates/vize_canon/src/batch/virtual_project/vue_codegen/generic_component_tests/native/reka_authority.rs",
+  "crates/vize_canon/src/batch/virtual_project/vue_codegen/generic_component_tests/native/reka_authority/fixture.rs",
+  "crates/vize_canon/src/batch/virtual_project/vue_codegen/generic_component_tests/native/reka_authority/owned_vue_tsc.rs",
+  "crates/vize_canon/src/batch/virtual_project/vue_codegen/generic_component_tests/native/vuefes.rs",
+  "crates/vize_canon/src/batch/virtual_project/vue_codegen/generic_component_tests/native/vuefes/fixture.rs",
+  "crates/vize_canon/src/batch/virtual_project/vue_codegen/generic_component_tests/native/vuefes/rows.rs",
+  "crates/vize_canon/src/lsp_client/editor_lsp/batch_provider_receipt.rs",
+  "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests.rs",
+  "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests/batch_receipt.rs",
 ];

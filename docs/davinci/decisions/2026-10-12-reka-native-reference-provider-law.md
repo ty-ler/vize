@@ -38,12 +38,12 @@ bound preparation Node executable. Retain the executable, inspection script,
 actual provider paths/versions/manifests, CLI sources and entire stdout/stderr.
 Require these four authored diagnostics at their original positions:
 
-| Source | Position | Diagnostic |
-| --- | --- | --- |
-| `ComboboxAsyncOptions.story.vue` | 14:34 | TS7006, parameter `i` |
-| `ComboboxAsyncOptions.story.vue` | 14:108 | TS7006, parameter `i` |
-| `DateRangeFieldValidation.story.vue` | 2:15 | TS2305, missing `Matcher` |
-| `DateRangeFieldValidation.story.vue` | 10:38 | TS7006, parameter `date` |
+| Source                               | Position | Diagnostic                |
+| ------------------------------------ | -------- | ------------------------- |
+| `ComboboxAsyncOptions.story.vue`     | 14:34    | TS7006, parameter `i`     |
+| `ComboboxAsyncOptions.story.vue`     | 14:108   | TS7006, parameter `i`     |
+| `DateRangeFieldValidation.story.vue` | 2:15     | TS2305, missing `Matcher` |
+| `DateRangeFieldValidation.story.vue` | 10:38    | TS7006, parameter `date`  |
 
 This checks the authored four. The configured vue-tsc program also includes
 other inputs and diagnostics; it grants no full native or public App parity.
@@ -88,3 +88,14 @@ configuration/options/owner authority and full prepared App acceptance remain
 separate pending gates. Compare the remaining configured vue-tsc diagnostics
 under matching input scopes before claiming full parity. This law does not
 update diagnostic goldens, close #6879 or prove merge/release acceptance.
+
+The first full `3407da4f4efa502f82624c483938af857ccba07f`
+original400 source job refused the seven new provider-law files before
+compilation. The exact finite scope now includes those test-only members.
+The parent registrations are already reviewed: all native children are
+reachable through `cfg(test)`, and provider receipts through
+`cfg(all(test, unix))`. Original inputs, complete response oracles and
+budgets remain unchanged; admission supplies no timing or correctness
+credit. The same source Check JS failure was Markdown table whitespace,
+now formatted without changing its content. Fresh exact-head Actions
+remains required.
