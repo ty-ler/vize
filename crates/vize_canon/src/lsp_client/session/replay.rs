@@ -106,7 +106,7 @@ mod tests {
         serde_json::from_str(include_str!(
             "../../../../../tests/_fixtures/differential/config/materialized-two-buffer-topology-8476.json"
         ))
-        .unwrap()
+        .expect("materialized two-buffer fixture must be valid JSON")
     }
 
     #[test]
