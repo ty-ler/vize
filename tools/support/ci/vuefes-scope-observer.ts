@@ -49,22 +49,26 @@ export async function captureVuefesPage(
   name: string,
   responses: ReturnType<typeof observeVuefesResponses>,
 ) {
+  try {
+    await captureVuefesPageComplete(page, name, responses);
+  } catch (error) {
+    const output = path.resolve("../target/app-e2e-logs/vuefes-scope");
+    const failure = { complete: false, name, error: String(error) };
+    try {
+      fs.mkdirSync(output, { recursive: true });
+      fs.writeFileSync(path.join(output, `${name}-error.json`), JSON.stringify(failure, null, 2));
+    } catch (writeError) {
+      console.error("VueFes observer failure", failure, String(writeError));
+    }
+  }
+}
+
+async function captureVuefesPageComplete(
+  page: Page,
+  name: string,
+  responses: ReturnType<typeof observeVuefesResponses>,
+) {
   const receipt = await page.evaluate(() => {
-    const serialize = (value: unknown, seen = new Set<unknown>()): unknown => {
-      if (value === undefined) return { type: "undefined" };
-      if (typeof value === "function") return { type: "function", source: value.toString() };
-      if (typeof value === "symbol") return { type: "symbol", value: value.toString() };
-      if (value === null || typeof value !== "object") return value;
-      if (seen.has(value)) return { type: "circular", constructor: value.constructor?.name };
-      seen.add(value);
-      const result = Array.isArray(value)
-        ? value.map((child) => serialize(child, seen))
-        : Object.fromEntries(
-            Object.entries(value).map(([key, child]) => [key, serialize(child, seen)]),
-          );
-      seen.delete(value);
-      return result;
-    };
     type RuleReceipt = {
       index: number;
       text: string;
@@ -105,21 +109,6 @@ export async function captureVuefesPage(
     const headings = [...document.querySelectorAll("h1,h2,h3,h4,h5,h6")].map((heading, order) => {
       const style = getComputedStyle(heading);
       const rect = heading.getBoundingClientRect();
-      const vue = (heading as HTMLElement & { __vueParentComponent?: any }).__vueParentComponent;
-      const instances = [];
-      for (let instance = vue; instance; instance = instance.parent) {
-        instances.push({
-          uid: instance.uid,
-          name: instance.type.__name ?? instance.type.name,
-          file: instance.type.__file,
-          scopeId: instance.type.__scopeId,
-          render: instance.render?.toString(),
-          props: serialize(instance.props),
-          attrs: serialize(instance.attrs),
-          vnodeScopeId: instance.vnode.scopeId,
-          slotScopeIds: instance.vnode.slotScopeIds,
-        });
-      }
       const matched = (list: RuleReceipt[], sheet: number, parents: string[] = []): unknown[] =>
         list.flatMap((rule) => {
           const nested = rule.children
@@ -159,7 +148,6 @@ export async function captureVuefesPage(
           Array.from(style, (name) => [name, style.getPropertyValue(name)]),
         ),
         pseudoBefore: { content: getComputedStyle(heading, "::before").content },
-        instances,
         matchedRules,
       };
     });
@@ -175,12 +163,130 @@ export async function captureVuefesPage(
       headings,
     };
   });
-  const text = JSON.stringify({ ...receipt, responses: await responses() }, null, 2) + "\n";
   const output = path.resolve("../target/app-e2e-logs/vuefes-scope");
   fs.mkdirSync(output, { recursive: true });
-  fs.writeFileSync(path.join(output, `${name}.json`), text);
-  fs.writeFileSync(
-    path.join(output, `${name}.sha256`),
-    createHash("sha256").update(text).digest("hex") + "\n",
-  );
+  const save = (suffix: string, value: unknown) => {
+    const text = JSON.stringify(value, null, 2) + "\n";
+    fs.writeFileSync(path.join(output, `${name}${suffix}.json`), text);
+    fs.writeFileSync(
+      path.join(output, `${name}${suffix}.sha256`),
+      createHash("sha256").update(text).digest("hex") + "\n",
+    );
+  };
+  const network = await responses();
+  save("-dom", { ...receipt, responses: network });
+  let vueGraph: unknown;
+  try {
+    vueGraph = await page.evaluate(() => {
+      const ids = new Map<object, number>();
+      const queue: object[] = [];
+      const errors: { node?: number; key?: unknown; error: string }[] = [];
+      const symbolIds = new Map<symbol, number>();
+      const symbols: unknown[] = [];
+      const symbolReference = (value: symbol) => {
+        let id = symbolIds.get(value);
+        if (id === undefined) {
+          id = symbols.length;
+          symbolIds.set(value, id);
+          symbols.push({
+            id,
+            description: value.description ?? { type: "undefined" },
+            globalKey: Symbol.keyFor(value) ?? { type: "undefined" },
+          });
+        }
+        return { symbolReference: id };
+      };
+      const encode = (value: unknown): unknown => {
+        if (value === undefined) return { type: "undefined" };
+        if (typeof value === "function") return { type: "function", source: value.toString() };
+        if (typeof value === "symbol") return symbolReference(value);
+        if (typeof value === "bigint") {
+          return { type: typeof value, value: value.toString() };
+        }
+        if (typeof value === "number" && !Number.isFinite(value)) {
+          return { type: "number", value: String(value) };
+        }
+        if (value === null || typeof value !== "object") return value;
+        let id = ids.get(value);
+        if (id === undefined) {
+          id = queue.length;
+          ids.set(value, id);
+          queue.push(value);
+        }
+        return { reference: id };
+      };
+      const instances: unknown[] = [];
+      const instanceIds = new Map<object, number>();
+      const headings = [...document.querySelectorAll("h1,h2,h3,h4,h5,h6")].map((heading, order) => {
+        const chain: number[] = [];
+        const seen = new Set<object>();
+        let cycle: number | undefined;
+        let instance = (heading as HTMLElement & { __vueParentComponent?: any })
+          .__vueParentComponent;
+        while (instance) {
+          let id = instanceIds.get(instance);
+          if (id === undefined) {
+            id = instances.length;
+            instanceIds.set(instance, id);
+            instances.push({
+              id,
+              uid: encode(instance.uid),
+              name: encode(instance.type.__name ?? instance.type.name),
+              file: encode(instance.type.__file),
+              scopeId: encode(instance.type.__scopeId),
+              render: encode(instance.render),
+              props: encode(instance.props),
+              attrs: encode(instance.attrs),
+              vnodeScopeId: encode(instance.vnode.scopeId),
+              slotScopeIds: encode(instance.vnode.slotScopeIds),
+            });
+          }
+          if (seen.has(instance)) {
+            cycle = id;
+            break;
+          }
+          seen.add(instance);
+          chain.push(id);
+          instance = instance.parent;
+        }
+        return { order, chain, cycle };
+      });
+      const nodes: unknown[] = [];
+      for (let id = 0; id < queue.length; id++) {
+        const value = queue[id];
+        const entries: { key: unknown; value?: unknown; error?: string }[] = [];
+        let keys: (string | symbol)[] = [];
+        try {
+          keys = Reflect.ownKeys(value).filter(
+            (key) => Object.getOwnPropertyDescriptor(value, key)?.enumerable,
+          );
+        } catch (error) {
+          errors.push({ node: id, error: String(error) });
+        }
+        for (const key of keys) {
+          const recordedKey = typeof key === "symbol" ? symbolReference(key) : key;
+          try {
+            entries.push({
+              key: recordedKey,
+              value: encode((value as Record<PropertyKey, unknown>)[key]),
+            });
+          } catch (error) {
+            entries.push({ key: recordedKey, error: String(error) });
+            errors.push({ node: id, key: recordedKey, error: String(error) });
+          }
+        }
+        nodes.push({
+          id,
+          array: Array.isArray(value),
+          length: Array.isArray(value) ? value.length : undefined,
+          entries,
+        });
+      }
+      return { complete: errors.length === 0, headings, instances, nodes, symbols, errors };
+    });
+  } catch (error) {
+    vueGraph = { complete: false, error: String(error) };
+  }
+  save("-vue", vueGraph);
+  save("", { ...receipt, responses: await responses(), vueGraph });
 }

@@ -54,24 +54,22 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
+          python3 .vuefes-observer/tools/support/ci/capture-vuefes-producer.py
+      - name: Preserve original strict post-build source diff gate
+        if: always()
+        run: |
+          set -euo pipefail
           test "$(git rev-parse HEAD)" = 605429c660b328bb03bec5bbfef15961e59fcaf0
           test "$(git -C tests/_fixtures/_git/vuefes-2025 rev-parse HEAD)" = 8eff3cd7dd79a7f47bbf2b78202b9aa2070ec5a6
           git diff --exit-code -- crates davinci npm Cargo.toml Cargo.lock package.json pnpm-lock.yaml pnpm-workspace.yaml
+      - name: Verify supplementary observer completeness separately
+        if: always()
+        run: |
           python3 - <<'PYINNER'
-          import hashlib, json, pathlib
-          root = pathlib.Path.cwd()
-          output = root / "target/app-e2e-logs/vuefes-scope"
-          records = []
-          for pattern in ("npm/native/*.node", "target/ci/vize", "tests/_fixtures/_git/vuefes-2025/app/components/**/VFHeading.vue", "tests/_fixtures/_git/vuefes-2025/app/assets/styles/main.css"):
-              for file in root.glob(pattern):
-                  if file.is_file():
-                      raw = file.read_bytes()
-                      records.append({"path": str(file.relative_to(root)), "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
-                      if file.suffix != ".node" and file.name != "vize":
-                          (output / file.name).write_bytes(raw)
-          assert any(row["path"].endswith(".node") for row in records), "missing actual compiled native identity"
-          assert any(row["path"].endswith("VFHeading.vue") for row in records), "missing literal pinned source"
-          (output / "actual-producer-identity.json").write_text(json.dumps(records, indent=2) + "\n")
+          import json, pathlib
+          receipt = pathlib.Path("target/app-e2e-logs/vuefes-scope/observer-completeness.json")
+          assert receipt.exists(), "missing supplementary observer completeness receipt"
+          assert json.loads(receipt.read_text())["complete"], "supplementary observer incomplete; original VRT verdict retained separately"
           PYINNER
       - name: Retain complete original screenshots and supplementary receipts
         if: always()
