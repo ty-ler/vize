@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "originalReviewedSource": "27243d0b5ed2e0ba24bf90a3904615f3ab628a6b",
+  "repairedSource": "877bc0eba89879ca08ef13fb192c4334c1a5ff32",
+  "originalReviewManifestSHA256": "1e3adcb1df0d9433add5e0903fe5d1b631787fc7df8bce094b677466e5d4a754",
+  "productionBodies": [
+    [
+      "crates/vize_maestro/src/server/project_contexts.rs",
+      null,
+      "8561d4c2f7021d824bd6fbc7e0157ed562ca53446a168177a7d7b204bd1a339e",
+      "509ae8123f61eba642c80d3c326a006ae079b60042ec43545932daac35b858da"
+    ],
+    [
+      "crates/vize_maestro/src/server/project_contexts/tests.rs",
+      null,
+      "53d2b77273839800c6b318066337d19479473999c468ae2aefcf97349aa323fe",
+      "587354f60a8511d41fd1db1aa512c19616da07c16878def7cb820e0cbb6458e3"
+    ],
+    [
+      "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs",
+      null,
+      "860ad749f0e1349c152a36178f0dd9b4778e179a0b953d9dcb4decaeb2bef799",
+      "b15ad8d54d87540c59b9d38e527093f23bab6c1488b76a68d6454d1d18ae684a"
+    ],
+    [
+      "crates/vize_maestro/src/source_project/navigation/tests/retirement.rs",
+      null,
+      "6d7ea01fdcb495c2c6bd97ea528ac3fff9cb686a98ad601a8f3f25dca4245ec8",
+      "d9a1f484a2540d9ce74dad2c10f7c50fc89335c7bb98f6a3cfb103401be3a87e"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/lifecycle.rs",
+      "bc864c48a8707d9b6b5172b0f962fc82e29846538c8b1c3b9b6efcf1b35c11a0",
+      "6aefd710345b4734bd3df270204c4e9553733ba4a8c2f95c3b0735906c5d05cc",
+      "d817b88ecb5ccda8edfaf8aec3bb26d06dbccccc459800648dd10b7e2e9bcc52"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/session.rs",
+      "9408751665c7142a94bfff93fd71d5852e69f8dc5af42340929334758415b128",
+      "e119f6f05305a302a7a5747e1b60676e69a7fac092ac5f1c15ac444ed4b5e63a",
+      "c365ad25cb028f7868333eb44c1b0eb1399b0ffbab289f7c7dc4b54701c656c1"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/session/replay.rs",
+      null,
+      "91786a3cd73bf8cf7a35ba5a5da589d67bbd445336db1d4f8b356215b99ef5d7",
+      "7e6604157741eb77f9736e6c84baabd49e5d0d0c6f6d9122d6aa12b5135fcead"
+    ]
+  ],
+  "corpusBodies": [
+    [
+      "tests/_fixtures/differential/config/materialized-two-buffer-topology-8476.json",
+      null,
+      "5ea737e5c9b450f7a6470946600632f57a2fdf976ce45fa7a5dcf51b2cf7b634"
+    ]
+  ]
+}
