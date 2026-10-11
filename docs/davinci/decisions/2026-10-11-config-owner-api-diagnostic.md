@@ -62,3 +62,22 @@ hashes are diagnostic metadata and cannot authenticate any attachment. An added
 control proves that inspecting this metadata neither consumes the stream nor
 qualifies its incomplete bytes. All original 79 requests, request windows,
 transcript limits and complete initialized shutdown/reap checks remain required.
+
+The pinned Corsa 1.14 attachment calls `ApiClient::connect_pipe`, whose Unix
+connection uses JSON-RPC. Full configuration and project authority therefore
+requires this actual socket traffic as well as the original native stdio
+messages. The observer retains both complete decoded directions and their byte
+hashes before discarding its private trace. Each API direction must bind the
+authenticated server inode and the same independent original client peer;
+foreign/shared writers, missing peers, partial frames and absent directions
+refuse qualification. These protocol facts grant no migration credit until the
+full selected source/member/config proof and original packet controls pass.
+
+The preserved first error is `strace: Can't fopen '/dev/stdout': No such device
+or address`: Node's actual original transport uses a Unix socket descriptor,
+which cannot be reopened as a filesystem file. The observer now consumes
+strace's inherited standard-error stream directly. Its documented `[pid N]`
+prefix remains an explicit kernel identity; missing PID prefixes still refuse
+authority. This adds no child launch and retains the existing five-second
+attachment/retirement windows and all transcript limits. See the pinned
+[strace 6.8 manual](https://github.com/strace/strace/blob/v6.8/doc/strace.1.in).

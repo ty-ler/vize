@@ -40,10 +40,10 @@ export class NativeProtocolStream {
 
   private accept(line: string) {
     if (!line) return;
-    const prefix = line.match(/^(\d+)\s+\d+\.\d+\s+(.*)$/u);
+    const prefix = line.match(/^(?:\[pid\s+(\d+)\]|(\d+))\s+\d+\.\d+\s+(.*)$/u);
     assert.ok(prefix, "each original syscall requires its kernel thread and timestamp");
-    const thread = Number(prefix[1]);
-    const body = prefix[2];
+    const thread = Number(prefix[1] ?? prefix[2]);
+    const body = prefix[3];
     let selected: boolean;
     if (body.startsWith("<... write resumed>")) {
       assert.ok(this.pending.has(thread), "a resumed syscall requires its original descriptor");

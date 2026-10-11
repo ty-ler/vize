@@ -24,10 +24,10 @@ export function syscallWrites(text: string): Write[] {
   const writes: Write[] = [];
   const pending = new Map<number, string>();
   for (const line of text.split("\n").filter(Boolean)) {
-    const prefix = line.match(/^(\d+)\s+\d+\.\d+\s+(.*)$/u);
+    const prefix = line.match(/^(?:\[pid\s+(\d+)\]|(\d+))\s+\d+\.\d+\s+(.*)$/u);
     assert.ok(prefix, "each syscall requires its actual thread and timestamp");
-    const thread = Number(prefix[1]);
-    let body = prefix[2];
+    const thread = Number(prefix[1] ?? prefix[2]);
+    let body = prefix[3];
     if (body.includes("<unfinished ...>")) {
       assert.equal(pending.has(thread), false);
       pending.set(thread, body.replace(/\s*<unfinished \.\.\.>$/u, ""));
@@ -137,6 +137,8 @@ export function nativeApiAttachments(
       socket: sockets[0],
       completeNativeStdinSHA256: sha256(Buffer.concat(stdin.map((write) => write.bytes))),
       completeNativeStdoutSHA256: sha256(Buffer.concat(stdout.map((write) => write.bytes))),
+      completeNativeStdin: requests,
+      completeNativeStdout: responses,
     };
   });
   assert.equal(

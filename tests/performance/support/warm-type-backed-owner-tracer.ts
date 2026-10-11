@@ -6,11 +6,13 @@ import { setTimeout } from "node:timers/promises";
 
 import {
   nativeApiAttachments,
+  syscallWrites,
   syscallTranscriptDigest,
   type NativeProcessWitness,
 } from "./warm-type-backed-owner-syscalls.ts";
 import { sha256 } from "./warm-type-backed-source.ts";
 import { NativeProtocolStream } from "./warm-type-backed-owner-protocol-stream.ts";
+import { nativeApiSocketTraffic } from "./warm-type-backed-owner-socket-traffic.ts";
 
 const MAX_TRANSCRIPT = 64 * 1024 * 1024;
 
@@ -123,26 +125,30 @@ export class NativeApiSyscallObserver {
         "trace=write",
         "-p",
         String(pid),
-        "-o",
-        "/dev/stdout",
       ],
       {
         stdio: ["ignore", "pipe", "pipe"],
       },
     );
-    this.child.stdout!.on("data", (chunk: Buffer) => {
+    // strace's inherited stderr accepts Node's actual socket-backed descriptor;
+    // reopening /dev/stdout as a file fails with ENXIO on that original transport.
+    this.child.stderr!.on("data", (chunk: Buffer) => {
       if (this.streamFailure) return;
+      const diagnostics = chunk
+        .toString("utf8")
+        .split("\n")
+        .filter((line) => /^(strace|sudo):/u.test(line))
+        .join("\n");
+      this.stderr = (this.stderr + diagnostics).slice(0, 65_536);
       try {
         this.stream.push(chunk);
       } catch (error) {
         this.streamFailure = error;
       }
     });
-    this.child.stderr!.on("data", (chunk: Buffer) => {
+    this.child.stdout!.on("data", () => {
       if (this.streamFailure) return;
-      this.stderr += chunk.toString("utf8");
-      if (Buffer.byteLength(this.stderr) > 65_536)
-        this.streamFailure = new Error("the independent observer's stderr exceeded its bound");
+      this.streamFailure = new Error("the independent syscall observer emitted unexpected stdout");
     });
     this.closed = new Promise((resolve, reject) => {
       this.child.once("error", reject);
@@ -159,6 +165,7 @@ export class NativeApiSyscallObserver {
       phase = "attach";
       const deadline = Date.now() + 5000;
       while (Date.now() < deadline) {
+        if (observer.streamFailure) throw observer.streamFailure;
         const status = fs.readFileSync(`/proc/${pid}/status`, "utf8");
         observer.tracerPid = Number(status.match(/^TracerPid:\s+(\d+)$/mu)?.[1]);
         if (observer.tracerPid > 0) {
@@ -253,6 +260,10 @@ export class NativeApiSyscallObserver {
       this.witnesses,
       this.parents,
     );
+    const writes = syscallWrites(fs.readFileSync(this.file, "utf8"));
+    const socketTraffic = attachments.map(({ process, socket }) =>
+      nativeApiSocketTraffic(writes, process, socket, this.parents),
+    );
     const result = {
       parent: this.parent,
       tracer: this.tracer,
@@ -260,6 +271,7 @@ export class NativeApiSyscallObserver {
       transcriptSHA256,
       protocolScope,
       attachments,
+      socketTraffic,
     };
     fs.writeFileSync(
       path.join(path.dirname(this.file), "native-api-attachments.json"),

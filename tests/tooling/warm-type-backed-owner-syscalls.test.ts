@@ -11,6 +11,7 @@ import {
   type NativeProcessWitness,
 } from "../performance/support/warm-type-backed-owner-syscalls.ts";
 import { NativeProtocolStream } from "../performance/support/warm-type-backed-owner-protocol-stream.ts";
+import { nativeApiSocketTraffic } from "../performance/support/warm-type-backed-owner-socket-traffic.ts";
 import { sha256 } from "../performance/support/warm-type-backed-source.ts";
 
 const request = {
@@ -135,6 +136,15 @@ await test("Unix socket peer arrows preserve the complete decorated descriptor a
   );
 });
 
+await test("inherited strace stderr retains exact kernel PID prefixes without inventing an owner", () => {
+  const stderr = (input + output).replace(/^(\d+) /gmu, "[pid $1] ");
+  const { selected, scope } = protocolStream(stderr);
+  assert.equal(selected, stderr);
+  assert.equal(scope.inputSHA256, sha256(Buffer.from(stderr)));
+  assert.deepEqual(nativeApiAttachments(selected, [native], [parent])[0].response, response);
+  assert.throws(() => protocolStream(stderr.replace(/^\[pid \d+\] /gmu, "")));
+});
+
 function protocolStream(text: string) {
   let selected = "";
   const stream = new NativeProtocolStream((line) => (selected += line));
@@ -206,6 +216,73 @@ await test("partial failure metadata preserves custody without completing or con
   assert.equal(complete.inputSHA256, sha256(Buffer.from(input + output)));
   assert.equal(complete.incompleteLineBytes, 0);
   assert.deepEqual(nativeApiAttachments(selected, [native], [parent])[0].response, response);
+});
+
+const projectRequest = {
+  jsonrpc: "2.0",
+  id: 2,
+  method: "getDefaultProjectForFile",
+  params: { snapshot: "snapshot-actual", file: "/fixture/Comp0.vue.ts" },
+};
+const projectResponse = {
+  jsonrpc: "2.0",
+  id: 2,
+  result: {
+    id: "project-actual",
+    configFileName: "/fixture/tsconfig.json",
+    compilerOptions: { strict: true },
+    rootFiles: ["/fixture/Comp0.vue.ts"],
+  },
+};
+const apiClient = write(11, "UNIX-STREAM:[203->202]", frameMessage(projectRequest));
+const apiServer = write(
+  21,
+  'UNIX-STREAM:[202->203,"/tmp/tsgo-api-actual"]',
+  frameMessage(projectResponse),
+);
+
+await test("complete native API project/config payloads retain both exact independently owned peers", () => {
+  const traffic = nativeApiSocketTraffic(
+    syscallWrites(apiClient + apiServer),
+    native,
+    native.sockets[0],
+    [parent],
+  );
+  assert.deepEqual(traffic.client, [projectRequest]);
+  assert.deepEqual(traffic.server, [projectResponse]);
+  assert.equal(traffic.clientInode, "203");
+  assert.equal(traffic.clientSHA256, sha256(frameMessage(projectRequest)));
+  assert.equal(traffic.serverSHA256, sha256(frameMessage(projectResponse)));
+  const split = frameMessage(projectResponse);
+  const first = write(20, 'UNIX-STREAM:[202->203,"/tmp/tsgo-api-actual"]', split.subarray(0, 11));
+  const last = write(21, 'UNIX-STREAM:[202->203,"/tmp/tsgo-api-actual"]', split.subarray(11));
+  assert.deepEqual(
+    nativeApiSocketTraffic(syscallWrites(first + apiClient + last), native, native.sockets[0], [
+      parent,
+    ]).server,
+    [projectResponse],
+  );
+});
+
+await test("foreign/shared API writers, different peers, absent directions and partial frames refuse", () => {
+  for (const text of [
+    apiClient.replace(/^11 /u, "99 ") + apiServer,
+    apiClient + apiServer.replace(/^21 /u, "11 "),
+    apiClient + apiServer.replace("202->203", "202->204"),
+    apiClient + apiServer.replace("202->203", "202"),
+    apiClient.replace("203->202", "202->202") + apiServer,
+    apiClient,
+    apiServer,
+    apiClient +
+      write(
+        21,
+        'UNIX-STREAM:[202->203,"/tmp/tsgo-api-actual"]',
+        frameMessage(projectResponse).subarray(0, -1),
+      ),
+  ])
+    assert.throws(() =>
+      nativeApiSocketTraffic(syscallWrites(text), native, native.sockets[0], [parent]),
+    );
 });
 
 await test("the protocol transcript retains its original 64MiB ceiling and finite line bound", () => {
