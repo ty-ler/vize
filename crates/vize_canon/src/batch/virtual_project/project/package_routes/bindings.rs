@@ -34,13 +34,16 @@ impl VirtualProject {
             .keys()
             .cloned()
             .collect::<FxHashSet<_>>();
+        // Every replaced old owner must reach the original shadow retirement,
+        // including keys already removed by a preceding source/route operation.
+        self.package_shadow_dirty_keys
+            .extend(self.package_routes.keys().cloned());
         self.package_routes.clear();
         self.package_route_reverse.clear();
         self.package_route_importers.clear();
         self.package_route_source_owners.clear();
         self.package_route_manifests.clear();
         self.package_route_roots.clear();
-        self.package_shadow_dirty_keys.clear();
         for binding in bindings {
             self.insert_package_route_binding_with_consumption(binding, observe, facts);
         }

@@ -203,3 +203,53 @@ fn truly_retired_importer_releases_its_probes_but_keeps_configuration_facts() {
     facts.remove_retired_owners(&vize_carton::FxHashSet::default());
     assert_eq!(facts.finish(()).stamps, vec![configuration]);
 }
+
+#[test]
+fn completed_dependency_walk_replaces_only_its_actual_probe_scope() {
+    let importer = Path::new("/project/Host.vue");
+    let unfinished = Path::new("/project/Other.vue");
+    let target = Path::new("/project/Child.vue");
+    let probe = |owner: &Path, role| {
+        InputStamp::observed_is_file(target.to_path_buf(), true).with_owner(Arc::new(FactOwner {
+            path: owner.to_path_buf(),
+            role,
+        }))
+    };
+    let old_walk = probe(importer, FactRole::DependencyImporter);
+    let other_walk = probe(unfinished, FactRole::DependencyImporter);
+    let shadow = probe(importer, FactRole::LocalImporter);
+    let config = probe(importer, FactRole::Configuration);
+    let body = fact(target, b"body", target, FactRole::AuthoredSource);
+    let old = vec![
+        old_walk.clone(),
+        other_walk.clone(),
+        shadow.clone(),
+        config.clone(),
+        body.clone(),
+    ];
+    let mut pending = NativeFacts::new(true);
+    pending.retain_previous(&old, &[], &[importer.to_path_buf()], &[]);
+    assert_eq!(pending.finish(()).stamps, old);
+    for qualified in [true, false] {
+        let mut finished = NativeFacts::new(true);
+        let current = probe(importer, FactRole::DependencyImporter);
+        finished.record_owned(Consumed {
+            value: (),
+            stamps: vec![current.clone()],
+            qualified,
+        });
+        finished.retain_previous(&old, &[importer.to_path_buf()], &[], &[]);
+        let packet = finished.finish(());
+        assert_eq!(
+            packet.stamps,
+            vec![
+                current,
+                other_walk.clone(),
+                shadow.clone(),
+                config.clone(),
+                body.clone()
+            ]
+        );
+        assert_eq!(packet.qualified, qualified);
+    }
+}

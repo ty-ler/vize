@@ -14,6 +14,19 @@ pub(crate) enum SourceRevisionFact {
 }
 
 impl InputStamp {
+    /// Borrow the original file-key operation, preserving its true/false bit.
+    /// The caller must separately validate freshness, owner and membership.
+    pub(crate) fn consumed_canonical_file_selection(
+        &self,
+    ) -> Option<(&std::path::Path, &std::path::Path, bool)> {
+        match self.fact.as_ref()? {
+            InputFact::CanonicalFile { selected, is_file } if self.consumed_only => {
+                Some((&self.path, selected, *is_file))
+            }
+            _ => None,
+        }
+    }
+
     /// Exact authored ownership is recorded by the original source operation.
     /// Generated text and filename classifications cannot establish it.
     pub(crate) fn is_authored_body_fact(&self) -> bool {
@@ -73,8 +86,10 @@ impl InputStamp {
                 _ => {}
             }
         }
-        if (owner.role == FactRole::LocalImporter
-            || (owner.role == FactRole::AuthoredSource && owner.path == self.path))
+        if (matches!(
+            owner.role,
+            FactRole::LocalImporter | FactRole::DependencyImporter
+        ) || (owner.role == FactRole::AuthoredSource && owner.path == self.path))
             && deleted_sources
                 .iter()
                 .any(|deleted| self.changed_only_by_deleted_target(current, deleted))
@@ -249,5 +264,35 @@ mod tests {
             role: FactRole::Configuration,
         }));
         assert!(!configured.is_authored_body_fact());
+    }
+    #[test]
+    fn original_file_key_accessor_preserves_negative_and_canonical_path_kinds() {
+        let logical = Path::new("/project/src/../props.ts");
+        let target = Path::new("/project/props.ts");
+        for is_file in [true, false] {
+            let fact = InputStamp::observed_canonical_file(
+                logical.to_path_buf(),
+                target.to_path_buf(),
+                is_file,
+            );
+            assert_eq!(
+                fact.consumed_canonical_file_selection(),
+                Some((logical, target, is_file))
+            );
+            assert!(fact.consumed_canonical_selection().is_none());
+        }
+        let path = InputStamp::observed_canonical_path(logical.to_path_buf(), target.to_path_buf());
+        assert!(path.consumed_canonical_file_selection().is_none());
+        assert_eq!(path.consumed_canonical_selection(), Some((logical, target)));
+        assert!(
+            InputStamp::observed_is_file(logical.to_path_buf(), true)
+                .consumed_canonical_file_selection()
+                .is_none()
+        );
+        assert!(
+            InputStamp::capture(logical)
+                .consumed_canonical_file_selection()
+                .is_none()
+        );
     }
 }

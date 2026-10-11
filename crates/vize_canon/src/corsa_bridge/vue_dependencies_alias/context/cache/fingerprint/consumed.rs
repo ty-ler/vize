@@ -82,7 +82,9 @@ pub(super) fn validate(
                     return Err(Refusal::UnknownAuthority);
                 }
             }
-            FactRole::LocalImporter if !known.contains(&owner.path) => {
+            FactRole::LocalImporter | FactRole::DependencyImporter
+                if !known.contains(&owner.path) =>
+            {
                 crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(5, consumed.len());
                 return Err(Refusal::UnknownAuthority);
             }

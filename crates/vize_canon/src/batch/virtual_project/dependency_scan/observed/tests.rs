@@ -97,7 +97,7 @@ fn importer_append_preserves_complete_owned_facts_order_and_qualification() {
     expected.extend(owned_facts());
     expected.push(unowned.with_owner(Arc::new(FactOwner {
         path: importer.to_path_buf(),
-        role: FactRole::LocalImporter,
+        role: FactRole::DependencyImporter,
     })));
     expected.push(after.with_owner(Arc::new(FactOwner {
         path: root.to_path_buf(),

@@ -125,7 +125,7 @@ impl WalkFacts {
         }
         self.owner = Some(Shared::new(FactOwner {
             path: path.to_path_buf(),
-            role: FactRole::LocalImporter,
+            role: FactRole::DependencyImporter,
         }));
         let Some(body) = original else {
             self.unknown_at(77);

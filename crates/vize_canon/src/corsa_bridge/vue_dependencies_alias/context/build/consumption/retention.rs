@@ -93,6 +93,9 @@ impl NativeFacts {
                     (completed.contains(&owner.path) && stamp.package_contribution().is_some())
                         || self.deleted_probe_was_actually_replaced(stamp, &deleted, actual_count)
                 }
+                // This exact original walk has replaced its whole edge/probe
+                // scope. Shadow/rewrite observations retain LocalImporter.
+                FactRole::DependencyImporter => completed.contains(&owner.path),
                 FactRole::AuthoredSource => replaced.contains(&owner.path),
             };
             if !released {

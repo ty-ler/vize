@@ -21,6 +21,8 @@ pub(crate) enum FactRole {
     Configuration,
     AuthoredSource,
     LocalImporter,
+    /// Probes consumed by one completed original dependency-edge walk only.
+    DependencyImporter,
 }
 
 /// One owner value is shared by facts emitted by the same original operation.

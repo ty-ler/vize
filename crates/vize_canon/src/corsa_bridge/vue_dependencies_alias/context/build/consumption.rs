@@ -63,7 +63,7 @@ impl NativeFacts {
             let reason = match role {
                 FactRole::Configuration => 40,
                 FactRole::AuthoredSource => 41,
-                FactRole::LocalImporter => 42,
+                FactRole::LocalImporter | FactRole::DependencyImporter => 42,
             };
             crate::corsa_bridge::preparation_trace::Phase::native_fact_guard(
                 reason,

@@ -269,14 +269,37 @@ impl ContextFingerprint {
             {
                 return Err(SourceGuard::PackageInput);
             }
-            if !known.contains(path) {
-                #[cfg(test)]
-                eprintln!(
-                    "original weak resolution refusal: path={path:?}; known={known:?}; stamp={stamp:?}"
-                );
-                return Err(SourceGuard::ResolutionInput);
-            }
-            changes.changed.push(path.to_path_buf());
+            let source = if known.contains(path) {
+                path
+            } else {
+                let mut selected = None;
+                for fact in &validated.stamps {
+                    let Some((logical, target, true)) = fact.consumed_canonical_file_selection()
+                    else {
+                        continue;
+                    };
+                    let Some(owner) = fact.owner() else {
+                        continue;
+                    };
+                    if logical != path
+                        || !known.contains(target)
+                        || !known.contains(&owner.path)
+                        || !matches!(
+                            owner.role,
+                            crate::package_route::stamp::FactRole::LocalImporter
+                                | crate::package_route::stamp::FactRole::DependencyImporter
+                        )
+                    {
+                        continue;
+                    }
+                    if selected.is_some_and(|previous| previous != target) {
+                        return Err(SourceGuard::ResolutionInput);
+                    }
+                    selected = Some(target);
+                }
+                selected.ok_or(SourceGuard::ResolutionInput)?
+            };
+            changes.changed.push(source.to_path_buf());
         }
         changes.changed.sort();
         changes.changed.dedup();

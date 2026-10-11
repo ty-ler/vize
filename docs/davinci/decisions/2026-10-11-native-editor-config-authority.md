@@ -157,3 +157,19 @@ and uncaptured original law output now identify that refusal and the separate
 weak-resolution guard; all predicates, complete values and assertions remain.
 The callback carries all thirteen original provenance fields inline again,
 under the approved enum-local Clippy expectation, with no extra Box allocation.
+
+Uncaptured run `38110979972` on `f3a6fe241d` proves the exact weak guard
+rejected the resolver's logical `src/../packages/props/index.ts`, while the
+original file-key operation selected the registered authored source. The join
+now borrows only an unchanged validated original `CanonicalFile(..., true)`
+with a known importer and one unambiguous registered target; no guard-side
+canonicalization or broader CanonicalPath authority is introduced.
+
+The same run proves package targets actually reached zero owners but dropped
+old binding keys lost their shadow retirement work when replacement cleared
+the dirty set. Keep those exact original keys until the existing shadow owner
+operation removes their complete topology; no owner or file is filtered out.
+The completed original dependency walk now labels only its own probes as
+`DependencyImporter`, so that exact finished edge scope can replace its old
+inputs while all configuration, callback, shadow and rewrite facts retain
+their original lifetimes. Unknown packets remain monotonically unqualified.
