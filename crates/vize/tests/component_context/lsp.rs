@@ -102,12 +102,17 @@ fn watched_policy_replacement_does_not_leak_into_a_sibling_workspace() {
     let source = "<template>界😀<my-owned/><my-neighbor/></template>\r\n";
     let roots = [
         workspace.path().join("owned"),
-        workspace.path().join("unowned"),
+        workspace.path().join("sibling"),
     ];
+    let policies = [vec!["my-owned"], vec!["my-neighbor"]];
     let mut folders = Vec::new();
     for (index, root) in roots.iter().enumerate() {
         write(root, "Policy.vue", source);
-        write(root, "vize.config.json", &policy(index == 0).to_string());
+        write(
+            root,
+            "vize.config.json",
+            &policy(&policies[index]).to_string(),
+        );
         folders.push(json!({"uri": file_uri(root), "name": index.to_string()}));
     }
     let mut lsp = LspProcess::spawn(workspace.path());
@@ -134,10 +139,10 @@ fn watched_policy_replacement_does_not_leak_into_a_sibling_workspace() {
                 && message["params"]["uri"] == uri.as_str()
                 && message["params"]["version"] == 1
         });
-        let case = expected_policy(source, index == 0);
+        let case = expected_policy(source, &policies[index]);
         observations.push(json!({"expected":lsp_packet(&case, &uri, 1),"actual":actual}));
     }
-    write(&roots[0], "vize.config.json", &policy(false).to_string());
+    write(&roots[0], "vize.config.json", &policy(&[]).to_string());
     lsp.send(
         json!({"jsonrpc":"2.0","method":"workspace/didChangeWatchedFiles","params":{
             "changes":[{"uri":file_uri(&roots[0].join("vize.config.json")),"type":2}]
@@ -150,8 +155,23 @@ fn watched_policy_replacement_does_not_leak_into_a_sibling_workspace() {
             && message["params"]["version"] == 1
     });
     observations.push(
-        json!({"expected":lsp_packet(&expected_policy(source, false), &uri, 1),"actual":actual}),
+        json!({"expected":lsp_packet(&expected_policy(source, &[]), &uri, 1),"actual":actual}),
     );
+    let sibling_uri = file_uri(&roots[1].join("Policy.vue"));
+    lsp.send(
+        json!({"jsonrpc":"2.0","method":"textDocument/didChange","params":{
+            "textDocument":{"uri":sibling_uri,"version":2},"contentChanges":[{"text":source}]
+        }}),
+    );
+    let actual = lsp.recv_matching(|message| {
+        message["method"] == "textDocument/publishDiagnostics"
+            && message["params"]["uri"] == sibling_uri.as_str()
+            && message["params"]["version"] == 2
+    });
+    observations.push(json!({
+        "expected":lsp_packet(&expected_policy(source, &policies[1]), &sibling_uri, 2),
+        "actual":actual
+    }));
     lsp.send(json!({"jsonrpc":"2.0","id":2,"method":"shutdown"}));
     let shutdown = lsp.recv_response(2);
     lsp.send(json!({"jsonrpc":"2.0","method":"exit"}));
@@ -178,22 +198,22 @@ fn watched_policy_replacement_does_not_leak_into_a_sibling_workspace() {
         fs::read_to_string(roots[1].join("Policy.vue")).unwrap(),
         source
     );
+    assert_eq!(
+        fs::read_to_string(roots[1].join("vize.config.json")).unwrap(),
+        policy(&policies[1]).to_string()
+    );
 }
 
-fn policy(owned: bool) -> Value {
-    json!({"compiler":{"customElements":if owned {vec!["my-owned"]} else {vec![]}},
+fn policy(custom_elements: &[&str]) -> Value {
+    json!({"compiler":{"customElements":custom_elements},
         "linter":{"preset":"incremental","rules":{support::RULE:"warn"}},
         "languageServer":{"editor":false,"typecheck":false,"lint":true}})
 }
 
-fn expected_policy(source: &str, owned: bool) -> Value {
-    let tags = if owned {
-        vec!["my-neighbor"]
-    } else {
-        vec!["my-owned", "my-neighbor"]
-    };
-    let diagnostics = tags
+fn expected_policy(source: &str, custom_elements: &[&str]) -> Value {
+    let diagnostics = ["my-owned", "my-neighbor"]
         .into_iter()
+        .filter(|tag| !custom_elements.contains(tag))
         .map(|tag| {
             let start = source.find(tag).unwrap();
             json!({"message":"Component is used but not explicitly imported",
