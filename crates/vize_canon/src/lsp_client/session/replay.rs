@@ -15,9 +15,11 @@ impl CorsaProjectClient {
         // Startup must see the complete batch, including a typed overlay API
         // fallback while replay temporarily owns the retained document map.
         for (uri, content) in documents {
-            self.document_texts.insert((*uri).into(), (*content).into());
+            let previous = self.document_texts.insert((*uri).into(), (*content).into());
+            if previous.as_deref() != Some(*content) {
+                self.editor_lsp_documents_dirty = true;
+            }
         }
-        self.editor_lsp_documents_dirty = true;
         self.activate_materialized_project_session()?;
         let mut summary = FileChangeSummary::default();
         for (uri, content) in documents {
@@ -100,14 +102,33 @@ impl CorsaProjectClient {
 mod tests {
     use super::CorsaProjectClient;
 
+    fn materialized_batch_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!(
+            "../../../../../tests/_fixtures/differential/config/materialized-two-buffer-topology-8476.json"
+        ))
+        .unwrap()
+    }
+
     #[test]
     fn materialized_batch_retains_every_input_before_a_preparation_failure() {
         let root = tempfile::tempdir().unwrap();
         let mut client = CorsaProjectClient::empty_for_test(root.path().to_path_buf());
-        let documents = [
-            ("invalid-uri", "export const first = 'unsaved';\n"),
-            ("another-invalid-uri", "export const second = 42;\n"),
-        ];
+        let fixture = materialized_batch_fixture();
+        let mut documents = fixture["documents"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|document| {
+                (
+                    document["uri"].as_str().unwrap(),
+                    document["unsaved"].as_str().unwrap(),
+                )
+            })
+            .collect::<Vec<_>>();
+        documents.push((
+            fixture["preparationFailure"]["uri"].as_str().unwrap(),
+            fixture["preparationFailure"]["text"].as_str().unwrap(),
+        ));
         client.editor_lsp_documents_dirty = false;
         assert!(
             client
@@ -120,6 +141,43 @@ mod tests {
         }
         assert!(client.editor_lsp_documents_dirty);
         assert!(!client.materialized_project_session);
+        assert!(client.session.is_none());
+        assert!(client.editor_lsp.is_none());
+    }
+
+    #[test]
+    fn unchanged_materialized_batch_preserves_clean_editor_state_without_a_transport() {
+        let root = tempfile::tempdir().unwrap();
+        let mut client = CorsaProjectClient::empty_for_test(root.path().to_path_buf());
+        let fixture = materialized_batch_fixture();
+        let documents = fixture["documents"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|document| {
+                (
+                    document["uri"].as_str().unwrap(),
+                    document["unsaved"].as_str().unwrap(),
+                )
+            })
+            .collect::<Vec<_>>();
+        client
+            .synchronize_materialized_project_documents(&documents)
+            .unwrap();
+        assert_eq!(client.document_texts.len(), documents.len());
+        for (uri, source) in &documents {
+            assert_eq!(client.document_texts.get(*uri).unwrap(), *source);
+        }
+        let retained = client.document_texts.clone();
+        let mappings = client.session_document_uris.clone();
+        client.editor_lsp_documents_dirty = false;
+        client
+            .synchronize_materialized_project_documents(&documents)
+            .unwrap();
+        assert!(!client.editor_lsp_documents_dirty);
+        assert_eq!(client.document_texts, retained);
+        assert_eq!(client.session_document_uris, mappings);
+        assert!(client.materialized_project_session);
         assert!(client.session.is_none());
         assert!(client.editor_lsp.is_none());
     }
