@@ -28,6 +28,9 @@ them with native SSG link conversion enabled. Their original Support destination
 new-tab target, and opener protection must survive. Additional Markdown and raw
 HTML cases retain external schemes, internal routes, query strings, and fragments.
 Both new regressions fail with the previous native renderer and pass with 2.88.0.
+The exact external fresh-LSP policy URL with its `#react-owned-projects`
+fragment, which blocked all four English/Japanese JSX browser controls, also
+remains an original destination in both Markdown and raw HTML regression cases.
 
 The unchanged Japanese emphasis, translation, and materialized-content laws also
 pass. The full hosted Docs campaign retains every original route and assertion,
