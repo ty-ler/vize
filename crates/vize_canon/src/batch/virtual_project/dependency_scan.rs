@@ -311,11 +311,7 @@ impl VirtualProject {
                 // failure degrades to the pre-#3887 ambient stub for that one
                 // import instead of propagating (#3898).
                 let registered = if aliases_consumed_is_enabled {
-                    let packet = match overlays.get(&key) {
-                        Some(content) => self.register_path_with_content_observed(&key, content),
-                        None => self.register_path_observed(&key),
-                    };
-                    packet.map(|packet| facts.registration(packet))
+                    facts.inferred_registration(self, &key, overlays.get(&key).copied())
                 } else {
                     match overlays.get(&key) {
                         Some(content) => self.register_path_with_content(&key, content),
@@ -324,7 +320,7 @@ impl VirtualProject {
                 };
                 match registered {
                     Ok(()) => queue.push(key),
-                    Err(error) => facts.failed_registration(&key, &error),
+                    Err(_) => {}
                 }
             }
             let released = self.replace_dependency_edges(&importer, dependency_targets);

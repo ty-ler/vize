@@ -1,4 +1,4 @@
-//! Whole shadow values and actual-operation facts; source-only, unexecuted.
+//! Whole shadow values and facts from the actual original operations.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -298,6 +298,10 @@ fn shadow_path_packet_never_claims_raw_manifest_body_authority() {
 #[test]
 fn no_scope_manifest_keeps_the_original_predicate_and_canonical_absence() {
     let fixture = fixture();
+    // The real setter resolves the nearest scope. Make that scope genuinely
+    // absent before it runs instead of assuming fixture context survives it.
+    std::fs::remove_file(fixture.root.join("package.json")).unwrap();
+    let mut original = project(&fixture);
     let mut project = project(&fixture);
     assert!(
         project
@@ -305,7 +309,9 @@ fn no_scope_manifest_keeps_the_original_predicate_and_canonical_absence() {
             .values()
             .all(|binding| binding.context.scope_manifest_path.is_none())
     );
+    original.rebuild_package_shadows().unwrap();
     let packet = project.rebuild_package_shadows_observed().unwrap();
+    assert_same_shadow_values(&project, &original);
     let scope_manifest = fixture.root.join("package.json");
     let owner = Arc::new(FactOwner {
         path: fixture.bindings[0].importer_path.clone(),

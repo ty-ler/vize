@@ -226,11 +226,12 @@ jobs:
         run: cargo build --profile ci -p vize && vp node tests/differential/build-receipt.ts
       - name: Verify actual configuration and native fact refusal controls
         run: |
-          cargo test --locked --profile ci -p vize_canon --lib --no-run
           controls_failed=0
+          cargo test --locked --profile ci -p vize_canon --lib -- --nocapture || controls_failed=1
           for filter in \
             batch::virtual_project::tsconfig_gen::compiler_options \
             batch::virtual_project::project::construction \
+            batch::virtual_project::project::registration::inferred::tests \
             batch::virtual_project::typed_router::config_tests \
             batch::virtual_project::package_source_index \
             batch::virtual_project::dependency_scan::consumed_tests \

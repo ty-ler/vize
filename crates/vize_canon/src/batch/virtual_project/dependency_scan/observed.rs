@@ -126,6 +126,26 @@ impl WalkFacts {
         self.stamps.extend(result.stamps);
     }
 
+    pub(super) fn inferred_registration(
+        &mut self,
+        project: &mut super::VirtualProject,
+        path: &Path,
+        content: Option<&str>,
+    ) -> crate::batch::error::CorsaResult<()> {
+        let packet = project.register_inferred_path_observed(path, content, self.owner.as_ref());
+        if !packet.qualified
+            && let Err(error) = &packet.value
+        {
+            self.failed_registration(path, error);
+        }
+        self.registration(Consumed {
+            value: (),
+            stamps: packet.stamps,
+            qualified: packet.qualified,
+        });
+        packet.value
+    }
+
     pub(super) fn registered_roots<T>(&mut self, roots: &Consumed<T>) {
         if self.enabled {
             self.qualified &= roots.qualified;

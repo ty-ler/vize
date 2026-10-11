@@ -255,3 +255,38 @@ consumer inventory also became stale after the actual source changes. Run the
 official generator and retain its complete output check; this changes source
 inventory only. Full test/allocation gates and the original lifecycle remain
 unfinished, so these partial successes do not permit queue or release admission.
+
+Exact `8d69f4c6e2`, run `38113877965`, retains every original source and
+refusal control but the original DELETE still fails after 541,112ms. The
+separate first-refusal observation identifies actual readable UTF-8
+`anthropic.svg`, `en.json`, and `easy_ai_starter.json` dependencies. Each
+original registration returns its exact `PathError` because it is not a Vue or
+JS/TS program. The consumed body was discarded with that negative result,
+wrongly losing authority for the actual completed requesting import walk.
+
+The minimal authored `native-inferred-assets` corpus retains the complete
+original project value, dependency edges, diagnostic vector and unregistered
+asset topology. On authentic unchanged production `8d69f4c6e2`, test-only head
+`7bdf7187c0a`, run `38115143565`, fails exactly its new readable SVG/JSON
+qualification assertion: 13/14 dependency laws pass; invalid UTF-8 and malformed
+Vue remain cold. All other seven original filters and production Clippy pass.
+Retain the whole log and exact six-file test packet custody.
+
+Retain the actual inferred registration's complete positive or negative result
+and its original read facts. Only the pure unsupported-program classification,
+the exact returned `PathError`, an unregistered target and the actual known
+requesting `DependencyImporter` authorize that readable negative packet. Its
+body facts share that existing importer's exact Arc identity; it creates no
+source node, target completion, filesystem probe or recovery of an earlier
+unknown packet. Changed/deleted asset bodies remain incompatible; missing or
+wrong owner, read failure and malformed Vue retain their original cold refusal.
+
+The full `38113203551` source-coverage lane ran 2,007 Canon laws: 2,004 passed,
+one failed and two original laws were ignored. The retained no-scope shadow
+fixture supplied default context but the real setter resolved its existing
+root package manifest. Remove only that fixture's own scope manifest before
+the original setter, keeping every original absence/predicate assertion and
+adding the whole original shadow-value comparison. The source job now executes
+all Canon lib laws as well as every original filter and independent Clippy;
+whole workspace, allocation/instruction and original n8n lifecycle gates remain
+required. This source composition has not yet qualified for queue or release.

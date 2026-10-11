@@ -7,6 +7,8 @@ use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
+mod inferred;
+
 impl VirtualProject {
     pub(crate) fn register_path_observed(&mut self, path: &Path) -> CorsaResult<Consumed<()>> {
         let mut facts = empty(true);
