@@ -3,7 +3,9 @@
 
 use super::observed::WalkFacts;
 use super::{DependencyConsumption, FxHashSet, Path, PathBuf, VirtualProject};
-use crate::package_route::stamp::{Consumed, FactRole, SourceRevisionFact};
+use crate::package_route::stamp::{
+    Consumed, FactOwner, FactRole, InputStamp, Shared, SourceRevisionFact,
+};
 
 #[expect(clippy::disallowed_types, reason = "whole source fixture packets")]
 #[expect(clippy::disallowed_macros, reason = "whole source fixture packets")]
@@ -196,12 +198,19 @@ fn both_actual_initial_registered_lists_own_keys_without_completing_unwalked_sou
                 },
             )
             .unwrap();
+        // The original key operation records CanonicalFile, not the separate
+        // CanonicalPath-only authority borrowed by configured-project consumers.
+        let expected_key =
+            InputStamp::observed_canonical_file(untouched.clone(), untouched.clone(), true)
+                .with_owner(Shared::new(FactOwner {
+                    path: untouched.clone(),
+                    role: FactRole::AuthoredSource,
+                }));
+        assert!(expected_key.consumed_canonical_selection().is_none());
         let keys = consumed
             .stamps
             .iter()
-            .filter(|stamp| {
-                stamp.path() == untouched && stamp.consumed_canonical_selection().is_some()
-            })
+            .filter(|stamp| *stamp == &expected_key)
             .collect::<Vec<_>>();
         assert!(!keys.is_empty());
         for stamp in &keys {
