@@ -118,9 +118,8 @@ fn references(fixture: &Fixture, uri: &Url) -> FixtureResult<Vec<Location>> {
 }
 
 #[test]
-fn primary_and_nested_document_dispatch_reuse_actual_owner_and_program_workers() -> FixtureResult<()>
-{
-    let fixture = fixture()?;
+fn primary_and_nested_document_dispatch_reuse_actual_owner_and_program_workers() {
+    let fixture = fixture().unwrap();
     let server = fixture.service.inner();
     let primary = server.with_project_state(server.state.clone());
     assert!(Arc::ptr_eq(
@@ -142,8 +141,8 @@ fn primary_and_nested_document_dispatch_reuse_actual_owner_and_program_workers()
         let first = block_on(server.for_document(uri));
         let navigation = first.navigation.as_ref().unwrap();
         assert_eq!(
-            block_on(navigation.definition(uri, position(&fixture)?)),
-            Ok(Some(definition(&fixture, uri)?))
+            block_on(navigation.definition(uri, position(&fixture).unwrap())),
+            Ok(Some(definition(&fixture, uri).unwrap()))
         );
         let worker = navigation.cached_program_worker_for_test(uri).unwrap();
         assert_eq!(worker.1, (1, 1));
@@ -153,10 +152,10 @@ fn primary_and_nested_document_dispatch_reuse_actual_owner_and_program_workers()
         assert_eq!(
             block_on(second.navigation.as_ref().unwrap().references(
                 uri,
-                position(&fixture)?,
+                position(&fixture).unwrap(),
                 true
             )),
-            Ok(references(&fixture, uri)?)
+            Ok(references(&fixture, uri).unwrap())
         );
         assert_eq!(
             navigation.cached_program_worker_for_test(uri),
@@ -178,12 +177,11 @@ fn primary_and_nested_document_dispatch_reuse_actual_owner_and_program_workers()
             .enumerate()
             .all(|(index, worker)| !worker_ids[index + 1..].contains(worker))
     );
-    Ok(())
 }
 
 #[test]
-fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() -> FixtureResult<()> {
-    let fixture = fixture()?;
+fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() {
+    let fixture = fixture().unwrap();
     let server = fixture.service.inner();
     let a = &fixture.uris[1];
     let b = &fixture.uris[2];
@@ -200,12 +198,12 @@ fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() -> 
     };
     let sibling_navigation = sibling.navigation.as_ref().unwrap();
     assert_eq!(
-        block_on(old_navigation.definition(a, position(&fixture)?)),
-        Ok(Some(definition(&fixture, a)?))
+        block_on(old_navigation.definition(a, position(&fixture).unwrap())),
+        Ok(Some(definition(&fixture, a).unwrap()))
     );
     assert_eq!(
-        block_on(sibling_navigation.definition(b, position(&fixture)?)),
-        Ok(Some(definition(&fixture, b)?))
+        block_on(sibling_navigation.definition(b, position(&fixture).unwrap())),
+        Ok(Some(definition(&fixture, b).unwrap()))
     );
     let sibling_worker = sibling_navigation
         .cached_program_worker_for_test(b)
@@ -214,7 +212,8 @@ fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() -> 
         fixture.root.path(),
         "packages/a/vize.config.json",
         r#"{"lsp":{"hover":false}}"#,
-    )?;
+    )
+    .unwrap();
     server.state.observe_project_config_events(&[FileEvent {
         uri: config,
         typ: FileChangeType::CHANGED,
@@ -238,7 +237,7 @@ fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() -> 
         tower_lsp::jsonrpc::ErrorCode::ContentModified
     );
     assert_eq!(
-        block_on(old_navigation.definition(a, position(&fixture)?)),
+        block_on(old_navigation.definition(a, position(&fixture).unwrap())),
         Err(NavigationRefusal::Host(SnapshotRefusal::Superseded))
     );
     assert!(old_navigation.cached_program_worker_for_test(a).is_none());
@@ -268,44 +267,41 @@ fn watcher_retires_old_navigation_and_preserves_the_unaffected_owner_cache() -> 
                 .navigation
                 .as_ref()
                 .unwrap()
-                .definition(a, position(&fixture)?)
+                .definition(a, position(&fixture).unwrap())
         ),
-        Ok(Some(definition(&fixture, a)?))
+        Ok(Some(definition(&fixture, a).unwrap()))
     );
     assert_eq!(
-        block_on(
-            new_b
-                .navigation
-                .as_ref()
-                .unwrap()
-                .references(b, position(&fixture)?, true)
-        ),
-        Ok(references(&fixture, b)?)
+        block_on(new_b.navigation.as_ref().unwrap().references(
+            b,
+            position(&fixture).unwrap(),
+            true
+        )),
+        Ok(references(&fixture, b).unwrap())
     );
     assert_eq!(
         sibling_navigation.cached_program_worker_for_test(b),
         Some((sibling_worker.0, (1, 2)))
     );
     assert_eq!(server.state.documents.version(a), Some(1));
-    Ok(())
 }
 
 #[test]
-fn primary_configuration_replacement_refuses_retained_owner_and_drains_its_worker()
--> FixtureResult<()> {
-    let fixture = fixture()?;
+fn primary_configuration_replacement_refuses_retained_owner_and_drains_its_worker() {
+    let fixture = fixture().unwrap();
     let server = fixture.service.inner();
     let uri = &fixture.uris[0];
     let navigation = server.navigation.as_ref().unwrap();
     assert_eq!(
-        block_on(navigation.definition(uri, position(&fixture)?)),
-        Ok(Some(definition(&fixture, uri)?))
+        block_on(navigation.definition(uri, position(&fixture).unwrap())),
+        Ok(Some(definition(&fixture, uri).unwrap()))
     );
     let config = file(
         fixture.root.path(),
         "vize.config.json",
         r#"{"lsp":{"hover":false}}"#,
-    )?;
+    )
+    .unwrap();
     // Marking occurs in the registry; publication/admission refuse immediately,
     // before the ordinary server watcher drains the old primary owner.
     server.state.observe_project_config_events(&[FileEvent {
@@ -313,7 +309,7 @@ fn primary_configuration_replacement_refuses_retained_owner_and_drains_its_worke
         typ: FileChangeType::CHANGED,
     }]);
     assert_eq!(
-        block_on(navigation.definition(uri, position(&fixture)?)),
+        block_on(navigation.definition(uri, position(&fixture).unwrap())),
         Err(NavigationRefusal::Host(SnapshotRefusal::Superseded))
     );
     block_on(tower_lsp::LanguageServer::did_change_watched_files(
@@ -337,9 +333,8 @@ fn primary_configuration_replacement_refuses_retained_owner_and_drains_its_worke
                 .navigation
                 .as_ref()
                 .unwrap()
-                .definition(uri, position(&fixture)?)
+                .definition(uri, position(&fixture).unwrap())
         ),
-        Ok(Some(definition(&fixture, uri)?))
+        Ok(Some(definition(&fixture, uri).unwrap()))
     );
-    Ok(())
 }
