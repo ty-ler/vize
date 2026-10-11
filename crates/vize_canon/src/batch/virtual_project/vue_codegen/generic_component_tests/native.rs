@@ -4,6 +4,7 @@
 mod install;
 mod minimal;
 mod packets;
+mod reka_authority;
 mod replay;
 mod tree;
 mod type_imports;
