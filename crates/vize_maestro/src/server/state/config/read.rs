@@ -62,6 +62,16 @@ impl ServerState {
         (snapshot.0.clone(), snapshot.1, snapshot.2.clone())
     }
 
+    pub(crate) fn get_linter_config_and_features(
+        &self,
+    ) -> (
+        vize_l0::config::LinterConfig,
+        vize_l0::config::LinterFeatureFlags,
+    ) {
+        let snapshot = self.linter_config.read();
+        (snapshot.0.clone(), snapshot.1)
+    }
+
     /// Get the enabled LSP feature set.
     #[inline]
     pub(crate) fn lsp_features(&self) -> LspFeatureConfig {

@@ -17,6 +17,7 @@ workspace context as the lint plan; existing callers keep their three-field
 settings interface. The deepest enclosing folder, ignores, rule severity,
 explicit globals and selected Nuxt preset keep their existing ownership. A
 neighboring root does not inherit another root's custom-element declaration.
+Existing Musea settings reads avoid cloning the compiler matcher they do not use.
 Compiler globs and original Vue ESLint `ignorePatterns` remain distinct APIs.
 
 The original 30 authored SFCs, all 120 API observations, eight JSX/TSX packets and
@@ -27,7 +28,8 @@ and explicit directory selection, and 90 complete JSON-RPC publications across
 including unrelated findings, rather than filtering to the registration rule.
 The CLI config counter requires one actual JS evaluation per invocation.
 Additional editor controls retain a Unicode/CRLF missing neighbor, process
-fallback, root isolation and actual watched policy replacement.
+fallback, root isolation and actual watched policy replacement. A sibling keeps
+its distinct declared element after the owner's watched policy is replaced.
 
 This is a new child of the configuration native Stack #8400, after #8531. Its
 parent APIs and original 400-provider qualification remain separately required.
