@@ -28,7 +28,7 @@ impl VirtualProject {
         self.collect_manifest_target_shadows(route, shadow_root, topology, facts);
         let mut nested_routes = route.nested_routes.iter().collect::<Vec<_>>();
         let private_dependencies = self.private_dependencies_for(&route.manifest_path);
-        nested_routes.extend(private_dependencies.iter());
+        nested_routes.extend(private_dependencies);
         nested_routes.sort_by(|left, right| left.manifest_path.cmp(&right.manifest_path));
         nested_routes.dedup();
         for nested in nested_routes {

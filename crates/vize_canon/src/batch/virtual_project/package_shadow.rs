@@ -72,13 +72,13 @@ impl VirtualProject {
         facts: &mut ShadowFacts,
     ) -> CorsaResult<()> {
         self.remove_package_shadow_owner(key);
-        let Some(binding) = self.package_routes.get(key).cloned() else {
+        let Some(binding) = self.package_routes.get(key) else {
             return Ok(());
         };
         let Some(route) = binding.route.as_ref() else {
             return Ok(());
         };
-        facts.binding(&binding);
+        facts.binding(binding);
         let mut topology = PackageShadowTopology::default();
 
         if let Some(scope_manifest) = binding.context.scope_manifest_path.as_ref()
@@ -116,7 +116,7 @@ impl VirtualProject {
                     &route.manifest_path,
                     facts,
                 )]
-            } else if let Some(root) = plan.selected_install_shadow(self, &binding, facts) {
+            } else if let Some(root) = plan.selected_install_shadow(self, binding, facts) {
                 topology
                     .install_roots
                     .insert(root.clone(), route.manifest_path.clone());
@@ -177,3 +177,6 @@ impl VirtualProject {
 #[cfg(test)]
 #[path = "package_shadow/consumed_tests.rs"]
 mod consumed_tests;
+
+#[cfg(test)]
+mod borrowed_routes_tests;
