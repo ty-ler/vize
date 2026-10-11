@@ -23,15 +23,19 @@ struct Fixture {
     uris: Vec<Url>,
 }
 
+fn member<'a>(input: &'a Value, name: &str) -> &'a Value {
+    input.get(name).expect("authored fixture member")
+}
+
 fn file(root: &Path, name: &str, source: &str) -> Url {
     let path = root.join(name);
-    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-    std::fs::write(&path, source).unwrap();
-    Url::from_file_path(path).unwrap()
+    std::fs::create_dir_all(path.parent().expect("fixture value")).expect("fixture value");
+    std::fs::write(&path, source).expect("fixture value");
+    Url::from_file_path(path).expect("fixture value")
 }
 
 fn fixture() -> Fixture {
-    let root = tempfile::tempdir().unwrap();
+    let root = tempfile::tempdir().expect("fixture value");
     file(root.path(), "vize.config.json", "{}");
     for package in ["a", "b"] {
         file(root.path(), &cstr!("packages/{package}/package.json"), "{}");
@@ -56,16 +60,19 @@ fn fixture() -> Fixture {
     server.state.apply_lsp_initialization_options(Some(
         &json!({"lint":false,"typecheck":false,"ecosystem":false}),
     ));
-    let input: Value = serde_json::from_str(INPUT).unwrap();
-    let source = input["source"].as_str().unwrap();
+    let input: Value = serde_json::from_str(INPUT).expect("fixture value");
+    let source = member(&input, "source").as_str().expect("fixture value");
     let uris = ["Root.ts", "packages/a/src/One.ts", "packages/b/src/Two.ts"]
         .map(|name| {
             let uri = file(root.path(), name, source);
             server.state.documents.open(
                 uri.clone(),
                 source.into(),
-                input["version"].as_i64().unwrap() as i32,
-                input["languageId"].as_str().unwrap().into(),
+                member(&input, "version").as_i64().expect("fixture value") as i32,
+                member(&input, "languageId")
+                    .as_str()
+                    .expect("fixture value")
+                    .into(),
             );
             uri
         })
@@ -79,22 +86,29 @@ fn fixture() -> Fixture {
 }
 
 fn position(fixture: &Fixture) -> Position {
-    serde_json::from_value(fixture.input["definitionPosition"].clone()).unwrap()
+    serde_json::from_value(member(&fixture.input, "definitionPosition").clone())
+        .expect("fixture value")
 }
 
 fn definition(fixture: &Fixture, uri: &Url) -> Location {
     Location::new(
         uri.clone(),
-        serde_json::from_value(fixture.input["definitionRange"].clone()).unwrap(),
+        serde_json::from_value(member(&fixture.input, "definitionRange").clone())
+            .expect("fixture value"),
     )
 }
 
 fn references(fixture: &Fixture, uri: &Url) -> Vec<Location> {
-    fixture.input["referenceRanges"]
+    member(&fixture.input, "referenceRanges")
         .as_array()
-        .unwrap()
+        .expect("fixture value")
         .iter()
-        .map(|range| Location::new(uri.clone(), serde_json::from_value(range.clone()).unwrap()))
+        .map(|range| {
+            Location::new(
+                uri.clone(),
+                serde_json::from_value(range.clone()).expect("fixture value"),
+            )
+        })
         .collect()
 }
 
