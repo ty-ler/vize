@@ -34,6 +34,10 @@ test("whole passive packet custody rejects missing chunks, reused birth, foreign
         startTicks: "124",
         executable: launch.backendPath,
         executableSha256: launch.backendSha256,
+        executableDev: "5",
+        executableIno: "6",
+        executableSize: "7",
+        executableMtimeNs: "8",
       },
     ],
     acceptanceCredit: "none",
@@ -68,6 +72,7 @@ test("whole passive packet custody rejects missing chunks, reused birth, foreign
       chunks.map((row, i) => (i === 0 ? { ...row, start: 1 } : row)),
       chunks.map((row, i) => (i === 1 ? { ...row, end: 2 } : row)),
       chunks.map((row, i) => (i === 1 ? { ...row, ns: "31" } : row)),
+      chunks.map((row, i) => (i === 0 ? { ...row, ns: "0" } : row)),
     ]) {
       writeChunks(changed);
       assert.throws(() => assessPacketCustody(root, launch, close));
@@ -77,6 +82,9 @@ test("whole passive packet custody rejects missing chunks, reused birth, foreign
       { ...close, owner: { ...owner, startTicks: "125" } },
       { ...close, acceptanceCredit: "full" },
       { ...close, providers: [] },
+      { ...close, providers: [{ ...close.providers[0], parentPid: 999 }] },
+      { ...close, providers: [{ ...close.providers[0], parentPid: close.providers[0].pid }] },
+      { ...close, providers: [{ ...close.providers[0], executableIno: undefined }] },
       { ...close, providers: [{ ...close.providers[0], executable: "/foreign/native" }] },
       { ...close, providers: [{ ...close.providers[0], executableSha256: "c".repeat(64) }] },
     ])

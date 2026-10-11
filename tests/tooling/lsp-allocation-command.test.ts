@@ -63,3 +63,36 @@ test("orchestration timeout preserves the actual owned-child termination and exp
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test(
+  "an actual owned child ignoring SIGTERM is finitely killed and reaped with its full refusal",
+  { timeout: 10_000 },
+  async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-allocation-kill-law-"));
+    try {
+      const directory = path.join(root, "command");
+      const result = await command(
+        directory,
+        process.execPath,
+        [
+          "-e",
+          'process.on("SIGTERM",()=>process.stderr.write("owned SIGTERM ignored\\n"));process.stdout.write("owned ready\\n");setInterval(()=>{},1000)',
+        ],
+        root,
+        process.env,
+        250,
+      );
+      assert.equal(fs.readFileSync(path.join(directory, "stdout.bin"), "utf8"), "owned ready\n");
+      assert.equal(
+        fs.readFileSync(path.join(directory, "stderr.bin"), "utf8"),
+        "owned SIGTERM ignored\n",
+      );
+      assert.equal(result.code, null);
+      assert.equal(result.signal, "SIGKILL");
+      assert.match(result.failure!, /250ms orchestration bound/);
+      assert.throws(() => successful(result));
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  },
+);

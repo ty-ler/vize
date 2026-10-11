@@ -18,12 +18,29 @@ export function assessPacketCustody(directory: string, launch: any, close: any):
     assert.match(close.owner[key], /^\d+$/);
   assert(BigInt(start.ns) <= BigInt(close.ns));
   assert(close.providers.length > 0);
+  assert(close.providers.length <= 126, "whole original63 fences at most2 provider members each");
+  const owned = new Set([close.owner.pid]);
+  assert.equal(
+    new Set(close.providers.map((provider: any) => provider.pid)).size,
+    close.providers.length,
+  );
   for (const provider of close.providers) {
     assert.equal(provider.executable, launch.backendPath);
     assert.equal(provider.executableSha256, launch.backendSha256);
     assert(Number.isSafeInteger(provider.pid) && provider.pid > 0);
+    assert.notEqual(provider.pid, close.owner.pid);
+    assert(Number.isSafeInteger(provider.parentPid) && provider.parentPid > 0);
     assert.match(provider.startTicks, /^\d+$/);
+    for (const key of ["executableDev", "executableIno", "executableSize", "executableMtimeNs"])
+      assert.match(provider[key], /^\d+$/);
   }
+  for (let pass = 0; pass < close.providers.length; pass += 1)
+    for (const provider of close.providers)
+      if (owned.has(provider.parentPid)) owned.add(provider.pid);
+  assert(
+    close.providers.every((provider: any) => owned.has(provider.pid)),
+    "foreign or cyclic provider parent chain refused",
+  );
   const ends = { client: 0, server: 0, stderr: 0 };
   let previousNs = 0n;
   const chunks = fs.readFileSync(path.join(directory, "chunks.jsonl"), "utf8").trim().split("\n");
@@ -37,7 +54,7 @@ export function assessPacketCustody(directory: string, launch: any, close: any):
     };
     assert(Object.hasOwn(ends, chunk.stream));
     const ns = BigInt(chunk.ns);
-    assert(ns >= previousNs && ns <= BigInt(close.ns));
+    assert(ns >= BigInt(start.ns) && ns >= previousNs && ns <= BigInt(close.ns));
     previousNs = ns;
     assert.equal(chunk.start, ends[chunk.stream]);
     assert(Number.isSafeInteger(chunk.end) && chunk.end > chunk.start);

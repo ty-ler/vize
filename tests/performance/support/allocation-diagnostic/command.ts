@@ -24,9 +24,12 @@ export async function command(
   const startedNs = process.hrtime.bigint().toString();
   const child = spawn(executable, args, { cwd, env, stdio: ["ignore", "pipe", "pipe"] });
   let failure: string | null = null;
+  let killTimer: ReturnType<typeof setTimeout> | undefined;
   const stop = (reason: string) => {
     failure ??= reason;
+    if (killTimer) return;
     child.kill("SIGTERM");
+    killTimer = setTimeout(() => child.kill("SIGKILL"), 1000);
   };
   const timer = setTimeout(
     () => stop(`owned command exceeds explicit ${timeoutMs}ms orchestration bound`),
@@ -48,6 +51,7 @@ export async function command(
     child.once("close", (code, signal) => resolve({ code, signal })),
   );
   clearTimeout(timer);
+  clearTimeout(killTimer);
   const receipt = {
     executable,
     args,

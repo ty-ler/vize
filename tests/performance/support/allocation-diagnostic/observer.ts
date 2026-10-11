@@ -68,18 +68,18 @@ export class MemoryObserver {
     assert(child.pid, "actual spawned server PID required");
     assert(!sessions.has(child.pid), "one capture per actual process");
     sessions.set(child.pid, this);
-    child.once("spawn", () => {
-      try {
-        const owner = identity(child.pid!);
-        assert.equal(owner.parentPid, process.pid);
-        assert.equal(owner.executable, fs.realpathSync(this.launch.binary));
-        assert.equal(owner.executableSha256, this.binding.binarySha256);
-        this.owner = owner;
-        json(this.file("process-start.json"), { ns: process.hrtime.bigint().toString(), owner });
-      } catch (error) {
-        this.refuse(error);
-      }
-    });
+    // uv_spawn has returned an actual PID. Bind it before the client's first write;
+    // the deferred Node `spawn` event would timestamp authentication too late.
+    try {
+      const owner = identity(child.pid!);
+      assert.equal(owner.parentPid, process.pid);
+      assert.equal(owner.executable, fs.realpathSync(this.launch.binary));
+      assert.equal(owner.executableSha256, this.binding.binarySha256);
+      this.owner = owner;
+      json(this.file("process-start.json"), { ns: process.hrtime.bigint().toString(), owner });
+    } catch (error) {
+      this.refuse(error);
+    }
     child.stdout.on("data", (bytes: Buffer) => this.append("server", bytes));
     child.stderr.on("data", (bytes: Buffer) => this.append("stderr", bytes));
     child.on("error", (error) => this.refuse(error));
