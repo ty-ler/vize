@@ -80,22 +80,23 @@ impl ServerState {
         if self.project_contexts.shutting_down.load(Ordering::Acquire) {
             return None;
         }
-        let root = match self.project_contexts.routes.get(uri) {
+        let root = match self
+            .project_contexts
+            .routes
+            .get(uri)
+            .map(|route| route.value().clone())
+        {
             Some(root) => {
-                let cached = self
-                    .project_contexts
-                    .contexts
-                    .lock()
-                    .get(root.value())
-                    .cloned();
+                #[cfg(test)]
+                lock_order_tests::before_contexts_lock();
+                let cached = self.project_contexts.contexts.lock().get(&root).cloned();
                 if let Some(context) = cached {
-                    drop(root);
                     return Some(context);
                 }
                 if self.is_primary_boundary(&root) {
                     return None;
                 }
-                root.clone()
+                root
             }
             None => {
                 let path = uri.to_file_path().ok()?;
@@ -304,6 +305,8 @@ mod async_tests;
 mod asynchronous;
 mod capabilities;
 mod current;
+#[cfg(test)]
+mod lock_order_tests;
 mod paths;
 mod pool;
 mod registry;
