@@ -1,0 +1,66 @@
+name: Qualify complete Docs rendering with two and four workers
+description: Build once and preserve both full source-matched navigation campaigns
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+      with: { toolchain: "stable" }
+    - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
+      with: { wild-version: "0.9.0" }
+    - uses: ./.github/actions/setup-rust-sticky-cache
+      with:
+        key: docs-napi
+        cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
+    - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+      with: { node-version-file: package.json, cache: true, run-install: false }
+    - uses: ./.github/actions/setup-moonbit
+    - uses: ./.github/actions/setup-rust-script
+    - name: Install identical Docs dependencies and rendering fonts
+      shell: bash
+      run: |
+        moon run --target native tools/moon/cmd/github/vp_install -- --filter './docs...' --filter './npm/builder/vite...' --filter './npm/cli...' --filter './npm/native...' --filter './npm/ui...' --filter './npm/compose/core...'
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+    - name: Verify original and four-worker browser scheduling laws
+      shell: bash
+      run: node --test tests/tooling/docs-render-concurrency.test.ts tests/tooling/docs-render-concurrency-browser.test.ts tests/tooling/docs-render-workers-qualification.test.ts
+    - name: Build the same native packages and Docs once
+      shell: bash
+      run: |
+        rust-script tools/commands/ci/github/run-many.rs vp run --filter './npm/native' build:ci -- vp run --filter './npm/cli' build -- vp run --filter './npm/builder/vite' build
+        vp run --no-cache --filter './docs' build
+    - name: Retain complete physical source and built Docs custody
+      id: prepare
+      shell: bash
+      env:
+        VIZE_DOCS_WORKERS_OUTPUT: target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}
+      run: vp node docs/scripts/qualify-navigation-render-workers.ts --phase prepare --output "$VIZE_DOCS_WORKERS_OUTPUT"
+    - name: Complete original two-worker navigation proof
+      id: two
+      shell: bash
+      env:
+        VIZE_DOCS_WORKERS_OUTPUT: target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}
+      run: vp node docs/scripts/verify-navigation-render.ts --workers 2 --capture-timings --output "$VIZE_DOCS_WORKERS_OUTPUT/workers-2"
+    - name: Complete opt-in four-worker navigation proof
+      id: four
+      if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+      shell: bash
+      env:
+        VIZE_DOCS_WORKERS_OUTPUT: target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}
+      run: vp node docs/scripts/verify-navigation-render.ts --workers 4 --capture-timings --output "$VIZE_DOCS_WORKERS_OUTPUT/workers-4"
+    - name: Qualify both whole campaigns and original raw evidence
+      if: ${{ !cancelled() }}
+      shell: bash
+      env:
+        VIZE_DOCS_WORKERS_OUTPUT: target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}
+      run: vp node docs/scripts/qualify-navigation-render-workers.ts --phase qualify --output "$VIZE_DOCS_WORKERS_OUTPUT" --baseline-outcome "${{ steps.two.outcome }}" --candidate-outcome "${{ steps.four.outcome }}"
+    - name: Preserve both complete campaign packets on success and failure
+      if: ${{ always() }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ci-walltime-docs-workers-${{ github.sha }}-${{ github.run_attempt }}
+        path: |
+          target/ci-walltime/docs-workers/${{ github.run_id }}-${{ github.run_attempt }}/
+          target/differential/docs-render-workers/
+        if-no-files-found: error
+        retention-days: 14

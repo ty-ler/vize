@@ -19,7 +19,7 @@ void test("walltime comparisons use the same source and runner without publishin
   assert.deepEqual(workflow.on.pull_request.types, ["opened", "reopened", "labeled"]);
   assert.deepEqual(
     Object.keys(workflow.jobs)
-      .filter((name) => name !== "js-native-fault-diagnostic")
+      .filter((name) => !["js-native-fault-diagnostic", "docs-workers"].includes(name))
       .sort(),
     ["docs", "js", "n8n-baseline", "n8n-preparation", "native", "rust"],
   );
@@ -62,6 +62,7 @@ void test("baseline input partitions are manual-only, build once and retain both
     "native",
     "n8n-baseline",
     "n8n-preparation",
+    "docs-workers",
   ]);
   assert.equal(workflow.concurrency["cancel-in-progress"], false);
   const job = workflow.jobs["n8n-baseline"];

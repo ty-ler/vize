@@ -91,7 +91,12 @@ test(
   "real browser keeps serial/parallel receipts equivalent and persists failed-page evidence",
   { timeout: 120_000 },
   async () => {
-    const temporary = await mkdtemp(path.join(os.tmpdir(), "vize-docs-render-workers-"));
+    const retained = process.env.GITHUB_ACTIONS === "true";
+    const parent = retained
+      ? path.join(root, "target/differential/docs-render-workers")
+      : os.tmpdir();
+    await mkdir(parent, { recursive: true });
+    const temporary = await mkdtemp(path.join(parent, "vize-docs-render-workers-"));
     try {
       const dir = path.join(temporary, "dist");
       const routes = ["/a/b", "/a-b"];
@@ -123,7 +128,7 @@ test(
       await prepareLocaleControls(dir);
       const receipts = [];
       const durations = [];
-      for (const workers of ["1", "2"]) {
+      for (const workers of ["1", "2", "4"]) {
         const output = path.join(temporary, `workers-${workers}`);
         const result = await verify(dir, output, workers, routes);
         assert.equal(result.status, 0, result.log);
@@ -172,13 +177,34 @@ test(
             "real second context starts before the first route completes",
           );
         }
+        if (workers !== "1") {
+          const concurrent = timings.jobs.slice(0, Number(workers));
+          const created = concurrent.map(
+            (job: { phases: { phase: string; startedAt: string; durationMs: number }[] }) => {
+              const phase = job.phases.find(({ phase }) => phase === "context");
+              assert(phase, "actual browser context creation is measured");
+              return Date.parse(phase.startedAt) + Math.ceil(phase.durationMs) + 1;
+            },
+          );
+          const closing = concurrent.map(
+            (job: { phases: { phase: string; startedAt: string }[] }) => {
+              const phase = job.phases.find(({ phase }) => phase === "context-close");
+              assert(phase, "actual browser context cleanup is measured");
+              return Date.parse(phase.startedAt);
+            },
+          );
+          assert(
+            Math.max(...created) < Math.min(...closing),
+            `${workers} real contexts exist before the first cleanup begins`,
+          );
+        }
         // Each invocation has its own ephemeral server port; compare the same targets.
         receipts.push(
           receipt.reports.map((report: { links: string[] }) => ({
             ...report,
             links: report.links.map((href) => {
               const target = new URL(href);
-              return target.pathname + target.hash;
+              return target.pathname + target.search + target.hash;
             }),
           })),
         );
@@ -190,39 +216,65 @@ test(
         "parallel execution retains identical complete evidence",
       );
       console.log(`Docs render fixture measurements: ${JSON.stringify(durations)}`);
-
-      const output = path.join(temporary, "failure");
-      const result = await verify(dir, output, "2", [routes[0], "/broken"]);
-      assert.notEqual(result.status, 0);
-      const receipt = await json(path.join(output, "receipt.json"));
-      const timings = await json(path.join(output, "timings.json"));
-      assert.equal(receipt.status, "failed");
-      assert.equal(receipt.reports.length, 2);
-      assert(receipt.reports.every(({ route }: { route: string }) => route === routes[0]));
-      assert.equal(timings.status, "failed");
-      assert.equal(timings.failedCount, 2);
-      assert.equal(timings.incompleteCount, 0);
-      for (const job of timings.jobs.filter(
-        ({ route }: { route: string }) => route === "/broken",
-      )) {
-        assert.equal(job.status, "failed");
-        assert.match(job.error, /broken link/);
-        assert.equal(
-          job.phases.find(({ phase }: { phase: string }) => phase === "links").status,
-          "failed",
-        );
-        assert.equal(job.phases.at(-1).phase, "context-close");
-        assert.equal(job.phases.at(-1).status, "passed");
-      }
-      assert(
-        timings.phases
-          .filter(({ phase }: { phase: string }) =>
-            ["browser-close", "server-close"].includes(phase),
-          )
-          .every(({ status }: { status: string }) => status === "passed"),
+      assert.deepEqual(
+        receipts[0],
+        receipts[2],
+        "four workers retain every original receipt and tile hash",
       );
+
+      for (const workers of ["2", "4"]) {
+        const failureRoutes = workers === "2" ? [routes[0], "/broken"] : [...routes, "/broken"];
+        const output = path.join(temporary, workers === "2" ? "failure" : "failure-4");
+        const result = await verify(dir, output, workers, failureRoutes);
+        assert.notEqual(result.status, 0);
+        const receipt = await json(path.join(output, "receipt.json"));
+        const timings = await json(path.join(output, "timings.json"));
+        assert.equal(receipt.status, "failed");
+        assert.equal(receipt.reports.length, workers === "2" ? 2 : 4);
+        assert(receipt.reports.every(({ route }: { route: string }) => routes.includes(route)));
+        assert.equal(timings.status, "failed");
+        assert.equal(timings.failedCount, 2);
+        assert.equal(timings.incompleteCount, 0);
+        assert.deepEqual(
+          timings.jobs.map(
+            ({ index, route, device }: { index: number; route: string; device: string }) => ({
+              index,
+              route,
+              device,
+            }),
+          ),
+          createRenderJobs(failureRoutes).map(({ index, route, device }) => ({
+            index,
+            route,
+            device,
+          })),
+        );
+        for (const job of timings.jobs.filter(
+          ({ route }: { route: string }) => route === "/broken",
+        )) {
+          assert.equal(job.status, "failed");
+          assert.match(job.error, /broken link/);
+          assert.equal(
+            job.phases.find(({ phase }: { phase: string }) => phase === "links").status,
+            "failed",
+          );
+          assert.equal(job.phases.at(-1).phase, "context-close");
+          assert.equal(job.phases.at(-1).status, "passed");
+        }
+        assert(
+          timings.phases
+            .filter(({ phase }: { phase: string }) =>
+              ["browser-close", "server-close"].includes(phase),
+            )
+            .every(({ status }: { status: string }) => status === "passed"),
+        );
+        assert.deepEqual(
+          timings.phases.slice(-2).map(({ phase }: { phase: string }) => phase),
+          ["browser-close", "server-close"],
+        );
+      }
     } finally {
-      await rm(temporary, { recursive: true, force: true });
+      if (!retained) await rm(temporary, { recursive: true, force: true });
     }
   },
 );

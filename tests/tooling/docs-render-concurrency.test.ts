@@ -16,12 +16,125 @@ function deferred() {
   return { promise, resolve };
 }
 
-test("render workers accepts only the bounded 1/2 contract", () => {
+test("render workers preserves 1/2 and admits only explicit four-worker execution", () => {
   assert.equal(parseRenderWorkers(undefined), 2);
   assert.equal(parseRenderWorkers("1"), 1);
   assert.equal(parseRenderWorkers("2"), 2);
-  for (const invalid of ["", "0", "3", "4", "01", "2.0", " 2", "2workers", "-1", "Infinity"])
+  assert.equal(parseRenderWorkers("4"), 4);
+  for (const invalid of [
+    "",
+    "0",
+    "3",
+    "5",
+    "01",
+    "2.0",
+    " 2",
+    "2workers",
+    "-1",
+    "Infinity",
+    "04",
+    "4.0",
+    " 4",
+    "4 ",
+  ])
     assert.throws(() => parseRenderWorkers(invalid), /workers/);
+});
+
+test("four workers retain their slots until actual context cleanup completes", async () => {
+  const jobs = createRenderJobs(["/a", "/b", "/c"]);
+  const closing = Array.from({ length: 4 }, deferred);
+  const allClosing = deferred();
+  const nextStarted = deferred();
+  const visits: number[] = [];
+  let active = 0;
+  let maximum = 0;
+  let closeCount = 0;
+  const running = runRenderJobs(jobs, 4, async (job, phase) =>
+    withRenderContext(
+      () =>
+        phase("context", async () => {
+          active += 1;
+          maximum = Math.max(maximum, active);
+          visits.push(job.index);
+          if (job.index === 4) nextStarted.resolve();
+          return {
+            close: async () => {
+              if (job.index < 4) {
+                closeCount += 1;
+                if (closeCount === 4) allClosing.resolve();
+                await closing[job.index].promise;
+              }
+              active -= 1;
+            },
+          };
+        }),
+      async () => ({ route: job.route, device: job.device }),
+      (close) => phase("context-close", close),
+    ),
+  );
+  await allClosing.promise;
+  assert.equal(active, 4);
+  assert.equal(maximum, 4);
+  assert.deepEqual(visits, [0, 1, 2, 3], "closing contexts still occupy all four slots");
+  closing[0].resolve();
+  await nextStarted.promise;
+  for (const gate of closing) gate.resolve();
+  const results = await running;
+  assert.equal(active, 0);
+  assert.equal(maximum, 4);
+  assert.deepEqual(
+    visits,
+    jobs.map(({ index }) => index),
+  );
+  assert.equal(collectRenderReceipts(jobs, results).length, jobs.length);
+  assert(
+    results.every(
+      ({ timing }) => timing.worker < 4 && timing.phases.at(-1)?.phase === "context-close",
+    ),
+  );
+});
+
+test("four workers drain later jobs after operation and cleanup failures without success receipts", async () => {
+  const jobs = createRenderJobs(["/ok", "/broken", "/dual", "/later"]);
+  const closed: number[] = [];
+  const results = await runRenderJobs(jobs, 4, async (job, phase) =>
+    withRenderContext(
+      () =>
+        phase("context", async () => ({
+          close: async () => {
+            closed.push(job.index);
+            if (job.route === "/dual") throw new Error("cleanup refusal");
+          },
+        })),
+      async () => {
+        await phase("navigation", async () => {
+          if (["/broken", "/dual"].includes(job.route)) throw new Error("operation refusal");
+        });
+        return { route: job.route, device: job.device };
+      },
+      (close) => phase("context-close", close),
+    ),
+  );
+  assert.deepEqual(
+    closed.toSorted((a, b) => a - b),
+    jobs.map(({ index }) => index),
+  );
+  assert.equal(results.length, 8);
+  assert.equal(collectRenderReceipts(jobs, results).length, 4);
+  for (const result of results.filter(({ job }) => ["/broken", "/dual"].includes(job.route))) {
+    assert.equal(result.receipt, undefined);
+    assert.equal(result.timing.status, "failed");
+    assert.match(result.timing.error ?? "", /operation refusal/);
+    if (result.job.route === "/dual") {
+      assert.match(result.timing.error ?? "", /cleanup refusal/);
+      assert.equal(result.timing.phases.at(-1)?.status, "failed");
+    }
+  }
+  assert(
+    results
+      .filter(({ job }) => job.route === "/later")
+      .every(({ timing }) => timing.status === "passed"),
+  );
 });
 
 test("route/device jobs are complete, ordered and cannot collide in their output names", () => {

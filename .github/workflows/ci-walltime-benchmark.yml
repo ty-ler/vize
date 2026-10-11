@@ -8,7 +8,7 @@ on:
       component:
         description: Compare serial and concurrent execution on the same source
         type: choice
-        options: [all, js, docs, rust, native, n8n-baseline, n8n-preparation]
+        options: [all, js, docs, rust, native, n8n-baseline, n8n-preparation, docs-workers]
         default: all
 permissions: { contents: read }
 concurrency:
@@ -44,6 +44,14 @@ jobs:
             target/oxlint-original-project-transport/
           if-no-files-found: error
           retention-days: 14
+  docs-workers:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.component == 'docs-workers' }}
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with: { ref: "${{ github.sha }}" }
+      - uses: ./.github/actions/benchmark-docs-workers
   n8n-preparation:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.component == 'n8n-preparation' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
