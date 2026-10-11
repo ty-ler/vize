@@ -7,7 +7,8 @@ use std::fs;
 #[test]
 fn exact_directory_imports_register_both_barrels_and_their_vue_dependency() {
     let root = tempfile::tempdir().unwrap();
-    let source = root.path().join("src");
+    let authored_root = root.path().canonicalize().unwrap();
+    let source = authored_root.join("src");
     let nested = source.join("story");
     fs::create_dir_all(&nested).unwrap();
     let component = source.join("Input.vue");
