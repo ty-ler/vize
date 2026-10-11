@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "originalConfigManifestSHA256": "433e284764244dd3e171ff3513552054dbbd28b7b9603866c25871fc1dd904fc",
+  "nullCompletionManifestSHA256": "8d3677de4d6cfa8e5d1a1a18f4eaf93c3c88fb5c7db454d55adae26968054d30",
+  "loaderManifestSHA256": "a7ff805231e2d318d4bebbbce3926a2bbdb0d4f0d5209c458bedb268ceef66c4",
+  "producerParent": "649eabcecaf0f32a2138446dc9b0fb62d30dc480",
+  "producerSource": "5af6c5c1ab8dffe82d516ea1e6e935e747a9cf11",
+  "original400": 400,
+  "originalPackets": 79,
+  "supplementalResolves": 8,
+  "supplementalRefusals": 8,
+  "originalComparedFields": 20,
+  "producerBodies": [
+    [
+      "crates/vize_canon/src/lsp_client/editor_lsp.rs",
+      "67f11d411eae9bfaef00710e7147f8ed2c41ce726edb121b7db65a746f99c7c4",
+      "151174505c9f5135d1a37a70ea0f5d1f11efd4d952e5f1f7d8dbbfcc4748792c",
+      "14d63236d65a349c4784c9528e9ea277c489fbdc7828cf441bbd79e6bf7459ac"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/editor_lsp/completion_resolve.rs",
+      "e050d1173855faf066d602d86c8c44dc5505867c64cc1ffea2238a1c1427a985",
+      "e050d1173855faf066d602d86c8c44dc5505867c64cc1ffea2238a1c1427a985",
+      "d5a3c9f62fce730757a512f3bb1f51dee04ff01f7df4151b84529ec4b62e54d5"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/editor_lsp/completion_resolve/issued.rs",
+      null,
+      null,
+      "29aab3c4b986d2ffdc2352825b1837b38918f31412783e26ee448fde3bf1c209"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/editor_lsp/completion_resolve/issued/tests.rs",
+      null,
+      null,
+      "6237609c987c07ca1d65a658920283eebb8356655a177fdba94497ed0063b5c9"
+    ],
+    [
+      "crates/vize_canon/src/lsp_client/editor_lsp/readiness.rs",
+      "54a03096fa662a44883aa204385fe7c4ce1817dd58a91406ddc3900a77a62ef7",
+      "54a03096fa662a44883aa204385fe7c4ce1817dd58a91406ddc3900a77a62ef7",
+      "06069fdf432b4935ea84757480476bab49a983d4d84c79cfde4205f14f2db424"
+    ],
+    [
+      "crates/vize_canon/tests/fixtures/issued_completions/cross-root.json",
+      null,
+      null,
+      "19c2993cebb7ada6c7ac243a74b3fb5309e39d32aad2fa19333eabb4690cb84a"
+    ],
+    [
+      "crates/vize_canon/tests/fixtures/issued_completions/native-epoch-recovered.json",
+      null,
+      null,
+      "b41654868ec72bdc57199df92ae1e614c3615379acd1ebe8e5272df128b729fd"
+    ]
+  ]
+}

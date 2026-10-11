@@ -7,6 +7,12 @@ import successor from "../performance/support/warm-type-backed-project-config-nu
 import { qualifyProjectConfigHost } from "../performance/support/warm-type-backed-project-config-host.ts";
 import { qualifyProjectConfigNullCompletionHost } from "../performance/support/warm-type-backed-project-config-null-completion-host.ts";
 import { qualifyProjectConfigLoaderHost } from "../performance/support/warm-type-backed-project-config-loader-host.ts";
+import {
+  issuedCompletionManifest as issued,
+  issuedCompletionProduction,
+  qualifyIssuedCompletionHost,
+} from "../performance/support/warm-type-backed-issued-completion-host.ts";
+import loader from "../performance/support/warm-type-backed-project-config-loader-manifest.json" with { type: "json" };
 
 const production = original.files.map(([file]) => file);
 const bodies = [...original.files, ...original.preservedBodies, ...original.harnessExtensions];
@@ -31,7 +37,11 @@ await test("the finite null completion successor preserves the strict original w
 
 await test("the current whole bodies qualify only with the explicit successor and complete loader context", () => {
   const actual = (side: "before" | "after", file: string) => {
-    if (side === "before") return legacy(side, file);
+    if (side === "before") {
+      const body = issued.producerBodies.find(([name]) => name === file);
+      const context = loader.composedContext.find(([name]) => name === file);
+      return body ? body[1] : context ? context[1] : legacy(side, file);
+    }
     try {
       return createHash("sha256")
         .update(fs.readFileSync(new URL(`../../${file}`, import.meta.url)))
@@ -40,9 +50,12 @@ await test("the current whole bodies qualify only with the explicit successor an
       return null;
     }
   };
-  const result = qualifyProjectConfigNullCompletionHost(production, new Set(), actual);
+  const result =
+    qualifyProjectConfigNullCompletionHost(production, new Set(), actual) ??
+    qualifyIssuedCompletionHost(issuedCompletionProduction, new Set(), actual);
   assert.ok(result);
-  assert.equal(result.harnessSuccessor[2], current);
+  if ("harnessSuccessor" in result) assert.equal(result.harnessSuccessor[2], current);
+  else assert.equal(actual("after", changedFile), current);
   assert.equal(
     qualifyProjectConfigLoaderHost(production, new Set(), digest),
     null,
