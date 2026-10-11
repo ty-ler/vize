@@ -1,11 +1,10 @@
-import {
-  configReviewManifest,
-  qualifyConfigReviewHost,
-} from "../../performance/support/warm-type-backed-config-review-host.ts";
+import { configReviewManifest } from "../../performance/support/warm-type-backed-config-review-host.ts";
 import {
   issuedCompletionProduction,
   qualifyIssuedCompletionHost,
 } from "../../performance/support/warm-type-backed-issued-completion-host.ts";
+
+import { qualifyConfigRepairedReviewHost } from "../../performance/support/warm-type-backed-config-repair-host.ts";
 
 type Digest = (side: "before" | "after", file: string) => string | null;
 const bodies = new Map(
@@ -20,7 +19,7 @@ export const reviewedConfigProduction = [
 
 /** Current files remain actual reads; only the explicitly frozen before fixture is extended. */
 export function qualifyCurrentConfigReviewHost(allowed: ReadonlySet<string>, digest: Digest) {
-  return qualifyConfigReviewHost(
+  return qualifyConfigRepairedReviewHost(
     reviewedConfigProduction,
     allowed,
     (side, file) =>
