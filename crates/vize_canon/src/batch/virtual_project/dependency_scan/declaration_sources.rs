@@ -46,6 +46,13 @@ pub(super) fn source_backed(
     let mut visited = FxHashSet::default();
     let mut source_backed = false;
     while let Some(path) = pending.pop() {
+        if let Some(answer) = cache.get(&path) {
+            if *answer {
+                source_backed = true;
+                break;
+            }
+            continue;
+        }
         if !visited.insert(path.clone()) {
             continue;
         }
@@ -81,13 +88,54 @@ pub(super) fn source_backed(
             break;
         }
     }
-    cache.insert(declaration.to_path_buf(), source_backed);
+    if source_backed {
+        // Early success proves the queried root, not every visited branch.
+        cache.insert(declaration.to_path_buf(), true);
+    } else {
+        // A complete negative closure proves each visited node. Subsequent
+        // aliases of the same cycle must not parse that closure again.
+        cache.extend(visited.into_iter().map(|path| (path, false)));
+    }
     source_backed
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn negative_cycles_cache_the_complete_closure_and_fresh_walks_observe_overlays() {
+        let case = tempfile::tempdir().unwrap();
+        let root = case.path().canonicalize().unwrap();
+        let first = root.join("first.d.ts");
+        let second = root.join("second.d.ts");
+        let third = root.join("third.d.ts");
+        std::fs::write(&first, "export * from './second';\n").unwrap();
+        std::fs::write(&second, "export * from './third';\n").unwrap();
+        std::fs::write(&third, "export * from './first';\n").unwrap();
+        std::fs::write(root.join("ready.ts"), "export const ready = 1;\n").unwrap();
+        let project = VirtualProject::new(&root).unwrap();
+        let empty = FxHashMap::default();
+        let mut cache = FxHashMap::default();
+        assert!(!source_backed(&project, &first, &[], &empty, &mut cache));
+        assert_eq!(
+            cache,
+            [first.clone(), second.clone(), third.clone()]
+                .into_iter()
+                .map(|path| (path, false))
+                .collect()
+        );
+        // A different root reuses the negative child closure in this walk.
+        let outer = root.join("outer.d.ts");
+        std::fs::write(&outer, "export * from './second';\n").unwrap();
+        assert!(!source_backed(&project, &outer, &[], &empty, &mut cache));
+        assert_eq!(cache.len(), 4);
+        // Cache scope is one walk: the next walk admits unsaved source edges.
+        let overlays = FxHashMap::from_iter([(second, "export { ready } from './ready';\n")]);
+        let mut fresh = FxHashMap::default();
+        assert!(source_backed(&project, &first, &[], &overlays, &mut fresh));
+        assert_eq!(fresh, FxHashMap::from_iter([(first, true)]));
+    }
 
     #[test]
     fn declaration_cycles_reaching_source_join_the_mirror_but_terminal_ambient_types_do_not() {

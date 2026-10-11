@@ -45,6 +45,11 @@ the walk could inspect their source edges. A per-walk cache determines whether
 a declaration graph reaches supported first-party source, handles cycles, and
 honors unsaved declaration overlays. Registration, final declaration rewriting,
 and materialization then use the existing graph and source maps.
+The cache reuses classified children and stores every visited node only after a
+complete negative closure. Early success classifies only the queried root, so
+unproved branches never acquire a positive answer. Each new walk starts fresh
+and observes its own overlays; repeated aliases of a negative declaration cycle
+do not repeatedly parse the entire cycle.
 
 Terminal ambient declarations keep their authored identity and existing
 tsconfig authority. Published declarations inside `node_modules` keep the
