@@ -31,6 +31,11 @@ pub(super) fn install(root: &Path) -> (PathBuf, Value) {
         source("minimal-tsconfig.json.txt").as_str(),
     )
     .unwrap();
+    fs::write(
+        root.join("packages/core/src/PinInput/index.ts"),
+        source("minimal-index.ts.txt").as_str(),
+    )
+    .unwrap();
     let provider = repo.join("tests/node_modules").canonicalize().unwrap();
     assert!(
         provider.join("vue/package.json").is_file(),
@@ -41,6 +46,7 @@ pub(super) fn install(root: &Path) -> (PathBuf, Value) {
     let packet = json!({
         "scope":"tracked minimal whole-SFC native cause control; no ReKa Git checkout or install",
         "wholeRoot":source("minimal-root.vue.txt"),"wholeStory":source("minimal-story.vue.txt"),
+        "wholeBarrel":source("minimal-index.ts.txt"),
         "wholeConfig":source("minimal-tsconfig.json.txt"),"declaredSourceConfig":root.join(CONFIG_PATH),
         "providerScope":provider,"wholeVueManifest":fs::read_to_string(provider.join("vue/package.json")).unwrap(),
         "vueCanonicalTarget":provider.join("vue").canonicalize().unwrap(),

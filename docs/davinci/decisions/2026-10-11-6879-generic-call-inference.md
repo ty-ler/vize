@@ -151,3 +151,34 @@ failed CLI vectors remain separate evidence. Capture stays optional for standard
 native semantics; the pinned requirement remains mandatory in the existing
 single composed App qualifier. Current-source compilation, all native verdicts,
 full App output, snapshots, queue and release qualification remain pending.
+
+## Directory barrel authority after the first composed run
+
+Composed qualifier `38138961313` at exact `8170fd3e` retained all six portable
+PinInput cases, but its six pinned cases failed the original-text before
+assertion. The full raw and mapped packets reveal genuine TS2307 on the
+story's authored `import '..'`; all pinned before/after vectors consequently
+missed the required model TS2322. The Tree pinned control had the same missing
+barrel. This is incomplete program authority, not successful generic inference.
+
+The dependency resolver and its parser-free prefilter now admit the exact
+directory specifiers `.` and `..`. Existing `./` and `../` resolution, module
+candidate order, aliases and bare-package fast paths are preserved. A complete
+SFC graph law requires both directory barrels and their re-exported Vue
+dependency. A neighboring prefilter law keeps `.hidden`, `..hidden` and plain
+published packages out of that relative path. The portable six-case corpus now
+imports its own real `..` barrel, so its unchanged strict empty/singleton
+diagnostic verdicts detect this graph defect without a hydrated Git fixture.
+
+The prior assertion and its complete packet remain in immutable artifact
+`11702332387`. No App diagnostic golden is changed by this correction. That
+run separately retained whole App differences after authentic provider setup
+and the npmX/Vue Fes preparation failures; their qualification remains open.
+Exact-source Actions and the composed whole App/native oracle are required
+before queue admission. No throughput or 10x-target claim follows this fix.
+
+Existing unpublished worktree heads `065baa9448`, `bb52fbfffb` and `888a4898a8`
+remain intact on their original local branches; delivery repairs use a fresh
+`repair/canon-stack-delivery-20261011` worktree from the authenticated remote
+`1a0d0cbb`. The merged prefix stays immutable. Descendants will be rebased onto
+the actual merged main and pushed only against their rechecked remote leases.

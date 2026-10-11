@@ -9,10 +9,12 @@ text default require the original story's string arrays to stay valid.
 conditional/default distinction separately from pending Canon/native proof.
 
 The required Canon filter is `vue_codegen::generic_component_tests::`.
-Its native law always runs the tracked minimal root/story/strict-config cause
+Its native law always runs the tracked minimal root/story/barrel/strict-config cause
 through the actual generated project and returning native client, using the
 normal installed test Vue dependency and no ReKa checkout. Empty positive
 vectors and genuine singleton model TS2322 negatives remain mandatory.
+The story imports its actual parent directory barrel with `from '..'`, so a
+missing directory-module edge cannot make those negative cases pass silently.
 `VIZE_TEST_REQUIRE_TSGO=1` requires the real runtime. The single composed App
 qualifier additionally sets `VIZE_TEST_REQUIRE_PIN_INPUT_FIXTURE=1` to require
 the original tracked fixture snapshot, authentic provider links and whole
