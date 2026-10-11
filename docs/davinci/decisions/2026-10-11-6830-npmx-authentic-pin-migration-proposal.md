@@ -1,6 +1,6 @@
-# npmX fixture pin migration proposal
+# npmX authentic fixture pin migration
 
-**Status:** Private proposal; no maintainer selection, published pin, changed golden, installation, native acceptance or release credit.
+**Status:** The maintainer selected the immutable current-source pin on 2026-10-11. The original private proposal and 404 remain retained. The approved pin is composed with the required ElementPlus merge-queue fixture preparation. Genuine consumer/native acceptance and release remain pending.
 
 The original npmX fixture is [c9e8be91e61eeeae956e2068722caa09e293cc68](https://github.com/npmx-dev/npmx.dev/commit/c9e8be91e61eeeae956e2068722caa09e293cc68). Its authored manifest and lock require `https://pkg.pr.new/lunariajs/lunaria/@lunariajs/core@904b935`. Original composed source `888a4898a86a0fccfda99490e532eb407fc79157` failed preparation with HTTP 404 in [run 38129574946](https://github.com/ubugeeei-prod/vize/actions/runs/38129574946); its unchanged checker never ran for this fixture. The original expected vector and this failure stay retained.
 
@@ -12,10 +12,12 @@ The candidate authentically declares `@lunariajs/core@0.2.0`. Its [registry tarb
 
 ## Maintainer decision
 
+The maintainer explicitly selected option 1: update to immutable commit `83e38d9d40025ba45d800caf066012c0e7bef753` and retain all original 32 projects and checks. This authorizes the whole-source pin migration; it does not approve changed diagnostic expectations or claim consumer success.
+
 1. Select this immutable full-source pin migration, keeping the original 404 as historical evidence and qualifying the migrated consumer before accepting any new expected vector.
 2. Keep the original pin and provide the original tarball bytes matching its recorded SHA-512 integrity. The failed fixture remains a release blocker until those authentic bytes can be consumed.
 
-The private patch is one Gitlink change. The candidate has 217 changed upstream members: 34 added, seven removed and 176 modified, with 1,162 original versus 1,189 candidate tracked members. It changes 46 direct dependency declarations and 15 catalog/override declarations. Both root manifests require Node 24; the authored package-manager pin changes from pnpm 11.20.0 to 11.22.0. Candidate preparation and all other package availability remain unproved.
+The fixture patch is one Gitlink change. The candidate has 217 changed upstream members: 34 added, seven removed and 176 modified, with 1,162 original versus 1,189 candidate tracked members. It changes 46 direct dependency declarations and 15 catalog/override declarations. Both root manifests require Node 24; the authored package-manager pin changes from pnpm 11.20.0 to 11.22.0. Candidate preparation and all other package availability remain unproved.
 
 ## Complete changed direct declarations
 
