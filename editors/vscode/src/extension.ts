@@ -14,7 +14,6 @@ import {
   env,
   window,
   workspace,
-  type QuickPickItem,
   type StatusBarItem,
 } from "vscode";
 import { LanguageClient, Trace } from "vscode-languageclient/node.js";
@@ -36,6 +35,14 @@ import { createClientOptions } from "./client-options.js";
 import { isJsxDocument } from "./jsx-routing.js";
 import { downloadFile } from "./release-download.js";
 import { WorkspaceLspConfigDiscovery } from "./workspace-config.js";
+import type {
+  InspectedServerCandidate,
+  ReleaseServerTarget,
+  ServerCandidate,
+  VizeStatus,
+  VizeStatusAction,
+  VizeStatusQuickPickItem,
+} from "./server-state-types.js";
 
 const execFileAsync = promisify(execFile);
 let client: LanguageClient | undefined;
@@ -49,37 +56,6 @@ let configurationSyncTimer: ReturnType<typeof setTimeout> | undefined;
 let suppressConfigurationSync = false;
 const workspaceLspConfig = new WorkspaceLspConfigDiscovery(WORKSPACE_LSP_CONFIG_FILES);
 
-type ServerCandidateSource =
-  | "configured"
-  | "bundled"
-  | "development"
-  | "release"
-  | "cargo"
-  | "path";
-type ServerCandidate = {
-  path: string;
-  source: ServerCandidateSource;
-};
-type InspectedServerCandidate = ServerCandidate & {
-  version?: string;
-  versionError?: string;
-};
-type ReleaseServerTarget = {
-  archiveName: string;
-  targetName: string;
-};
-type VizeStatus = "disabled" | "starting" | "ready" | "missing-server" | "failed";
-type VizeStatusAction =
-  | "recommended"
-  | "lintOnly"
-  | "selectServer"
-  | "restart"
-  | "settings"
-  | "output"
-  | "disable";
-type VizeStatusQuickPickItem = QuickPickItem & {
-  action: VizeStatusAction;
-};
 const RECOMMENDED_SETUP_ACTION = "Enable Recommended";
 const LINT_ONLY_SETUP_ACTION = "Enable Lint Only";
 const OPEN_SETTINGS_ACTION = "Open Settings";
