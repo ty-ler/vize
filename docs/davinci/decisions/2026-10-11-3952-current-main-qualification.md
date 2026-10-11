@@ -163,3 +163,26 @@ observations. Diagnostic source `88a39e897c4dc86c70932e34e7b399d9d03fe1a8`
 follows those directories and reports missing tools explicitly. Repeat the
 unchanged original campaign before sampling; no cost attribution or improvement
 is claimed from the failed observer.
+
+At successor `091e599c1939f47413ff3454e68966f2b119950f`, all 2,034 existing
+Canon tests and native refusal filters pass, but the new corpus compares raw
+stderr's terminal newline with the existing public CLI error format, which
+trims terminal whitespace. [Authored job 114496222886](https://github.com/ubugeeei-prod/vize/actions/runs/38148308042)
+correctly refuses that assertion. Producer `48fa8442720081ea54a9f857b7805f17b001be47`
+pins both packets separately: invoke the unchanged runtime and compare its
+whole exit/stdout/stderr packet, then compare the complete actual public
+`CorsaError` packet and original API refusal. The runtime bytes, both failed
+paths, successful-fallback law and every frontier-transfer assertion remain
+unchanged. The complete corpus digest is now
+`043689a6cbcbe6fe8929488168663ea32a50d01c2599fe6867bbaf3df04028f2`.
+Only the same existing test's after pair changes among the finite 193; all 45
+preserved bodies and original source remain exact. Wait for current source
+controls and original n8n acceptance before another full manual dispatch.
+
+Historical source `cadaa068` does pass the unchanged Misskey resource campaign
+in artifact `11705463350`: all 287 publications and 40 cycles, server peak
+130,200 KiB (127.1484375 MiB), process-tree peak 354,600 KiB (346.2890625 MiB).
+Its full run remains unqualified because the added test does not compile;
+cancel the remaining stale full work after retaining the terminal resource
+packet. Neither that historical pass nor the observer grants current-source
+acceptance or a measured performance improvement.
