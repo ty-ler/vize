@@ -88,7 +88,7 @@ function handleMessage(message) {
   if (message.method === "initialize") {
     activeInitializationOptions = message.params?.initializationOptions ?? {};
     workspaceRootUri = message.params?.rootUri ?? workspaceRootUri;
-    sendInitializeResponse(message.id, createCapabilities(), version, send);
+    sendInitializeResponse(message.id, createCapabilities(), version, send, appendLog);
     return;
   }
 
