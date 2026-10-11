@@ -288,10 +288,10 @@ jobs:
         with:
           key: davinci-canon-scaling
           cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}-private-owner-diagnostic-400
-      - name: Verify closed native protocol witness refusal controls
-        run: vp exec node --test tests/tooling/warm-type-backed-owner-syscalls.test.ts tests/tooling/warm-type-backed-owner-kernel-string.test.ts tests/tooling/warm-type-backed-owner-lifecycle.test.ts tests/tooling/warm-type-backed-owner-write-epochs.test.ts tests/tooling/warm-type-backed-owner-current-context.test.ts
       - name: Pin original and actual reviewed production/helper/input bodies
         run: vp exec node tests/performance/support/warm-type-backed-owner-diagnostic.ts prepare
+      - name: Verify closed native protocol witness refusal controls
+        run: vp exec node --test tests/tooling/warm-type-backed-owner-syscalls.test.ts tests/tooling/warm-type-backed-owner-kernel-string.test.ts tests/tooling/warm-type-backed-owner-lifecycle.test.ts tests/tooling/warm-type-backed-owner-write-epochs.test.ts tests/tooling/warm-type-backed-owner-current-context.test.ts
       - name: Build unchanged original source with the existing shipping custody recipe
         run: vp exec node tests/performance/support/warm-type-backed-build.ts before
       - name: Build unchanged actual source with the identical shipping custody recipe
