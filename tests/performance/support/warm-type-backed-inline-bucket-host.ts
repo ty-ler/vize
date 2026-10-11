@@ -20,11 +20,11 @@ const previous = JSON.parse(
 ) as { files: string[]; preservedBodies: string[] };
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const manifestSHA256 = hash(manifest);
-assert.equal(manifestSHA256, "f77ccfcea51a0223e76de324499143d913d3fa5c739ed8f576e06698392dbb5c");
+assert.equal(manifestSHA256, "ba362ecf06dc733b802e448f3d4362cd4a5d5915075f8995cbd8e7b721093d6f");
 assert.equal(hash(previous), "da67c0b266a29d54ee9561d7dc7dbe739e621cbc66e796ebeee2bdefbb009adc");
 assert.equal(manifest.version, 1);
 assert.equal(manifest.originalSource, "b63d18511ce087e5ef9f6b1da17031f258ef7276");
-assert.equal(manifest.reviewedSource, "cc4270a54999d70d8c07bef1104f8524ec9485ec");
+assert.equal(manifest.reviewedSource, "ab497e944cbfb57952db8dad1f787b0f6df5cd9b");
 assert.equal(manifest.files.length, 196);
 assert.equal(manifest.preservedBodies.length, 45);
 assert.deepEqual(manifest.preservedBodies, previous.preservedBodies);

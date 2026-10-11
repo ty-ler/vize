@@ -4,7 +4,7 @@ Issue: [#3952](https://github.com/ubugeeei-prod/vize/issues/3952).
 This candidate is a separate draft child of
 [diagnostic PR #8688](https://github.com/ubugeeei-prod/vize/pull/8688),
 whose minimum source parent is `b63d18511ce087e5ef9f6b1da17031f258ef7276`.
-The actual reviewed source is `cc4270a54999d70d8c07bef1104f8524ec9485ec`.
+The actual reviewed source is `ab497e944cbfb57952db8dad1f787b0f6df5cd9b`.
 The preceding [Linux occupancy receipt](./2026-10-12-3952-native-fact-occupancy-diagnostic.md)
 counts the whole full-key index, unlike its explicitly incomplete prospective
 suffix histogram. At 1,391 files, all 1,223,853 full buckets contain one index.
