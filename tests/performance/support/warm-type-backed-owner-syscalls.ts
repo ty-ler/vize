@@ -19,6 +19,17 @@ export type NativeProcessWitness = {
 
 type Write = { thread: number; descriptor: string; bytes: Buffer; line: string };
 
+/** Losslessly decode -xx kernel descriptor syntax; raw trace lines remain unchanged. */
+export function kernelDescriptor(encoded: string) {
+  if (!encoded.startsWith("\\x")) return encoded;
+  assert.match(encoded, /^(?:\\x[0-9a-f]{2})+$/u, "partial descriptor escapes cannot qualify");
+  const bytes = Buffer.from(encoded.replaceAll("\\x", ""), "hex");
+  assert.equal(bytes.includes(0), false, "NUL descriptors cannot qualify");
+  const decoded = bytes.toString("utf8");
+  assert.ok(Buffer.from(decoded).equals(bytes), "kernel descriptor bytes must decode losslessly");
+  return decoded;
+}
+
 /** Decode complete successful writes only. Unknown or truncated relevant writes fail closed. */
 export function syscallWrites(text: string): Write[] {
   const writes: Write[] = [];
@@ -54,7 +65,7 @@ export function syscallWrites(text: string): Write[] {
     assert.ok(Number.isSafeInteger(transmitted) && transmitted >= 0 && transmitted <= requested);
     writes.push({
       thread,
-      descriptor: match[1].slice(1, -1),
+      descriptor: kernelDescriptor(match[1].slice(1, -1)),
       bytes: bytes.subarray(0, transmitted),
       line,
     });

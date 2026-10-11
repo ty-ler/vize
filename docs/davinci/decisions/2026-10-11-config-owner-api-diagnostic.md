@@ -91,3 +91,14 @@ byte remains hashed/counted and no filesystem payload grants API authority.
 Two added controls retain complete selected protocol bytes and reject each
 invalid form. All sixteen controls pass locally; actual capture and the original
 20-field migration remain unqualified until fresh complete Actions evidence.
+
+Actual run `38116573649` also refused the whole escaped `pipe:[56792]`
+descriptor. `-xx` encodes kernel pipe/socket labels as well as paths. A shared
+lossless descriptor decoder now recognizes only complete all-hex UTF-8 bytes;
+NUL, invalid bytes and partial escapes refuse. Both the scope selector and native
+witness parser use that decoded syntax, while each original raw syscall line,
+thread/PID/inode witness and whole incoming hash remain intact. Added complete
+pipe and Unix-peer controls pass together with all eighteen original/new laws.
+Original fixture values moved without changes into one bounded shared helper;
+all owned files remain within the existing line ratchet. Actual complete native
+API capture and the original migration authority remain unfinished.

@@ -12,8 +12,16 @@ import {
 import { NativeProtocolStream } from "../performance/support/warm-type-backed-owner-protocol-stream.ts";
 import { nativeApiSocketTraffic } from "../performance/support/warm-type-backed-owner-socket-traffic.ts";
 import { sha256 } from "../performance/support/warm-type-backed-source.ts";
-import { request, response, parent, native, write, input, output, protocolStream } from "./support/warm-type-backed-owner-kernel-fixture.ts";
-
+import {
+  request,
+  response,
+  parent,
+  native,
+  write,
+  input,
+  output,
+  protocolStream,
+} from "./support/warm-type-backed-owner-kernel-fixture.ts";
 
 await test("actual complete request/response bytes, process lineage and socket inode qualify together", () => {
   const [receipt] = nativeApiAttachments(input + output, [native], [parent]);
@@ -106,7 +114,6 @@ await test("inherited strace stderr retains exact kernel PID prefixes without in
   assert.throws(() => protocolStream(stderr.replace(/^\[pid \d+\] /gmu, "")));
 });
 
-
 await test("the bounded observer retains every protocol byte and hashes excluded filesystem writes", () => {
   const regular = write(11, "/fixture/virtuals/Comp0.vue.ts", Buffer.from("synthetic source"));
   const wake = write(21, "anon_inode:[eventfd]", Buffer.alloc(8));
@@ -146,6 +153,45 @@ await test("partial, relative, NUL and mixed escaped paths remain unknown kernel
     '"\\x2f\\x61"',
   ])
     assert.throws(() => protocolStream(write(11, descriptor, Buffer.from("a"))));
+});
+
+await test("fully hex-escaped kernel pipe descriptors retain original bytes and exact process witnesses", () => {
+  const escaped = (text: string) =>
+    [...Buffer.from(text)].map((byte) => `\\x${byte.toString(16).padStart(2, "0")}`).join("");
+  const trace =
+    write(11, escaped(native.stdin), frameMessage(request)) +
+    write(21, escaped(native.stdout), frameMessage(response));
+  const { selected, scope } = protocolStream(trace);
+  assert.equal(selected, trace);
+  assert.equal(scope.inputSHA256, sha256(Buffer.from(trace)));
+  assert.deepEqual(
+    syscallWrites(selected).map((row) => row.descriptor),
+    [native.stdin, native.stdout],
+  );
+  const [attachment] = nativeApiAttachments(selected, [native], [parent]);
+  assert.deepEqual(attachment.request, request);
+  assert.deepEqual(attachment.response, response);
+  assert.equal(attachment.process.pid, native.pid);
+});
+
+await test("fully escaped Unix descriptors preserve actual peer arrows and returned API inode", () => {
+  const descriptor = 'UNIX-STREAM:[202->203,"/tmp/tsgo-api-actual"]';
+  const escaped = [...Buffer.from(descriptor)]
+    .map((byte) => `\\x${byte.toString(16).padStart(2, "0")}`)
+    .join("");
+  const bytes = frameMessage({
+    jsonrpc: "2.0",
+    id: 8,
+    method: "api/test",
+    params: { source: "entire" },
+  });
+  const trace = input + write(21, escaped, bytes) + output;
+  const { selected } = protocolStream(trace);
+  assert.equal(selected, trace);
+  assert.equal(syscallWrites(selected)[1].descriptor, descriptor);
+  assert.deepEqual(syscallWrites(selected)[1].bytes, bytes);
+  assert.equal(nativeApiAttachments(selected, [native], [parent])[0].socket.inode, "202");
+  assert.throws(() => protocolStream(write(21, "\\x2f\\xff", Buffer.from("a"))), /losslessly/);
 });
 
 await test("unfinished filesystem and protocol writes retain independent exact thread custody", () => {

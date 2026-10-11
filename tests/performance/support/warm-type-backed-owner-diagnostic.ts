@@ -141,6 +141,7 @@ if (process.argv[2] === "prepare") {
     "tests/performance/support/warm-type-backed-owner-syscalls.ts",
     "tests/performance/support/warm-type-backed-owner-resolve.ts",
     "tests/tooling/warm-type-backed-owner-syscalls.test.ts",
+    "tests/tooling/support/warm-type-backed-owner-kernel-fixture.ts",
   ].map((file) => {
     const sourceSHA256 = digest(driver.revision, file);
     assert.equal(sha256(fs.readFileSync(path.join(driverRoot, file))), sourceSHA256);

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { kernelDescriptor } from "./warm-type-backed-owner-syscalls.ts";
 
 const MAX_LINE = 4 * 1024 * 1024 + 4096;
 const MAX_SELECTED = 64 * 1024 * 1024;
@@ -50,16 +51,12 @@ export class NativeProtocolStream {
       selected = this.pending.get(thread)!;
       this.pending.delete(thread);
     } else if (body.startsWith("write(")) {
-      const descriptor = body.match(/^write\(\d+<(.+)>, /u)?.[1];
-      assert.ok(descriptor, "undecorated or unknown writes cannot qualify");
+      const encoded = body.match(/^write\(\d+<(.+)>, /u)?.[1];
+      assert.ok(encoded, "undecorated or unknown writes cannot qualify");
+      const descriptor = kernelDescriptor(encoded);
       if (/^pipe:\[\d+\]$/u.test(descriptor)) selected = true;
       else if (/^UNIX-STREAM:\[\d+(?:->\d+)?(?:,"[^"\n]+")?\]$/u.test(descriptor)) selected = true;
-      else if (
-        descriptor.startsWith("/") ||
-        (/^(?:\\x[0-9a-f]{2})+$/u.test(descriptor) &&
-          descriptor.startsWith("\\x2f") &&
-          !descriptor.includes("\\x00"))
-      ) {
+      else if (descriptor.startsWith("/")) {
         selected = false;
         this.fileWrites++;
       } else if (descriptor === "anon_inode:[eventfd]") {
