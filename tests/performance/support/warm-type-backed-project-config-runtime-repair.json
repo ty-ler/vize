@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "originalSource": "a49936db24d9540e0630b42474654190d575294b",
+  "repairedSource": "a6d8bd85db85cae9ccc3978bdacbc1048626421e",
+  "inheritedBodies": [
+    [
+      "crates/vize_carton/src/config/loader/js.rs",
+      "df49c1e9b603ce50011ecde9dac116987ab32ee48d3a4b2b4c5818e7e1876f5e",
+      "df49c1e9b603ce50011ecde9dac116987ab32ee48d3a4b2b4c5818e7e1876f5e"
+    ],
+    [
+      "crates/vize_carton/src/config/loader/module-runtime.mjs",
+      "a5d247f627f4a45924f61d72253114349b512c23817487b45c0a068db69f7eda",
+      "6dc8d9af88a733dd53d6d38171f8793bfd5857d9b6c77bf506c06ce576c67312"
+    ]
+  ]
+}
