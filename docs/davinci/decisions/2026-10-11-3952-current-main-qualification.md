@@ -45,3 +45,22 @@ Actions must pass the original normal/native tests, n8n authored lifecycle,
 400-request comparison, full workspace/Nix checks and 128/384 MiB resource
 caps before queue admission. Source qualification alone grants no speed,
 installed acceptance, release or issue-completion credit.
+
+The next reviewed producer is
+`d0c678454696b058e0789e84ea84b1ce6a5a1927`. It borrows the actual registered
+package binding and private nested routes instead of recursively cloning them.
+The existing stable manifest sort, complete-value adjacent deduplication and
+shadow/fact operation order remain unchanged. Two new test modules retain the
+literal original clone operations, compare all 65 project fields and complete
+ordered facts across six lifecycle waves with observation both enabled and
+disabled, and verify actual registered pointers and owner-sharing relations.
+The separate private-route control also preserves equal routes separated by
+a different same-manifest value; it does not replace full equality with a key.
+
+The complete qualification now contains 190 before/after producer bodies and
+the same 45 identical preserved bodies. Only the three reviewed shadow modules
+change among the earlier 188 producer pairs; the two new modules are additional
+test producers. Fresh Actions must compile and execute these controls and the
+unchanged real campaigns. This source change has no measured speed or memory
+claim yet. The preceding full Check also failed Misskey's unchanged 128 MiB
+server cap at 129 MiB; the resource gate remains required.
