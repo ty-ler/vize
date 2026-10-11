@@ -3,6 +3,7 @@ use super::resolution;
 use crate::package_route::stamp::Shared;
 use crate::package_route::stamp::{Consumed, FactOwner, FactRole, InputStamp};
 use std::path::{Path, PathBuf};
+use vize_carton::FxHashMap;
 
 pub(super) struct WalkFacts {
     enabled: bool,
@@ -179,20 +180,34 @@ impl WalkFacts {
         pattern: &str,
         target: &str,
         root: &Path,
+        overlays: &FxHashMap<PathBuf, &str>,
     ) -> bool {
-        if !self.enabled {
-            return resolution::alias_may_reach_first_party(pattern, target, root);
+        let packet = resolution::alias_may_reach_with_overlays_consumed(
+            pattern,
+            target,
+            root,
+            overlays,
+            self.enabled,
+        );
+        if self.enabled {
+            self.append(packet)
+        } else {
+            packet.value
         }
-        self.append(resolution::alias_may_reach_first_party_observed(
-            pattern, target, root,
-        ))
     }
 
-    pub(super) fn probe_candidates(&mut self, path: &Path) -> Option<PathBuf> {
-        if !self.enabled {
-            return resolution::probe_candidates(path);
+    pub(super) fn probe_candidates(
+        &mut self,
+        path: &Path,
+        overlays: &FxHashMap<PathBuf, &str>,
+    ) -> Option<PathBuf> {
+        let packet =
+            resolution::probe_candidates_with_overlays_consumed(path, overlays, self.enabled);
+        if self.enabled {
+            self.append(packet)
+        } else {
+            packet.value
         }
-        self.append(resolution::probe_candidates_observed(path))
     }
 
     #[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
@@ -202,14 +217,21 @@ impl WalkFacts {
         dir: &Path,
         root: &Path,
         aliases: &[(std::string::String, std::string::String)],
+        overlays: &FxHashMap<PathBuf, &str>,
     ) -> Option<PathBuf> {
-        if !self.enabled {
-            return resolution::resolve_dependency(specifier, dir, root, aliases);
+        let packet = resolution::resolve_dependency_with_overlays_consumed(
+            specifier,
+            dir,
+            root,
+            aliases,
+            overlays,
+            self.enabled,
+        );
+        if self.enabled {
+            self.append(packet).0
+        } else {
+            packet.value.0
         }
-        self.append(resolution::resolve_dependency_observed(
-            specifier, dir, root, aliases,
-        ))
-        .0
     }
 
     pub(super) fn finish(self) -> Consumed<Vec<PathBuf>> {

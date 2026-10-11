@@ -230,6 +230,16 @@ impl ContextFingerprint {
             }
         })?;
         let mut changes = validated.value;
+        // Supplied package bodies are also route inputs. Their changed body
+        // must use the complete cold producer even when disk metadata stayed
+        // current; only actual validated deletions have a narrow exception.
+        if changes
+            .changed
+            .iter()
+            .any(|path| context.route_inputs.contains(path) && !changes.deleted.contains(path))
+        {
+            return Err(SourceGuard::PackageInput);
+        }
         // Only actual missing authored bodies can remove old requested roots.
         // Surviving duplicate counts and all other membership shifts stay cold.
         let retained_requested = self

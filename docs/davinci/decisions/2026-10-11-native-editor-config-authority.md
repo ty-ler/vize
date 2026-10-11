@@ -204,3 +204,24 @@ generation controls now require actual package-classified regeneration, its
 complete authored-body packet and the unchanged registry. Missing completion,
 body, qualification, a changed registry, and first-party classification all
 retain ordinary registration. Their Actions results remain pending.
+
+Exact `a064f97d63`, run `38112023745`, compiled all 2,001 Canon lib tests
+and passed scoped production Clippy. Original rename and four-node package
+work laws now pass, alongside all three new package generation controls. The
+context filter still failed 3/107: a dependency-role canonical replacement was
+not retired after its independently observed negative probe, deleted reachable
+buffers were omitted by the cold producer, and a changed unsaved package body
+incorrectly reused the old route-input authority.
+
+Keep the exact independent canonical replacement rule for dependency probes
+as for the original callback probe, without granting importer completion.
+Changed package bodies, including supplied buffers, retain the original cold
+producer policy. The dependency walk may resolve an absent path only through
+the exact caller-owned overlay key while retaining the actual negative IsFile,
+TryExists and CanonicalFile facts. Directories and inaccessible paths never
+gain file authority. Existing disk-only resolver APIs and target ordering are
+unchanged; the consumed and ordinary overlay walks share the same operation.
+The authored `editor-deleted-overlay` corpus fixture and whole-projection
+comparison cover the reachable buffer, untouched overlay, directory refusal,
+TypeScript-before-JavaScript precedence and an exact alias. All original cold
+refusals and the original lifecycle campaign remain required.

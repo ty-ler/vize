@@ -331,3 +331,6 @@ fn registered_source_retarget_and_global_config_negative_creation_keep_strict_re
         );
     }
 }
+
+#[path = "consumed_tests/overlay.rs"]
+mod overlay;

@@ -3,8 +3,9 @@
 use std::path::{Component, Path, PathBuf};
 
 use crate::package_route::stamp::{Consumed, InputStamp};
-use vize_carton::{String as CompactString, cstr};
+use vize_carton::{FxHashMap, String as CompactString, cstr};
 
+#[path = "resolution/candidates.rs"]
 mod candidates;
 use candidates::probe_candidates_with_inputs_inner;
 
@@ -49,26 +50,13 @@ pub(super) fn is_declaration_file(path: &Path) -> bool {
         })
 }
 
+#[cfg(test)]
 pub(super) fn alias_may_reach_first_party(
     pattern: &str,
     target: &str,
     project_root: &Path,
 ) -> bool {
-    alias_may_reach_first_party_inner(pattern, target, project_root, None)
-}
-
-pub(super) fn alias_may_reach_first_party_observed(
-    pattern: &str,
-    target: &str,
-    project_root: &Path,
-) -> Consumed<bool> {
-    let mut stamps = Vec::new();
-    let value = alias_may_reach_first_party_inner(pattern, target, project_root, Some(&mut stamps));
-    Consumed {
-        value,
-        stamps,
-        qualified: true,
-    }
+    alias_may_reach_first_party_inner(pattern, target, project_root, None, None)
 }
 
 fn alias_may_reach_first_party_inner(
@@ -76,6 +64,7 @@ fn alias_may_reach_first_party_inner(
     target: &str,
     project_root: &Path,
     mut stamps: Option<&mut Vec<InputStamp>>,
+    overlays: Option<&FxHashMap<PathBuf, &str>>,
 ) -> bool {
     if pattern.contains('*') {
         return true;
@@ -85,11 +74,18 @@ fn alias_may_reach_first_party_inner(
     } else {
         project_root.join(target)
     };
-    let Some(resolved) = probe_candidates_with_inputs_inner(&absolute, stamps.as_deref_mut()).0
+    let Some(resolved) =
+        probe_candidates_with_inputs_inner(&absolute, stamps.as_deref_mut(), overlays).0
     else {
         return false;
     };
-    let Some(key) = canonical_key_inner(&resolved, stamps) else {
+    let Some(key) = canonical_key_inner(&resolved, stamps).or_else(|| {
+        overlays.and_then(|overlays| {
+            overlays
+                .get_key_value(&resolved)
+                .map(|(path, _)| path.clone())
+        })
+    }) else {
         return false;
     };
     !inside_node_modules(&key) && !is_declaration_file(&key)
@@ -127,7 +123,7 @@ pub(crate) fn resolve_dependency_with_inputs(
     project_root: &Path,
     aliases: &[(std::string::String, std::string::String)],
 ) -> (Option<PathBuf>, Vec<PathBuf>) {
-    resolve_dependency_with_inputs_inner(specifier, importer_dir, project_root, aliases, None)
+    resolve_dependency_with_inputs_inner(specifier, importer_dir, project_root, aliases, None, None)
 }
 
 #[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
@@ -144,6 +140,7 @@ pub(crate) fn resolve_dependency_observed(
         project_root,
         aliases,
         Some(&mut stamps),
+        None,
     );
     Consumed {
         value,
@@ -159,6 +156,7 @@ fn resolve_dependency_with_inputs_inner(
     project_root: &Path,
     aliases: &[(std::string::String, std::string::String)],
     mut stamps: Option<&mut Vec<InputStamp>>,
+    overlays: Option<&FxHashMap<PathBuf, &str>>,
 ) -> (Option<PathBuf>, Vec<PathBuf>) {
     let specifier = specifier
         .strip_suffix(".vue.ts")
@@ -167,7 +165,11 @@ fn resolve_dependency_with_inputs_inner(
         || specifier.starts_with("../")
         || Path::new(&specifier).is_absolute()
     {
-        return probe_candidates_with_inputs_inner(&importer_dir.join(&specifier), stamps);
+        return probe_candidates_with_inputs_inner(
+            &importer_dir.join(&specifier),
+            stamps,
+            overlays,
+        );
     }
 
     // Select the authored pattern before probing its targets. An exact key
@@ -225,7 +227,7 @@ fn resolve_dependency_with_inputs_inner(
             project_root.join(&substituted)
         };
         let (resolved, consulted) =
-            probe_candidates_with_inputs_inner(&absolute, stamps.as_deref_mut());
+            probe_candidates_with_inputs_inner(&absolute, stamps.as_deref_mut(), overlays);
         inputs.extend(consulted);
         if resolved.is_some() {
             return (resolved, inputs);
@@ -234,24 +236,78 @@ fn resolve_dependency_with_inputs_inner(
     (None, inputs)
 }
 
+#[cfg(test)]
 pub(super) fn probe_candidates(base: &Path) -> Option<PathBuf> {
     probe_candidates_with_inputs(base).0
 }
 
-pub(super) fn probe_candidates_observed(base: &Path) -> Consumed<Option<PathBuf>> {
+#[cfg(test)]
+fn probe_candidates_with_inputs(base: &Path) -> (Option<PathBuf>, Vec<PathBuf>) {
+    probe_candidates_with_inputs_inner(base, None, None)
+}
+
+/// Use the original resolver with the exact authoritative editor scope.
+#[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
+pub(super) fn resolve_dependency_with_overlays_consumed(
+    specifier: &str,
+    importer_dir: &Path,
+    project_root: &Path,
+    aliases: &[(std::string::String, std::string::String)],
+    overlays: &FxHashMap<PathBuf, &str>,
+    observe: bool,
+) -> Consumed<(Option<PathBuf>, Vec<PathBuf>)> {
     let mut stamps = Vec::new();
-    let value = probe_candidates_with_inputs_inner(base, Some(&mut stamps)).0;
+    let value = resolve_dependency_with_inputs_inner(
+        specifier,
+        importer_dir,
+        project_root,
+        aliases,
+        observe.then_some(&mut stamps),
+        Some(overlays),
+    );
     Consumed {
         value,
         stamps,
-        qualified: true,
+        qualified: observe,
     }
 }
 
-fn probe_candidates_with_inputs(base: &Path) -> (Option<PathBuf>, Vec<PathBuf>) {
-    probe_candidates_with_inputs_inner(base, None)
+pub(super) fn probe_candidates_with_overlays_consumed(
+    base: &Path,
+    overlays: &FxHashMap<PathBuf, &str>,
+    observe: bool,
+) -> Consumed<Option<PathBuf>> {
+    let mut stamps = Vec::new();
+    let value =
+        probe_candidates_with_inputs_inner(base, observe.then_some(&mut stamps), Some(overlays)).0;
+    Consumed {
+        value,
+        stamps,
+        qualified: observe,
+    }
 }
 
+pub(super) fn alias_may_reach_with_overlays_consumed(
+    pattern: &str,
+    target: &str,
+    project_root: &Path,
+    overlays: &FxHashMap<PathBuf, &str>,
+    observe: bool,
+) -> Consumed<bool> {
+    let mut stamps = Vec::new();
+    let value = alias_may_reach_first_party_inner(
+        pattern,
+        target,
+        project_root,
+        observe.then_some(&mut stamps),
+        Some(overlays),
+    );
+    Consumed {
+        value,
+        stamps,
+        qualified: observe,
+    }
+}
 
 #[cfg(test)]
 #[path = "alias_tests.rs"]

@@ -90,7 +90,7 @@ impl VirtualProject {
         let alias_prefixes: Vec<CompactString> = aliases
             .iter()
             .filter(|(pattern, target)| {
-                facts.alias_may_reach_first_party(pattern, target, &self.project_root)
+                facts.alias_may_reach_first_party(pattern, target, &self.project_root, overlays)
             })
             .map(|(pattern, _)| {
                 CompactString::from(
@@ -239,13 +239,14 @@ impl VirtualProject {
                 // Path references are always relative to the containing file,
                 // even without `./`; import aliases and packages do not apply.
                 let native_target = if is_reference {
-                    facts.probe_candidates(&importer_dir.join(&specifier))
+                    facts.probe_candidates(&importer_dir.join(&specifier), overlays)
                 } else {
                     facts.resolve_dependency(
                         &specifier,
                         &importer_dir,
                         &self.project_root,
                         &aliases,
+                        overlays,
                     )
                 };
                 let Some(target) = native_target else {
@@ -259,7 +260,12 @@ impl VirtualProject {
                     }
                     continue;
                 };
-                let Some(key) = facts.canonical_key(&target) else {
+                // Retain negative disk facts; only the exact supplied buffer owns its key.
+                let Some(key) = facts.canonical_key(&target).or_else(|| {
+                    overlays
+                        .get_key_value(&target)
+                        .map(|(path, _)| path.clone())
+                }) else {
                     continue;
                 };
                 let package_local = importer_package_roots
@@ -291,15 +297,14 @@ impl VirtualProject {
                 // A preceding changed owner can prune an already visited
                 // target and its descendants before another owner acquires it.
                 // The scoped walk skips only a registration that still exists;
-                // full cold walks keep their original failed-inference policy.
+                // cold walks retain the original failed-inference policy.
                 if !visited.insert(key.clone())
                     && (initial_sources.is_none() || self.find_by_original(&key).is_some())
                 {
                     continue;
                 }
-                // Register the canonical path: a workspace symlink is
-                // first-party where it actually lives, so it must not enter the
-                // virtual tree under `node_modules`.
+                // Register physical workspace-symlink identity outside
+                // `node_modules`, or the exact supplied absent-buffer key.
                 // A reachable dependency is inferred, not requested: an
                 // unreadable file or a malformed sibling-package SFC must not
                 // abort the check the user actually asked for, so registration

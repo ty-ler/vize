@@ -116,7 +116,10 @@ impl NativeFacts {
                 }
                 // This exact original walk has replaced its whole edge/probe
                 // scope. Shadow/rewrite observations retain LocalImporter.
-                FactRole::DependencyImporter => completed.contains(&owner.path),
+                FactRole::DependencyImporter => {
+                    completed.contains(&owner.path)
+                        || self.deleted_probe_was_actually_replaced(stamp, &deleted, actual_count)
+                }
                 FactRole::EditorImporter => editors.contains(&owner.path),
                 FactRole::AuthoredSource => replaced.contains(&owner.path),
             };

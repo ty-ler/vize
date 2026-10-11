@@ -1,11 +1,12 @@
 use std::path::{Path, PathBuf};
 
 use crate::package_route::stamp::InputStamp;
-use vize_carton::cstr;
+use vize_carton::{FxHashMap, cstr};
 
 pub(super) fn probe_candidates_with_inputs_inner(
     base: &Path,
     mut stamps: Option<&mut Vec<InputStamp>>,
+    overlays: Option<&FxHashMap<PathBuf, &str>>,
 ) -> (Option<PathBuf>, Vec<PathBuf>) {
     let mut inputs = vec![base.to_path_buf()];
     let extension = base.extension().and_then(|extension| extension.to_str());
@@ -15,7 +16,9 @@ pub(super) fn probe_candidates_with_inputs_inner(
         Some("js" | "jsx") => &["ts", "tsx", "d.ts", "js", "jsx"],
         Some("mjs") => &["mts", "d.mts", "mjs"],
         Some("cjs") => &["cts", "d.cts", "cjs"],
-        _ if file_predicate(base, &mut stamps) => return (Some(base.to_path_buf()), inputs),
+        _ if file_predicate(base, &mut stamps, overlays) => {
+            return (Some(base.to_path_buf()), inputs);
+        }
         Some("vue" | "ts" | "tsx" | "mts" | "cts" | "json") => return (None, inputs),
         _ => &[
             "ts", "tsx", "d.ts", "mts", "d.mts", "cts", "d.cts", "vue", "js", "jsx", "mjs", "cjs",
@@ -30,7 +33,7 @@ pub(super) fn probe_candidates_with_inputs_inner(
     for extension in extensions {
         let candidate = PathBuf::from(cstr!("{}.{extension}", probe_base.display()).as_str());
         inputs.push(candidate.clone());
-        if file_predicate(&candidate, &mut stamps) {
+        if file_predicate(&candidate, &mut stamps, overlays) {
             return (Some(candidate), inputs);
         }
     }
@@ -53,17 +56,31 @@ pub(super) fn probe_candidates_with_inputs_inner(
     ] {
         let candidate = base.join(index);
         inputs.push(candidate.clone());
-        if file_predicate(&candidate, &mut stamps) {
+        if file_predicate(&candidate, &mut stamps, overlays) {
             return (Some(candidate), inputs);
         }
     }
     (None, inputs)
 }
 
-fn file_predicate(path: &Path, stamps: &mut Option<&mut Vec<InputStamp>>) -> bool {
+fn file_predicate(
+    path: &Path,
+    stamps: &mut Option<&mut Vec<InputStamp>>,
+    overlays: Option<&FxHashMap<PathBuf, &str>>,
+) -> bool {
     let is_file = path.is_file();
-    if let Some(stamps) = stamps {
+    if let Some(stamps) = stamps.as_deref_mut() {
         stamps.push(InputStamp::observed_is_file(path.to_path_buf(), is_file));
     }
-    is_file
+    if is_file || !overlays.is_some_and(|overlays| overlays.contains_key(path)) {
+        return is_file;
+    }
+    // Only the exact caller-owned buffer can supply an absent source. Keep
+    // the actual negative disk predicate; directories and inaccessible paths
+    // do not become files merely because a buffer was supplied.
+    let exists = path.try_exists().map_err(|error| error.kind());
+    if let Some(stamps) = stamps {
+        stamps.push(InputStamp::observed_try_exists(path.to_path_buf(), exists));
+    }
+    exists == Ok(false)
 }
