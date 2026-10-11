@@ -4,11 +4,14 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import signal
 import subprocess
 import sys
+import threading
 import time
+import traceback
 
 SOURCE = "605429c660b328bb03bec5bbfef15961e59fcaf0"
 PINS = {
@@ -43,7 +46,7 @@ def git(cwd, *args):
     return subprocess.check_output(["git", "-C", str(cwd), *args])
 
 
-def run(argv, cwd, destination, timeout=300):
+def run(argv, cwd, destination, timeout=300, observer=None):
     destination.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
     timed_out = False
@@ -52,6 +55,11 @@ def run(argv, cwd, destination, timeout=300):
             process = subprocess.Popen(
                 argv, cwd=cwd, stdout=stdout, stderr=stderr, start_new_session=True
             )
+            stop = threading.Event()
+            watcher = None
+            if observer:
+                watcher = threading.Thread(target=observer, args=(stop,))
+                watcher.start()
             try:
                 returncode = process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
@@ -62,6 +70,10 @@ def run(argv, cwd, destination, timeout=300):
                 except subprocess.TimeoutExpired:
                     os.killpg(process.pid, signal.SIGKILL)
                     returncode = process.wait()
+            finally:
+                stop.set()
+                if watcher:
+                    watcher.join()
     record = {
         "argv": list(map(str, argv)), "cwd": str(cwd), "pid": process.pid,
         "timeoutSeconds": timeout, "timedOut": timed_out, "returncode": returncode,
@@ -104,6 +116,55 @@ def snapshot(cache, destination):
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(source, target)
     save_json(destination / "materialized-manifest.json", manifest(cache))
+
+
+def observe_native_exec(stop, trace, destination, corsa, direct):
+    """Copy the ephemeral program during the declared native exec observer pause."""
+    records = []
+    seen = set()
+    position = 0
+    pending = ""
+    try:
+        while True:
+            if trace.exists():
+                with trace.open() as stream:
+                    stream.seek(position)
+                    pending += stream.read()
+                    position = stream.tell()
+                lines = pending.split("\n")
+                pending = lines.pop()
+                for line in lines:
+                    if "execve(" not in line or '"--checkers"' not in line:
+                        continue
+                    match = re.search(r'"--project", "([^"]+)"', line)
+                    if not match or match[1] in seen:
+                        continue
+                    config = Path(match[1])
+                    if "batch-installed-" not in str(config):
+                        continue
+                    seen.add(str(config))
+                    target = destination / str(len(records))
+                    target.mkdir(parents=True)
+                    (target / "whole-native-exec-line").write_text(line + "\n")
+                    before = sha(config)
+                    snapshot(config.parent, target)
+                    record = {"config": str(config), "configSHA256": before,
+                              "observedAtMonotonic": time.monotonic()}
+                    records.append(record)
+                    if direct:
+                        argv = [str(corsa), "--checkers", "1", "--pretty", "false",
+                                "--project", str(config)]
+                        run(argv, config.parent, target / "direct-diagnostics")
+                        run([*argv, "--listFilesOnly"], config.parent, target / "effective-roots")
+                    record["configUnchangedThroughObservation"] = config.exists() and sha(config) == before
+            if stop.is_set():
+                break
+            stop.wait(0.025)
+    except Exception:
+        (destination / "observer-error").parent.mkdir(parents=True, exist_ok=True)
+        (destination / "observer-error").write_text(traceback.format_exc())
+    finally:
+        save_json(destination / "live-exec-receipts.json", records)
 
 
 def authenticate_source():
@@ -182,22 +243,19 @@ def capture_project(name, pin, vize, corsa, cache):
             phase_dir.mkdir()
             shutil.copyfile(authored, phase_dir / "whole-authored.vue")
             # Exact original argv; strace is an explicitly separate observer process.
-            trace = ["strace", "-f", "-yy", "-s", "0", "-o", str(phase_dir / "native-ipc.strace"),
+            trace_path = phase_dir / "native-ipc.strace"
+            trace = ["strace", "-f", "-yy", "-s", "2147483647", "-o", str(trace_path),
+                     "-e", "inject=execve:delay_enter=5s",
                      "-e", "trace=execve,openat,read,write,close", *argv]
-            command = run(trace, project, phase_dir / "original-command")
+            command = run(trace, project, phase_dir / "original-command", observer=lambda stop:
+                          observe_native_exec(stop, trace_path, phase_dir / "native-exec-live",
+                                              corsa, phase == "broken"))
             snapshot(cache, phase_dir)
             reports[phase] = report_diagnostics(phase_dir / "original-command", relative)
             reports[phase]["command"] = command
             if phase != "broken":
                 continue
             run([*argv, "--show-virtual-ts"], project, phase_dir / "virtual-source-observer")
-            if cache.exists():
-                for index, config in enumerate(sorted(cache.rglob("tsconfig.json"))):
-                    direct = phase_dir / "direct-native" / str(index)
-                    native_argv = [str(corsa), "--checkers", "1", "--pretty", "false",
-                                   "--project", str(config)]
-                    run(native_argv, config.parent, direct / "diagnostics")
-                    run([*native_argv, "--listFilesOnly"], config.parent, direct / "effective-roots")
             snapshot(cache, phase_dir / "after-supplementary-observers")
     finally:
         authored.unlink(missing_ok=True)
@@ -214,6 +272,9 @@ def capture_project(name, pin, vize, corsa, cache):
         "originalDeadlines": all(not report["command"]["timedOut"]
                                  and report["command"]["elapsedSeconds"] < 300
                                  for report in reports.values()),
+        "liveCustody": all(any(receipt.get("configUnchangedThroughObservation")
+            for receipt in json.loads((destination / phase / "native-exec-live/live-exec-receipts.json").read_text()))
+            for phase in ("clean", "broken", "repair")),
     }
 
 
@@ -236,7 +297,7 @@ def main():
     save_json(OUT / "whole-packet-manifest.json", manifest(OUT))
     print(json.dumps(results, indent=2))
     return 0 if all(all(result[key] for key in (
-        "cleanOracle", "brokenOracle", "repairOracle", "originalDeadlines")) for result in results) else 1
+        "cleanOracle", "brokenOracle", "repairOracle", "originalDeadlines", "liveCustody")) for result in results) else 1
 
 
 if __name__ == "__main__":

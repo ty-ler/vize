@@ -28,3 +28,14 @@ filter, or required check. The job preserves an unsuccessful original oracle
 as an unsuccessful result and retains the whole artifact on failure.
 Any production repair requires packet-backed ownership coordination and
 fresh complete original Actions qualification before queue admission.
+
+The first observer run retained genuine consumer failures and full virtual
+source but did not retain complete native strings or the ephemeral config:
+`strace -s 0` suppresses strings, and factory cleanup precedes post-exit
+copying. Its whole artifact remains preserved with that limitation.
+The corrected observer prints complete syscall string buffers and pauses
+native exec for five seconds before binary startup, allowing whole generated
+trees and direct native output to be saved while the original program exists.
+This observer delay is declared separately; original CLI arguments and
+300-second consumer deadlines remain unchanged. Custody now refuses empty
+live captures and records whether the config stayed unchanged throughout.
