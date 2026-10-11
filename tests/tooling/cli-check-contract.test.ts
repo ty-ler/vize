@@ -121,3 +121,20 @@ test("vize check exits 0 in an empty project with no inputs", () => {
     );
   });
 });
+
+test("default discovery refuses a config whose authored import cannot be evaluated", () => {
+  withWorkspace((dir) => {
+    fs.writeFileSync(path.join(dir, "Ok.vue"), "<template><p /></template>\n", "utf8");
+    fs.writeFileSync(
+      path.join(dir, "vize.config.ts"),
+      'import { nope } from "totally-not-installed";\nexport default { enabled: nope };\n',
+      "utf8",
+    );
+    const result = runCheck(["Ok.vue", "--format", "json"], dir);
+    assert.equal(result.status, 2, `${result.stdout}\n${result.stderr}`);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /failed to parse .*vize\.config\.ts/);
+    assert.match(result.stderr, /Cannot find package 'totally-not-installed'/);
+    assert.match(result.stderr, /ERR_MODULE_NOT_FOUND/);
+  });
+});
