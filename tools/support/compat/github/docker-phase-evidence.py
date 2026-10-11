@@ -6,7 +6,9 @@ import sys
 import subprocess
 import time
 
-from docker_phase_packets import (IMAGE, checkout_identity, process_identity, query,
+sys.dont_write_bytecode = True
+
+from docker_phase_packets import (IMAGE, checkout_identity, process_ancestry, process_identity, query,
                                  runner_owner, source_identity, template)
 from docker_phase_stream import observe, write_json
 
@@ -41,20 +43,26 @@ def start(root):
         checkout = json.loads((directory / "checkout.json").read_text())
         if checkout["status"] != "authenticated":
             raise ValueError("Original clean checkout authentication was unavailable")
-        configuration.update({"checkout": checkout, "owner": runner_owner(os.getpid()),
-                              "source": source_identity(root, checkout["identity"]),
+        configuration["setupStage"] = "runner-ownership"
+        configuration["ancestry"] = process_ancestry(os.getpid())
+        configuration["owner"] = runner_owner(os.getpid())
+        configuration["setupStage"] = "source-custody"
+        configuration.update({"checkout": checkout, "source": source_identity(root, checkout["identity"]),
                               "since": str(time.time_ns() // 1000000000),
                               "workflow": {key: os.environ.get(key) for key in
                                            ("GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT", "GITHUB_JOB")}})
+        configuration["setupStage"] = "daemon-identity"
         configuration["daemon"] = query(["info", "--format", template({
             "id": ".ID", "cpus": ".NCPU", "memory": ".MemTotal",
             "kernel": ".KernelVersion", "architecture": ".Architecture",
             "os": ".OSType", "storageDriver": ".Driver"})])
+        configuration["setupStage"] = "image-identity"
         configuration["image"] = query(["image", "inspect", "--format", template({
             "id": ".Id", "digests": ".RepoDigests", "architecture": ".Architecture", "os": ".Os"}), IMAGE])
         if any(configuration[key]["status"] != "observed" for key in ("daemon", "image")):
             raise ValueError("Actual daemon and pinned image identity unavailable")
         write_json(directory / "configuration.json", configuration)
+        configuration["setupStage"] = "event-stream-readiness"
         child = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "observe"],
                                  cwd=root, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                  stderr=subprocess.DEVNULL, start_new_session=True)

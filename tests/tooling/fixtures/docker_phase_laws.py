@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "tools/support/compat/github"))
+sys.dont_write_bytecode = True
 import docker_phase_packets as packets
 import docker_phase_stream as stream
 
@@ -58,12 +59,16 @@ class DockerPhaseLaws(unittest.TestCase):
             checkout.mkdir()
             foreign = root / "foreign"
             foreign.mkdir()
+            process(proc, 1, 0, 1, "init", checkout)
             process(proc, 10, 1, 101, "Runner.Worker", checkout)
             process(proc, 22, 10, 202, "node", checkout)
             process(proc, 23, 10, 203, "node", foreign)
             process(proc, 30, 1, 301, "Runner.Worker", checkout)
             process(proc, 31, 30, 302, "node", checkout)
             owner = packets.runner_owner(22, proc)
+            ancestry = packets.process_ancestry(22, proc)
+            self.assertEqual([entry["pid"] for entry in ancestry], [22, 10, 1])
+            self.assertEqual(set(ancestry[0]), {"pid", "parent", "startTicks", "exe"})
             self.assertEqual(packets.owned_host(22, checkout, owner, proc)["startTicks"], 202)
             for pid in (23, 31):
                 with self.assertRaises(ValueError):
@@ -86,13 +91,19 @@ class DockerPhaseLaws(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             env = {"GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "1", "GITHUB_JOB": "tooling"}
-            with patch.dict(os.environ, env), patch.object(capture, "runner_owner", side_effect=ValueError("private-control")):
+            ancestry = [{"pid": 22, "parent": 1, "startTicks": 20, "exe": "python3"},
+                        {"pid": 1, "parent": 0, "startTicks": 1, "exe": "unreviewed-runner"}]
+            with patch.dict(os.environ, env), \
+                    patch.object(capture, "process_ancestry", return_value=ancestry), \
+                    patch.object(capture, "runner_owner", side_effect=ValueError("private-control")):
                 directory = capture.capture_directory(root)
                 directory.mkdir(parents=True)
                 stream.write_json(directory / "checkout.json", {"status": "authenticated", "identity": {}})
                 self.assertEqual(capture.start(root), 0)
                 record = json.loads((capture.capture_directory(root) / "configuration.json").read_text())
                 self.assertEqual(record["failureType"], "ValueError")
+                self.assertEqual(record["setupStage"], "runner-ownership")
+                self.assertEqual(record["ancestry"], ancestry)
                 self.assertNotIn("private-control", json.dumps(record))
                 marker = root / "original-once"
                 subprocess.run([sys.executable, "-c", "from pathlib import Path; Path('original-once').write_text('1')"],
@@ -198,7 +209,11 @@ class DockerPhaseLaws(unittest.TestCase):
             declaration = root / "npm/native/index.d.ts"
             declaration.parent.mkdir(parents=True)
             declaration.write_text("original native declaration")
-            subprocess.run(["git", "add", "law", "npm/native/index.d.ts"], cwd=root, check=True)
+            helper = root / "tools/support/compat/github"
+            helper.mkdir(parents=True)
+            for name in ("docker-phase-evidence.py", "docker_phase_packets.py", "docker_phase_stream.py"):
+                (helper / name).write_bytes((ROOT / "tools/support/compat/github" / name).read_bytes())
+            subprocess.run(["git", "add", "law", "npm/native/index.d.ts", "tools"], cwd=root, check=True)
             subprocess.run(["git", "-c", "user.name=Law", "-c", "user.email=law@example.invalid",
                             "commit", "--quiet", "-m", "law"], cwd=root, check=True)
             head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root).decode().strip()
@@ -206,8 +221,14 @@ class DockerPhaseLaws(unittest.TestCase):
             receipt.parent.mkdir(parents=True)
             receipt.write_text('{"source":"frozen"}')
             import hashlib
-            env = {"GITHUB_SHA": head, "VIZE_SOURCE_CLI_RECEIPT_SHA256": hashlib.sha256(receipt.read_bytes()).hexdigest()}
+            env = {"GITHUB_SHA": head, "VIZE_SOURCE_CLI_RECEIPT_SHA256": hashlib.sha256(receipt.read_bytes()).hexdigest(),
+                   "GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "1", "GITHUB_JOB": "tooling"}
             with patch.dict(os.environ, env):
+                subprocess.run([sys.executable, str(helper / "docker-phase-evidence.py"), "prepare"],
+                               cwd=root, check=True)
+                self.assertFalse((helper / "__pycache__").exists())
+                self.assertEqual(subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=root).decode(),
+                                 "target/ci-docker-phase/123-1-tooling/checkout.json\ntarget/ci/vize.differential-build.json\n")
                 checkout = packets.checkout_identity(root)
                 self.assertEqual(packets.source_identity(root, checkout)["head"], head)
                 declaration.write_text("actual generated declaration")

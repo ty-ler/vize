@@ -8,6 +8,7 @@ type Step = {
   if?: string;
   uses?: string;
   run?: string;
+  shell?: string;
   with?: Record<string, string>;
 };
 type Workflow = {
@@ -19,9 +20,39 @@ const action = parse(readRepoFile(actionPath.slice(2), "action.yml")) as {
   runs: { using: string; steps: Step[] };
 };
 
-test("shared evidence uploader retains every product raw tree and the selected CLI receipt", () => {
+function retainWithoutBuilder(steps: Step[]) {
+  assert.equal(
+    steps.length,
+    3,
+    "retention accepts only the original upload and two passive diagnostic steps",
+  );
+  assert.deepEqual(
+    steps.slice(1),
+    [
+      {
+        name: "Finish opted-in passive Docker lifecycle evidence",
+        if: "${{ always() && env.VIZE_DOCKER_PHASE_CAPTURE == 'true' }}",
+        shell: "bash",
+        run: "python3 tools/support/compat/github/docker-phase-evidence.py finish",
+      },
+      {
+        name: "Retain opted-in bounded Docker lifecycle evidence",
+        if: "${{ always() && env.VIZE_DOCKER_PHASE_CAPTURE == 'true' }}",
+        uses: "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+        with: {
+          name: "docker-phase-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.shard }}",
+          path: "target/ci-docker-phase/",
+          "if-no-files-found": "error",
+        },
+      },
+    ],
+    "diagnostic retention cannot introduce another build or change default qualification",
+  );
+}
+
+void test("shared evidence uploader retains every product raw tree and the selected CLI receipt", () => {
   assert.equal(action.runs.using, "composite");
-  assert.equal(action.runs.steps.length, 1, "retention must not introduce another build");
+  retainWithoutBuilder(action.runs.steps);
   const upload = action.runs.steps[0];
   assert.match(upload.uses ?? "", /^actions\/upload-artifact@[0-9a-f]{40}$/);
   assert.deepEqual(upload.with?.path.trim().split("\n"), [
@@ -32,7 +63,21 @@ test("shared evidence uploader retains every product raw tree and the selected C
   assert.equal(upload.run, undefined);
 });
 
-test("evidence artifact identity preserves its prefix and separates jobs, shards and attempts", () => {
+void test("additional builders and unconditional diagnostic retention remain refusals", () => {
+  const original = action.runs.steps;
+  for (const altered of [
+    [...original, { run: "cargo build -p vize" }],
+    [
+      original[0],
+      { ...original[1], run: "cargo build -p vize && " + original[1].run },
+      original[2],
+    ],
+    [original[0], { ...original[1], if: "${{ always() }}" }, original[2]],
+  ])
+    assert.throws(() => retainWithoutBuilder(altered), assert.AssertionError);
+});
+
+void test("evidence artifact identity preserves its prefix and separates jobs, shards and attempts", () => {
   assert.equal(action.inputs.shard.default, "full");
   const template = action.runs.steps[0].with?.name ?? "";
   assert.equal(
@@ -58,7 +103,7 @@ test("evidence artifact identity preserves its prefix and separates jobs, shards
   assert.equal(identities.size, 24);
 });
 
-test("PR and full tooling gates retain failed observations after their tests", () => {
+void test("PR and full tooling gates retain failed observations after their tests", () => {
   const full = parse(readRepoFile(".github", "workflows", "check.yml")) as Workflow;
   const pr = parse(readRepoFile(".github", "workflows", "pr-source-checks.yml")) as Workflow;
   const producer = parse(readRepoFile(".github", "workflows", "pr-source-cli.yml")) as Workflow;

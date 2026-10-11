@@ -55,6 +55,21 @@ Final unterminated JSON frames refuse without persisting their content. Each
 observed container declares missing and repeated phases; partial lifecycle
 evidence stays partial even when other observed intervals are available.
 
+Original source `29f8cc03`, Check `38162591888`, actually supplied the opt-in
+environment to all four shards. Their clean checkout receipts authenticated
+synthetic source `c07aa84a`; setup then refused before daemon observation.
+All four unavailable packets remain retained. A bounded PID, parent, start-tick
+and executable-basename ancestry packet and finite setup stage now distinguish
+ownership refusal from later source or daemon failures without broadening the
+required worker ownership. Native run `38162591678` independently failed the
+historical custom-directive source guard; its complete failed log is preserved.
+Original clean-source laws also exposed Python import cache writes; owned entry
+points now prevent bytecode writes, proved by an actual fresh Git checkout.
+The existing uploader law retains the original first upload and explicitly
+admits only the two gated nonbuilder diagnostic steps; authored builder and
+unconditional-observer mutations remain refusals. No source-cleanliness or
+retention oracle was exempted.
+
 TODO: capture one qualified exact-source four-shard run, retain the original
 outcome and source/provider receipts, and attribute create/start/guest/cleanup
 costs only when the actual events prove them. No causal repair or CI speed gain

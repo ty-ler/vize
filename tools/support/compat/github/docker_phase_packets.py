@@ -55,14 +55,23 @@ def process_identity(pid, proc=Path("/proc")):
             "exe": os.path.basename(os.readlink(proc / str(pid) / "exe"))}
 
 
-def runner_owner(pid, proc=Path("/proc")):
+def process_ancestry(pid, proc=Path("/proc")):
+    identities = []
     for _ in range(64):
         identity = process_identity(pid, proc)
+        if any(entry["pid"] == identity["pid"] for entry in identities):
+            raise ValueError("Actual process ancestry contains a cycle")
+        identities.append(identity)
+        pid = identity["parent"]
+        if pid <= 0:
+            break
+    return identities
+
+
+def runner_owner(pid, proc=Path("/proc")):
+    for identity in process_ancestry(pid, proc):
         if identity["exe"] == "Runner.Worker":
             return identity
-        pid = identity["parent"]
-        if pid <= 1:
-            break
     raise ValueError("Actual isolated job worker ancestry is unavailable")
 
 
