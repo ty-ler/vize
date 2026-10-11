@@ -26,6 +26,11 @@ if (process.argv[2] === 'binding') {
   console.log(JSON.stringify(binding));
 } else if (process.argv[2] === 'receipt') {
   const baseline = read('baseline/union-before-after-receipt.json');
+  const emitted = read('evidence/current-emitted.json');
+  assert.equal(emitted.head, head());
+  const oldEmitted = read('baseline/after-emitted.json');
+  assert.deepEqual(emitted.inputs, oldEmitted.inputs);
+  assert.deepEqual(emitted.results, oldEmitted.results);
   assert.equal(baseline.after, '6a279bc77f531c95abb58ee5b90c634354ef5f3f');
   const result = { publicHead, progressSource, actualSource: head(), binding: read('evidence/binding.json'), lanes: {}, markup: {} };
   const negatives = ['progress-bar-collapsed-negative', 'progress-bar-collapsed-positive', 'progress-bar-wide-endpoint', 'progress-bar-wide-range'];
