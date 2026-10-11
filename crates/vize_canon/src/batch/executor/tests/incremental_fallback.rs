@@ -83,9 +83,9 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
     assert_eq!(
         &Sha256::digest(fixture.as_bytes())[..],
         &[
-            0xd0, 0x1c, 0x71, 0x61, 0x24, 0x21, 0x04, 0xde, 0x91, 0x26, 0x72, 0x8a, 0xc4, 0x28,
-            0x2c, 0x75, 0xcb, 0x92, 0x1d, 0xbf, 0x72, 0x24, 0xc2, 0x77, 0x1a, 0x33, 0x6f, 0xb4,
-            0x83, 0xaf, 0x2a, 0xe0
+            0x33, 0xbe, 0x59, 0xfb, 0xa6, 0x67, 0x46, 0xbd, 0xba, 0xc1, 0x99, 0xd4, 0xe2, 0x54,
+            0x1c, 0xe8, 0x26, 0xf5, 0xb8, 0xa6, 0x57, 0xb2, 0x04, 0xef, 0x50, 0x5d, 0xc7, 0xcd,
+            0x2f, 0xa9, 0x86, 0x8e
         ],
     );
     let case: serde_json::Value = serde_json::from_str(fixture).unwrap();
@@ -95,6 +95,44 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
     assert_eq!(case["checks"], 2);
     fs::write(&tsgo, case["runtime"].as_str().unwrap()).unwrap();
     fs::set_permissions(&tsgo, fs::Permissions::from_mode(0o755)).unwrap();
+    // Validate the exact real wire response separately, including process exit
+    // and both raw streams. Closing stdin is an actual owner operation.
+    let decode = |hex: &str| {
+        assert_eq!(hex.len() % 2, 0);
+        hex.as_bytes()
+            .chunks_exact(2)
+            .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
+            .collect::<Vec<_>>()
+    };
+    let mut api = std::process::Command::new(&tsgo)
+        .arg("--api")
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    std::io::Write::write_all(
+        &mut api.stdin.take().unwrap(),
+        &decode(case["expectedRawApiError"]["requestHex"].as_str().unwrap()),
+    )
+    .unwrap();
+    let raw_api = api.wait_with_output().unwrap();
+    assert_eq!(
+        i64::from(raw_api.status.code().unwrap()),
+        case["expectedRawApiError"]["exitCode"].as_i64().unwrap()
+    );
+    assert_eq!(
+        raw_api.stdout,
+        decode(case["expectedRawApiError"]["stdoutHex"].as_str().unwrap())
+    );
+    assert_eq!(
+        raw_api.stderr,
+        case["expectedRawApiError"]["stderr"]
+            .as_str()
+            .unwrap()
+            .as_bytes()
+    );
+    fs::remove_file(case_dir.join(".api-call-count")).unwrap();
     let mut project = VirtualProject::new(&case_dir).unwrap();
     project.register_path(&source).unwrap();
     project.materialize().unwrap();
@@ -154,6 +192,10 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
         assert_eq!(first.step.as_deref(), Some("SessionToCli"));
         let first_error = first.error.as_ref().unwrap();
         assert_eq!(vize_carton::cstr!("{actual}"), *first_error);
+        assert_eq!(
+            first_error.as_str(),
+            case["expectedSessionError"].as_str().unwrap()
+        );
         assert!(matches!(
             actual,
             CorsaError::CorsaExecution { exit_code: -1, .. }
@@ -161,13 +203,9 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
         let retained = packets.last().expect("both failed paths remain recorded");
         assert_eq!(retained.error.as_ref(), Some(first_error));
         let failed_cli = retained.failed_cli.as_ref().unwrap();
-        assert!(
-            case["expectedFailedFallbackPackets"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|packet| packet.as_str().unwrap() == failed_cli.as_str()),
-            "unexpected complete fallback packet: {failed_cli}"
+        assert_eq!(
+            failed_cli.as_str(),
+            case["expectedFailedFallbackPacket"].as_str().unwrap()
         );
         eprintln!(
             "actual first session error: {first_error}\nactual failed CLI fallback: {failed_cli}"
@@ -179,6 +217,10 @@ fn failed_incremental_cli_fallback_retains_the_complete_first_session_error() {
         assert_eq!(metrics.session_starts, 0);
         assert_eq!(metrics.session_reuses, 0);
     }
+    assert_eq!(
+        fs::read_to_string(case_dir.join(".api-call-count")).unwrap(),
+        case["expectedApiCalls"].as_u64().unwrap().to_string()
+    );
     let _ = fs::remove_dir_all(&case_dir);
 }
 

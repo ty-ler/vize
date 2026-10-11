@@ -246,3 +246,23 @@ main-thread frames include `nearest_nuxt_root`. Investigate actual repeated
 read/stamp paths before further producer changes. Intrusive observer timings,
 aggregate descendant counts and historical source receipts cannot establish a
 current-source speed improvement or satisfy the original n8n campaign.
+
+At composed source `12e78caa`, authored source controls pass all 2,046 existing
+Canon tests but the new failed-fallback corpus observes another complete second
+API close packet, not either previously pinned rendered variant. Independent
+EOF timing is not a stable error oracle. Replace only this new corpus runtime
+with a deterministic actual MsgPack refusal: consume the complete original
+request tuple, return matching-method MSG_ERROR with a complete owned payload,
+and keep the transport open until its owner retires it. Per-case operation
+counts distinguish the initial API refusal from the later failed fallback, so
+returning the latter before the production fix is visibly wrong. Pin the entire
+initial error and combined secondary error, not a rendered variant allowlist.
+Retain the same-invocation warning/returned-error equality and complete
+structured second error, raw CLI exit17/stdout/stderr, successful fallback metrics
+and all unchanged frontier-transfer laws. Independent raw wire/process controls
+pass six real runtime operations; a small offline harness using the actual
+locked corsa_client 1.14.0 SDK also passes six complete distinct refusal packets.
+The new complete fixture digest is
+`33be59fba66746bdbac199d4e2541ce826f5b8a657b204ef505dc7cd2fa9868e`.
+Native source Actions still must execute the full regression. Change only this
+existing test's after body in the same finite193; preserve all45 original bodies.

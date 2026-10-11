@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "incremental-fallback-precedence",
-  "runtime": "#!/bin/sh\nif [ \"$1\" = \"--api\" ]; then printf 'api unavailable'; exit 0; fi\nprintf 'whole CLI failure packet\\n' >&2\nexit 17\n",
+  "runtime": "#!/usr/bin/env python3\nimport pathlib, struct, sys\n\nif sys.argv[1] != \"--api\":\n    sys.stderr.write(\"whole CLI failure packet\\n\")\n    raise SystemExit(17)\n\ndef exact(size):\n    assert 0 <= size <= 65536\n    data = bytearray()\n    while len(data) < size:\n        part = sys.stdin.buffer.read(size - len(data))\n        assert part, \"the complete owned API request is required\"\n        data.extend(part)\n    return bytes(data)\n\ndef read_bin():\n    tag = exact(1)[0]\n    width = {0xc4: 1, 0xc5: 2, 0xc6: 4}[tag]\n    return exact(int.from_bytes(exact(width), \"big\"))\n\ndef write_bin(body):\n    return b\"\\xc5\" + struct.pack(\">H\", len(body)) + body\n\nassert exact(2) == b\"\\x93\\x01\"\nmethod, request = read_bin(), read_bin()\ncounter = pathlib.Path(__file__).with_name(\".api-call-count\")\ncount = int(counter.read_text()) + 1 if counter.exists() else 1\ncounter.write_text(str(count))\nmessage = (b\"whole initial API failure packet\" if count % 2 else\n           b\"whole fallback API failure packet\")\nsys.stdout.buffer.write(b\"\\x93\\x05\" + write_bin(method) + write_bin(message))\nsys.stdout.buffer.flush()\n# Keep the owned transport open until its actual owner retires it.\nsys.stdin.buffer.read()\n",
   "expectedCliError": {
     "exitCode": 17,
     "message": "whole CLI failure packet"
@@ -14,8 +14,13 @@
     "stdout": "",
     "stderr": "whole CLI failure packet\n"
   },
-  "expectedFailedFallbackPackets": [
-    "corsa error (exit code 17): whole CLI failure packet",
-    "corsa error (exit code 1): corsa error (exit code 17): whole CLI failure packet\nSame-config native diagnostic completion failed: corsa error (exit code 17): whole CLI failure packet"
-  ]
+  "expectedSessionError": "corsa error (exit code -1): Failed to start Corsa API session: protocol error: whole initial API failure packet",
+  "expectedFailedFallbackPacket": "corsa error (exit code 1): corsa error (exit code 17): whole CLI failure packet\nSame-config native diagnostic completion failed: corsa error (exit code -1): Failed to start Corsa API session: protocol error: whole fallback API failure packet",
+  "expectedRawApiError": {
+    "requestHex": "9301c40a696e697469616c697a65c4027b7d",
+    "exitCode": 0,
+    "stdoutHex": "9305c5000a696e697469616c697a65c5002077686f6c6520696e697469616c20415049206661696c757265207061636b6574",
+    "stderr": ""
+  },
+  "expectedApiCalls": 4
 }
