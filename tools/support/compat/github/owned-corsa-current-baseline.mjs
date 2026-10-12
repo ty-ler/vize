@@ -56,6 +56,14 @@ export const ownedCorsaAccessibilityDocumentationMainBaseline = Object.freeze({
   rawCommitBytes: 1093,
 });
 
+// The actual merged NoMutating main retains every complete original237 before cell.
+export const ownedCorsaNoMutatingPropsMainBaseline = Object.freeze({
+  revision: "7d6e0350202643010db3a0f474eb235c8f1042c3",
+  tree: "03ffeac65c16dd3d310adfde7586d15e6db7d96c",
+  rawCommitSHA256: "bff0a78beb027ff225a72135117c5c5117c3061d5585e798a596009d1d175279",
+  rawCommitBytes: 1940,
+});
+
 export function retainedOwnedCorsaBaseline(root, baseline) {
   // Unknown contexts stay literal and the original complete qualifier refuses them.
   const context =
@@ -73,7 +81,9 @@ export function retainedOwnedCorsaBaseline(root, baseline) {
                 ? ownedCorsaMuseaDocumentationMainBaseline
                 : baseline === ownedCorsaAccessibilityDocumentationMainBaseline.revision
                   ? ownedCorsaAccessibilityDocumentationMainBaseline
-                  : null;
+                  : baseline === ownedCorsaNoMutatingPropsMainBaseline.revision
+                    ? ownedCorsaNoMutatingPropsMainBaseline
+                    : null;
   if (!context) return baseline;
   const git = (args) =>
     execFileSync("git", ["--no-replace-objects", ...args], {

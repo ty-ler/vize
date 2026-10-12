@@ -33,19 +33,7 @@ const frames = load(
   changedBodies: (Capsule & { kind: string })[];
 };
 assert.equal(frames.version, 1);
-const composed = load(
-  "./ascii-symbol-composed-caller-frame.json",
-  "22b6a814fc44d072037fdf690761597ea68339a2a7a9e2d6537925c94ceac7a6",
-) as { version: number; frame: Frame; changedBodies: (Capsule & { kind: string })[] };
-assert.equal(composed.version, 1);
-assert.equal(composed.frame.kind, "owned-sdk-reader");
-assert.equal(composed.frame.source, "fbdaa063d15302b8f2ff8693f57336cba007d056");
-assert.equal(composed.frame.tree, "160337c9ffa80e18ae3d7b29b3d22a253cf3f290");
-const retained = {
-  ...original,
-  frames: [...frames.frames, composed.frame],
-  changedBodies: [...frames.changedBodies, ...composed.changedBodies],
-};
+const retained = { ...original, frames: frames.frames, changedBodies: frames.changedBodies };
 assert.equal(retained.version, 1);
 assert.equal(retained.source, "5c54b1195fa8c0bf151e0a2862bf4238a3597b4e");
 assert.equal(retained.original.length, 10);
@@ -60,7 +48,7 @@ for (const entry of retained.original) {
   assert.equal(blob(bytes), entry.blob);
   originals.set(entry.file, bytes);
 }
-assert.equal(retained.frames.length, 4);
+assert.equal(retained.frames.length, 3);
 for (const frame of retained.frames) {
   assert.equal(frame.files.length, 10);
   assert.deepEqual(
@@ -71,7 +59,7 @@ for (const frame of retained.frames) {
 }
 
 const changed = new Map<string, Buffer>();
-assert.equal(retained.changedBodies.length, 7);
+assert.equal(retained.changedBodies.length, 4);
 for (const entry of retained.changedBodies) {
   const frame = retained.frames.find(({ kind }) => kind === entry.kind);
   assert.ok(frame);
@@ -133,7 +121,7 @@ export function qualifyAsciiOriginalCallers(entries: AsciiCaller[]) {
   );
   assert.ok(
     frame,
-    "one complete original, reviewed SDK, reviewed reader or owned SDK/reader source frame is required",
+    "one complete original, reviewed SDK or reviewed reader source frame is required",
   );
   return {
     authority: "complete-ascii-original-caller-source-frame",
