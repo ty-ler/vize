@@ -342,9 +342,9 @@
       },
       "after": {
         "path": "crates/vize_patina/src/rules/vue/no_mutating_props/options_api/tests.rs",
-        "bytes": 13291,
-        "sha256": "ba1ec3ee61aa17883e60e4e77de3505ece949b53e0a35821b2a874b79027ddf3",
-        "gitBlob": "a69049ee5d14176a4201c73ea28f5cbe98f2b188",
+        "bytes": 13299,
+        "sha256": "322f83c1bc7e0a2772e3eaa1b28d9de3693aad0995715f0fe55b50aa53e40fc3",
+        "gitBlob": "e552fcbaee32518e284d8d3dd060fd96855c189b",
         "archive": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/08-after.fixture"
       }
     },
@@ -366,13 +366,13 @@
       }
     },
     {
-      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/class-decorator.vue",
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/class-decorator.vue.txt",
       "before": {
-        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/class-decorator.vue",
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/class-decorator.vue.txt",
         "absent": true
       },
       "after": {
-        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/class-decorator.vue",
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/class-decorator.vue.txt",
         "bytes": 4859,
         "sha256": "0e8ca44978bf438cf9ff9df7bb2adf315af226efc32b511d12a10c75dc22f6e1",
         "gitBlob": "a34c67ed8a84ed8554f3c537f58bd9421d9953d4",
@@ -380,13 +380,13 @@
       }
     },
     {
-      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue",
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue.txt",
       "before": {
-        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue",
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue.txt",
         "absent": true
       },
       "after": {
-        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue",
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue.txt",
         "bytes": 4000,
         "sha256": "c3c5314f04219dd9769e96a27b0f7172b7553758546763e2a5603a3520abcf4b",
         "gitBlob": "a4927dcfd7572c1fc6204f6afbbcfe874993946d",

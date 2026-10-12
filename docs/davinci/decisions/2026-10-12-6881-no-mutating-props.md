@@ -4,7 +4,7 @@ The original release447 Matrix corpus reports one missing vue/no-mutating-props
 finding in vue-uploader at pinned revision
 0be2f9571644ac2f7d3348420baf8fb8105c5555. The whole 4000-byte
 src/components/uploader.vue is retained unchanged under
-tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue
+tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue.txt
 (SHA256 c3c5314f04219dd9769e96a27b0f7172b7553758546763e2a5603a3520abcf4b).
 The missing operation is this.options.initialPaused = !this.autoStart:
 line 116 columns 7–51, authored bytes 2975–3019.
@@ -64,3 +64,8 @@ remain required.
 This decision is paired with
 [#6881](https://github.com/ubugeeei-prod/vize/issues/6881); original input,
 baseline and budget evidence remain unchanged.
+
+Both corpus carriers use .vue.txt so the compiler S3 discovery vector remains
+unchanged. Real Linter include_str consumers retain the whole original bytes;
+the display filenames, diagnostic locations and eventual CLI .vue materialization
+stay original. The move-only commit preserves both complete blob identities.

@@ -63,7 +63,7 @@ export function composeNoMutatingHistoricalLaw(original) {
 /** Source custody only: no measured, compiled or installed acceptance is returned. */
 export function authenticateNoMutatingPropsSourceFamily(root, read = reader(root)) {
   const bytes = read(`${noMutatingCustodyDirectory}/successor.json`);
-  assert.equal(digest(bytes), "b7bde1db724bc274482335876523bca7d231c9fd5e23a889e450ea6f3cf6f7ed");
+  assert.equal(digest(bytes), "052f284b2d11f94e6d81dc68096ae74e1334c8ab4323ccaa01951e94e20a7fd1");
   const manifest = JSON.parse(bytes);
   assert.equal(manifest.schema, "vize.lint.no-mutating-props-sfc-source-successor");
   assert.equal(manifest.version, 1);

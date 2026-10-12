@@ -8,11 +8,11 @@ const RULE: &str = "vue/no-mutating-props";
 const HELP: &str = "Use a local ref or emit an event instead of mutating props directly";
 const UPLOADER: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/../../tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue"
+    "/../../tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue.txt"
 ));
 const CARD: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/../../tests/_fixtures/differential/linter/no-mutating-props-options-uploader/class-decorator.vue"
+    "/../../tests/_fixtures/differential/linter/no-mutating-props-options-uploader/class-decorator.vue.txt"
 ));
 
 fn configured(shallow_only: bool) -> Linter {
