@@ -16,10 +16,10 @@ import {
 import { gitReaderSetupGuard } from "../performance/support/warm-type-backed-git-reader-setup.ts";
 
 import {
-  qualifyComponentReaderFrame,
-  exerciseComponentReaderFrameRefusals,
-  runRetainedComponentReaderLaw,
-} from "../performance/support/warm-type-backed-git-reader-component-frame.ts";
+  qualifyDualCurrentFrame,
+  exerciseDualOriginalFrameControls,
+  runDualRetainedReaderLaw,
+} from "../performance/support/warm-type-backed-git-reader-dual-frame.ts";
 
 const root = path.resolve(import.meta.dirname, "../..");
 const sha = (body: Buffer | string) => createHash("sha256").update(body).digest("hex");
@@ -47,20 +47,26 @@ const pairs = new Map(
 );
 const digest = (side: "before" | "after", file: string) => pairs.get(file)![side];
 
-test("actual NoUnused reader sources and retained setup controls have separate complete authority", () => {
-  const current = qualifyComponentReaderFrame(root);
-  assert.equal(current.completeCurrentPairs, 111);
-  assert.equal(current.preservedOriginalPairs, 110);
-  assert.equal(current.originalNoDeepPairs, 102);
-  assert.equal(current.originalNamedFamilyBodies, 87);
-  assert.equal(current.acceptanceCredit, "none");
-  const refusals = exerciseComponentReaderFrameRefusals(root);
-  assert.equal(refusals.completeCurrentPairs, 111);
-  assert.equal(refusals.controls.length, 8);
-  assert.equal(refusals.squashedEquivalentPairs, 111);
-  assert.equal(refusals.squashedParent, "2489128d5f8fab1b7442a1e5c09b4e1701cbf185");
-  assert.match(refusals.squashedCommit, /^[a-f0-9]{40}$/u);
-  const historical = runRetainedComponentReaderLaw(root);
+test("actual SDK and component Reader frames retain separate complete authority", async () => {
+  const current = qualifyDualCurrentFrame(root);
+  assert.equal(current.completeCombinedPairs, 112);
+  for (const receipt of [current.owned, current.component]) {
+    assert.equal(receipt.completeCurrentPairs, 111);
+    assert.equal(receipt.preservedOriginalPairs, 110);
+    assert.equal(receipt.originalNoDeepPairs, 102);
+    assert.equal(receipt.originalNamedFamilyBodies, 87);
+    assert.equal(receipt.acceptanceCredit, "none");
+    assert.equal(receipt.head, current.head);
+  }
+  const originals = await exerciseDualOriginalFrameControls(root, current);
+  for (const refusals of [originals.owned, originals.component]) {
+    assert.equal(refusals.completeCurrentPairs, 111);
+    assert.equal(refusals.controls.length, 8);
+    assert.equal(refusals.squashedEquivalentPairs, 111);
+    assert.equal(refusals.squashedParent, "2489128d5f8fab1b7442a1e5c09b4e1701cbf185");
+    assert.match(refusals.squashedCommit, /^[a-f0-9]{40}$/u);
+  }
+  const historical = await runDualRetainedReaderLaw(root, current);
   assert.equal(historical.source, "2489128d5f8fab1b7442a1e5c09b4e1701cbf185");
   assert.equal(historical.completeRetainedBodies, 113);
   assert.equal(historical.passed, 5);
