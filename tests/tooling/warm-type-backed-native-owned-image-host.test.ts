@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
-import { historicalCompositionBody } from "./support/native-lexical-composition-source.ts";
+import { historicalCompositionBody } from "./support/native-sdk-historical-source.mjs";
 import {
   assertNativeTerminalLocks,
   nativeTerminalManifest,

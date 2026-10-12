@@ -1,5 +1,6 @@
 // Nonexecuted byte fixtures exercise receipt refusals; they are never native evidence.
 import fs from "node:fs";
+import sourceFs from "./native-sdk-historical-source.mjs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
@@ -9,12 +10,9 @@ import {
   originalReceiptNames,
   unobserved,
   sourcePaths,
-} from "../../../tools/support/compat/github/native-lexical-dollar-metadata.mjs";
-import { validateLexicalSourceBodies } from "../../../tools/support/compat/github/native-lexical-composition-custody.mjs";
-import {
-  nativeLaw,
-  producerLaws,
-} from "../../../tools/support/compat/github/native-lexical-dollar-receipt.mjs";
+} from "./native-sdk-historical-packets.mjs";
+import { validateLexicalSourceBodies } from "./native-sdk-historical-packets.mjs";
+import { nativeLaw, producerLaws } from "./native-sdk-historical-packets.mjs";
 
 const actualRoot = fs.realpathSync(new URL("../../../", import.meta.url));
 const corpusPath = "tests/_fixtures/differential/typechecker/lexical-dollar-slot-6879";
@@ -42,7 +40,7 @@ export function createPacketFixture() {
   const manifestPath = "tests/performance/support/warm-type-backed-lexical-dollar-manifest.json";
   const manifest = JSON.parse(fs.readFileSync(path.join(actualRoot, manifestPath)));
   const files = sourcePaths(manifest);
-  for (const file of files) write(repo, file, fs.readFileSync(path.join(actualRoot, file)));
+  for (const file of files) write(repo, file, sourceFs.readFileSync(path.join(actualRoot, file)));
   git(["init", "--quiet"]);
   git(["add", "."]);
   git([

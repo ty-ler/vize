@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import fs from "node:fs";
+import fs from "./support/native-sdk-historical-source.mjs";
 import { test } from "node:test";
 import { reviewedHostPaths } from "../performance/support/warm-type-backed-reviewed-hosts.ts";
 import { nativeOwnedImageManifest as sdk } from "../performance/support/warm-type-backed-native-owned-image-host.ts";

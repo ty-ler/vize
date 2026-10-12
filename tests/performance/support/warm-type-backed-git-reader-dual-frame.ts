@@ -36,7 +36,7 @@ type Review = {
   driver: string;
   privatePrototype: boolean;
 };
-const hash = (body: Buffer | string) => createHash("sha256").update(body).digest("hex");
+const hash = (body: Uint8Array | string) => createHash("sha256").update(body).digest("hex");
 const object = (kind: string, body: Buffer) =>
   createHash("sha1").update(`${kind} ${body.length}\0`).update(body).digest("hex");
 export function bodyCell(body: Buffer, mode = "100644"): Cell {
@@ -89,7 +89,15 @@ function reviewBytes() {
   return body;
 }
 const bytes = reviewBytes();
-const review = JSON.parse(bytes.toString()) as Review;
+function freezeReview(value: unknown): unknown {
+  // The authenticated JSON is frozen once before any authority view is exposed.
+  if (value && typeof value === "object") {
+    for (const child of Object.values(value)) freezeReview(child);
+    Object.freeze(value);
+  }
+  return value;
+}
+const review = freezeReview(JSON.parse(bytes.toString())) as Review;
 assert.equal(review.version, 1);
 assert.equal(review.scope, "finite-dual-current-source-frame");
 assert.equal(review.rows.length, 112);

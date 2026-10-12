@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
-import fs from "node:fs";
-import { historicalCompositionBody } from "./support/native-lexical-composition-source.ts";
+import fs from "./support/native-sdk-historical-source.mjs";
+import { historicalCompositionBody } from "./support/native-sdk-historical-source.mjs";
 import {
   assertNativeTerminalLocks,
   nativeTerminalManifest,

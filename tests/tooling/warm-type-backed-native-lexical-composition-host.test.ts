@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import fs from "node:fs";
+import fs from "./support/native-sdk-historical-source.mjs";
 import { test } from "node:test";
 import {
   assertNativeTerminalLocks,
@@ -17,7 +17,7 @@ import {
 } from "../performance/support/warm-type-backed-native-lexical-composition-host.ts";
 import { qualifyLexicalDollarHost } from "../performance/support/warm-type-backed-lexical-dollar-host.ts";
 import { validateLexicalSourceBodies } from "../../tools/support/compat/github/native-lexical-composition-custody.mjs";
-import { historicalCompositionBody } from "./support/native-lexical-composition-source.ts";
+import { historicalCompositionBody } from "./support/native-sdk-historical-source.mjs";
 
 type Side = "before" | "after";
 const lexical = JSON.parse(
