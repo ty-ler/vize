@@ -184,10 +184,10 @@ cap failure can proceed to the diagnostic arm, but final workflow status still
 fails the original gate. Incomplete capture refuses the pair without retries.
 
 The finite source manifest binds the actual reviewed producer source
-`23a0bc0463dddb0f4a3499932c43f2c6e2e9f902` to frozen e7ec: 208 native
+`c349570181064fd10801d3f78e673c6464177087` to frozen e7ec: 208 native
 whole-body pairs, all original 45 workload pairs and 31 bounded helper pairs.
 Its semantic SHA-256 is
-`e376621ad3156f69fcac9f070f6c30313182a765437a078f8ea5dc911d50075c`.
+`256dd23ed28196bf2a9f007c2a5486b3ecb54105cbb8825cce5117f503843917`.
 All original 196 producers and the original 196/45 manifest remain mandatory;
 the old manifest retains whole-file SHA-256
 `0eb167a2811ad25303d53d4e8ac72f297a439f0bfa5368f309ca7622c2284ada`.

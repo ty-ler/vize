@@ -1,7 +1,7 @@
 {
   "version": 1,
   "originalSource": "e7ec9790a0ec5586588f97d21b8e5913ad01861c",
-  "reviewedSource": "23a0bc0463dddb0f4a3499932c43f2c6e2e9f902",
+  "reviewedSource": "c349570181064fd10801d3f78e673c6464177087",
   "nativeDelta": [
     "crates/vize/Cargo.toml",
     "crates/vize/src/commands/lsp.rs",
@@ -171,7 +171,7 @@
     "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context.rs\t85303b006b24590071b808bb406433a9e1250b95868c2a737ae6995543e67a51\t85303b006b24590071b808bb406433a9e1250b95868c2a737ae6995543e67a51",
     "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build.rs\t628e0e75331927e920693c5b52aee791dd21aa61bd35dce691893e241dca6f8d\t628e0e75331927e920693c5b52aee791dd21aa61bd35dce691893e241dca6f8d",
     "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build/consumption.rs\t18c3231ec0dbb9e1b81a963a62815a5ce05e6d4b283471e6aff13e10b6f9e624\t58dcb33e2b9210e9c366959ab0018f612542d88094168bff7b21725893754d6b",
-    "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build/consumption/allocation.rs\t-\tdc9133895f2eb9d0f073d3f2405ab78ce438ae1ef4a9a7a839555364c3ce920d",
+    "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build/consumption/allocation.rs\t-\t376f785a2139d45b293eac0a69d815297365c2afaad9d85249251f2cd9b46317",
     "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build/consumption/population.rs\tb1d96e589c8511738e1d6d76c27e284533c80897460c85a4d08a505535e982ed\tb1d96e589c8511738e1d6d76c27e284533c80897460c85a4d08a505535e982ed",
     "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build/consumption/retention.rs\tdee0c12e631b8925ac50f63a5592b82d8411c5aa33f1d3042ac71d7d18d08fa8\tdee0c12e631b8925ac50f63a5592b82d8411c5aa33f1d3042ac71d7d18d08fa8",
     "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build/consumption/tests.rs\t125ee377761d148ff0fc285d09f5719b6ad763a5f844256fed47427c38a5a16d\t125ee377761d148ff0fc285d09f5719b6ad763a5f844256fed47427c38a5a16d",
