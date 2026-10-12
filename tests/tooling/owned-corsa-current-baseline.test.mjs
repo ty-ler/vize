@@ -14,6 +14,7 @@ import {
   ownedCorsaMuseaDocumentationMainBaseline,
   ownedCorsaAccessibilityDocumentationMainBaseline,
   ownedCorsaNoMutatingPropsMainBaseline,
+  ownedCorsaJapaneseComponentDocumentationMainBaseline,
   retainedOwnedCorsaBaseline,
 } from "../../tools/support/compat/github/owned-corsa-current-baseline.mjs";
 import {
@@ -56,6 +57,7 @@ void test("literal current main and all474 raw/physical pair cells retain the or
     ownedCorsaMuseaDocumentationMainBaseline,
     ownedCorsaAccessibilityDocumentationMainBaseline,
     ownedCorsaNoMutatingPropsMainBaseline,
+    ownedCorsaJapaneseComponentDocumentationMainBaseline,
   ]) {
     const baseline = context.revision;
     assert.equal(retainedOwnedCorsaBaseline(root, baseline), ownedCorsaSource.baseline);

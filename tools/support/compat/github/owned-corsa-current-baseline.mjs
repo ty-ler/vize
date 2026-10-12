@@ -64,6 +64,14 @@ export const ownedCorsaNoMutatingPropsMainBaseline = Object.freeze({
   rawCommitBytes: 1940,
 });
 
+// Actual component documentation main leaves all complete237 before cells literal.
+export const ownedCorsaJapaneseComponentDocumentationMainBaseline = Object.freeze({
+  revision: "3601d6810158d77d63ad995879bf9ec746cd7547",
+  tree: "982528ca5b4c46d7191a3a57fd465114c564dc88",
+  rawCommitSHA256: "870c09ee56daaca7c4005140dc5ec63337e6be94beee1d0a5b26388bfdc4766d",
+  rawCommitBytes: 1190,
+});
+
 export function retainedOwnedCorsaBaseline(root, baseline) {
   // Unknown contexts stay literal and the original complete qualifier refuses them.
   const context =
@@ -83,7 +91,9 @@ export function retainedOwnedCorsaBaseline(root, baseline) {
                   ? ownedCorsaAccessibilityDocumentationMainBaseline
                   : baseline === ownedCorsaNoMutatingPropsMainBaseline.revision
                     ? ownedCorsaNoMutatingPropsMainBaseline
-                    : null;
+                    : baseline === ownedCorsaJapaneseComponentDocumentationMainBaseline.revision
+                      ? ownedCorsaJapaneseComponentDocumentationMainBaseline
+                      : null;
   if (!context) return baseline;
   const git = (args) =>
     execFileSync("git", ["--no-replace-objects", ...args], {
