@@ -136,8 +136,8 @@ sub client {
         $self->{wholeShutdownRequest} = $message;
     }
     return 0 unless ($message->{method} // '') eq 'exit' && !exists $message->{id}
-        && (!exists $message->{params} || !defined $message->{params})
-        && !grep { $_ ne 'jsonrpc' && $_ ne 'method' && $_ ne 'params' } keys %$message;
+        && !exists $message->{params}
+        && !grep { $_ ne 'jsonrpc' && $_ ne 'method' } keys %$message;
     return 0 unless $self->{candidate} && $self->{initialized} && $self->{acknowledged}
         && !@{$self->{errors}};
     my $current = $self->process_identity($pid);

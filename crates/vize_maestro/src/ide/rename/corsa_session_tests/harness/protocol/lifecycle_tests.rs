@@ -1,6 +1,69 @@
-use std::{fs, path::Path, process::Command};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use serde_json::Value;
+
+pub(super) fn capture_root(
+    workspace: &Path,
+    profile: Option<&str>,
+) -> Result<Option<PathBuf>, String> {
+    match profile {
+        None => Ok(None),
+        Some(profile @ ("pr" | "full")) => Ok(Some(
+            workspace.join(format!("target/nextest/{profile}/native-proxy-termination")),
+        )),
+        Some(profile) => Err(format!(
+            "unknown native proxy nextest capture profile: {profile:?}"
+        )),
+    }
+}
+
+#[test]
+fn capture_profiles_belong_to_existing_pr_and_full_artifact_producers() {
+    let workspace = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let shard = fs::read_to_string(workspace.join(".github/workflows/pr-rust-checks.yml"))
+        .expect("actual shard artifact producer");
+    let full = fs::read_to_string(
+        workspace.join(".github/actions/upload-rust-full-workspace-results/action.yml"),
+    )
+    .expect("actual complete workspace artifact producer");
+    let artifact_paths = |body: &str| {
+        body.lines()
+            .map(str::trim)
+            .filter(|line| line.starts_with("path: target/nextest/"))
+            .map(str::to_owned)
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        artifact_paths(&shard),
+        ["path: target/nextest/${{ env.NEXTEST_PROFILE }}/"]
+    );
+    assert_eq!(artifact_paths(&full), ["path: target/nextest/full/"]);
+    for profile in ["pr", "full"] {
+        let root = capture_root(&workspace, Some(profile))
+            .expect("known artifact profile")
+            .expect("capture root");
+        assert_eq!(
+            root,
+            workspace.join(format!("target/nextest/{profile}/native-proxy-termination"))
+        );
+    }
+    assert_eq!(
+        capture_root(&workspace, None).expect("ordinary Cargo has no nextest artifact"),
+        None
+    );
+    for unknown in ["", "ci", "full/../../foreign", "pr/foreign", "../full"] {
+        assert_eq!(
+            capture_root(&workspace, Some(unknown)),
+            Err(format!(
+                "unknown native proxy nextest capture profile: {unknown:?}"
+            ))
+        );
+    }
+}
 
 pub(super) fn assert_native_termination(trace_dir: &Path, pid: &str) -> Result<(), String> {
     let path = trace_dir.join(format!("server-{pid}.stderr.lifecycle.json"));

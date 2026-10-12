@@ -157,13 +157,15 @@ pub(in crate::ide) fn traced_corsa_executable(
         fs::write(root.join(name), body).map_err(|error| error.to_string())?;
     }
     if std::env::var("CI").is_ok_and(|value| value == "true") {
-        let capture = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../target/nextest/full/native-proxy-termination");
-        fs::write(
-            root.join("native-proxy-capture.path"),
-            capture.to_string_lossy().as_bytes(),
-        )
-        .map_err(|error| error.to_string())?;
+        let workspace = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let profile = std::env::var("NEXTEST_PROFILE").ok();
+        if let Some(capture) = lifecycle_tests::capture_root(&workspace, profile.as_deref())? {
+            fs::write(
+                root.join("native-proxy-capture.path"),
+                capture.to_string_lossy().as_bytes(),
+            )
+            .map_err(|error| error.to_string())?;
+        }
     }
     executable::link_session_wrapper(&wrapper)?;
     Ok((wrapper, trace_dir, shutdown_gate))

@@ -71,6 +71,7 @@ sub initialized {
     is($p->{wholeExitFrameHex}, unpack('H*', $whole_exit), 'complete Exit frame retained byte-exact');
     for my $case (
         ['request Exit', { %$exit, id => 13 }],
+        ['null Exit params', { %$exit, params => undef }],
         ['Exit params', { %$exit, params => {} }],
         ['extra Exit member', { %$exit, extra => 1 }],
     ) {

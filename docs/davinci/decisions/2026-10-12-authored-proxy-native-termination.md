@@ -1,0 +1,49 @@
+# Authored protocol proxy native termination
+
+Decision: #6879; delivery: #8675. The protected candidate
+`9a9dcb137e64f24901a4b28489b13d7cf0556b2b` completed semantic answers but
+failed five original rename/signature cases during shutdown. Each retained
+whole refusal has reaped Unix status 36096 (exit 141), empty wrapper stderr,
+and no timeout or kill. The candidate was removed from the queue immediately.
+
+The authored Perl proxy passed a writable regular file to `IPC::Open3` as
+its stderr argument. Open3 replaced that handle with a new pipe reader; the
+proxy then closed the reader. Physical descriptor and native wait receipts
+prove the original shutdown control terminated with SIGPIPE 13. Duplicating
+that regular-file descriptor preserves the whole native stderr. It also
+exposes the separate pinned TypeScript-go 7.0.2 Exit cancellation: genuine
+standard Shutdown/Exit still returns 1, while acknowledged Shutdown then
+native stdin EOF returns 0. Neither nonzero result is accepted.
+
+The fixture now parses complete frames and translates only the actual
+params-less client Exit after the complete pinned native binary identity,
+whole matching initialize result, matching null Shutdown response and stable
+owned process identity. It closes native stdin and retires the client read
+pipe immediately, retaining the complete original client Exit trace. This
+also permits a parent to await process completion while its writer remains
+open. Descriptor zero stays occupied by a read-only `/dev/null` handle while
+receipts are written. Observed post-Exit bytes remain explicit refusals.
+Unknown binaries retain the original standard frame forwarding and actual
+status/stderr. The default SDK and all Canon production bodies stay unchanged
+from `deb6a0ba0f8713b9d116538cccd0fc9d5b6a5570`.
+
+Complete framing, identity and refusal controls include fragmented/coalesced
+frames, partial tails, duplicate requests, numeric/string request identity,
+wrong contracts/ACKs, missing or replaced process births, and an actual foreign
+executable with a matching fake contract whose whole stderr and exit 17 remain
+unchanged. Original readiness, signature and rename assertions remain intact.
+A separate mandatory native EOF receipt verifies actual PID/birth/image,
+complete client/server frames, matching ACK and actual waitpid/reap. Passive
+CI copies use the exact `pr` or `full` nextest profile's existing recursive
+artifact producer. A source law binds both complete producer paths; absent
+nextest profile grants no artifact credit, and unknown profiles refuse. No
+workflow command or builder is added.
+
+The original pending/killed Exit-with-open-writer probe and the intermediate
+Perl descriptor warning are retained as failures. Corrected direct Darwin
+controls complete actual Exit/EOF, Exit with an open parent writer, and
+Shutdown/EOF with status 0, complete readers, no kill/timeout and unchanged raw
+native stderr. These probes grant no Rust, Linux, whole-project or performance
+credit. Fresh exact-source Actions, all original native/400 gates, the whole
+protected suites and actual merge remain required. Original #8614/#8615 and
+broader typechecker/real-project acceptance remain unfinished.
