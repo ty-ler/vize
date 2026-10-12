@@ -77,3 +77,20 @@ historical caller modules run separately and retain all 20 cases with zero
 failures or skips in their raw packets. The 13 documentation checks pass on the
 exact current canonical input view, and the unchanged inventory checks all 19
 files. These source results do not transfer prior-head native qualification.
+
+Exact head `cd81dd8` passes all four source tooling shards, both native
+workflows and the original 51/88 plus 39/8-control Rust regressions. The
+remaining Rust failure is the unchanged all-locale `explain` assertion: its
+committed domain rows still describe only Options API objects, while the
+already-reviewed contract now includes compiler-owned setup bindings.
+Only that one domain row changes in each of EN/JA/ZH. The unchanged renderer
+localizes the label and appends the raw contract value; every other snapshot
+byte, rule, contract and assertion remains intact. The complete predicted
+English snapshot matches actual native output. Japanese and Chinese remain
+source-derived predictions until fresh native verification. Complete raw
+failed output, old snapshots and producer bytes are retained in
+`source-custody/ci-repair/explain-domain-snapshot-repair.json.gz`; the finite
+inverse restores every original byte. Fresh exact-head Actions, protected
+Stack merge and released acceptance remain unfinished.
+
+Paired explain decision: [three locale domain rows](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6127254036).

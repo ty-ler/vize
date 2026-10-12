@@ -2213,7 +2213,7 @@ script/no-dupe-keys · lint rule
 Disallow duplicate keys across Options API props/data/computed/methods/setup/inject
 
 tier: exact
-domain: Options API component definitions written as object literals
+domain: members of resolved Options API objects and compiler-owned inline SFC setup props with locally declared runtime or typed keys, checked against resolved value bindings in setup and its sibling module
 severity: error
 category: script
 autofix: no
