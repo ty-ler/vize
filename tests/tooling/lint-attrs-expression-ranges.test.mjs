@@ -86,6 +86,7 @@ await test("attrs forwarding preserves all twenty five whole source CLI packets"
       assert.equal(run.error, undefined, entry.id);
       assert.equal(run.signal, null, entry.id);
       assert.equal(run.status, entry.afterStatus, entry.id);
+      assert.equal(record.stderrBase64, "", entry.id);
       record.wholeJson = JSON.parse(run.stdout.toString("utf8"));
       persist();
       assert.deepEqual(record.wholeJson, entry.afterCli, entry.id);
