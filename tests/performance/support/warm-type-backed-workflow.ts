@@ -9,6 +9,7 @@ import { reviewedHostPaths } from "./warm-type-backed-reviewed-hosts.ts";
 import { assertNativeTerminalLocks } from "./warm-type-backed-native-terminal-host.ts";
 import { qualifyNativeTerminalHost } from "./warm-type-backed-native-lexical-composition-host.ts";
 import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
+import { qualifyNativeProxyHost } from "./warm-type-backed-native-proxy-host.ts";
 import {
   driverRoot,
   git,
@@ -76,6 +77,12 @@ if (process.argv[2] === "prepare") {
     .split("\n")
     .filter(Boolean);
   const allowed = new Set<string>(reviewedHostPaths);
+  const nativeProxyHost = !cut
+    ? qualifyNativeProxyHost(production, allowed, (side, file) =>
+        gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+      )
+    : null;
+  for (const file of nativeProxyHost?.files ?? []) allowed.add(file);
   const harnessOnly = !cut && production.length === 0;
   if (harnessOnly) {
     const changed = git(driverRoot, ["diff", "--name-only", baseline, head])
@@ -169,6 +176,7 @@ if (process.argv[2] === "prepare") {
         production,
         ...hostMoves,
         nativeTerminalHost,
+        nativeProxyHost,
         afterRoot,
         driverSource: driver,
         authority: cut

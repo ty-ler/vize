@@ -39,6 +39,16 @@ artifact producer. A source law binds both complete producer paths; absent
 nextest profile grants no artifact credit, and unknown profiles refuse. No
 workflow command or builder is added.
 
+The original400 source guard first refuses the actual 128-file delta because
+the seven fixture bodies are outside its closed source scope. A separate
+qualifier authenticates all seven complete before/after bodies, including
+four genuine absences, before enrolling those exact files. The original
+121-source/122-body SDK authority and every runtime/input/lock refusal remain
+mandatory. Removing only this fixture qualifier restores the whole original
+workflow byte-for-byte. Missing, duplicate, foreign and partial fixture sets
+still refuse; neither source admission nor these test-only changes grants
+performance credit.
+
 The original pending/killed Exit-with-open-writer probe and the intermediate
 Perl descriptor warning are retained as failures. Corrected direct Darwin
 controls complete actual Exit/EOF, Exit with an open parent writer, and
