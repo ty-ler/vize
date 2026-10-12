@@ -21,7 +21,7 @@ const original = read(
 );
 const context = read(
   "../../tooling/support/native-sdk-final-source-context.json",
-  "aabda7b0fd807d4261633e1f7b64fe3573bb7d6af656b9ea536895625c87b2e2",
+  "c9e0b29dfb08d7e4a933ebe7a25281fb54cc99e418f0417ed9800e8b2348edea",
 );
 assert.equal(
   context.originalFrameSHA256,

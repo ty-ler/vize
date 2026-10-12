@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "preparationSource": "40b3e234e50fe99f5d59317d40dcc46e7c2a3191",
-  "preparationTree": "6bbb2f56deec7de28c2e59af4aaf6fa1e4a0d1fe",
-  "rawCommitSHA256": "d3d2e62b8a8e465d7eec18e8dc4aeadb6b9549cdf04ae4968733020337790731",
-  "rawCommitBytes": 282,
+  "preparationSource": "499a49c3d82ddddb47edd656469a926b72a55dfa",
+  "preparationTree": "ef4515819fe5a0b9b8d0c89cbf089eac74bd63eb",
+  "rawCommitSHA256": "1664695371822f24d552620033c81231bbc3ecd0559803eb97fdbe003f641f1d",
+  "rawCommitBytes": 315,
   "originalFrameSHA256": "899d7c384501209b2322b64416cb4f7be6a9532a46aed6c11e7cc0e7eb5e87ab",
   "runtimeCredit": false,
   "performanceCredit": false,
@@ -20,7 +20,7 @@
       },
       "after": {
         "file": "tools/support/compat/github/owned-corsa-source-custody.mjs",
-        "source": "40b3e234e50fe99f5d59317d40dcc46e7c2a3191",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
         "mode": "100644",
         "blob": "1cc416e3749602de57078a6f75f2831f25699153",
         "bytes": 6256,
@@ -39,7 +39,7 @@
       },
       "after": {
         "file": "tools/support/compat/github/owned-corsa-lexical-source.mjs",
-        "source": "40b3e234e50fe99f5d59317d40dcc46e7c2a3191",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
         "mode": "100644",
         "blob": "b4c1c782089b01bfa59b62f2171ecdc32dd046b4",
         "bytes": 6300,
@@ -58,7 +58,7 @@
       },
       "after": {
         "file": "pnpm-lock.yaml",
-        "source": "40b3e234e50fe99f5d59317d40dcc46e7c2a3191",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
         "mode": "100644",
         "blob": "ab601a6961c855d1f52948750cc72f117fbf2c1d",
         "bytes": 950541,
@@ -72,7 +72,7 @@
       "before": null,
       "after": {
         "file": "tools/support/compat/github/owned-corsa-clippy-source.mjs",
-        "source": "40b3e234e50fe99f5d59317d40dcc46e7c2a3191",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
         "mode": "100644",
         "blob": "33eac6856b773531e6548834139f9fb107c5eb3a",
         "bytes": 7178,
@@ -84,11 +84,95 @@
       "before": null,
       "after": {
         "file": "tools/support/compat/github/owned-corsa-clippy-source.json",
-        "source": "40b3e234e50fe99f5d59317d40dcc46e7c2a3191",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
         "mode": "100644",
         "blob": "5e60ca30e59f64fdc94ba948e47a6ee6629318cc",
         "bytes": 81488,
         "sha256": "9b9212acd2ae6a56c4c4a8fb86abec5e550a2a55347ae030a896785e77f8c96f"
+      }
+    },
+    {
+      "file": "tests/tooling/sdk-ascii-symbol-original-callers.test.ts",
+      "before": null,
+      "after": {
+        "file": "tests/tooling/sdk-ascii-symbol-original-callers.test.ts",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
+        "mode": "100644",
+        "blob": "deb97e574bcc396ab6aecef568aaae8bcb99466f",
+        "bytes": 4862,
+        "sha256": "01c39141e4bef1080ba8d4c4613f569dc9c75c9b2df25db240c630a44b82b38b"
+      }
+    },
+    {
+      "file": "tests/tooling/sdk-component-join-source.test.mjs",
+      "before": null,
+      "after": {
+        "file": "tests/tooling/sdk-component-join-source.test.mjs",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
+        "mode": "100644",
+        "blob": "5b2ef05561c7c27b67d51a0462a1ac135588312b",
+        "bytes": 10304,
+        "sha256": "40a44282b497b3e6513688661b9427210557fa445f59a14af603160e17b6ab82"
+      }
+    },
+    {
+      "file": "tests/tooling/support/sdk-ascii-symbol-original-callers.ts",
+      "before": null,
+      "after": {
+        "file": "tests/tooling/support/sdk-ascii-symbol-original-callers.ts",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
+        "mode": "100644",
+        "blob": "6a24e80278a24d1faefb883fdbb116d90649c62f",
+        "bytes": 6180,
+        "sha256": "158cc39c3e8025e39e833321c25d6c9bdebdd594d8448a0a025b7d23c0dbf5d5"
+      }
+    },
+    {
+      "file": "tests/tooling/support/sdk-component-join-files.json",
+      "before": null,
+      "after": {
+        "file": "tests/tooling/support/sdk-component-join-files.json",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
+        "mode": "100644",
+        "blob": "209eaa0d91e4bbdacd1cf6a15f5986c5e57ab323",
+        "bytes": 15623,
+        "sha256": "2b5cbb3807182cfb7ade2873ef8b2247a1cae02fad0e6297c46288579f920314"
+      }
+    },
+    {
+      "file": "tests/tooling/support/sdk-component-join-replay.mjs",
+      "before": null,
+      "after": {
+        "file": "tests/tooling/support/sdk-component-join-replay.mjs",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
+        "mode": "100644",
+        "blob": "f50ceddda23c7181c83fe96203fe96d9a2901cf1",
+        "bytes": 4846,
+        "sha256": "09bdcd9b6a14f69f846d44bde2d294522640a394ce22fa6fd26b0a1d76826ebb"
+      }
+    },
+    {
+      "file": "tests/tooling/support/sdk-component-join.json",
+      "before": null,
+      "after": {
+        "file": "tests/tooling/support/sdk-component-join.json",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
+        "mode": "100644",
+        "blob": "a15552e3d7d94192dcab360d66693179d325537f",
+        "bytes": 6222,
+        "sha256": "227aef4e28ba150eee128c8659293cd441a11766c23047ccfed5b0a48be86a44"
+      }
+    },
+    {
+      "file": "tests/tooling/support/sdk-component-join.mjs",
+      "before": null,
+      "after": {
+        "file": "tests/tooling/support/sdk-component-join.mjs",
+        "source": "499a49c3d82ddddb47edd656469a926b72a55dfa",
+        "mode": "100644",
+        "blob": "480ef7babc11c69a287e702d815f6d2df98b44b0",
+        "bytes": 12878,
+        "sha256": "138525703d660ee2683fac1bb9c96efced757f0e69d342e8c48fccde8c568830"
       }
     }
   ],

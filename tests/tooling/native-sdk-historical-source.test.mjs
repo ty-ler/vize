@@ -235,7 +235,7 @@ void test("the whole incoming main lock is genuine current source and the origin
   const historical = current.body("pnpm-lock.yaml");
   assert.equal(sha(historical), "12e66667fc82ac9a5b72d1e9ab2aa59f7c1466ea8be689f17a67678bf31a0915");
   assert.notDeepEqual(historical, real.body);
-  assert.equal(current.receipt.completeCurrentFrameBodies, 119);
+  assert.equal(current.receipt.completeCurrentFrameBodies, 126);
   for (const credit of [
     "ancestryCredit",
     "squashCredit",

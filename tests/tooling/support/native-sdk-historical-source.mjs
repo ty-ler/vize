@@ -40,6 +40,7 @@ assert.equal(capsule.runtimeCredit, false);
 assert.equal(capsule.performanceCredit, false);
 assert.equal(capsule.historicalSourcePaths.length, 206);
 assert.equal(new Set(capsule.historicalSourcePaths).size, 206);
+const fileNames = (entries) => entries.map(({ file }) => file);
 const runtimeNames = [
   "native-lexical-dollar.sh",
   "native-lexical-dollar-metadata.mjs",
@@ -47,10 +48,7 @@ const runtimeNames = [
   "native-lexical-composition-custody.mjs",
 ].map((name) => "tools/support/compat/github/" + name);
 assert.deepEqual(capsule.historicalRuntimeModulePaths, runtimeNames);
-assert.deepEqual(
-  capsule.historicalRuntimeBodies.map(({ file }) => file),
-  runtimeNames,
-);
+assert.deepEqual(fileNames(capsule.historicalRuntimeBodies), runtimeNames);
 const archived = new Map();
 for (const entry of capsule.historicalRuntimeBodies) {
   assert.equal(entry.source, capsule.historicalRuntimeSource);
@@ -75,7 +73,7 @@ assert(finalContextStat.isFile() && (finalContextStat.mode & 0o777) === 0o644);
 const finalContextBytes = fs.readFileSync(finalContextURL);
 assert.equal(
   sha(finalContextBytes),
-  "aabda7b0fd807d4261633e1f7b64fe3573bb7d6af656b9ea536895625c87b2e2",
+  "c9e0b29dfb08d7e4a933ebe7a25281fb54cc99e418f0417ed9800e8b2348edea",
 );
 const finalContext = JSON.parse(finalContextBytes);
 assert.equal(finalContext.schema, 1);
@@ -90,15 +88,16 @@ const replacements = [
 const additions = [
   "tools/support/compat/github/owned-corsa-clippy-source.mjs",
   "tools/support/compat/github/owned-corsa-clippy-source.json",
+  "tests/tooling/sdk-ascii-symbol-original-callers.test.ts",
+  "tests/tooling/sdk-component-join-source.test.mjs",
+  "tests/tooling/support/sdk-ascii-symbol-original-callers.ts",
+  "tests/tooling/support/sdk-component-join-files.json",
+  "tests/tooling/support/sdk-component-join-replay.mjs",
+  "tests/tooling/support/sdk-component-join.json",
+  "tests/tooling/support/sdk-component-join.mjs",
 ];
-assert.deepEqual(
-  finalContext.replacementFrames.map(({ file }) => file),
-  replacements,
-);
-assert.deepEqual(
-  finalContext.additionalFrames.map(({ file }) => file),
-  additions,
-);
+assert.deepEqual(fileNames(finalContext.replacementFrames), replacements);
+assert.deepEqual(fileNames(finalContext.additionalFrames), additions);
 for (const entry of finalContext.replacementFrames) {
   assert.deepEqual(entry.before, frames.get(entry.file), "whole original117 frame stays exact");
   frames.set(entry.file, entry.after);
@@ -116,10 +115,7 @@ const provisioningNames = [
   "tests/performance/support/warm-type-backed-git-reader-literal-source.ts",
   "tests/performance/support/warm-type-backed-git-reader-nodeep.ts",
 ];
-assert.deepEqual(
-  finalContext.hostedProvisioningFrames.map(({ file }) => file),
-  provisioningNames,
-);
+assert.deepEqual(fileNames(finalContext.hostedProvisioningFrames), provisioningNames);
 const lockBodies = authenticateHistoricalIncomingLock(finalContext, capsule.currentFrames);
 const production = ownedCorsaSource.rows.map(({ file }) => file);
 const known = new Set([...production, ...ownedCorsaCallerPaths, ...frames.keys()]);
@@ -289,7 +285,7 @@ export function createNativeSdkHistoricalView(root = nativeSdkSourceRoot, suppli
       completeCurrentFrameBodies: frames.size,
       originalCurrentFrameBodies: 117,
       finiteReplacementFrameBodies: 3,
-      finiteAdditionalFrameBodies: 2,
+      finiteAdditionalFrameBodies: 9,
       hostedProvisioningBodies: 2,
       wholeHistoricalLockBodies: 1,
       ancestryCredit: false,
