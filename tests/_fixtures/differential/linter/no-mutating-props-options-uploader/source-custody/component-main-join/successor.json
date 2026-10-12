@@ -2511,23 +2511,23 @@
     {
       "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/component-main-join/literal-49-source-frame.json.gz",
       "mode": "100644",
-      "bytes": 465130,
-      "sha256": "4d5e2c372e3540b942f395ae40d9cc5889d0f9bce26ae91491efc3e593cff412",
-      "gitBlob": "89a4af85b9a21b5a95bd0d990c4d58a69547ee8f",
+      "bytes": 872936,
+      "sha256": "36756783456c5a73388b4f3de7c8a5a4a917d5313473fb98fee8bace1758b963",
+      "gitBlob": "0ad520f15295fb64941ccbfafb496e526484d26c",
       "source": "49d95b8e93a9f5bcb73e0c1c307815d4b3a9d570",
-      "files": 4972,
-      "rawFileBytes": 49502272,
+      "files": 5080,
+      "rawFileBytes": 56677561,
       "genuineAbsentPaths": 94
     },
     {
       "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/component-main-join/literal-f207-source-frame.json.gz",
       "mode": "100644",
-      "bytes": 102690,
-      "sha256": "505a26b72330923739d8e6262619a2d71061f2af1e6f1d1d9cafd76e5dd03d0a",
-      "gitBlob": "93a7b537c3b95caca293a2613fa592003df59e3d",
+      "bytes": 166947,
+      "sha256": "08287eadb4b720ae55e6d268ac48d2644436f4e128b3601c3f02c177788c3dc4",
+      "gitBlob": "c6abebb9962621b4e0695dc002253e0be21c2dd9",
       "source": "f20740ef6b0958ddb0bbbd64fd1b38210ea5e207",
-      "files": 570,
-      "rawFileBytes": 8806301,
+      "files": 683,
+      "rawFileBytes": 16000263,
       "genuineAbsentPaths": 80
     }
   ],

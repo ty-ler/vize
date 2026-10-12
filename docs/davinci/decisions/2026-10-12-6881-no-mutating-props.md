@@ -200,3 +200,22 @@ exact-source fetch; corrupt objects, framing and I/O errors refuse. Partial
 cohorts follow only required path ancestors and prove each actual file mode
 and blob ID before hydration. No product source or
 measured budget changes in this integration.
+
+### Complete inputs for the original source counterparts
+
+The genuine 4a7e merge run passed 22 of 25 source tests without skips. Three
+original 49 counterparts failed because their physical frames lacked fixture
+or source inputs; all raw packets and the complete failed run remain retained.
+Each 49/F207 frame now authenticates a complete 133-cell input family: both
+bare/reserved fixture namespaces, their producer, custody, refusal and n8n
+reads, all 18 ASCII physical sources and all ten current ASCII callers. This
+adds 108/113 historical rows while preserving all prior cells, original whole
+laws and the current 323-path closure. Only the three failed delegates and
+five existing source laws are rerun. Native, Matrix and performance
+acceptance remain pending; no previous source pass grants those credits.
+
+Each source frame also binds its entire file/absence inventory as its own
+private Git requirement. An existing commit and complete trees with a missing
+own-frame blob must hydrate before the frame joins bytes; tree-only presence
+does not establish complete input availability. The genuine Git control
+retains that tree-only refusal and verifies the restored full-file positive.

@@ -16,9 +16,13 @@ const root = path.resolve(import.meta.dirname, "../..");
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 assert.equal(
   sha(fs.readFileSync(path.join(root, "tests/tooling/support/no-mutating-component-join.mjs"))),
-  "112068783ffe5e524ee068d0e78731549e3a903f85da7337d215a547c2d124be",
+  "d4398205f9a484995741576f2a7249db0bbe9fd4a0cc51429957667e1b5042b8",
 );
-import { assertJoinCommitted, joinGit } from "./support/no-mutating-component-join-physical.mjs";
+import {
+  assertJoinCommitted,
+  joinGit,
+  joinRawBodies,
+} from "./support/no-mutating-component-join-physical.mjs";
 import { provisionJoinColdSources } from "./support/no-mutating-component-join-cold.mjs";
 import { joinObjectID, joinSHA } from "./support/no-mutating-component-join-physical.mjs";
 const physical = authenticateNoMutatingComponentJoinPhysical(root);
@@ -30,13 +34,18 @@ void test("the coherent physical union and both complete literal source frames s
   assert.deepEqual(
     joined.frames.map((context) => [context.frame.source, context.frame.files.length]),
     [
-      ["49d95b8e93a9f5bcb73e0c1c307815d4b3a9d570", 4972],
-      ["f20740ef6b0958ddb0bbbd64fd1b38210ea5e207", 570],
+      ["49d95b8e93a9f5bcb73e0c1c307815d4b3a9d570", 5080],
+      ["f20740ef6b0958ddb0bbbd64fd1b38210ea5e207", 683],
     ],
   );
   assert.equal(joined.manifest.completeOriginalNoMutatingCases, 20);
   assert.equal(joined.manifest.completeIncomingCallerCases, 20);
   assert.equal(joined.manifest.completePureHistoricalCases, 126);
+  for (const { frame } of joined.frames) {
+    const own = frame.requiredGitSources.find((row) => row.source === frame.source);
+    assert.deepEqual(own.files, frame.files);
+    assert.deepEqual(own.absentPaths, frame.genuineAbsentPaths);
+  }
   assert.equal(joined.manifest.sourceRegistry.length, 20);
   assert.equal(joined.manifest.laws.length, 19);
   for (const entry of joined.manifest.sourceRegistry) {
@@ -250,7 +259,12 @@ void test("an existing real commit and tree hydrate a missing declared blob whil
         },
       ],
     };
-    for (const oid of [source, tree]) {
+    const childTrees = ["selected", "unrelated"].map((name) =>
+      joinGit(origin, ["rev-parse", source + ":" + name])
+        .toString()
+        .trim(),
+    );
+    for (const oid of [source, tree, ...childTrees]) {
       const relative = ".git/objects/" + oid.slice(0, 2) + "/" + oid.slice(2);
       fs.mkdirSync(path.dirname(path.join(owned, relative)), { recursive: true });
       fs.copyFileSync(path.join(origin, relative), path.join(owned, relative));
@@ -261,6 +275,9 @@ void test("an existing real commit and tree hydrate a missing declared blob whil
       joinGit(owned, ["cat-file", "--batch-check"], blob + "\n").toString(),
       blob + " missing\n",
     );
+    provisionJoinColdSources(owned, [{ ...declaration, files: [] }]);
+    assert.equal(fs.existsSync(path.join(owned, ".git/FETCH_HEAD")), false);
+    assert.throws(() => joinRawBodies(owned, source, declaration.files));
     provisionJoinColdSources(owned, [declaration]);
     assert.deepEqual(joinGit(owned, ["cat-file", "blob", blob]), body);
     fs.unlinkSync(path.join(owned, ".git/FETCH_HEAD"));
