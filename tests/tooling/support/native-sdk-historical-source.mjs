@@ -75,7 +75,7 @@ assert(finalContextStat.isFile() && (finalContextStat.mode & 0o777) === 0o644);
 const finalContextBytes = fs.readFileSync(finalContextURL);
 assert.equal(
   sha(finalContextBytes),
-  "8b85e3698e568015597b9dcafb6d52393f1201cef84762136f39df389f558ff6",
+  "aabda7b0fd807d4261633e1f7b64fe3573bb7d6af656b9ea536895625c87b2e2",
 );
 const finalContext = JSON.parse(finalContextBytes);
 assert.equal(finalContext.schema, 1);
@@ -231,12 +231,13 @@ export function createNativeSdkHistoricalView(root = nativeSdkSourceRoot, suppli
   );
   assert.equal(
     currentAfter.context.sourceContextSHA256,
-    "b38685b9f740fc5444f70d51a2adcb9c7463ed5dc720d46f7ff8aabf8eb8dc94",
+    "9b9212acd2ae6a56c4c4a8fb86abec5e550a2a55347ae030a896785e77f8c96f",
   );
   const policy = JSON.parse(actual("after", additions[1]).body);
-  assert.equal(currentAfter.context.wholeCorrectedRustBodies, 1);
+  assert.equal(currentAfter.context.wholeCorrectedRustBodies, 2);
   assert.deepEqual(currentAfter.context.correctedSourceFiles, [
     "vendor/corsa_client/src/api/handles.rs",
+    "vendor/corsa/src/bin/bench_real_corsa/args.rs",
   ]);
   const currentCells = new Map(
     [...policy.entries, ...policy.sourceCorrections].map(({ file, currentAfter }) => [
@@ -244,7 +245,7 @@ export function createNativeSdkHistoricalView(root = nativeSdkSourceRoot, suppli
       currentAfter,
     ]),
   );
-  assert.equal(currentCells.size, 7);
+  assert.equal(currentCells.size, 8);
   const currentAfterIdentities = ownedCorsaSource.rows.map((row) => {
     const expected = currentCells.get(row.file) ?? row.after;
     const value = currentAfter.actualAfter(row.file);
@@ -263,7 +264,6 @@ export function createNativeSdkHistoricalView(root = nativeSdkSourceRoot, suppli
       }),
     });
   });
-
   const historicalReader = (side, file) => {
     const current = actual(side, file);
     if (side === "after" && file === "pnpm-lock.yaml") {

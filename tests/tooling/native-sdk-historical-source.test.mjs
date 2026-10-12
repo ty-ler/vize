@@ -30,9 +30,10 @@ void test("genuine current237 and two complete raw Git callers qualify separatel
   assert.equal(current.receipt.currentAfterContext.wholeCurrentBodies, 237);
   assert.equal(current.receipt.currentAfterContext.wholeManifestBodies, 6);
   assert.equal(current.receipt.currentAfterContext.clippyExecutionCredit, false);
-  assert.equal(current.receipt.currentAfterContext.wholeCorrectedRustBodies, 1);
+  assert.equal(current.receipt.currentAfterContext.wholeCorrectedRustBodies, 2);
   assert.deepEqual(current.receipt.currentAfterContext.correctedSourceFiles, [
     "vendor/corsa_client/src/api/handles.rs",
+    "vendor/corsa/src/bin/bench_real_corsa/args.rs",
   ]);
   const afterIdentities = new Map(
     current.currentAfterIdentities.map(({ file, identity }) => [file, identity]),
@@ -44,7 +45,11 @@ void test("genuine current237 and two complete raw Git callers qualify separatel
     ),
   );
   for (const row of ownedCorsaSource.rows) {
-    if (six.has(row.file) || row.file === "vendor/corsa_client/src/api/handles.rs")
+    if (
+      six.has(row.file) ||
+      row.file === "vendor/corsa_client/src/api/handles.rs" ||
+      row.file === "vendor/corsa/src/bin/bench_real_corsa/args.rs"
+    )
       assert.notDeepEqual(afterIdentities.get(row.file), row.after);
     else assert.deepEqual(afterIdentities.get(row.file), row.after);
     for (const side of ["before", "after"]) {
@@ -199,7 +204,7 @@ void test("all four complete historical parser modules and the original206 fixtu
 void test("mixing exactly one retained old whole manifest into the real current six-manifest class refuses", () => {
   const current = nativeSdkHistoricalView();
   const bytes = physical("tools/support/compat/github/owned-corsa-clippy-source.json");
-  assert.equal(sha(bytes), "b38685b9f740fc5444f70d51a2adcb9c7463ed5dc720d46f7ff8aabf8eb8dc94");
+  assert.equal(sha(bytes), "9b9212acd2ae6a56c4c4a8fb86abec5e550a2a55347ae030a896785e77f8c96f");
   const entries = JSON.parse(bytes).entries;
   assert.equal(entries.length, 6);
   for (const entry of entries) {
