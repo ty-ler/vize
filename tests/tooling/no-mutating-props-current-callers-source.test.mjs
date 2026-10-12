@@ -12,6 +12,7 @@ import {
   noMutatingCurrentCallerManifestSHA256,
 } from "./support/no-mutating-props-current-caller-source-custody.mjs";
 import { authenticateNoMutatingCallerFrame } from "./support/no-mutating-props-current-caller-frame.mjs";
+import { noMutatingCallerAncestryCapsulePath } from "./support/no-mutating-props-current-caller-ancestry.mjs";
 import { gitReaderSetupPairs } from "../performance/support/warm-type-backed-git-reader-setup.ts";
 import {
   privateNoMutatingCallerGit,
@@ -65,7 +66,7 @@ void test("each of the23 actual complete bodies refuses missing, foreign and his
 });
 
 function sourceFixture() {
-  const files = new Set();
+  const files = new Set([noMutatingCallerAncestryCapsulePath]);
   authenticateNoMutatingCurrentCallerSource(root, (name) => {
     files.add(name);
     return read(name);
@@ -178,7 +179,7 @@ void test("the external source law seals executing helper bodies without a self-
     ],
     [
       "tests/tooling/support/no-mutating-props-current-caller-git.mjs",
-      "d54ce79f0743fdd45b8d007cfd7dde61c0a7a5457bd879001d22b1ac528e3ffd",
+      "6c899c556602975558cc0c0e7274e34a0ac7f0e13822637805bc47c90108032c",
     ],
   ];
   for (const [file, expected] of fixed) assert.equal(sha(read(file)), expected);

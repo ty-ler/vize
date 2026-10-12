@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { prepareLiteralSource } from "../../performance/support/warm-type-backed-git-reader-nodeep.ts";
+import { seedNoMutatingCallerAncestry } from "./no-mutating-props-current-caller-ancestry.mjs";
 
 const pools = new Map();
 const rawGit = (root, args) =>
@@ -100,5 +101,6 @@ export function privateNoMutatingCallerGit(root, source) {
     source,
   );
   assert.equal(rawGit(owned, ["rev-parse", "HEAD"]).toString().trim(), source);
+  seedNoMutatingCallerAncestry(root, owned);
   return owned;
 }
