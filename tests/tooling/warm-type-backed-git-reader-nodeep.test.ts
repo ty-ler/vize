@@ -16,10 +16,10 @@ import {
 import { gitReaderSetupGuard } from "../performance/support/warm-type-backed-git-reader-setup.ts";
 
 import {
-  qualifyOwnedReaderFrame,
-  exerciseOwnedReaderFrameRefusals,
-  runRetainedReaderLaw,
-} from "../performance/support/warm-type-backed-git-reader-owned-frame.ts";
+  qualifyComponentReaderFrame,
+  exerciseComponentReaderFrameRefusals,
+  runRetainedComponentReaderLaw,
+} from "../performance/support/warm-type-backed-git-reader-component-frame.ts";
 
 const root = path.resolve(import.meta.dirname, "../..");
 const sha = (body: Buffer | string) => createHash("sha256").update(body).digest("hex");
@@ -47,20 +47,20 @@ const pairs = new Map(
 );
 const digest = (side: "before" | "after", file: string) => pairs.get(file)![side];
 
-test("actual composed Reader sources and retained setup controls have separate complete authority", () => {
-  const current = qualifyOwnedReaderFrame(root);
+test("actual NoUnused reader sources and retained setup controls have separate complete authority", () => {
+  const current = qualifyComponentReaderFrame(root);
   assert.equal(current.completeCurrentPairs, 111);
   assert.equal(current.preservedOriginalPairs, 110);
   assert.equal(current.originalNoDeepPairs, 102);
   assert.equal(current.originalNamedFamilyBodies, 87);
   assert.equal(current.acceptanceCredit, "none");
-  const refusals = exerciseOwnedReaderFrameRefusals(root);
+  const refusals = exerciseComponentReaderFrameRefusals(root);
   assert.equal(refusals.completeCurrentPairs, 111);
   assert.equal(refusals.controls.length, 8);
   assert.equal(refusals.squashedEquivalentPairs, 111);
   assert.equal(refusals.squashedParent, "2489128d5f8fab1b7442a1e5c09b4e1701cbf185");
   assert.match(refusals.squashedCommit, /^[a-f0-9]{40}$/u);
-  const historical = runRetainedReaderLaw(root);
+  const historical = runRetainedComponentReaderLaw(root);
   assert.equal(historical.source, "2489128d5f8fab1b7442a1e5c09b4e1701cbf185");
   assert.equal(historical.completeRetainedBodies, 113);
   assert.equal(historical.passed, 5);
