@@ -235,9 +235,22 @@ def source_identity(root, checkout):
         raise ValueError("Actual source differs from authenticated clean checkout")
     identity = producer["identity"]
     if (identity["sourceRevision"] != source or identity["sourceTree"] != checkout["tree"] or
-            identity["runId"] != os.environ.get("GITHUB_RUN_ID") or
-            identity["runAttempt"] != os.environ.get("GITHUB_RUN_ATTEMPT")):
+            identity["runId"] != os.environ.get("GITHUB_RUN_ID")):
         raise ValueError("Actual transport source or run differs")
+    consumer_use = None
+    if (identity["runAttempt"] != os.environ.get("GITHUB_RUN_ATTEMPT") or
+            "VIZE_SOURCE_CLI_USE_RECEIPT_SHA256" in os.environ):
+        result = subprocess.run(["vp", "node", "tools/support/compat/github/source-cli-artifact.ts", "consumer-use"],
+                                cwd=root, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                timeout=5, check=False)
+        if result.returncode or not 0 < len(result.stdout) <= 1024:
+            raise ValueError("Shared source CLI consumer-use authentication unavailable")
+        consumer_use = json.loads(result.stdout)
+        expected_use = {"useReceiptSha256": os.environ.get("VIZE_SOURCE_CLI_USE_RECEIPT_SHA256"),
+                        "producerAttempt": identity["runAttempt"],
+                        "consumerAttempt": os.environ.get("GITHUB_RUN_ATTEMPT")}
+        if consumer_use != expected_use:
+            raise ValueError("Shared source CLI consumer-use identity differs")
     members, differential = cli_members(root, producer)
     # Existing native builds regenerate this declaration; every other tracked/staged delta refuses.
     changes = git("status", "--porcelain", "--untracked-files=no").splitlines()
@@ -251,6 +264,7 @@ def source_identity(root, checkout):
         raise ValueError("Generated declaration file mode changed")
     return {"head": source, "tree": git("rev-parse", "HEAD^{tree}"),
             "cliReceiptSha256": digest, "cliReceipt": producer, "cliMembers": members,
+            "cliConsumerUse": consumer_use,
             "differentialReceipt": differential,
             "generatedDeclaration": {"path": "npm/native/index.d.ts", "bytes": len(generated),
                                      "mode": declaration.stat().st_mode,

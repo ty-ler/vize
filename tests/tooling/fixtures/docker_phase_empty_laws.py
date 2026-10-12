@@ -61,11 +61,11 @@ class EmptyObservationLaws(unittest.TestCase):
             with self.assertRaises(ValueError):
                 capture.lifecycle_outcome(changed, {"mandatoryDockerTests": ["required-law"]})
 
-    def finish_record(self, selection, stream=None, source_changed=False, plan_changed=False):
+    def finish_record(self, selection, stream=None, source_changed=False, plan_changed=False, use_changed=False):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             env = {"GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "1", "GITHUB_JOB": "tooling"}
-            source = {key: "original" for key in ("head", "tree", "cliReceiptSha256", "cliReceipt", "cliMembers",
+            source = {key: "original" for key in ("head", "tree", "cliReceiptSha256", "cliReceipt", "cliMembers", "cliConsumerUse",
                       "differentialReceipt", "generatedDeclaration", "trackedChanges")}
             with patch.dict(os.environ, env):
                 directory = capture.capture_directory(root); directory.mkdir(parents=True)
@@ -75,6 +75,8 @@ class EmptyObservationLaws(unittest.TestCase):
                 capture.write_json(directory / "ready.json", {"observer": actor})
                 capture.write_json(directory / "stream.json", stream or empty_stream())
                 after = {**source, "tree": "changed"} if source_changed else source
+                if use_changed:
+                    after = {**source, "cliConsumerUse": "changed"}
                 selected = {**selection, "planSha256": "changed"} if plan_changed else selection
                 with patch.object(capture, "process_identity", return_value=actor), \
                         patch.object(capture, "source_identity", return_value=after), \
@@ -90,7 +92,7 @@ class EmptyObservationLaws(unittest.TestCase):
         self.assertEqual(receipt["lifecycleCoverage"], "none")
         self.assertIs(receipt["lifecycleQualification"], False)
         self.assertEqual(receipt["selectionAfter"], selection)
-        for options in [{"source_changed": True}, {"plan_changed": True},
+        for options in [{"source_changed": True}, {"use_changed": True}, {"plan_changed": True},
                         {"stream": {**empty_stream(), "status": "unavailable"}}]:
             status, receipt = self.finish_record(selection, **options)
             self.assertEqual(status, 1)

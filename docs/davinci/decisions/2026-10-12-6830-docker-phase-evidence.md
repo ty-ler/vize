@@ -137,6 +137,14 @@ changed plans and source/producer changes remain diagnostic failures.
 Authored finalizer controls retain all those refusals and the actual original
 selection, including complete merge-suite admission.
 
+Failed-only retries retain the immutable original producer receipt and all three
+member bodies. A different consumer attempt requires the same shared
+`verifySourceCliConsumerUse` adapter used by restoration and the SFC oracle;
+bind its physical use-receipt digest and exact producer/consumer attempts before
+and after observation. Normal same-attempt observation keeps its original reads.
+The real Git/tar/Python law admits authenticated producer two to consumer three,
+while absent, forged, foreign, future, linked or altered evidence still refuses.
+
 TODO: qualify the corrected exact-source four-shard receipts and actual merge,
 then attribute costs only from complete observed intervals. No causal repair
 or CI speed gain is claimed. Whole #6830 targets, release qualification and

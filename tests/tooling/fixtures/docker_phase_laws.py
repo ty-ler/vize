@@ -196,7 +196,8 @@ class DockerPhaseLaws(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             env = {"GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "1", "GITHUB_JOB": "tooling"}
-            with patch.dict(os.environ, env):
+            clean_env = {key: value for key, value in os.environ.items() if key != "VIZE_SOURCE_CLI_USE_RECEIPT_SHA256"}
+            with patch.dict(os.environ, {**clean_env, **env}, clear=True):
                 directory = capture.capture_directory(root)
                 directory.mkdir(parents=True)
                 witness = directory / "configuration.json"

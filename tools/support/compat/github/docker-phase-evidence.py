@@ -144,7 +144,7 @@ def finish(root):
             raise ValueError("Actual selected tooling plan changed during observation")
         after = source_identity(root, configuration["checkout"]["identity"])
         receipt["sourceAfter"] = after
-        for key in ("head", "tree", "cliReceiptSha256", "cliReceipt", "cliMembers", "differentialReceipt", "generatedDeclaration", "trackedChanges"):
+        for key in ("head", "tree", "cliReceiptSha256", "cliReceipt", "cliMembers", "cliConsumerUse", "differentialReceipt", "generatedDeclaration", "trackedChanges"):
             if after[key] != configuration["source"][key]:
                 raise ValueError("Source or authenticated producer identity changed")
         receipt["status"], receipt["lifecycleCoverage"] = lifecycle_outcome(stream, selection)

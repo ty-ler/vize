@@ -35,8 +35,17 @@ void test("Docker custody consumes the actual pack/restore envelope and every or
     fs.mkdirSync(path.join(producer, "npm/native"), { recursive: true });
     fs.writeFileSync(path.join(producer, "Cargo.toml"), '[workspace.package]\nversion = "0.1.0"\n');
     fs.writeFileSync(path.join(producer, "npm/native/index.d.ts"), "original declaration\n");
+    for (const helper of [
+      "tools/support/compat/github/source-cli-artifact.ts",
+      "tools/support/compat/github/source-cli-identity.ts",
+      "tests/differential/build-receipt.ts",
+      "tests/differential/sha256.ts",
+    ]) {
+      fs.mkdirSync(path.dirname(path.join(producer, helper)), { recursive: true });
+      fs.copyFileSync(path.join(root, helper), path.join(producer, helper));
+    }
     command(producer, "git", ["init", "--quiet"]);
-    command(producer, "git", ["add", "Cargo.toml", "npm/native/index.d.ts"]);
+    command(producer, "git", ["add", "Cargo.toml", "npm/native/index.d.ts", "tools", "tests"]);
     command(producer, "git", [
       "-c",
       "user.name=Law",
@@ -80,6 +89,7 @@ void test("Docker custody consumes the actual pack/restore envelope and every or
       GITHUB_RUN_ATTEMPT: "2",
       VIZE_SOURCE_CLI_RECEIPT_SHA256: hashes.receiptSha256,
     };
+    delete env.VIZE_SOURCE_CLI_USE_RECEIPT_SHA256;
     const observe = (extra = {}) =>
       JSON.parse(
         execFileSync(
@@ -99,6 +109,7 @@ void test("Docker custody consumes the actual pack/restore envelope and every or
     );
     const actual = observe();
     assert.equal(actual.cliReceiptSha256, hashes.receiptSha256);
+    assert.equal(actual.cliConsumerUse, null);
     assert.deepEqual(actual.cliMembers, actual.cliReceipt.members);
     assert.equal(actual.differentialReceipt.sourceRevision, identity.sourceRevision);
     assert.throws(() => observe({ GITHUB_RUN_ATTEMPT: "3" }));
@@ -131,6 +142,63 @@ void test("Docker custody consumes the actual pack/restore envelope and every or
       fs.renameSync(moved, filename);
     }
     assert.deepEqual(observe().cliMembers, actual.cliMembers);
+    const immutableProducer = fs.readFileSync(
+      path.join(consumer, "target/ci/vize.source-build.json"),
+    );
+    const useSha256 = restoreSourceCli(
+      consumer,
+      archive,
+      hashes.sha256,
+      { ...identity, runAttempt: "3" },
+      "2",
+      hashes.receiptSha256,
+    );
+    const retryEnv = {
+      GITHUB_RUN_ATTEMPT: "3",
+      VIZE_SOURCE_CLI_USE_RECEIPT_SHA256: useSha256,
+    };
+    const retried = observe(retryEnv);
+    assert.deepEqual(retried.cliConsumerUse, {
+      useReceiptSha256: useSha256,
+      producerAttempt: "2",
+      consumerAttempt: "3",
+    });
+    assert.deepEqual(retried.cliMembers, actual.cliMembers);
+    assert.deepEqual(retried.cliReceipt, actual.cliReceipt);
+    assert.deepEqual(
+      fs.readFileSync(path.join(consumer, "target/ci/vize.source-build.json")),
+      immutableProducer,
+    );
+    assert.throws(() => observe({ GITHUB_RUN_ATTEMPT: "3" }));
+    for (const foreign of [
+      { GITHUB_RUN_ATTEMPT: "1" },
+      { GITHUB_RUN_ATTEMPT: "4" },
+      { GITHUB_RUN_ID: "124" },
+      { GITHUB_SHA: "a".repeat(40) },
+      { VIZE_SOURCE_CLI_USE_RECEIPT_SHA256: "a".repeat(64) },
+      { VIZE_SOURCE_CLI_USE_RECEIPT_SHA256: "" },
+    ]) {
+      assert.throws(() => observe({ ...retryEnv, ...foreign }));
+    }
+    const usePath = path.join(consumer, "target/ci/vize.source-use.json");
+    fs.chmodSync(usePath, 0o600);
+    assert.throws(() => observe(retryEnv));
+    fs.chmodSync(usePath, 0o644);
+    fs.renameSync(usePath, usePath + ".saved");
+    fs.symlinkSync(usePath + ".saved", usePath);
+    assert.throws(() => observe(retryEnv));
+    fs.unlinkSync(usePath);
+    fs.renameSync(usePath + ".saved", usePath);
+    for (const member of CLI_MEMBERS) {
+      const filename = path.join(consumer, member);
+      const bytes = fs.readFileSync(filename);
+      const changed = Buffer.from(bytes);
+      changed[0] ^= 1;
+      fs.writeFileSync(filename, changed);
+      assert.throws(() => observe(retryEnv));
+      fs.writeFileSync(filename, bytes);
+    }
+    assert.deepEqual(observe(retryEnv).cliMembers, actual.cliMembers);
   } finally {
     fs.rmSync(base, { recursive: true, force: true });
   }
