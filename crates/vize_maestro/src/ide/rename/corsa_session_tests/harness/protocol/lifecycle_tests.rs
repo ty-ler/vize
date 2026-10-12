@@ -5,6 +5,7 @@ use std::{
 };
 
 use serde_json::Value;
+use vize_l0::cstr;
 
 pub(super) fn capture_root(
     workspace: &Path,
@@ -13,9 +14,9 @@ pub(super) fn capture_root(
     match profile {
         None => Ok(None),
         Some(profile @ ("pr" | "full")) => Ok(Some(
-            workspace.join(format!("target/nextest/{profile}/native-proxy-termination")),
+            workspace.join(cstr!("target/nextest/{profile}/native-proxy-termination")),
         )),
-        Some(profile) => Err(format!(
+        Some(profile) => Err(cstr!(
             "unknown native proxy nextest capture profile: {profile:?}"
         )),
     }
@@ -48,7 +49,7 @@ fn capture_profiles_belong_to_existing_pr_and_full_artifact_producers() {
             .expect("capture root");
         assert_eq!(
             root,
-            workspace.join(format!("target/nextest/{profile}/native-proxy-termination"))
+            workspace.join(cstr!("target/nextest/{profile}/native-proxy-termination"))
         );
     }
     assert_eq!(
@@ -58,7 +59,7 @@ fn capture_profiles_belong_to_existing_pr_and_full_artifact_producers() {
     for unknown in ["", "ci", "full/../../foreign", "pr/foreign", "../full"] {
         assert_eq!(
             capture_root(&workspace, Some(unknown)),
-            Err(format!(
+            Err(cstr!(
                 "unknown native proxy nextest capture profile: {unknown:?}"
             ))
         );
@@ -66,12 +67,12 @@ fn capture_profiles_belong_to_existing_pr_and_full_artifact_producers() {
 }
 
 pub(super) fn assert_native_termination(trace_dir: &Path, pid: &str) -> Result<(), String> {
-    let path = trace_dir.join(format!("server-{pid}.stderr.lifecycle.json"));
-    let whole = fs::read(&path).map_err(|error| format!("read {}: {error}", path.display()))?;
+    let path = trace_dir.join(cstr!("server-{pid}.stderr.lifecycle.json"));
+    let whole = fs::read(&path).map_err(|error| cstr!("read {}: {error}", path.display()))?;
     let packet: Value = serde_json::from_slice(&whole)
-        .map_err(|error| format!("parse whole native lifecycle {}: {error}", path.display()))?;
+        .map_err(|error| cstr!("parse whole native lifecycle {}: {error}", path.display()))?;
     let refused = || {
-        format!(
+        cstr!(
             "incomplete native EOF lifecycle {}: {packet}",
             path.display()
         )
@@ -132,8 +133,8 @@ pub(super) fn assert_native_termination(trace_dir: &Path, pid: &str) -> Result<(
         return Err(refused());
     }
     for (side, name) in [
-        ("client", format!("client-{pid}.raw")),
-        ("server", format!("server-{pid}.raw")),
+        ("client", cstr!("client-{pid}.raw")),
+        ("server", cstr!("server-{pid}.raw")),
     ] {
         let frames = packet["frames"][side].as_array().ok_or_else(refused)?;
         let mut observed = Vec::new();
@@ -142,7 +143,7 @@ pub(super) fn assert_native_termination(trace_dir: &Path, pid: &str) -> Result<(
             if hex.len() % 2 != 0 {
                 return Err(refused());
             }
-            for pair in hex.as_bytes().chunks_exact(2) {
+            for pair in hex.as_bytes().as_chunks::<2>().0 {
                 let pair = std::str::from_utf8(pair).map_err(|_| refused())?;
                 observed.push(u8::from_str_radix(pair, 16).map_err(|_| refused())?);
             }
