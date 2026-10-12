@@ -2271,9 +2271,9 @@
     {
       "path": "tests/tooling/support/no-mutating-component-join-frame.mjs",
       "mode": "100644",
-      "bytes": 6853,
-      "sha256": "252a56d6a1a6bbf717c67c4b185f0a4d82664cbc72cff26d0e83b08f15a799d4",
-      "gitBlob": "c4e72fe4096e05bcff82891081592b983e37d98b"
+      "bytes": 6898,
+      "sha256": "9f17945754b7981fac068d4e44f4449d24b5544526791e4015c795be67665251",
+      "gitBlob": "44e171fa287e3fc3b257af1221887c581ce02c69"
     },
     {
       "path": "tests/tooling/support/no-mutating-component-join-native.mjs",
@@ -2789,5 +2789,12 @@
     "oldMigrationMeasurement": null,
     "oldSetupMeasurement": null,
     "currentOld111Receipt": null
+  },
+  "externalMaintenanceLaw": {
+    "path": "tests/tooling/no-mutating-component-join-maintenance.test.mjs",
+    "mode": "100644",
+    "bytes": 8132,
+    "sha256": "ae84305d5e43d879435f4bc592398c780829179cf4a7af0fe6f6688afc986d34",
+    "gitBlob": "4ca18f1297683a594ba1531a3f6b653cf6e5f23d"
   }
 }

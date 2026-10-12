@@ -20,7 +20,7 @@ import {
 export const componentJoinDirectory =
   "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/component-main-join";
 export const componentJoinManifestSHA256 =
-  "1bd162b581119ad53546a0630363bee4d79e79819512da97e5f4176c448b749e";
+  "d243b3673a299d099203118cfc5909051d948243f422a6e223cf5f8c4bee006a";
 const expectedSources = [
   "49d95b8e93a9f5bcb73e0c1c307815d4b3a9d570",
   "f20740ef6b0958ddb0bbbd64fd1b38210ea5e207",
@@ -105,6 +105,11 @@ export function authenticateNoMutatingComponentJoinPhysical(root) {
   const union = new Set(Object.values(manifest.families).flat());
   assert.equal(union.size, 206);
   assert.equal(manifest.completeUnionSize, 206);
+  assert.equal(
+    manifest.externalMaintenanceLaw.path,
+    "tests/tooling/no-mutating-component-join-maintenance.test.mjs",
+  );
+  joinPhysical(root, manifest.externalMaintenanceLaw);
   const rows = manifest.current;
   assert.equal(new Set(rows.map((row) => row.path)).size, rows.length);
   assert.deepEqual(
@@ -138,6 +143,7 @@ export function authenticateNoMutatingComponentJoinPhysical(root) {
     bodies,
     completeCurrentUnionBodies: 206,
     completeCurrentClosedBodies: rows.length,
+    completeAncillarySourceControlBodies: 1,
     sourceOnly: true,
     compiled: false,
     native: false,
@@ -197,7 +203,11 @@ export function authenticateNoMutatingComponentJoin(root) {
 
 export function authenticateNoMutatingComponentJoinCommitted(root) {
   const current = authenticateNoMutatingComponentJoinPhysical(root);
-  const committedRows = [...current.manifest.current, ...current.manifest.literalFrames];
+  const committedRows = [
+    ...current.manifest.current,
+    ...current.manifest.literalFrames,
+    current.manifest.externalMaintenanceLaw,
+  ];
   for (const name of [
     componentJoinDirectory + "/successor.json",
     "tests/tooling/support/no-mutating-component-join.mjs",

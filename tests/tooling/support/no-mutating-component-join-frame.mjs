@@ -38,7 +38,7 @@ function privateMetadata(root, source) {
   fs.writeFileSync(path.join(owned, ".git/objects/info/alternates"), objects + "\n");
   fs.writeFileSync(
     path.join(owned, ".git/config"),
-    '[core]\nrepositoryformatversion = 0\nbare = false\n[remote "origin"]\nurl = ' +
+    '[core]\nrepositoryformatversion = 0\nbare = false\n[maintenance]\nauto = false\n[gc]\nauto = 0\n[remote "origin"]\nurl = ' +
       JSON.stringify(origin) +
       "\n",
   );

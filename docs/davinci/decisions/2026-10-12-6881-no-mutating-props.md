@@ -231,3 +231,26 @@ The external source seal tracks this exact return change. Local checks enable
 type-aware await-thenable, require-await and no-floating-promises on all 19
 delegates and the helper; earlier untyped checks did not cover the defect.
 Native, Matrix and performance acceptance remain pending.
+
+### Private source Git maintenance and cold refusal prerequisites
+
+All four exact 1b64 tooling logs failed while privately fetching f518, reporting
+\`shallow file has changed since we read it\`; the source refusal control also
+borrowed a root object store that lacked 49 in a shallow checkout. The frame
+factory now disables automatic maintenance and automatic GC only in its
+freshly owned Git configuration. A durable control uses this actual factory
+store, fetches 15 exact local commits, validates their complete source bytes
+and records whole Trace2 events with zero maintenance, GC or repack children.
+Runs, source bytes and available raw Trace2 persist before cleanup even on
+failure, with explicit missing or parse-error trace status.
+It preserves the original origin, owned HEAD/shallow bytes and shared metadata.
+
+The independent Git 2.55 default/configured comparisons both passed: default
+fetches launched automatic maintenance and repack, configured fetches launched
+none. The fatal error was not reproduced locally, so fresh exact-head Actions
+must establish whether actor removal fixes the hosted failure. The wrong-HEAD
+control now borrows the already authenticated 49 frame's own objects and keeps
+its metadata unchanged. The separately sealed maintenance law participates
+in physical/committed custody and all mutation/missing-source controls; the
+323-path closure changes only the private frame factory. Native, Matrix and
+performance acceptance remain pending.

@@ -11,12 +11,11 @@ import {
   composeNoMutatingComponentJoinCaller,
   authenticateNoMutatingComponentJoinCommitted,
 } from "./support/no-mutating-component-join.mjs";
-
 const root = path.resolve(import.meta.dirname, "../..");
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 assert.equal(
   sha(fs.readFileSync(path.join(root, "tests/tooling/support/no-mutating-component-join.mjs"))),
-  "aa95c50e8b7ff905f2d6450c13ddc1c73e1c3fb40387b98e7047be3b07ecf907",
+  "c84f918521d90d085a087582833f4f523b53724dfad3ab669435b1abfa6ef6ad",
 );
 import {
   assertJoinCommitted,
@@ -26,7 +25,6 @@ import {
 import { provisionJoinColdSources } from "./support/no-mutating-component-join-cold.mjs";
 import { joinObjectID, joinSHA } from "./support/no-mutating-component-join-physical.mjs";
 const physical = authenticateNoMutatingComponentJoinPhysical(root);
-
 void test("the coherent physical union and both complete literal source frames stay distinct", () => {
   const joined = authenticateNoMutatingComponentJoin(root);
   assert.equal(joined.completeCurrentUnionBodies, 206);
@@ -70,10 +68,10 @@ void test("the coherent physical union and both complete literal source frames s
     assert.deepEqual(joined.bodies.get(name), composeNoMutatingComponentJoinCaller(name));
   assert.throws(() => composeNoMutatingComponentJoinCaller("unreviewed.test.ts"));
 });
-
 function capsule() {
   const owned = fs.mkdtempSync(path.join(os.tmpdir(), "vize-component-join-source-refusals-"));
   const rows = [...physical.manifest.current, ...physical.manifest.literalFrames];
+  rows.push(physical.manifest.externalMaintenanceLaw);
   for (const row of rows) {
     const target = path.join(owned, row.path);
     fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -86,7 +84,6 @@ function capsule() {
   assert.equal(authenticateNoMutatingComponentJoinPhysical(owned).completeCurrentClosedBodies, 323);
   return { owned, rows, index };
 }
-
 void test("every complete physical source, helper, caller and before-frame rejects mutation and missing bytes", () => {
   const { owned, rows } = capsule();
   try {
@@ -108,7 +105,6 @@ void test("every complete physical source, helper, caller and before-frame rejec
     fs.rmSync(owned, { recursive: true, force: true });
   }
 });
-
 void test("executable, symlink, unknown, duplicate, omitted and hybrid source declarations never qualify", () => {
   const { owned, rows, index } = capsule();
   try {
@@ -138,6 +134,12 @@ void test("executable, symlink, unknown, duplicate, omitted and hybrid source de
     changed((value) => value.sources.reverse());
     changed((value) => (value.literalFrames[0] = value.literalFrames[1]));
     changed((value) => value.families.currentReader111.pop());
+    changed((value) => delete value.externalMaintenanceLaw);
+    changed((value) => {
+      const row = value.externalMaintenanceLaw;
+      value.externalMaintenanceLaw = [row, row];
+    });
+    changed((value) => (value.externalMaintenanceLaw = value.current[0]));
     fs.unlinkSync(filename);
     assert.throws(() => authenticateNoMutatingComponentJoinPhysical(owned));
     fs.writeFileSync(filename, original, { mode: 0o644, flag: "wx" });
@@ -149,7 +151,6 @@ void test("executable, symlink, unknown, duplicate, omitted and hybrid source de
     fs.rmSync(owned, { recursive: true, force: true });
   }
 });
-
 void test("actual raw HEAD and mutated committed source refuse an otherwise complete physical family", () => {
   const { owned, rows } = capsule();
   try {
@@ -196,8 +197,11 @@ void test("actual raw HEAD and mutated committed source refuse an otherwise comp
     assert.throws(() => assertJoinCommitted(owned, ordered), /whole committed joined source/u);
     fs.writeFileSync(path.join(owned, ".git/HEAD"), head + "\n");
     assert.equal(assertJoinCommitted(owned, ordered), head);
-    const common = joinGit(root, ["rev-parse", "--git-common-dir"]).toString().trim();
-    const objects = fs.realpathSync(path.resolve(root, common, "objects"));
+    const literal = authenticateNoMutatingComponentJoin(root).frames[0];
+    assert.equal(literal.frame.source, physical.manifest.sources[0]);
+    const files = ["HEAD", "shallow"].map((n) => path.join(literal.root, ".git", n));
+    const before = files.map((p) => (fs.existsSync(p) ? fs.readFileSync(p) : null));
+    const objects = fs.realpathSync(path.join(literal.root, ".git/objects"));
     fs.mkdirSync(path.join(owned, ".git/objects/info"), { recursive: true });
     fs.writeFileSync(path.join(owned, ".git/objects/info/alternates"), objects + "\n");
     fs.writeFileSync(path.join(owned, ".git/HEAD"), physical.manifest.sources[0] + "\n");
@@ -205,11 +209,12 @@ void test("actual raw HEAD and mutated committed source refuse an otherwise comp
     fs.writeFileSync(path.join(owned, ".git/HEAD"), head + "\n");
     assert.equal(assertJoinCommitted(owned, ordered), head);
     assert.throws(() => authenticateNoMutatingComponentJoinCommitted(owned));
+    const after = files.map((p) => (fs.existsSync(p) ? fs.readFileSync(p) : null));
+    assert.deepEqual(after, before);
   } finally {
     fs.rmSync(owned, { recursive: true, force: true });
   }
 });
-
 void test("an existing real commit and tree hydrate a missing declared blob while foreign or corrupt objects refuse", () => {
   const area = fs.mkdtempSync(path.join(os.tmpdir(), "vize-component-cold-source-"));
   const origin = path.join(area, "origin");
