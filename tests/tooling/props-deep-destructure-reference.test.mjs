@@ -1,3 +1,4 @@
+import { reviewedNoMutatingHelperHistoryReadView } from "./support/no-mutating-props-source-custody.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -283,6 +284,7 @@ await test("five additional public before packets preserve wrapped callees and e
 
 await test("old source callers admit only the complete successor and retain whole helper history", () => {
   const readRoot = (name) => fs.readFileSync(path.join(root, name));
+  const readHelperHistory = reviewedNoMutatingHelperHistoryReadView(root, readRoot);
   const bytes = read("source-custody/helper-integration/manifest.json");
   assert.equal(sha256(bytes), "0a3c546ac610655d29d6f4d059a6950e195fa1ed380c77c1ebd56aca9105ba9d");
   const integration = JSON.parse(bytes);
@@ -294,7 +296,7 @@ await test("old source callers admit only the complete successor and retain whol
       assert.equal(sha256(body), arm.sha256);
       assert.equal(blob(body), arm.gitBlob);
     }
-    assert.equal(sha256(readRoot(helper.path)), helper.after.sha256);
+    assert.equal(sha256(readHelperHistory(helper.path)), helper.after.sha256);
   }
   const runtime = authenticateRuntimeApiSourceFamily(root, readRoot);
   const preset = authenticateSetupExportPresetSourceFamily(root, runtime, readRoot);

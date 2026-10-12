@@ -1,3 +1,4 @@
+import { reviewedNoMutatingHistoricalCaseReadView } from "./support/no-mutating-props-source-custody.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -11,7 +12,8 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const directory = "tests/_fixtures/differential/lint/props-deep-destructure-8090/source-custody";
-const read = (name) => fs.readFileSync(path.join(root, name));
+const physicalRead = (name) => fs.readFileSync(path.join(root, name));
+const read = reviewedNoMutatingHistoricalCaseReadView(root, physicalRead);
 const incoming = JSON.parse(read(`${directory}/import-correction/successor.json`));
 
 await test("the whole trait-scope successor preserves both failed families and the old laws", () => {
