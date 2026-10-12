@@ -1,3 +1,0 @@
-<script setup lang="ts">
-namespace defineProps { export const value = 1 }; const props = defineProps({ value: { required: true, default: 1 } });
-</script>

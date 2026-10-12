@@ -1,4 +1,0 @@
-<script setup lang="ts">
-export enum Direction { North }
-</script>
-<template><div /></template>

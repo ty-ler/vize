@@ -1,3 +1,0 @@
-<script lang="ts">
-export default { inject: ["$refs", "_theme", "$custom", "$host", "props", "data"] }
-</script>

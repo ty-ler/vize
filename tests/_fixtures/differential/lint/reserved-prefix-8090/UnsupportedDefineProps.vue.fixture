@@ -1,3 +1,0 @@
-<script setup lang="ts">
-defineProps({ $props: Number, _secret: Number, $custom: Number })
-</script>

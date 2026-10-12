@@ -1,3 +1,0 @@
-<script lang="ts">
-export default { e\u006dits: { submit(payload) { void payload } } }
-</script>

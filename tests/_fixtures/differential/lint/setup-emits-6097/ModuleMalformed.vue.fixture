@@ -1,6 +1,0 @@
-<script lang="ts">
-const = ;
-</script>
-<script setup lang="ts">
-const emit = defineEmits({ submit(payload) { void payload } })
-</script>

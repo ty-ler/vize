@@ -1,3 +1,0 @@
-<script lang="ts">
-export default { props: { '\u0024data': Number, '$props': Number, '\u0024dataExtra': Number, '_hidden': Number } }
-</script>

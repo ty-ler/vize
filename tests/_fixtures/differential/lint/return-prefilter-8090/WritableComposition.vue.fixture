@@ -1,3 +1,0 @@
-<script setup lang="ts">
-const total = computed({ get () { const value = 1 }, set (value) { void value } })
-</script>
