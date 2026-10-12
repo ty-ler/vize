@@ -1,3 +1,4 @@
+import { reviewedNoDupeCIRepairHistoricalReadView } from "./no-dupe-keys-ci-repair-source-custody.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -34,8 +35,7 @@ export function composeNoDupeIncomingHelper(original) {
 }
 
 export function composeNoDupeHistoricalLaw(original) {
-  const before =
-    "const read = (name) => fs.readFileSync(path.join(root, name));\n";
+  const before = "const read = (name) => fs.readFileSync(path.join(root, name));\n";
   const body = original.toString();
   assert.equal(body.split(before).length, 2);
   const after =
@@ -49,6 +49,7 @@ export function composeNoDupeHistoricalLaw(original) {
 
 /** Complete source custody only. This establishes no native or performance acceptance. */
 export function authenticateNoDupeKeysSourceFamily(root, read = reader(root)) {
+  read = reviewedNoDupeCIRepairHistoricalReadView(root, read);
   const manifestPath = `${noDupeCustodyDirectory}/successor.json`;
   const bytes = read(manifestPath);
   assert.equal(digest(bytes), "e03ce63b3186777006c71c65f611c3e42f7f89ecad79a5262bc5a389980a9356");
@@ -64,15 +65,9 @@ export function authenticateNoDupeKeysSourceFamily(root, read = reader(root)) {
     checked.add(name);
     return body;
   };
-  const incomingBytes = check(
-    manifest.incomingFamily.path,
-    manifest.incomingFamily,
-  );
+  const incomingBytes = check(manifest.incomingFamily.path, manifest.incomingFamily);
   const incoming = JSON.parse(incomingBytes);
-  assert.equal(
-    incoming.schema,
-    "vize.lint.no-mutating-props-sfc-source-successor",
-  );
+  assert.equal(incoming.schema, "vize.lint.no-mutating-props-sfc-source-successor");
   assert.equal(manifest.sources.length, 12);
   assert.deepEqual(
     manifest.sources.map(({ path: name }) => name),
@@ -90,8 +85,7 @@ export function authenticateNoDupeKeysSourceFamily(root, read = reader(root)) {
     check(source.after.archive, source.after);
     check(source.path, source.after);
     assert.equal(source.changed, manifest.changedPaths.includes(source.path));
-    if (source.changed)
-      assert.notEqual(source.before.sha256, source.after.sha256);
+    if (source.changed) assert.notEqual(source.before.sha256, source.after.sha256);
     else assert.deepEqual(source.after, source.before);
   }
   assert.equal(
@@ -100,20 +94,13 @@ export function authenticateNoDupeKeysSourceFamily(root, read = reader(root)) {
   );
   for (const source of manifest.ownedBodies) {
     assert(!manifest.sources.some(({ path: name }) => name === source.path));
-    if (source.before.absent)
-      assert.deepEqual(source.before, { path: source.path, absent: true });
+    if (source.before.absent) assert.deepEqual(source.before, { path: source.path, absent: true });
     else check(source.before.archive, source.before);
     check(source.after.archive, source.after);
     check(source.path, source.after);
   }
-  const originalHelper = check(
-    manifest.incomingHelper.archive,
-    manifest.incomingHelper,
-  );
-  assert.deepEqual(
-    read(manifest.incomingHelper.path),
-    composeNoDupeIncomingHelper(originalHelper),
-  );
+  const originalHelper = check(manifest.incomingHelper.archive, manifest.incomingHelper);
+  assert.deepEqual(read(manifest.incomingHelper.path), composeNoDupeIncomingHelper(originalHelper));
   checked.add(manifest.incomingHelper.path);
   assert.equal(manifest.originalHistoricalLaws.length, 1);
   for (const law of manifest.originalHistoricalLaws) {
@@ -123,16 +110,10 @@ export function authenticateNoDupeKeysSourceFamily(root, read = reader(root)) {
   }
   for (const name of checked) {
     const status = fs.lstatSync(path.join(root, name));
-    assert(
-      status.isFile() && !status.isSymbolicLink() && !(status.mode & 0o111),
-      name,
-    );
+    assert(status.isFile() && !status.isSymbolicLink() && !(status.mode & 0o111), name);
   }
   const historical = incomingReadView(manifest, read);
-  assert.deepEqual(
-    authenticateNoMutatingPropsSourceFamily(root, historical),
-    incoming,
-  );
+  assert.deepEqual(authenticateNoMutatingPropsSourceFamily(root, historical), incoming);
   return manifest;
 }
 
@@ -144,9 +125,7 @@ function incomingReadView(manifest, read) {
     if (source) return read(source.before.archive, ...args);
     if (name === manifest.incomingHelper.path)
       return read(manifest.incomingHelper.archive, ...args);
-    const law = manifest.originalHistoricalLaws.find(
-      ({ path: candidate }) => candidate === name,
-    );
+    const law = manifest.originalHistoricalLaws.find(({ path: candidate }) => candidate === name);
     return read(law ? law.archive : name, ...args);
   };
 }
@@ -166,22 +145,19 @@ export function reviewedNoDupeSourceReadView(root, read = reader(root)) {
     ].includes(name),
   );
   assert.equal(selected.length, 3);
-  if (selected.every(({ path: name, after }) => matches(read(name), after)))
-    return read;
+  if (selected.every(({ path: name, after }) => matches(read(name), after))) return read;
   // The incoming SFC-only layer already supplies its complete predecessor to
   // older predicates. Let those unchanged predicates authenticate that family.
   const originalSfc = selected.find(
-    ({ path: name }) =>
-      name === "crates/vize_patina/src/linter/script_rules/sfc.rs",
+    ({ path: name }) => name === "crates/vize_patina/src/linter/script_rules/sfc.rs",
   );
   if (matches(read(originalSfc.path), originalSfc.before)) return read;
+  read = reviewedNoDupeCIRepairHistoricalReadView(root, read);
   return incomingReadView(authenticateNoDupeKeysSourceFamily(root, read), read);
 }
 
 /** Original whole cases execute only after proving their current successor context. */
-export function reviewedNoDupeHistoricalCaseReadView(
-  root,
-  read = reader(root),
-) {
+export function reviewedNoDupeHistoricalCaseReadView(root, read = reader(root)) {
+  read = reviewedNoDupeCIRepairHistoricalReadView(root, read);
   return incomingReadView(authenticateNoDupeKeysSourceFamily(root, read), read);
 }

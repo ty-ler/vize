@@ -130,7 +130,7 @@ fn foreign_typed_capability_cannot_claim_duplicate_rule_dispatch() {
         .insert(FOREIGN_META.name, Box::new(ForeignCapability(NoDupeKeys)));
     let opening = "<script setup lang=\"ts\">";
     let source =
-        format!("{opening}\nconst props = defineProps({foo: String}); const foo = 1;\n</script>");
+        format!("{opening}\nconst props = defineProps({{foo: String}}); const foo = 1;\n</script>");
     assert_eq!(
         whole(&linter.lint_sfc(&source, "ForeignCapability.vue")),
         json!({

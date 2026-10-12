@@ -1,0 +1,1523 @@
+{
+  "schema": "vize.lint.no-dupe-keys-ci-source-successor",
+  "version": 1,
+  "source": "9da2c1f2469f256a06b304785641c6e2e376a10e",
+  "parent": "2690dafc8af3e7a78095f287eaaf494eb33d0eaf",
+  "originalFamily": {
+    "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/successor.json",
+    "bytes": 70231,
+    "sha256": "e03ce63b3186777006c71c65f611c3e42f7f89ecad79a5262bc5a389980a9356",
+    "gitBlob": "6ec179cf794f280a287ae4aea04534a659ec3c48"
+  },
+  "current": [
+    {
+      "path": "crates/vize_patina/src/linter/engine.rs",
+      "bytes": 19940,
+      "sha256": "0ee0a7230e1cceca0868d7637eb31978dff372bf3b16c2699f06e0a97b74d9fa",
+      "gitBlob": "bcab2539142ad988f851ef92dd2226395dd53981"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/engine/sfc.rs",
+      "bytes": 11157,
+      "sha256": "bcd3c09c4db78c4bf93514bf177848eb816bb1d665f3c9185fe332550c28eb23",
+      "gitBlob": "e153615991646e5549b0c3997c2184251493fe4a"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules.rs",
+      "bytes": 10359,
+      "sha256": "ee8121635192f4979fddf8a3a977c320a14e5ae5bb55611dc33f51aad720e212",
+      "gitBlob": "36e7781cf95556c57333651084358a2a2a4c482a"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/dupe_keys_dispatch_tests.rs",
+      "bytes": 5119,
+      "sha256": "4e770f4ac04412bc8ac3900e6198b21705c1dd9fa46f65be7264fcb66d04dfcd",
+      "gitBlob": "62728cad925fc22a6e9ef96b93a32bb0b95d8a27"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/prefilter.rs",
+      "bytes": 14021,
+      "sha256": "803f88a0cfa28b518c26104cc5bc53cef10dda8100afc5974e6fc105d05b4f98",
+      "gitBlob": "9927aeb19543c5cc3c02da5230ca22db708a180f"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/registered_sfc.rs",
+      "bytes": 1366,
+      "sha256": "3c5def49a855e146eaea7db29798f616e31fc6a44e7bf4d9a6b0afcf70805bd3",
+      "gitBlob": "5016a21b8d925696b314a0f5d82c1194c9dd0950"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/registry/rules.rs",
+      "bytes": 21922,
+      "sha256": "e0ac436d8735f69bab0fe42465a328047dc24dc58248a22ae2315a828468f7a1",
+      "gitBlob": "cbf9c7f32929b3d92554b1bc8918a5d100c303c4"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/sfc.rs",
+      "bytes": 9427,
+      "sha256": "eeab9a3f9bd6d5c587096bb994b5528eb46ff86d8cf0eca381c57033a818d440",
+      "gitBlob": "aa4a206eb4fc065b1643618e491ec6667499de54"
+    },
+    {
+      "path": "crates/vize_patina/src/rule.rs",
+      "bytes": 12879,
+      "sha256": "6537cc95fb04eb4f8f51afd7dfea9e7a695b81a7f428e01ddb38e208478c34b5",
+      "gitBlob": "20a0e112b3e6434eb05b6c9502a54974aa550301"
+    },
+    {
+      "path": "crates/vize_patina/src/rule_contracts/table.rs",
+      "bytes": 19857,
+      "sha256": "0adb8d7e75f43846e07d781a1ff4e58c08dc3016ad5a5abb3fea4b8393be53fb",
+      "gitBlob": "daa61391b47f3c65122f1cf6cfb9ea208b394118"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script.rs",
+      "bytes": 7908,
+      "sha256": "1037a333628d05ab36a46d3e975b447552ce85c23c4414342c6e7ffd7f30df2c",
+      "gitBlob": "2063d25f2eeedb67c4047bc02680caedc62c0fa0"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/no_dupe_keys.rs",
+      "bytes": 9752,
+      "sha256": "7ddb67676ddc0973ddf7802d9d1e2a04f482928a70a4a56a95944be03dd72bf4",
+      "gitBlob": "e9a984ccdb6d035dbe6eabb2ba7615f2f0000632"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/no_dupe_keys/setup.rs",
+      "bytes": 13150,
+      "sha256": "788194a1bda1ddde53cedd882e15cb31359d08bef6328f16fc32b27b91aa2822",
+      "gitBlob": "090a792078ee53db0b1c89ab8b6a40a55e1e7486"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/no_dupe_keys/setup/props.rs",
+      "bytes": 9695,
+      "sha256": "a8c3190e50faf728c4d59952c8d9c561de9e29556073a9d4db131a90fa9a45a3",
+      "gitBlob": "57c5aa2bc91733bb6a7b091ac388bae9e2ba08fe"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/props_emits.rs",
+      "bytes": 1368,
+      "sha256": "8974083b1d8e5c864f31d3f872d54d6061a84f4a8f7a181c2daa0d3f27ede6ff",
+      "gitBlob": "4a756a4d427286eb83d65e540713051736002831"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/props_emits/compiler_macro_bindings.rs",
+      "bytes": 5670,
+      "sha256": "2fa87c69fef9eca8cd8c39d88892a2db91bb40eadcc17fa15c1bec9a991b376f",
+      "gitBlob": "7ba76a4d5a9256270ef258947064d9e60f103077"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/props_emits/no_required_prop_with_default.rs",
+      "bytes": 11471,
+      "sha256": "1e3e58cab0ab268e3c9e3ba5eb3e74d54283d47249d10189fe65c608cca504f1",
+      "gitBlob": "85243a519428825cd278e0a5f418bb71b30ff53d"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/props_emits/no_required_prop_with_default/runtime.rs",
+      "bytes": 2399,
+      "sha256": "5bed02a5b8cdf759c2939fae2f68fda41c05a3d35508383e9275b28569e4c4b2",
+      "gitBlob": "76b7cfe95c7a8d4121580f11b67c3545036d5025"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/props_emits/no_required_prop_with_default/typed.rs",
+      "bytes": 8807,
+      "sha256": "0749c7e672b42572d4c509404af7c82ba415590de5ef04988d577cdc23806c83",
+      "gitBlob": "897c711329161538d8fefe536e46815aea76a043"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/props_emits/return_in_emits_validator/setup.rs",
+      "bytes": 6384,
+      "sha256": "458971904a70de545aca5bb441e0f4241fad91d8573ae0681bd6298a1d3136f1",
+      "gitBlob": "5a0328505ea2d520ecabaa404202dd4bd0861365"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/vue/no_mutating_props.rs",
+      "bytes": 11795,
+      "sha256": "06002fab66c451069ada1b21b1a15bf7966dd82d8766562270ef4d620788230c",
+      "gitBlob": "c3396f48f8657921a8fd8d6806b9e6b789d0fe7b"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/vue/no_mutating_props/options_api.rs",
+      "bytes": 2600,
+      "sha256": "5df609daa1ca1c8cb58226907fcd8b091fdf9606b95c10613387f25f33b2a927",
+      "gitBlob": "d065ba04d67c9ab4c77351b5751cabc5d0725cbb"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/vue/no_mutating_props/options_api/component.rs",
+      "bytes": 5011,
+      "sha256": "111ebf7e0d4a58a38aeb20833786139812cae3a6b13a219ff881002f431e638e",
+      "gitBlob": "30d8e77f846d0f093a6bb29070e8123fe04f1cb5"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/vue/no_mutating_props/options_api/mutations.rs",
+      "bytes": 4235,
+      "sha256": "94c333fd81cffb93eb82e0d589d4d96c2fdddb1d17710b16f275c8069e2bf6ae",
+      "gitBlob": "f1f3e83f95510cddc3cda33481dbee533925d173"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/vue/no_mutating_props/options_api/targets.rs",
+      "bytes": 1530,
+      "sha256": "c7e9c0a75885841c5d9aae4ded76608fab45636d8b60bc90481e43f14c728449",
+      "gitBlob": "6dea161ed46ce543029f8660f6ad762ea4a339b2"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/vue/no_mutating_props/options_api/tests.rs",
+      "bytes": 13291,
+      "sha256": "c9e4a7ee85ab8b09ed4fbfad27ce8f546f456f51289559f8d8e56a136565890e",
+      "gitBlob": "58bc5aa0deebd053494e3307ef8fd191d7d5ffbd"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/vue/no_mutating_props/script_mutations.rs",
+      "bytes": 10403,
+      "sha256": "b474379c4a38b27286ea330828ec2889dc4834eecb90d34d2ffaa47d81951d64",
+      "gitBlob": "9871a9fbb0656c2d9fc6c75644530670f13743a9"
+    },
+    {
+      "path": "crates/vize_patina/tests/no_dupe_keys_447.rs",
+      "bytes": 4531,
+      "sha256": "d5d7e8c37568ba3b71c15ab53a38a47e3919b7532f81c0ef5d7192447cab3cdf",
+      "gitBlob": "4399990c290cecd93590311c69acfb17b1e147db"
+    },
+    {
+      "path": "docs/content/ja/rules/reference/script-no-dupe-keys.md",
+      "bytes": 2600,
+      "sha256": "d0ec2862d9e8376e68ebe59b4220e88c205014757bed6813ee5d2b2dd5281d09",
+      "gitBlob": "02ad9b427e171014d7791dbe6f73a224a0be30f7"
+    },
+    {
+      "path": "docs/content/rules/reference/script-no-dupe-keys.md",
+      "bytes": 2381,
+      "sha256": "9d90651f43af6d9f0c2154f7b250f96801fc9c2f20b9063211269ccd9a28abe7",
+      "gitBlob": "10d577fe3d4c184582862adfd6d69310863a8e44"
+    },
+    {
+      "path": "docs/davinci/plan/consumer-migration-surfaces/linter/vize_patina.tsv",
+      "bytes": 161166,
+      "sha256": "532ec0ab6a2b35a6fe9706094d4643a30b891d0ead56c886a4ea337fe650dc3a",
+      "gitBlob": "07d750c5809cd6c7e33252c37c401b831feb8458"
+    },
+    {
+      "path": "npm/ui/src/families/date-time/calendar/calendar-multiple-root.vue",
+      "bytes": 7587,
+      "sha256": "3aae2fb8dc2b87dc1d6670678aac25c9b0f1f8d1df72d8df30a7340226b7117e",
+      "gitBlob": "14ba74a768a9524ffa4a0db1f5d234fe3935af0f"
+    },
+    {
+      "path": "npm/ui/src/families/date-time/calendar/calendar-root.vue",
+      "bytes": 7202,
+      "sha256": "accbdfe867c51af9d2a69ae0a87afa74a06b37dd6a7661dcaab0ddae09028c45",
+      "gitBlob": "47e7ef84a959bd476b65fa4a20bfdd0794e38019"
+    },
+    {
+      "path": "npm/ui/src/families/date-time/duration-field/duration-field.vue",
+      "bytes": 6981,
+      "sha256": "6652d5c079f6861fd07459db995e2d466be13781a5b6a70a5746028cb2f43633",
+      "gitBlob": "1a4f12b1f6055b71644fd864f05721119263b5b2"
+    },
+    {
+      "path": "npm/ui/src/families/date-time/range-calendar/range-calendar-root.vue",
+      "bytes": 8624,
+      "sha256": "d96b50cbd7a742d511b25a236991bd69c7bd525b5e51b7a50ac1cf6f045d73a7",
+      "gitBlob": "5e2b6e08a2a8a3294050417f8424ff0b6cfb2728"
+    },
+    {
+      "path": "npm/ui/src/families/date-time/week-picker/week-picker-root.vue",
+      "bytes": 8090,
+      "sha256": "ebde7d946630ac9fd8a8918e87cdeec162da035629d1b97c3ed40886d7f9ceb3",
+      "gitBlob": "286fde1bb6e87e31c8b5eb133cc592aa654f6396"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/props-deep-destructure-8090/source-custody/01-after.rs.fixture",
+      "bytes": 1368,
+      "sha256": "8974083b1d8e5c864f31d3f872d54d6061a84f4a8f7a181c2daa0d3f27ede6ff",
+      "gitBlob": "4a756a4d427286eb83d65e540713051736002831"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/props-deep-destructure-8090/source-custody/06-after.rs.fixture",
+      "bytes": 7697,
+      "sha256": "2fcda85b4dba45248c782f475c648b4344b0cb2b008b55d241cd282efa9cf7dd",
+      "gitBlob": "7b54949f6b48abe4c69b27865bf6b0165694a936"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/props-deep-destructure-8090/source-custody/trait-scope-correction/script-rules-after.rs.fixture",
+      "bytes": 9734,
+      "sha256": "9a3f6978f30b5895c31d5eb0f333175f8ee60c1a52bccc31615d5ceb075f1e2b",
+      "gitBlob": "9eddae3f363f1965b59aedbc487af25ff18f9e94"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/runtime-prop-defaults-8564/source-custody/02-after.rs.fixture",
+      "bytes": 5670,
+      "sha256": "2fa87c69fef9eca8cd8c39d88892a2db91bb40eadcc17fa15c1bec9a991b376f",
+      "gitBlob": "7ba76a4d5a9256270ef258947064d9e60f103077"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/runtime-prop-defaults-8564/source-custody/03-after.rs.fixture",
+      "bytes": 6384,
+      "sha256": "458971904a70de545aca5bb441e0f4241fad91d8573ae0681bd6298a1d3136f1",
+      "gitBlob": "5a0328505ea2d520ecabaa404202dd4bd0861365"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/runtime-prop-defaults-8564/source-custody/04-after.rs.fixture",
+      "bytes": 11471,
+      "sha256": "1e3e58cab0ab268e3c9e3ba5eb3e74d54283d47249d10189fe65c608cca504f1",
+      "gitBlob": "85243a519428825cd278e0a5f418bb71b30ff53d"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/runtime-prop-defaults-8564/source-custody/05-after.rs.fixture",
+      "bytes": 2399,
+      "sha256": "5bed02a5b8cdf759c2939fae2f68fda41c05a3d35508383e9275b28569e4c4b2",
+      "gitBlob": "76b7cfe95c7a8d4121580f11b67c3545036d5025"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/runtime-prop-defaults-8564/source-custody/08-after.rs.fixture",
+      "bytes": 7552,
+      "sha256": "cce4c13e30a66479b42ea078dc9f799afc81bbfb8e9d5464f78b75b874c42dc1",
+      "gitBlob": "e4a3c8d0a973ae13ed0c9ba97a4cf4cb72b46320"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/runtime-prop-defaults-8564/source-custody/09-after.rs.fixture",
+      "bytes": 8807,
+      "sha256": "0749c7e672b42572d4c509404af7c82ba415590de5ef04988d577cdc23806c83",
+      "gitBlob": "897c711329161538d8fefe536e46815aea76a043"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/runtime-prop-defaults-8564/source-custody/10-after.rs.fixture",
+      "bytes": 11157,
+      "sha256": "bcd3c09c4db78c4bf93514bf177848eb816bb1d665f3c9185fe332550c28eb23",
+      "gitBlob": "e153615991646e5549b0c3997c2184251493fe4a"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/runtime-prop-defaults-8564/source-custody/11-after.rs.fixture",
+      "bytes": 19940,
+      "sha256": "0ee0a7230e1cceca0868d7637eb31978dff372bf3b16c2699f06e0a97b74d9fa",
+      "gitBlob": "bcab2539142ad988f851ef92dd2226395dd53981"
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/setup-export-default-8090/source-custody/registry-after.rs.fixture",
+      "bytes": 21922,
+      "sha256": "e0ac436d8735f69bab0fe42465a328047dc24dc58248a22ae2315a828468f7a1",
+      "gitBlob": "cbf9c7f32929b3d92554b1bc8918a5d100c303c4"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/README.md",
+      "bytes": 4781,
+      "sha256": "aa1a30aea78526eb9f2c6f2d1dbe6828ac3338f41f1d003b8fd6ec1cf53bbbed",
+      "gitBlob": "26b1dd2b8f2803e740fec2b1ee82bd3d4ac11529"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/authored-reference-replay-whole.json",
+      "bytes": 23194,
+      "sha256": "ea9738191e2c7344f13aec226ca0e4339e776b6107fba6a44167ac768c8371ad",
+      "gitBlob": "43ac7b24dc3960eed63f4c42290e3ac0129b4471"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/cases.json",
+      "bytes": 151078,
+      "sha256": "db62ee4ea2e1d30a5027e5c09d003a1d4e8f5daaa47311e5eb846bf8206550c0",
+      "gitBlob": "17acd89d1660d3b3a63d94d6f2156df0caef5ec4"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/generic-parameter-substitution-proposal.rs.fixture",
+      "bytes": 13195,
+      "sha256": "51bd94bd1af81af0a3120e4371cda37965d86337d5ffabbc3e7e87bc2cf0e9e2",
+      "gitBlob": "f0a24b0c220972c680f4a45c1f971339d134febb"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/generic-specialization-before.json",
+      "bytes": 21815,
+      "sha256": "88025380e79b5d229f25bb7bfd806e390e53b11e6bfde8c38cb4f43b8049d693",
+      "gitBlob": "a84f96ad55db1ab58ea94082e4bb4d35fafb9b9a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/neighbor-reference-replay-whole.json",
+      "bytes": 8791,
+      "sha256": "72d17625ce0a6cf209064535c926f1509bdb06861aaf9144019411ee1a2fb980",
+      "gitBlob": "5e84216b6753993bfc4759f1f4f47881b5fa1050"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-owner-packet.json.gz",
+      "bytes": 158398,
+      "sha256": "159ba0895250d42e53ea0490ab581a5f1d92993e1f61877b698577dbfeaa46a0",
+      "gitBlob": "e1351e6d9414a079d53e81e033d2d936ce9f1e14"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-owner-selector.json.gz",
+      "bytes": 16499,
+      "sha256": "a86f5c0e78b81a5d93e32958815a4dbd30772d241cf342960e8a6a8ab3f90841",
+      "gitBlob": "472c1f5c19ef80b780013b3583a901d8c48efbfa"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-provider-vector-equality.json",
+      "bytes": 9904,
+      "sha256": "f3075af712f9324794fdacc28ae27b4fb4533a4c1bc30bdcfda9f5cdb8004145",
+      "gitBlob": "4f738182339182e6f5e7a5595e3ffb661959027a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/dbx/apps/desktop/src/components/grid/DataGrid.vue.txt",
+      "bytes": 521180,
+      "sha256": "69ba95ae965d22edab63f807472a86c388a72a0a22a4d2fea8762acfc7b8420a",
+      "gitBlob": "56134c36946ee8ef555976dcdc0e2349418b8106"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/dbx/apps/desktop/src/components/mq/ProducerConsumerPanel.vue.txt",
+      "bytes": 33967,
+      "sha256": "1aa9ef1775faea2133abd09ec5089ae31f6c6b2a7a1e1d0fc034180edcf39c50",
+      "gitBlob": "166fcc6a262ed4713a7fa7458d6cbc7e0afd6064"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/frappe-builder/frontend/src/components/PropsOptions/SelectOptions.vue.txt",
+      "bytes": 2961,
+      "sha256": "942a24c3aca363ce1805a62a15671617e085701a6c6a2fb69ec8cdf92393f35b",
+      "gitBlob": "59ec109be5e5396c7003a601f6d2154ab5c683ac"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/inspira-ui/app/components/inspira/examples/gradient-button/GradientButtonDemo.vue.txt",
+      "bytes": 772,
+      "sha256": "63c1a993f7da8e0aa3be281c8bc85c39465c736807e8bb5093a52d146518f057",
+      "gitBlob": "19371282465eed918b757b0a6dac50bf1ae0a473"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/inspira-ui/app/components/inspira/examples/line-shadow-text/LineShadowTextDemo.vue.txt",
+      "bytes": 756,
+      "sha256": "30bae898dc1218cb00548970c11e260060157d3bd377d4b21f3e49e5c0489a97",
+      "gitBlob": "44744fe6772cb741946f6ff443c2a1c49839f665"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/lew-ui/lib/_components/CommonInput.vue.txt",
+      "bytes": 13563,
+      "sha256": "27774295b18c0955bb8f57887ecc12604b67e3334a87dce831a584551f5927d6",
+      "gitBlob": "c48be845d2f710fb2f70ef0c8e04b0db115be1de"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/nativescript-vue/demo/src/components/Home.vue.txt",
+      "bytes": 2425,
+      "sha256": "8cf655ae9d6e6a1568bcb7d9d24c7a5ffd64a4ea3a34d335d2ed22732aa6a55a",
+      "gitBlob": "881cacb38d4481594c72d06ac0f4f5b018d2b5ae"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Autocomplete/AutocompleteRoot.vue.txt",
+      "bytes": 8152,
+      "sha256": "7bb346099f600f230e07195927d02fef10f1b8e77346b90e58a41542134e0260",
+      "gitBlob": "5c5b8b18a7a8d767dff635377a3d9287959f2cab"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Calendar/CalendarRoot.vue.txt",
+      "bytes": 11434,
+      "sha256": "fc5377e7f16d5777a8654dca0af8428772959e3f736434ba2d3f2457dc5a7608",
+      "gitBlob": "425341e381d1c83c196c5532a4148a4c4b9b4529"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/ColorField/ColorFieldRoot.vue.txt",
+      "bytes": 8939,
+      "sha256": "ddde43869cac86be1fadc886dae43fd35b1288bd7e02dc93cc92c25e23738d8a",
+      "gitBlob": "fbd7da9954814ced8051fea3410a6f7db5149c56"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/ColorSlider/ColorSliderRoot.vue.txt",
+      "bytes": 7389,
+      "sha256": "03808cc496bc6341bd958428c745f3f2d1599b946a385261deefc1a73654ca3f",
+      "gitBlob": "091341561861194fc9ba2ec68cd18ff1911b9f21"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Combobox/ComboboxViewport.vue.txt",
+      "bytes": 1685,
+      "sha256": "4a3a9b9229a230b3bd0e50e29d3a935b225ae718ede1951f18fcc32f3a22b178",
+      "gitBlob": "8d18ff72ae392e5fd6eac2f247c2f622dd690b7a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/DateField/DateFieldRoot.vue.txt",
+      "bytes": 11516,
+      "sha256": "bc9617435fb0425b69c97b438dc3fdfe634b49a4cc6e869eafc9f59bc16e0863",
+      "gitBlob": "cab8aeb3283448ac8e8bb6b350b36a6188caec2d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/DateRangeField/DateRangeFieldRoot.vue.txt",
+      "bytes": 14114,
+      "sha256": "6c797b520435de42f8c6ae258bffc387d09be5c1aee154a984395a901b25c898",
+      "gitBlob": "7a4056f094ea5b8abc97dfe1844a8f66bd97d7c5"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Editable/EditableRoot.vue.txt",
+      "bytes": 6781,
+      "sha256": "5e2cf3110986545095c68086f8a7c5276083a3fde8121bf70d49af2da194d7a6",
+      "gitBlob": "b3b17124601fb7a6ebc75268f12f886ecf161978"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Listbox/ListboxRoot.vue.txt",
+      "bytes": 14021,
+      "sha256": "2ac683d36494c2527bd0cd7cace3015167494dbd1186a515a9a97fe2fb8042be",
+      "gitBlob": "5060aa565611ad3bb070bb833ad8ee08a4978a8d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Menu/MenuRoot.vue.txt",
+      "bytes": 2231,
+      "sha256": "092e5c96ceb5f215c8fa298cba0a524e2569ee6766bca6ebd39f4e24304a5e26",
+      "gitBlob": "7cee07a0c2da7e97dcaa18c029bf497b6c118305"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Menubar/MenubarRoot.vue.txt",
+      "bytes": 3001,
+      "sha256": "f40c90cd8e8089c73286de6925402ad4f6be3a1086a8cd623f0dcc989a246065",
+      "gitBlob": "2d12518b89f98c104d6b9a6a5726505559f3296c"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/MonthPicker/MonthPickerRoot.vue.txt",
+      "bytes": 9713,
+      "sha256": "c311897718d4dc3baa1cd608ea6b8c37d01a159874d91b89851469430a0a33da",
+      "gitBlob": "32e5e158df4407bc1056507ac2410d5c7ffb8f26"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/MonthRangePicker/MonthRangePickerRoot.vue.txt",
+      "bytes": 11879,
+      "sha256": "6157c89bf66d741a15d2e08e74dd4d141dbf023b2b423e5cba0447bd914d723b",
+      "gitBlob": "10080ffcb1c1a9f503492e226e87aec4c79755f5"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/NavigationMenu/NavigationMenuRoot.vue.txt",
+      "bytes": 6782,
+      "sha256": "51daed58de75c6063d825e92a4482b6b4ab5c72f33d4ede245cf5b6d6f7e6bfc",
+      "gitBlob": "6e08c1eb483695f75f46720b8dc5ebc9c9c161ff"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/NumberField/NumberFieldRoot.vue.txt",
+      "bytes": 9814,
+      "sha256": "97465568ef99b133c58779bd57d6e6ffeb96181f13e373325007ab14d8ebafc6",
+      "gitBlob": "5f7b6ffd0a3c253a58e304eb2f5efad300f5045e"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/PinInput/PinInputRoot.vue.txt",
+      "bytes": 5059,
+      "sha256": "c1115c31eb8c79f911fc7f20eb2106c755b7a1226f4760d71830b88017d8709f",
+      "gitBlob": "cfe11610b1de5cd0ac5d201bd07883f5dd93a0b4"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/RadioGroup/RadioGroupRoot.vue.txt",
+      "bytes": 3503,
+      "sha256": "846ddffdf680acb2a6913f0977d98a8e686140fc160acf7c1cd36d567a3b92db",
+      "gitBlob": "566ddf20414876d4588bb821584b8e5947aad416"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/RangeCalendar/RangeCalendarRoot.vue.txt",
+      "bytes": 15016,
+      "sha256": "677ba85971ead6b7853687ecfbfad4289f86d152798be2bb77c9de7cc3767ecb",
+      "gitBlob": "1d5f6b90e2fb0751240aef2d3d2b7d6a48dc778d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/RovingFocus/RovingFocusGroup.vue.txt",
+      "bytes": 4884,
+      "sha256": "c489af089deb1d7e9d587277117492d586982263a06c9084847f36f53210f477",
+      "gitBlob": "da8e13623fb08e40449a30fb03b9a9a49884a69a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/ScrollArea/ScrollAreaRoot.vue.txt",
+      "bytes": 4720,
+      "sha256": "d37c1f035711ffed4d8cea75c760c78da9f246fe13f477b86b9688bc22bac3c9",
+      "gitBlob": "402c5b8cd03fa30444f7549635efe29d08d6926e"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/ScrollArea/ScrollAreaViewport.vue.txt",
+      "bytes": 3117,
+      "sha256": "d4c06b19799794a489f0e94da9bbe5c436258feb46689bcfb5848b74d1e3ebb1",
+      "gitBlob": "167d5a7d64cbb9a3282a0b7ef6994e0fae2015c1"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Select/SelectRoot.vue.txt",
+      "bytes": 7165,
+      "sha256": "e54ff0f801d2a684775b4093b005c2c7cf050d9dc8a1a649b7762c6a13f1eded",
+      "gitBlob": "738c2eebc29a521c4623eade32e611630e3f0a0b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Select/SelectViewport.vue.txt",
+      "bytes": 3364,
+      "sha256": "7b9d5d43a35ee112834900451fba66bf116af8cba23405e428ba2b6991512297",
+      "gitBlob": "49c437a2be41ba7a55d87e8e4fe826ad5b152c26"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Slider/SliderRoot.vue.txt",
+      "bytes": 7415,
+      "sha256": "e5e92f05bf98e12eaaa94401a9ec9178b2d53c0bd6237603a329ef3eb9fe3ced",
+      "gitBlob": "b58b4fe3ab875e67ab8b8d1baec8c46b6cf5d00b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Splitter/SplitterResizeHandle.vue.txt",
+      "bytes": 4730,
+      "sha256": "a1eb1f9a6da0cd61dc4863d62402a0cb70cec0ac85f432c164412b9076e3a63f",
+      "gitBlob": "3ed35639b12c5b9fd5a3af56dfde646b54d2d7fc"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Stepper/StepperRoot.vue.txt",
+      "bytes": 6464,
+      "sha256": "1900b8580a0ace1a489ad5659abd7f87fdd9594e8ef0922aba3d7a60bf346014",
+      "gitBlob": "41efadcba299e69537d0782d2751abffeb37ad52"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Tabs/TabsRoot.vue.txt",
+      "bytes": 3752,
+      "sha256": "cb818ff3a6d7352652ccd47f2d8549502e83917b0c3de20b19261c842e770e2c",
+      "gitBlob": "b3fcac78a36163fb800cd9d7632cccad8c524704"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/TagsInput/TagsInputRoot.vue.txt",
+      "bytes": 9346,
+      "sha256": "d550ffe0fdd0eadbbb2a86dea678bf11dce33799306e9c8b30fa39f8a875c507",
+      "gitBlob": "91f337b0056b865e1b4689c2300d35f4170e7b25"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/TimeField/TimeFieldRoot.vue.txt",
+      "bytes": 12516,
+      "sha256": "be0bd336d3f833ec8e3994522115a46fc181cfc4c3996cb50fd30a025fa7bae3",
+      "gitBlob": "74b21472b4c0090dbe08a786d34589285e0d5e67"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/TimeRangeField/TimeRangeFieldRoot.vue.txt",
+      "bytes": 16432,
+      "sha256": "686f83cc9bc6af3c3ad98d0f30d26c2e3d5c43c5d52c8d5b83d180b7f1a07a9b",
+      "gitBlob": "32314670c5571b78eec34a3eb1cb553c9549a966"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/ToggleGroup/ToggleGroupRoot.vue.txt",
+      "bytes": 3459,
+      "sha256": "df05fb3b1eb25bf23371cf994ab1e1e815d766ff7f004499ddeb5beab84060b9",
+      "gitBlob": "b7943d1ce7458d86d0f438f88030eee38ccf47eb"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Toolbar/ToolbarRoot.vue.txt",
+      "bytes": 1644,
+      "sha256": "4923deea2221a4e1442702e64811e50e9e23c65ec3b15a0d93ac9133aa108c6c",
+      "gitBlob": "38edb4ef519ee154088da28b5c49fb3e381da4d3"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Tree/TreeRoot.vue.txt",
+      "bytes": 9543,
+      "sha256": "cd45b4ad003c59ef0d8a9801741546a0f5cf75013716ef6ddcb65528e3c72a05",
+      "gitBlob": "5abdc16fc3be893b7813d75da9202e0c93add06a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/Viewport/Viewport.vue.txt",
+      "bytes": 1488,
+      "sha256": "04beb5d70204f4a7fceae332406dffad58a22c9d9caa93b6682667bd0eda4658",
+      "gitBlob": "296ccd2ce91baa3c6b446774a3c2514342b09057"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/YearPicker/YearPickerRoot.vue.txt",
+      "bytes": 9742,
+      "sha256": "2eac038964a24deb94e22ec8180b401d9582883c4b842a8f90e1d404d4d24089",
+      "gitBlob": "9fcf514cd352079042a52a8cf8bede2197ad6fad"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/reka-ui/packages/core/src/YearRangePicker/YearRangePickerRoot.vue.txt",
+      "bytes": 11803,
+      "sha256": "35f0fbab072e81d5704795a26d1e6032a0ba7448560d98cb2f32ae69809c9953",
+      "gitBlob": "577e2922b4583b937d24457639f00d2b1a95bc59"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/tiny-rdm/frontend/src/components/common/TtlInput.vue.txt",
+      "bytes": 1371,
+      "sha256": "2f36fb15d6c943481fcd927a4ab14370433c14f36407b84d7c713cca63169949",
+      "gitBlob": "a24a93ff4fbdf3be450d19b1152ef547360e03d5"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/tiny-rdm/frontend/src/components/content_value/ContentToolbar.vue.txt",
+      "bytes": 6638,
+      "sha256": "f2c61111ddfb25414edbd9733e3d5edf4bbdd03aa7f3bc925d9c81b619bbae4f",
+      "gitBlob": "de3d1d02faae5c22459d3908cd82523eb8cbfb25"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/tiny-rdm/frontend/src/components/content_value/ContentValueHash.vue.txt",
+      "bytes": 16361,
+      "sha256": "4d1929bb035f0e7bf3180a84350bd49846f6a9fb959af2ac3c1ec5b5183bbf9c",
+      "gitBlob": "4aeff6994d48cc892c6b4ce375a75e2fb142fa4a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/tiny-rdm/frontend/src/components/content_value/ContentValueList.vue.txt",
+      "bytes": 13543,
+      "sha256": "802ff396c0460c44f89829d5d00cc0e7d13415494daa272d81223633611b6ed6",
+      "gitBlob": "76c0c12c5907376f3650e11420692ee030ed6e31"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/tiny-rdm/frontend/src/components/content_value/ContentValueSet.vue.txt",
+      "bytes": 13485,
+      "sha256": "6b879f9b7657371e2978498a0a3f0edc9081ee6a89e58863b474c05774517d7b",
+      "gitBlob": "058f576e83b3cf1506c4b2bc1b140d7f59a97428"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/tiny-rdm/frontend/src/components/content_value/ContentValueStream.vue.txt",
+      "bytes": 7791,
+      "sha256": "9564f59274d7a8dee012fdec445d98026a0714ba8dd301df7a72e3e944f8ad0d",
+      "gitBlob": "b2e08d12041e65b21bbeabef19dd210badeff1f2"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/tiny-rdm/frontend/src/components/content_value/ContentValueZSet.vue.txt",
+      "bytes": 14721,
+      "sha256": "a96e74b58ce738109b7e0fa08ce7e070039975d22e91115976d57ce86bc7ac5c",
+      "gitBlob": "b23fffafd51f11ec29b855fa3bf33a76b4c7f77d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/original-sources/vue-netcore/vol.web/src/components/basic/VolBox.vue.txt",
+      "bytes": 7484,
+      "sha256": "f90b633e7804b5814c2d9ad6099c7c3963c198c44770cae4b882b21b99b58cb1",
+      "gitBlob": "f938d6ca5a3662d8fe110cfbebbe84eecf4f2dc3"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/pinned-primary-no-dupe-keys.js",
+      "bytes": 5446,
+      "sha256": "8af6216a7bdf7a74e12865cc603920291686611b7975cddaaf3a21be43e77f8a",
+      "gitBlob": "ecfa787cf6b6adcd74206d96743e9f9b020d581d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/pinned-primary-rule-custody.json",
+      "bytes": 1651,
+      "sha256": "83f80cbf9e1e96ccb1c16a83886721aadd6276b383197349bb059428fca7e32f",
+      "gitBlob": "23b1eaabcd5bbb73bb16117881421295468c10b6"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/pinned-reference-replay-whole.json",
+      "bytes": 66995,
+      "sha256": "9a5cd72ea74060533df8982cce1841c956a0d8267bcfc1b1dcaf884cca663be8",
+      "gitBlob": "2c0bf91adf0069e6830df0ef08d1e41486b5a162"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/pinned-source-custody.json",
+      "bytes": 35917,
+      "sha256": "eae0821c22f620191888bb1f23d65191a606a8e796d6808b03aabb943c910960",
+      "gitBlob": "2324654da7a7c8096effda365d53c44fbe9d46af"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-source-snapshot.json.gz",
+      "bytes": 5273712,
+      "sha256": "27ab3a1ba075efb5c9c80c7850f33a732308baf4ae50ef355cfc49c0e1626548",
+      "gitBlob": "e7072b741a4abbd77e6f53949ddaf34131b3e2a1"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/repair-evidence.json.gz",
+      "bytes": 134471,
+      "sha256": "a7d84cd6051ede00f284a028b09d9912f07807eb21462fb1528dd32106d3cff5",
+      "gitBlob": "b793082901c94d676cf9fe25969fcda5dd6a9df0"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/family-05-after.fixture",
+      "bytes": 7908,
+      "sha256": "1037a333628d05ab36a46d3e975b447552ce85c23c4414342c6e7ffd7f30df2c",
+      "gitBlob": "2063d25f2eeedb67c4047bc02680caedc62c0fa0"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/family-06-after.fixture",
+      "bytes": 10359,
+      "sha256": "ee8121635192f4979fddf8a3a977c320a14e5ae5bb55611dc33f51aad720e212",
+      "gitBlob": "36e7781cf95556c57333651084358a2a2a4c482a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/family-07-after.fixture",
+      "bytes": 9427,
+      "sha256": "eeab9a3f9bd6d5c587096bb994b5528eb46ff86d8cf0eca381c57033a818d440",
+      "gitBlob": "aa4a206eb4fc065b1643618e491ec6667499de54"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/incoming-no-mutating-props-source-custody.mjs.fixture",
+      "bytes": 9757,
+      "sha256": "2c9609f6bac7f05f2251c31fd0f3eeecb6e60a60f99f340a024ab2910f7bec3e",
+      "gitBlob": "c68f973cc217cfcecffddc6b709f404b913de4a3"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/incoming-no-mutating-props-source-custody.test.mjs.fixture",
+      "bytes": 8405,
+      "sha256": "2a62d67dd801fe7e18299ed1593d0dc7efb2132507e2b39e297e62b6db7c0e90",
+      "gitBlob": "2cf1a567fed31276d9f7e61cee637015bbb6b26b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-000-after.fixture",
+      "bytes": 5117,
+      "sha256": "498319d459adf652860af2f329f2cff8a306997c9861acde70153a946de72370",
+      "gitBlob": "37cfc6d765de162188388e789f829595be36a866"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-001-after.fixture",
+      "bytes": 14021,
+      "sha256": "803f88a0cfa28b518c26104cc5bc53cef10dda8100afc5974e6fc105d05b4f98",
+      "gitBlob": "9927aeb19543c5cc3c02da5230ca22db708a180f"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-001-before.fixture",
+      "bytes": 13327,
+      "sha256": "2bfb6e6243dae77b6984b33ab330761f5c4a3bd372cc216ae15a990413c20e53",
+      "gitBlob": "de5aea6c9ce67bb69dc05189901d6ce339f14768"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-002-after.fixture",
+      "bytes": 19857,
+      "sha256": "0adb8d7e75f43846e07d781a1ff4e58c08dc3016ad5a5abb3fea4b8393be53fb",
+      "gitBlob": "daa61391b47f3c65122f1cf6cfb9ea208b394118"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-002-before.fixture",
+      "bytes": 19597,
+      "sha256": "e234dce1cfa604c1955090aeccc9df32dd0f8326e4e43c394f5539b2e76c8711",
+      "gitBlob": "ea5d309e1805829611345dc4bdac98e4d93f23cb"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-003-after.fixture",
+      "bytes": 9752,
+      "sha256": "7ddb67676ddc0973ddf7802d9d1e2a04f482928a70a4a56a95944be03dd72bf4",
+      "gitBlob": "e9a984ccdb6d035dbe6eabb2ba7615f2f0000632"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-003-before.fixture",
+      "bytes": 8333,
+      "sha256": "6b4e85c384afa8e9a5b21bb02224371a5d59e0620e991f80d5491e5e646fadac",
+      "gitBlob": "5f100d498a762f05231014de584d0aafd4d0fd88"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-004-after.fixture",
+      "bytes": 13150,
+      "sha256": "788194a1bda1ddde53cedd882e15cb31359d08bef6328f16fc32b27b91aa2822",
+      "gitBlob": "090a792078ee53db0b1c89ab8b6a40a55e1e7486"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-005-after.fixture",
+      "bytes": 9695,
+      "sha256": "a8c3190e50faf728c4d59952c8d9c561de9e29556073a9d4db131a90fa9a45a3",
+      "gitBlob": "57c5aa2bc91733bb6a7b091ac388bae9e2ba08fe"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-006-after.fixture",
+      "bytes": 4531,
+      "sha256": "d5d7e8c37568ba3b71c15ab53a38a47e3919b7532f81c0ef5d7192447cab3cdf",
+      "gitBlob": "4399990c290cecd93590311c69acfb17b1e147db"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-007-after.fixture",
+      "bytes": 2600,
+      "sha256": "d0ec2862d9e8376e68ebe59b4220e88c205014757bed6813ee5d2b2dd5281d09",
+      "gitBlob": "02ad9b427e171014d7791dbe6f73a224a0be30f7"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-007-before.fixture",
+      "bytes": 1977,
+      "sha256": "7b830b677d1e2095cbb81adee4f154b68dd4de30cb2d585ae2435e377fa7d628",
+      "gitBlob": "da9ed22ebfa332cd84d5ee66768d56f9452bb647"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-008-after.fixture",
+      "bytes": 2381,
+      "sha256": "9d90651f43af6d9f0c2154f7b250f96801fc9c2f20b9063211269ccd9a28abe7",
+      "gitBlob": "10d577fe3d4c184582862adfd6d69310863a8e44"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-008-before.fixture",
+      "bytes": 1754,
+      "sha256": "f0272dd821d0803a4add6398d4571e16b4da5a978ae5dd415fe11a97771b4ff0",
+      "gitBlob": "989e9d4030e19d6c9759e80f5c60d871d8ce28c2"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-009-after.fixture",
+      "bytes": 4781,
+      "sha256": "aa1a30aea78526eb9f2c6f2d1dbe6828ac3338f41f1d003b8fd6ec1cf53bbbed",
+      "gitBlob": "26b1dd2b8f2803e740fec2b1ee82bd3d4ac11529"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-010-after.fixture",
+      "bytes": 23194,
+      "sha256": "ea9738191e2c7344f13aec226ca0e4339e776b6107fba6a44167ac768c8371ad",
+      "gitBlob": "43ac7b24dc3960eed63f4c42290e3ac0129b4471"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-011-after.fixture",
+      "bytes": 151078,
+      "sha256": "db62ee4ea2e1d30a5027e5c09d003a1d4e8f5daaa47311e5eb846bf8206550c0",
+      "gitBlob": "17acd89d1660d3b3a63d94d6f2156df0caef5ec4"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-012-after.fixture",
+      "bytes": 13195,
+      "sha256": "51bd94bd1af81af0a3120e4371cda37965d86337d5ffabbc3e7e87bc2cf0e9e2",
+      "gitBlob": "f0a24b0c220972c680f4a45c1f971339d134febb"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-013-after.fixture",
+      "bytes": 21815,
+      "sha256": "88025380e79b5d229f25bb7bfd806e390e53b11e6bfde8c38cb4f43b8049d693",
+      "gitBlob": "a84f96ad55db1ab58ea94082e4bb4d35fafb9b9a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-014-after.fixture",
+      "bytes": 8791,
+      "sha256": "72d17625ce0a6cf209064535c926f1509bdb06861aaf9144019411ee1a2fb980",
+      "gitBlob": "5e84216b6753993bfc4759f1f4f47881b5fa1050"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-015-after.fixture",
+      "bytes": 158398,
+      "sha256": "159ba0895250d42e53ea0490ab581a5f1d92993e1f61877b698577dbfeaa46a0",
+      "gitBlob": "e1351e6d9414a079d53e81e033d2d936ce9f1e14"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-016-after.fixture",
+      "bytes": 16499,
+      "sha256": "a86f5c0e78b81a5d93e32958815a4dbd30772d241cf342960e8a6a8ab3f90841",
+      "gitBlob": "472c1f5c19ef80b780013b3583a901d8c48efbfa"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-017-after.fixture",
+      "bytes": 9904,
+      "sha256": "f3075af712f9324794fdacc28ae27b4fb4533a4c1bc30bdcfda9f5cdb8004145",
+      "gitBlob": "4f738182339182e6f5e7a5595e3ffb661959027a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-018-after.fixture",
+      "bytes": 521180,
+      "sha256": "69ba95ae965d22edab63f807472a86c388a72a0a22a4d2fea8762acfc7b8420a",
+      "gitBlob": "56134c36946ee8ef555976dcdc0e2349418b8106"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-019-after.fixture",
+      "bytes": 33967,
+      "sha256": "1aa9ef1775faea2133abd09ec5089ae31f6c6b2a7a1e1d0fc034180edcf39c50",
+      "gitBlob": "166fcc6a262ed4713a7fa7458d6cbc7e0afd6064"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-020-after.fixture",
+      "bytes": 2961,
+      "sha256": "942a24c3aca363ce1805a62a15671617e085701a6c6a2fb69ec8cdf92393f35b",
+      "gitBlob": "59ec109be5e5396c7003a601f6d2154ab5c683ac"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-021-after.fixture",
+      "bytes": 772,
+      "sha256": "63c1a993f7da8e0aa3be281c8bc85c39465c736807e8bb5093a52d146518f057",
+      "gitBlob": "19371282465eed918b757b0a6dac50bf1ae0a473"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-022-after.fixture",
+      "bytes": 756,
+      "sha256": "30bae898dc1218cb00548970c11e260060157d3bd377d4b21f3e49e5c0489a97",
+      "gitBlob": "44744fe6772cb741946f6ff443c2a1c49839f665"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-023-after.fixture",
+      "bytes": 13563,
+      "sha256": "27774295b18c0955bb8f57887ecc12604b67e3334a87dce831a584551f5927d6",
+      "gitBlob": "c48be845d2f710fb2f70ef0c8e04b0db115be1de"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-024-after.fixture",
+      "bytes": 2425,
+      "sha256": "8cf655ae9d6e6a1568bcb7d9d24c7a5ffd64a4ea3a34d335d2ed22732aa6a55a",
+      "gitBlob": "881cacb38d4481594c72d06ac0f4f5b018d2b5ae"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-025-after.fixture",
+      "bytes": 8152,
+      "sha256": "7bb346099f600f230e07195927d02fef10f1b8e77346b90e58a41542134e0260",
+      "gitBlob": "5c5b8b18a7a8d767dff635377a3d9287959f2cab"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-026-after.fixture",
+      "bytes": 11434,
+      "sha256": "fc5377e7f16d5777a8654dca0af8428772959e3f736434ba2d3f2457dc5a7608",
+      "gitBlob": "425341e381d1c83c196c5532a4148a4c4b9b4529"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-027-after.fixture",
+      "bytes": 8939,
+      "sha256": "ddde43869cac86be1fadc886dae43fd35b1288bd7e02dc93cc92c25e23738d8a",
+      "gitBlob": "fbd7da9954814ced8051fea3410a6f7db5149c56"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-028-after.fixture",
+      "bytes": 7389,
+      "sha256": "03808cc496bc6341bd958428c745f3f2d1599b946a385261deefc1a73654ca3f",
+      "gitBlob": "091341561861194fc9ba2ec68cd18ff1911b9f21"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-029-after.fixture",
+      "bytes": 1685,
+      "sha256": "4a3a9b9229a230b3bd0e50e29d3a935b225ae718ede1951f18fcc32f3a22b178",
+      "gitBlob": "8d18ff72ae392e5fd6eac2f247c2f622dd690b7a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-030-after.fixture",
+      "bytes": 11516,
+      "sha256": "bc9617435fb0425b69c97b438dc3fdfe634b49a4cc6e869eafc9f59bc16e0863",
+      "gitBlob": "cab8aeb3283448ac8e8bb6b350b36a6188caec2d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-031-after.fixture",
+      "bytes": 14114,
+      "sha256": "6c797b520435de42f8c6ae258bffc387d09be5c1aee154a984395a901b25c898",
+      "gitBlob": "7a4056f094ea5b8abc97dfe1844a8f66bd97d7c5"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-032-after.fixture",
+      "bytes": 6781,
+      "sha256": "5e2cf3110986545095c68086f8a7c5276083a3fde8121bf70d49af2da194d7a6",
+      "gitBlob": "b3b17124601fb7a6ebc75268f12f886ecf161978"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-033-after.fixture",
+      "bytes": 14021,
+      "sha256": "2ac683d36494c2527bd0cd7cace3015167494dbd1186a515a9a97fe2fb8042be",
+      "gitBlob": "5060aa565611ad3bb070bb833ad8ee08a4978a8d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-034-after.fixture",
+      "bytes": 2231,
+      "sha256": "092e5c96ceb5f215c8fa298cba0a524e2569ee6766bca6ebd39f4e24304a5e26",
+      "gitBlob": "7cee07a0c2da7e97dcaa18c029bf497b6c118305"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-035-after.fixture",
+      "bytes": 3001,
+      "sha256": "f40c90cd8e8089c73286de6925402ad4f6be3a1086a8cd623f0dcc989a246065",
+      "gitBlob": "2d12518b89f98c104d6b9a6a5726505559f3296c"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-036-after.fixture",
+      "bytes": 9713,
+      "sha256": "c311897718d4dc3baa1cd608ea6b8c37d01a159874d91b89851469430a0a33da",
+      "gitBlob": "32e5e158df4407bc1056507ac2410d5c7ffb8f26"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-037-after.fixture",
+      "bytes": 11879,
+      "sha256": "6157c89bf66d741a15d2e08e74dd4d141dbf023b2b423e5cba0447bd914d723b",
+      "gitBlob": "10080ffcb1c1a9f503492e226e87aec4c79755f5"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-038-after.fixture",
+      "bytes": 6782,
+      "sha256": "51daed58de75c6063d825e92a4482b6b4ab5c72f33d4ede245cf5b6d6f7e6bfc",
+      "gitBlob": "6e08c1eb483695f75f46720b8dc5ebc9c9c161ff"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-039-after.fixture",
+      "bytes": 9814,
+      "sha256": "97465568ef99b133c58779bd57d6e6ffeb96181f13e373325007ab14d8ebafc6",
+      "gitBlob": "5f7b6ffd0a3c253a58e304eb2f5efad300f5045e"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-040-after.fixture",
+      "bytes": 5059,
+      "sha256": "c1115c31eb8c79f911fc7f20eb2106c755b7a1226f4760d71830b88017d8709f",
+      "gitBlob": "cfe11610b1de5cd0ac5d201bd07883f5dd93a0b4"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-041-after.fixture",
+      "bytes": 3503,
+      "sha256": "846ddffdf680acb2a6913f0977d98a8e686140fc160acf7c1cd36d567a3b92db",
+      "gitBlob": "566ddf20414876d4588bb821584b8e5947aad416"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-042-after.fixture",
+      "bytes": 15016,
+      "sha256": "677ba85971ead6b7853687ecfbfad4289f86d152798be2bb77c9de7cc3767ecb",
+      "gitBlob": "1d5f6b90e2fb0751240aef2d3d2b7d6a48dc778d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-043-after.fixture",
+      "bytes": 4884,
+      "sha256": "c489af089deb1d7e9d587277117492d586982263a06c9084847f36f53210f477",
+      "gitBlob": "da8e13623fb08e40449a30fb03b9a9a49884a69a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-044-after.fixture",
+      "bytes": 4720,
+      "sha256": "d37c1f035711ffed4d8cea75c760c78da9f246fe13f477b86b9688bc22bac3c9",
+      "gitBlob": "402c5b8cd03fa30444f7549635efe29d08d6926e"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-045-after.fixture",
+      "bytes": 3117,
+      "sha256": "d4c06b19799794a489f0e94da9bbe5c436258feb46689bcfb5848b74d1e3ebb1",
+      "gitBlob": "167d5a7d64cbb9a3282a0b7ef6994e0fae2015c1"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-046-after.fixture",
+      "bytes": 7165,
+      "sha256": "e54ff0f801d2a684775b4093b005c2c7cf050d9dc8a1a649b7762c6a13f1eded",
+      "gitBlob": "738c2eebc29a521c4623eade32e611630e3f0a0b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-047-after.fixture",
+      "bytes": 3364,
+      "sha256": "7b9d5d43a35ee112834900451fba66bf116af8cba23405e428ba2b6991512297",
+      "gitBlob": "49c437a2be41ba7a55d87e8e4fe826ad5b152c26"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-048-after.fixture",
+      "bytes": 7415,
+      "sha256": "e5e92f05bf98e12eaaa94401a9ec9178b2d53c0bd6237603a329ef3eb9fe3ced",
+      "gitBlob": "b58b4fe3ab875e67ab8b8d1baec8c46b6cf5d00b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-049-after.fixture",
+      "bytes": 4730,
+      "sha256": "a1eb1f9a6da0cd61dc4863d62402a0cb70cec0ac85f432c164412b9076e3a63f",
+      "gitBlob": "3ed35639b12c5b9fd5a3af56dfde646b54d2d7fc"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-050-after.fixture",
+      "bytes": 6464,
+      "sha256": "1900b8580a0ace1a489ad5659abd7f87fdd9594e8ef0922aba3d7a60bf346014",
+      "gitBlob": "41efadcba299e69537d0782d2751abffeb37ad52"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-051-after.fixture",
+      "bytes": 3752,
+      "sha256": "cb818ff3a6d7352652ccd47f2d8549502e83917b0c3de20b19261c842e770e2c",
+      "gitBlob": "b3fcac78a36163fb800cd9d7632cccad8c524704"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-052-after.fixture",
+      "bytes": 9346,
+      "sha256": "d550ffe0fdd0eadbbb2a86dea678bf11dce33799306e9c8b30fa39f8a875c507",
+      "gitBlob": "91f337b0056b865e1b4689c2300d35f4170e7b25"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-053-after.fixture",
+      "bytes": 12516,
+      "sha256": "be0bd336d3f833ec8e3994522115a46fc181cfc4c3996cb50fd30a025fa7bae3",
+      "gitBlob": "74b21472b4c0090dbe08a786d34589285e0d5e67"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-054-after.fixture",
+      "bytes": 16432,
+      "sha256": "686f83cc9bc6af3c3ad98d0f30d26c2e3d5c43c5d52c8d5b83d180b7f1a07a9b",
+      "gitBlob": "32314670c5571b78eec34a3eb1cb553c9549a966"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-055-after.fixture",
+      "bytes": 3459,
+      "sha256": "df05fb3b1eb25bf23371cf994ab1e1e815d766ff7f004499ddeb5beab84060b9",
+      "gitBlob": "b7943d1ce7458d86d0f438f88030eee38ccf47eb"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-056-after.fixture",
+      "bytes": 1644,
+      "sha256": "4923deea2221a4e1442702e64811e50e9e23c65ec3b15a0d93ac9133aa108c6c",
+      "gitBlob": "38edb4ef519ee154088da28b5c49fb3e381da4d3"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-057-after.fixture",
+      "bytes": 9543,
+      "sha256": "cd45b4ad003c59ef0d8a9801741546a0f5cf75013716ef6ddcb65528e3c72a05",
+      "gitBlob": "5abdc16fc3be893b7813d75da9202e0c93add06a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-058-after.fixture",
+      "bytes": 1488,
+      "sha256": "04beb5d70204f4a7fceae332406dffad58a22c9d9caa93b6682667bd0eda4658",
+      "gitBlob": "296ccd2ce91baa3c6b446774a3c2514342b09057"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-059-after.fixture",
+      "bytes": 9742,
+      "sha256": "2eac038964a24deb94e22ec8180b401d9582883c4b842a8f90e1d404d4d24089",
+      "gitBlob": "9fcf514cd352079042a52a8cf8bede2197ad6fad"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-060-after.fixture",
+      "bytes": 11803,
+      "sha256": "35f0fbab072e81d5704795a26d1e6032a0ba7448560d98cb2f32ae69809c9953",
+      "gitBlob": "577e2922b4583b937d24457639f00d2b1a95bc59"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-061-after.fixture",
+      "bytes": 1371,
+      "sha256": "2f36fb15d6c943481fcd927a4ab14370433c14f36407b84d7c713cca63169949",
+      "gitBlob": "a24a93ff4fbdf3be450d19b1152ef547360e03d5"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-062-after.fixture",
+      "bytes": 6638,
+      "sha256": "f2c61111ddfb25414edbd9733e3d5edf4bbdd03aa7f3bc925d9c81b619bbae4f",
+      "gitBlob": "de3d1d02faae5c22459d3908cd82523eb8cbfb25"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-063-after.fixture",
+      "bytes": 16361,
+      "sha256": "4d1929bb035f0e7bf3180a84350bd49846f6a9fb959af2ac3c1ec5b5183bbf9c",
+      "gitBlob": "4aeff6994d48cc892c6b4ce375a75e2fb142fa4a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-064-after.fixture",
+      "bytes": 13543,
+      "sha256": "802ff396c0460c44f89829d5d00cc0e7d13415494daa272d81223633611b6ed6",
+      "gitBlob": "76c0c12c5907376f3650e11420692ee030ed6e31"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-065-after.fixture",
+      "bytes": 13485,
+      "sha256": "6b879f9b7657371e2978498a0a3f0edc9081ee6a89e58863b474c05774517d7b",
+      "gitBlob": "058f576e83b3cf1506c4b2bc1b140d7f59a97428"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-066-after.fixture",
+      "bytes": 7791,
+      "sha256": "9564f59274d7a8dee012fdec445d98026a0714ba8dd301df7a72e3e944f8ad0d",
+      "gitBlob": "b2e08d12041e65b21bbeabef19dd210badeff1f2"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-067-after.fixture",
+      "bytes": 14721,
+      "sha256": "a96e74b58ce738109b7e0fa08ce7e070039975d22e91115976d57ce86bc7ac5c",
+      "gitBlob": "b23fffafd51f11ec29b855fa3bf33a76b4c7f77d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-068-after.fixture",
+      "bytes": 7484,
+      "sha256": "f90b633e7804b5814c2d9ad6099c7c3963c198c44770cae4b882b21b99b58cb1",
+      "gitBlob": "f938d6ca5a3662d8fe110cfbebbe84eecf4f2dc3"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-069-after.fixture",
+      "bytes": 5446,
+      "sha256": "8af6216a7bdf7a74e12865cc603920291686611b7975cddaaf3a21be43e77f8a",
+      "gitBlob": "ecfa787cf6b6adcd74206d96743e9f9b020d581d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-070-after.fixture",
+      "bytes": 1651,
+      "sha256": "83f80cbf9e1e96ccb1c16a83886721aadd6276b383197349bb059428fca7e32f",
+      "gitBlob": "23b1eaabcd5bbb73bb16117881421295468c10b6"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-071-after.fixture",
+      "bytes": 66995,
+      "sha256": "9a5cd72ea74060533df8982cce1841c956a0d8267bcfc1b1dcaf884cca663be8",
+      "gitBlob": "2c0bf91adf0069e6830df0ef08d1e41486b5a162"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/owned-072-after.fixture",
+      "bytes": 35917,
+      "sha256": "eae0821c22f620191888bb1f23d65191a606a8e796d6808b03aabb943c910960",
+      "gitBlob": "2324654da7a7c8096effda365d53c44fbe9d46af"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/successor.json",
+      "bytes": 70231,
+      "sha256": "e03ce63b3186777006c71c65f611c3e42f7f89ecad79a5262bc5a389980a9356",
+      "gitBlob": "6ec179cf794f280a287ae4aea04534a659ec3c48"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/class-decorator.vue.txt",
+      "bytes": 4859,
+      "sha256": "0e8ca44978bf438cf9ff9df7bb2adf315af226efc32b511d12a10c75dc22f6e1",
+      "gitBlob": "a34c67ed8a84ed8554f3c537f58bd9421d9953d4"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/input.vue.txt",
+      "bytes": 4000,
+      "sha256": "c3c5314f04219dd9769e96a27b0f7172b7553758546763e2a5603a3520abcf4b",
+      "gitBlob": "a4927dcfd7572c1fc6204f6afbbcfe874993946d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/01-after.fixture",
+      "bytes": 1366,
+      "sha256": "3c5def49a855e146eaea7db29798f616e31fc6a44e7bf4d9a6b0afcf70805bd3",
+      "gitBlob": "5016a21b8d925696b314a0f5d82c1194c9dd0950"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/02-after.fixture",
+      "bytes": 12879,
+      "sha256": "6537cc95fb04eb4f8f51afd7dfea9e7a695b81a7f428e01ddb38e208478c34b5",
+      "gitBlob": "20a0e112b3e6434eb05b6c9502a54974aa550301"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/02-before.fixture",
+      "bytes": 12547,
+      "sha256": "6dd7a1f3fb7ef88dd13278e1e9f73191cd922ab18e2524af22e7413fb6b15bc1",
+      "gitBlob": "b7dcb6da3168c457e44ac9d0af9da9aa3eae83cd"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/03-after.fixture",
+      "bytes": 11795,
+      "sha256": "06002fab66c451069ada1b21b1a15bf7966dd82d8766562270ef4d620788230c",
+      "gitBlob": "c3396f48f8657921a8fd8d6806b9e6b789d0fe7b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/03-before.fixture",
+      "bytes": 11903,
+      "sha256": "cf1b3ad144c946f6b0e2f57e520b6568ac9304240a42ed244c267048666e7f46",
+      "gitBlob": "34920db25d0b023fa0071fbbf866bdc22c086f93"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/04-after.fixture",
+      "bytes": 2600,
+      "sha256": "5df609daa1ca1c8cb58226907fcd8b091fdf9606b95c10613387f25f33b2a927",
+      "gitBlob": "d065ba04d67c9ab4c77351b5751cabc5d0725cbb"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/05-after.fixture",
+      "bytes": 5011,
+      "sha256": "111ebf7e0d4a58a38aeb20833786139812cae3a6b13a219ff881002f431e638e",
+      "gitBlob": "30d8e77f846d0f093a6bb29070e8123fe04f1cb5"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/06-after.fixture",
+      "bytes": 4235,
+      "sha256": "94c333fd81cffb93eb82e0d589d4d96c2fdddb1d17710b16f275c8069e2bf6ae",
+      "gitBlob": "f1f3e83f95510cddc3cda33481dbee533925d173"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/07-after.fixture",
+      "bytes": 1530,
+      "sha256": "c7e9c0a75885841c5d9aae4ded76608fab45636d8b60bc90481e43f14c728449",
+      "gitBlob": "6dea161ed46ce543029f8660f6ad762ea4a339b2"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/08-after.fixture",
+      "bytes": 13299,
+      "sha256": "322f83c1bc7e0a2772e3eaa1b28d9de3693aad0995715f0fe55b50aa53e40fc3",
+      "gitBlob": "e552fcbaee32518e284d8d3dd060fd96855c189b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/09-after.fixture",
+      "bytes": 10403,
+      "sha256": "b474379c4a38b27286ea330828ec2889dc4834eecb90d34d2ffaa47d81951d64",
+      "gitBlob": "9871a9fbb0656c2d9fc6c75644530670f13743a9"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/09-before.fixture",
+      "bytes": 10392,
+      "sha256": "e62e993105501ba6191803da0d9cfc67e7e9bd62f43b435401a5584269ab60db",
+      "gitBlob": "b773db00e94e2747a7a1a3d48c63a4e5957cac6f"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/10-after.fixture",
+      "bytes": 4859,
+      "sha256": "0e8ca44978bf438cf9ff9df7bb2adf315af226efc32b511d12a10c75dc22f6e1",
+      "gitBlob": "a34c67ed8a84ed8554f3c537f58bd9421d9953d4"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/11-after.fixture",
+      "bytes": 4000,
+      "sha256": "c3c5314f04219dd9769e96a27b0f7172b7553758546763e2a5603a3520abcf4b",
+      "gitBlob": "a4927dcfd7572c1fc6204f6afbbcfe874993946d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/sfc-after.rs.fixture",
+      "bytes": 8023,
+      "sha256": "80bc625aefac361bb6390fedba9641d6bbff127d78d5190fe6e695e4f41c0dff",
+      "gitBlob": "ed113004836d7430fe7be9904e11f1d61256708d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/successor.json",
+      "bytes": 22319,
+      "sha256": "052f284b2d11f94e6d81dc68096ae74e1334c8ab4323ccaa01951e94e20a7fd1",
+      "gitBlob": "0d077f4296d88ac6389774bfb1c03e453d5c99af"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/test-namespace-correction/original-no-mutating-props-source-custody.mjs.fixture",
+      "bytes": 9757,
+      "sha256": "2c9609f6bac7f05f2251c31fd0f3eeecb6e60a60f99f340a024ab2910f7bec3e",
+      "gitBlob": "c68f973cc217cfcecffddc6b709f404b913de4a3"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/test-namespace-correction/original-no-mutating-props-source-custody.test.mjs.fixture",
+      "bytes": 8405,
+      "sha256": "2a62d67dd801fe7e18299ed1593d0dc7efb2132507e2b39e297e62b6db7c0e90",
+      "gitBlob": "2cf1a567fed31276d9f7e61cee637015bbb6b26b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/test-namespace-correction/successor.json",
+      "bytes": 2442,
+      "sha256": "6b5aa9402ad8927e9eb68d4dcfaca99597bfa0065718bb23d7e06dbd3ebc412f",
+      "gitBlob": "d7740bd40224bb70b3b27f516cff6042e39b543f"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/test-namespace-correction/tests-after.rs.fixture",
+      "bytes": 13291,
+      "sha256": "c9e4a7ee85ab8b09ed4fbfad27ce8f546f456f51289559f8d8e56a136565890e",
+      "gitBlob": "58bc5aa0deebd053494e3307ef8fd191d7d5ffbd"
+    },
+    {
+      "path": "tests/tooling/no-dupe-keys-source-custody.test.mjs",
+      "bytes": 6024,
+      "sha256": "286cc653ef3b3751936ff6b08d46bc5cdeea16d7ad1b26d3e5b57fed04951840",
+      "gitBlob": "f2228d9b09d9c2a06eb150764bdbf22dccedc3a2"
+    },
+    {
+      "path": "tests/tooling/no-mutating-props-source-custody.test.mjs",
+      "bytes": 8582,
+      "sha256": "46f4e5ec06283f594fb34120109800b9f12040aca6d68368481cbf7b387be21a",
+      "gitBlob": "fab017d6448a809c17bff27e887812c1dc878996"
+    },
+    {
+      "path": "tests/tooling/no-mutating-props-test-correction-source-custody.test.mjs",
+      "bytes": 298,
+      "sha256": "0912728b1e7e248455d9fc08b2edd87373b28097189c6ba41ebcadf17d79a8d2",
+      "gitBlob": "3a9dc493c9e8137aa9955272cf560f08ad30585b"
+    },
+    {
+      "path": "tests/tooling/support/no-dupe-keys-source-custody.mjs",
+      "bytes": 7808,
+      "sha256": "2d1f9759dc1e8a5fc6ce43af2cbd1a5699936e52e730ba4c9d5ab21ec2b25d55",
+      "gitBlob": "9c8fc860076bc9a287f7dc46c38c5888f45ec318"
+    },
+    {
+      "path": "tests/tooling/support/no-mutating-props-source-custody.mjs",
+      "bytes": 10221,
+      "sha256": "ba42939e1934befc14ea251949e656df1d869d5ee7e90c29328904d3e2456b9c",
+      "gitBlob": "7c74c9db40ec56c4850fe01b4dd947b14ecde43d"
+    },
+    {
+      "path": "tests/tooling/support/no-mutating-props-test-correction-source-custody.mjs",
+      "bytes": 5588,
+      "sha256": "f44738bbfe427ce641ab4a7ebc72bdb95d2e9102805956d27eddb87b133f6d83",
+      "gitBlob": "0d63fc4f624cb36277cfea70ad689ecddab2c368"
+    }
+  ],
+  "archives": [
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-0.fixture",
+      "bytes": 7645,
+      "sha256": "1fe56149197e026e4aeec24cb86bc5c677aaf576d7d770bb37d5a266617bb8ba",
+      "gitBlob": "cb4e82858e9083a71648916603d8c0b4195442e1"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-1.fixture",
+      "bytes": 6015,
+      "sha256": "be41bd955ff85acbe5d75cc0ba7b033d3b0166b69d46c45db9f04dda260ff2ff",
+      "gitBlob": "ebd64f316a37c0ddc91ca06589d6810f479d4843"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-2.fixture",
+      "bytes": 10043,
+      "sha256": "f3034858abe53478f009e40e7b478d4f5687f5c63a80bef75503f06ee1ad5807",
+      "gitBlob": "b5c13eee7b14405079599b9a8c4853fa3b2f9c4a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-3.fixture",
+      "bytes": 5117,
+      "sha256": "498319d459adf652860af2f329f2cff8a306997c9861acde70153a946de72370",
+      "gitBlob": "37cfc6d765de162188388e789f829595be36a866"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-4.fixture",
+      "bytes": 13299,
+      "sha256": "322f83c1bc7e0a2772e3eaa1b28d9de3693aad0995715f0fe55b50aa53e40fc3",
+      "gitBlob": "e552fcbaee32518e284d8d3dd060fd96855c189b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-0.fixture",
+      "bytes": 7697,
+      "sha256": "2fcda85b4dba45248c782f475c648b4344b0cb2b008b55d241cd282efa9cf7dd",
+      "gitBlob": "7b54949f6b48abe4c69b27865bf6b0165694a936"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-1.fixture",
+      "bytes": 9734,
+      "sha256": "9a3f6978f30b5895c31d5eb0f333175f8ee60c1a52bccc31615d5ceb075f1e2b",
+      "gitBlob": "9eddae3f363f1965b59aedbc487af25ff18f9e94"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-2.fixture",
+      "bytes": 8023,
+      "sha256": "80bc625aefac361bb6390fedba9641d6bbff127d78d5190fe6e695e4f41c0dff",
+      "gitBlob": "ed113004836d7430fe7be9904e11f1d61256708d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-3.fixture",
+      "bytes": 9935,
+      "sha256": "2f29510015f60edc963a11f4f9bc7a831fe76f9e06dfd73cad75bbf850a02383",
+      "gitBlob": "e551c2f4a4a97104ac9e5af5a3c285e7abad35ac"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-4.fixture",
+      "bytes": 8405,
+      "sha256": "2a62d67dd801fe7e18299ed1593d0dc7efb2132507e2b39e297e62b6db7c0e90",
+      "gitBlob": "2cf1a567fed31276d9f7e61cee637015bbb6b26b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-5.fixture",
+      "bytes": 5363,
+      "sha256": "53a1af6753ffdab235406c70752cb871c57cf6a9c9971204b42083500a6af7a2",
+      "gitBlob": "a9d6bd8e1158e7959378ac09495051240ee58027"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-6.fixture",
+      "bytes": 10072,
+      "sha256": "1b75196ff99ecd3042b600eb7db3df78e1d886586cb9d27144c1e266ff317491",
+      "gitBlob": "6b50e73b8069e340faca0813f17c73e61faf85a7"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-7.fixture",
+      "bytes": 159840,
+      "sha256": "af2baf60023510bd37b4d3f5eaa655a5e2991bf5e85707c8b6e1f25350221305",
+      "gitBlob": "87cf2c1734aa73ccbc84cc8f9f8a5592e9ff869c"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/formatted-original-helper.fixture",
+      "bytes": 7515,
+      "sha256": "59fb4e55f3aea17fcd1e3a5d039cc9e99d6fc7d4f40a93a5c06c43ec7be4cc88",
+      "gitBlob": "ee6e9d61bd3496cec6f0ec5b8033421272bccbfa"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/formatted-original-five-laws.fixture",
+      "bytes": 5829,
+      "sha256": "5f2004a8ca12b045e7acb75695618b4bf9e371c68bef409b8ede76503d1e7507",
+      "gitBlob": "cc27fb17fa274d98025283e46d17570f909edbbf"
+    }
+  ],
+  "historicalProjection": [
+    {
+      "path": "tests/tooling/support/no-dupe-keys-source-custody.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-0.fixture"
+    },
+    {
+      "path": "tests/tooling/no-dupe-keys-source-custody.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-1.fixture"
+    },
+    {
+      "path": "tests/tooling/support/no-mutating-props-source-custody.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-2.fixture"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/dupe_keys_dispatch_tests.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-3.fixture"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/vue/no_mutating_props/options_api/tests.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-4.fixture"
+    }
+  ],
+  "parentProjection": [
+    {
+      "path": "crates/vize_patina/src/rules/script.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-0.fixture"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-1.fixture"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/sfc.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-2.fixture"
+    },
+    {
+      "path": "tests/tooling/support/no-mutating-props-source-custody.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-3.fixture"
+    },
+    {
+      "path": "tests/tooling/no-mutating-props-source-custody.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-4.fixture"
+    },
+    {
+      "path": "tests/tooling/support/no-mutating-props-test-correction-source-custody.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-5.fixture"
+    },
+    {
+      "path": "tests/tooling/no-mutating-props-test-correction-source-custody.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-6.fixture"
+    },
+    {
+      "path": "docs/davinci/plan/consumer-migration-surfaces/linter/vize_patina.tsv",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-7.fixture"
+    }
+  ],
+  "credit": {
+    "compiled": false,
+    "native": false,
+    "performance": false
+  }
+}

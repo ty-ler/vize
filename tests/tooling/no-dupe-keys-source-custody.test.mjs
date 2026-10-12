@@ -1,3 +1,4 @@
+import { reviewedNoDupeCIRepairHistoricalReadView } from "./support/no-dupe-keys-ci-repair-source-custody.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -16,11 +17,9 @@ import { authenticateDeepPropsSourceFamily } from "./support/props-deep-source-c
 import { authenticateRuntimeApiSourceFamily } from "./support/runtime-props-api-source-custody.mjs";
 import { authenticateSetupExportPresetSourceFamily } from "./support/setup-export-preset-source-custody.mjs";
 
-const root = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../..",
-);
-const read = (name) => fs.readFileSync(path.join(root, name));
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const physicalRead = (name) => fs.readFileSync(path.join(root, name));
+const read = reviewedNoDupeCIRepairHistoricalReadView(root, physicalRead);
 const observe = () => {
   const names = new Set();
   const tracked = (name) => {
@@ -38,46 +37,26 @@ await test("the genuine NoDup whole successor retains nine bodies and all incomi
   assert.equal(current.ownedBodies.length, 73);
   const incoming = authenticateNoMutatingPropsSourceFamily(root, read);
   assert.equal(incoming.sources.length, 12);
-  assert.deepEqual(incoming.changedPaths, [
-    "crates/vize_patina/src/linter/script_rules/sfc.rs",
-  ]);
+  assert.deepEqual(incoming.changedPaths, ["crates/vize_patina/src/linter/script_rules/sfc.rs"]);
   const runtime = authenticateRuntimeApiSourceFamily(root, read);
   assert.equal(runtime.sources.length, 12);
-  assert.equal(
-    authenticateSetupExportPresetSourceFamily(root, runtime, read).sources
-      .length,
-    12,
-  );
-  assert.equal(
-    authenticateDeepPropsSourceFamily(root, read).sources.length,
-    12,
-  );
+  assert.equal(authenticateSetupExportPresetSourceFamily(root, runtime, read).sources.length, 12);
+  assert.equal(authenticateDeepPropsSourceFamily(root, read).sources.length, 12);
   assert.deepEqual(
     read(current.incomingHelper.path),
     composeNoDupeIncomingHelper(read(current.incomingHelper.archive)),
   );
   for (const law of current.originalHistoricalLaws)
-    assert.deepEqual(
-      read(law.path),
-      composeNoDupeHistoricalLaw(read(law.archive)),
-    );
+    assert.deepEqual(read(law.path), composeNoDupeHistoricalLaw(read(law.archive)));
 });
 
 await test("all actual current bodies, corpus bytes, manifests, archives and callers reject mutation", () => {
   const { names } = observe();
   for (const name of names) {
     const unknown = (requested) =>
-      requested === name
-        ? Buffer.concat([read(requested), Buffer.from(" ")])
-        : read(requested);
-    assert.throws(
-      () => authenticateNoDupeKeysSourceFamily(root, unknown),
-      name,
-    );
-    assert.throws(
-      () => authenticateNoMutatingPropsSourceFamily(root, unknown),
-      name,
-    );
+      requested === name ? Buffer.concat([read(requested), Buffer.from(" ")]) : read(requested);
+    assert.throws(() => authenticateNoDupeKeysSourceFamily(root, unknown), name);
+    assert.throws(() => authenticateNoMutatingPropsSourceFamily(root, unknown), name);
     assert.throws(() => authenticateDeepPropsSourceFamily(root, unknown), name);
   }
 });
@@ -85,16 +64,9 @@ await test("all actual current bodies, corpus bytes, manifests, archives and cal
 await test("partial successors cannot borrow another family's admissible body", () => {
   const current = authenticateNoDupeKeysSourceFamily(root, read);
   for (const source of current.sources.filter(({ changed }) => changed)) {
-    const partial = (name) =>
-      name === source.path ? read(source.before.archive) : read(name);
-    assert.throws(
-      () => authenticateNoDupeKeysSourceFamily(root, partial),
-      source.path,
-    );
-    assert.throws(
-      () => authenticateNoMutatingPropsSourceFamily(root, partial),
-      source.path,
-    );
+    const partial = (name) => (name === source.path ? read(source.before.archive) : read(name));
+    assert.throws(() => authenticateNoDupeKeysSourceFamily(root, partial), source.path);
+    assert.throws(() => authenticateNoMutatingPropsSourceFamily(root, partial), source.path);
   }
   const historical = reviewedNoDupeHistoricalCaseReadView(root, read);
   assert.deepEqual(
@@ -114,10 +86,7 @@ await test("the explicit incoming context restores exact whole helpers and forwa
   const view = reviewedNoDupeSourceReadView(root, tracked);
   for (const source of current.sources.filter(({ changed }) => changed))
     assert.deepEqual(view(source.path), read(source.before.archive));
-  assert.deepEqual(
-    view(current.incomingHelper.path),
-    read(current.incomingHelper.archive),
-  );
+  assert.deepEqual(view(current.incomingHelper.path), read(current.incomingHelper.archive));
   for (const law of current.originalHistoricalLaws)
     assert.deepEqual(view(law.path), read(law.archive));
   const unrelated = current.sources.find(({ changed }) => !changed).path;
@@ -128,9 +97,7 @@ await test("the explicit incoming context restores exact whole helpers and forwa
 
 await test("matching callback bytes cannot mask physical source links, executables, missing files or directories", () => {
   const { names } = observe();
-  const owned = fs.mkdtempSync(
-    path.join(os.tmpdir(), "vize-no-dupe-source-custody-"),
-  );
+  const owned = fs.mkdtempSync(path.join(os.tmpdir(), "vize-no-dupe-source-custody-"));
   try {
     for (const name of names) {
       const target = path.join(owned, name);
