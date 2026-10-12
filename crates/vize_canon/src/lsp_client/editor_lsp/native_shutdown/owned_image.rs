@@ -73,7 +73,7 @@ fn digest_image(file: &mut File) -> Option<vize_l0::String> {
     loop {
         match file.read(&mut buffer) {
             Ok(0) => break,
-            Ok(length) => digest.update(&buffer[..length]),
+            Ok(length) => digest.update(buffer.get(..length)?),
             Err(error) if error.kind() == std::io::ErrorKind::Interrupted => continue,
             Err(_) => return None,
         }
@@ -88,7 +88,7 @@ fn digest_image(file: &mut File) -> Option<vize_l0::String> {
 }
 
 fn image_digest(pid: u32) -> Option<vize_l0::String> {
-    let directory = Path::new("/proc").join(pid.to_string());
+    let directory = Path::new("/proc").join(vize_l0::cstr!("{pid}").as_str());
     let before = life(pid, &fs::read_to_string(directory.join("stat")).ok()?)?;
     let executable = directory.join("exe");
     let mut image = File::open(&executable).ok()?;
@@ -140,7 +140,7 @@ mod tests {
             "stderr_error": row.stderr_error, "exit_status": row.exit_status.map(ExitStatus::into_raw),
             "process_error": row.process_error, "timed_out": row.timed_out,
             "kill_requested": row.kill_requested, "reaped": row.reaped,
-            "elapsed_nanos": row.elapsed.as_nanos().to_string()})
+            "elapsed_nanos": vize_l0::cstr!("{}", row.elapsed.as_nanos())})
     }
 
     fn receipt() -> ProcessReceipt {
@@ -245,8 +245,7 @@ mod tests {
             .spawn()
             .unwrap();
         let pid = child.id();
-        let stat =
-            fs::read_to_string(Path::new("/proc").join(pid.to_string()).join("stat")).unwrap();
+        let stat = fs::read_to_string(vize_l0::cstr!("/proc/{pid}/stat").as_str()).unwrap();
         let digest = image_digest(pid).unwrap();
         drop(child.stdin.take());
         let terminal = child.wait().unwrap();
@@ -306,8 +305,7 @@ mod tests {
             super::super::known_contract()
         );
         let pid = live_pid(&session.process_observer.receipts()).unwrap();
-        let stat =
-            fs::read_to_string(Path::new("/proc").join(pid.to_string()).join("stat")).unwrap();
+        let stat = fs::read_to_string(vize_l0::cstr!("/proc/{pid}/stat").as_str()).unwrap();
         let before = session.process_observer.receipts();
         let digest = image_digest(pid).unwrap();
         assert!(super::super::known_binary(digest.as_str()));
