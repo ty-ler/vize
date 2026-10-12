@@ -52,6 +52,23 @@ wrong PID/parent/birth and changed initialization to refuse. The existing
 unused-history input, report/config assertions and original process-gone oracle
 remain unchanged and must become green on a fresh Linux source.
 
+Source `96fb5cfea68b04c1a24377b14a23db094f3db80f` reaches the affected
+Rust builder but Clippy refuses its new Linux helper before tests: buffer slicing
+at line76 and standard PID `to_string` at line91 violate existing workspace
+policies. Preserve that complete job114609389747 failure. The bounded successor
+uses checked buffer access and the existing compact-string formatter; decimal
+PID/stat paths, full streamed digest and all physical/terminal oracles remain
+unchanged. Test-side rendering follows the same rule. No lint allowance is added.
+
+The same head's native run38186303818 passes original syntax/refusal phases,
+then stops at those same Clippy errors in job114609252878; the four image laws
+are not reached. Its original400 run38186303793 succeeds: artifact11719828433
+authenticates all810 ZIP members,534 whole authored inputs,79 comparable full
+request/response rows per side and complete wire bytes, hashes and frames. The
+finite121 production plus one corpus successor preserves all23 runtime and two
+final guard bodies. Original permitted same-birth zombies and all unchanged
+acceptance limits remain; this does not qualify the later Clippy source.
+
 ## Required physical qualification
 
 Normal PR Rust shards deliberately set `VIZE_TEST_DISABLE_TSGO=1`, so their

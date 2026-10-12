@@ -25,7 +25,7 @@ export const nativeOwnedImageManifest = JSON.parse(
 };
 const successor = nativeOwnedImageManifest;
 const manifestSHA256 = createHash("sha256").update(JSON.stringify(successor)).digest("hex");
-assert.equal(manifestSHA256, "79c3269204a877a4a59c1694f1bd99a414162db1513a6e5f7d3c55bbe8376fa3");
+assert.equal(manifestSHA256, "cba2a1701ebdf3af5ae2b02465507a70a9cc43d0d56b2d94271efbe24ba28a4f");
 assert.equal(successor.version, 1);
 assert.equal(
   successor.originalManifestSHA256,
