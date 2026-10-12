@@ -91,6 +91,58 @@ Vec first-push capacity operation. Every existing law, default/profile-only
 body, input and cap stays fixed. A fresh exact-source campaign still requires
 review; these native law passes do not supply paired-arm acceptance.
 
+## Terminal diagnostic receipts
+
+At exact `0817fa703ce8978b2f33aeede9837dd28b50f6d3`,
+[38189853397](https://github.com/ubugeeei-prod/vize/actions/runs/38189853397)
+passes the 29 Linux Node laws, both native feature/layout graphs, strict
+Clippy and both complete original workload arms. Each arm retains 40 edit
+cycles and 63 fences at scale 1; the full client and server vectors match
+after only the approved fixture-root and authenticated initialize-PID
+normalization. The original historical e7 RSS and n8n deadline failures
+remain unchanged.
+
+| Observed arm                 | Source   |                   Server peak |        Tree peak | Sampled processes |
+| ---------------------------- | -------- | ----------------------------: | ---------------: | ----------------: |
+| Fresh plain CI+legacy        | e7ec9790 |   126096 KiB (123.140625 MiB) | 333.98046875 MiB |                 3 |
+| Opt-in allocation diagnostic | 0817fa70 | 130868 KiB (127.80078125 MiB) |        339.5 MiB |                 3 |
+
+Both peaks occur at the original `file-lifecycle-0` fence. The native layout
+controls report the original/default Phase at 80 bytes and the separate
+diagnostic Phase at 184 bytes. The actual plain
+executable has SHA-256
+`7277999dd5865624145d545efa453515531cf97478e2057bf21450652b2bb10c`;
+the diagnostic executable has SHA-256
+`7c1de06727606aa4b1e69abf2f3aef39cd300bde96bc6bc28702f15837e8f61b`.
+The historical e7 executable remains unavailable. Passive driver observation
+can change scheduling and the second allocator build adds overhead; these
+numbers grant no ordinary RSS, speed, 10x-target or causal acceptance.
+
+The 264 operation-local finish reports measure `FactBucket` and the old Vec
+at 24 bytes each, both map pairs at 32 bytes, and the old Vec first-push
+capacity at four indices. Observed maxima are only 22 facts, fact capacity
+32, map length 22 and usable capacity 28, with no collision buckets. This
+scope cannot establish the size or lifetime of every retained native owner,
+or attribute the original Misskey RSS failure to inline storage. The
+existing global profiler reports 7,872,330 allocation calls and 1,033,881
+reallocations for the session, with 3,770 separately recorded overlapping
+windows. Those windows are not summed;
+allocator coverage, live allocation ownership and callsite causality remain
+unestablished. Both raw stderr packets also retain the original copied
+frontend config's unresolved `../../package.json` warning.
+
+Artifact `11721795495` contains both executables, receipts, whole inputs,
+raw streams and authenticated smaps fences. Its complete ZIP has SHA-256
+`409be3270e43bae988e85f73dd1850eabf9cd55dc59b01ebd07fdb3b846eb268`.
+The upload action omits hidden paths by default: 541 of 548 expected source
+bodies are present and match their complete hashes, while seven `.cargo/`
+and `.github/` before/after bodies are absent. The 284-row manifest and
+runtime whole-source qualification remain present; the archive itself is
+incomplete. A separately labeled raw Git supplement authenticates those
+seven pinned commit/blob bodies without changing the original ZIP or
+claiming original Actions custody. A future upload must explicitly retain
+hidden source paths. No repeat campaign is authorized by this record.
+
 ## Two distinct binaries and unchanged original workload
 
 The first arm rebuilds the frozen e7ec source with its exact original CI+legacy
