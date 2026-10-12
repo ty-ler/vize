@@ -1,4 +1,5 @@
 import { reviewedNoDupeSourceReadView } from "./no-dupe-keys-source-custody.mjs";
+import { reviewedNoDupeCIRepairParentContext } from "./no-dupe-keys-ci-repair-source-custody.mjs";
 import { reviewedNoMutatingModuleLayoutReadView } from "./no-mutating-props-module-layout-source-custody.mjs";
 import { reviewedNoMutatingTestCorrectionReadView } from "./no-mutating-props-test-correction-source-custody.mjs";
 import assert from "node:assert/strict";
@@ -65,6 +66,9 @@ export function composeNoMutatingHistoricalLaw(original) {
 
 /** Source custody only: no measured, compiled or installed acceptance is returned. */
 export function authenticateNoMutatingPropsSourceFamily(root, read = reader(root)) {
+  const childAuthority = reviewedNoDupeCIRepairParentContext(root, read);
+  root = childAuthority.root;
+  read = childAuthority.read;
   const moduleLayoutAuthority = reviewedNoMutatingModuleLayoutReadView(root, read);
   root = moduleLayoutAuthority.root;
   read = moduleLayoutAuthority.read;

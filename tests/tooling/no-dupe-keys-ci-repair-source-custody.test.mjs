@@ -22,7 +22,7 @@ const current = () => authenticateNoDupeCIRepairPhysical(root, read);
 void test("the complete CI successor authenticates actual current sources before both whole predecessors", () => {
   assert.equal(
     digest(read(helperPath)),
-    "98d57aef0be008c0a7caf4eaeee88c8b995a26a9af0456d70dfaba69a24c0fdb",
+    "ecf86503f5eab0e4ce722592cde69aeb72a17791104e10d356313d8387e2a419",
   );
   const manifest = authenticateNoDupeCIRepair(root, read);
   assert.equal(
@@ -43,7 +43,15 @@ void test("the complete CI successor authenticates actual current sources before
     ({ path: name }) =>
       name === "tests/tooling/no-mutating-props-test-correction-source-custody.test.mjs",
   );
-  assert.equal(read(parentLaws.archive, "utf8").match(/^await test\(/gm).length, 5);
+  const layout = JSON.parse(
+    read(
+      "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/successor.json",
+    ),
+  );
+  const originalParentLaws = layout.historicalLaws.find(
+    ({ path: name }) => name === parentLaws.path,
+  );
+  assert.equal(read(originalParentLaws.archive, "utf8").match(/^await test\(/gm).length, 5);
 });
 
 void test("every current source, archive and manifest corruption or omission is refused", () => {
@@ -175,7 +183,10 @@ void test("each changed source helper retains its complete predecessor through a
   assert.equal(body.split(imported).length, 2);
   assert.equal(body.split(selected).length, 4);
   body = body.replace(imported, "").split(selected).join("");
-  assert.equal(body, read(`${noDupeCIRepairDirectory}/formatted-original-helper.fixture`, "utf8"));
+  assert.equal(
+    body,
+    read(`${noDupeCIRepairDirectory}/420-formatted-original-helper.fixture`, "utf8"),
+  );
   assert(
     historicalArchive(ownHelper).includes(
       '"e03ce63b3186777006c71c65f611c3e42f7f89ecad79a5262bc5a389980a9356"',
@@ -194,24 +205,20 @@ void test("each changed source helper retains its complete predecessor through a
     .replace(context, "const read = (name) => fs.readFileSync(path.join(root, name));\n");
   assert.equal(
     body,
-    read(`${noDupeCIRepairDirectory}/formatted-original-five-laws.fixture`, "utf8"),
+    read(`${noDupeCIRepairDirectory}/420-formatted-original-five-laws.fixture`, "utf8"),
   );
   const guard = "tests/tooling/support/no-mutating-props-test-correction-source-custody.mjs";
-  const parentImport =
-    'import {\n  reviewedNoDupeCIRepairParentReadView,\n  reviewedNoDupeCIRepairParentPhysicalReadView,\n} from "./no-dupe-keys-ci-repair-source-custody.mjs";\n';
-  const parentEntry =
-    "  read = reviewedNoDupeCIRepairParentReadView(root, read);\n  const physicalRead = reviewedNoDupeCIRepairParentPhysicalReadView(root);\n";
-  body = read(guard, "utf8");
-  assert.equal(body.split(parentImport).length, 2);
-  assert.equal(body.split(parentEntry).length, 2);
-  body = body
-    .replace(parentImport, "")
-    .replace(parentEntry, "")
-    .replace("physicalRead(name)", "fs.readFileSync(path.join(root, name))")
-    .replace("physicalRead(manifestPath)", "fs.readFileSync(path.join(root, manifestPath))")
-    .replace(
-      "physicalRead(current.originalHelper.path)",
-      "fs.readFileSync(path.join(root, current.originalHelper.path))",
-    );
-  assert.equal(body, parentArchive(guard));
+  assert.equal(read(guard, "utf8"), parentArchive(guard));
+  const outer = "tests/tooling/support/no-mutating-props-source-custody.mjs";
+  const outerImports =
+    'import { reviewedNoDupeSourceReadView } from "./no-dupe-keys-source-custody.mjs";\nimport { reviewedNoDupeCIRepairParentContext } from "./no-dupe-keys-ci-repair-source-custody.mjs";\n';
+  const outerEntry =
+    "  const childAuthority = reviewedNoDupeCIRepairParentContext(root, read);\n  root = childAuthority.root;\n  read = childAuthority.read;\n";
+  const outerSelected = "  read = reviewedNoDupeSourceReadView(root, read);\n";
+  body = read(outer, "utf8");
+  assert.equal(body.split(outerImports).length, 2);
+  assert.equal(body.split(outerEntry).length, 2);
+  assert.equal(body.split(outerSelected).length, 5);
+  body = body.replace(outerImports, "").replace(outerEntry, "").split(outerSelected).join("");
+  assert.equal(body, parentArchive(outer));
 });

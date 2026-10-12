@@ -5,8 +5,14 @@ import path from "node:path";
 import os from "node:os";
 import { pathToFileURL } from "node:url";
 import { gunzipSync } from "node:zlib";
-import { authenticateNoDupeKeysSourceFamily } from "./no-dupe-keys-source-custody.mjs";
-import { authenticateNoMutatingTestCorrection } from "./no-mutating-props-test-correction-source-custody.mjs";
+import {
+  authenticateNoDupeKeysSourceFamily,
+  reviewedNoDupeSourceReadView,
+} from "./no-dupe-keys-source-custody.mjs";
+import {
+  authenticateNoMutatingModuleLayoutSourceFamily,
+  runNoMutatingModuleLayoutHistoricalLaw,
+} from "./no-mutating-props-module-layout-source-custody.mjs";
 
 export const noDupeCIRepairDirectory =
   "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair";
@@ -22,6 +28,11 @@ const witness = "crates/vize_patina/src/linter/script_rules/dupe_keys_dispatch_t
 const originalWitnessSHA = "498319d459adf652860af2f329f2cff8a306997c9861acde70153a946de72370";
 const originalParentTest =
   "crates/vize_patina/src/rules/vue/no_mutating_props/options_api/tests.rs";
+const originalParentCarrierSHA = "80bc625aefac361bb6390fedba9641d6bbff127d78d5190fe6e695e4f41c0dff";
+const carrier = "crates/vize_patina/src/linter/script_rules/sfc.rs";
+const oldCallback = "crates/vize_patina/src/linter/script_rules/registered_sfc.rs";
+const parentCarrierSHA = "4ba51a6cabd3fdb1ce973edfa7cf7bf4dac6d0bf12b6e9294ee75b9c3dd1ba46";
+const originalDupeCarrierSHA = "eeab9a3f9bd6d5c587096bb994b5528eb46ff86d8cf0eca381c57033a818d440";
 const originalParentTestSHA = "322f83c1bc7e0a2772e3eaa1b28d9de3693aad0995715f0fe55b50aa53e40fc3";
 
 /** Every actual current body and archive is checked before a source-only projection. */
@@ -47,24 +58,36 @@ export function authenticateNoDupeCIRepairPhysical(root, read = reader(root)) {
   const manifestPath = `${noDupeCIRepairDirectory}/successor.json`;
   regular(manifestPath);
   const bytes = read(manifestPath);
-  assert.equal(digest(bytes), "d1b4fce34e3ffb444f6c410d2dbfa29a40d42608cb2342b9abf5dcd79cd86701");
+  assert.equal(digest(bytes), "1c82fe73b71513ca112386801b975a29f7d8107aead7487a26efdba50ff45f82");
   assert.deepEqual(physical(manifestPath), bytes);
   const manifest = JSON.parse(bytes);
   assert.equal(manifest.schema, "vize.lint.no-dupe-keys-ci-source-successor");
   assert.equal(manifest.version, 1);
   assert.equal(manifest.source, "9da2c1f2469f256a06b304785641c6e2e376a10e");
-  assert.equal(manifest.parent, "2690dafc8af3e7a78095f287eaaf494eb33d0eaf");
+  assert.equal(manifest.parent, "420d7bf263a404d8a2ea4a0d0a71815961519ada");
   assert.equal(
     new Set(manifest.current.map(({ path: name }) => name)).size,
     manifest.current.length,
   );
+  assert.deepEqual(manifest.absent, [oldCallback]);
+  for (const name of manifest.absent) {
+    let missing = false;
+    try {
+      fs.lstatSync(path.join(root, name));
+    } catch (error) {
+      assert.equal(error.code, "ENOENT");
+      missing = true;
+    }
+    assert(missing, `old callback must be absent: ${name}`);
+  }
   for (const identity of manifest.current) check(identity);
   for (const identity of manifest.archives) check(identity);
   for (const projection of [manifest.historicalProjection, manifest.parentProjection]) {
     assert.equal(new Set(projection.map(({ path: name }) => name)).size, projection.length);
     for (const entry of projection) {
       assert(
-        manifest.current.some(({ path: name }) => name === entry.path),
+        manifest.current.some(({ path: name }) => name === entry.path) ||
+          manifest.absent.includes(entry.path),
         entry.path,
       );
       assert(
@@ -99,8 +122,8 @@ export function authenticateNoDupeCIRepair(root, read = reader(root)) {
     authenticateNoDupeKeysSourceFamily(root, old),
     JSON.parse(read(manifest.originalFamily.path)),
   );
-  const parent = project(root, read, manifest, "parent");
-  const corrected = authenticateNoMutatingTestCorrection(root, parent);
+  const parent = relocatedParentContext(root, read, manifest);
+  const corrected = authenticateNoMutatingModuleLayoutSourceFamily(parent.root, parent.read);
   assert.equal(corrected.native, false);
   assert.equal(corrected.compiled, false);
   return manifest;
@@ -140,38 +163,115 @@ export function reviewedNoDupeCIRepairParentPhysicalReadView(root) {
   return project(root, read, authenticateNoDupeCIRepairPhysical(root, read), "parent");
 }
 
-/** Run the five original parent laws unchanged against their complete ancestor source context. */
-export async function runNoDupeParentCorrectionLaws(root) {
-  const manifest = authenticateNoDupeCIRepairPhysical(root);
-  const snapshotPath = `${noDupeCIRepairDirectory}/parent-source-snapshot.json.gz`;
-  assert(manifest.current.some(({ path: name }) => name === snapshotPath));
-  const packet = JSON.parse(gunzipSync(reader(root)(snapshotPath)));
-  assert.equal(packet.schema, "vize.lint.no-dupe-parent-source-snapshot");
-  assert.equal(packet.version, 1);
-  assert.equal(packet.source, "2690dafc8af3e7a78095f287eaaf494eb33d0eaf");
-  assert.equal(packet.credit.native, false);
-  assert.equal(packet.credit.compiled, false);
-  assert.equal(new Set(packet.files.map(({ path: name }) => name)).size, packet.files.length);
-  const owned = fs.mkdtempSync(path.join(os.tmpdir(), "vize-no-dupe-parent-source-"));
-  try {
-    for (const identity of packet.files) {
-      assert(identity.path && !path.isAbsolute(identity.path));
-      assert.equal(path.normalize(identity.path), identity.path);
-      assert(!identity.path.split("/").includes(".."));
-      const body = Buffer.from(identity.base64, "base64");
-      assert.equal(body.length, identity.bytes, identity.path);
-      assert.equal(digest(body), identity.sha256, identity.path);
-      assert.equal(blob(body), identity.gitBlob, identity.path);
-      const target = path.join(owned, identity.path);
-      fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, body, { mode: 0o644, flag: "wx" });
-    }
-    const law = "tests/tooling/no-mutating-props-test-correction-source-custody.test.mjs";
-    const original = manifest.parentProjection.find(({ path: name }) => name === law);
-    assert(original);
-    assert.deepEqual(fs.readFileSync(path.join(owned, law)), reader(root)(original.archive));
-    await import(pathToFileURL(path.join(owned, law)).href);
-  } finally {
-    fs.rmSync(owned, { recursive: true, force: true });
+const parentFrames = new Map();
+const legacyFrames = new Map();
+const frameRoots = new Set();
+process.once("exit", () => {
+  for (const owned of frameRoots) fs.rmSync(owned, { recursive: true, force: true });
+});
+function materializeRows(rows) {
+  const owned = fs.mkdtempSync(path.join(os.tmpdir(), "vize-no-dupe-parent-context-"));
+  for (const [name, body] of rows) {
+    assert(
+      name &&
+        !path.isAbsolute(name) &&
+        path.normalize(name) === name &&
+        !name.split("/").includes(".."),
+    );
+    const target = path.join(owned, name);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, body, { mode: 0o644, flag: "wx" });
   }
+  frameRoots.add(owned);
+  return owned;
+}
+function relocatedParentContext(root, read, manifest) {
+  const key = root + ":" + manifest.parent;
+  if (!parentFrames.has(key)) {
+    const rows = legacyParentBodies(root, manifest);
+    for (const entry of manifest.parentFrameChanges) {
+      const body = read(entry.archive);
+      assert.equal(body.length, entry.identity.bytes, entry.path);
+      assert.equal(digest(body), entry.identity.sha256, entry.path);
+      assert.equal(blob(body), entry.identity.gitBlob, entry.path);
+      rows.set(entry.path, body);
+    }
+    for (const name of manifest.parentFrameAbsent) rows.delete(name);
+    const owned = materializeRows(rows);
+    parentFrames.set(key, owned);
+  }
+  const sourceRoot = parentFrames.get(key);
+  const parentRead = reader(sourceRoot);
+  // The unmodified strict parent qualifier authenticates this physical frame on every reuse.
+  authenticateNoMutatingModuleLayoutSourceFamily(sourceRoot, parentRead);
+  return { root: sourceRoot, read: parentRead };
+}
+function legacyParentBodies(root, manifest) {
+  const snapshotPath = manifest.parentLegacySnapshot;
+  assert(manifest.current.some(({ path: name }) => name === snapshotPath));
+  const bytes = reader(root)(snapshotPath);
+  const packet = JSON.parse(gunzipSync(bytes));
+  assert.equal(packet.schema, "vize.lint.no-mutating-props-ancestor-source-snapshot");
+  assert.equal(packet.source, "2690dafc8af3e7a78095f287eaaf494eb33d0eaf");
+  assert.deepEqual(packet.credit, { compiled: false, native: false, performance: false });
+  assert.equal(new Set(packet.files.map(({ path: name }) => name)).size, packet.files.length);
+  const rows = new Map();
+  for (const identity of packet.files) {
+    assert.equal(identity.mode, "100644");
+    const body = Buffer.from(identity.base64, "base64");
+    assert.equal(body.toString("base64"), identity.base64);
+    assert.equal(body.length, identity.bytes, identity.path);
+    assert.equal(digest(body), identity.sha256, identity.path);
+    assert.equal(blob(body), identity.gitBlob, identity.path);
+    rows.set(identity.path, body);
+  }
+  return rows;
+}
+function legacyParentRoot(root, manifest) {
+  const rows = legacyParentBodies(root, manifest);
+  const key = root + ":" + manifest.parentLegacySnapshot;
+  if (!legacyFrames.has(key)) legacyFrames.set(key, materializeRows(rows));
+  return legacyFrames.get(key);
+}
+/** Actual child source qualification precedes a genuine parent physical context. */
+export function reviewedNoDupeCIRepairParentContext(root, read = reader(root)) {
+  if (frameRoots.has(root)) return { root, read };
+  const carrierSHA = digest(read(carrier));
+  // A literal parent gets only its unchanged strict parent's authority.
+  if (carrierSHA === parentCarrierSHA) return { root, read };
+  if (carrierSHA === originalDupeCarrierSHA) {
+    const manifest = authenticateNoDupeCIRepairPhysical(root);
+    const incoming = reviewedNoDupeSourceReadView(root, read);
+    return { root: legacyParentRoot(root, manifest), read: incoming };
+  }
+  if (carrierSHA === originalParentCarrierSHA) {
+    try {
+      const status = fs.lstatSync(path.join(root, oldCallback));
+      if (status.isFile() && !status.isSymbolicLink() && !(status.mode & 0o111))
+        return { root, read };
+    } catch (error) {
+      assert.equal(error.code, "ENOENT");
+    }
+    const manifest = authenticateNoDupeCIRepairPhysical(root);
+    // Preserve the supplied historical callback so old full predicates still reject its mutations.
+    return { root: legacyParentRoot(root, manifest), read };
+  }
+  const manifest = authenticateNoDupeCIRepairPhysical(root, read);
+  return relocatedParentContext(root, read, manifest);
+}
+/** The old nine parent laws run unchanged against the strictly qualified relocated parent frame. */
+export async function runNoDupeParentHistoricalLaw(root, law) {
+  const manifest = authenticateNoDupeCIRepairPhysical(root);
+  const parent = relocatedParentContext(root, reader(root), manifest);
+  await runNoMutatingModuleLayoutHistoricalLaw(parent.root, law);
+}
+/** The four new parent laws run unchanged with all their original physical refusal controls. */
+export async function runNoDupeParentModuleLayoutLaws(root) {
+  const manifest = authenticateNoDupeCIRepairPhysical(root);
+  const parent = relocatedParentContext(root, reader(root), manifest);
+  const law = "tests/tooling/no-mutating-props-module-layout-source-custody.test.mjs";
+  const archived = manifest.parentProjection.find(({ path: name }) => name === law);
+  assert(archived);
+  assert.deepEqual(parent.read(law), reader(root)(archived.archive));
+  await import(pathToFileURL(path.join(parent.root, law)).href);
 }

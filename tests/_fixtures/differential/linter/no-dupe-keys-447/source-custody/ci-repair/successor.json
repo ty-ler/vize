@@ -2,7 +2,396 @@
   "schema": "vize.lint.no-dupe-keys-ci-source-successor",
   "version": 1,
   "source": "9da2c1f2469f256a06b304785641c6e2e376a10e",
-  "parent": "2690dafc8af3e7a78095f287eaaf494eb33d0eaf",
+  "parent": "420d7bf263a404d8a2ea4a0d0a71815961519ada",
+  "absent": [
+    "crates/vize_patina/src/linter/script_rules/registered_sfc.rs"
+  ],
+  "parentLegacySnapshot": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/ancestor-source-snapshot.json.gz",
+  "parentFrameChanges": [
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/sfc.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-0.fixture",
+      "identity": {
+        "path": "crates/vize_patina/src/linter/script_rules/sfc.rs",
+        "bytes": 7993,
+        "sha256": "4ba51a6cabd3fdb1ce973edfa7cf7bf4dac6d0bf12b6e9294ee75b9c3dd1ba46",
+        "gitBlob": "c36f934e635b6aced245ae92ce0bafa1ddb613bf"
+      }
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/sfc/registered_sfc.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-1.fixture",
+      "identity": {
+        "path": "crates/vize_patina/src/linter/script_rules/sfc/registered_sfc.rs",
+        "bytes": 1366,
+        "sha256": "3c5def49a855e146eaea7db29798f616e31fc6a44e7bf4d9a6b0afcf70805bd3",
+        "gitBlob": "5016a21b8d925696b314a0f5d82c1194c9dd0950"
+      }
+    },
+    {
+      "path": "docs/davinci/plan/consumer-migration-surfaces/linter/vize_patina.tsv",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-2.fixture",
+      "identity": {
+        "path": "docs/davinci/plan/consumer-migration-surfaces/linter/vize_patina.tsv",
+        "bytes": 159848,
+        "sha256": "2a8d7219f67b338975888d620d0a250f2c13d23d4c3a0aa0a2ca66ff250d5b9a",
+        "gitBlob": "d84e65a65989c92ed1bc819f1f14233287bcc190"
+      }
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/ancestor-source-snapshot.json.gz",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-3.fixture",
+      "identity": {
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/ancestor-source-snapshot.json.gz",
+        "bytes": 4010228,
+        "sha256": "1ed3f8401eb849b230d617d3836fac5e0fbb681802d8e097432aab8b79fb47f7",
+        "gitBlob": "a7772b4ab4aa2a03aa18365b37d0630e9f82b7b2"
+      }
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/ledger-after.tsv.fixture",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-4.fixture",
+      "identity": {
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/ledger-after.tsv.fixture",
+        "bytes": 159848,
+        "sha256": "2a8d7219f67b338975888d620d0a250f2c13d23d4c3a0aa0a2ca66ff250d5b9a",
+        "gitBlob": "d84e65a65989c92ed1bc819f1f14233287bcc190"
+      }
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/ledger-before.tsv.fixture",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-5.fixture",
+      "identity": {
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/ledger-before.tsv.fixture",
+        "bytes": 159840,
+        "sha256": "af2baf60023510bd37b4d3f5eaa655a5e2991bf5e85707c8b6e1f25350221305",
+        "gitBlob": "87cf2c1734aa73ccbc84cc8f9f8a5592e9ff869c"
+      }
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-namespace-helper.mjs.fixture",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-6.fixture",
+      "identity": {
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-namespace-helper.mjs.fixture",
+        "bytes": 5363,
+        "sha256": "53a1af6753ffdab235406c70752cb871c57cf6a9c9971204b42083500a6af7a2",
+        "gitBlob": "a9d6bd8e1158e7959378ac09495051240ee58027"
+      }
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-namespace-law.mjs.fixture",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-7.fixture",
+      "identity": {
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-namespace-law.mjs.fixture",
+        "bytes": 10072,
+        "sha256": "1b75196ff99ecd3042b600eb7db3df78e1d886586cb9d27144c1e266ff317491",
+        "gitBlob": "6b50e73b8069e340faca0813f17c73e61faf85a7"
+      }
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-source-helper.mjs.fixture",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-8.fixture",
+      "identity": {
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-source-helper.mjs.fixture",
+        "bytes": 9935,
+        "sha256": "2f29510015f60edc963a11f4f9bc7a831fe76f9e06dfd73cad75bbf850a02383",
+        "gitBlob": "e551c2f4a4a97104ac9e5af5a3c285e7abad35ac"
+      }
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-source-law.mjs.fixture",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-9.fixture",
+      "identity": {
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-source-law.mjs.fixture",
+        "bytes": 8405,
+        "sha256": "2a62d67dd801fe7e18299ed1593d0dc7efb2132507e2b39e297e62b6db7c0e90",
+        "gitBlob": "2cf1a567fed31276d9f7e61cee637015bbb6b26b"
+      }
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/sfc-after.rs.fixture",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-10.fixture",
+      "identity": {
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/sfc-after.rs.fixture",
+        "bytes": 7993,
+        "sha256": "4ba51a6cabd3fdb1ce973edfa7cf7bf4dac6d0bf12b6e9294ee75b9c3dd1ba46",
+        "gitBlob": "c36f934e635b6aced245ae92ce0bafa1ddb613bf"
+      }
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/sfc-before.rs.fixture",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-11.fixture",
+      "identity": {
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/sfc-before.rs.fixture",
+        "bytes": 8023,
+        "sha256": "80bc625aefac361bb6390fedba9641d6bbff127d78d5190fe6e695e4f41c0dff",
+        "gitBlob": "ed113004836d7430fe7be9904e11f1d61256708d"
+      }
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/successor.json",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-12.fixture",
+      "identity": {
+        "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/successor.json",
+        "bytes": 43326,
+        "sha256": "e53d557df855bf8a365e56cdf3cd64772ea33b8032690df34eaed0c6ed444c5e",
+        "gitBlob": "ad6ffe1169aaca5d3cadf41789d49fc75c6a2222"
+      }
+    },
+    {
+      "path": "tests/tooling/ascii-symbol-original-callers.test.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-13.fixture",
+      "identity": {
+        "path": "tests/tooling/ascii-symbol-original-callers.test.ts",
+        "bytes": 3381,
+        "sha256": "9a7c159495f48858b28fb68cb3ee8838676d4505ed98bf2366b92e96dd6e8345",
+        "gitBlob": "d9a3706a5d4a8a39930c9ec97d9d892ed0d1a053"
+      }
+    },
+    {
+      "path": "tests/tooling/css-fork-release-metadata.test.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-14.fixture",
+      "identity": {
+        "path": "tests/tooling/css-fork-release-metadata.test.ts",
+        "bytes": 4648,
+        "sha256": "ef79dd7cb13a5c93d0a916c9e0cfc8715cfae17a9092c0f6ff93afd2d93368d1",
+        "gitBlob": "c877da79a69e3eb669910c8167862ed449a6f4c0"
+      }
+    },
+    {
+      "path": "tests/tooling/css-fork-release-version-inheritance.test.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-15.fixture",
+      "identity": {
+        "path": "tests/tooling/css-fork-release-version-inheritance.test.ts",
+        "bytes": 11240,
+        "sha256": "383e6202a8b144451ed027f8725c368016bf964e48248a9a51e1346ab8314580",
+        "gitBlob": "5e7a9ef2747e7db3602d83619f9454e549005bef"
+      }
+    },
+    {
+      "path": "tests/tooling/docs-reviewed-translations.test.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-16.fixture",
+      "identity": {
+        "path": "tests/tooling/docs-reviewed-translations.test.ts",
+        "bytes": 15336,
+        "sha256": "27a90704d9528082af0b78d9e8fb8d7aa8c4dc12c0d5f9d13a64aff25e13d098",
+        "gitBlob": "e250a53be6af4e87d510bf262dde5ace05553297"
+      }
+    },
+    {
+      "path": "tests/tooling/moonbit-helper.test.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-17.fixture",
+      "identity": {
+        "path": "tests/tooling/moonbit-helper.test.ts",
+        "bytes": 10362,
+        "sha256": "97fe5435f7bb144db356e3def8cf7396631e98bc6f6c1daf73696d081164c10c",
+        "gitBlob": "16073b024d92518ae45186830af198e4c8ac0dff"
+      }
+    },
+    {
+      "path": "tests/tooling/moonbit-pinned-artifacts.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-18.fixture",
+      "identity": {
+        "path": "tests/tooling/moonbit-pinned-artifacts.test.mjs",
+        "bytes": 8420,
+        "sha256": "14b447ea71de8e567180d23ac6f6a0d3a259a6e5dc7ab2c1a15e7912cd87e66e",
+        "gitBlob": "60713dd2a1f58932f8ea21b356deb1300808bff0"
+      }
+    },
+    {
+      "path": "tests/tooling/moonbit-pinned-transport-shell.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-19.fixture",
+      "identity": {
+        "path": "tests/tooling/moonbit-pinned-transport-shell.test.mjs",
+        "bytes": 8969,
+        "sha256": "0076835a39a08807b27df166125501f2259929bdbedde7449137e6c4bf5d6cb0",
+        "gitBlob": "1e8c1823d0ca3389917e25f9c3d225d9faf80e12"
+      }
+    },
+    {
+      "path": "tests/tooling/moonbit-registry-update-installer.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-20.fixture",
+      "identity": {
+        "path": "tests/tooling/moonbit-registry-update-installer.test.mjs",
+        "bytes": 10110,
+        "sha256": "20c0e209ceb9fa0788312a06b42c23b268058d03e4184bbae655f134076de1eb",
+        "gitBlob": "3454bc0250a5a2fb04ac560db9da45cc331573db"
+      }
+    },
+    {
+      "path": "tests/tooling/no-mutating-props-module-layout-source-custody.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-21.fixture",
+      "identity": {
+        "path": "tests/tooling/no-mutating-props-module-layout-source-custody.test.mjs",
+        "bytes": 8744,
+        "sha256": "ce99694dd027d81d57abd41440c0f88dfe12c5e6f92d42857c6a205475ace344",
+        "gitBlob": "08b0c8a24f908e68c1dd4735a566ab218f0bcca5"
+      }
+    },
+    {
+      "path": "tests/tooling/no-mutating-props-source-custody.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-22.fixture",
+      "identity": {
+        "path": "tests/tooling/no-mutating-props-source-custody.test.mjs",
+        "bytes": 391,
+        "sha256": "e6cc2028b925f817ec5ea37ab28f5c95cd80f0315d6f818352d80429873bc211",
+        "gitBlob": "30a1972b28cb046f353ceb4fbfeb9b524348554f"
+      }
+    },
+    {
+      "path": "tests/tooling/no-mutating-props-test-correction-source-custody.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-23.fixture",
+      "identity": {
+        "path": "tests/tooling/no-mutating-props-test-correction-source-custody.test.mjs",
+        "bytes": 407,
+        "sha256": "8ddaa16c7d1a259b2074e2bd01183ac222f787f9ce27f171f51138665c3eb9d6",
+        "gitBlob": "8ae1ee8ee82d623d37de8db2f809d591890628dd"
+      }
+    },
+    {
+      "path": "tests/tooling/rule-parity-private-script.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-24.fixture",
+      "identity": {
+        "path": "tests/tooling/rule-parity-private-script.test.mjs",
+        "bytes": 10208,
+        "sha256": "56a0b355a73513361f7892d1bff1320eab9c750c26f161ce480a4214ecee4eca",
+        "gitBlob": "9f9a01e770c7f65b0e55b7019f82ca36b8d8ea57"
+      }
+    },
+    {
+      "path": "tests/tooling/support/ascii-symbol-caller-frames.json",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-25.fixture",
+      "identity": {
+        "path": "tests/tooling/support/ascii-symbol-caller-frames.json",
+        "bytes": 69364,
+        "sha256": "ae9cbab52a1ba62f3e31b8e4f92f80e3c973de3510d219ee940a6b89cfc716d6",
+        "gitBlob": "3e2cd37656232ea2bf1e8847ec4799cb789b8221"
+      }
+    },
+    {
+      "path": "tests/tooling/support/ascii-symbol-original-callers.json",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-26.fixture",
+      "identity": {
+        "path": "tests/tooling/support/ascii-symbol-original-callers.json",
+        "bytes": 112709,
+        "sha256": "0dc0852abe918f17f378a708e70d61b42f0630fe94865db96f8c7201d43ffbd3",
+        "gitBlob": "91f3b1bc4e56f5fea621c3d3594bb0468ed9cd4c"
+      }
+    },
+    {
+      "path": "tests/tooling/support/ascii-symbol-original-callers.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-27.fixture",
+      "identity": {
+        "path": "tests/tooling/support/ascii-symbol-original-callers.ts",
+        "bytes": 5625,
+        "sha256": "26247a3b96d3ec476aa591a83d19c0667c5545323f1ac11ff8aadda354369de2",
+        "gitBlob": "525dc1a4e14329459b06d29cb167bd988ef7201a"
+      }
+    },
+    {
+      "path": "tests/tooling/support/no-mutating-props-module-layout-source-custody.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-28.fixture",
+      "identity": {
+        "path": "tests/tooling/support/no-mutating-props-module-layout-source-custody.mjs",
+        "bytes": 11259,
+        "sha256": "6b3f047011243d9eccac6f4040159ca1a65be93c0f0c0cbc6bdd31969295dde9",
+        "gitBlob": "9eb2d33544818e511c066822c81aa2c8e50e6f52"
+      }
+    },
+    {
+      "path": "tests/tooling/support/no-mutating-props-source-custody.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-29.fixture",
+      "identity": {
+        "path": "tests/tooling/support/no-mutating-props-source-custody.mjs",
+        "bytes": 10204,
+        "sha256": "19fd4d91089deb15ee216f8e365e97b9c2c6b54345661bd6c3baa4bc79e400b4",
+        "gitBlob": "4d81a2b6250c33feefe29f03439f9a6825419f99"
+      }
+    },
+    {
+      "path": "tests/tooling/warm-type-backed-ascii-symbol-host.test.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-30.fixture",
+      "identity": {
+        "path": "tests/tooling/warm-type-backed-ascii-symbol-host.test.ts",
+        "bytes": 11243,
+        "sha256": "06fdc1724b5fc98c388029203311635e5935fea64f5594bcb4431100ee052b76",
+        "gitBlob": "66d6201283f8480a0ab96ab7daf9bc4ac8d1944b"
+      }
+    },
+    {
+      "path": "tests/tooling/warm-type-backed-git-body-authority.test.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-31.fixture",
+      "identity": {
+        "path": "tests/tooling/warm-type-backed-git-body-authority.test.ts",
+        "bytes": 5837,
+        "sha256": "8f1690c69868d074cd38c48b5994c0e0edf81ecf206ce8722ab946beb40e50c6",
+        "gitBlob": "0ca140b1aac3ca5aa1eee4d7c5cf6fafcdec528b"
+      }
+    },
+    {
+      "path": "tests/tooling/warm-type-backed-git-reader-incoming.test.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-32.fixture",
+      "identity": {
+        "path": "tests/tooling/warm-type-backed-git-reader-incoming.test.ts",
+        "bytes": 3133,
+        "sha256": "0c570ef6418d1c9651b2451b58d073b68b2af39662df0e2966016d54a783a4f5",
+        "gitBlob": "ed04eeef2f93bc577a0a0e2227db561f4620361b"
+      }
+    },
+    {
+      "path": "tests/tooling/warm-type-backed-git-reader-nodeep.test.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-33.fixture",
+      "identity": {
+        "path": "tests/tooling/warm-type-backed-git-reader-nodeep.test.ts",
+        "bytes": 12629,
+        "sha256": "73527589546b593e96b58dba9f747d8e897bb5d53d476342dc9715cc25b70228",
+        "gitBlob": "03daad285234f476642a5933e179407e7e7bf478"
+      }
+    },
+    {
+      "path": "tests/tooling/warm-type-backed-git-reader-setup.test.ts",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-34.fixture",
+      "identity": {
+        "path": "tests/tooling/warm-type-backed-git-reader-setup.test.ts",
+        "bytes": 7834,
+        "sha256": "659866cd702f3a710bc068765aa7135b309519e0a1776aa6ce60a60c30a182e7",
+        "gitBlob": "389b2763fb4aca9731515ac0f2baa128792578e7"
+      }
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/rule-parity-matrix.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-35.fixture",
+      "identity": {
+        "path": "tools/support/compat/davinci/lib/rule-parity-matrix.mjs",
+        "bytes": 6732,
+        "sha256": "bb3288600625f469381a6373a9f94aed287ef1f56c651f803e369cebeb4e575b",
+        "gitBlob": "286b760149169793c23a6597ebc6e74f74451553"
+      }
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/rule-parity-private-script.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-36.fixture",
+      "identity": {
+        "path": "tools/support/compat/davinci/lib/rule-parity-private-script.mjs",
+        "bytes": 8534,
+        "sha256": "e3e83f1e01e44e2e916f5f9eb12bef235658d5460736906946472adb690c22fd",
+        "gitBlob": "06b20be754968629ff876a7fc4dc4533167f3556"
+      }
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/rule-parity-rules.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-37.fixture",
+      "identity": {
+        "path": "tools/support/compat/davinci/lib/rule-parity-rules.mjs",
+        "bytes": 7687,
+        "sha256": "8a89b9289c4d96211ae68803635d5810dd743bf432f7644108a3ab4370f6a225",
+        "gitBlob": "588aa7c636c4a0a633bd6ac106d969adbc1b0e76"
+      }
+    }
+  ],
+  "parentFrameAbsent": [
+    "crates/vize_patina/src/linter/script_rules/registered_sfc.rs"
+  ],
   "originalFamily": {
     "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/successor.json",
     "bytes": 70231,
@@ -41,12 +430,6 @@
       "gitBlob": "9927aeb19543c5cc3c02da5230ca22db708a180f"
     },
     {
-      "path": "crates/vize_patina/src/linter/script_rules/registered_sfc.rs",
-      "bytes": 1366,
-      "sha256": "3c5def49a855e146eaea7db29798f616e31fc6a44e7bf4d9a6b0afcf70805bd3",
-      "gitBlob": "5016a21b8d925696b314a0f5d82c1194c9dd0950"
-    },
-    {
       "path": "crates/vize_patina/src/linter/script_rules/registry/rules.rs",
       "bytes": 21922,
       "sha256": "e0ac436d8735f69bab0fe42465a328047dc24dc58248a22ae2315a828468f7a1",
@@ -54,9 +437,15 @@
     },
     {
       "path": "crates/vize_patina/src/linter/script_rules/sfc.rs",
-      "bytes": 9427,
-      "sha256": "eeab9a3f9bd6d5c587096bb994b5528eb46ff86d8cf0eca381c57033a818d440",
-      "gitBlob": "aa4a206eb4fc065b1643618e491ec6667499de54"
+      "bytes": 9397,
+      "sha256": "60abf9ce785cde71d1a42407c41d6389d98a3fcc238e2cfa56ca7f4930f039ec",
+      "gitBlob": "bf0390c37d850795959ce18413a9159625667d7b"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/sfc/registered_sfc.rs",
+      "bytes": 1366,
+      "sha256": "3c5def49a855e146eaea7db29798f616e31fc6a44e7bf4d9a6b0afcf70805bd3",
+      "gitBlob": "5016a21b8d925696b314a0f5d82c1194c9dd0950"
     },
     {
       "path": "crates/vize_patina/src/rule.rs",
@@ -192,9 +581,9 @@
     },
     {
       "path": "docs/davinci/plan/consumer-migration-surfaces/linter/vize_patina.tsv",
-      "bytes": 161166,
-      "sha256": "532ec0ab6a2b35a6fe9706094d4643a30b891d0ead56c886a4ea337fe650dc3a",
-      "gitBlob": "07d750c5809cd6c7e33252c37c401b831feb8458"
+      "bytes": 161174,
+      "sha256": "6b2b0f341eee484c29f3ba6e0db99fa2bbd138a8568ab9049f0daebf2aa0fb7d",
+      "gitBlob": "20756c22cb26dc71a21496447547972228efd097"
     },
     {
       "path": "npm/ui/src/families/date-time/calendar/calendar-multiple-root.vue",
@@ -1295,6 +1684,96 @@
       "gitBlob": "a4927dcfd7572c1fc6204f6afbbcfe874993946d"
     },
     {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/ancestor-source-snapshot.json.gz",
+      "bytes": 4010228,
+      "sha256": "1ed3f8401eb849b230d617d3836fac5e0fbb681802d8e097432aab8b79fb47f7",
+      "gitBlob": "a7772b4ab4aa2a03aa18365b37d0630e9f82b7b2"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/ledger-after.tsv.fixture",
+      "bytes": 159848,
+      "sha256": "2a8d7219f67b338975888d620d0a250f2c13d23d4c3a0aa0a2ca66ff250d5b9a",
+      "gitBlob": "d84e65a65989c92ed1bc819f1f14233287bcc190"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/ledger-before.tsv.fixture",
+      "bytes": 159840,
+      "sha256": "af2baf60023510bd37b4d3f5eaa655a5e2991bf5e85707c8b6e1f25350221305",
+      "gitBlob": "87cf2c1734aa73ccbc84cc8f9f8a5592e9ff869c"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-namespace-helper.mjs.fixture",
+      "bytes": 5363,
+      "sha256": "53a1af6753ffdab235406c70752cb871c57cf6a9c9971204b42083500a6af7a2",
+      "gitBlob": "a9d6bd8e1158e7959378ac09495051240ee58027"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-namespace-law.mjs.fixture",
+      "bytes": 10072,
+      "sha256": "1b75196ff99ecd3042b600eb7db3df78e1d886586cb9d27144c1e266ff317491",
+      "gitBlob": "6b50e73b8069e340faca0813f17c73e61faf85a7"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-source-helper.mjs.fixture",
+      "bytes": 9935,
+      "sha256": "2f29510015f60edc963a11f4f9bc7a831fe76f9e06dfd73cad75bbf850a02383",
+      "gitBlob": "e551c2f4a4a97104ac9e5af5a3c285e7abad35ac"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/original-source-law.mjs.fixture",
+      "bytes": 8405,
+      "sha256": "2a62d67dd801fe7e18299ed1593d0dc7efb2132507e2b39e297e62b6db7c0e90",
+      "gitBlob": "2cf1a567fed31276d9f7e61cee637015bbb6b26b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/sfc-after.rs.fixture",
+      "bytes": 7993,
+      "sha256": "4ba51a6cabd3fdb1ce973edfa7cf7bf4dac6d0bf12b6e9294ee75b9c3dd1ba46",
+      "gitBlob": "c36f934e635b6aced245ae92ce0bafa1ddb613bf"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/module-layout-correction/successor.json",
+      "bytes": 43326,
+      "sha256": "e53d557df855bf8a365e56cdf3cd64772ea33b8032690df34eaed0c6ed444c5e",
+      "gitBlob": "ad6ffe1169aaca5d3cadf41789d49fc75c6a2222"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/original-props-deep-destructure-reference.test.mjs.fixture",
+      "bytes": 15018,
+      "sha256": "d6db39c5ffc0757c8e9b274534f2ec7c5ce0a01519693e1121a48247b083efa8",
+      "gitBlob": "1b8f4013de4446b7789153254360986f97174fed"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/original-props-deep-import-source-custody.test.mjs.fixture",
+      "bytes": 2937,
+      "sha256": "4c23bdcb6fbbcc6080f77c47f0bcb16a846c529e6d3f0af9877aed867d0c5250",
+      "gitBlob": "43fc0e8b52c63b2e55b5704ad82b2cd314dab92a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/original-props-deep-source-custody.mjs.fixture",
+      "bytes": 12271,
+      "sha256": "f6bf1e93600bdd8d4d6867b81b59fd67f8cdf5c9e96544d1a953ed081d2909ad",
+      "gitBlob": "10ba8d9be5e048d2c6ab1702965e294566d2802b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/original-props-deep-trait-scope-source-custody.test.mjs.fixture",
+      "bytes": 3556,
+      "sha256": "1094a2ceb84b0d6f98f1d1b5d6d8ec9a88f7ce17090c413236e53cd47b54949b",
+      "gitBlob": "2164a934aad0e04ae4d176b8521a6a9a2dc633b4"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/original-runtime-props-api-source-custody.mjs.fixture",
+      "bytes": 6045,
+      "sha256": "8c9e884f8099a1125ab0518d5f569baf043f7416509190dfa61b8db212a38d33",
+      "gitBlob": "a8fce88502aa29db93afdfb233c892a15516e99d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/original-setup-export-preset-source-custody.mjs.fixture",
+      "bytes": 5387,
+      "sha256": "8995c93374509bbb37be4fd0df0506df1b8d6bac4737496d5f66410d19527b7a",
+      "gitBlob": "af400a192e7d2384aefdd823483caf257419b93d"
+    },
+    {
       "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/sfc-after.rs.fixture",
       "bytes": 8023,
       "sha256": "80bc625aefac361bb6390fedba9641d6bbff127d78d5190fe6e695e4f41c0dff",
@@ -1337,16 +1816,22 @@
       "gitBlob": "f2228d9b09d9c2a06eb150764bdbf22dccedc3a2"
     },
     {
+      "path": "tests/tooling/no-mutating-props-module-layout-source-custody.test.mjs",
+      "bytes": 302,
+      "sha256": "aac2d87d506ce6c2783dff4fbeccca8cb7f13a416c7525e64d7518010fb31044",
+      "gitBlob": "cde3618491374231170313eb190171d767510770"
+    },
+    {
       "path": "tests/tooling/no-mutating-props-source-custody.test.mjs",
-      "bytes": 8582,
-      "sha256": "46f4e5ec06283f594fb34120109800b9f12040aca6d68368481cbf7b387be21a",
-      "gitBlob": "fab017d6448a809c17bff27e887812c1dc878996"
+      "bytes": 355,
+      "sha256": "88684d59b79238c72bc56deecd7f515bde4aea8e2a2699423e51379062d45aaa",
+      "gitBlob": "970ad85607c3b6852a519151de65a0ee403beb5c"
     },
     {
       "path": "tests/tooling/no-mutating-props-test-correction-source-custody.test.mjs",
-      "bytes": 298,
-      "sha256": "0912728b1e7e248455d9fc08b2edd87373b28097189c6ba41ebcadf17d79a8d2",
-      "gitBlob": "3a9dc493c9e8137aa9955272cf560f08ad30585b"
+      "bytes": 378,
+      "sha256": "d23164d095edb6db3be17d9bde4c97e0894a0e29874569315834c4fdbbf398f9",
+      "gitBlob": "17cd494c0ec9c966090d5f2ae8313ad7121c08a2"
     },
     {
       "path": "tests/tooling/support/no-dupe-keys-source-custody.mjs",
@@ -1355,164 +1840,542 @@
       "gitBlob": "9c8fc860076bc9a287f7dc46c38c5888f45ec318"
     },
     {
+      "path": "tests/tooling/support/no-mutating-props-module-layout-source-custody.mjs",
+      "bytes": 11259,
+      "sha256": "6b3f047011243d9eccac6f4040159ca1a65be93c0f0c0cbc6bdd31969295dde9",
+      "gitBlob": "9eb2d33544818e511c066822c81aa2c8e50e6f52"
+    },
+    {
       "path": "tests/tooling/support/no-mutating-props-source-custody.mjs",
-      "bytes": 10221,
-      "sha256": "ba42939e1934befc14ea251949e656df1d869d5ee7e90c29328904d3e2456b9c",
-      "gitBlob": "7c74c9db40ec56c4850fe01b4dd947b14ecde43d"
+      "bytes": 10723,
+      "sha256": "95a69e13da4e5257dfea058c26da121224a81a8dd3bde939fd715a71486df152",
+      "gitBlob": "c3b59a22ae3f4d44e3f8faf5f7f7fa7247c02616"
     },
     {
       "path": "tests/tooling/support/no-mutating-props-test-correction-source-custody.mjs",
-      "bytes": 5588,
-      "sha256": "f44738bbfe427ce641ab4a7ebc72bdb95d2e9102805956d27eddb87b133f6d83",
-      "gitBlob": "0d63fc4f624cb36277cfea70ad689ecddab2c368"
-    }
-  ],
-  "archives": [
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-0.fixture",
-      "bytes": 7645,
-      "sha256": "1fe56149197e026e4aeec24cb86bc5c677aaf576d7d770bb37d5a266617bb8ba",
-      "gitBlob": "cb4e82858e9083a71648916603d8c0b4195442e1"
-    },
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-1.fixture",
-      "bytes": 6015,
-      "sha256": "be41bd955ff85acbe5d75cc0ba7b033d3b0166b69d46c45db9f04dda260ff2ff",
-      "gitBlob": "ebd64f316a37c0ddc91ca06589d6810f479d4843"
-    },
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-2.fixture",
-      "bytes": 10043,
-      "sha256": "f3034858abe53478f009e40e7b478d4f5687f5c63a80bef75503f06ee1ad5807",
-      "gitBlob": "b5c13eee7b14405079599b9a8c4853fa3b2f9c4a"
-    },
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-3.fixture",
-      "bytes": 5117,
-      "sha256": "498319d459adf652860af2f329f2cff8a306997c9861acde70153a946de72370",
-      "gitBlob": "37cfc6d765de162188388e789f829595be36a866"
-    },
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-4.fixture",
-      "bytes": 13299,
-      "sha256": "322f83c1bc7e0a2772e3eaa1b28d9de3693aad0995715f0fe55b50aa53e40fc3",
-      "gitBlob": "e552fcbaee32518e284d8d3dd060fd96855c189b"
-    },
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-0.fixture",
-      "bytes": 7697,
-      "sha256": "2fcda85b4dba45248c782f475c648b4344b0cb2b008b55d241cd282efa9cf7dd",
-      "gitBlob": "7b54949f6b48abe4c69b27865bf6b0165694a936"
-    },
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-1.fixture",
-      "bytes": 9734,
-      "sha256": "9a3f6978f30b5895c31d5eb0f333175f8ee60c1a52bccc31615d5ceb075f1e2b",
-      "gitBlob": "9eddae3f363f1965b59aedbc487af25ff18f9e94"
-    },
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-2.fixture",
-      "bytes": 8023,
-      "sha256": "80bc625aefac361bb6390fedba9641d6bbff127d78d5190fe6e695e4f41c0dff",
-      "gitBlob": "ed113004836d7430fe7be9904e11f1d61256708d"
-    },
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-3.fixture",
-      "bytes": 9935,
-      "sha256": "2f29510015f60edc963a11f4f9bc7a831fe76f9e06dfd73cad75bbf850a02383",
-      "gitBlob": "e551c2f4a4a97104ac9e5af5a3c285e7abad35ac"
-    },
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-4.fixture",
-      "bytes": 8405,
-      "sha256": "2a62d67dd801fe7e18299ed1593d0dc7efb2132507e2b39e297e62b6db7c0e90",
-      "gitBlob": "2cf1a567fed31276d9f7e61cee637015bbb6b26b"
-    },
-    {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-5.fixture",
       "bytes": 5363,
       "sha256": "53a1af6753ffdab235406c70752cb871c57cf6a9c9971204b42083500a6af7a2",
       "gitBlob": "a9d6bd8e1158e7959378ac09495051240ee58027"
     },
     {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-6.fixture",
-      "bytes": 10072,
-      "sha256": "1b75196ff99ecd3042b600eb7db3df78e1d886586cb9d27144c1e266ff317491",
-      "gitBlob": "6b50e73b8069e340faca0813f17c73e61faf85a7"
+      "path": "tests/tooling/support/props-deep-source-custody.mjs",
+      "bytes": 12527,
+      "sha256": "0473d9509d4b34e52bced41c5e8b28296c225e879ed40a2b1d3d67f164b7fbf7",
+      "gitBlob": "71f9fbb344404e29fccc81e3af2f771116d43a41"
     },
     {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-7.fixture",
-      "bytes": 159840,
-      "sha256": "af2baf60023510bd37b4d3f5eaa655a5e2991bf5e85707c8b6e1f25350221305",
-      "gitBlob": "87cf2c1734aa73ccbc84cc8f9f8a5592e9ff869c"
+      "path": "tests/tooling/support/runtime-props-api-source-custody.mjs",
+      "bytes": 6246,
+      "sha256": "42f16bbbb5bef25f4ba20e171a32742c5b161dc4739b6bd33d605f925de0fea6",
+      "gitBlob": "78d221236f13513d8afda21a124de39a49812460"
     },
     {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/formatted-original-helper.fixture",
+      "path": "tests/tooling/support/setup-export-preset-source-custody.mjs",
+      "bytes": 5533,
+      "sha256": "72a84609389244088b640ab52e02e0aa4d047cea0160a60ae175c79486d7b362",
+      "gitBlob": "d3e92473a69f7cb59fc87aa664fe176e5a6b04c6"
+    },
+    {
+      "path": "tools/commands/davinci/consumer-migration-surfaces.rs",
+      "bytes": 624,
+      "sha256": "ca773b248aa77fc0495f189d3dddb4faa2b84b1384f8906317063a97a5f36313",
+      "gitBlob": "75539629820350e8a12f6496c6992b1fe121ccaa"
+    },
+    {
+      "path": "tools/support/artifacts.rs",
+      "bytes": 3677,
+      "sha256": "cc089694fa247d978d587f0a505d5893c6c56b25aa4a466736aa5512b7124194",
+      "gitBlob": "4b84c4bfc4fdcb8bfc41ed8c6457acd1a3c65d7b"
+    },
+    {
+      "path": "tools/support/compat/davinci/consumer-migration-surfaces.mjs",
+      "bytes": 2508,
+      "sha256": "76d2297771695af55d5fbd724116b2ead4fd67f2a1d4f2e7478f1e4e44cd9031",
+      "gitBlob": "0810910235c07b804985f9312bf3446e21dabb84"
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/artifact-set.mjs",
+      "bytes": 5121,
+      "sha256": "250a21844948aa772b41499c849cfef5b1123a924576d4058b36c5d93eabbb59",
+      "gitBlob": "c2a38bbaba57fef96d35001168207b27d2c6b856"
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/consumer-migration-render.mjs",
+      "bytes": 11104,
+      "sha256": "7aebff1294349fdfa8b06b738f301428e6d28c7908db41dbb14bce85de55ef88",
+      "gitBlob": "7f08e5b55a411ddddea95a9c1e79db611f2d8ab8"
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/consumer-migration-scan.mjs",
+      "bytes": 9974,
+      "sha256": "6a67a5dce583ca92bbc2b440457bd897ebe4f15adcf211df66765a26089ec590",
+      "gitBlob": "500adf6e07957a75ac7ba489cc8eeebb51bba07f"
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/consumer-migration-summary.mjs",
+      "bytes": 4138,
+      "sha256": "b8cad331da5ae9c7cf4c591d5c688bc4f17388f17cba3d481f58ec42ac3e320c",
+      "gitBlob": "56f7751674200038b91e9a5b2df5a7ab216ea180"
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/markdown.mjs",
+      "bytes": 1718,
+      "sha256": "5e102fc28f97d30213c5ccd48052035ce276cb8bb8b6189fb1c918a1488c6f12",
+      "gitBlob": "c1f748517854ddf2eb9cd9de4c35a775d568dd80"
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/ordering.mjs",
+      "bytes": 320,
+      "sha256": "d6efc2401271777bb800d7a632128971255e9e957749771745c7c4d835921b42",
+      "gitBlob": "aa8a8cb3401ba24159e2cf04dd3a028ef9c319d3"
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/paths.mjs",
+      "bytes": 1152,
+      "sha256": "391983b97b002f7bdd849510d1d60cb60fee30940702166183063a255eea7369",
+      "gitBlob": "e432c7c8fe9f01f164e2132b1bd059b2bf5577f6"
+    },
+    {
+      "path": "tools/support/compat/davinci/lib/rust-source.mjs",
+      "bytes": 6101,
+      "sha256": "5624f91ff9920feab0f839436499a47efb90cc0141bf66c44a089f2aee72803e",
+      "gitBlob": "8f0c0a2e760563e4020660ef2d70f3d769be5fff"
+    }
+  ],
+  "archives": [
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-0.fixture",
+      "bytes": 7645,
+      "sha256": "1fe56149197e026e4aeec24cb86bc5c677aaf576d7d770bb37d5a266617bb8ba",
+      "gitBlob": "cb4e82858e9083a71648916603d8c0b4195442e1"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-1.fixture",
+      "bytes": 6015,
+      "sha256": "be41bd955ff85acbe5d75cc0ba7b033d3b0166b69d46c45db9f04dda260ff2ff",
+      "gitBlob": "ebd64f316a37c0ddc91ca06589d6810f479d4843"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-2.fixture",
+      "bytes": 10043,
+      "sha256": "f3034858abe53478f009e40e7b478d4f5687f5c63a80bef75503f06ee1ad5807",
+      "gitBlob": "b5c13eee7b14405079599b9a8c4853fa3b2f9c4a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-3.fixture",
+      "bytes": 8582,
+      "sha256": "46f4e5ec06283f594fb34120109800b9f12040aca6d68368481cbf7b387be21a",
+      "gitBlob": "fab017d6448a809c17bff27e887812c1dc878996"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-4.fixture",
+      "bytes": 7908,
+      "sha256": "1037a333628d05ab36a46d3e975b447552ce85c23c4414342c6e7ffd7f30df2c",
+      "gitBlob": "2063d25f2eeedb67c4047bc02680caedc62c0fa0"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-5.fixture",
+      "bytes": 10359,
+      "sha256": "ee8121635192f4979fddf8a3a977c320a14e5ae5bb55611dc33f51aad720e212",
+      "gitBlob": "36e7781cf95556c57333651084358a2a2a4c482a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-6.fixture",
+      "bytes": 9427,
+      "sha256": "eeab9a3f9bd6d5c587096bb994b5528eb46ff86d8cf0eca381c57033a818d440",
+      "gitBlob": "aa4a206eb4fc065b1643618e491ec6667499de54"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-7.fixture",
+      "bytes": 1366,
+      "sha256": "3c5def49a855e146eaea7db29798f616e31fc6a44e7bf4d9a6b0afcf70805bd3",
+      "gitBlob": "5016a21b8d925696b314a0f5d82c1194c9dd0950"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-8.fixture",
+      "bytes": 5117,
+      "sha256": "498319d459adf652860af2f329f2cff8a306997c9861acde70153a946de72370",
+      "gitBlob": "37cfc6d765de162188388e789f829595be36a866"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-9.fixture",
+      "bytes": 13299,
+      "sha256": "322f83c1bc7e0a2772e3eaa1b28d9de3693aad0995715f0fe55b50aa53e40fc3",
+      "gitBlob": "e552fcbaee32518e284d8d3dd060fd96855c189b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-0.fixture",
+      "bytes": 7697,
+      "sha256": "2fcda85b4dba45248c782f475c648b4344b0cb2b008b55d241cd282efa9cf7dd",
+      "gitBlob": "7b54949f6b48abe4c69b27865bf6b0165694a936"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-1.fixture",
+      "bytes": 9734,
+      "sha256": "9a3f6978f30b5895c31d5eb0f333175f8ee60c1a52bccc31615d5ceb075f1e2b",
+      "gitBlob": "9eddae3f363f1965b59aedbc487af25ff18f9e94"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-2.fixture",
+      "bytes": 7993,
+      "sha256": "4ba51a6cabd3fdb1ce973edfa7cf7bf4dac6d0bf12b6e9294ee75b9c3dd1ba46",
+      "gitBlob": "c36f934e635b6aced245ae92ce0bafa1ddb613bf"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-3.fixture",
+      "bytes": 10204,
+      "sha256": "19fd4d91089deb15ee216f8e365e97b9c2c6b54345661bd6c3baa4bc79e400b4",
+      "gitBlob": "4d81a2b6250c33feefe29f03439f9a6825419f99"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-4.fixture",
+      "bytes": 391,
+      "sha256": "e6cc2028b925f817ec5ea37ab28f5c95cd80f0315d6f818352d80429873bc211",
+      "gitBlob": "30a1972b28cb046f353ceb4fbfeb9b524348554f"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-5.fixture",
+      "bytes": 5363,
+      "sha256": "53a1af6753ffdab235406c70752cb871c57cf6a9c9971204b42083500a6af7a2",
+      "gitBlob": "a9d6bd8e1158e7959378ac09495051240ee58027"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-6.fixture",
+      "bytes": 407,
+      "sha256": "8ddaa16c7d1a259b2074e2bd01183ac222f787f9ce27f171f51138665c3eb9d6",
+      "gitBlob": "8ae1ee8ee82d623d37de8db2f809d591890628dd"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-7.fixture",
+      "bytes": 8744,
+      "sha256": "ce99694dd027d81d57abd41440c0f88dfe12c5e6f92d42857c6a205475ace344",
+      "gitBlob": "08b0c8a24f908e68c1dd4735a566ab218f0bcca5"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-8.fixture",
+      "bytes": 159848,
+      "sha256": "2a8d7219f67b338975888d620d0a250f2c13d23d4c3a0aa0a2ca66ff250d5b9a",
+      "gitBlob": "d84e65a65989c92ed1bc819f1f14233287bcc190"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-formatted-original-helper.fixture",
       "bytes": 7515,
       "sha256": "59fb4e55f3aea17fcd1e3a5d039cc9e99d6fc7d4f40a93a5c06c43ec7be4cc88",
       "gitBlob": "ee6e9d61bd3496cec6f0ec5b8033421272bccbfa"
     },
     {
-      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/formatted-original-five-laws.fixture",
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-formatted-original-five-laws.fixture",
       "bytes": 5829,
       "sha256": "5f2004a8ca12b045e7acb75695618b4bf9e371c68bef409b8ede76503d1e7507",
       "gitBlob": "cc27fb17fa274d98025283e46d17570f909edbbf"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-0.fixture",
+      "bytes": 7993,
+      "sha256": "4ba51a6cabd3fdb1ce973edfa7cf7bf4dac6d0bf12b6e9294ee75b9c3dd1ba46",
+      "gitBlob": "c36f934e635b6aced245ae92ce0bafa1ddb613bf"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-1.fixture",
+      "bytes": 1366,
+      "sha256": "3c5def49a855e146eaea7db29798f616e31fc6a44e7bf4d9a6b0afcf70805bd3",
+      "gitBlob": "5016a21b8d925696b314a0f5d82c1194c9dd0950"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-2.fixture",
+      "bytes": 159848,
+      "sha256": "2a8d7219f67b338975888d620d0a250f2c13d23d4c3a0aa0a2ca66ff250d5b9a",
+      "gitBlob": "d84e65a65989c92ed1bc819f1f14233287bcc190"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-3.fixture",
+      "bytes": 4010228,
+      "sha256": "1ed3f8401eb849b230d617d3836fac5e0fbb681802d8e097432aab8b79fb47f7",
+      "gitBlob": "a7772b4ab4aa2a03aa18365b37d0630e9f82b7b2"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-4.fixture",
+      "bytes": 159848,
+      "sha256": "2a8d7219f67b338975888d620d0a250f2c13d23d4c3a0aa0a2ca66ff250d5b9a",
+      "gitBlob": "d84e65a65989c92ed1bc819f1f14233287bcc190"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-5.fixture",
+      "bytes": 159840,
+      "sha256": "af2baf60023510bd37b4d3f5eaa655a5e2991bf5e85707c8b6e1f25350221305",
+      "gitBlob": "87cf2c1734aa73ccbc84cc8f9f8a5592e9ff869c"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-6.fixture",
+      "bytes": 5363,
+      "sha256": "53a1af6753ffdab235406c70752cb871c57cf6a9c9971204b42083500a6af7a2",
+      "gitBlob": "a9d6bd8e1158e7959378ac09495051240ee58027"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-7.fixture",
+      "bytes": 10072,
+      "sha256": "1b75196ff99ecd3042b600eb7db3df78e1d886586cb9d27144c1e266ff317491",
+      "gitBlob": "6b50e73b8069e340faca0813f17c73e61faf85a7"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-8.fixture",
+      "bytes": 9935,
+      "sha256": "2f29510015f60edc963a11f4f9bc7a831fe76f9e06dfd73cad75bbf850a02383",
+      "gitBlob": "e551c2f4a4a97104ac9e5af5a3c285e7abad35ac"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-9.fixture",
+      "bytes": 8405,
+      "sha256": "2a62d67dd801fe7e18299ed1593d0dc7efb2132507e2b39e297e62b6db7c0e90",
+      "gitBlob": "2cf1a567fed31276d9f7e61cee637015bbb6b26b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-10.fixture",
+      "bytes": 7993,
+      "sha256": "4ba51a6cabd3fdb1ce973edfa7cf7bf4dac6d0bf12b6e9294ee75b9c3dd1ba46",
+      "gitBlob": "c36f934e635b6aced245ae92ce0bafa1ddb613bf"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-11.fixture",
+      "bytes": 8023,
+      "sha256": "80bc625aefac361bb6390fedba9641d6bbff127d78d5190fe6e695e4f41c0dff",
+      "gitBlob": "ed113004836d7430fe7be9904e11f1d61256708d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-12.fixture",
+      "bytes": 43326,
+      "sha256": "e53d557df855bf8a365e56cdf3cd64772ea33b8032690df34eaed0c6ed444c5e",
+      "gitBlob": "ad6ffe1169aaca5d3cadf41789d49fc75c6a2222"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-13.fixture",
+      "bytes": 3381,
+      "sha256": "9a7c159495f48858b28fb68cb3ee8838676d4505ed98bf2366b92e96dd6e8345",
+      "gitBlob": "d9a3706a5d4a8a39930c9ec97d9d892ed0d1a053"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-14.fixture",
+      "bytes": 4648,
+      "sha256": "ef79dd7cb13a5c93d0a916c9e0cfc8715cfae17a9092c0f6ff93afd2d93368d1",
+      "gitBlob": "c877da79a69e3eb669910c8167862ed449a6f4c0"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-15.fixture",
+      "bytes": 11240,
+      "sha256": "383e6202a8b144451ed027f8725c368016bf964e48248a9a51e1346ab8314580",
+      "gitBlob": "5e7a9ef2747e7db3602d83619f9454e549005bef"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-16.fixture",
+      "bytes": 15336,
+      "sha256": "27a90704d9528082af0b78d9e8fb8d7aa8c4dc12c0d5f9d13a64aff25e13d098",
+      "gitBlob": "e250a53be6af4e87d510bf262dde5ace05553297"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-17.fixture",
+      "bytes": 10362,
+      "sha256": "97fe5435f7bb144db356e3def8cf7396631e98bc6f6c1daf73696d081164c10c",
+      "gitBlob": "16073b024d92518ae45186830af198e4c8ac0dff"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-18.fixture",
+      "bytes": 8420,
+      "sha256": "14b447ea71de8e567180d23ac6f6a0d3a259a6e5dc7ab2c1a15e7912cd87e66e",
+      "gitBlob": "60713dd2a1f58932f8ea21b356deb1300808bff0"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-19.fixture",
+      "bytes": 8969,
+      "sha256": "0076835a39a08807b27df166125501f2259929bdbedde7449137e6c4bf5d6cb0",
+      "gitBlob": "1e8c1823d0ca3389917e25f9c3d225d9faf80e12"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-20.fixture",
+      "bytes": 10110,
+      "sha256": "20c0e209ceb9fa0788312a06b42c23b268058d03e4184bbae655f134076de1eb",
+      "gitBlob": "3454bc0250a5a2fb04ac560db9da45cc331573db"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-21.fixture",
+      "bytes": 8744,
+      "sha256": "ce99694dd027d81d57abd41440c0f88dfe12c5e6f92d42857c6a205475ace344",
+      "gitBlob": "08b0c8a24f908e68c1dd4735a566ab218f0bcca5"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-22.fixture",
+      "bytes": 391,
+      "sha256": "e6cc2028b925f817ec5ea37ab28f5c95cd80f0315d6f818352d80429873bc211",
+      "gitBlob": "30a1972b28cb046f353ceb4fbfeb9b524348554f"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-23.fixture",
+      "bytes": 407,
+      "sha256": "8ddaa16c7d1a259b2074e2bd01183ac222f787f9ce27f171f51138665c3eb9d6",
+      "gitBlob": "8ae1ee8ee82d623d37de8db2f809d591890628dd"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-24.fixture",
+      "bytes": 10208,
+      "sha256": "56a0b355a73513361f7892d1bff1320eab9c750c26f161ce480a4214ecee4eca",
+      "gitBlob": "9f9a01e770c7f65b0e55b7019f82ca36b8d8ea57"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-25.fixture",
+      "bytes": 69364,
+      "sha256": "ae9cbab52a1ba62f3e31b8e4f92f80e3c973de3510d219ee940a6b89cfc716d6",
+      "gitBlob": "3e2cd37656232ea2bf1e8847ec4799cb789b8221"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-26.fixture",
+      "bytes": 112709,
+      "sha256": "0dc0852abe918f17f378a708e70d61b42f0630fe94865db96f8c7201d43ffbd3",
+      "gitBlob": "91f3b1bc4e56f5fea621c3d3594bb0468ed9cd4c"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-27.fixture",
+      "bytes": 5625,
+      "sha256": "26247a3b96d3ec476aa591a83d19c0667c5545323f1ac11ff8aadda354369de2",
+      "gitBlob": "525dc1a4e14329459b06d29cb167bd988ef7201a"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-28.fixture",
+      "bytes": 11259,
+      "sha256": "6b3f047011243d9eccac6f4040159ca1a65be93c0f0c0cbc6bdd31969295dde9",
+      "gitBlob": "9eb2d33544818e511c066822c81aa2c8e50e6f52"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-29.fixture",
+      "bytes": 10204,
+      "sha256": "19fd4d91089deb15ee216f8e365e97b9c2c6b54345661bd6c3baa4bc79e400b4",
+      "gitBlob": "4d81a2b6250c33feefe29f03439f9a6825419f99"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-30.fixture",
+      "bytes": 11243,
+      "sha256": "06fdc1724b5fc98c388029203311635e5935fea64f5594bcb4431100ee052b76",
+      "gitBlob": "66d6201283f8480a0ab96ab7daf9bc4ac8d1944b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-31.fixture",
+      "bytes": 5837,
+      "sha256": "8f1690c69868d074cd38c48b5994c0e0edf81ecf206ce8722ab946beb40e50c6",
+      "gitBlob": "0ca140b1aac3ca5aa1eee4d7c5cf6fafcdec528b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-32.fixture",
+      "bytes": 3133,
+      "sha256": "0c570ef6418d1c9651b2451b58d073b68b2af39662df0e2966016d54a783a4f5",
+      "gitBlob": "ed04eeef2f93bc577a0a0e2227db561f4620361b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-33.fixture",
+      "bytes": 12629,
+      "sha256": "73527589546b593e96b58dba9f747d8e897bb5d53d476342dc9715cc25b70228",
+      "gitBlob": "03daad285234f476642a5933e179407e7e7bf478"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-34.fixture",
+      "bytes": 7834,
+      "sha256": "659866cd702f3a710bc068765aa7135b309519e0a1776aa6ce60a60c30a182e7",
+      "gitBlob": "389b2763fb4aca9731515ac0f2baa128792578e7"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-35.fixture",
+      "bytes": 6732,
+      "sha256": "bb3288600625f469381a6373a9f94aed287ef1f56c651f803e369cebeb4e575b",
+      "gitBlob": "286b760149169793c23a6597ebc6e74f74451553"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-36.fixture",
+      "bytes": 8534,
+      "sha256": "e3e83f1e01e44e2e916f5f9eb12bef235658d5460736906946472adb690c22fd",
+      "gitBlob": "06b20be754968629ff876a7fc4dc4533167f3556"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-frame-37.fixture",
+      "bytes": 7687,
+      "sha256": "8a89b9289c4d96211ae68803635d5810dd743bf432f7644108a3ab4370f6a225",
+      "gitBlob": "588aa7c636c4a0a633bd6ac106d969adbc1b0e76"
     }
   ],
   "historicalProjection": [
     {
       "path": "tests/tooling/support/no-dupe-keys-source-custody.mjs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-0.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-0.fixture"
     },
     {
       "path": "tests/tooling/no-dupe-keys-source-custody.test.mjs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-1.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-1.fixture"
     },
     {
       "path": "tests/tooling/support/no-mutating-props-source-custody.mjs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-2.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-2.fixture"
+    },
+    {
+      "path": "tests/tooling/no-mutating-props-source-custody.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-3.fixture"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-4.fixture"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-5.fixture"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/sfc.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-6.fixture"
+    },
+    {
+      "path": "crates/vize_patina/src/linter/script_rules/registered_sfc.rs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-7.fixture"
     },
     {
       "path": "crates/vize_patina/src/linter/script_rules/dupe_keys_dispatch_tests.rs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-3.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-8.fixture"
     },
     {
       "path": "crates/vize_patina/src/rules/vue/no_mutating_props/options_api/tests.rs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/history-4.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-history-9.fixture"
     }
   ],
   "parentProjection": [
     {
       "path": "crates/vize_patina/src/rules/script.rs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-0.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-0.fixture"
     },
     {
       "path": "crates/vize_patina/src/linter/script_rules.rs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-1.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-1.fixture"
     },
     {
       "path": "crates/vize_patina/src/linter/script_rules/sfc.rs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-2.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-2.fixture"
     },
     {
       "path": "tests/tooling/support/no-mutating-props-source-custody.mjs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-3.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-3.fixture"
     },
     {
       "path": "tests/tooling/no-mutating-props-source-custody.test.mjs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-4.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-4.fixture"
     },
     {
       "path": "tests/tooling/support/no-mutating-props-test-correction-source-custody.mjs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-5.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-5.fixture"
     },
     {
       "path": "tests/tooling/no-mutating-props-test-correction-source-custody.test.mjs",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-6.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-6.fixture"
+    },
+    {
+      "path": "tests/tooling/no-mutating-props-module-layout-source-custody.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-7.fixture"
     },
     {
       "path": "docs/davinci/plan/consumer-migration-surfaces/linter/vize_patina.tsv",
-      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/parent-7.fixture"
+      "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/420-parent-8.fixture"
     }
   ],
   "credit": {
