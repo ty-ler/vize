@@ -128,3 +128,37 @@ Formatting passes, but the sparse local lint engine did not reproduce the
 archived six warnings; no configured type-inference credit is claimed. Fresh
 exact-head Actions remain required; source proofs grant no native, measured
 performance, Matrix, merge, release or public acceptance.
+
+The exact `b48dbb85` tooling3 job `114832713609` refused the unchanged
+Nodeep law's first-parent fetch after preparing eafe and3dda: Git reported
+that its shallow file changed. The separately sealed capsule retains all13
+genuine first-parent commit bodies from2489 to eafe within the original64
+limit, the real3dda commit,52 complete trees and72 complete blobs. Its111
+eafe paths and four3dda bodies join their actual root trees, including20
+committed absences. After the selected source is privately prepared, only
+these authenticated objects are seeded into owned metadata. Every invocation
+rechecks the capsule, private object path, six environment boundaries and all
+actual object bodies; shared refs/shallow metadata and old prepare functions
+remain unchanged.
+
+The complete original5-case Nodeep module passes in an isolated real2489
+physical425 frame with all12 parent commits initially absent and an uncreated
+origin throughout execution. The542 object/edge/path refusals and physical,
+environment and cached-object controls retain restored positives. All28
+adjacent source laws and the original20 historical cases pass without skips;
+both current old tuples remainNULL. The earlier27/1 source refusal exposed
+a missing capsule dependency in the negative fixture; only that explicit
+dependency and the declared Git-helper source seal change its wholeB48 law.
+Both complete predecessor bodies, the primary90d/425 authority and terminal
+B48 failure remain retained. Formatting and local zero-warning lint pass;
+configured type-inference credit still requires exact-head Actions. These
+source receipts grant no native, measured performance, Matrix or release
+acceptance, and earlier B48 greens do not qualify the successor.
+
+A final packet-directory prerequisite adds only mkdir before retaining the
+raw result. All three standalone laws pass with that target directory
+genuinely absent; all five earlier raw packets were restored byte exact.
+The28-law receipt predates this I/O-only correction. Raw nonfatal Git
+gitmodulesMissing/gitattributesMissing diagnostics remain retained; only the
+declared object/path closure is qualified, without full object-graph fsck
+credit. Final exact-head Actions remain required.
