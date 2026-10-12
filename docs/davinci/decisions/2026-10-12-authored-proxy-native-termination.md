@@ -130,3 +130,33 @@ source laws require the original exact digest refusal on those same current
 Git bodies, the candidate result and missing/duplicate/foreign/physical-byte
 controls; they grant no native or performance credit. No original source table,
 caller, workflow, fixture, input, budget or product body changes in this repair.
+
+## Shared ASCII caller source custody
+
+The complete `8635d85f` source run passed all four Rust shards, JS packages,
+required native phases and the original 400 providers. Its tooling shard
+retained a separate refusal: the older ASCII host law compared ten caller
+bodies directly to `5c54b119`, although the reviewed SDK had changed the whole
+workflow and request transport. Reader source `6354e9b` independently encountered
+the same law after its whole path-reader and workflow changes. Neither failure
+changes the original two-producer and sixteen-preserved-body authority.
+
+Retain the ten complete historical caller bodies in checksummed source capsules.
+Authenticate every actual current caller against its literal raw Git blob,
+regular mode and whole physical bytes before replaying that historical positive.
+Admit only one complete original, reviewed SDK or reviewed Reader frame. Bind
+every file, mode, blob, length, digest and source/tree identity; refuse mixed,
+unknown, missing, duplicate and mutated frames. The standalone controls preserve
+buffer ownership, authentic SDK/Reader hybrid refusal and all original negative
+laws. The data split preserves every retained value and the existing 350-row
+limit. This supplies source qualification only, with no native, Matrix or
+performance credit. Fresh exact-head Actions and the protected actual merge
+remain required.
+
+The `8635d85f` archive separately retains four actual Linux owned-image laws:
+complete initialize, owned process identity, foreign-image denial and genuine
+zero-status reaping packets. Nine whole source bodies, all 34 selected archive
+members, Cargo's emitted libtest identity and the default/native `ci-opt` thin
+LTO/codegen-16 recipe were reauthenticated. The executable body is not among
+the selected small archive members; no local Linux execution or broader
+acceptance is inferred from the archived packet replay.
