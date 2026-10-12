@@ -137,7 +137,6 @@ merge. Original SDK f2 worker SIGSEGV remains an independent retained failure;
 fresh c9 JavaScript success supplies no causal fault attribution. Optional worker
 diagnostic controls neither replace these gates nor delay ordinary source work.
 
-
 ## Accepted lexical composition
 
 The independent lexical ownership repair actually merged as
@@ -194,3 +193,9 @@ TODO: qualify the new complete source on Actions, authenticate its actual four
 Linux laws and complete lexical/native/original400 packets, then enter the
 protected queue and observe all five workflows and actual merge. Original
 #8614/#8615 App gates, public consumer gaps and release remain unfinished.
+
+Run38193503115's check-js job114631093336 refuses an extra blank row before
+this composition heading. Remove that formatting whitespace and preserve its
+complete failed log. No compiled source, custody, assertion, deadline or
+workflow changes. Other in-flight native/original400 results remain bound to
+91d2 and cannot qualify the later formatted head.
