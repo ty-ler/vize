@@ -7,10 +7,11 @@ import { gitReaderHarness } from "./warm-type-backed-git-reader-harness.ts";
 import { finiteCut } from "./warm-type-backed-cut.ts";
 import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
 import { reviewedHostPaths } from "./warm-type-backed-reviewed-hosts.ts";
-import { assertNativeTerminalLocks } from "./warm-type-backed-native-terminal-host.ts";
-import { qualifyNativeTerminalHost } from "./warm-type-backed-native-lexical-composition-host.ts";
+import {
+  qualifyOwnedCorsaHost,
+  assertOwnedCorsaLocks,
+} from "./warm-type-backed-owned-corsa-host.ts";
 import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
-import { qualifyNativeProxyHost } from "./warm-type-backed-native-proxy-host.ts";
 import {
   driverRoot,
   git,
@@ -78,11 +79,10 @@ if (process.argv[2] === "prepare") {
     .split("\n")
     .filter(Boolean);
   const allowed = new Set<string>(reviewedHostPaths);
-  const nativeProxyHost = !cut
-    ? qualifyNativeProxyHost(production, allowed, (side, file) =>
-        gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
-      )
+  const owned = !cut
+    ? qualifyOwnedCorsaHost(driverRoot, baseline, head, production, allowed)
     : null;
+  const nativeProxyHost = owned?.nativeProxyHost ?? null;
   for (const file of nativeProxyHost?.files ?? []) allowed.add(file);
   const harnessOnly = !cut && production.length === 0;
   if (harnessOnly) {
@@ -125,11 +125,7 @@ if (process.argv[2] === "prepare") {
   const hostMoves = qualifyHostMoves(production, allowed, !cut, (side, file) =>
     gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
   );
-  const nativeTerminalHost = !cut
-    ? qualifyNativeTerminalHost(production, allowed, (side, file) =>
-        gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
-      )
-    : null;
+  const nativeTerminalHost = owned?.nativeTerminalHost ?? null;
   if (!cut) {
     for (const file of production)
       assert.ok(
@@ -226,7 +222,7 @@ if (process.argv[2] === "prepare") {
     ) + "\n",
   );
   if (!cut)
-    assertNativeTerminalLocks(
+    assertOwnedCorsaLocks(
       sourceIdentity(before).locks,
       sourceIdentity(afterRoot).locks,
       nativeTerminalHost,

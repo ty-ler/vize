@@ -7,10 +7,18 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
   lexicalFinalSourcePaths,
+  lexicalSourcePaths as originalSourcePaths,
   validateLexicalFinalSource,
   validateLexicalSourceBodies,
 } from "../../tools/support/compat/github/native-lexical-composition-custody.mjs";
-import { sourcePaths } from "../../tools/support/compat/github/native-lexical-dollar-metadata.mjs";
+import {
+  sourcePaths,
+  helperPaths,
+} from "../../tools/support/compat/github/native-lexical-dollar-metadata.mjs";
+import { projectOwnedCorsaLexicalCopied } from "../../tools/support/compat/github/owned-corsa-lexical-source.mjs";
+import { ownedCorsaSource } from "../../tools/support/compat/github/owned-corsa-source-custody.mjs";
+import { nativeLexicalCompositionBodyPairs } from "../performance/support/warm-type-backed-native-lexical-composition-host.ts";
+import { nativeProxyManifest } from "../performance/support/warm-type-backed-native-proxy-host.ts";
 
 const root = new URL("../../", import.meta.url);
 const rootPath = fileURLToPath(root);
@@ -61,10 +69,72 @@ const copied = sourcePaths(manifest).map((file) => {
   };
 });
 
-await test("actual complete current Git bodies refuse the original caller guard and qualify the finite successor", () => {
+const priorBytes = read("tests/_fixtures/ci/owned-corsa-source-before.json");
+assert.equal(sha(priorBytes), "80fce9f7a5737d4aaf708911310b0e07a9f52801e87d8ffb7f56170c45e4747b");
+const prior = JSON.parse(priorBytes);
+assert.equal(prior.source, ownedCorsaSource.baseline);
+const before = new Map(
+  prior.files.map((entry) => [
+    entry.file,
+    {
+      mode: entry.mode,
+      blob: entry.blob,
+      body: Buffer.from(entry.rawBase64, "base64"),
+    },
+  ]),
+);
+const callerMetadata = JSON.parse(
+  read("tools/support/compat/github/owned-corsa-caller-metadata.json"),
+);
+for (const entry of callerMetadata.files)
+  before.set(
+    entry.file,
+    entry.actualBefore
+      ? {
+          mode: entry.actualBefore.mode,
+          blob: entry.actualBefore.blob,
+          body: Buffer.from(entry.actualBefore.rawBase64, "base64"),
+        }
+      : null,
+  );
+const after = new Map(
+  copied.map((entry) => {
+    const body = read(entry.file);
+    return [
+      entry.file,
+      {
+        mode: "100644",
+        body,
+        blob: createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex"),
+      },
+    ];
+  }),
+);
+const project = (entries) =>
+  projectOwnedCorsaLexicalCopied({
+    copied: entries,
+    originalPaths: originalSourcePaths(manifest, helperPaths),
+    baseline: ownedCorsaSource.baseline,
+    production: [
+      ...ownedCorsaSource.rows.map(({ file }) => file),
+      ...nativeProxyManifest.files.map(([file]) => file),
+    ],
+    alreadyQualified: new Set(nativeProxyManifest.files.map(([file]) => file)),
+    historicalPairs: nativeLexicalCompositionBodyPairs,
+    reader: (side, file) => (side === "before" ? before : after).get(file) ?? null,
+  });
+const actualView = project(copied);
+const validateCurrentCopied = (manifest, entries) => {
+  const view = project(entries);
+  return validateLexicalSourceBodies(manifest, view.historicalCopied, view.historicalReader);
+};
+
+await test("actual owned Cargo tuple separately refuses the original helper before historical caller qualification", () => {
+  const expectedLock = actualView.historicalCopied.find(({ file }) => file === "Cargo.lock").sha256;
+  const actualLock = copied.find(({ file }) => file === "Cargo.lock").sha256;
   let refusal;
   try {
-    assert.equal(currentSHA, oldSHA, caller);
+    assert.equal(actualLock, expectedLock, "Cargo.lock");
   } catch (error) {
     refusal = error;
   }
@@ -77,7 +147,25 @@ await test("actual complete current Git bodies refuse the original caller guard 
     operator: refusal.operator,
     generatedMessage: refusal.generatedMessage,
   });
-  const result = validateLexicalSourceBodies(manifest, copied);
+});
+
+await test("actual complete current Git bodies refuse the original caller guard and qualify the finite successor", () => {
+  let refusal;
+  try {
+    assert.equal(currentSHA, oldSHA, caller);
+  } catch (error) {
+    refusal = error;
+  }
+  assert.throws(() => old.validateLexicalSourceBodies(manifest, actualView.historicalCopied), {
+    name: refusal.name,
+    code: refusal.code,
+    message: refusal.message,
+    actual: refusal.actual,
+    expected: refusal.expected,
+    operator: refusal.operator,
+    generatedMessage: refusal.generatedMessage,
+  });
+  const result = validateCurrentCopied(manifest, copied);
   assert.equal(result.completeSdkProductionBodies, 121);
   assert.equal(result.incomingLexicalSourceBodies, 9);
   assert.equal(result.incomingLexicalCorpusBodies, 21);
@@ -92,7 +180,7 @@ await test("actual complete current Git bodies refuse the original caller guard 
 
 await test("retained historical final source and original lexical fastpath remain separately qualified", () => {
   // This explicit historical tuple is not the actual current caller observation.
-  const historical = copied.map((entry) =>
+  const historical = actualView.historicalCopied.map((entry) =>
     entry.file === caller ? { ...entry, sha256: oldSHA } : entry,
   );
   assert.deepEqual(
@@ -105,7 +193,7 @@ await test("retained historical final source and original lexical fastpath remai
       row.at(-1),
     ]),
   );
-  const lexical = copied.map((entry) =>
+  const lexical = actualView.historicalCopied.map((entry) =>
     originalBodies.has(entry.file) ? { ...entry, sha256: originalBodies.get(entry.file) } : entry,
   );
   assert.equal(validateLexicalSourceBodies(manifest, lexical), null);
@@ -116,7 +204,7 @@ await test("complete current copied census refuses missing duplicate unknown and
   for (const { file } of copied) {
     assert.throws(
       () =>
-        validateLexicalSourceBodies(
+        validateCurrentCopied(
           manifest,
           copied.filter((entry) => entry.file !== file),
         ),
@@ -125,16 +213,13 @@ await test("complete current copied census refuses missing duplicate unknown and
     );
     assert.throws(
       () =>
-        validateLexicalSourceBodies(manifest, [
-          ...copied,
-          copied.find((entry) => entry.file === file),
-        ]),
+        validateCurrentCopied(manifest, [...copied, copied.find((entry) => entry.file === file)]),
       undefined,
       file,
     );
     assert.throws(
       () =>
-        validateLexicalSourceBodies(
+        validateCurrentCopied(
           manifest,
           copied.map((entry) =>
             entry.file === file ? { ...entry, sha256: "f".repeat(64) } : entry,
@@ -145,7 +230,7 @@ await test("complete current copied census refuses missing duplicate unknown and
     );
   }
   assert.throws(() =>
-    validateLexicalSourceBodies(manifest, [
+    validateCurrentCopied(manifest, [
       ...copied,
       { file: "crates/vize_canon/src/unknown.rs", sha256: "f".repeat(64) },
     ]),
@@ -157,25 +242,67 @@ await test("complete current copied census refuses missing duplicate unknown and
 
 await test("whole caller inverse capsule helper metadata and every fixture member refuse physical-byte changes", () => {
   for (const file of [caller, ...lexicalFinalSourcePaths]) {
-    const originalBody = read(file);
+    const originalBody = actualView.historicalReader(file);
     const changed = Buffer.from(originalBody);
     changed[0] ^= 1;
     assert.throws(
-      () => validateLexicalFinalSource(copied, (name) => (name === file ? changed : read(name))),
+      () =>
+        validateLexicalFinalSource(actualView.historicalCopied, (name) =>
+          name === file ? changed : actualView.historicalReader(name),
+        ),
       undefined,
       file,
     );
     assert.throws(
       () =>
-        validateLexicalFinalSource(copied, (name) =>
-          name === file ? originalBody.subarray(1) : read(name),
+        validateLexicalFinalSource(actualView.historicalCopied, (name) =>
+          name === file ? originalBody.subarray(1) : actualView.historicalReader(name),
         ),
       undefined,
       file,
     );
   }
   assert.deepEqual(
-    validateLexicalFinalSource(copied),
-    validateLexicalSourceBodies(manifest, copied).finalSource,
+    validateLexicalFinalSource(actualView.historicalCopied, actualView.historicalReader),
+    validateCurrentCopied(manifest, copied).finalSource,
   );
+});
+
+await test("the one complete additional plan body qualifies before projection and refuses absent foreign mode blob or partial inputs", () => {
+  const file = "tools/support/compat/github/native-lexical-dollar-plan.mjs";
+  const actual = after.get(file);
+  assert(actual);
+  for (const changed of [
+    null,
+    { ...actual, mode: "100755" },
+    { ...actual, mode: "120000" },
+    { ...actual, blob: "f".repeat(40) },
+    { ...actual, body: actual.body.subarray(1) },
+    { ...actual, body: Buffer.concat([actual.body, Buffer.from(" ")]) },
+  ]) {
+    const calls = [];
+    assert.throws(() =>
+      projectOwnedCorsaLexicalCopied({
+        copied,
+        originalPaths: originalSourcePaths(manifest, helperPaths),
+        baseline: ownedCorsaSource.baseline,
+        production: [
+          ...ownedCorsaSource.rows.map(({ file }) => file),
+          ...nativeProxyManifest.files.map(([file]) => file),
+        ],
+        alreadyQualified: new Set(nativeProxyManifest.files.map(([file]) => file)),
+        historicalPairs: nativeLexicalCompositionBodyPairs,
+        reader: (side, name) => {
+          calls.push([side, name]);
+          return side === "after" && name === file
+            ? changed
+            : ((side === "before" ? before : after).get(name) ?? null);
+        },
+      }),
+    );
+    assert.deepEqual(calls, [
+      ["after", "tools/support/compat/github/native-lexical-composition-custody.mjs"],
+      ["after", file],
+    ]);
+  }
 });

@@ -215,7 +215,7 @@ export const lexicalSourcePaths = (manifest, helpers) => [
 ];
 
 /** Original lexical authority is unchanged; only the whole finite SDK composition is additive. */
-export function validateLexicalSourceBodies(manifest, copied) {
+export function validateLexicalSourceBodies(manifest, copied, reader = sourceBytes) {
   assert.equal(hash(manifest), composition.lexicalManifestSHA256);
   const bodies = new Map(copied.map((entry) => [entry.file, entry.sha256]));
   const originalBodies = [...manifest.files, ...manifest.corpusBodies];
@@ -233,14 +233,13 @@ export function validateLexicalSourceBodies(manifest, copied) {
   const finalSource =
     bodies.get(finalCaller) === expected.get(finalCaller)
       ? null
-      : validateLexicalFinalSource(copied);
+      : validateLexicalFinalSource(copied, reader);
   if (finalSource) {
     assert.deepEqual(
       copied.map(({ file }) => file).toSorted((a, b) => a.localeCompare(b)),
       lexicalSourcePaths(manifest, runtimeHelpers).toSorted((a, b) => a.localeCompare(b)),
     );
-    for (const entry of copied)
-      assert.equal(entry.sha256, rawHash(sourceBytes(entry.file)), entry.file);
+    for (const entry of copied) assert.equal(entry.sha256, rawHash(reader(entry.file)), entry.file);
   }
   for (const [file, body] of expected)
     assert.equal(
@@ -252,7 +251,7 @@ export function validateLexicalSourceBodies(manifest, copied) {
     assert.equal(
       bodies.get(support + name),
       createHash("sha256")
-        .update(fs.readFileSync(new URL(support + name, root)))
+        .update(reader(support + name))
         .digest("hex"),
       name,
     );

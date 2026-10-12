@@ -4,46 +4,19 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import {
-  lexicalSourcePaths,
-  validateLexicalSourceBodies,
-} from "./native-lexical-composition-custody.mjs";
+  ownedLexicalSourcePaths,
+  validateOwnedLexicalSourceBodies,
+} from "./owned-corsa-lexical-metadata.mjs";
 
-export const helperPaths = [
-  "native-lexical-dollar.sh",
-  "native-lexical-dollar-metadata.mjs",
-  "native-lexical-dollar-receipt.mjs",
-  "native-lexical-composition-custody.mjs",
-].map((name) => `tools/support/compat/github/${name}`);
+import {
+  cargoArgs,
+  helperPaths,
+  originalReceiptNames,
+  unobserved,
+} from "./native-lexical-dollar-plan.mjs";
+export { cargoArgs, helperPaths, originalReceiptNames, unobserved };
 export const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
-export const cargoArgs = [
-  "cargo",
-  "test",
-  "--locked",
-  "--profile",
-  "ci-opt",
-  "-p",
-  "vize_canon",
-  "--lib",
-  "--no-run",
-  "--message-format=json",
-  "--config",
-  'profile.ci-opt.inherits="release"',
-  "--config",
-  'profile.ci-opt.lto="thin"',
-  "--config",
-  "profile.ci-opt.codegen-units=16",
-];
-export const originalReceiptNames = [
-  "receipts.json",
-  "imported-runtime-props.runtime.json",
-  "editor-runtime.json",
-];
-export const unobserved = [
-  "diagnosing native PID",
-  "native normalized options",
-  "engine loaded source-file vector",
-];
-export const sourcePaths = (manifest) => lexicalSourcePaths(manifest, helperPaths);
+export const sourcePaths = (manifest) => ownedLexicalSourcePaths(manifest, helperPaths);
 const git = (args) => execFileSync("git", ["--no-replace-objects", ...args]);
 const identity = (file) => {
   const actual = fs.realpathSync(file);
@@ -144,7 +117,7 @@ export function captureMetadata(output) {
     version: 1,
     source: { root, head, tree, noReplaceObjects: true },
     copied,
-    composition: validateLexicalSourceBodies(manifest, copied),
+    composition: validateOwnedLexicalSourceBodies(manifest, copied, { root, head }),
     testBinary,
     compilerArtifact: artifact,
     originalReceipts,
@@ -219,7 +192,13 @@ export function validateMetadata(output) {
       metadata.copied.find((entry) => entry.file === name).sha256,
       digest(fs.readFileSync(new URL(path.basename(name), import.meta.url))),
     );
-  assert.deepEqual(metadata.composition, validateLexicalSourceBodies(manifest, metadata.copied));
+  assert.deepEqual(
+    metadata.composition,
+    validateOwnedLexicalSourceBodies(manifest, metadata.copied, {
+      root: metadata.source.root,
+      head: metadata.source.head,
+    }),
+  );
   assert.equal(manifest.files.length, 9);
   assert.equal(manifest.corpusBodies.length, 21);
   for (const executable of [metadata.testBinary, metadata.native])
