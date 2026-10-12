@@ -11,6 +11,7 @@ import {
   qualifyNativeTerminalHost,
 } from "../performance/support/warm-type-backed-native-lexical-composition-host.ts";
 import {
+  nativeProxyBodyPairs,
   nativeProxyManifest,
   qualifyNativeProxyHost,
 } from "../performance/support/warm-type-backed-native-proxy-host.ts";
@@ -39,7 +40,7 @@ for (const [file, before, after] of [
   ...nativeLexicalCompositionBodyPairs,
   ...sdk.corpusBodies,
   ...composition.historicalReplayBodies,
-  ...nativeProxyManifest.files,
+  ...nativeProxyBodyPairs,
 ])
   put(file, before, after);
 for (const [file, , accepted] of [...lexical.files, ...lexical.corpusBodies])
@@ -96,7 +97,7 @@ test("all seven complete actual fixture bodies qualify without changing native s
 });
 
 test("every absent or foreign whole fixture body refuses on either side", () => {
-  for (const [file] of nativeProxyManifest.files)
+  for (const [file] of nativeProxyBodyPairs)
     for (const side of ["before", "after"] as const)
       for (const bad of [null, "f".repeat(64)]) {
         if (bad === digest(side, file)) continue;
@@ -169,4 +170,63 @@ test("removing only fixture qualification restores the whole original400 workflo
     .replace("        nativeProxyHost,\n", "");
   assert.equal(sha256(restored), nativeProxyManifest.workflowBeforeSHA256);
   assert.notEqual(restored, workflow);
+});
+
+test("the whole Rust lint correction restores every original frame and refusal byte", () => {
+  const correction = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "../performance/support/warm-type-backed-native-proxy-correction.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  ) as {
+    file: string;
+    before: string;
+    after: string;
+    reviewedSource: string;
+    reviewedSourceTree: string;
+  };
+  const current = fs.readFileSync(new URL("../../" + correction.file, import.meta.url), "utf8");
+  assert.equal(sha256(current), correction.after);
+  const restored = current
+    .replace("use vize_l0::cstr;\n", "")
+    .replaceAll("cstr!(", "format!(")
+    .replace(".as_chunks::<2>().0", ".chunks_exact(2)")
+    .replace(
+      `        Some(profile) => {
+            Err(format!("unknown native proxy nextest capture profile: {profile:?}").into())
+        }`,
+      `        Some(profile) => Err(format!(
+            "unknown native proxy nextest capture profile: {profile:?}"
+        )),`,
+    )
+    .replace(
+      `            Err(format!("unknown native proxy nextest capture profile: {unknown:?}").into())`,
+      `            Err(format!(
+                "unknown native proxy nextest capture profile: {unknown:?}"
+            ))`,
+    )
+    .replace("    let refused = || -> String {", "    let refused = || {")
+    .replace("        .into()\n    };", "    };");
+  assert.equal(sha256(restored), correction.before);
+  assert.notEqual(restored, current);
+  const currentReceipt = qualifyNativeProxyHost(production, allowed, actual);
+  assert.ok(currentReceipt);
+  assert.equal(currentReceipt.reviewedSource, correction.reviewedSource);
+  assert.equal(currentReceipt.reviewedSourceTree, correction.reviewedSourceTree);
+});
+
+test("the original seven complete bodies remain an independently identified historical variant", () => {
+  const originalDigest = (side: Side, file: string) =>
+    nativeProxyManifest.files.find(([name]) => name === file)?.[side === "before" ? 1 : 2] ??
+    digest(side, file);
+  const historical = qualifyNativeProxyHost(production, allowed, originalDigest);
+  assert.ok(historical);
+  assert.equal(historical.reviewedSource, nativeProxyManifest.reviewedSource);
+  assert.equal(historical.reviewedSourceTree, nativeProxyManifest.reviewedSourceTree);
+  assert.equal(historical.wholeFixtureBodyPairs, 7);
+  assert.equal(historical.runtimeCredit, false);
+  assert.equal(historical.performanceCredit, false);
 });

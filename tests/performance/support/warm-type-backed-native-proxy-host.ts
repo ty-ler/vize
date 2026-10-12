@@ -33,6 +33,39 @@ for (const [file, before, after] of nativeProxyManifest.files) {
   assert.match(after, /^[a-f0-9]{64}$/u);
 }
 
+const correction = JSON.parse(
+  fs.readFileSync(
+    new URL("./warm-type-backed-native-proxy-correction.json", import.meta.url),
+    "utf8",
+  ),
+) as {
+  version: number;
+  beforeSource: string;
+  reviewedSource: string;
+  reviewedSourceTree: string;
+  file: string;
+  before: string;
+  after: string;
+};
+assert.equal(
+  createHash("sha256").update(JSON.stringify(correction)).digest("hex"),
+  "a5ba4433860ea0c3c2cd53c4f5eb00cc5d4c079ba62b221c33a5581620d0b42b",
+);
+assert.equal(correction.version, 1);
+assert.equal(
+  correction.file,
+  "crates/vize_maestro/src/ide/rename/corsa_session_tests/harness/protocol/lifecycle_tests.rs",
+);
+assert.equal(
+  nativeProxyManifest.files.find(([file]) => file === correction.file)?.[2],
+  correction.before,
+);
+assert.match(correction.after, /^[a-f0-9]{64}$/u);
+export const nativeProxyBodyPairs = nativeProxyManifest.files.map(
+  ([file, before, after]) =>
+    [file, before, file === correction.file ? correction.after : after] as const,
+);
+
 /** Seven whole fixture bodies only; the original complete SDK source guard remains mandatory. */
 export function qualifyNativeProxyHost(
   production: string[],
@@ -50,14 +83,17 @@ export function qualifyNativeProxyHost(
     JSON.stringify(files)
   )
     return null;
-  for (const [file, before, after] of nativeProxyManifest.files)
+  const corrected = digest("after", correction.file) === correction.after;
+  for (const [file, before, after] of corrected ? nativeProxyBodyPairs : nativeProxyManifest.files)
     if (digest("before", file) !== before || digest("after", file) !== after) return null;
   return {
     authority: "complete-reviewed-authored-native-proxy-fixtures",
     manifestSHA256,
     beforeSource: nativeProxyManifest.beforeSource,
-    reviewedSource: nativeProxyManifest.reviewedSource,
-    reviewedSourceTree: nativeProxyManifest.reviewedSourceTree,
+    reviewedSource: corrected ? correction.reviewedSource : nativeProxyManifest.reviewedSource,
+    reviewedSourceTree: corrected
+      ? correction.reviewedSourceTree
+      : nativeProxyManifest.reviewedSourceTree,
     wholeFixtureBodyPairs: 7,
     files,
     runtimeCredit: false,

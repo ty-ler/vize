@@ -57,3 +57,21 @@ native stderr. These probes grant no Rust, Linux, whole-project or performance
 credit. Fresh exact-source Actions, all original native/400 gates, the whole
 protected suites and actual merge remain required. Original #8614/#8615 and
 broader typechecker/real-project acceptance remain unfinished.
+
+Fresh source `d6b3618d2f973ae6da559130955056f5c2d8ea98` passed its native
+phase but failed strict Clippy in the added lifecycle test: ten standard
+`format!` macros and the Rust 1.99 exact-chunk lint. The bounded correction
+uses `cstr!`, preserves the standard error result through explicit conversions,
+and retains the odd-length refusal before `as_chunks::<2>()`. Reversing only
+these formatting/type substitutions restores the whole original test body.
+The original seven-body table remains immutable; a separately authenticated
+single-body successor identifies the correction. An isolated Darwin metadata
+and Clippy check used existing compiled dependencies without building or
+relinking them; it grants no Linux, full Rust or native acceptance.
+
+The same source's original400 run retained both original sides and the paired
+packet, then failed final source reauthentication: its final SDK guard had not
+enrolled the seven separately authenticated fixture paths. The failed whole
+run remains a failure. Final fixture reauthentication and a bounded whole
+final-guard successor are required before any original400 qualification or
+protected queue admission.
