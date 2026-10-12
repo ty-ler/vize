@@ -118,3 +118,10 @@ version = "1"
 
 [dev-dependencies.tempfile]
 version = "3"
+
+# Retained upstream public APIs use standard String/Arc, formatting and to_string.
+# Exempt only these three Vize allocation-style restrictions; keep ordinary Clippy warnings.
+[lints.clippy]
+disallowed_types = "allow"
+disallowed_methods = "allow"
+disallowed_macros = "allow"

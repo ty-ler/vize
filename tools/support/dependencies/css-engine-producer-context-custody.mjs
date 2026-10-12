@@ -12,7 +12,7 @@ function regular(file) {
   return fs.readFileSync(file);
 }
 const bytes = regular(new URL("./css-engine-producer-context-source.json", import.meta.url));
-assert.equal(sha(bytes), "3605c77fd792cc3721dda41389b3fcf6447487fb021d946006a34e0c87e9469f");
+assert.equal(sha(bytes), "66617eb5fafde197e5f6ff861fce18352e79a0d791297c3f6174161d1b562152");
 const data = JSON.parse(bytes);
 assert.equal(data.version, 1);
 assert.deepEqual(
@@ -62,6 +62,39 @@ export function authenticateCssProducerContext(root) {
     assert.equal(body.length, row.bytes, row.file);
     assert.equal(sha(body), row.sha256, row.file);
     assert.equal(blob(body), row.blob, row.file);
+  }
+  assert.deepEqual(
+    data.contextSuccessors.map(({ file }) => file),
+    [
+      "tools/support/dependencies/owned-corsa-producer-metadata.ts",
+      "tests/tooling/owned-corsa-css-producer-context.test.mjs",
+    ],
+  );
+  const beforeChecksums = {
+    "tools/support/dependencies/owned-corsa-producer-metadata.ts":
+      "323e7ba4faad68bc81629b9ec75618ea8018dec9662df755ddfe527cc9b33df4",
+    "tests/tooling/owned-corsa-css-producer-context.test.mjs":
+      "36d58c12c817cef7811a86bf73b3e80167b61f053e8ab25befb4702803bc8b74",
+  };
+  for (const successor of data.contextSuccessors) {
+    const before = successor.retainedBefore;
+    const bytes = Buffer.from(before.rawBase64, "base64");
+    assert.equal(bytes.toString("base64"), before.rawBase64);
+    assert.equal(before.mode, "100644");
+    assert.equal(bytes.length, before.bytes);
+    assert.equal(sha(bytes), before.sha256);
+    assert.equal(blob(bytes), before.blob);
+    assert.equal(before.sha256, beforeChecksums[successor.file]);
+    let forward = bytes.toString();
+    for (const [old, next] of successor.forwardClauses) {
+      assert.equal(forward.split(old).length, 2);
+      forward = forward.replace(old, next);
+    }
+    assert.deepEqual(
+      Buffer.from(forward),
+      regular(path.join(root, successor.file)),
+      "whole CSS provider context inverse",
+    );
   }
   let recovered = actual.toString("utf8");
   for (const [after, before] of data.inverseClauses) {

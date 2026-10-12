@@ -216,7 +216,7 @@ for (const [filename, checksum] of [
     assert(stat.isFile() && (stat.mode & 0o777) === 0o644);
     assert.equal(
       sha256(fs.readFileSync(helper)),
-      "613c4ad73c29fe1549b99fb40ee2f34cb89331fd850754e5ba9dcce1733ba576",
+      "9694dd3cf4d9f5d08ebd1618d94b14ce88d15241abaf562e556eb2e08637fe74",
       "whole finite CSS context verifier",
     );
     const { authenticateCssProducerContext } = await import(pathToFileURL(helper).href);

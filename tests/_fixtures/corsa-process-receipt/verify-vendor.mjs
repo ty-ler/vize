@@ -1,10 +1,11 @@
-import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
+import { authenticateProcessReceiptVendorSource } from "../../../tools/support/compat/github/owned-corsa-vendor-source.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
+const vendorSource = authenticateProcessReceiptVendorSource(root);
 const custody = JSON.parse(readFileSync(join(root, "vendor/corsa-published-custody.json")));
 const modified = {
   corsa_core: ["src/lib.rs", "src/process.rs"],
@@ -12,7 +13,7 @@ const modified = {
 };
 const additions = { corsa_core: ["LICENSE", "src/process_receipt.rs"], corsa_lsp: ["LICENSE"] };
 const report = {};
-const sha = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
+const sha = vendorSource.checksum;
 for (const crate of ["corsa_core", "corsa_lsp"]) {
   const entry = custody[crate];
   assert.equal(entry.version, "1.14.0");
@@ -40,4 +41,4 @@ for (const crate of ["corsa_core", "corsa_lsp"]) {
     revision: vcs.git.sha1,
   };
 }
-console.log(JSON.stringify(report, null, 2));
+console.log(JSON.stringify({ ...report, ownedSource: vendorSource.receipt }, null, 2));

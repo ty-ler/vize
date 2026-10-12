@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ownedCorsaSource } from "../compat/github/owned-corsa-source-custody.mjs";
+import { authenticateOwnedCorsaAfterContext } from "../compat/github/owned-corsa-clippy-source.mjs";
 
 const checksum = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const blob = (bytes: Buffer) =>
@@ -102,6 +103,7 @@ export function authenticateOwnedCorsaProducerMetadata(
   }
   // The real official transform has already proved the entire current root/lock pair.
   // Every other current provider/compiler body must still equal its literal reviewed cell.
+  const afterBodies = new Map<string, { mode: string; blob: string; body: Buffer }>();
   for (const row of ownedCorsaSource.rows) {
     const target = path.join(root, row.file);
     const stat = fs.lstatSync(target);
@@ -113,10 +115,12 @@ export function authenticateOwnedCorsaProducerMetadata(
     if (current.has(row.file))
       assert.deepEqual(actual, current.get(row.file), "actual pair equals the verified snapshot");
     const bytes = baseline.get(row.file) ?? actual;
-    assert.equal(bytes.length, row.after.bytes, row.file);
-    assert.equal(checksum(bytes), row.after.sha256, row.file);
-    assert.equal(blob(bytes), row.after.blob, row.file);
+    afterBodies.set(row.file, { mode: "100644", blob: blob(bytes), body: bytes });
   }
+  const afterContext = authenticateOwnedCorsaAfterContext(ownedCorsaSource.rows, (file: string) =>
+    afterBodies.get(file),
+  );
+  assert(afterContext, "complete actual237 provider bodies and atomic manifest policy");
   assert.equal(ownedCorsaSource.rows.length, 237);
   assert.deepEqual([...sources.keys()], ["Cargo.toml", "Cargo.lock"]);
   for (const [file, source] of sources)
@@ -133,6 +137,7 @@ export function authenticateOwnedCorsaProducerMetadata(
       manifestSHA256,
       metadataBaselineSource: metadata.source,
       wholeCurrentBodies: 237,
+      clippySourceContext: afterContext.context,
       versionTransform,
       runtimeCredit: false,
       performanceCredit: false,

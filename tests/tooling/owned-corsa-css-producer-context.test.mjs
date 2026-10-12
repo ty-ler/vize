@@ -7,6 +7,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { parse as parseToml } from "@iarna/toml";
 import { ownedCorsaSource } from "../../tools/support/compat/github/owned-corsa-source-custody.mjs";
+import { authenticateOwnedCorsaAfterContext } from "../../tools/support/compat/github/owned-corsa-clippy-source.mjs";
 import { authenticateOwnedCorsaProducerMetadata } from "../../tools/support/dependencies/owned-corsa-producer-metadata.ts";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
@@ -58,7 +59,9 @@ function pair(version) {
   );
   let nextRoot = root;
   for (const [key] of aliases) {
-    const lines = nextRoot.split("\n").filter((line) => line.startsWith(key + " = "));
+    const lines = nextRoot
+      .split("\n")
+      .filter((line) => line.startsWith(key + " = ") && line.includes('version = "=0.443.0"'));
     assert.equal(lines.length, 1, key);
     const next = lines[0].replace('version = "=0.443.0"', `version = "=${version}"`);
     assert.notEqual(next, lines[0], key);
@@ -110,15 +113,30 @@ function commit(root, files) {
 function withRoot(version, action) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-owned-css-context-control-"));
   try {
+    const actualBodies = new Map();
+    for (const row of ownedCorsaSource.rows) {
+      const file = path.join(repoRoot, row.file);
+      const stat = fs.lstatSync(file);
+      assert(stat.isFile() && (stat.mode & 0o777) === 0o644, row.file);
+      const body = fs.readFileSync(file);
+      actualBodies.set(row.file, { mode: "100644", blob: oid(body), body });
+    }
+    const afterContext = authenticateOwnedCorsaAfterContext(ownedCorsaSource.rows, (file) =>
+      actualBodies.get(file),
+    );
+    assert(afterContext, "complete actual237 source context before historical projection");
     const current = pair(version);
     for (const row of ownedCorsaSource.rows) {
-      const body = baseline.get(row.file) ?? fs.readFileSync(path.join(repoRoot, row.file));
+      const body = afterContext.historicalAfter(row.file).body;
       assert.equal(body.length, row.after.bytes, row.file);
       assert.equal(sha(body), row.after.sha256, row.file);
       assert.equal(oid(body), row.after.blob, row.file);
       const target = path.join(root, row.file);
       fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, current.get(row.file) ?? body, { flag: "wx", mode: 0o644 });
+      fs.writeFileSync(target, current.get(row.file) ?? afterContext.actualAfter(row.file).body, {
+        flag: "wx",
+        mode: 0o644,
+      });
     }
     assert.equal(ownedCorsaSource.rows.length, 237);
     git(root, ["init", "--quiet"]);

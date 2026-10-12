@@ -75,9 +75,20 @@ def main(root, package_directory, vendor, manifest_path, source_sha, output):
         require(len(values) == part["bodyPairs"], "authority part count")
         rows.extend(values)
     require(len(rows) == 237 and len({row["file"] for row in rows}) == 237, "complete source census")
-    for row in rows:
-        body = regular(root / row["file"])
-        require(len(body) == row["after"]["bytes"] and sha(body) == row["after"]["sha256"], row["file"])
+    verifier = root / "tools/support/compat/github/owned-corsa-package-source.mjs"
+    require(sha(regular(verifier)) == "a9ad6942e5e82583ae6f741ef63f4f8ebcf4100a2265c3a8f04502e9a1b8eb30", "whole shared source verifier")
+    result = subprocess.run([os.environ.get("NODE_EXE", "node"), str(verifier), str(root), source_sha], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, env={**os.environ, "GIT_NO_LAZY_FETCH": "1"})
+    require(result.returncode == 0, result.stderr.decode(errors="replace"))
+    source_authority = json.loads(result.stdout)
+    require(source_authority["head"] == source_sha and source_authority["manifestSHA256"] == MANIFEST_SHA and source_authority["completeProductionBodies"] == 237, "same complete actual source authority")
+    cells = source_authority["actualBodies"]
+    require([cell["file"] for cell in cells] == [row["file"] for row in rows], "exact source tuple order/census")
+    for cell in cells:
+        body = regular(root / cell["file"])
+        blob = hashlib.sha1(("blob " + str(len(body)) + "\0").encode() + body).hexdigest()
+        entry = subprocess.check_output(["git", "--no-replace-objects", "ls-tree", "-z", source_sha, "--", cell["file"]], cwd=root)
+        require(cell["mode"] == "100644" and cell["bytes"] == len(body) and cell["sha256"] == sha(body) and cell["blob"] == blob, cell["file"])
+        require(entry == ("100644 blob " + blob + "\t" + cell["file"] + "\0").encode(), "actual source mode/blob: " + cell["file"])
     root_manifest = toml(root, regular(root / "Cargo.toml"))
     version = root_manifest["workspace"]["package"]["version"]
     require(version == "0.443.0", "this finite package graph version")
@@ -133,7 +144,7 @@ def main(root, package_directory, vendor, manifest_path, source_sha, output):
         checksum = {"package": sha(archive_bytes), "files": {item["file"]: item["sha256"] for item in members}}
         (destination / ".cargo-checksum.json").write_text(json.dumps(checksum, sort_keys=True) + "\n")
         staged.append({"name": owned, "version": version, "archive": str(archive), "archiveBytes": len(archive_bytes), "archiveSHA256": sha(archive_bytes), "members": members})
-    output.write_text(json.dumps({"sourceSha": source_sha, "finiteSourceManifestSHA256": sha(raw), "completeSourceBodies": 237, "packages": staged, "buildVerified": False, "publicRegistryAcceptance": False}, indent=2) + "\n")
+    output.write_text(json.dumps({"sourceSha": source_sha, "finiteSourceManifestSHA256": sha(raw), "completeSourceBodies": 237, "sourceContext": source_authority["sourceContext"], "packages": staged, "buildVerified": False, "publicRegistryAcceptance": False}, indent=2) + "\n")
 
 
 if __name__ == "__main__":

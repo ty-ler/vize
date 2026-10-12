@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
+import { qualifyClippyOwnedCorsaSource } from "./owned-corsa-clippy-source.mjs";
 
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const blob = (body) =>
@@ -89,7 +90,7 @@ function sameBody(actual, expected) {
 }
 
 /** Historical projection is available only after the complete actual 237-body pair succeeds. */
-export function qualifyOwnedCorsaSource({
+function qualifyOriginalOwnedCorsaSource({
   baseline,
   production,
   alreadyQualified,
@@ -159,4 +160,12 @@ export function qualifyOwnedCorsaSource({
       return value === null ? null : { ...value, body: Buffer.from(value.body) };
     },
   };
+}
+
+export function qualifyOwnedCorsaSource(input) {
+  return qualifyClippyOwnedCorsaSource(
+    input,
+    ownedCorsaSource.rows,
+    qualifyOriginalOwnedCorsaSource,
+  );
 }

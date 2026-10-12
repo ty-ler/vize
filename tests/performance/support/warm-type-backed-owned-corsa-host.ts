@@ -1,4 +1,5 @@
 import { ownedCorsaReader } from "../../../tools/support/compat/github/owned-corsa-source-reader.mjs";
+import { retainedOwnedCorsaBaseline } from "../../../tools/support/compat/github/owned-corsa-current-baseline.mjs";
 import {
   verifyOwnedCorsaCallers,
   ownedCorsaCallerMetadataSHA256,
@@ -36,7 +37,7 @@ export function qualifyOwnedCorsaHost(
     ...nativeProxyManifest.files.map(([file]) => file),
   ]);
   const graph = qualifyOwnedCorsaSource({
-    baseline,
+    baseline: retainedOwnedCorsaBaseline(root, baseline),
     production,
     alreadyQualified: temporary,
     reader,

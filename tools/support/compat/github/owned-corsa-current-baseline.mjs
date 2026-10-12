@@ -1,0 +1,71 @@
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { ownedCorsaSource } from "./owned-corsa-source-custody.mjs";
+
+// The literal 237 before cells remain unchanged at this independently reviewed main.
+// This changes only source context; the full actual pair still gates projection.
+export const ownedCorsaCurrentBaseline = Object.freeze({
+  revision: "ace25e4f9f2959d97941653decc55619bf154316",
+  tree: "d4d9454052ce58961a9b4d066596cded1f7d0742",
+  rawCommitSHA256: "344769a70de5894699b30d2329268cf8eff0529a324fe20aa121e83466f8839e",
+  rawCommitBytes: 1095,
+});
+
+// This actual merged main retains every complete literal 237 before cell.
+export const ownedCorsaMergedMainBaseline = Object.freeze({
+  revision: "a42878a9af4a9e79e42cc56bbcd55fc0c66400e3",
+  tree: "eeab9af4d02ead0c0de04db3595ea11b5eb914b8",
+  rawCommitSHA256: "b9823c6e8e90463429e75bb117be58267aa6673eb368089be60e152d0c95c0cb",
+  rawCommitBytes: 1388,
+});
+
+export const ownedCorsaLatestMergedBaseline = Object.freeze({
+  revision: "d5a25a89540198f9cfb50cb9e2e6e74a24d6d14e",
+  tree: "a0b9b88acce3ae75236d017b26f124e7859c77b9",
+  rawCommitSHA256: "adafd1908c53a13e284614cef739561fd16c6081275827782206fde9569e3cf5",
+  rawCommitBytes: 3649,
+});
+
+export const ownedCorsaDocumentationMainBaseline = Object.freeze({
+  revision: "02731ffc046b08e947e087b80da0b745884e1229",
+  tree: "37ac869ddabe51769ee9a2ede35765596fdf76b7",
+  rawCommitSHA256: "52c81110eae81453efac5e879659270699cd022fc0e69679b3231f6ae2240cf1",
+  rawCommitBytes: 1088,
+});
+
+export const ownedCorsaRecoveryMainBaseline = Object.freeze({
+  revision: "f20740ef6b0958ddb0bbbd64fd1b38210ea5e207",
+  tree: "d42e1a13f69c4bfc48ee9b4a8bd0c46671abd18c",
+  rawCommitSHA256: "9579d0c3a8467c1666a9e5360c3af9a28ce63068922f6da606dd74658ca4dbe0",
+  rawCommitBytes: 1101,
+});
+
+export function retainedOwnedCorsaBaseline(root, baseline) {
+  // Unknown contexts stay literal and the original complete qualifier refuses them.
+  const context =
+    baseline === ownedCorsaCurrentBaseline.revision
+      ? ownedCorsaCurrentBaseline
+      : baseline === ownedCorsaMergedMainBaseline.revision
+        ? ownedCorsaMergedMainBaseline
+        : baseline === ownedCorsaLatestMergedBaseline.revision
+          ? ownedCorsaLatestMergedBaseline
+          : baseline === ownedCorsaDocumentationMainBaseline.revision
+            ? ownedCorsaDocumentationMainBaseline
+            : baseline === ownedCorsaRecoveryMainBaseline.revision
+              ? ownedCorsaRecoveryMainBaseline
+              : null;
+  if (!context) return baseline;
+  const git = (args) =>
+    execFileSync("git", ["--no-replace-objects", ...args], {
+      cwd: root,
+      env: { ...process.env, GIT_NO_LAZY_FETCH: "1" },
+      maxBuffer: 1024 * 1024,
+    });
+  assert.equal(git(["for-each-ref", "--format=%(refname)", "refs/replace"]).length, 0);
+  const raw = git(["cat-file", "commit", baseline]);
+  assert.equal(raw.length, context.rawCommitBytes);
+  assert.equal(createHash("sha256").update(raw).digest("hex"), context.rawCommitSHA256);
+  assert.equal(raw.toString().split("\n")[0], "tree " + context.tree);
+  return ownedCorsaSource.baseline;
+}
