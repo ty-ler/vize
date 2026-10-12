@@ -1,0 +1,512 @@
+[
+  {
+    "project": "dbx",
+    "revision": "5173bbafd1e2dcb67a3be557c569adcc15021193",
+    "file": "apps/desktop/src/components/grid/DataGrid.vue",
+    "url": "https://github.com/t8y2/dbx/blob/5173bbafd1e2dcb67a3be557c569adcc15021193/apps/desktop/src/components/grid/DataGrid.vue",
+    "rawURL": "https://raw.githubusercontent.com/t8y2/dbx/5173bbafd1e2dcb67a3be557c569adcc15021193/apps/desktop/src/components/grid/DataGrid.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/dbx/apps/desktop/src/components/grid/DataGrid.vue",
+    "byteCount": 521180,
+    "sha256": "69ba95ae965d22edab63f807472a86c388a72a0a22a4d2fea8762acfc7b8420a"
+  },
+  {
+    "project": "dbx",
+    "revision": "5173bbafd1e2dcb67a3be557c569adcc15021193",
+    "file": "apps/desktop/src/components/mq/ProducerConsumerPanel.vue",
+    "url": "https://github.com/t8y2/dbx/blob/5173bbafd1e2dcb67a3be557c569adcc15021193/apps/desktop/src/components/mq/ProducerConsumerPanel.vue",
+    "rawURL": "https://raw.githubusercontent.com/t8y2/dbx/5173bbafd1e2dcb67a3be557c569adcc15021193/apps/desktop/src/components/mq/ProducerConsumerPanel.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/dbx/apps/desktop/src/components/mq/ProducerConsumerPanel.vue",
+    "byteCount": 33967,
+    "sha256": "1aa9ef1775faea2133abd09ec5089ae31f6c6b2a7a1e1d0fc034180edcf39c50"
+  },
+  {
+    "project": "lew-ui",
+    "revision": "abdcecdcdf611211b0502383a6dbfacded2c9608",
+    "file": "lib/_components/CommonInput.vue",
+    "url": "https://github.com/lewkamtao/lew-ui/blob/abdcecdcdf611211b0502383a6dbfacded2c9608/lib/_components/CommonInput.vue",
+    "rawURL": "https://raw.githubusercontent.com/lewkamtao/lew-ui/abdcecdcdf611211b0502383a6dbfacded2c9608/lib/_components/CommonInput.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/lew-ui/lib/_components/CommonInput.vue",
+    "byteCount": 13563,
+    "sha256": "27774295b18c0955bb8f57887ecc12604b67e3334a87dce831a584551f5927d6"
+  },
+  {
+    "project": "inspira-ui",
+    "revision": "5650bfd050743ffaee02a471a1406b58c98b2ef5",
+    "file": "app/components/inspira/examples/gradient-button/GradientButtonDemo.vue",
+    "url": "https://github.com/unovue/inspira-ui/blob/5650bfd050743ffaee02a471a1406b58c98b2ef5/app/components/inspira/examples/gradient-button/GradientButtonDemo.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/inspira-ui/5650bfd050743ffaee02a471a1406b58c98b2ef5/app/components/inspira/examples/gradient-button/GradientButtonDemo.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/inspira-ui/app/components/inspira/examples/gradient-button/GradientButtonDemo.vue",
+    "byteCount": 772,
+    "sha256": "63c1a993f7da8e0aa3be281c8bc85c39465c736807e8bb5093a52d146518f057"
+  },
+  {
+    "project": "inspira-ui",
+    "revision": "5650bfd050743ffaee02a471a1406b58c98b2ef5",
+    "file": "app/components/inspira/examples/line-shadow-text/LineShadowTextDemo.vue",
+    "url": "https://github.com/unovue/inspira-ui/blob/5650bfd050743ffaee02a471a1406b58c98b2ef5/app/components/inspira/examples/line-shadow-text/LineShadowTextDemo.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/inspira-ui/5650bfd050743ffaee02a471a1406b58c98b2ef5/app/components/inspira/examples/line-shadow-text/LineShadowTextDemo.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/inspira-ui/app/components/inspira/examples/line-shadow-text/LineShadowTextDemo.vue",
+    "byteCount": 756,
+    "sha256": "30bae898dc1218cb00548970c11e260060157d3bd377d4b21f3e49e5c0489a97"
+  },
+  {
+    "project": "nativescript-vue",
+    "revision": "7cba9651cfff27d9819cafe76f67e09bfd19fdbe",
+    "file": "demo/src/components/Home.vue",
+    "url": "https://github.com/nativescript-vue/nativescript-vue/blob/7cba9651cfff27d9819cafe76f67e09bfd19fdbe/demo/src/components/Home.vue",
+    "rawURL": "https://raw.githubusercontent.com/nativescript-vue/nativescript-vue/7cba9651cfff27d9819cafe76f67e09bfd19fdbe/demo/src/components/Home.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/nativescript-vue/demo/src/components/Home.vue",
+    "byteCount": 2425,
+    "sha256": "8cf655ae9d6e6a1568bcb7d9d24c7a5ffd64a4ea3a34d335d2ed22732aa6a55a"
+  },
+  {
+    "project": "frappe-builder",
+    "revision": "ed705f9dddc9a78867fb672c342ee025368ac6a1",
+    "file": "frontend/src/components/PropsOptions/SelectOptions.vue",
+    "url": "https://github.com/frappe/builder/blob/ed705f9dddc9a78867fb672c342ee025368ac6a1/frontend/src/components/PropsOptions/SelectOptions.vue",
+    "rawURL": "https://raw.githubusercontent.com/frappe/builder/ed705f9dddc9a78867fb672c342ee025368ac6a1/frontend/src/components/PropsOptions/SelectOptions.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/frappe-builder/frontend/src/components/PropsOptions/SelectOptions.vue",
+    "byteCount": 2961,
+    "sha256": "942a24c3aca363ce1805a62a15671617e085701a6c6a2fb69ec8cdf92393f35b"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Autocomplete/AutocompleteRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Autocomplete/AutocompleteRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Autocomplete/AutocompleteRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Autocomplete/AutocompleteRoot.vue",
+    "byteCount": 8152,
+    "sha256": "7bb346099f600f230e07195927d02fef10f1b8e77346b90e58a41542134e0260"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Calendar/CalendarRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Calendar/CalendarRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Calendar/CalendarRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Calendar/CalendarRoot.vue",
+    "byteCount": 11434,
+    "sha256": "fc5377e7f16d5777a8654dca0af8428772959e3f736434ba2d3f2457dc5a7608"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/ColorField/ColorFieldRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/ColorField/ColorFieldRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/ColorField/ColorFieldRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/ColorField/ColorFieldRoot.vue",
+    "byteCount": 8939,
+    "sha256": "ddde43869cac86be1fadc886dae43fd35b1288bd7e02dc93cc92c25e23738d8a"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/ColorSlider/ColorSliderRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/ColorSlider/ColorSliderRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/ColorSlider/ColorSliderRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/ColorSlider/ColorSliderRoot.vue",
+    "byteCount": 7389,
+    "sha256": "03808cc496bc6341bd958428c745f3f2d1599b946a385261deefc1a73654ca3f"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Combobox/ComboboxViewport.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Combobox/ComboboxViewport.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Combobox/ComboboxViewport.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Combobox/ComboboxViewport.vue",
+    "byteCount": 1685,
+    "sha256": "4a3a9b9229a230b3bd0e50e29d3a935b225ae718ede1951f18fcc32f3a22b178"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/DateField/DateFieldRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/DateField/DateFieldRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/DateField/DateFieldRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/DateField/DateFieldRoot.vue",
+    "byteCount": 11516,
+    "sha256": "bc9617435fb0425b69c97b438dc3fdfe634b49a4cc6e869eafc9f59bc16e0863"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/DateRangeField/DateRangeFieldRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/DateRangeField/DateRangeFieldRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/DateRangeField/DateRangeFieldRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/DateRangeField/DateRangeFieldRoot.vue",
+    "byteCount": 14114,
+    "sha256": "6c797b520435de42f8c6ae258bffc387d09be5c1aee154a984395a901b25c898"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Editable/EditableRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Editable/EditableRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Editable/EditableRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Editable/EditableRoot.vue",
+    "byteCount": 6781,
+    "sha256": "5e2cf3110986545095c68086f8a7c5276083a3fde8121bf70d49af2da194d7a6"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Listbox/ListboxRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Listbox/ListboxRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Listbox/ListboxRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Listbox/ListboxRoot.vue",
+    "byteCount": 14021,
+    "sha256": "2ac683d36494c2527bd0cd7cace3015167494dbd1186a515a9a97fe2fb8042be"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Menu/MenuRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Menu/MenuRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Menu/MenuRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Menu/MenuRoot.vue",
+    "byteCount": 2231,
+    "sha256": "092e5c96ceb5f215c8fa298cba0a524e2569ee6766bca6ebd39f4e24304a5e26"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Menubar/MenubarRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Menubar/MenubarRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Menubar/MenubarRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Menubar/MenubarRoot.vue",
+    "byteCount": 3001,
+    "sha256": "f40c90cd8e8089c73286de6925402ad4f6be3a1086a8cd623f0dcc989a246065"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/MonthPicker/MonthPickerRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/MonthPicker/MonthPickerRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/MonthPicker/MonthPickerRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/MonthPicker/MonthPickerRoot.vue",
+    "byteCount": 9713,
+    "sha256": "c311897718d4dc3baa1cd608ea6b8c37d01a159874d91b89851469430a0a33da"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/MonthRangePicker/MonthRangePickerRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/MonthRangePicker/MonthRangePickerRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/MonthRangePicker/MonthRangePickerRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/MonthRangePicker/MonthRangePickerRoot.vue",
+    "byteCount": 11879,
+    "sha256": "6157c89bf66d741a15d2e08e74dd4d141dbf023b2b423e5cba0447bd914d723b"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/NavigationMenu/NavigationMenuRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/NavigationMenu/NavigationMenuRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/NavigationMenu/NavigationMenuRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/NavigationMenu/NavigationMenuRoot.vue",
+    "byteCount": 6782,
+    "sha256": "51daed58de75c6063d825e92a4482b6b4ab5c72f33d4ede245cf5b6d6f7e6bfc"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/NumberField/NumberFieldRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/NumberField/NumberFieldRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/NumberField/NumberFieldRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/NumberField/NumberFieldRoot.vue",
+    "byteCount": 9814,
+    "sha256": "97465568ef99b133c58779bd57d6e6ffeb96181f13e373325007ab14d8ebafc6"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/PinInput/PinInputRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/PinInput/PinInputRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/PinInput/PinInputRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/PinInput/PinInputRoot.vue",
+    "byteCount": 5059,
+    "sha256": "c1115c31eb8c79f911fc7f20eb2106c755b7a1226f4760d71830b88017d8709f"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/RadioGroup/RadioGroupRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/RadioGroup/RadioGroupRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/RadioGroup/RadioGroupRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/RadioGroup/RadioGroupRoot.vue",
+    "byteCount": 3503,
+    "sha256": "846ddffdf680acb2a6913f0977d98a8e686140fc160acf7c1cd36d567a3b92db"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/RangeCalendar/RangeCalendarRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/RangeCalendar/RangeCalendarRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/RangeCalendar/RangeCalendarRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/RangeCalendar/RangeCalendarRoot.vue",
+    "byteCount": 15016,
+    "sha256": "677ba85971ead6b7853687ecfbfad4289f86d152798be2bb77c9de7cc3767ecb"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/RovingFocus/RovingFocusGroup.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/RovingFocus/RovingFocusGroup.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/RovingFocus/RovingFocusGroup.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/RovingFocus/RovingFocusGroup.vue",
+    "byteCount": 4884,
+    "sha256": "c489af089deb1d7e9d587277117492d586982263a06c9084847f36f53210f477"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/ScrollArea/ScrollAreaRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/ScrollArea/ScrollAreaRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/ScrollArea/ScrollAreaRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/ScrollArea/ScrollAreaRoot.vue",
+    "byteCount": 4720,
+    "sha256": "d37c1f035711ffed4d8cea75c760c78da9f246fe13f477b86b9688bc22bac3c9"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/ScrollArea/ScrollAreaViewport.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/ScrollArea/ScrollAreaViewport.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/ScrollArea/ScrollAreaViewport.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/ScrollArea/ScrollAreaViewport.vue",
+    "byteCount": 3117,
+    "sha256": "d4c06b19799794a489f0e94da9bbe5c436258feb46689bcfb5848b74d1e3ebb1"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Select/SelectRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Select/SelectRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Select/SelectRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Select/SelectRoot.vue",
+    "byteCount": 7165,
+    "sha256": "e54ff0f801d2a684775b4093b005c2c7cf050d9dc8a1a649b7762c6a13f1eded"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Select/SelectViewport.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Select/SelectViewport.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Select/SelectViewport.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Select/SelectViewport.vue",
+    "byteCount": 3364,
+    "sha256": "7b9d5d43a35ee112834900451fba66bf116af8cba23405e428ba2b6991512297"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Slider/SliderRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Slider/SliderRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Slider/SliderRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Slider/SliderRoot.vue",
+    "byteCount": 7415,
+    "sha256": "e5e92f05bf98e12eaaa94401a9ec9178b2d53c0bd6237603a329ef3eb9fe3ced"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Splitter/SplitterResizeHandle.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Splitter/SplitterResizeHandle.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Splitter/SplitterResizeHandle.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Splitter/SplitterResizeHandle.vue",
+    "byteCount": 4730,
+    "sha256": "a1eb1f9a6da0cd61dc4863d62402a0cb70cec0ac85f432c164412b9076e3a63f"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Stepper/StepperRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Stepper/StepperRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Stepper/StepperRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Stepper/StepperRoot.vue",
+    "byteCount": 6464,
+    "sha256": "1900b8580a0ace1a489ad5659abd7f87fdd9594e8ef0922aba3d7a60bf346014"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Tabs/TabsRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Tabs/TabsRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Tabs/TabsRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Tabs/TabsRoot.vue",
+    "byteCount": 3752,
+    "sha256": "cb818ff3a6d7352652ccd47f2d8549502e83917b0c3de20b19261c842e770e2c"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/TagsInput/TagsInputRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/TagsInput/TagsInputRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/TagsInput/TagsInputRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/TagsInput/TagsInputRoot.vue",
+    "byteCount": 9346,
+    "sha256": "d550ffe0fdd0eadbbb2a86dea678bf11dce33799306e9c8b30fa39f8a875c507"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/TimeField/TimeFieldRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/TimeField/TimeFieldRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/TimeField/TimeFieldRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/TimeField/TimeFieldRoot.vue",
+    "byteCount": 12516,
+    "sha256": "be0bd336d3f833ec8e3994522115a46fc181cfc4c3996cb50fd30a025fa7bae3"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/TimeRangeField/TimeRangeFieldRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/TimeRangeField/TimeRangeFieldRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/TimeRangeField/TimeRangeFieldRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/TimeRangeField/TimeRangeFieldRoot.vue",
+    "byteCount": 16432,
+    "sha256": "686f83cc9bc6af3c3ad98d0f30d26c2e3d5c43c5d52c8d5b83d180b7f1a07a9b"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/ToggleGroup/ToggleGroupRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/ToggleGroup/ToggleGroupRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/ToggleGroup/ToggleGroupRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/ToggleGroup/ToggleGroupRoot.vue",
+    "byteCount": 3459,
+    "sha256": "df05fb3b1eb25bf23371cf994ab1e1e815d766ff7f004499ddeb5beab84060b9"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Toolbar/ToolbarRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Toolbar/ToolbarRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Toolbar/ToolbarRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Toolbar/ToolbarRoot.vue",
+    "byteCount": 1644,
+    "sha256": "4923deea2221a4e1442702e64811e50e9e23c65ec3b15a0d93ac9133aa108c6c"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Tree/TreeRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Tree/TreeRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Tree/TreeRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Tree/TreeRoot.vue",
+    "byteCount": 9543,
+    "sha256": "cd45b4ad003c59ef0d8a9801741546a0f5cf75013716ef6ddcb65528e3c72a05"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/Viewport/Viewport.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Viewport/Viewport.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/Viewport/Viewport.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/Viewport/Viewport.vue",
+    "byteCount": 1488,
+    "sha256": "04beb5d70204f4a7fceae332406dffad58a22c9d9caa93b6682667bd0eda4658"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/YearPicker/YearPickerRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/YearPicker/YearPickerRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/YearPicker/YearPickerRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/YearPicker/YearPickerRoot.vue",
+    "byteCount": 9742,
+    "sha256": "2eac038964a24deb94e22ec8180b401d9582883c4b842a8f90e1d404d4d24089"
+  },
+  {
+    "project": "reka-ui",
+    "revision": "c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2",
+    "file": "packages/core/src/YearRangePicker/YearRangePickerRoot.vue",
+    "url": "https://github.com/unovue/reka-ui/blob/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/YearRangePicker/YearRangePickerRoot.vue",
+    "rawURL": "https://raw.githubusercontent.com/unovue/reka-ui/c23e0ed8a38c66cd4f9350e7a46c6b502a8491c2/packages/core/src/YearRangePicker/YearRangePickerRoot.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/reka-ui/packages/core/src/YearRangePicker/YearRangePickerRoot.vue",
+    "byteCount": 11803,
+    "sha256": "35f0fbab072e81d5704795a26d1e6032a0ba7448560d98cb2f32ae69809c9953"
+  },
+  {
+    "project": "tiny-rdm",
+    "revision": "4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc",
+    "file": "frontend/src/components/common/TtlInput.vue",
+    "url": "https://github.com/tiny-craft/tiny-rdm/blob/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/common/TtlInput.vue",
+    "rawURL": "https://raw.githubusercontent.com/tiny-craft/tiny-rdm/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/common/TtlInput.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/tiny-rdm/frontend/src/components/common/TtlInput.vue",
+    "byteCount": 1371,
+    "sha256": "2f36fb15d6c943481fcd927a4ab14370433c14f36407b84d7c713cca63169949"
+  },
+  {
+    "project": "tiny-rdm",
+    "revision": "4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc",
+    "file": "frontend/src/components/content_value/ContentToolbar.vue",
+    "url": "https://github.com/tiny-craft/tiny-rdm/blob/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentToolbar.vue",
+    "rawURL": "https://raw.githubusercontent.com/tiny-craft/tiny-rdm/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentToolbar.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/tiny-rdm/frontend/src/components/content_value/ContentToolbar.vue",
+    "byteCount": 6638,
+    "sha256": "f2c61111ddfb25414edbd9733e3d5edf4bbdd03aa7f3bc925d9c81b619bbae4f"
+  },
+  {
+    "project": "tiny-rdm",
+    "revision": "4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc",
+    "file": "frontend/src/components/content_value/ContentValueHash.vue",
+    "url": "https://github.com/tiny-craft/tiny-rdm/blob/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentValueHash.vue",
+    "rawURL": "https://raw.githubusercontent.com/tiny-craft/tiny-rdm/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentValueHash.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/tiny-rdm/frontend/src/components/content_value/ContentValueHash.vue",
+    "byteCount": 16361,
+    "sha256": "4d1929bb035f0e7bf3180a84350bd49846f6a9fb959af2ac3c1ec5b5183bbf9c"
+  },
+  {
+    "project": "tiny-rdm",
+    "revision": "4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc",
+    "file": "frontend/src/components/content_value/ContentValueList.vue",
+    "url": "https://github.com/tiny-craft/tiny-rdm/blob/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentValueList.vue",
+    "rawURL": "https://raw.githubusercontent.com/tiny-craft/tiny-rdm/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentValueList.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/tiny-rdm/frontend/src/components/content_value/ContentValueList.vue",
+    "byteCount": 13543,
+    "sha256": "802ff396c0460c44f89829d5d00cc0e7d13415494daa272d81223633611b6ed6"
+  },
+  {
+    "project": "tiny-rdm",
+    "revision": "4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc",
+    "file": "frontend/src/components/content_value/ContentValueSet.vue",
+    "url": "https://github.com/tiny-craft/tiny-rdm/blob/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentValueSet.vue",
+    "rawURL": "https://raw.githubusercontent.com/tiny-craft/tiny-rdm/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentValueSet.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/tiny-rdm/frontend/src/components/content_value/ContentValueSet.vue",
+    "byteCount": 13485,
+    "sha256": "6b879f9b7657371e2978498a0a3f0edc9081ee6a89e58863b474c05774517d7b"
+  },
+  {
+    "project": "tiny-rdm",
+    "revision": "4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc",
+    "file": "frontend/src/components/content_value/ContentValueStream.vue",
+    "url": "https://github.com/tiny-craft/tiny-rdm/blob/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentValueStream.vue",
+    "rawURL": "https://raw.githubusercontent.com/tiny-craft/tiny-rdm/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentValueStream.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/tiny-rdm/frontend/src/components/content_value/ContentValueStream.vue",
+    "byteCount": 7791,
+    "sha256": "9564f59274d7a8dee012fdec445d98026a0714ba8dd301df7a72e3e944f8ad0d"
+  },
+  {
+    "project": "tiny-rdm",
+    "revision": "4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc",
+    "file": "frontend/src/components/content_value/ContentValueZSet.vue",
+    "url": "https://github.com/tiny-craft/tiny-rdm/blob/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentValueZSet.vue",
+    "rawURL": "https://raw.githubusercontent.com/tiny-craft/tiny-rdm/4ddb94a3c55f3401dbc66870f0d21cf0d6203cbc/frontend/src/components/content_value/ContentValueZSet.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/tiny-rdm/frontend/src/components/content_value/ContentValueZSet.vue",
+    "byteCount": 14721,
+    "sha256": "a96e74b58ce738109b7e0fa08ce7e070039975d22e91115976d57ce86bc7ac5c"
+  },
+  {
+    "project": "vue-netcore",
+    "revision": "a5512b75501bcc5f98c2b52aa498c4c07877f9ec",
+    "file": "vol.web/src/components/basic/VolBox.vue",
+    "url": "https://github.com/cq-panda/Vue.NetCore/blob/a5512b75501bcc5f98c2b52aa498c4c07877f9ec/vol.web/src/components/basic/VolBox.vue",
+    "rawURL": "https://raw.githubusercontent.com/cq-panda/Vue.NetCore/a5512b75501bcc5f98c2b52aa498c4c07877f9ec/vol.web/src/components/basic/VolBox.vue",
+    "localPath": "/tmp/vize-447-no-dupe-keys-proposal-20261012/original-sources/vue-netcore/vol.web/src/components/basic/VolBox.vue",
+    "byteCount": 7484,
+    "sha256": "f90b633e7804b5814c2d9ad6099c7c3963c198c44770cae4b882b21b99b58cb1"
+  }
+]

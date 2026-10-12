@@ -1,3 +1,4 @@
+import { runNoDupeCommonJoinSourceLaw } from "./no-dupe-keys-common-main-source-custody.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -9,7 +10,6 @@ import {
 } from "../../performance/support/warm-type-backed-git-reader-setup.ts";
 import { rawNoMutatingCallerDigest } from "./no-mutating-props-current-caller-frame.mjs";
 import { authenticateJoinLiteralFrame } from "./no-mutating-component-join-frame.mjs";
-import { executeJoinLiteralCaller } from "./no-mutating-component-join-runner.mjs";
 import {
   assertJoinCommitted,
   joinPhysical,
@@ -230,30 +230,6 @@ export function authenticateNoMutatingComponentJoinCommitted(root) {
   return assertJoinCommitted(root, committedRows);
 }
 
-export function runNoMutatingComponentJoinCaller(root, law) {
-  assert(callerNames.includes(law), "unknown source-only joint caller");
-  const current = authenticateNoMutatingComponentJoin(root);
-  const committedHead = authenticateNoMutatingComponentJoinCommitted(root);
-  const registry = current.manifest.sourceRegistry.find((row) => row.path === law);
-  assert(registry && registry.kind === "historical-source-law");
-  const selected = current.frames.filter((frame) =>
-    registry.declaredSources.includes(frame.frame.source),
-  );
-  assert.equal(selected.length, registry.declaredSources.length);
-  for (const frame of selected) assert(frame.frame.laws.some((row) => row.path === law));
-  const historical = selected.map((frame) => executeJoinLiteralCaller(root, frame, law));
-  return Promise.resolve({
-    committedHead,
-    currentUnion: current.completeCurrentUnionBodies,
-    currentClosedBodies: current.completeCurrentClosedBodies,
-    historical,
-    historicalProjection: true,
-    sourceOnly: true,
-    compiled: false,
-    native: false,
-    performance: false,
-    oldMigrationMeasurement: null,
-    oldSetupMeasurement: null,
-    currentOld111Receipt: null,
-  });
+export async function runNoMutatingComponentJoinCaller(root, law) {
+  return await runNoDupeCommonJoinSourceLaw(root, law);
 }

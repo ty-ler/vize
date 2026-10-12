@@ -1,0 +1,33 @@
+{
+  "publicSignedTag": "v10.9.2",
+  "actualTagCommit": "9aa463a4aa4ad3c37d7facacda2e40ad7880ea92",
+  "rows": [
+    {
+      "name": "attribute-hyphenation.ts",
+      "path": "lib/rules/attribute-hyphenation.ts",
+      "local": "/tmp/vize-447-pinned-plugin-vue-10.9.2-selected-rule-sources/attribute-hyphenation.ts",
+      "bytes": 3899,
+      "sha256": "f9bbdaf837676282628fec4b14c2050bb3dea8f1f9c1a40d14a83cc7af4c82a5",
+      "gitBlob": "2d665dbe7b9c6d48812d94975bcba11e51ba66b6",
+      "immutableURL": "https://github.com/vuejs/eslint-plugin-vue/blob/9aa463a4aa4ad3c37d7facacda2e40ad7880ea92/lib/rules/attribute-hyphenation.ts"
+    },
+    {
+      "name": "no-dupe-keys.js",
+      "path": "lib/rules/no-dupe-keys.js",
+      "local": "/tmp/vize-447-pinned-plugin-vue-10.9.2-selected-rule-sources/no-dupe-keys.js",
+      "bytes": 5446,
+      "sha256": "8af6216a7bdf7a74e12865cc603920291686611b7975cddaaf3a21be43e77f8a",
+      "gitBlob": "ecfa787cf6b6adcd74206d96743e9f9b020d581d",
+      "immutableURL": "https://github.com/vuejs/eslint-plugin-vue/blob/9aa463a4aa4ad3c37d7facacda2e40ad7880ea92/lib/rules/no-dupe-keys.js"
+    },
+    {
+      "name": "no-unused-components.ts",
+      "path": "lib/rules/no-unused-components.ts",
+      "local": "/tmp/vize-447-pinned-plugin-vue-10.9.2-selected-rule-sources/no-unused-components.ts",
+      "bytes": 4272,
+      "sha256": "93eb8eda9b3a7b2228300fe8044ec0421c841b9e71c20aec764ec3ac0e8fa216",
+      "gitBlob": "73510584f480c3a0d3b2f3d1f7c60572cf1e5306",
+      "immutableURL": "https://github.com/vuejs/eslint-plugin-vue/blob/9aa463a4aa4ad3c37d7facacda2e40ad7880ea92/lib/rules/no-unused-components.ts"
+    }
+  ]
+}

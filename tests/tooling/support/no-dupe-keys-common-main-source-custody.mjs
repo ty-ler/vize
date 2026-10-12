@@ -1,0 +1,68 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import { assertJoinCommitted, joinGit } from "./no-mutating-component-join-physical.mjs";
+import {
+  authenticateCommonPhysical,
+  commonLaw,
+  identity,
+  sourceCredit,
+  validateWholeSelection,
+} from "./no-dupe-keys-common-main-source-physical.mjs";
+import { authenticateCommonLiteralFrame } from "./no-dupe-keys-common-main-source-frame.mjs";
+import { executeCommonWholeLaw } from "./no-dupe-keys-common-main-source-runner.mjs";
+
+const seal = Object.freeze({
+  manifestSHA: "0c24fc8bbd51602c8ea81c8370d480b4f9755f11f923ae1011fa65e0d8a21bab",
+  parent: "3783850eeb9d12f52c76108853f514a3999dfb76",
+  entry: fs.readFileSync(fileURLToPath(import.meta.url)),
+});
+export function authenticateNoDupeCommonJoinPhysical(root) {
+  return authenticateCommonPhysical(root, seal);
+}
+/** Entire actual physical and raw committed family precedes every historical authority. */
+export function authenticateNoDupeCommonJoinCommitted(root) {
+  const current = authenticateNoDupeCommonJoinPhysical(root);
+  const rows = [...current.currentBodies].map(([name, body]) => identity(name, body));
+  rows.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  assert.equal(new Set(rows.map((row) => row.path)).size, rows.length);
+  const currentHead = assertJoinCommitted(root, rows);
+  if (current.manifest.genuineAbsentPaths.length)
+    assert.equal(
+      joinGit(root, ["ls-tree", "-z", currentHead, "--", ...current.manifest.genuineAbsentPaths])
+        .length,
+      0,
+      "genuine raw-current source absence",
+    );
+  const contexts = current.manifest.literalFrames.map((frame) =>
+    authenticateCommonLiteralFrame(root, frame, current.manifest.sourceLaws),
+  );
+  validateWholeSelection(current, contexts);
+  return { ...current, currentHead, contexts };
+}
+/** No exact-B/775 fallback: callers always qualify the new child before accessing B. */
+export function authenticateNoDupeCommonJoinParentFrame(root) {
+  const current = authenticateNoDupeCommonJoinCommitted(root);
+  const context = current.contexts.find((row) => row.frame.source === seal.parent);
+  assert(context);
+  assert.equal(authenticateNoDupeCommonJoinCommitted(root).currentHead, current.currentHead);
+  return { root: context.root, source: seal.parent, ...sourceCredit };
+}
+/** Only complete fixed pure modules have historical dispatch authority. */
+export async function runNoDupeCommonJoinSourceLaw(root, law) {
+  const current = authenticateNoDupeCommonJoinCommitted(root);
+  const declared = current.manifest.sourceLaws.find((row) => row.path === law);
+  assert(declared && law !== commonLaw, "unknown or live native source dispatch refused");
+  const historicalPackets = [];
+  for (const source of declared.sources) {
+    const context = current.contexts.find((row) => row.frame.source === source);
+    assert(context);
+    const expected = declared.cases.find((row) => row.source === source);
+    assert(expected);
+    historicalPackets.push(
+      await executeCommonWholeLaw(root, current.currentHead, context, law, expected),
+    );
+    assert.equal(authenticateNoDupeCommonJoinCommitted(root).currentHead, current.currentHead);
+  }
+  return { currentHead: current.currentHead, historicalPackets, ...sourceCredit };
+}
