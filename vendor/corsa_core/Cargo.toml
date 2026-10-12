@@ -12,8 +12,9 @@
 [package]
 edition = "2024"
 rust-version = "1.85"
-name = "corsa_core"
-version = "1.14.0"
+name = "vize_corsa_core"
+version.workspace = true
+exclude = [".cargo_vcs_info.json", "Cargo.toml.orig"]
 build = false
 publish = ["crates-io"]
 autolib = false
@@ -28,6 +29,9 @@ readme = "README.md"
 license = "MIT"
 repository = "https://github.com/ubugeeei-prod/corsa-bind"
 resolver = "2"
+
+[package.metadata.vize]
+stability = "compatibility-preview"
 
 [lib]
 name = "corsa_core"

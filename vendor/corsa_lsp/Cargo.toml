@@ -12,8 +12,9 @@
 [package]
 edition = "2024"
 rust-version = "1.85"
-name = "corsa_lsp"
-version = "1.14.0"
+name = "vize_corsa_lsp"
+version.workspace = true
+exclude = [".cargo_vcs_info.json", "Cargo.toml.orig"]
 build = false
 publish = ["crates-io"]
 autolib = false
@@ -29,18 +30,21 @@ license = "MIT"
 repository = "https://github.com/ubugeeei-prod/corsa-bind"
 resolver = "2"
 
+[package.metadata.vize]
+stability = "compatibility-preview"
+
 [lib]
 name = "corsa_lsp"
 path = "src/lib.rs"
 
 [dependencies.corsa_core]
-version = "1.14.0"
+workspace = true
 
 [dependencies.corsa_jsonrpc]
-version = "1.14.0"
+workspace = true
 
 [dependencies.corsa_runtime]
-version = "1.14.0"
+version = "=1.14.0"
 
 [dependencies.lsp-types]
 version = "0.97"
