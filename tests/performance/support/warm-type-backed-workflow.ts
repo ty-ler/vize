@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { unqualifiedReceiptPaths } from "./warm-type-backed-build-receipt-extension.ts";
+import { gitReaderHarness } from "./warm-type-backed-git-reader-harness.ts";
 import { finiteCut } from "./warm-type-backed-cut.ts";
 import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
 import { reviewedHostPaths } from "./warm-type-backed-reviewed-hosts.ts";
@@ -100,9 +101,10 @@ if (process.argv[2] === "prepare") {
       "docs/davinci/decisions/2026-09-27-level-restructure.md",
       "docs/davinci/decisions/2026-10-05-lsp-warm-query-surfaces.md",
     ]);
-    for (const file of unqualifiedReceiptPaths(changed, harness, driverRoot, baseline, head))
+    const qualified = gitReaderHarness(changed, harness, driverRoot, baseline, head);
+    for (const file of unqualifiedReceiptPaths(changed, qualified, driverRoot, baseline, head))
       assert.ok(
-        harness.has(file) ||
+        qualified.has(file) ||
           /^tests\/performance\/support\/warm-type-backed-[a-z-]+\.ts$/u.test(file),
         `unqualified harness delta: ${file}`,
       );
