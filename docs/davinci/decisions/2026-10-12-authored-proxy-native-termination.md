@@ -108,3 +108,25 @@ workload, source qualifier or budget. The same head's original400 workflow
 passes separately; its whole packet is retained. The original source-plan
 failure remains a failure, and the metadata successor requires fresh
 exact-head source/native/original400 and protected qualification.
+
+That head's native workflow subsequently fails at the separate lexical metadata
+source check: it expects the complete historical `e17c27d` final caller, while
+the actual source contains the reviewed acyclic successor. All prior raw native
+packets and the full failed archive are retained. The ordered owned-image
+supplement is unexecuted because this source refusal occurs first; no four-law
+or whole-native success is inferred. Its bounded successor must retain the
+original lexical/SDK tables, authenticate the complete old/current caller and
+its helper, metadata, capsule and seven fixtures, and reject partial or foreign
+custody. The current400 success is independent and grants no successor credit.
+
+The native metadata successor retains the whole original helper as a pinned
+source fixture. Only its reversible module-root transport permits that exact
+historical body to run alongside the candidate source. The current arm requires
+the complete caller inverse, five fixed data bodies and one complete seven-file
+fixture variant, then the exact 206-path copied census and each whole current
+body digest. The original lexical fast path and historical final arm stay
+separate. Existing raw-Git/mode/blob/length checks remain mandatory. Additive
+source laws require the original exact digest refusal on those same current
+Git bodies, the candidate result and missing/duplicate/foreign/physical-byte
+controls; they grant no native or performance credit. No original source table,
+caller, workflow, fixture, input, budget or product body changes in this repair.
