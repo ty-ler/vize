@@ -1,7 +1,7 @@
 {
   "version": 1,
   "originalSource": "e7ec9790a0ec5586588f97d21b8e5913ad01861c",
-  "reviewedSource": "f8cdeb03ab64acd3b2b476df1337ce8b9a01d9f6",
+  "reviewedSource": "23a0bc0463dddb0f4a3499932c43f2c6e2e9f902",
   "nativeDelta": [
     "crates/vize/Cargo.toml",
     "crates/vize/src/commands/lsp.rs",
@@ -311,7 +311,7 @@
     ".cargo/config.toml\t9087d9834c7170cfa25b764557d51b652081f674af8ee03f83e3a947eabb13e5\t9087d9834c7170cfa25b764557d51b652081f674af8ee03f83e3a947eabb13e5",
     ".github/actions/n8n-authored-editor/git-authority.mjs\t473af4de7ee26334d56fc06cdc69532aa98d6b456aa425f7027538c8435cfaa4\t30e341a0c518e8b4ea190b46ba5cf253fefcc0b7fc676086c90b41acea9e5520",
     ".github/actions/n8n-authored-editor/git-authority.test.mjs\td017d6c22b212d09397d942f195c2d7a4f250ae0b965a87fbf740227babea4eb\tde753473aff238f74d1399439abdffdbd79dd0592ce80a0f83236d37d3580675",
-    ".github/workflows/lsp-allocation-diagnostic.yml\t-\t77d0a68befb6bbb1c930bc52f63c42bd85c039359252c1d61395aeb285f5fd34",
+    ".github/workflows/lsp-allocation-diagnostic.yml\t-\t71e0f184f80513f2f4ab9f0b4705eecd7dc2cb9bf0ca14d6b8a8180869625221",
     "tests/_fixtures/vue-ecosystem-fixtures.json\t95e1f92ae1432a80047b67e2f2854ce7a4cb0c659a1fbbcfcaf4b0ec22ca37a7\t95e1f92ae1432a80047b67e2f2854ce7a4cb0c659a1fbbcfcaf4b0ec22ca37a7",
     "tests/_helpers/realworld-typecheck.ts\t0a56e4845f867104c3d3d12ddf29bbfca29b01e7e34d34c80c9eedf6319c0aba\t0a56e4845f867104c3d3d12ddf29bbfca29b01e7e34d34c80c9eedf6319c0aba",
     "tests/performance/lsp-churn-stress.test.ts\t7d64733877f7f97cb53cc1c9553b5bc589574e5159da80f10eb25f460ee730de\t7d64733877f7f97cb53cc1c9553b5bc589574e5159da80f10eb25f460ee730de",
