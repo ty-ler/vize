@@ -40,6 +40,7 @@ jobs:
           set -euo pipefail
           test "$(git --no-replace-objects rev-parse HEAD)" = "$SOURCE_SHA"
           node tests/performance/support/allocation-diagnostic/prepare.ts
+          node --input-type=module -e 'import { prepare } from "./.github/actions/n8n-authored-editor/git-authority.mjs"; prepare({ version: 1, tier: "pr", tests: ["tests/tooling/warm-type-backed-inline-bucket-authority.test.ts", "tests/tooling/lsp-allocation-source.test.ts"] }, "1/1");'
           git --no-replace-objects submodule update --init --depth 1 -- tests/_fixtures/_git/misskey
           vp install --frozen-lockfile --prefer-offline
       - name: Verify finite whole source and bounded diagnostic parser laws

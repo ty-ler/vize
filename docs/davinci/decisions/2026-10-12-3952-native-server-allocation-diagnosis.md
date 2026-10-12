@@ -60,6 +60,21 @@ nontruncated GitHub b63 tree contains both the original workflow (blob
 missing-path stderr does not justify changing those pins or old bodies.
 A separate finite full-tooling object-preparation repair remains required.
 
+The first optional diagnosis at exact `851223b5667b87d87ac7bd8dc4df5a093d3065db`,
+[38187483671](https://github.com/ubugeeei-prod/vize/actions/runs/38187483671),
+fails before Rust compilation or either workload arm. Its 27 Node laws pass,
+but the retained original inline guard cannot read the complete b63/f3 objects.
+The whole job log has SHA-256
+`904ccaffd237cf4c523dc8e90fb1f54a813ad88ccd17c4f7c29132befaa5187f`.
+There are no first/second binaries, receipts or workload measurements. The
+artifact step also fails because the campaign has not started. The repair
+uses the existing finite source helper with the actual selected inline and
+allocation-source law plan before those laws run. Both manifests determine
+every required historical object; the helper keeps its original missing-only,
+depth-one, no-tags fetch and hard refusal behavior. All original law bodies,
+workload bounds and native producers remain unchanged. A new immutable-head
+campaign requires separate review; this setup failure supplies no acceptance.
+
 ## Two distinct binaries and unchanged original workload
 
 The first arm rebuilds the frozen e7ec source with its exact original CI+legacy
