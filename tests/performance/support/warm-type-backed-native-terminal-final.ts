@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { assertNativeTerminalLocks } from "./warm-type-backed-native-terminal-host.ts";
-import { qualifyNativeTerminalHost } from "./warm-type-backed-native-owned-image-host.ts";
+import { qualifyNativeTerminalHost } from "./warm-type-backed-native-lexical-composition-host.ts";
 import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
 import { reviewedHostPaths } from "./warm-type-backed-reviewed-hosts.ts";
 import { driverRoot } from "./warm-type-backed-source.ts";

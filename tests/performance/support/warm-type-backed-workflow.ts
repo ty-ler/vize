@@ -7,7 +7,7 @@ import { finiteCut } from "./warm-type-backed-cut.ts";
 import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
 import { reviewedHostPaths } from "./warm-type-backed-reviewed-hosts.ts";
 import { assertNativeTerminalLocks } from "./warm-type-backed-native-terminal-host.ts";
-import { qualifyNativeTerminalHost } from "./warm-type-backed-native-owned-image-host.ts";
+import { qualifyNativeTerminalHost } from "./warm-type-backed-native-lexical-composition-host.ts";
 import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
 import {
   driverRoot,
@@ -113,11 +113,8 @@ if (process.argv[2] === "prepare") {
       );
     }
   } else assert.ok(production.length > 0);
-  const { pathHostMove, timingHostMove, defaultMigrationHost } = qualifyHostMoves(
-    production,
-    allowed,
-    !cut,
-    (side, file) => gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
+  const hostMoves = qualifyHostMoves(production, allowed, !cut, (side, file) =>
+    gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
   );
   const nativeTerminalHost = !cut
     ? qualifyNativeTerminalHost(production, allowed, (side, file) =>
@@ -128,9 +125,7 @@ if (process.argv[2] === "prepare") {
     for (const file of production)
       assert.ok(
         allowed.has(file) ||
-          pathHostMove?.files.includes(file) ||
-          timingHostMove?.files.includes(file) ||
-          defaultMigrationHost?.files.includes(file) ||
+          Object.values(hostMoves).some((qualification) => qualification?.files.includes(file)) ||
           nativeTerminalHost?.files.includes(file),
         `unqualified production delta: ${file}`,
       );
@@ -172,9 +167,7 @@ if (process.argv[2] === "prepare") {
         base,
         baseline,
         production,
-        pathHostMove,
-        timingHostMove,
-        defaultMigrationHost,
+        ...hostMoves,
         nativeTerminalHost,
         afterRoot,
         driverSource: driver,
