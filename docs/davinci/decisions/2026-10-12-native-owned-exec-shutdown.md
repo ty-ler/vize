@@ -69,6 +69,12 @@ finite121 production plus one corpus successor preserves all23 runtime and two
 final guard bodies. Original permitted same-birth zombies and all unchanged
 acceptance limits remain; this does not qualify the later Clippy source.
 
+The bounded successor is replayed onto actual main
+`ba777412182169093c1b96564089ef0d205f39d0`, including the merged authored
+definition repair. All incoming canonical clauses and the complete existing
+native workflow are retained. Source body custody is checked anew against that
+common main; earlier passing packets remain bound to their original heads.
+
 ## Required physical qualification
 
 Normal PR Rust shards deliberately set `VIZE_TEST_DISABLE_TSGO=1`, so their
