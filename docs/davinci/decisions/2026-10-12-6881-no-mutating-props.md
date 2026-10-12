@@ -219,3 +219,15 @@ private Git requirement. An existing commit and complete trees with a missing
 own-frame blob must hydrate before the frame joins bytes; tree-only presence
 does not establish complete input availability. The genuine Git control
 retains that tree-only refusal and verifies the restored full-file positive.
+
+### Awaited source-runner API
+
+Exact 1b64 Actions type-aware lint reported 13 await-thenable warnings and no
+errors: all 19 delegates await the source runner's synchronous return value.
+The final return now resolves the same receipt as a genuine Promise,
+preserving synchronous validation and historical process order. An async-only
+prototype triggers require-await and remains retained as diagnostic evidence.
+The external source seal tracks this exact return change. Local checks enable
+type-aware await-thenable, require-await and no-floating-promises on all 19
+delegates and the helper; earlier untyped checks did not cover the defect.
+Native, Matrix and performance acceptance remain pending.

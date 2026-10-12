@@ -232,7 +232,7 @@ export function runNoMutatingComponentJoinCaller(root, law) {
   assert.equal(selected.length, registry.declaredSources.length);
   for (const frame of selected) assert(frame.frame.laws.some((row) => row.path === law));
   const historical = selected.map((frame) => executeJoinLiteralCaller(root, frame, law));
-  return {
+  return Promise.resolve({
     committedHead,
     currentUnion: current.completeCurrentUnionBodies,
     currentClosedBodies: current.completeCurrentClosedBodies,
@@ -245,5 +245,5 @@ export function runNoMutatingComponentJoinCaller(root, law) {
     oldMigrationMeasurement: null,
     oldSetupMeasurement: null,
     currentOld111Receipt: null,
-  };
+  });
 }
