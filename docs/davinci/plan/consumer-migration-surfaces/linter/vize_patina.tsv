@@ -714,12 +714,12 @@ linter	Linter	source	crates/vize_patina/src/rules/script/no_dupe_keys/setup.rs	9
 linter	Linter	source	crates/vize_patina/src/rules/script/no_dupe_keys/setup.rs	9	raw_oxc	raw OXC	raw	oxc_ast	raw	3
 linter	Linter	source	crates/vize_patina/src/rules/script/no_dupe_keys/setup.rs	9	raw_oxc	raw OXC	raw	oxc_semantic	raw	1
 linter	Linter	source	crates/vize_patina/src/rules/script/no_dupe_keys/setup.rs	9	raw_oxc	raw OXC	raw	oxc_syntax	raw	1
-linter	Linter	test/dev	crates/vize_patina/src/rules/script/no_dupe_keys/setup.rs	270	l0	L0	stage	vize_l0	preferred	1
-linter	Linter	test/dev	crates/vize_patina/src/rules/script/no_dupe_keys/setup.rs	270	raw_oxc	raw OXC	raw	oxc_allocator	raw	1
-linter	Linter	test/dev	crates/vize_patina/src/rules/script/no_dupe_keys/setup.rs	270	raw_oxc	raw OXC	raw	oxc_parser	raw	1
 linter	Linter	source	crates/vize_patina/src/rules/script/no_dupe_keys/setup/props.rs	4	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	source	crates/vize_patina/src/rules/script/no_dupe_keys/setup/props.rs	4	raw_oxc	raw OXC	raw	oxc_ast	raw	2
 linter	Linter	source	crates/vize_patina/src/rules/script/no_dupe_keys/setup/props.rs	4	raw_oxc	raw OXC	raw	oxc_semantic	raw	1
+linter	Linter	test/dev	crates/vize_patina/src/rules/script/no_dupe_keys/setup/tests.rs	5	l0	L0	stage	vize_l0	preferred	1
+linter	Linter	test/dev	crates/vize_patina/src/rules/script/no_dupe_keys/setup/tests.rs	5	raw_oxc	raw OXC	raw	oxc_allocator	raw	1
+linter	Linter	test/dev	crates/vize_patina/src/rules/script/no_dupe_keys/setup/tests.rs	5	raw_oxc	raw OXC	raw	oxc_parser	raw	1
 linter	Linter	test/dev	crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance.rs	68	raw_oxc	raw OXC	raw	oxc_ast	raw	1
 linter	Linter	source	crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance/options.rs	9	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	source	crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance/options.rs	9	raw_oxc	raw OXC	raw	oxc_ast	raw	1

@@ -61,13 +61,13 @@ export function authenticateNoDupeCIRepairPhysical(root, read = reader(root)) {
   const manifestPath = `${noDupeCIRepairDirectory}/successor.json`;
   regular(manifestPath);
   const bytes = read(manifestPath);
-  assert.equal(digest(bytes), "a5824b2c80ef3ebf511ff09e45ff27e430e2ca2f08515077a59231f9c8fd86bb");
+  assert.equal(digest(bytes), "add532a2461f7667a2647313347fac91546439908377d7cf87d8537eefd33dab");
   assert.deepEqual(physical(manifestPath), bytes);
   const manifest = JSON.parse(bytes);
   assert.equal(manifest.schema, "vize.lint.no-dupe-keys-ci-source-successor");
   assert.equal(manifest.version, 1);
   assert.equal(manifest.source, "9da2c1f2469f256a06b304785641c6e2e376a10e");
-  assert.equal(manifest.parent, "b48dbb85e257f1875a4df83113dfb20f4830e3a2");
+  assert.equal(manifest.parent, "49d95b8e93a9f5bcb73e0c1c307815d4b3a9d570");
   assert.equal(
     new Set(manifest.current.map(({ path: name }) => name)).size,
     manifest.current.length,
@@ -246,6 +246,17 @@ export async function runNoDupeParentCurrentCallerShallowLaw(root) {
   const manifest = authenticateNoDupeCIRepairPhysical(root);
   const parent = relocatedParentContext(root, reader(root), manifest);
   const law = "tests/tooling/no-mutating-props-current-callers-shallow.test.mjs";
+  const archived = manifest.parentProjection.find(({ path: name }) => name === law);
+  assert(archived);
+  assert.deepEqual(parent.read(law), reader(root)(archived.archive));
+  await import(pathToFileURL(path.join(parent.root, law)).href);
+}
+
+/** The complete parent ancestry laws keep their missing-parent and dead-origin controls. */
+export async function runNoDupeParentCurrentCallerAncestryLaw(root) {
+  const manifest = authenticateNoDupeCIRepairPhysical(root);
+  const parent = relocatedParentContext(root, reader(root), manifest);
+  const law = "tests/tooling/no-mutating-props-current-callers-ancestry.test.mjs";
   const archived = manifest.parentProjection.find(({ path: name }) => name === law);
   assert(archived);
   assert.deepEqual(parent.read(law), reader(root)(archived.archive));

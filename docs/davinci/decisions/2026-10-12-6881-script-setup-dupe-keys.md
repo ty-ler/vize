@@ -46,3 +46,34 @@ Fresh child Actions, protected Stack merge and released acceptance remain
 unfinished.
 
 Paired shallow-source decision: [actual parent and complete historical callers](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6125318190).
+
+The actual `9488229` source jobs exposed canonical documentation drift and four
+files exceeding the unchanged 350-line ceiling. The unchanged documentation
+generator restores every original reviewed bilingual code fence. Three
+terminal Rust test modules move to their standard child paths, retaining
+production prefixes, all Vue input bytes, module namespaces and existing
+snapshot paths. The private parent-frame helper moves as a literal block,
+with a frozen membership view and its mutable cleanup Set kept private.
+Whole-source inverses reconstruct each predecessor exactly; every actual
+current body is authenticated before a historical projection. The complete
+raw failed jobs remain in `source-custody/ci-repair/source-check-948-evidence.json.gz`.
+
+This successor genuinely composes parent `49d95b8e93a9f5bcb73e0c1c307815d4b3a9d570`
+and carries its whole ancestry laws and fixed raw object capsule through an
+authenticated real parent frame. Missing-parent and dead-origin controls keep
+the unchanged original Nodeep assertions. All original 51/88 corpus vectors,
+39/8 controls and eight compiler/provider disagreements remain intact.
+The extra generic-specialization false negative stays unfinished, and actual
+compiler-owned runtime `foo` collisions remain diagnostics. Documentation
+checks (13 cases), Rust formatting and literal split reconstruction pass
+locally; fresh native qualification is separate. Both native workflows passed
+on prior head `9488229` only. Exact child Actions, protected Stack merge, release
+and installed acceptance remain unfinished.
+
+Paired source-check decision: [canonical docs and literal module extraction](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6126287314).
+
+The final local source suite passes 38 checks with zero skips. The four whole
+historical caller modules run separately and retain all 20 cases with zero
+failures or skips in their raw packets. The 13 documentation checks pass on the
+exact current canonical input view, and the unchanged inventory checks all 19
+files. These source results do not transfer prior-head native qualification.

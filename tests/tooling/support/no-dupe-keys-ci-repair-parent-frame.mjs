@@ -80,7 +80,7 @@ function qualifyMaterializedParentFrame(root, rows, source) {
 }
 /** Only this declared parent can hydrate into independently owned metadata and objects. */
 function literalParentGit(root, source) {
-  assert.equal(source, "b48dbb85e257f1875a4df83113dfb20f4830e3a2");
+  assert.equal(source, "49d95b8e93a9f5bcb73e0c1c307815d4b3a9d570");
   for (const name of [
     "GIT_DIR",
     "GIT_WORK_TREE",

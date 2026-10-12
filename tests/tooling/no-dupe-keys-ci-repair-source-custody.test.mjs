@@ -1,3 +1,4 @@
+import { verifyNoDupeLiteralModuleExtraction } from "./support/no-dupe-keys-literal-module-source-custody.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -23,7 +24,7 @@ const current = () => authenticateNoDupeCIRepairPhysical(root, read);
 void test("the complete CI successor authenticates actual current sources before both whole predecessors", () => {
   assert.equal(
     digest(read(helperPath)),
-    "66a81e7a5ec16f2c8d2d8b6e3eb6d4b4ca955c89d96bec8e29f5caeda298117c",
+    "64ab7f4eaf53a399df8c5b7160ff33f503ea78cf5c13fe1642905958b8d841ea",
   );
   const manifest = authenticateNoDupeCIRepair(root, read);
   assert.equal(
@@ -210,7 +211,7 @@ void test("each changed source helper retains its complete predecessor through a
   body = body.replace(imported, "").split(selected).join("");
   assert.equal(
     body,
-    read(`${noDupeCIRepairDirectory}/b48dbb85-formatted-original-helper.fixture`, "utf8"),
+    read(`${noDupeCIRepairDirectory}/49d95b8e-formatted-original-helper.fixture`, "utf8"),
   );
   assert(
     historicalArchive(ownHelper).includes(
@@ -230,7 +231,7 @@ void test("each changed source helper retains its complete predecessor through a
     .replace(context, "const read = (name) => fs.readFileSync(path.join(root, name));\n");
   assert.equal(
     body,
-    read(`${noDupeCIRepairDirectory}/b48dbb85-formatted-original-five-laws.fixture`, "utf8"),
+    read(`${noDupeCIRepairDirectory}/49d95b8e-formatted-original-five-laws.fixture`, "utf8"),
   );
   const guard = "tests/tooling/support/no-mutating-props-test-correction-source-custody.mjs";
   assert.equal(read(guard, "utf8"), parentArchive(guard));
@@ -277,4 +278,10 @@ void test("each changed source helper retains its complete predecessor through a
     assert.equal(bytes.length, previous.identity.bytes);
     assert.equal(digest(bytes), previous.identity.sha256);
   }
+  assert.deepEqual(verifyNoDupeLiteralModuleExtraction(root, read), {
+    sourceOnly: true,
+    compiled: false,
+    native: false,
+    performance: false,
+  });
 });
