@@ -25,11 +25,11 @@ export const nativeSdkSourceRoot = fs.realpathSync(new URL("../../../", import.m
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const blob = (body) =>
   createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
-const capsulePath = new URL("./native-sdk-historical-source.json", import.meta.url);
+const capsulePath = new URL("../fixtures/native-sdk-historical-source.json", import.meta.url);
 const capsuleStat = fs.lstatSync(capsulePath);
 assert(capsuleStat.isFile() && (capsuleStat.mode & 0o777) === 0o644);
 const capsuleBytes = fs.readFileSync(capsulePath);
-assert.equal(sha(capsuleBytes), "14cbd2af799101d8a64a9b864370a115421721b755af7eb7555c4aa50dc57ab5");
+assert.equal(sha(capsuleBytes), "899d7c384501209b2322b64416cb4f7be6a9532a46aed6c11e7cc0e7eb5e87ab");
 const capsule = JSON.parse(capsuleBytes);
 assert.equal(capsule.version, 1);
 assert.equal(capsule.selectedSource, "b2caebeab6fb5bc817b4e31a65d5d560449b691b");
@@ -76,7 +76,7 @@ assert(finalContextStat.isFile() && (finalContextStat.mode & 0o777) === 0o644);
 const finalContextBytes = fs.readFileSync(finalContextURL);
 assert.equal(
   sha(finalContextBytes),
-  "c4751114e97ef5c86a874d3adefa7a72f44e64abe704240336b83badca1dc56e",
+  "9547dce5d522c40c0b8ac17d4ecd66970a78828eda1b3b123aeb2716ffa613c2",
 );
 const finalContext = JSON.parse(finalContextBytes);
 assert.equal(finalContext.schema, 1);

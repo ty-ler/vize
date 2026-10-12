@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ownedCorsaSource } from "../compat/github/owned-corsa-source-custody.mjs";
-import { authenticateOwnedCorsaAfterContext } from "../compat/github/owned-corsa-clippy-source.mjs";
+import { assertOwnedCorsaAfterContext } from "../compat/github/owned-corsa-clippy-source.mjs";
 
 const checksum = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const blob = (bytes: Buffer) =>
@@ -117,10 +117,9 @@ export function authenticateOwnedCorsaProducerMetadata(
     const bytes = baseline.get(row.file) ?? actual;
     afterBodies.set(row.file, { mode: "100644", blob: blob(bytes), body: bytes });
   }
-  const afterContext = authenticateOwnedCorsaAfterContext(ownedCorsaSource.rows, (file: string) =>
+  const afterContext = assertOwnedCorsaAfterContext(ownedCorsaSource.rows, (file: string) =>
     afterBodies.get(file),
   );
-  assert(afterContext, "complete actual237 provider bodies and atomic manifest policy");
   assert.equal(ownedCorsaSource.rows.length, 237);
   assert.deepEqual([...sources.keys()], ["Cargo.toml", "Cargo.lock"]);
   for (const [file, source] of sources)

@@ -21,6 +21,11 @@ import {
 } from "./warm-type-backed-native-proxy-host.ts";
 import { assertNativeTerminalLocks } from "./warm-type-backed-native-terminal-host.ts";
 
+import {
+  qualifyOwnedCorsaPreservedRecipe,
+  preservedRecipeDigest,
+} from "./warm-type-backed-owned-corsa-recipe.ts";
+
 type Side = "before" | "after";
 const sha = (body: Buffer) => createHash("sha256").update(body).digest("hex");
 
@@ -74,7 +79,12 @@ export function qualifyOwnedCorsaHost(
     "seven complete native fixture bodies remain mandatory after graph source authentication",
   );
   for (const file of proxy.files) allowed.add(file);
-  const retained = qualifyNativeTerminalHost(graph.historicalProduction, allowed, digest);
+  const recipe = qualifyOwnedCorsaPreservedRecipe(reader);
+  const retained = qualifyNativeTerminalHost(
+    graph.historicalProduction,
+    allowed,
+    preservedRecipeDigest(recipe, digest),
+  );
   assert(
     retained,
     "complete original121/122/23/2 source and all old lexical fields remain mandatory",
@@ -91,6 +101,7 @@ export function qualifyOwnedCorsaHost(
         "237 production bodies plus one retained SDK corpus body; callers are separate",
       sourceAndCallerBodies: 239,
       originalNativeTerminalHost: retained,
+      ...(recipe ? { preservedRecipeSource: recipe } : {}),
       ownedCorsaSource: {
         authority: graph.authority,
         manifestSHA256: graph.manifestSHA256,

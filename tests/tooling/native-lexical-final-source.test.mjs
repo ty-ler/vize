@@ -19,6 +19,7 @@ import { projectOwnedCorsaLexicalCopied } from "../../tools/support/compat/githu
 import { ownedCorsaSource } from "../../tools/support/compat/github/owned-corsa-source-custody.mjs";
 import { nativeLexicalCompositionBodyPairs } from "../performance/support/warm-type-backed-native-lexical-composition-host.ts";
 import { nativeProxyManifest } from "../performance/support/warm-type-backed-native-proxy-host.ts";
+import { historicalCompositionBody } from "./support/native-sdk-historical-source.mjs";
 
 const root = new URL("../../", import.meta.url);
 const rootPath = fileURLToPath(root);
@@ -124,8 +125,40 @@ const project = (entries) =>
     reader: (side, file) => (side === "before" ? before : after).get(file) ?? null,
   });
 const actualView = project(copied);
+// The existing source-first helper authenticates237 +2 callers +119 frames.
+// Only this named whole pnpm source cell is historical; copied remains actual.
+function preservedSourceView(view) {
+  const file = "pnpm-lock.yaml";
+  const historical = historicalCompositionBody("sdk", file);
+  assert.equal(sha(historical), "12e66667fc82ac9a5b72d1e9ab2aa59f7c1466ea8be689f17a67678bf31a0915");
+  const actual = view.historicalReader(file);
+  assert.equal(sha(actual), "f83208b48ac69a7fd603384bb4962d0da0116b04ff2b19793daa2a63dc5378db");
+  const entry = view.historicalCopied.find((entry) => entry.file === file);
+  assert.equal(entry.sha256, sha(actual));
+  assert.equal(entry.byteLength, actual.length);
+  const blob = createHash("sha1")
+    .update(`blob ${historical.length}\0`)
+    .update(historical)
+    .digest("hex");
+  return {
+    ...view,
+    historicalCopied: view.historicalCopied.map((entry) =>
+      entry.file === file
+        ? {
+            ...entry,
+            sha256: sha(historical),
+            byteLength: historical.length,
+            gitEntryHex: Buffer.from(`100644 blob ${blob}\t${file}\0`).toString("hex"),
+          }
+        : entry,
+    ),
+    historicalReader: (name) =>
+      name === file ? Buffer.from(historical) : view.historicalReader(name),
+  };
+}
+const preservedView = preservedSourceView(actualView);
 const validateCurrentCopied = (manifest, entries) => {
-  const view = project(entries);
+  const view = preservedSourceView(project(entries));
   return validateLexicalSourceBodies(manifest, view.historicalCopied, view.historicalReader);
 };
 
@@ -149,14 +182,14 @@ await test("actual owned Cargo tuple separately refuses the original helper befo
   });
 });
 
-await test("actual complete current Git bodies refuse the original caller guard and qualify the finite successor", () => {
+await test("authenticated whole incoming recipe source retains the exact original caller refusal and finite successor", () => {
   let refusal;
   try {
     assert.equal(currentSHA, oldSHA, caller);
   } catch (error) {
     refusal = error;
   }
-  assert.throws(() => old.validateLexicalSourceBodies(manifest, actualView.historicalCopied), {
+  assert.throws(() => old.validateLexicalSourceBodies(manifest, preservedView.historicalCopied), {
     name: refusal.name,
     code: refusal.code,
     message: refusal.message,
@@ -180,7 +213,7 @@ await test("actual complete current Git bodies refuse the original caller guard 
 
 await test("retained historical final source and original lexical fastpath remain separately qualified", () => {
   // This explicit historical tuple is not the actual current caller observation.
-  const historical = actualView.historicalCopied.map((entry) =>
+  const historical = preservedView.historicalCopied.map((entry) =>
     entry.file === caller ? { ...entry, sha256: oldSHA } : entry,
   );
   assert.deepEqual(
@@ -264,7 +297,11 @@ await test("whole caller inverse capsule helper metadata and every fixture membe
   }
   assert.deepEqual(
     validateLexicalFinalSource(actualView.historicalCopied, actualView.historicalReader),
-    validateCurrentCopied(manifest, copied).finalSource,
+    validateLexicalSourceBodies(
+      manifest,
+      preservedView.historicalCopied,
+      preservedView.historicalReader,
+    ).finalSource,
   );
 });
 

@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { ensureHostedLiteralSource } from "../performance/support/warm-type-backed-git-reader-literal-source.ts";
 import {
   ownedCorsaSource,
   qualifyOwnedCorsaSource,
@@ -23,6 +24,7 @@ const context = JSON.parse(
 );
 
 function fixture(run) {
+  ensureHostedLiteralSource(originalRoot, ownedCorsaSource.baseline);
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-vendor-source-"));
   try {
     let head = git(originalRoot, ["rev-parse", "HEAD"]).toString().trim();
@@ -44,6 +46,11 @@ function fixture(run) {
     git(root, ["symbolic-ref", "HEAD", "refs/heads/current"]);
     // Reconstruct the retained old class even when the current checkout contains the new class.
     for (const row of context.entries) {
+      const old = Buffer.from(row.retainedOldAfter.rawBase64, "base64");
+      fs.writeFileSync(path.join(root, row.file), old);
+      head = sourceCommit(root, head, row.file, old);
+    }
+    for (const row of context.sourceCorrections) {
       const old = Buffer.from(row.retainedOldAfter.rawBase64, "base64");
       fs.writeFileSync(path.join(root, row.file), old);
       head = sourceCommit(root, head, row.file, old);
