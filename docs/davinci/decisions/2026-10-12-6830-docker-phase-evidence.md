@@ -145,6 +145,23 @@ and after observation. Normal same-attempt observation keeps its original reads.
 The real Git/tar/Python law admits authenticated producer two to consumer three,
 while absent, forged, foreign, future, linked or altered evidence still refuses.
 
+Source `4e451300`, Check `38187523737`, authenticates all four complete ZIPs
+and their original source/plan identities. Selected shards two and three retain
+14/21 complete containers and 56/84 events with every refusal counter zero.
+Shards one and four have no selected mandatory Docker law and correctly record
+`none`, without lifecycle qualification. Original tooling shard three still
+fails its cross-attempt transport law; retain that failure separately.
+
+That law's nested `vp node` adapter refused on Linux while the core's direct
+Node adapter law passed on the same runner. Its discarded underlying stderr
+does not establish why wrapper resolution failed. Invoke the same configured
+`node` command as the central restoration action, preserving the exact shared
+verifier and every original receipt/member check. An authored real Git/tar
+control supplies the actual test Node executable alongside a refusing wrapper:
+the complete old Python helper refuses, and the direct adapter passes the same
+positive and negative custody laws. This proves the executable boundary repair,
+not the cause of the original Linux refusal or a live cross-attempt retry.
+
 TODO: qualify the corrected exact-source four-shard receipts and actual merge,
 then attribute costs only from complete observed intervals. No causal repair
 or CI speed gain is claimed. Whole #6830 targets, release qualification and

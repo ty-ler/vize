@@ -240,7 +240,7 @@ def source_identity(root, checkout):
     consumer_use = None
     if (identity["runAttempt"] != os.environ.get("GITHUB_RUN_ATTEMPT") or
             "VIZE_SOURCE_CLI_USE_RECEIPT_SHA256" in os.environ):
-        result = subprocess.run(["vp", "node", "tools/support/compat/github/source-cli-artifact.ts", "consumer-use"],
+        result = subprocess.run(["node", "tools/support/compat/github/source-cli-artifact.ts", "consumer-use"],
                                 cwd=root, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                                 timeout=5, check=False)
         if result.returncode or not 0 < len(result.stdout) <= 1024:

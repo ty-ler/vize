@@ -82,14 +82,24 @@ void test("Docker custody consumes the actual pack/restore envelope and every or
     const archive = path.join(base, "source-cli.tar.gz");
     const hashes = packSourceCli(producer, archive, identity);
     restoreSourceCli(consumer, archive, hashes.sha256, identity);
+    const tools = path.join(base, "configured-node");
+    fs.mkdirSync(tools);
+    fs.symlinkSync(process.execPath, path.join(tools, "node"));
+    fs.writeFileSync(path.join(tools, "vp"), "#!/bin/sh\nexit 71\n", { mode: 0o755 });
     const env = {
       ...process.env,
+      PATH: `${tools}${path.delimiter}${process.env.PATH ?? ""}`,
       GITHUB_SHA: identity.sourceRevision,
       GITHUB_RUN_ID: "123",
       GITHUB_RUN_ATTEMPT: "2",
       VIZE_SOURCE_CLI_RECEIPT_SHA256: hashes.receiptSha256,
     };
     delete env.VIZE_SOURCE_CLI_USE_RECEIPT_SHA256;
+    assert.equal(
+      execFileSync("node", ["-p", "process.execPath"], { env, encoding: "utf8" }).trim(),
+      fs.realpathSync(process.execPath),
+    );
+    assert.throws(() => execFileSync("vp", ["node", "--version"], { env }));
     const observe = (extra = {}) =>
       JSON.parse(
         execFileSync(
