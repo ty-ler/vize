@@ -87,3 +87,25 @@ test("sealed whole SDK reader and original frames retain historical bodies and r
   assert.throws(() => originalAsciiCaller("f".repeat(40), entries[0].file, entries));
   assert.throws(() => originalAsciiCaller(manifest.originalSource, "unknown.ts", entries));
 });
+
+void test("the actual owned SDK/Reader whole frame remains distinct from every historical frame", () => {
+  const composed = retainedAsciiCallerFrame("owned-sdk-reader");
+  const receipt = qualifyAsciiOriginalCallers(composed);
+  assert.equal(receipt.kind, "owned-sdk-reader");
+  assert.equal(receipt.source, "fbdaa063d15302b8f2ff8693f57336cba007d056");
+  assert.equal(receipt.tree, "160337c9ffa80e18ae3d7b29b3d22a253cf3f290");
+  assert.equal(receipt.wholeCallerBodies, 10);
+  assert.equal(receipt.runtimeCredit, false);
+  for (const kind of ["original", "sdk", "reader"]) {
+    const historical = retainedAsciiCallerFrame(kind);
+    const workflow = historical.find((entry) =>
+      entry.file.endsWith("warm-type-backed-workflow.ts"),
+    );
+    assert.ok(workflow);
+    assert.throws(() =>
+      qualifyAsciiOriginalCallers(
+        composed.map((entry) => (entry.file === workflow.file ? workflow : entry)),
+      ),
+    );
+  }
+});
