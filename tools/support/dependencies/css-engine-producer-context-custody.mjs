@@ -12,7 +12,7 @@ function regular(file) {
   return fs.readFileSync(file);
 }
 const bytes = regular(new URL("./css-engine-producer-context-source.json", import.meta.url));
-assert.equal(sha(bytes), "66617eb5fafde197e5f6ff861fce18352e79a0d791297c3f6174161d1b562152");
+assert.equal(sha(bytes), "ba9cfb3a569930a949d98eaa069bcf0fe0b2b12d4a4c89732b6471045c150775");
 const data = JSON.parse(bytes);
 assert.equal(data.version, 1);
 assert.deepEqual(

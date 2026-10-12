@@ -20,7 +20,6 @@ import { nativeLexicalCompositionBodyPairs } from "../../performance/support/war
 import { ensureHostedLiteralSource } from "../../performance/support/warm-type-backed-git-reader-literal-source.ts";
 import { historicalCompositionBody as retainedCompositionBody } from "./native-lexical-composition-source.ts";
 import { authenticateHistoricalIncomingLock } from "./native-sdk-incoming-lock.mjs";
-
 export const nativeSdkSourceRoot = fs.realpathSync(new URL("../../../", import.meta.url));
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const blob = (body) =>
@@ -76,7 +75,7 @@ assert(finalContextStat.isFile() && (finalContextStat.mode & 0o777) === 0o644);
 const finalContextBytes = fs.readFileSync(finalContextURL);
 assert.equal(
   sha(finalContextBytes),
-  "9547dce5d522c40c0b8ac17d4ecd66970a78828eda1b3b123aeb2716ffa613c2",
+  "8b85e3698e568015597b9dcafb6d52393f1201cef84762136f39df389f558ff6",
 );
 const finalContext = JSON.parse(finalContextBytes);
 assert.equal(finalContext.schema, 1);
@@ -162,7 +161,6 @@ function currentReader(root) {
     rawReaders.set(key, ownedCorsaReader(root, capsule.actualBeforeSource, head));
   return { head, reader: rawReaders.get(key) };
 }
-
 /** Supplied callbacks must equal genuine raw Git and current physical whole bodies. */
 export function createNativeSdkHistoricalView(root = nativeSdkSourceRoot, suppliedReader) {
   root = fs.realpathSync(root);
@@ -233,13 +231,22 @@ export function createNativeSdkHistoricalView(root = nativeSdkSourceRoot, suppli
   );
   assert.equal(
     currentAfter.context.sourceContextSHA256,
-    "9dec771413262e89eb1e34abfac1594207da8eb2e04bf68388e96049358f70a7",
+    "b38685b9f740fc5444f70d51a2adcb9c7463ed5dc720d46f7ff8aabf8eb8dc94",
   );
   const policy = JSON.parse(actual("after", additions[1]).body);
-  const currentSix = new Map(policy.entries.map(({ file, currentAfter }) => [file, currentAfter]));
-  assert.equal(currentSix.size, 6);
+  assert.equal(currentAfter.context.wholeCorrectedRustBodies, 1);
+  assert.deepEqual(currentAfter.context.correctedSourceFiles, [
+    "vendor/corsa_client/src/api/handles.rs",
+  ]);
+  const currentCells = new Map(
+    [...policy.entries, ...policy.sourceCorrections].map(({ file, currentAfter }) => [
+      file,
+      currentAfter,
+    ]),
+  );
+  assert.equal(currentCells.size, 7);
   const currentAfterIdentities = ownedCorsaSource.rows.map((row) => {
-    const expected = currentSix.get(row.file) ?? row.after;
+    const expected = currentCells.get(row.file) ?? row.after;
     const value = currentAfter.actualAfter(row.file);
     assert(value && value.mode === expected.mode);
     assert.equal(value.blob, expected.blob);
