@@ -143,6 +143,14 @@ seven pinned commit/blob bodies without changing the original ZIP or
 claiming original Actions custody. A future upload must explicitly retain
 hidden source paths. No repeat campaign is authorized by this record.
 
+The future upload-only source successor binds producer
+`b48274d54462c5624e202700803f12b5a1d46ab8` with semantic manifest SHA-256
+`5f75f98aac6746c8785bf301afcc948527fbbeb25cf2e2ba06f2f8c23d67d6a4`. Removing its single
+`include-hidden-files: true` setting restores the complete observed workflow;
+all 208 native, 45 original workload and other 30 helper body pairs remain
+exact. Its new source identity carries no runtime evidence from `0817fa70`
+and does not authorize another capture.
+
 ## Two distinct binaries and unchanged original workload
 
 The first arm rebuilds the frozen e7ec source with its exact original CI+legacy

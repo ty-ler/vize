@@ -31,7 +31,7 @@ const previous = JSON.parse(previousBytes.toString()) as {
   preservedBodies: string[];
 };
 export const manifestSHA256 = sha256(JSON.stringify(manifest));
-assert.equal(manifestSHA256, "256dd23ed28196bf2a9f007c2a5486b3ecb54105cbb8825cce5117f503843917");
+assert.equal(manifestSHA256, "5f75f98aac6746c8785bf301afcc948527fbbeb25cf2e2ba06f2f8c23d67d6a4");
 assert.equal(manifest.version, 1);
 assert.equal(manifest.originalSource, FROZEN_SOURCE);
 assert.match(manifest.reviewedSource, /^[a-f0-9]{40}$/);
