@@ -19,7 +19,7 @@ const digest = (body) => createHash("sha256").update(body).digest("hex");
 const helperPath = "tests/tooling/support/no-dupe-keys-ci-repair-source-custody.mjs";
 const current = () => authenticateNoDupeCIRepairPhysical(root, read);
 
-await test("the complete CI successor authenticates actual current sources before both whole predecessors", () => {
+void test("the complete CI successor authenticates actual current sources before both whole predecessors", () => {
   assert.equal(
     digest(read(helperPath)),
     "98d57aef0be008c0a7caf4eaeee88c8b995a26a9af0456d70dfaba69a24c0fdb",
@@ -46,7 +46,7 @@ await test("the complete CI successor authenticates actual current sources befor
   assert.equal(read(parentLaws.archive, "utf8").match(/^await test\(/gm).length, 5);
 });
 
-await test("every current source, archive and manifest corruption or omission is refused", () => {
+void test("every current source, archive and manifest corruption or omission is refused", () => {
   const manifest = current();
   const names = [...manifest.current, ...manifest.archives].map(({ path: name }) => name);
   names.push(`${noDupeCIRepairDirectory}/successor.json`);
@@ -68,7 +68,7 @@ await test("every current source, archive and manifest corruption or omission is
   assert.equal(current().current.length, manifest.current.length);
 });
 
-await test("matching callback bytes and cached read views cannot hide actual content or file-status changes", () => {
+void test("matching callback bytes and cached read views cannot hide actual content or file-status changes", () => {
   const manifest = current();
   const names = [...manifest.current, ...manifest.archives].map(({ path: name }) => name);
   names.push(`${noDupeCIRepairDirectory}/successor.json`);
@@ -122,7 +122,7 @@ await test("matching callback bytes and cached read views cannot hide actual con
   }
 });
 
-await test("the finite parent and failed-head views preserve binary, UTF8 and unrelated arguments", () => {
+void test("the finite parent and failed-head views preserve binary, UTF8 and unrelated arguments", () => {
   const manifest = current();
   const calls = [];
   const tracked = (name, ...args) => {
@@ -155,7 +155,7 @@ await test("the finite parent and failed-head views preserve binary, UTF8 and un
   assert.deepEqual(forwarded, ["outside", "unchanged", 42]);
 });
 
-await test("each changed source helper retains its complete predecessor through a finite inverse", () => {
+void test("each changed source helper retains its complete predecessor through a finite inverse", () => {
   const manifest = current();
   const historicalArchive = (name) =>
     read(
