@@ -16,9 +16,9 @@ pub(super) fn capture_root(
         Some(profile @ ("pr" | "full")) => Ok(Some(
             workspace.join(cstr!("target/nextest/{profile}/native-proxy-termination")),
         )),
-        Some(profile) => Err(cstr!(
-            "unknown native proxy nextest capture profile: {profile:?}"
-        )),
+        Some(profile) => {
+            Err(cstr!("unknown native proxy nextest capture profile: {profile:?}").into())
+        }
     }
 }
 
@@ -59,9 +59,7 @@ fn capture_profiles_belong_to_existing_pr_and_full_artifact_producers() {
     for unknown in ["", "ci", "full/../../foreign", "pr/foreign", "../full"] {
         assert_eq!(
             capture_root(&workspace, Some(unknown)),
-            Err(cstr!(
-                "unknown native proxy nextest capture profile: {unknown:?}"
-            ))
+            Err(cstr!("unknown native proxy nextest capture profile: {unknown:?}").into())
         );
     }
 }
@@ -71,11 +69,12 @@ pub(super) fn assert_native_termination(trace_dir: &Path, pid: &str) -> Result<(
     let whole = fs::read(&path).map_err(|error| cstr!("read {}: {error}", path.display()))?;
     let packet: Value = serde_json::from_slice(&whole)
         .map_err(|error| cstr!("parse whole native lifecycle {}: {error}", path.display()))?;
-    let refused = || {
+    let refused = || -> String {
         cstr!(
             "incomplete native EOF lifecycle {}: {packet}",
             path.display()
         )
+        .into()
     };
     for field in [
         "candidate",
