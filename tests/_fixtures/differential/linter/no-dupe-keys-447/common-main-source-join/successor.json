@@ -5582,9 +5582,9 @@
     {
       "path": "tests/tooling/support/no-dupe-keys-common-main-source-structure.mjs",
       "mode": "100644",
-      "bytes": 5220,
-      "sha256": "7884f4fb0082abb65f478f948870520e09fc89547f2215379040e05f2a61962f",
-      "gitBlob": "dfff80bfa634bef52deaa601550dd65c2678f763"
+      "bytes": 5395,
+      "sha256": "32ca25df4cd687e2e842ff703acc776bdb31b8910178c1b33a2121c7950b59c2",
+      "gitBlob": "e3b5bf0818605b18b3ec54c128026a46b6368ba4"
     },
     {
       "path": "tests/tooling/support/no-dupe-keys-common-native-ingress.mjs",

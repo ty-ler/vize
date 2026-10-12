@@ -33,7 +33,10 @@ export function uniquePaths(names) {
   assert(Array.isArray(names));
   names.forEach(sourcePath);
   assert.equal(new Set(names).size, names.length);
-  assert.deepEqual(names, names.toSorted());
+  assert.deepEqual(
+    names,
+    names.toSorted((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+  );
   return names;
 }
 export function sourceIdentity(row) {
@@ -120,13 +123,15 @@ export function validateCommonStructure(manifest, parent) {
     uniquePaths(names);
   }
   assert.deepEqual(
-    [...new Set(Object.values(manifest.families).flat())].toSorted(),
-    [...current].toSorted(),
+    [...new Set(Object.values(manifest.families).flat())].toSorted((a, b) =>
+      a < b ? -1 : a > b ? 1 : 0,
+    ),
+    [...current].toSorted((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
   );
   assert.equal(manifest.selection.length, current.size);
   assert.deepEqual(
     manifest.selection.map((row) => row.path),
-    [...current].toSorted(),
+    [...current].toSorted((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
   );
   return manifest;
 }
