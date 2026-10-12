@@ -84,3 +84,15 @@ qualification only: the original native phase succeeded, while the new exact
 head still requires its own Actions. The original MoonBit transport 403 and
 failed source/native jobs remain separate evidence; no retry or release credit
 is transferred.
+
+The actual 2690 Plan generator refused the private Options API ScriptRule
+because its file has no independent META. The source inventory now proves its
+direct module owner, registered parent, typed field and exact SFC callback
+return, imported parent META and complete three-field metadata projection.
+The callback contributes one script-oxc surface to its existing parent's SFC
+row, without another registration or a JSX surface. Unknown, foreign,
+ambiguous, missing or independently registered callbacks still refuse;
+there is no rule-name or filename allowlist. Source-model laws and the genuine
+Node generator qualify this model only, not Rust behavior, Matrix completion,
+performance, merge or release acceptance. The original collector and refusal
+remain retained separately. This source correction stays paired with #6881.
