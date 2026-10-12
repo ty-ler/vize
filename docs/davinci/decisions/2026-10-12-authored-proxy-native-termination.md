@@ -98,3 +98,13 @@ The capsule needs no historical Git object or network fetch in shallow CI.
 Every other current source read and original refusal stays unchanged. The seven
 successor laws and actual Git final-boundary proof require the new complete body
 separately; this source test grants no historical runtime credit.
+
+The actual `dc7b2458` source-plan job rejected the generated Maestro migration
+ledger: the Clippy correction's test-only `use vize_l0::cstr` at lifecycle test
+line 8 added one real L0 consumer. The authoritative inventory generator adds
+that exact test/dev row; all other generated files stay unchanged, and its
+19-file check passes. This metadata repair changes no fixture, native body,
+workload, source qualifier or budget. The same head's original400 workflow
+passes separately; its whole packet is retained. The original source-plan
+failure remains a failure, and the metadata successor requires fresh
+exact-head source/native/original400 and protected qualification.
