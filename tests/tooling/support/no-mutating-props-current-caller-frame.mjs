@@ -5,7 +5,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
-import { privateNoMutatingCallerGit } from "./no-mutating-props-current-caller-git.mjs";
+import {
+  privateNoMutatingCallerGit,
+  copyNoMutatingCallerShallowBoundary,
+} from "./no-mutating-props-current-caller-git.mjs";
 
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const compareNames = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
@@ -53,7 +56,7 @@ export function authenticateNoMutatingCallerFrame(root, manifest) {
   const indexPath =
     "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers/successor.json";
   const index = fs.readFileSync(path.join(root, indexPath));
-  assert.equal(sha(index), "fa45cf8fa852f0c222af9378a981cb77d51d33f2bf58bad346230e4a00f8f532");
+  assert.equal(sha(index), "90d02914213ad8346bdd4a71488dd322591d0ab7dcb9588117f5ccba5caff1b9");
   assert.deepEqual(
     manifest,
     JSON.parse(index),
@@ -161,6 +164,7 @@ export function runNoMutatingLiteralCaller(root, context, law) {
         JSON.stringify(origin) +
         "\n",
     );
+    copyNoMutatingCallerShallowBoundary(literalGit, owned);
     assert.equal(rawGit(owned, ["rev-parse", "HEAD"]).toString().trim(), manifest.source);
     assert.deepEqual(
       rawGit(owned, ["cat-file", "commit", manifest.source]),

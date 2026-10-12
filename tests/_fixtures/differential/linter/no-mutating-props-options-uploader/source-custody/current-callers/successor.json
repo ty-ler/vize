@@ -110,15 +110,29 @@
         "sha256": "67751253a65713d602036d6356a5ea0bd5228a6f7f5e802810ba7bb5a50f367a",
         "gitBlob": "76672b5e623a9478ce43c69f02aaf3920265e4fb"
       }
+    },
+    {
+      "path": "tests/tooling/setup-export-default-reference.test.mjs",
+      "bytes": 13645,
+      "sha256": "63b83fe1266802edad926ab8f4f171e402862ea74a42ae54e3a49834c8fc2e0b",
+      "gitBlob": "09f6c72be7118214102d51cb0d021020a5415357",
+      "archive": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers/04-original-law.fixture",
+      "cases": 7,
+      "after": {
+        "path": "tests/tooling/setup-export-default-reference.test.mjs",
+        "bytes": 536,
+        "sha256": "82f83af994c233fc6bd19ad0d718f7b7087eb03128f46f2a69be1d5dc3890799",
+        "gitBlob": "a8f31b7597854e6bda1ee60e4713d6c33bba7c7b"
+      }
     }
   ],
   "historicalFrame": {
-    "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers/literal-2489-source-frame.json.gz",
-    "bytes": 4209624,
-    "sha256": "ee3110c4fec3f0c83ab8e30c6d6de2fc2045a403e4092e76f41ded79cd74a230",
-    "gitBlob": "c7e5f70a21b9d55ebcea7ccf74f9e5d0190a3eb2"
+    "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers/ci-repair-363/literal-2489-complete-source-frame.json.gz",
+    "bytes": 4242789,
+    "sha256": "c498e0b14257b95acfe7f4ea4e2471d3e25c6e51d70568604af248f59f279d87",
+    "gitBlob": "f22042d597faf550df6205fcf4ccededd1c1509b"
   },
-  "historicalFrameRows": 416,
+  "historicalFrameRows": 425,
   "completeSubtreeScopes": [
     "tests/performance/support/",
     "tests/_fixtures/differential/lint/runtime-prop-defaults-8564/",
@@ -132,5 +146,43 @@
     "compiled": false,
     "native": false,
     "performance": false
-  }
+  },
+  "predecessorSource": "363794932d3776dcdca521531c7cec86c27e5e06",
+  "predecessorManifest": {
+    "path": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers/successor.json",
+    "archive": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers/ci-repair-363/00-363-whole-before.fixture",
+    "bytes": 5892,
+    "sha256": "fa45cf8fa852f0c222af9378a981cb77d51d33f2bf58bad346230e4a00f8f532",
+    "gitBlob": "6132ea7c31b474c386715d94eb5fca2a82e58908"
+  },
+  "predecessorSourceBodies": [
+    {
+      "path": "tests/tooling/support/no-mutating-props-current-caller-source-custody.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers/ci-repair-363/01-363-whole-before.fixture",
+      "bytes": 7391,
+      "sha256": "facaefef2ff091fe2252110391f4587632dc114055c39ab6186fa46b0a3f400d",
+      "gitBlob": "01a2dd65a470b22e5f9dcea75ef5736580037b9c"
+    },
+    {
+      "path": "tests/tooling/support/no-mutating-props-current-caller-frame.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers/ci-repair-363/02-363-whole-before.fixture",
+      "bytes": 9904,
+      "sha256": "c9b1eebfd15810bf5dfad8c90d2580a16da9a79ffa5083b2239d1d2336628add",
+      "gitBlob": "a95fbe91e57964264ac44cd309dd6a5986ea3f0f"
+    },
+    {
+      "path": "tests/tooling/support/no-mutating-props-current-caller-git.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers/ci-repair-363/03-363-whole-before.fixture",
+      "bytes": 2398,
+      "sha256": "f9afa9088bf11b52332d0c7562f69fb698cc19495a9fcbfbd7c596e5af09a6b1",
+      "gitBlob": "e1f69fe6b5fe053febe22c2ef0523165aa5434ff"
+    },
+    {
+      "path": "tests/tooling/no-mutating-props-current-callers-source.test.mjs",
+      "archive": "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers/ci-repair-363/04-363-whole-before.fixture",
+      "bytes": 7602,
+      "sha256": "13287b0b5cba2cba68f682ef8d556999fe2cdf13dd45452413c99be0d8816af8",
+      "gitBlob": "f2eff982bac41712362ec048e5a1d195160922a4"
+    }
+  ]
 }

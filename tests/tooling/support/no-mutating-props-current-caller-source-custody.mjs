@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { gunzipSync } from "node:zlib";
 import { qualifyDefaultMigrationHost } from "../../performance/support/warm-type-backed-default-migration-host.ts";
 import {
   qualifyGitReaderSetupHarness,
@@ -18,7 +19,7 @@ import {
 export const noMutatingCurrentCallerDirectory =
   "tests/_fixtures/differential/linter/no-mutating-props-options-uploader/source-custody/current-callers";
 export const noMutatingCurrentCallerManifestSHA256 =
-  "fa45cf8fa852f0c222af9378a981cb77d51d33f2bf58bad346230e4a00f8f532";
+  "90d02914213ad8346bdd4a71488dd322591d0ab7dcb9588117f5ccba5caff1b9";
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const reader = (root) => (name) => fs.readFileSync(path.join(root, name));
 
@@ -73,6 +74,60 @@ export function authenticateNoMutatingCurrentCallerSource(root, read = reader(ro
   assert.equal(manifest.version, 1);
   assert.equal(manifest.source, "2489128d5f8fab1b7442a1e5c09b4e1701cbf185");
   assert.deepEqual(manifest.familyCounts, [12, 11]);
+  assert.equal(manifest.predecessorSource, "363794932d3776dcdca521531c7cec86c27e5e06");
+  assert.equal(
+    manifest.predecessorManifest.sha256,
+    "fa45cf8fa852f0c222af9378a981cb77d51d33f2bf58bad346230e4a00f8f532",
+  );
+  const original = JSON.parse(
+    check(manifest.predecessorManifest.archive, manifest.predecessorManifest),
+  );
+  assert.deepEqual(
+    manifest.predecessorSourceBodies.map(({ path: name }) => name),
+    [
+      "tests/tooling/support/no-mutating-props-current-caller-source-custody.mjs",
+      "tests/tooling/support/no-mutating-props-current-caller-frame.mjs",
+      "tests/tooling/support/no-mutating-props-current-caller-git.mjs",
+      "tests/tooling/no-mutating-props-current-callers-source.test.mjs",
+    ],
+  );
+  for (const archived of manifest.predecessorSourceBodies) check(archived.archive, archived);
+  const inverse = structuredClone(manifest);
+  for (const key of ["predecessorSource", "predecessorManifest", "predecessorSourceBodies"])
+    delete inverse[key];
+  inverse.laws = inverse.laws.slice(0, 3);
+  inverse.historicalFrame = original.historicalFrame;
+  inverse.historicalFrameRows = original.historicalFrameRows;
+  assert.deepEqual(
+    inverse,
+    original,
+    "every field of the complete original fa45 authority remains exact",
+  );
+  const beforeFrame = JSON.parse(
+    gunzipSync(check(original.historicalFrame.path, original.historicalFrame)),
+  );
+  const afterFrame = JSON.parse(
+    gunzipSync(check(manifest.historicalFrame.path, manifest.historicalFrame)),
+  );
+  assert.equal(beforeFrame.files.length, 416);
+  assert.equal(afterFrame.files.length, 425);
+  const currentFiles = new Map(afterFrame.files.map((row) => [row.path, row]));
+  for (const row of beforeFrame.files) assert.deepEqual(currentFiles.get(row.path), row);
+  const oldFiles = new Set(beforeFrame.files.map(({ path: name }) => name));
+  assert.deepEqual(
+    afterFrame.files.filter(({ path: name }) => !oldFiles.has(name)).map(({ path: name }) => name),
+    [
+      "crates/vize/src/commands/lint/aggregate.rs",
+      "crates/vize_patina/src/diagnostic/formatting.rs",
+      "crates/vize_patina/src/output/json.rs",
+      "crates/vize_patina/src/preset/tests.rs",
+      "crates/vize_patina/src/rules/script/no_export_in_script_setup.rs",
+      "crates/vize_patina/src/rules/script/no_options_api.rs",
+      "tests/_fixtures/patina-eslint-vue-rule-map.json",
+      "tests/tooling/bare-reserved-default-route-reference.test.mjs",
+      "tests/tooling/setup-export-default-reference.test.mjs",
+    ],
+  );
   assert.equal(
     manifest.moduleLayoutManifestSHA256,
     "e53d557df855bf8a365e56cdf3cd64772ea33b8032690df34eaed0c6ed444c5e",
@@ -99,6 +154,7 @@ export function authenticateNoMutatingCurrentCallerSource(root, read = reader(ro
       ["tests/tooling/reserved-suppression-default-routes.test.mjs", 1],
       ["tests/tooling/warm-type-backed-default-migration-host.test.ts", 7],
       ["tests/tooling/warm-type-backed-git-reader-nodeep.test.ts", 5],
+      ["tests/tooling/setup-export-default-reference.test.mjs", 7],
     ],
   );
   for (const law of manifest.laws) {

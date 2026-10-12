@@ -111,3 +111,20 @@ need their own new-head Actions; earlier source or native results do not
 qualify the successor, Matrix completion, performance or release acceptance.
 
 The fresh `420d7bf2` native phase passed, while four exact source checks refused the changed whole trait/source families and stale generated rule links. The original docs producer regenerated twelve pages; each complete inverse changes only the NoMutating implementation link from line42 to line39. A separately declared source-only caller successor first authenticates the actual complete23 bodies, preserves the whole trait’s sole default capability-method inverse, and proves that both the old measurement and old Reader setup tuple still return NULL. It then executes all three unchanged original caller modules (1+7+5 cases) in a complete416-row source frame joined to the actual raw `2489128d` commit, never a synthetic current87 view. All13 historical cases and22 adjacent source checks pass without skips; strict lint and formatting pass. The old performance helper, its manifests, all original400 inputs, production bodies, and the original failed caller packets remain retained. Exact missing-source hydration is confined to private Git metadata for the two declared source commits; shared metadata and refs remain unchanged. Fresh source/native qualification and protected merge for this new head remain pending; historical/source proofs grant no compiled, native, performance or public acceptance.
+
+The actual `36379493` source checks exposed six unhandled test-registration
+promises and private historical fetches that borrowed a shallow object store
+without its shallow boundary. The six registrations now use `void`; complete
+raw commit identities authenticate the boundary before copying it solely to
+new private pool, historical caller and refusal-fixture metadata. A real
+depth-one two-hop control retains the original missing-boundary refusal and
+passes after the private repair without changing shared refs or shallow bytes.
+The fourth unchanged setup-export caller runs all seven original cases in an
+authenticated425-row raw2489 frame; every original416 row and all previous
+13 cases remain literal. The failed419-row frame and both original ENOENT
+packets remain retained. All25 adjacent source laws and all20 historical
+cases pass with zero skips. The old measurement/setup tuples still refuse.
+Formatting passes, but the sparse local lint engine did not reproduce the
+archived six warnings; no configured type-inference credit is claimed. Fresh
+exact-head Actions remain required; source proofs grant no native, measured
+performance, Matrix, merge, release or public acceptance.

@@ -13,7 +13,10 @@ import {
 } from "./support/no-mutating-props-current-caller-source-custody.mjs";
 import { authenticateNoMutatingCallerFrame } from "./support/no-mutating-props-current-caller-frame.mjs";
 import { gitReaderSetupPairs } from "../performance/support/warm-type-backed-git-reader-setup.ts";
-import { privateNoMutatingCallerGit } from "./support/no-mutating-props-current-caller-git.mjs";
+import {
+  privateNoMutatingCallerGit,
+  copyNoMutatingCallerShallowBoundary,
+} from "./support/no-mutating-props-current-caller-git.mjs";
 
 const root = path.resolve(import.meta.dirname, "../..");
 const sha = (body) => createHash("sha256").update(body).digest("hex");
@@ -21,7 +24,7 @@ const read = (name) => fs.readFileSync(path.join(root, name));
 const manifest = JSON.parse(read(noMutatingCurrentCallerDirectory + "/successor.json"));
 const positive = () => authenticateNoMutatingCurrentCallerSource(root);
 
-test("current complete23 refuses both immutable old tuples and grants only its new source context", () => {
+void test("current complete23 refuses both immutable old tuples and grants only its new source context", () => {
   const result = positive();
   assert.equal(result.completeCurrentBodies, 23);
   assert.equal(new Set(result.paths).size, 23);
@@ -32,7 +35,7 @@ test("current complete23 refuses both immutable old tuples and grants only its n
   for (const key of ["compiled", "native", "performance"]) assert.equal(result[key], false);
 });
 
-test("each of the23 actual complete bodies refuses missing, foreign and historical source reads", () => {
+void test("each of the23 actual complete bodies refuses missing, foreign and historical source reads", () => {
   const current = positive();
   let controls = 0;
   for (const file of current.paths) {
@@ -96,10 +99,11 @@ function sourceFixture() {
       JSON.stringify(git("remote", "get-url", "origin").toString().trim()) +
       "\n",
   );
+  copyNoMutatingCallerShallowBoundary(root, owned);
   return owned;
 }
 
-test("physical omission, executable, symlink and old whole rule substitutes refuse after fresh positives", () => {
+void test("physical omission, executable, symlink and old whole rule substitutes refuse after fresh positives", () => {
   const owned = sourceFixture();
   const target = path.join(owned, manifest.rule.path);
   const original = fs.readFileSync(target);
@@ -128,14 +132,15 @@ test("physical omission, executable, symlink and old whole rule substitutes refu
   }
 });
 
-test("all three whole original caller modules and13 cases remain exact raw2489 inputs", () => {
+void test("all three original callers retain13 cases and the fourth retains its whole7 raw2489 cases", () => {
   positive();
   const frame = authenticateNoMutatingCallerFrame(root, manifest);
-  assert.equal(frame.size, 416);
+  assert.equal(frame.size, 425);
   assert.equal(
-    manifest.laws.reduce((count, law) => count + law.cases, 0),
+    manifest.laws.slice(0, 3).reduce((count, law) => count + law.cases, 0),
     13,
   );
+  assert.equal(manifest.laws[3].cases, 7);
   for (const law of manifest.laws) {
     assert.deepEqual(frame.get(law.path), read(law.archive));
     assert.equal(sha(frame.get(law.path)), law.sha256);
@@ -143,7 +148,7 @@ test("all three whole original caller modules and13 cases remain exact raw2489 i
   }
 });
 
-test("frame source and whole raw commit substitutions refuse rather than filling missing rows", () => {
+void test("frame source and whole raw commit substitutions refuse rather than filling missing rows", () => {
   positive();
   for (const change of [
     { source: "0".repeat(40) },
@@ -153,11 +158,11 @@ test("frame source and whole raw commit substitutions refuse rather than filling
     { laws: [...manifest.laws, manifest.laws[0]] },
   ])
     assert.throws(() => authenticateNoMutatingCallerFrame(root, { ...manifest, ...change }));
-  assert.equal(authenticateNoMutatingCallerFrame(root, manifest).size, 416);
+  assert.equal(authenticateNoMutatingCallerFrame(root, manifest).size, 425);
   assert.equal(positive().completeCurrentBodies, 23);
 });
 
-test("the external source law seals executing helper bodies without a self-checksum cycle", () => {
+void test("the external source law seals executing helper bodies without a self-checksum cycle", () => {
   assert.equal(
     sha(read(noMutatingCurrentCallerDirectory + "/successor.json")),
     noMutatingCurrentCallerManifestSHA256,
@@ -165,15 +170,15 @@ test("the external source law seals executing helper bodies without a self-check
   const fixed = [
     [
       "tests/tooling/support/no-mutating-props-current-caller-source-custody.mjs",
-      "facaefef2ff091fe2252110391f4587632dc114055c39ab6186fa46b0a3f400d",
+      "b27f733bb618bed3a9de302056024ed18e8082d639e0c2857d45ed122b0f4079",
     ],
     [
       "tests/tooling/support/no-mutating-props-current-caller-frame.mjs",
-      "c9b1eebfd15810bf5dfad8c90d2580a16da9a79ffa5083b2239d1d2336628add",
+      "8963f748c143c6c051e84ba5fe45b75fa07d09acaa72605c83af721f60087a80",
     ],
     [
       "tests/tooling/support/no-mutating-props-current-caller-git.mjs",
-      "f9afa9088bf11b52332d0c7562f69fb698cc19495a9fcbfbd7c596e5af09a6b1",
+      "d54ce79f0743fdd45b8d007cfd7dde61c0a7a5457bd879001d22b1ac528e3ffd",
     ],
   ];
   for (const [file, expected] of fixed) assert.equal(sha(read(file)), expected);
@@ -181,4 +186,30 @@ test("the external source law seals executing helper bodies without a self-check
   // This external law's full body is independently sealed by the parent source peer.
   // Neither the runtime manifest nor a running helper claims to authenticate itself.
   assert.equal(positive().performance, false);
+});
+
+void test("complete363 manifest and all four whole rejected source bodies remain fixed history", () => {
+  const context = positive();
+  const original = read(manifest.predecessorManifest.archive);
+  assert.equal(sha(original), "fa45cf8fa852f0c222af9378a981cb77d51d33f2bf58bad346230e4a00f8f532");
+  const before = JSON.parse(original);
+  const inverse = structuredClone(manifest);
+  for (const key of ["predecessorSource", "predecessorManifest", "predecessorSourceBodies"])
+    delete inverse[key];
+  inverse.laws = inverse.laws.slice(0, 3);
+  inverse.historicalFrame = before.historicalFrame;
+  inverse.historicalFrameRows = before.historicalFrameRows;
+  assert.deepEqual(inverse, before);
+  assert.equal(manifest.predecessorSourceBodies.length, 4);
+  for (const expected of manifest.predecessorSourceBodies) {
+    const body = read(expected.archive);
+    assert.equal(body.length, expected.bytes);
+    assert.equal(sha(body), expected.sha256);
+    assert.equal(
+      createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex"),
+      expected.gitBlob,
+    );
+  }
+  assert.equal(context.oldMeasurement, null);
+  assert.equal(context.oldSetup, null);
 });
