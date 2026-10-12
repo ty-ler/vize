@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -58,13 +59,13 @@ export function authenticateNoDupeCIRepairPhysical(root, read = reader(root)) {
   const manifestPath = `${noDupeCIRepairDirectory}/successor.json`;
   regular(manifestPath);
   const bytes = read(manifestPath);
-  assert.equal(digest(bytes), "1c82fe73b71513ca112386801b975a29f7d8107aead7487a26efdba50ff45f82");
+  assert.equal(digest(bytes), "e88b25363c88f221002b8c8a09523ba5951973c938664f37d392596107352b88");
   assert.deepEqual(physical(manifestPath), bytes);
   const manifest = JSON.parse(bytes);
   assert.equal(manifest.schema, "vize.lint.no-dupe-keys-ci-source-successor");
   assert.equal(manifest.version, 1);
   assert.equal(manifest.source, "9da2c1f2469f256a06b304785641c6e2e376a10e");
-  assert.equal(manifest.parent, "420d7bf263a404d8a2ea4a0d0a71815961519ada");
+  assert.equal(manifest.parent, "363794932d3776dcdca521531c7cec86c27e5e06");
   assert.equal(
     new Set(manifest.current.map(({ path: name }) => name)).size,
     manifest.current.length,
@@ -198,13 +199,75 @@ function relocatedParentContext(root, read, manifest) {
     }
     for (const name of manifest.parentFrameAbsent) rows.delete(name);
     const owned = materializeRows(rows);
-    parentFrames.set(key, owned);
+    authenticateLiteralParentFrame(root, manifest, rows, owned);
+    parentFrames.set(key, { root: owned, rows });
   }
-  const sourceRoot = parentFrames.get(key);
+  const frame = parentFrames.get(key);
+  const sourceRoot = frame.root;
+  qualifyMaterializedParentFrame(sourceRoot, frame.rows, manifest.parent);
   const parentRead = reader(sourceRoot);
   // The unmodified strict parent qualifier authenticates this physical frame on every reuse.
   authenticateNoMutatingModuleLayoutSourceFamily(sourceRoot, parentRead);
   return { root: sourceRoot, read: parentRead };
+}
+/** A cached parent frame cannot hide later physical body, mode, link, or literal HEAD changes. */
+function qualifyMaterializedParentFrame(root, rows, source) {
+  for (const [name, body] of rows) {
+    const target = path.join(root, name);
+    const status = fs.lstatSync(target);
+    assert(status.isFile() && !status.isSymbolicLink() && !(status.mode & 0o111), name);
+    assert.equal(fs.realpathSync(target), path.join(fs.realpathSync(root), name), name);
+    assert.deepEqual(fs.readFileSync(target), body, "cached parent whole body: " + name);
+  }
+  const head = path.join(root, ".git/HEAD");
+  const status = fs.lstatSync(head);
+  assert(status.isFile() && !status.isSymbolicLink() && !(status.mode & 0o111));
+  assert.equal(fs.readFileSync(head, "utf8"), source + "\n");
+}
+/** Every materialized body joins the real parent Git tree; the isolated HEAD is that literal commit. */
+function authenticateLiteralParentFrame(root, manifest, rows, owned) {
+  const git = (where, args) =>
+    execFileSync("git", ["--no-replace-objects", ...args], {
+      cwd: where,
+      maxBuffer: 32 * 1024 * 1024,
+    });
+  assert.match(manifest.parent, /^[a-f0-9]{40}$/u);
+  assert.equal(git(root, ["cat-file", "-t", manifest.parent]).toString().trim(), "commit");
+  const tree = new Map();
+  for (const line of git(root, ["ls-tree", "-r", "-z", manifest.parent])
+    .toString("utf8")
+    .split("\0")) {
+    if (!line) continue;
+    const match = /^([0-9]{6}) (blob|tree|commit) ([a-f0-9]{40})\t(.+)$/u.exec(line);
+    assert(match, "complete literal parent tree row");
+    assert(!tree.has(match[4]), match[4]);
+    tree.set(match[4], { mode: match[1], kind: match[2], blob: match[3] });
+  }
+  for (const [name, body] of rows) {
+    const row = tree.get(name);
+    assert(row && row.mode === "100644" && row.kind === "blob", name);
+    assert.equal(blob(body), row.blob, "parent whole Git body: " + name);
+  }
+  const common = git(root, ["rev-parse", "--git-common-dir"]).toString().trim();
+  const objects = fs.realpathSync(path.resolve(root, common, "objects"));
+  const origin = git(root, ["remote", "get-url", "origin"]).toString().trim();
+  assert(origin && !/[\r\n]/u.test(origin));
+  assert(!/[\r\n]/u.test(objects));
+  fs.mkdirSync(path.join(owned, ".git/objects/info"), { recursive: true });
+  fs.mkdirSync(path.join(owned, ".git/refs"));
+  fs.writeFileSync(path.join(owned, ".git/objects/info/alternates"), objects + "\n");
+  fs.writeFileSync(path.join(owned, ".git/HEAD"), manifest.parent + "\n");
+  fs.writeFileSync(
+    path.join(owned, ".git/config"),
+    '[core]\nrepositoryformatversion = 0\nbare = false\n[remote "origin"]\nurl = ' +
+      JSON.stringify(origin) +
+      "\n",
+  );
+  assert.equal(git(owned, ["rev-parse", "HEAD"]).toString().trim(), manifest.parent);
+  assert.deepEqual(
+    git(owned, ["cat-file", "commit", manifest.parent]),
+    git(root, ["cat-file", "commit", manifest.parent]),
+  );
 }
 function legacyParentBodies(root, manifest) {
   const snapshotPath = manifest.parentLegacySnapshot;
@@ -270,6 +333,38 @@ export async function runNoDupeParentModuleLayoutLaws(root) {
   const manifest = authenticateNoDupeCIRepairPhysical(root);
   const parent = relocatedParentContext(root, reader(root), manifest);
   const law = "tests/tooling/no-mutating-props-module-layout-source-custody.test.mjs";
+  const archived = manifest.parentProjection.find(({ path: name }) => name === law);
+  assert(archived);
+  assert.deepEqual(parent.read(law), reader(root)(archived.archive));
+  await import(pathToFileURL(path.join(parent.root, law)).href);
+}
+
+/** The unchanged parent caller runner proves current source refusal before all thirteen historical cases. */
+export async function runNoDupeParentCurrentCallerHistory(root, law) {
+  const manifest = authenticateNoDupeCIRepairPhysical(root);
+  const parent = relocatedParentContext(root, reader(root), manifest);
+  const caller = await import(
+    pathToFileURL(
+      path.join(
+        parent.root,
+        "tests/tooling/support/no-mutating-props-current-caller-source-custody.mjs",
+      ),
+    ).href
+  );
+  const result = await caller.runNoMutatingCurrentCallerHistory(parent.root, law);
+  const bytes = fs.readFileSync(result.packet);
+  const packetDirectory = path.join(root, "target/differential/no-dupe-parent-current-callers");
+  fs.mkdirSync(packetDirectory, { recursive: true });
+  const packet = path.join(packetDirectory, path.basename(law) + ".json");
+  fs.writeFileSync(packet, bytes);
+  assert.deepEqual(fs.readFileSync(packet), bytes);
+  return { ...result, packet };
+}
+/** All parent current-source omission/mode/substitution laws retain their complete physical controls. */
+export async function runNoDupeParentCurrentCallerLaws(root) {
+  const manifest = authenticateNoDupeCIRepairPhysical(root);
+  const parent = relocatedParentContext(root, reader(root), manifest);
+  const law = "tests/tooling/no-mutating-props-current-callers-source.test.mjs";
   const archived = manifest.parentProjection.find(({ path: name }) => name === law);
   assert(archived);
   assert.deepEqual(parent.read(law), reader(root)(archived.archive));

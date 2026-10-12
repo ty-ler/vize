@@ -16,3 +16,19 @@ The first child head `9da2c1f2469f256a06b304785641c6e2e376a10e` exposed an unesc
 A finite source successor preserves the original failed source head, complete manifests, old predicates and every corpus byte. Its actual current physical bodies and archives are authenticated before any historical read view. The original five namespace-correction laws execute unchanged in a sealed genuine `2690daf` source frame; their physical refusal loops and 1315-line predecessor ledger expectation remain intact. The unchanged generator separately checks the complete actual current consumer inventory. Thirty-four source laws pass with zero skipped tests on this intermediate parent; these do not qualify fresh native execution. Final parent composition, exact-head Actions, protected Stack merge and release acceptance remain unfinished.
 
 Paired issue decisions: [initial scope](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6121132210), [concrete CI repair](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6122646153).
+
+The final source composition branches from the actual published NoMutating parent
+`363794932d3776dcdca521531c7cec86c27e5e06`. Its first complete coupled run passes
+47 source tests with zero skips. The three incoming caller modules still execute
+all 13 original cases against the complete real `2489128` source and Git frame;
+the six current caller laws retain their original physical refusal controls.
+The child authenticates its actual full sources and archives before selecting a
+separate parent frame whose complete bytes join the real parent commit tree.
+Current source receives neither the old measured migration tuple nor the old
+Reader setup receipt. The 420 predecessor, all original 51/88 corpus vectors,
+39/8 controls, provider disagreements, and full failed-head logs remain intact.
+The original Node generator checks all 19 current inventory files separately.
+These are source checks; fresh exact-head Actions, protected native Stack merge,
+and released consumer acceptance remain unfinished.
+
+Paired final source decision: [complete parent composition](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6124348383).

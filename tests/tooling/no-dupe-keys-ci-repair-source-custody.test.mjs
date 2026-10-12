@@ -11,6 +11,7 @@ import {
   noDupeCIRepairDirectory,
   reviewedNoDupeCIRepairHistoricalReadView,
   reviewedNoDupeCIRepairParentReadView,
+  reviewedNoDupeCIRepairParentContext,
 } from "./support/no-dupe-keys-ci-repair-source-custody.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -22,7 +23,7 @@ const current = () => authenticateNoDupeCIRepairPhysical(root, read);
 void test("the complete CI successor authenticates actual current sources before both whole predecessors", () => {
   assert.equal(
     digest(read(helperPath)),
-    "ecf86503f5eab0e4ce722592cde69aeb72a17791104e10d356313d8387e2a419",
+    "a5b1075abf4fcca2b2aa2d2fd8bcbe8a103834b78ba9dfd23291723d2e76313e",
   );
   const manifest = authenticateNoDupeCIRepair(root, read);
   assert.equal(
@@ -125,6 +126,30 @@ void test("matching callback bytes and cached read views cannot hide actual cont
       authenticateNoDupeCIRepairPhysical(owned, local).current.length,
       manifest.current.length,
     );
+    const parent = reviewedNoDupeCIRepairParentContext(root, read);
+    const source = "tests/performance/support/warm-type-backed-default-migration-host.ts";
+    const target = path.join(parent.root, source);
+    const body = fs.readFileSync(target);
+    try {
+      fs.writeFileSync(target, Buffer.concat([body, Buffer.from(" ")]));
+      assert.throws(() => reviewedNoDupeCIRepairParentContext(root, read));
+      fs.writeFileSync(target, body);
+      fs.chmodSync(target, 0o755);
+      assert.throws(() => reviewedNoDupeCIRepairParentContext(root, read));
+      fs.chmodSync(target, 0o644);
+      assert.equal(reviewedNoDupeCIRepairParentContext(root, read).root, parent.root);
+      const head = path.join(parent.root, ".git/HEAD");
+      const literal = fs.readFileSync(head);
+      try {
+        fs.writeFileSync(head, "0".repeat(40) + "\n");
+        assert.throws(() => reviewedNoDupeCIRepairParentContext(root, read));
+      } finally {
+        fs.writeFileSync(head, literal);
+      }
+    } finally {
+      fs.chmodSync(target, 0o644);
+      fs.writeFileSync(target, body);
+    }
   } finally {
     fs.rmSync(owned, { recursive: true, force: true });
   }
@@ -185,7 +210,7 @@ void test("each changed source helper retains its complete predecessor through a
   body = body.replace(imported, "").split(selected).join("");
   assert.equal(
     body,
-    read(`${noDupeCIRepairDirectory}/420-formatted-original-helper.fixture`, "utf8"),
+    read(`${noDupeCIRepairDirectory}/36379493-formatted-original-helper.fixture`, "utf8"),
   );
   assert(
     historicalArchive(ownHelper).includes(
@@ -205,7 +230,7 @@ void test("each changed source helper retains its complete predecessor through a
     .replace(context, "const read = (name) => fs.readFileSync(path.join(root, name));\n");
   assert.equal(
     body,
-    read(`${noDupeCIRepairDirectory}/420-formatted-original-five-laws.fixture`, "utf8"),
+    read(`${noDupeCIRepairDirectory}/36379493-formatted-original-five-laws.fixture`, "utf8"),
   );
   const guard = "tests/tooling/support/no-mutating-props-test-correction-source-custody.mjs";
   assert.equal(read(guard, "utf8"), parentArchive(guard));
@@ -221,4 +246,34 @@ void test("each changed source helper retains its complete predecessor through a
   assert.equal(body.split(outerSelected).length, 5);
   body = body.replace(outerImports, "").replace(outerEntry, "").split(outerSelected).join("");
   assert.equal(body, parentArchive(outer));
+  for (const name of [
+    "tests/tooling/support/no-mutating-props-current-caller-source-custody.mjs",
+    "tests/tooling/support/no-mutating-props-current-caller-frame.mjs",
+    "tests/tooling/support/no-mutating-props-current-caller-git.mjs",
+  ])
+    assert.equal(read(name, "utf8"), parentArchive(name));
+  for (const name of [
+    "tests/tooling/reserved-suppression-default-routes.test.mjs",
+    "tests/tooling/warm-type-backed-default-migration-host.test.ts",
+    "tests/tooling/warm-type-backed-git-reader-nodeep.test.ts",
+  ]) {
+    const actual = read(name, "utf8");
+    assert.equal(actual.split("runNoDupeParentCurrentCallerHistory").length, 3);
+    assert.equal(actual.split("./support/no-dupe-keys-ci-repair-source-custody.mjs").length, 2);
+    assert.equal(
+      actual
+        .replaceAll("runNoDupeParentCurrentCallerHistory", "runNoMutatingCurrentCallerHistory")
+        .replace(
+          "./support/no-dupe-keys-ci-repair-source-custody.mjs",
+          "./support/no-mutating-props-current-caller-source-custody.mjs",
+        ),
+      parentArchive(name),
+    );
+  }
+  assert.equal(manifest.previousSourceBodies.length, 3);
+  for (const previous of manifest.previousSourceBodies) {
+    const bytes = read(previous.archive);
+    assert.equal(bytes.length, previous.identity.bytes);
+    assert.equal(digest(bytes), previous.identity.sha256);
+  }
 });
