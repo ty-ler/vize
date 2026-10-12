@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import fs from "node:fs";
 import { test } from "node:test";
+import { historicalCompositionBody } from "./support/native-lexical-composition-source.ts";
 import {
   assertNativeTerminalLocks,
   nativeTerminalManifest,
@@ -50,13 +50,11 @@ test("whole owned-image successor admits121 production and one executed corpus b
   assertNativeTerminalLocks(locks("before"), locks("after"), result);
 });
 
-test("actual successor source and full original runtime bodies match their finite review", () => {
+test("retained original SDK successor source and full runtime bodies match their finite review", () => {
   const actual = (side: "before" | "after", file: string) =>
     side === "before"
       ? digest(side, file)
-      : createHash("sha256")
-          .update(fs.readFileSync(new URL("../../" + file, import.meta.url)))
-          .digest("hex");
+      : createHash("sha256").update(historicalCompositionBody("sdk", file)).digest("hex");
   assert.ok(qualifyNativeTerminalHost(production, new Set(), actual));
 });
 

@@ -136,3 +136,61 @@ original400, all mandatory source checks and protected queue acceptance before
 merge. Original SDK f2 worker SIGSEGV remains an independent retained failure;
 fresh c9 JavaScript success supplies no causal fault attribution. Optional worker
 diagnostic controls neither replace these gates nor delay ordinary source work.
+
+
+## Accepted lexical composition
+
+The independent lexical ownership repair actually merged as
+`9708be553d7dcf5ae3a546bde6061e5630be02ba`, with all five protected
+workflows passing. SDK head `b4f7bab24f8ecbf4aa07bfd0fc60e8c7bcaf74a3`
+has its own successful full PR Check, original400 and complete native phases.
+Its original native archive authenticates all four named Linux controls and
+whole initialization, before/terminal receipts, exit0, empty stderr and actual
+reaping. The producer records the Cargo executable identity and full digest;
+its executable body is absent from that archive. That receipt limitation does
+not erase the physical packets or require a redundant builder. The original400
+archive authenticates534 whole inputs and79 comparable full vectors per side;
+its original permitted same-birth zombies remain permitted.
+
+Those passing packets qualify only b4. Its protected candidate could not merge
+with the queued lexical prefix: CLI/session declarations, the native workflow,
+the generated consumer inventory and the warm-workflow union conflicted. The
+SDK entry was removed from the queue. Keep lexical first and never jump it:
+a jump would discard the in-progress prefix builds. After its actual merge,
+compose the accepted main once and obtain fresh exact-head qualification.
+
+The local compiled-source snapshot is
+`46bebe0045e5d5ac44446d02dc4352c526c86e6c`, tree
+`cb865277f93a01545af9496391ceac5461a64476`. Both CLI module declarations
+and both session bodies survive. The native workflow executes the existing
+lexical supplement and SDK owned-image supplement together, remains350 rows,
+and retains every original phase. Regenerate the consumer inventory with its
+existing generator. Preserve incoming host qualifications and the SDK terminal
+source result in the warm-workflow union.
+
+The original SDK120/122 and lexical37 authorities remain byte-exact. A separate
+finite composition manifest changes only the two overlapping CLI/session
+source pairs. It authenticates every121 SDK production body, its corpus shell,
+all23 original runtime bodies, both final guards, and the entire accepted
+lexical nine-source/21-corpus/seven-preserved closure. It refuses absence,
+duplicates, unknown membership, partial or mixed bodies and foreign locks before
+recording the unchanged original400 comparison.
+
+One explicit preserved-manifest successor retains every original32 legacy
+case and every other original field while preserving the already reviewed SDK
+semantic-completion supplemental entry. The old lexical manifest and the five
+historical CLI/session/final-guard bodies are retained with complete Git blob,
+mode, length and SHA identities. Original positive laws replay those immutable
+bodies; separate laws qualify actual composed source. Neither replay nor source
+qualification grants native or performance credit.
+
+Native lexical custody likewise keeps its complete original source authority
+and adds only the complete reviewed composition. It captures and authenticates
+the entire SDK source/runtime closure in that mode. All original six producer
+laws, nine native vectors, maps, raw streams, ownership and provider controls
+remain mandatory. The prior source mismatch is a refusal, never runtime credit.
+
+TODO: qualify the new complete source on Actions, authenticate its actual four
+Linux laws and complete lexical/native/original400 packets, then enter the
+protected queue and observe all five workflows and actual merge. Original
+#8614/#8615 App gates, public consumer gaps and release remain unfinished.

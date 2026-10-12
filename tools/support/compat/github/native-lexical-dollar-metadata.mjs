@@ -3,11 +3,16 @@ import { spawnSync, execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import {
+  lexicalSourcePaths,
+  validateLexicalSourceBodies,
+} from "./native-lexical-composition-custody.mjs";
 
 export const helperPaths = [
   "native-lexical-dollar.sh",
   "native-lexical-dollar-metadata.mjs",
   "native-lexical-dollar-receipt.mjs",
+  "native-lexical-composition-custody.mjs",
 ].map((name) => `tools/support/compat/github/${name}`);
 export const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 export const cargoArgs = [
@@ -38,17 +43,7 @@ export const unobserved = [
   "native normalized options",
   "engine loaded source-file vector",
 ];
-const sourcePaths = (manifest) => [
-  ...helperPaths,
-  ...manifest.files.map(([file]) => file),
-  ...manifest.corpusBodies.map(([file]) => file),
-  "tests/performance/support/warm-type-backed-lexical-dollar-manifest.json",
-  "Cargo.toml",
-  "Cargo.lock",
-  "rust-toolchain.toml",
-  "crates/vize_canon/Cargo.toml",
-  "crates/vize_canon/src/lib.rs",
-];
+export const sourcePaths = (manifest) => lexicalSourcePaths(manifest, helperPaths);
 const git = (args) => execFileSync("git", ["--no-replace-objects", ...args]);
 const identity = (file) => {
   const actual = fs.realpathSync(file);
@@ -149,6 +144,7 @@ export function captureMetadata(output) {
     version: 1,
     source: { root, head, tree, noReplaceObjects: true },
     copied,
+    composition: validateLexicalSourceBodies(manifest, copied),
     testBinary,
     compilerArtifact: artifact,
     originalReceipts,
@@ -191,6 +187,13 @@ export function validateMetadata(output) {
   assert.equal(metadata.source.tree, sourceGit(["rev-parse", "HEAD^{tree}"]).toString().trim());
   assert.equal(text("source.sha").trim(), metadata.source.head);
   assert.equal(new Set(metadata.copied.map((entry) => entry.file)).size, metadata.copied.length);
+  const treeEntries = new Map(
+    sourceGit(["ls-tree", "-z", "HEAD", "--", ...metadata.copied.map((entry) => entry.file)])
+      .toString()
+      .split("\0")
+      .filter(Boolean)
+      .map((entry) => [entry.slice(entry.indexOf("\t") + 1), Buffer.from(entry + "\0")]),
+  );
   for (const entry of metadata.copied) {
     assert.ok(fs.lstatSync(path.join(output, "source", entry.file)).isFile());
     const body = fs.readFileSync(path.join(output, "source", entry.file));
@@ -202,7 +205,7 @@ export function validateMetadata(output) {
       .digest("hex");
     const gitEntry = Buffer.from(`100644 blob ${blob}\t${entry.file}\0`);
     assert.deepEqual(Buffer.from(entry.gitEntryHex, "hex"), gitEntry);
-    assert.deepEqual(sourceGit(["ls-tree", "-z", "HEAD", "--", entry.file]), gitEntry);
+    assert.deepEqual(treeEntries.get(entry.file), gitEntry);
   }
   const manifest = read(
     "source/tests/performance/support/warm-type-backed-lexical-dollar-manifest.json",
@@ -216,8 +219,7 @@ export function validateMetadata(output) {
       metadata.copied.find((entry) => entry.file === name).sha256,
       digest(fs.readFileSync(new URL(path.basename(name), import.meta.url))),
     );
-  for (const [file, , expected] of [...manifest.files, ...manifest.corpusBodies])
-    assert.equal(metadata.copied.find((entry) => entry.file === file).sha256, expected);
+  assert.deepEqual(metadata.composition, validateLexicalSourceBodies(manifest, metadata.copied));
   assert.equal(manifest.files.length, 9);
   assert.equal(manifest.corpusBodies.length, 21);
   for (const executable of [metadata.testBinary, metadata.native])

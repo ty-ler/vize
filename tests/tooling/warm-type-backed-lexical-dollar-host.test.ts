@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
+import { historicalCompositionBody } from "./support/native-lexical-composition-source.ts";
 
 import { qualifyHostMoves } from "../performance/support/warm-type-backed-host-qualifications.ts";
 import { qualifyLexicalDollarHost } from "../performance/support/warm-type-backed-lexical-dollar-host.ts";
@@ -41,8 +42,8 @@ assert.equal(capsule.source, "a6633fb68b110d07abd5ee5a6049bc15f20f9c7f");
 const actual = new Map<string, { before: string | null; after: string | null }>();
 for (const [file, before, after] of [...manifest.files, ...manifest.corpusBodies]) {
   assert.ok(fs.lstatSync(path.join(root, file)).isFile(), file);
-  actual.set(file, { before, after: sha(fs.readFileSync(path.join(root, file))) });
-  assert.equal(actual.get(file)!.after, after, `actual whole proposed body: ${file}`);
+  actual.set(file, { before, after: sha(historicalCompositionBody("lexical", file)) });
+  assert.equal(actual.get(file)!.after, after, `retained whole accepted lexical body: ${file}`);
 }
 assert.equal(capsule.entries.length, 9);
 assert.deepEqual(
@@ -74,14 +75,14 @@ for (const entry of capsule.entries) {
   actual.get(entry.path)!.before = originalDigest;
 }
 for (const [file, original] of manifest.preservedBodies) {
-  const digest = sha(fs.readFileSync(path.join(root, file)));
+  const digest = sha(historicalCompositionBody("lexical", file));
   assert.equal(digest, original, `complete original400/legacy authority: ${file}`);
   actual.set(file, { before: digest, after: digest });
 }
 const production = manifest.files.map(([file]) => file);
 const digest = (side: "before" | "after", file: string) => actual.get(file)?.[side] ?? null;
 
-test("complete actual lexical source, original bodies and whole corpus qualify without runtime credit", () => {
+test("complete retained lexical source, original bodies and whole corpus qualify without runtime credit", () => {
   const result = qualifyLexicalDollarHost(production, new Set(), digest);
   assert.ok(result);
   assert.deepEqual(result.files, production);
