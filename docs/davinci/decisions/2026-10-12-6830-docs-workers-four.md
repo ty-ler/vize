@@ -153,3 +153,36 @@ relocated original proof tree. Public PNG permissions must equal their retained
 logical producer output; readable non-executable `0600`/`0666` substitutions also
 refuse. All source-census Git commands disable replacement objects explicitly;
 an actual temporary-Git blob replacement cannot supply reviewed input bytes.
+
+## Whole pair refusal and bounded diagnostics
+
+Run [38181218859](https://github.com/ubugeeei-prod/vize/actions/runs/38181218859)
+at immutable `43a69347e12f446ad48aa0e1c092a761aa181dc2` completed both original
+238-page arms. Their retained durations are 2,494,421.655597 ms and
+1,653,332.473442 ms. Whole source-before/after JSON bytes match exactly, SHA256
+`3c96750299e60e9a9aa2f6b163d29d1955e17bf52c2b7b002948a8250e72445f`.
+The final qualifier was killed with exit 137 after 226,838 ms; artifact
+`11720140758` preserves every packet and raw capture. No accepted speed gain is
+established. A process/resource cause for the kill remains unproven.
+
+The original complete report comparison genuinely differs in 12,640 leaves,
+including viewport coordinates, 333 unique PNG body hashes and two locale hover
+fields. Two retained PNG pairs have 1,068 changed pixels confined to a native
+sidebar focus outline. Do not ignore these fields, normalize pixels, weaken the
+oracle or repeat the whole campaign blindly.
+
+The pair comparator keeps the complete deep-strict equality oracle. On refusal,
+it visits the complete JSON trees, counts every differing leaf, and retains only
+one bounded path/type/hash diagnostic. It attaches no full expected/actual
+objects and never stringifies the entire evidence for an error. Far-end unknown
+members and changed raw-body identities still refuse. This repairs refusal
+reporting; the retained pair remains refused and full acceptance is unfinished.
+
+The original comparator fails the authored large-packet law because it attaches
+both complete objects; the bounded comparator passes all 19 focused laws without
+skips. Replaying only the six authenticated original report/control/locale JSON
+bodies preserves all 238 reports per arm and refuses the same 12,640 differing
+leaves with a 406-byte diagnostic. The local comparison takes 42.95 ms and the
+process peaks at 453,328 KiB including parsing and original normalization. This
+is diagnostic-only evidence: no full raw-PNG qualifier replay or hosted memory
+counterfactual establishes the original exit-137 cause or whole-pair acceptance.

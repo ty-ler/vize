@@ -3,17 +3,78 @@ import { mkdtemp, readFile, realpath, rm, symlink, writeFile, mkdir } from "node
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { isDeepStrictEqual } from "node:util";
 import {
   packet,
   qualifyWorkersPair,
   workersArmEvidence,
 } from "../../docs/scripts/navigation-render-workers-evidence.ts";
 import { treeCustody } from "../../docs/scripts/navigation-render-workers-custody.ts";
+import { assertWorkersEvidenceEqual } from "../../docs/scripts/navigation-render-workers-equality.ts";
 import {
   fixtureExpected,
   prepareWorkersArm,
   writePacket,
 } from "./fixtures/docs-render-workers-fixture.ts";
+
+test("large whole packets keep exact equality and bounded refusal diagnostics", () => {
+  const original = {
+    reports: Array.from({ length: 12_000 }, (_, index) => ({
+      index,
+      source: `original/${index}`,
+      body: "preserved source body ".repeat(12),
+      png: "a".repeat(64),
+    })),
+  };
+  const copy = structuredClone(original);
+  assertWorkersEvidenceEqual(original, copy);
+  let changedCase = 0;
+  for (const change of [
+    () => {
+      copy.reports.at(-1)!.png = "b".repeat(64);
+    },
+    () => {
+      copy.reports.at(-1)!.body = "private-body-marker".repeat(100_000);
+    },
+    () => {
+      Object.assign(copy.reports.at(-1)!, {
+        ["unknown-field-marker".repeat(1_000)]: { nested: [true, false] },
+      });
+    },
+    () => {
+      for (const report of copy.reports) report.png = "b".repeat(64);
+    },
+  ]) {
+    const changed = structuredClone(original);
+    copy.reports = changed.reports;
+    change();
+    const leafCount = [1, 1, 2, 12_000][changedCase++];
+    assert.throws(
+      () => assertWorkersEvidenceEqual(original, copy),
+      (error: unknown) => {
+        assert(error instanceof assert.AssertionError);
+        assert(Buffer.byteLength(error.message) < 1_024);
+        assert(!Object.hasOwn(error, "actual") && !Object.hasOwn(error, "expected"));
+        assert(!error.message.includes("private-body-marker"));
+        assert(!error.message.includes("unknown-field-marker".repeat(10)));
+        assert.match(error.message, new RegExp(`: ${leafCount} leaf differences;`));
+        assert(error.message.includes(`path=$["reports"][${leafCount === 12_000 ? 0 : 11_999}]`));
+        assert.equal(isDeepStrictEqual(original, copy), false);
+        return true;
+      },
+    );
+  }
+  assert.throws(
+    () => assertWorkersEvidenceEqual({ original: { kept: [1, 2] } }, {}),
+    /2 leaf differences/,
+  );
+  assert.throws(
+    () => assertWorkersEvidenceEqual({}, { future: { kept: [1, 2, 3] } }),
+    /3 leaf differences/,
+  );
+  assert.throws(() => assertWorkersEvidenceEqual({}, Object.create(null)));
+  assert.throws(() => assertWorkersEvidenceEqual(null, { far: [1, 2] }), /3 leaf differences/);
+});
 
 test("whole 119-route two/four qualification retains every original packet and raw PNG", async () => {
   const temporary = await realpath(

@@ -4,6 +4,7 @@ import path from "node:path";
 import { createRenderJobs } from "./navigation-render-concurrency.ts";
 import { defaultNavigationRenderRoutes } from "./navigation-render-routes.ts";
 import { workersCaptureEvidence } from "./navigation-render-workers-captures.ts";
+import { assertWorkersEvidenceEqual } from "./navigation-render-workers-equality.ts";
 import {
   list,
   number,
@@ -216,7 +217,7 @@ export async function qualifyWorkersPair(
 ) {
   const two = await workersArmEvidence(baseline, 2, expected);
   const four = await workersArmEvidence(candidate, 4, expected);
-  assert.deepEqual(
+  assertWorkersEvidenceEqual(
     two.evidence,
     four.evidence,
     "Full original source/font/link/theme/layout/control/PNG custody must agree",
