@@ -1,0 +1,585 @@
+{
+  "matrixRun": 38205026873,
+  "source": "ef34d1a0409fc711a6c5cefcf0708b0cce78f502",
+  "fixtureManifestSHA256": "e1fe55bcfebec4c2b1aed73be23fa3a4d362667b919fc0c35b94fbe0283d9a68",
+  "scope": "exact pinned public fixture blobs only; no new provider execution or acceptance claim",
+  "rows": [
+    {
+      "project": "ant-design-vue",
+      "path": "site/src/layouts/icons/ThemeIcon.vue",
+      "revision": "7483836f0adac76516e527df893c3d84a7cd4005",
+      "repository": "https://github.com/vueComponent/ant-design-vue",
+      "api": "repos/vueComponent/ant-design-vue/contents/site/src/layouts/icons/ThemeIcon.vue?ref=7483836f0adac76516e527df893c3d84a7cd4005",
+      "html_url": "https://github.com/vueComponent/ant-design-vue/blob/7483836f0adac76516e527df893c3d84a7cd4005/site/src/layouts/icons/ThemeIcon.vue",
+      "gitBlob": "b6ff7c1c730f3ded5461c83edb31913469eb5116",
+      "bytes": 1350,
+      "sha256": "eb0f821769f5aa61f9819562c9420c411cf755240f2f33564b7483611f38423b",
+      "wholeInput": "/tmp/vize-447-original-project3-pinned-whole-inputs/ant-design-vue--site--src--layouts--icons--ThemeIcon.vue",
+      "sourceConfig": {
+        "id": "ant-design-vue",
+        "displayName": "Ant Design Vue",
+        "kind": "component-library",
+        "fixturePath": "tests/_fixtures/_git/ant-design-vue",
+        "repository": "https://github.com/vueComponent/ant-design-vue",
+        "revision": "7483836f0adac76516e527df893c3d84a7cd4005",
+        "license": {
+          "spdx": "MIT",
+          "files": [
+            "LICENSE"
+          ]
+        },
+        "vueGlobs": [
+          "components/**/*.vue",
+          "site/**/*.vue"
+        ],
+        "tsconfig": "tsconfig.json",
+        "coverage": [
+          "compiler",
+          "linter",
+          "typechecker",
+          "formatter",
+          "syntax-highlighter",
+          "lsp"
+        ],
+        "diff": "curator-compare",
+        "lspAuthoredOracle": {
+          "templateBinding": {
+            "file": "components/comment/demo/editor.vue",
+            "symbol": "handleSubmit",
+            "usageAnchor": "@click=\"handleSubmit\"",
+            "declarationAnchor": "const handleSubmit = () => {",
+            "hoverContains": [
+              "const handleSubmit: () => void"
+            ],
+            "renameTo": "__vizeRenamedHandleSubmit"
+          },
+          "componentBoundary": {
+            "importerFile": "components/drawer/demo/user-profile.vue",
+            "componentFile": "components/drawer/demo/descriptionItem/index.vue",
+            "tagName": "description-item",
+            "tagAnchor": "<description-item title=\"Full Name\" ",
+            "completionItemCount": 38,
+            "completionItems": [
+              {
+                "label": "v-if",
+                "rank": 0
+              },
+              {
+                "label": "v-else-if",
+                "rank": 1
+              },
+              {
+                "label": "v-else",
+                "rank": 2
+              },
+              {
+                "label": "v-for",
+                "rank": 3
+              },
+              {
+                "label": "v-on",
+                "rank": 4
+              },
+              {
+                "label": "v-bind",
+                "rank": 5
+              },
+              {
+                "label": "v-model",
+                "rank": 6
+              },
+              {
+                "label": "v-slot",
+                "rank": 7
+              },
+              {
+                "label": "v-show",
+                "rank": 8
+              },
+              {
+                "label": "v-pre",
+                "rank": 9
+              },
+              {
+                "label": "v-once",
+                "rank": 10
+              },
+              {
+                "label": "v-memo",
+                "rank": 11
+              },
+              {
+                "label": "v-cloak",
+                "rank": 12
+              },
+              {
+                "label": "v-text",
+                "rank": 13
+              },
+              {
+                "label": "v-html",
+                "rank": 14
+              },
+              {
+                "label": "@",
+                "rank": 15
+              },
+              {
+                "label": ":",
+                "rank": 16
+              },
+              {
+                "label": "#",
+                "rank": 17
+              },
+              {
+                "label": "@click",
+                "rank": 18
+              },
+              {
+                "label": "@input",
+                "rank": 19
+              },
+              {
+                "label": "@change",
+                "rank": 20
+              },
+              {
+                "label": "@submit",
+                "rank": 21
+              },
+              {
+                "label": "@keydown",
+                "rank": 22
+              },
+              {
+                "label": "@keyup",
+                "rank": 23
+              },
+              {
+                "label": "@focus",
+                "rank": 24
+              },
+              {
+                "label": "@blur",
+                "rank": 25
+              },
+              {
+                "label": "@mouseenter",
+                "rank": 26
+              },
+              {
+                "label": "@mouseleave",
+                "rank": 27
+              },
+              {
+                "label": "id",
+                "rank": 28
+              },
+              {
+                "label": "class",
+                "rank": 29
+              },
+              {
+                "label": "style",
+                "rank": 30
+              },
+              {
+                "label": "role",
+                "rank": 31
+              },
+              {
+                "label": "tabindex",
+                "rank": 32
+              },
+              {
+                "label": "aria-label",
+                "rank": 33
+              },
+              {
+                "label": "ref",
+                "rank": 34
+              },
+              {
+                "label": "key",
+                "rank": 35
+              },
+              {
+                "label": "title",
+                "rank": 36
+              },
+              {
+                "label": "content",
+                "rank": 37
+              }
+            ],
+            "dependencyEdit": {
+              "anchor": "  content?: string;\n",
+              "replacement": "  content?: string;\n  vizeOracleProbe?: boolean;\n",
+              "completionLabel": "vize-oracle-probe"
+            }
+          },
+          "fileLifecycle": {
+            "copiedFile": "components/drawer/demo/descriptionItem/__VizeOracleDescriptionItem.vue",
+            "renamedFile": "components/drawer/demo/descriptionItem/__VizeOracleRenamedDescriptionItem.vue",
+            "originalImportSpecifier": "./descriptionItem/index.vue",
+            "copiedImportSpecifier": "./descriptionItem/__VizeOracleDescriptionItem.vue",
+            "renamedImportSpecifier": "./descriptionItem/__VizeOracleRenamedDescriptionItem.vue",
+            "markerInsertionAnchor": "<script lang=\"ts\" setup>\n",
+            "markerSymbol": "__vizeAntDesignVueFileLifecycleMarker__"
+          }
+        }
+      }
+    },
+    {
+      "project": "vue-uploader",
+      "path": "src/components/uploader.vue",
+      "revision": "0be2f9571644ac2f7d3348420baf8fb8105c5555",
+      "repository": "https://github.com/simple-uploader/vue-uploader",
+      "api": "repos/simple-uploader/vue-uploader/contents/src/components/uploader.vue?ref=0be2f9571644ac2f7d3348420baf8fb8105c5555",
+      "html_url": "https://github.com/simple-uploader/vue-uploader/blob/0be2f9571644ac2f7d3348420baf8fb8105c5555/src/components/uploader.vue",
+      "gitBlob": "a4927dcfd7572c1fc6204f6afbbcfe874993946d",
+      "bytes": 4000,
+      "sha256": "c3c5314f04219dd9769e96a27b0f7172b7553758546763e2a5603a3520abcf4b",
+      "wholeInput": "/tmp/vize-447-original-project3-pinned-whole-inputs/vue-uploader--src--components--uploader.vue",
+      "sourceConfig": {
+        "id": "vue-uploader",
+        "displayName": "Vue Uploader",
+        "kind": "component-library",
+        "fixturePath": "tests/_fixtures/_git/vue-uploader",
+        "repository": "https://github.com/simple-uploader/vue-uploader",
+        "revision": "0be2f9571644ac2f7d3348420baf8fb8105c5555",
+        "license": {
+          "spdx": "MIT",
+          "files": [
+            "LICENSE"
+          ]
+        },
+        "vueGlobs": [
+          "**/*.vue"
+        ],
+        "coverage": [
+          "compiler",
+          "linter",
+          "typechecker",
+          "formatter",
+          "syntax-highlighter",
+          "lsp"
+        ],
+        "lspAuthoredOracle": {
+          "templateBinding": {
+            "file": "example/App.vue",
+            "symbol": "statusText",
+            "usageAnchor": ":file-status-text=\"statusText\"",
+            "declarationAnchor": "        statusText: {",
+            "hoverContains": [
+              "statusText"
+            ],
+            "renameTo": "__vizeRenamedStatusText"
+          },
+          "componentBoundary": {
+            "importerFile": "src/components/uploader.vue",
+            "componentFile": "src/components/btn.vue",
+            "tagName": "uploader-btn",
+            "tagAnchor": "        <uploader-btn ",
+            "completionItemCount": 40,
+            "completionItems": [
+              {
+                "label": "v-if",
+                "rank": 0
+              },
+              {
+                "label": "v-else-if",
+                "rank": 1
+              },
+              {
+                "label": "v-else",
+                "rank": 2
+              },
+              {
+                "label": "v-for",
+                "rank": 3
+              },
+              {
+                "label": "v-on",
+                "rank": 4
+              },
+              {
+                "label": "v-bind",
+                "rank": 5
+              },
+              {
+                "label": "v-model",
+                "rank": 6
+              },
+              {
+                "label": "v-slot",
+                "rank": 7
+              },
+              {
+                "label": "v-show",
+                "rank": 8
+              },
+              {
+                "label": "v-pre",
+                "rank": 9
+              },
+              {
+                "label": "v-once",
+                "rank": 10
+              },
+              {
+                "label": "v-memo",
+                "rank": 11
+              },
+              {
+                "label": "v-cloak",
+                "rank": 12
+              },
+              {
+                "label": "v-text",
+                "rank": 13
+              },
+              {
+                "label": "v-html",
+                "rank": 14
+              },
+              {
+                "label": "@",
+                "rank": 15
+              },
+              {
+                "label": ":",
+                "rank": 16
+              },
+              {
+                "label": "#",
+                "rank": 17
+              },
+              {
+                "label": "@click",
+                "rank": 18
+              },
+              {
+                "label": "@input",
+                "rank": 19
+              },
+              {
+                "label": "@change",
+                "rank": 20
+              },
+              {
+                "label": "@submit",
+                "rank": 21
+              },
+              {
+                "label": "@keydown",
+                "rank": 22
+              },
+              {
+                "label": "@keyup",
+                "rank": 23
+              },
+              {
+                "label": "@focus",
+                "rank": 24
+              },
+              {
+                "label": "@blur",
+                "rank": 25
+              },
+              {
+                "label": "@mouseenter",
+                "rank": 26
+              },
+              {
+                "label": "@mouseleave",
+                "rank": 27
+              },
+              {
+                "label": "id",
+                "rank": 28
+              },
+              {
+                "label": "class",
+                "rank": 29
+              },
+              {
+                "label": "style",
+                "rank": 30
+              },
+              {
+                "label": "title",
+                "rank": 31
+              },
+              {
+                "label": "role",
+                "rank": 32
+              },
+              {
+                "label": "tabindex",
+                "rank": 33
+              },
+              {
+                "label": "aria-label",
+                "rank": 34
+              },
+              {
+                "label": "ref",
+                "rank": 35
+              },
+              {
+                "label": "key",
+                "rank": 36
+              },
+              {
+                "label": "directory",
+                "rank": 37
+              },
+              {
+                "label": "single",
+                "rank": 38
+              },
+              {
+                "label": "attrs",
+                "rank": 39
+              }
+            ],
+            "dependencyEdit": {
+              "anchor": "      attrs: {\n        type: Object,\n        default () {\n          return {}\n        }\n      }",
+              "replacement": "      attrs: {\n        type: Object,\n        default () {\n          return {}\n        }\n      },\n      vizeOracleProbe: Boolean",
+              "completionLabel": "vize-oracle-probe"
+            }
+          },
+          "fileLifecycle": {
+            "copiedFile": "src/components/__VizeOracleBtn.vue",
+            "renamedFile": "src/components/__VizeOracleRenamedBtn.vue",
+            "originalImportSpecifier": "./btn.vue",
+            "copiedImportSpecifier": "./__VizeOracleBtn.vue",
+            "renamedImportSpecifier": "./__VizeOracleRenamedBtn.vue",
+            "markerInsertionAnchor": "<script>\n",
+            "markerSymbol": "__vizeVueUploaderBtnMarker__"
+          }
+        },
+        "diff": "curator-compare"
+      }
+    },
+    {
+      "project": "mobile-web-best-practice",
+      "path": "src/views/home/widgets/card.vue",
+      "revision": "34a793b13492405f75c97b46253df5ee142014cc",
+      "repository": "https://github.com/mcuking/mobile-web-best-practice",
+      "api": "repos/mcuking/mobile-web-best-practice/contents/src/views/home/widgets/card.vue?ref=34a793b13492405f75c97b46253df5ee142014cc",
+      "html_url": "https://github.com/mcuking/mobile-web-best-practice/blob/34a793b13492405f75c97b46253df5ee142014cc/src/views/home/widgets/card.vue",
+      "gitBlob": "a34c67ed8a84ed8554f3c537f58bd9421d9953d4",
+      "bytes": 4859,
+      "sha256": "0e8ca44978bf438cf9ff9df7bb2adf315af226efc32b511d12a10c75dc22f6e1",
+      "wholeInput": "/tmp/vize-447-original-project3-pinned-whole-inputs/mobile-web-best-practice--src--views--home--widgets--card.vue",
+      "sourceConfig": {
+        "id": "mobile-web-best-practice",
+        "displayName": "Mobile Web Best Practice",
+        "kind": "application",
+        "fixturePath": "tests/_fixtures/_git/mobile-web-best-practice",
+        "repository": "https://github.com/mcuking/mobile-web-best-practice",
+        "revision": "34a793b13492405f75c97b46253df5ee142014cc",
+        "license": {
+          "spdx": "MIT",
+          "files": [
+            "LICENSE"
+          ]
+        },
+        "vueGlobs": [
+          "**/*.vue"
+        ],
+        "tsconfig": "tsconfig.json",
+        "coverage": [
+          "compiler",
+          "linter",
+          "typechecker",
+          "formatter",
+          "syntax-highlighter",
+          "lsp"
+        ],
+        "diff": "e2e-vrt"
+      }
+    },
+    {
+      "project": "mobile-web-best-practice",
+      "path": "src/views/home/index.vue",
+      "revision": "34a793b13492405f75c97b46253df5ee142014cc",
+      "repository": "https://github.com/mcuking/mobile-web-best-practice",
+      "api": "repos/mcuking/mobile-web-best-practice/contents/src/views/home/index.vue?ref=34a793b13492405f75c97b46253df5ee142014cc",
+      "html_url": "https://github.com/mcuking/mobile-web-best-practice/blob/34a793b13492405f75c97b46253df5ee142014cc/src/views/home/index.vue",
+      "gitBlob": "342a6ef6022b9d144920951ba0645c909c5745a2",
+      "bytes": 4792,
+      "sha256": "d8240ec0195bcad09eedc9d9d3623aea283db3ca3aaebcb2fa8b87e573a5e3d0",
+      "wholeInput": "/tmp/vize-447-original-project3-pinned-whole-inputs/mobile-web-best-practice--src--views--home--index.vue",
+      "sourceConfig": {
+        "id": "mobile-web-best-practice",
+        "displayName": "Mobile Web Best Practice",
+        "kind": "application",
+        "fixturePath": "tests/_fixtures/_git/mobile-web-best-practice",
+        "repository": "https://github.com/mcuking/mobile-web-best-practice",
+        "revision": "34a793b13492405f75c97b46253df5ee142014cc",
+        "license": {
+          "spdx": "MIT",
+          "files": [
+            "LICENSE"
+          ]
+        },
+        "vueGlobs": [
+          "**/*.vue"
+        ],
+        "tsconfig": "tsconfig.json",
+        "coverage": [
+          "compiler",
+          "linter",
+          "typechecker",
+          "formatter",
+          "syntax-highlighter",
+          "lsp"
+        ],
+        "diff": "e2e-vrt"
+      }
+    },
+    {
+      "project": "mobile-web-best-practice",
+      "path": "src/views/note/create/index.vue",
+      "revision": "34a793b13492405f75c97b46253df5ee142014cc",
+      "repository": "https://github.com/mcuking/mobile-web-best-practice",
+      "api": "repos/mcuking/mobile-web-best-practice/contents/src/views/note/create/index.vue?ref=34a793b13492405f75c97b46253df5ee142014cc",
+      "html_url": "https://github.com/mcuking/mobile-web-best-practice/blob/34a793b13492405f75c97b46253df5ee142014cc/src/views/note/create/index.vue",
+      "gitBlob": "4b86478eddf410cc2bf7badb7773225112127622",
+      "bytes": 6708,
+      "sha256": "41547f7090f8d1b4d7893c0027eb8f8f7c0d3c8472f7e6bada7863d5126b9615",
+      "wholeInput": "/tmp/vize-447-original-project3-pinned-whole-inputs/mobile-web-best-practice--src--views--note--create--index.vue",
+      "sourceConfig": {
+        "id": "mobile-web-best-practice",
+        "displayName": "Mobile Web Best Practice",
+        "kind": "application",
+        "fixturePath": "tests/_fixtures/_git/mobile-web-best-practice",
+        "repository": "https://github.com/mcuking/mobile-web-best-practice",
+        "revision": "34a793b13492405f75c97b46253df5ee142014cc",
+        "license": {
+          "spdx": "MIT",
+          "files": [
+            "LICENSE"
+          ]
+        },
+        "vueGlobs": [
+          "**/*.vue"
+        ],
+        "tsconfig": "tsconfig.json",
+        "coverage": [
+          "compiler",
+          "linter",
+          "typechecker",
+          "formatter",
+          "syntax-highlighter",
+          "lsp"
+        ],
+        "diff": "e2e-vrt"
+      }
+    }
+  ]
+}

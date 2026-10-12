@@ -1,0 +1,8 @@
+{
+  "output": "/tmp/vize-attrs-expression-ranges-20261012/whole-before-and-official.json",
+  "sha256": "4b6ed294205f4abc9af6666504188452b5f6b293484bd4e39b89a422bfe91e91",
+  "bytes": 285047,
+  "nativePass": 25,
+  "officialPass": 25,
+  "failures": []
+}

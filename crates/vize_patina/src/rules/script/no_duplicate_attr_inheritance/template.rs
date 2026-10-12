@@ -1,6 +1,6 @@
-//! The template signal: `v-bind="$attrs"` on the component's root element.
+//! The template signal: `v-bind="$attrs"` in an eligible single-root template.
 //!
-//! # Why the AST, and why the *root* element specifically
+//! # Why the AST, and the bounded single-root traversal
 //!
 //! A recovered `v-bind="$attrs"` *creates* a finding, so an over-match is a
 //! false positive. Taking the evidence from the template AST excludes the cases
@@ -13,14 +13,14 @@
 //! * inside a `v-pre` region the parser rewrites every directive to a plain
 //!   attribute, so nothing there is a `DirectiveNode` at all.
 //!
-//! The trap is **which element**. Upstream reports the duplication on the
-//! *root* element's `v-bind="$attrs"`, because that is where the fallthrough
-//! attributes are applied a second time. `v-bind="$attrs"` on a nested element
-//! is the documented way to forward attributes to an inner node, is idiomatic,
-//! and is normally paired with `inheritAttrs: false`; reporting it would be a
-//! false positive on correct code. So only the single root element counts, and
-//! a multi-root (fragment) template — which has no single fallthrough target —
-//! records nothing.
+//! The pinned provider reports unbound `$attrs` references in argumentless
+//! bindings throughout an eligible template, including descendants. This
+//! producer keeps the exact-expression and single-root boundaries, then walks
+//! existing AST elements in source order. With inheritance left at its default,
+//! both root and descendant forwarding need the opt-out. Explicit scopes stop
+//! new descendant inference; an unscoped slot wrapper does not introduce a
+//! local `$attrs` binding and remains eligible for traversal.
+//! A multi-root fragment still has no single fallthrough target here.
 //!
 //! # Direction of error
 //!
@@ -28,39 +28,77 @@
 //!   `bind` with **no argument** whose expression is exactly `$attrs`. `:x="$attrs"`
 //!   carries an argument and binds one prop; `v-bind="$attrsExtra"` is a
 //!   different identifier.
-//! * **Under-match** loses a report: an expression that only *contains* `$attrs`
-//!   (`v-bind="{ ...$attrs }"`) is not matched, and neither is a root
-//!   `<template v-if>` wrapper, whose real root is decided at runtime.
+//! * **Under-match** loses a report: compound expressions, rendered-root
+//!   `<template>` wrappers and new descendant scopes stay conservative.
+//!   Existing root scope behavior is retained without new scope inference.
 
-use vize_relief::{DirectiveNode, ElementNode, ExpressionNode, PropNode, RootNode};
+use vize_relief::{
+    DirectiveNode, ElementNode, ExpressionNode, PropNode, RootNode, TemplateChildNode,
+};
 
-/// The location of a root `v-bind="$attrs"`, relative to the template block.
+/// The `$attrs` value's location, relative to the validated template block.
 pub(super) struct AttrsSpread {
     pub(super) start: u32,
     pub(super) end: u32,
+    pub(super) is_root: bool,
 }
 
-/// Find `v-bind="$attrs"` on the template's single root element.
+/// Report exact `$attrs` values in the single root and its unscoped descendants.
 ///
-/// Returns `None` when the template has no single root element, when that root
-/// is a `<template>` wrapper (its rendered root is not statically known), or
-/// when the root does not spread `$attrs`.
-pub(super) fn root_attrs_spread(root: &RootNode<'_>) -> Option<AttrsSpread> {
-    let element = single_root_element(root)?;
+/// No report when the template has no single root element or that root is a
+/// `<template>` wrapper whose rendered root is unavailable. Reuse the existing
+/// validated AST directly, without another parse or an intermediate collection.
+pub(super) fn for_each_attrs_spread(root: &RootNode<'_>, mut report: impl FnMut(AttrsSpread)) {
+    let Some(element) = single_root_element(root) else {
+        return;
+    };
     // A root `<template v-if>` / `<template v-for>` renders its children, so
     // the element that receives the fallthrough attributes is not this node.
     if element.tag == "template" {
-        return None;
+        return;
     }
-    element.props.iter().find_map(|prop| match prop {
-        PropNode::Directive(directive) if is_attrs_spread(directive, root.source) => {
-            Some(AttrsSpread {
-                start: directive.loc.span.start,
-                end: directive.loc.span.end,
-            })
+    visit_element(element, root.source, true, &mut report);
+}
+
+fn visit_element(
+    element: &ElementNode<'_>,
+    source: &str,
+    is_root: bool,
+    report: &mut impl FnMut(AttrsSpread),
+) {
+    // The original root producer stays eligible. New descendant reports cannot
+    // establish an unbound $attrs through a loop or slot-parameter scope.
+    let scoped = element.props.iter().any(|prop| {
+        matches!(prop, PropNode::Directive(d) if d.name == "for"
+        || (d.name == "slot" && d.exp.as_ref().is_some_and(|exp| {
+            !expression_source(exp, source).trim().is_empty()
+        })))
+    });
+    if scoped && !is_root {
+        return;
+    }
+    for prop in &element.props {
+        if let PropNode::Directive(directive) = prop
+            && is_attrs_spread(directive, source)
+            && let Some(exp) = &directive.exp
+        {
+            let raw = exp.loc().span.slice(source);
+            let leading = raw.len() - raw.trim_start().len();
+            let trailing = raw.len() - raw.trim_end().len();
+            report(AttrsSpread {
+                start: exp.loc().span.start + leading as u32,
+                end: exp.loc().span.end - trailing as u32,
+                is_root,
+            });
         }
-        _ => None,
-    })
+    }
+    if !scoped {
+        for child in &element.children {
+            if let TemplateChildNode::Element(child) = child {
+                visit_element(child, source, false, report);
+            }
+        }
+    }
 }
 
 /// The template's single root element, if it has exactly one.

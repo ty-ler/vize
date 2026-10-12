@@ -1,0 +1,276 @@
+{
+  "schema": "vize.lint.attrs-expression-primary-custody",
+  "version": 1,
+  "base": "dd188515f8ec3c51662b4f4d69adcd39c86a0907",
+  "matrix": {
+    "run": 38205026873,
+    "source": "ef34d1a0409fc711a6c5cefcf0708b0cce78f502",
+    "artifactId": 11727196356,
+    "zipSha256": "6b746f8c7ce6dbdd5982957ae8527fc14de65091e7986b548b15d5e0ad32cd79",
+    "rawProjectBytes": 8994689,
+    "rawProjectSha256": "304166e576d3b2972bf5cca3e3d3680a74c321e686e408a0a7d2dea328c14901",
+    "zipMembers": 60,
+    "allCrcPassed": true,
+    "budget": "Original whole zero-budget breach remains immutable. Scoped role observations never replace/qualify the Matrix packet."
+  },
+  "corpusSha256": "76de7272ef8f7f3f90fb50101c62a9e068af215f38014dc6f6fd41ec39555d0c",
+  "productionSources": [
+    {
+      "path": "crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance.rs",
+      "bytes": 7449,
+      "sha256": "8763e954de3033fbc98d7ae3a9083761305088ea15b191582a2f541b696b2cd6"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance/template.rs",
+      "bytes": 6153,
+      "sha256": "ea9155489e73f4819f65ddac9cc5d039671d33f042ca6180798eb921cd7d08d5"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance/tests/template.rs",
+      "bytes": 7839,
+      "sha256": "b961fdff2281c1c72ffc1bdb02a8166b52f720f1c4104657eb002741581b5196"
+    }
+  ],
+  "files": [
+    {
+      "path": "cases.json",
+      "bytes": 83949,
+      "sha256": "76de7272ef8f7f3f90fb50101c62a9e068af215f38014dc6f6fd41ec39555d0c"
+    },
+    {
+      "path": "reference/ant-design-vue-license-api.json",
+      "bytes": 5523,
+      "sha256": "fdd5fa99b4dbfd733d5db635049df06b2438f5d2f5408f499e34442e4d81759d"
+    },
+    {
+      "path": "reference/ant-design-vue.LICENSE",
+      "bytes": 3284,
+      "sha256": "092403b6450d5100dc9746f9cef1c72614118042bf6707ad74b60b4c218050f4"
+    },
+    {
+      "path": "reference/authored-corpus-with-root-scopes.json",
+      "bytes": 82863,
+      "sha256": "143fde86fb0e2bf7554829fe8ad6a2b3432a631ee0f7aecd0f1fdb58bf4d318c"
+    },
+    {
+      "path": "reference/authored-corpus.json",
+      "bytes": 72635,
+      "sha256": "f9e84738d7bcba00b9f81234e896f0f00a5af42d4bd55dff4e4c69c45c54a7a6"
+    },
+    {
+      "path": "reference/eslint-plugin-vue.LICENSE",
+      "bytes": 1071,
+      "sha256": "dbbf03317f0101fed5643cd87ca80fb769e358fa4f428445bf2315deeb23a154"
+    },
+    {
+      "path": "reference/eslint-plugin-vue.package.json",
+      "bytes": 4437,
+      "sha256": "f0ea5d1178ef413822f94486698b6ffcd62515e02bf860633d204c261fb70761"
+    },
+    {
+      "path": "reference/first-reference.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reference/first-reference.stdout",
+      "bytes": 251,
+      "sha256": "6c77f8abf6b40906ecd66402be150278746864105fb95e523f56cdf261126092"
+    },
+    {
+      "path": "reference/observe-before.mjs",
+      "bytes": 7007,
+      "sha256": "93cdd55534880d6d4a1baa8c7012cc29b6f599437df1007655d3d27b6194c0fa"
+    },
+    {
+      "path": "reference/original-ant-design-vue-lint-divergence.json.gz",
+      "bytes": 352968,
+      "sha256": "3de2197f60c76ce2b49f0a7ca822d627a24d74d8e3f2224fb26be927da969bd4"
+    },
+    {
+      "path": "reference/original-input-public-custody.json",
+      "bytes": 18886,
+      "sha256": "168a366d89abbc06d30ccb5191a8e2c2ef40831e7dd937a47ad5a6addedc90e8"
+    },
+    {
+      "path": "reference/original-matrix-package.json.fixture",
+      "bytes": 999,
+      "sha256": "f0903bb317e21f8d684e9253a9ad50389104c6b01b9168f98097099a1b566b91"
+    },
+    {
+      "path": "reference/original-matrix-runner.rs.fixture",
+      "bytes": 68493,
+      "sha256": "70eb083efe07d0eaf417c7b4d6f6a3d944d53738662ec2740f6ba684dc43ebe7"
+    },
+    {
+      "path": "reference/original-project3.zip",
+      "bytes": 962517,
+      "sha256": "6b746f8c7ce6dbdd5982957ae8527fc14de65091e7986b548b15d5e0ad32cd79"
+    },
+    {
+      "path": "reference/original-theme-icon-native-whole.json",
+      "bytes": 712,
+      "sha256": "8f964be4689f95842a4a6c8fb31e74fc933181fbf4cb07d249f2954d85c931b0"
+    },
+    {
+      "path": "reference/pinned-rule.js.fixture",
+      "bytes": 3386,
+      "sha256": "22d09914cb7dec9b6c100cc2d50413b2d3c05761fde082e2e4ad93393e7d4f15"
+    },
+    {
+      "path": "reference/root-scope-preservation-supplement.json",
+      "bytes": 10188,
+      "sha256": "e2e8e24b7725329387c8459fb4c7a4ddd5dcec1b063597fa48477ce0fc11181a"
+    },
+    {
+      "path": "reference/whole-before-and-official.json",
+      "bytes": 285047,
+      "sha256": "4b6ed294205f4abc9af6666504188452b5f6b293484bd4e39b89a422bfe91e91"
+    },
+    {
+      "path": "source-custody/0-before.rs.fixture",
+      "bytes": 6956,
+      "sha256": "7aa2a1acff67014204ed4a277ca75eca66da56856e80f99d1719776d3a496c3b"
+    },
+    {
+      "path": "source-custody/1-before.rs.fixture",
+      "bytes": 4838,
+      "sha256": "d3054766591ec55588524f47dc6ed55dd4e21b5941fd99374fe72898cb780cfc"
+    },
+    {
+      "path": "source-custody/2-before.rs.fixture",
+      "bytes": 7561,
+      "sha256": "49f300a15577d2247b3a105b9f684297930f1fa578142b0185cbd3577612dc2a"
+    },
+    {
+      "path": "source-custody/before.json",
+      "bytes": 1189,
+      "sha256": "c83f9e1f670a454c66d75972b27393b3fd589dc20d47bd6a352453db9f66f6db"
+    },
+    {
+      "path": "sources/Argument.vue",
+      "bytes": 96,
+      "sha256": "7b83ca0ea7b8ef0be160f04da9fc0ca919ee83cac45eaa90625ed0dcb7206496"
+    },
+    {
+      "path": "sources/Comment.vue",
+      "bytes": 108,
+      "sha256": "deeb1c54713e00fc14b0d6f392f925cb17cb63719cbec9c3d767d83384236322"
+    },
+    {
+      "path": "sources/FalseOptions.vue",
+      "bytes": 132,
+      "sha256": "9c8d5df72182222771bdfcbd1052d6ce66b4032c2acebef60afe58ce9423bf3c"
+    },
+    {
+      "path": "sources/FalseSetup.vue",
+      "bytes": 154,
+      "sha256": "f768d06bc4c846d82d72c0a9f72105fd5a40bbe86b005b275e607cdf5ab68bd4"
+    },
+    {
+      "path": "sources/ForLocal.vue",
+      "bytes": 151,
+      "sha256": "0f8bf2302d1cf6e6132fe7b10b30f45a25509bb54c6fefb719d083b9ad0ed7be"
+    },
+    {
+      "path": "sources/Fragment.vue",
+      "bytes": 109,
+      "sha256": "3b6d88a8145163ce7e42c09d1869016be3de6ae8698608d796e15c2f016bedc9"
+    },
+    {
+      "path": "sources/Nested.vue",
+      "bytes": 99,
+      "sha256": "4522c3f1e9bf19c18216237f8817ffac3eeedb9784ecd55d813a88778ce7c9d7"
+    },
+    {
+      "path": "sources/Opaque.vue",
+      "bytes": 157,
+      "sha256": "c0da8d015199293492686fbbeb88416d10e17b963fda2c864d4eee7624dcfe84"
+    },
+    {
+      "path": "sources/Ordered.vue",
+      "bytes": 123,
+      "sha256": "38da0a957e94a2b0361721ce96f38c042336a1aa88db18d6a0796baa58d63e6f"
+    },
+    {
+      "path": "sources/Other.vue",
+      "bytes": 127,
+      "sha256": "7f8fdc760eee58c8e0a3836661e115ea7956881cf3f265cd4ae970c2acdedf1a"
+    },
+    {
+      "path": "sources/Pre.vue",
+      "bytes": 105,
+      "sha256": "46b20839500c4985f0e38ca5c051a3acb4dda1dbf367601e453ff3a66ed55b3f"
+    },
+    {
+      "path": "sources/Rich.vue",
+      "bytes": 92,
+      "sha256": "e1b174e8a01014dbe55b675eabf372224cbfe0de841d02e6757abf013f174cf4"
+    },
+    {
+      "path": "sources/Root.vue",
+      "bytes": 85,
+      "sha256": "48f92575f9de40f8af733b2b63347883a489b2ae98b33c7a2bd83f3cee713e85"
+    },
+    {
+      "path": "sources/RootFor.vue",
+      "bytes": 126,
+      "sha256": "222cd4d4270a32aa8f54dbdee4594397e452685b4787a47c64a997f28c0f5be8"
+    },
+    {
+      "path": "sources/RootForLocal.vue",
+      "bytes": 128,
+      "sha256": "e8b704a131af57aff3adb045e8d5696c11fcd674bf5e074350c798a3d6f1ece6"
+    },
+    {
+      "path": "sources/Sibling.vue",
+      "bytes": 184,
+      "sha256": "2c1522867d6d4e241033e28fabe24b41c3a2c79b950039659b703cdfd1c32a8f"
+    },
+    {
+      "path": "sources/SingleQuote.vue",
+      "bytes": 99,
+      "sha256": "636129a8954be5aa6a5ac2609aecd5a3da6c88900a2113a6879690a965b9e56b"
+    },
+    {
+      "path": "sources/Slot.vue",
+      "bytes": 146,
+      "sha256": "a3f4c5651b6689d4aa87ead759951ae44dcfea2c843b92d1a589a33282cef5d3"
+    },
+    {
+      "path": "sources/SlotLocal.vue",
+      "bytes": 143,
+      "sha256": "25d4fbea0a2df7fb775e2d3802e8f0109269b3ca56f4e66597419686bd6f8361"
+    },
+    {
+      "path": "sources/SlotScope.vue",
+      "bytes": 137,
+      "sha256": "b4d7040eb87f5008f995832a65ddc049b24f06dd8acc14400ca6f755f297d88c"
+    },
+    {
+      "path": "sources/TemplateRoot.vue",
+      "bytes": 132,
+      "sha256": "af806d8c6720661ff61b54d17951b011558eea2893e4bde39b8c8f97c71fa015"
+    },
+    {
+      "path": "sources/ThemeIcon.vue",
+      "bytes": 1350,
+      "sha256": "eb0f821769f5aa61f9819562c9420c411cf755240f2f33564b7483611f38423b"
+    },
+    {
+      "path": "sources/Trimmed.vue",
+      "bytes": 89,
+      "sha256": "77505b18da45c07875d9bcfd2e75963ff55e7eedcacbf48f17637c13355b8646"
+    },
+    {
+      "path": "sources/True.vue",
+      "bytes": 123,
+      "sha256": "e2ab8c032fcc53bb910c8c75bcab4aab9c28955a53bf7da80020639d8326cc1b"
+    },
+    {
+      "path": "sources/Unicode.vue",
+      "bytes": 124,
+      "sha256": "54133d7042929070c4de9615a5c8a19b2ecd0bf3094520ec564c478d1b1572e8"
+    }
+  ]
+}

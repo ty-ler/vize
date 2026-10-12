@@ -1,0 +1,254 @@
+{
+  "schema": "vize.lint.attrs-expression-root-scope-preservation-supplement",
+  "version": 1,
+  "originalSha256": "f9e84738d7bcba00b9f81234e896f0f00a5af42d4bd55dff4e4c69c45c54a7a6",
+  "authority": "Two whole source-authored neighbor controls before any native/provider observation; no change to original23 vectors.",
+  "cases": [
+    {
+      "id": "root-for-existing-positive",
+      "filename": "RootFor.vue",
+      "source": "<script setup lang=\"ts\">\nconst items = [{}];\n</script>\n<template>\n  <div v-for=\"item in items\" v-bind=\"$attrs\" />\n</template>\n",
+      "sourceSha256": "222cd4d4270a32aa8f54dbdee4594397e452685b4787a47c64a997f28c0f5be8",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "RootFor.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 95,
+            "end": 110,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 95,
+                "end": 110
+              }
+            ]
+          }
+        ]
+      },
+      "beforeCli": [
+        {
+          "file": "RootFor.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 5,
+              "column": 30,
+              "endLine": 5,
+              "endColumn": 45,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "RootFor.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 103,
+            "end": 109,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 103,
+                "end": 109
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "RootFor.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 5,
+              "column": 38,
+              "endLine": 5,
+              "endColumn": 44,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/RootFor.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 38,
+              "endLine": 5,
+              "endColumn": 44,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\nconst items = [{}];\n</script>\n<template>\n  <div v-for=\"item in items\" v-bind=\"$attrs\" />\n</template>\n"
+        }
+      ],
+      "limit": "Existing legitimate root report must remain; scoped descendants are refused conservatively.",
+      "observed": false
+    },
+    {
+      "id": "root-for-existing-local-limitation",
+      "filename": "RootForLocal.vue",
+      "source": "<script setup lang=\"ts\">\nconst items = [{}];\n</script>\n<template>\n  <div v-for=\"$attrs in items\" v-bind=\"$attrs\" />\n</template>\n",
+      "sourceSha256": "e8b704a131af57aff3adb045e8d5696c11fcd674bf5e074350c798a3d6f1ece6",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "RootForLocal.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 97,
+            "end": 112,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 97,
+                "end": 112
+              }
+            ]
+          }
+        ]
+      },
+      "beforeCli": [
+        {
+          "file": "RootForLocal.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 5,
+              "column": 32,
+              "endLine": 5,
+              "endColumn": 47,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "RootForLocal.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 105,
+            "end": 111,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 105,
+                "end": 111
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "RootForLocal.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 5,
+              "column": 40,
+              "endLine": 5,
+              "endColumn": 46,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/RootForLocal.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": "Preserve existing root spread behavior, then refuse traversal below explicit template scopes. Root-local attrs binding remains a named pre-existing native false positive; no generic template semantic scope parser is introduced.",
+      "observed": false
+    }
+  ]
+}

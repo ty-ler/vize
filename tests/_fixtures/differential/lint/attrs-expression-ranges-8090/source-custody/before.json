@@ -1,0 +1,26 @@
+{
+  "base": "dd188515f8ec3c51662b4f4d69adcd39c86a0907",
+  "sources": [
+    {
+      "path": "crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance.rs",
+      "archive": "/tmp/vize-attrs-expression-ranges-20261012/original-source/0-before.rs.fixture",
+      "sha256": "7aa2a1acff67014204ed4a277ca75eca66da56856e80f99d1719776d3a496c3b",
+      "bytes": 6956,
+      "gitBlob": "08f010cf66ae705966a7c3ef3bb91a3f935dd861"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance/template.rs",
+      "archive": "/tmp/vize-attrs-expression-ranges-20261012/original-source/1-before.rs.fixture",
+      "sha256": "d3054766591ec55588524f47dc6ed55dd4e21b5941fd99374fe72898cb780cfc",
+      "bytes": 4838,
+      "gitBlob": "e22bd2ea5d0d5742df1d857f282f6411d0bc3a1f"
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance/tests/template.rs",
+      "archive": "/tmp/vize-attrs-expression-ranges-20261012/original-source/2-before.rs.fixture",
+      "sha256": "49f300a15577d2247b3a105b9f684297930f1fa578142b0185cbd3577612dc2a",
+      "bytes": 7561,
+      "gitBlob": "7df176e7ef0f2bccd7e7a150c51d9a33e85c11bb"
+    }
+  ]
+}

@@ -1,0 +1,2055 @@
+{
+  "schema": "vize.lint.attrs-expression-ranges-authored-corpus",
+  "version": 1,
+  "authority": "Whole inputs and independently source-authored before/after API/CLI and pinned official-role packets before any consumer/provider execution. Original447 Matrix source packet is separate immutable authority; scoped role is not whole Matrix parity.",
+  "base": "dd188515f8ec3c51662b4f4d69adcd39c86a0907",
+  "rule": "script/no-duplicate-attr-inheritance",
+  "cases": [
+    {
+      "id": "theme-icon-original",
+      "filename": "ThemeIcon.vue",
+      "source": "<template>\n  <Icon v-bind=\"$attrs\">\n    <template #component>\n      <svg width=\"1em\" height=\"1em\" viewBox=\"0 0 21 21\" fill=\"currentColor\" v-bind=\"$attrs\">\n        <g fillRule=\"evenodd\">\n          <g fillRule=\"nonzero\">\n            <path\n              d=\"M7.02 3.635l12.518 12.518a1.863 1.863 0 010 2.635l-1.317 1.318a1.863 1.863 0 01-2.635 0L3.068 7.588A2.795 2.795 0 117.02 3.635zm2.09 14.428a.932.932 0 110 1.864.932.932 0 010-1.864zm-.043-9.747L7.75 9.635l9.154 9.153 1.318-1.317-9.154-9.155zM3.52 12.473c.514 0 .931.417.931.931v.932h.932a.932.932 0 110 1.864h-.932v.931a.932.932 0 01-1.863 0l-.001-.931h-.93a.932.932 0 010-1.864h.93v-.932c0-.514.418-.931.933-.931zm15.374-3.727a1.398 1.398 0 110 2.795 1.398 1.398 0 010-2.795zM4.385 4.953a.932.932 0 000 1.317l2.046 2.047L7.75 7 5.703 4.953a.932.932 0 00-1.318 0zM14.701.36a.932.932 0 01.931.932v.931h.932a.932.932 0 010 1.864h-.933l.001.932a.932.932 0 11-1.863 0l-.001-.932h-.93a.932.932 0 110-1.864h.93v-.931a.932.932 0 01.933-.932z\"\n            />\n          </g>\n        </g>\n      </svg>\n    </template>\n  </Icon>\n</template>\n<script lang=\"ts\">\nimport { defineComponent } from 'vue';\nimport Icon from '@ant-design/icons-vue';\nexport default defineComponent({\n  name: 'ThemeIcon',\n  components: {\n    Icon,\n  },\n  setup() {\n    return {};\n  },\n});\n</script>\n<style lang=\"less\" scoped></style>\n",
+      "sourceSha256": "eb0f821769f5aa61f9819562c9420c411cf755240f2f33564b7483611f38423b",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "ThemeIcon.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 19,
+            "end": 34,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 19,
+                "end": 34
+              }
+            ]
+          }
+        ]
+      },
+      "beforeCli": [
+        {
+          "file": "ThemeIcon.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 2,
+              "column": 9,
+              "endLine": 2,
+              "endColumn": 24,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "ThemeIcon.vue",
+        "error_count": 0,
+        "warning_count": 2,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 27,
+            "end": 33,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 27,
+                "end": 33
+              }
+            ]
+          },
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+            "start": 146,
+            "end": 152,
+            "help": "Disable automatic inheritance with `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "manual attribute forwarding",
+                "start": 146,
+                "end": 152
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "ThemeIcon.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 2,
+              "column": 17,
+              "endLine": 2,
+              "endColumn": 23,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            },
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+              "line": 4,
+              "column": 85,
+              "endLine": 4,
+              "endColumn": 91,
+              "help": "Disable automatic inheritance with defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 2
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/ThemeIcon.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 2,
+              "column": 17,
+              "endLine": 2,
+              "endColumn": 23,
+              "messageId": "noDuplicateAttrInheritance"
+            },
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 4,
+              "column": 85,
+              "endLine": 4,
+              "endColumn": 91,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 2,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<template>\n  <Icon v-bind=\"$attrs\">\n    <template #component>\n      <svg width=\"1em\" height=\"1em\" viewBox=\"0 0 21 21\" fill=\"currentColor\" v-bind=\"$attrs\">\n        <g fillRule=\"evenodd\">\n          <g fillRule=\"nonzero\">\n            <path\n              d=\"M7.02 3.635l12.518 12.518a1.863 1.863 0 010 2.635l-1.317 1.318a1.863 1.863 0 01-2.635 0L3.068 7.588A2.795 2.795 0 117.02 3.635zm2.09 14.428a.932.932 0 110 1.864.932.932 0 010-1.864zm-.043-9.747L7.75 9.635l9.154 9.153 1.318-1.317-9.154-9.155zM3.52 12.473c.514 0 .931.417.931.931v.932h.932a.932.932 0 110 1.864h-.932v.931a.932.932 0 01-1.863 0l-.001-.931h-.93a.932.932 0 010-1.864h.93v-.932c0-.514.418-.931.933-.931zm15.374-3.727a1.398 1.398 0 110 2.795 1.398 1.398 0 010-2.795zM4.385 4.953a.932.932 0 000 1.317l2.046 2.047L7.75 7 5.703 4.953a.932.932 0 00-1.318 0zM14.701.36a.932.932 0 01.931.932v.931h.932a.932.932 0 010 1.864h-.933l.001.932a.932.932 0 11-1.863 0l-.001-.932h-.93a.932.932 0 110-1.864h.93v-.931a.932.932 0 01.933-.932z\"\n            />\n          </g>\n        </g>\n      </svg>\n    </template>\n  </Icon>\n</template>\n<script lang=\"ts\">\nimport { defineComponent } from 'vue';\nimport Icon from '@ant-design/icons-vue';\nexport default defineComponent({\n  name: 'ThemeIcon',\n  components: {\n    Icon,\n  },\n  setup() {\n    return {};\n  },\n});\n</script>\n<style lang=\"less\" scoped></style>\n"
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "root-simple",
+      "filename": "Root.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div v-bind=\"$attrs\" />\n</template>\n",
+      "sourceSha256": "48f92575f9de40f8af733b2b63347883a489b2ae98b33c7a2bd83f3cee713e85",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Root.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 54,
+            "end": 69,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 54,
+                "end": 69
+              }
+            ]
+          }
+        ]
+      },
+      "beforeCli": [
+        {
+          "file": "Root.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 5,
+              "column": 8,
+              "endLine": 5,
+              "endColumn": 23,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Root.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 62,
+            "end": 68,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 62,
+                "end": 68
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "Root.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 5,
+              "column": 16,
+              "endLine": 5,
+              "endColumn": 22,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Root.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 16,
+              "endLine": 5,
+              "endColumn": 22,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div v-bind=\"$attrs\" />\n</template>\n"
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "nested-simple",
+      "filename": "Nested.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div><button v-bind=\"$attrs\" /></div>\n</template>\n",
+      "sourceSha256": "4522c3f1e9bf19c18216237f8817ffac3eeedb9784ecd55d813a88778ce7c9d7",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Nested.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Nested.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Nested.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+            "start": 70,
+            "end": 76,
+            "help": "Disable automatic inheritance with `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "manual attribute forwarding",
+                "start": 70,
+                "end": 76
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "Nested.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+              "line": 5,
+              "column": 24,
+              "endLine": 5,
+              "endColumn": 30,
+              "help": "Disable automatic inheritance with defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Nested.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 24,
+              "endLine": 5,
+              "endColumn": 30,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div><button v-bind=\"$attrs\" /></div>\n</template>\n"
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "root-and-nested-slot",
+      "filename": "Slot.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <Icon v-bind=\"$attrs\"><template #component><svg v-bind=\"$attrs\" /></template></Icon>\n</template>\n",
+      "sourceSha256": "a3f4c5651b6689d4aa87ead759951ae44dcfea2c843b92d1a589a33282cef5d3",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Slot.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 55,
+            "end": 70,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 55,
+                "end": 70
+              }
+            ]
+          }
+        ]
+      },
+      "beforeCli": [
+        {
+          "file": "Slot.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 5,
+              "column": 9,
+              "endLine": 5,
+              "endColumn": 24,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Slot.vue",
+        "error_count": 0,
+        "warning_count": 2,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 63,
+            "end": 69,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 63,
+                "end": 69
+              }
+            ]
+          },
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+            "start": 105,
+            "end": 111,
+            "help": "Disable automatic inheritance with `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "manual attribute forwarding",
+                "start": 105,
+                "end": 111
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "Slot.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 5,
+              "column": 17,
+              "endLine": 5,
+              "endColumn": 23,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            },
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+              "line": 5,
+              "column": 59,
+              "endLine": 5,
+              "endColumn": 65,
+              "help": "Disable automatic inheritance with defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 2
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Slot.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 17,
+              "endLine": 5,
+              "endColumn": 23,
+              "messageId": "noDuplicateAttrInheritance"
+            },
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 59,
+              "endLine": 5,
+              "endColumn": 65,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 2,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <Icon v-bind=\"$attrs\"><template #component><svg v-bind=\"$attrs\" /></template></Icon>\n</template>\n"
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "nested-source-order",
+      "filename": "Ordered.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div><span v-bind=\"$attrs\" /><button v-bind=\"$attrs\" /></div>\n</template>\n",
+      "sourceSha256": "38da0a957e94a2b0361721ce96f38c042336a1aa88db18d6a0796baa58d63e6f",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Ordered.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Ordered.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Ordered.vue",
+        "error_count": 0,
+        "warning_count": 2,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+            "start": 68,
+            "end": 74,
+            "help": "Disable automatic inheritance with `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "manual attribute forwarding",
+                "start": 68,
+                "end": 74
+              }
+            ]
+          },
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+            "start": 94,
+            "end": 100,
+            "help": "Disable automatic inheritance with `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "manual attribute forwarding",
+                "start": 94,
+                "end": 100
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "Ordered.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+              "line": 5,
+              "column": 22,
+              "endLine": 5,
+              "endColumn": 28,
+              "help": "Disable automatic inheritance with defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            },
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+              "line": 5,
+              "column": 48,
+              "endLine": 5,
+              "endColumn": 54,
+              "help": "Disable automatic inheritance with defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 2
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Ordered.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 22,
+              "endLine": 5,
+              "endColumn": 28,
+              "messageId": "noDuplicateAttrInheritance"
+            },
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 48,
+              "endLine": 5,
+              "endColumn": 54,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 2,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div><span v-bind=\"$attrs\" /><button v-bind=\"$attrs\" /></div>\n</template>\n"
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "trimmed-root-value",
+      "filename": "Trimmed.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div v-bind=\"  $attrs  \" />\n</template>\n",
+      "sourceSha256": "77505b18da45c07875d9bcfd2e75963ff55e7eedcacbf48f17637c13355b8646",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Trimmed.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 54,
+            "end": 73,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 54,
+                "end": 73
+              }
+            ]
+          }
+        ]
+      },
+      "beforeCli": [
+        {
+          "file": "Trimmed.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 5,
+              "column": 8,
+              "endLine": 5,
+              "endColumn": 27,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Trimmed.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+            "start": 64,
+            "end": 70,
+            "help": "Opt out of the automatic inheritance so only this `v-bind` applies them, e.g. `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "attributes applied twice",
+                "start": 64,
+                "end": 70
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "Trimmed.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `v-bind=\"$attrs\"` on the root element applies the fallthrough attributes twice, because `inheritAttrs` defaults to true.",
+              "line": 5,
+              "column": 18,
+              "endLine": 5,
+              "endColumn": 24,
+              "help": "Opt out of the automatic inheritance so only this v-bind applies them, e.g. defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Trimmed.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 18,
+              "endLine": 5,
+              "endColumn": 24,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div v-bind=\"  $attrs  \" />\n</template>\n"
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "single-quote",
+      "filename": "SingleQuote.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div><button v-bind='$attrs' /></div>\n</template>\n",
+      "sourceSha256": "636129a8954be5aa6a5ac2609aecd5a3da6c88900a2113a6879690a965b9e56b",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "SingleQuote.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "SingleQuote.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "SingleQuote.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+            "start": 70,
+            "end": 76,
+            "help": "Disable automatic inheritance with `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "manual attribute forwarding",
+                "start": 70,
+                "end": 76
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "SingleQuote.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+              "line": 5,
+              "column": 24,
+              "endLine": 5,
+              "endColumn": 30,
+              "help": "Disable automatic inheritance with defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/SingleQuote.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 24,
+              "endLine": 5,
+              "endColumn": 30,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div><button v-bind='$attrs' /></div>\n</template>\n"
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "unicode-crlf",
+      "filename": "Unicode.vue",
+      "source": "<script setup lang=\"ts\">\r\n\r\n</script>\r\n<template>\r\n  <div title=\"日本🦊\"><button v-bind=\"$attrs\" /></div>\r\n</template>\r\n",
+      "sourceSha256": "54133d7042929070c4de9615a5c8a19b2ecd0bf3094520ec564c478d1b1572e8",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Unicode.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Unicode.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Unicode.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+            "start": 93,
+            "end": 99,
+            "help": "Disable automatic inheritance with `defineOptions({ inheritAttrs: false })` or `inheritAttrs: false` in the component options.",
+            "fix": null,
+            "labels": [
+              {
+                "message": "manual attribute forwarding",
+                "start": 93,
+                "end": 99
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "Unicode.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+              "line": 5,
+              "column": 36,
+              "endLine": 5,
+              "endColumn": 42,
+              "help": "Disable automatic inheritance with defineOptions({ inheritAttrs: false }) or inheritAttrs: false in the component options."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Unicode.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 37,
+              "endLine": 5,
+              "endColumn": 43,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\r\n\r\n</script>\r\n<template>\r\n  <div title=\"日本🦊\"><button v-bind=\"$attrs\" /></div>\r\n</template>\r\n"
+        }
+      ],
+      "limit": "Native CLI scalar columns differ from ESLint UTF16 columns; native API byte spans remain whole-source offsets.",
+      "observed": false
+    },
+    {
+      "id": "explicit-false-setup",
+      "filename": "FalseSetup.vue",
+      "source": "<script setup lang=\"ts\">\ndefineOptions({ inheritAttrs: false });\n</script>\n<template>\n  <div v-bind=\"$attrs\"><button v-bind=\"$attrs\" /></div>\n</template>\n",
+      "sourceSha256": "f768d06bc4c846d82d72c0a9f72105fd5a40bbe86b005b275e607cdf5ab68bd4",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "FalseSetup.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "FalseSetup.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "FalseSetup.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "FalseSetup.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/FalseSetup.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "explicit-false-options",
+      "filename": "FalseOptions.vue",
+      "source": "<script lang=\"ts\">\nexport default { inheritAttrs: false };\n</script>\n<template>\n  <div><button v-bind=\"$attrs\" /></div>\n</template>\n",
+      "sourceSha256": "9c8d5df72182222771bdfcbd1052d6ce66b4032c2acebef60afe58ce9423bf3c",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "FalseOptions.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "FalseOptions.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "FalseOptions.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "FalseOptions.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/FalseOptions.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "opaque-option",
+      "filename": "Opaque.vue",
+      "source": "<script lang=\"ts\">\nconst inherit = false; export default { inheritAttrs: inherit };\n</script>\n<template>\n  <div><button v-bind=\"$attrs\" /></div>\n</template>\n",
+      "sourceSha256": "c0da8d015199293492686fbbeb88416d10e17b963fda2c864d4eee7624dcfe84",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Opaque.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Opaque.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Opaque.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "Opaque.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Opaque.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 24,
+              "endLine": 5,
+              "endColumn": 30,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script lang=\"ts\">\nconst inherit = false; export default { inheritAttrs: inherit };\n</script>\n<template>\n  <div><button v-bind=\"$attrs\" /></div>\n</template>\n"
+        }
+      ],
+      "limit": "Preserved native opaque-option refusal differs from provider default-true behavior.",
+      "observed": false
+    },
+    {
+      "id": "v-for-local-attrs",
+      "filename": "ForLocal.vue",
+      "source": "<script setup lang=\"ts\">\nconst items = [{ id: \"a\" }];\n</script>\n<template>\n  <div><button v-for=\"$attrs in items\" v-bind=\"$attrs\" /></div>\n</template>\n",
+      "sourceSha256": "0f8bf2302d1cf6e6132fe7b10b30f45a25509bb54c6fefb719d083b9ad0ed7be",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "ForLocal.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "ForLocal.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "ForLocal.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "ForLocal.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/ForLocal.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "slot-local-attrs",
+      "filename": "SlotLocal.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <Icon><template #component=\"{ $attrs }\"><svg v-bind=\"$attrs\" /></template></Icon>\n</template>\n",
+      "sourceSha256": "25d4fbea0a2df7fb775e2d3802e8f0109269b3ca56f4e66597419686bd6f8361",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "SlotLocal.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "SlotLocal.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "SlotLocal.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "SlotLocal.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/SlotLocal.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "unrelated-slot-scope",
+      "filename": "SlotScope.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <Icon><template #component=\"slot\"><svg v-bind=\"$attrs\" /></template></Icon>\n</template>\n",
+      "sourceSha256": "b4d7040eb87f5008f995832a65ddc049b24f06dd8acc14400ca6f755f297d88c",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "SlotScope.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "SlotScope.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "SlotScope.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "SlotScope.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/SlotScope.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 50,
+              "endLine": 5,
+              "endColumn": 56,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <Icon><template #component=\"slot\"><svg v-bind=\"$attrs\" /></template></Icon>\n</template>\n"
+        }
+      ],
+      "limit": "Any explicit template scope conservatively refuses the subtree; no new JS scope parser here.",
+      "observed": false
+    },
+    {
+      "id": "fragment",
+      "filename": "Fragment.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div v-bind=\"$attrs\" /><span v-bind=\"$attrs\" />\n</template>\n",
+      "sourceSha256": "3b6d88a8145163ce7e42c09d1869016be3de6ae8698608d796e15c2f016bedc9",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Fragment.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Fragment.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Fragment.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "Fragment.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Fragment.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "root-template-wrapper",
+      "filename": "TemplateRoot.vue",
+      "source": "<script setup lang=\"ts\">\nconst ok = true;\n</script>\n<template>\n  <template v-if=\"ok\"><div v-bind=\"$attrs\" /></template>\n</template>\n",
+      "sourceSha256": "af806d8c6720661ff61b54d17951b011558eea2893e4bde39b8c8f97c71fa015",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "TemplateRoot.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "TemplateRoot.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "TemplateRoot.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "TemplateRoot.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/TemplateRoot.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 36,
+              "endLine": 5,
+              "endColumn": 42,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\nconst ok = true;\n</script>\n<template>\n  <template v-if=\"ok\"><div v-bind=\"$attrs\" /></template>\n</template>\n"
+        }
+      ],
+      "limit": "Preserved unavailable rendered-root refusal; conditional/root wrapper expansion is outside this slice.",
+      "observed": false
+    },
+    {
+      "id": "argument-bind",
+      "filename": "Argument.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div><button :id=\"$attrs\" /></div>\n</template>\n",
+      "sourceSha256": "7b83ca0ea7b8ef0be160f04da9fc0ca919ee83cac45eaa90625ed0dcb7206496",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Argument.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Argument.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Argument.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "Argument.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Argument.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "inert-comment",
+      "filename": "Comment.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div><!-- <button v-bind=\"$attrs\" /> --></div>\n</template>\n",
+      "sourceSha256": "deeb1c54713e00fc14b0d6f392f925cb17cb63719cbec9c3d767d83384236322",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Comment.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Comment.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Comment.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "Comment.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Comment.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "v-pre",
+      "filename": "Pre.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div v-pre><button v-bind=\"$attrs\" /></div>\n</template>\n",
+      "sourceSha256": "46b20839500c4985f0e38ca5c051a3acb4dda1dbf367601e453ff3a66ed55b3f",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Pre.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Pre.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Pre.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "Pre.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Pre.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "different-identifier",
+      "filename": "Other.vue",
+      "source": "<script setup lang=\"ts\">\nconst $attrsExtra = {};\n</script>\n<template>\n  <div><button v-bind=\"$attrsExtra\" /></div>\n</template>\n",
+      "sourceSha256": "7f8fdc760eee58c8e0a3836661e115ea7956881cf3f265cd4ae970c2acdedf1a",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Other.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Other.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Other.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "Other.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Other.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "rich-expression",
+      "filename": "Rich.vue",
+      "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div v-bind=\"{ ...$attrs }\" />\n</template>\n",
+      "sourceSha256": "e1b174e8a01014dbe55b675eabf372224cbfe0de841d02e6757abf013f174cf4",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Rich.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Rich.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Rich.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "Rich.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Rich.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 21,
+              "endLine": 5,
+              "endColumn": 27,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div v-bind=\"{ ...$attrs }\" />\n</template>\n"
+        }
+      ],
+      "limit": "Native exact-expression boundary is preserved; official provider reports embedded unbound attrs, authored separately below.",
+      "observed": false
+    },
+    {
+      "id": "sibling-opt-out",
+      "filename": "Sibling.vue",
+      "source": "<script lang=\"ts\">\nexport default { inheritAttrs: false };\n</script>\n<script setup lang=\"ts\">\n\n</script>\n<template>\n  <div v-bind=\"$attrs\"><button v-bind=\"$attrs\" /></div>\n</template>\n",
+      "sourceSha256": "2c1522867d6d4e241033e28fabe24b41c3a2c79b950039659b703cdfd1c32a8f",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "Sibling.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "beforeCli": [
+        {
+          "file": "Sibling.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "Sibling.vue",
+        "error_count": 0,
+        "warning_count": 0,
+        "diagnostics": []
+      },
+      "afterCli": [
+        {
+          "file": "Sibling.vue",
+          "messages": [],
+          "errorCount": 0,
+          "warningCount": 0
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/Sibling.vue",
+          "messages": [],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 0,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": []
+        }
+      ],
+      "limit": null,
+      "observed": false
+    },
+    {
+      "id": "explicit-true",
+      "filename": "True.vue",
+      "source": "<script setup lang=\"ts\">\ndefineOptions({ inheritAttrs: true });\n</script>\n<template>\n  <div v-bind=\"$attrs\" />\n</template>\n",
+      "sourceSha256": "e2ab8c032fcc53bb910c8c75bcab4aab9c28955a53bf7da80020639d8326cc1b",
+      "config": {
+        "linter": {
+          "preset": "incremental",
+          "rules": {
+            "script/no-duplicate-attr-inheritance": "warn"
+          }
+        }
+      },
+      "beforeApi": {
+        "filename": "True.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`inheritAttrs: true` is redundant because it is the default.",
+            "start": 55,
+            "end": 59,
+            "help": "Remove `inheritAttrs: true`: attribute inheritance is already on by default. Keep this option only to opt out with `inheritAttrs: false` (for example when forwarding `$attrs` manually with `v-bind=\"$attrs\"`).",
+            "fix": null,
+            "labels": [
+              {
+                "message": "redundant default",
+                "start": 55,
+                "end": 59
+              }
+            ]
+          }
+        ]
+      },
+      "beforeCli": [
+        {
+          "file": "True.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `inheritAttrs: true` is redundant because it is the default.",
+              "line": 2,
+              "column": 31,
+              "endLine": 2,
+              "endColumn": 35,
+              "help": "Remove inheritAttrs: true: attribute inheritance is already on by default. Keep this option only to opt out with inheritAttrs: false (for example when forwarding $attrs manually with v-bind=\"$attrs\")."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "beforeStatus": 0,
+      "afterApi": {
+        "filename": "True.vue",
+        "error_count": 0,
+        "warning_count": 1,
+        "diagnostics": [
+          {
+            "rule_name": "script/no-duplicate-attr-inheritance",
+            "severity": "warning",
+            "message": "`inheritAttrs: true` is redundant because it is the default.",
+            "start": 55,
+            "end": 59,
+            "help": "Remove `inheritAttrs: true`: attribute inheritance is already on by default. Keep this option only to opt out with `inheritAttrs: false` (for example when forwarding `$attrs` manually with `v-bind=\"$attrs\"`).",
+            "fix": null,
+            "labels": [
+              {
+                "message": "redundant default",
+                "start": 55,
+                "end": 59
+              }
+            ]
+          }
+        ]
+      },
+      "afterCli": [
+        {
+          "file": "True.vue",
+          "messages": [
+            {
+              "ruleId": "script/no-duplicate-attr-inheritance",
+              "ruleDocsPath": "docs/content/rules/type-and-script.md",
+              "severity": 1,
+              "message": "[vize:script/no-duplicate-attr-inheritance] `inheritAttrs: true` is redundant because it is the default.",
+              "line": 2,
+              "column": 31,
+              "endLine": 2,
+              "endColumn": 35,
+              "help": "Remove inheritAttrs: true: attribute inheritance is already on by default. Keep this option only to opt out with inheritAttrs: false (for example when forwarding $attrs manually with v-bind=\"$attrs\")."
+            }
+          ],
+          "errorCount": 0,
+          "warningCount": 1
+        }
+      ],
+      "afterStatus": 0,
+      "officialExpected": [
+        {
+          "filePath": "/tmp/vize-attrs-expression-ranges-20261012/controls/True.vue",
+          "messages": [
+            {
+              "ruleId": "vue/no-duplicate-attr-inheritance",
+              "severity": 1,
+              "message": "Set \"inheritAttrs\" to false.",
+              "line": 5,
+              "column": 16,
+              "endLine": 5,
+              "endColumn": 22,
+              "messageId": "noDuplicateAttrInheritance"
+            }
+          ],
+          "suppressedMessages": [],
+          "errorCount": 0,
+          "fatalErrorCount": 0,
+          "warningCount": 1,
+          "fixableErrorCount": 0,
+          "fixableWarningCount": 0,
+          "usedDeprecatedRules": [],
+          "source": "<script setup lang=\"ts\">\ndefineOptions({ inheritAttrs: true });\n</script>\n<template>\n  <div v-bind=\"$attrs\" />\n</template>\n"
+        }
+      ],
+      "limit": "Original explicit-true native warning remains at boolean literal; provider reports attrs identifier. Neither legacy script semantics nor provider differences are repaired here.",
+      "observed": false
+    }
+  ],
+  "algorithm": {
+    "sourceFiles": [
+      "crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance.rs",
+      "crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance/template.rs",
+      "crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance/tests/template.rs"
+    ],
+    "privateHelper": "Keep single-root-element and root-template refusals; visit existing validated ElementNode children in source order, skip explicit for/slot-parameter scopes, admit unscoped slot wrappers. Callback reports each exact argumentless attrs binding at trimmed exp.loc span, preserving root message/help and using missing-inheritAttrs-false wording for new nested reports. No intermediate vector or new parse/stage, no script dispatcher/context/registry/helper-family mutation.",
+    "limits": "Conditional root chains, compound attrs references, multi-root option, opaque values, sibling scripts and explicit template scopes remain named conservative boundaries. No new preset/default/budget policy."
+  },
+  "originalSource": {
+    "path": "/tmp/vize-447-original-project3-pinned-whole-inputs/ant-design-vue--site--src--layouts--icons--ThemeIcon.vue",
+    "sha256": "eb0f821769f5aa61f9819562c9420c411cf755240f2f33564b7483611f38423b",
+    "bytes": 1350,
+    "gitBlob": "b6ff7c1c730f3ded5461c83edb31913469eb5116",
+    "revision": "7483836f0adac76516e527df893c3d84a7cd4005"
+  }
+}

@@ -12,12 +12,12 @@ const SPREAD_MESSAGE: &str = "`v-bind=\"$attrs\"` on the root element applies th
 
 /// The finding the `v-bind="$attrs"` written as `directive` produces.
 fn duplicated(sfc: &str, directive: &str) -> (&'static str, Severity, u32, u32, &'static str) {
-    let start = sfc.find(directive).expect("bind directive");
+    let start = sfc.find(directive).expect("bind directive") + directive.find("$attrs").unwrap();
     (
         "script/no-duplicate-attr-inheritance",
         Severity::Warning,
         start as u32,
-        (start + directive.len()) as u32,
+        (start + "$attrs".len()) as u32,
         SPREAD_MESSAGE,
     )
 }
@@ -163,9 +163,8 @@ const id = 'x';
 // --- Over-match probes: none of these may manufacture a finding ------------
 
 #[test]
-fn ignores_an_attrs_spread_on_a_nested_element() {
-    // Forwarding `$attrs` to an inner node is the idiomatic pattern; only the
-    // root element duplicates the fallthrough attributes.
+fn reports_an_attrs_spread_on_a_nested_element_without_opt_out() {
+    // Forwarding attrs to an inner node also needs automatic inheritance off.
     let sfc = r#"<script setup lang="ts">
 </script>
 
@@ -173,7 +172,17 @@ fn ignores_an_attrs_spread_on_a_nested_element() {
   <div><span v-bind="$attrs"></span></div>
 </template>
 "#;
-    assert_eq!(findings(&lint_sfc(sfc)), none());
+    let start = sfc.find("$attrs").unwrap() as u32;
+    assert_eq!(
+        findings(&lint_sfc(sfc)),
+        vec![(
+            "script/no-duplicate-attr-inheritance",
+            Severity::Warning,
+            start,
+            start + 6,
+            "Set `inheritAttrs: false` when forwarding `$attrs` manually.",
+        )]
+    );
 }
 
 #[test]
