@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { ensureHostedLiteralSource } from "./warm-type-backed-git-reader-literal-source.ts";
 import { gitReaderSetupPairs, rawFirstParentProof } from "./warm-type-backed-git-reader-setup.ts";
 
 type Cell = { mode: string; blob: string; bytes: number; sha256: string };
@@ -47,10 +48,8 @@ function parts(entries: Array<{ file: string; entries: number; sha256: string }>
   });
 }
 const current: Row[] = parts(data.currentBodyParts, "warm-type-backed-git-reader-owned-current");
-const retained: Array<Cell & { file: string }> = parts(
-  data.retainedBodyParts,
-  "warm-type-backed-git-reader-owned-retained",
-);
+const retainedStem = "warm-type-backed-git-reader-owned-retained";
+const retained: Array<Cell & { file: string }> = parts(data.retainedBodyParts, retainedStem);
 assert.equal(current.length, 111);
 assert.equal(new Set(current.map(({ file }) => file)).size, 111);
 assert.equal(retained.length, 113);
@@ -72,11 +71,14 @@ assert.deepEqual(
     "tests/tooling/ascii-symbol-original-callers.test.ts",
   ],
 );
-const git = (root: string, args: string[]) =>
-  execFileSync("git", ["--no-replace-objects", ...args], {
+const git = (root: string, args: string[]) => {
+  if (args[0] === "cat-file" && /^(?:commit|-t)$/u.test(args[1]))
+    ensureHostedLiteralSource(root, args[2]);
+  return execFileSync("git", ["--no-replace-objects", ...args], {
     cwd: root,
     maxBuffer: 64 * 1024 * 1024,
   });
+};
 function existingFirstParents(root: string, ancestor: string, head: string) {
   for (let source = head, count = 0; count < 64; count++) {
     const body = git(root, ["cat-file", "commit", source]);
@@ -127,7 +129,6 @@ function driver(body: Buffer) {
   assert.deepEqual(Buffer.from(transformed), body, "whole original NoDeep law transport inverse");
 }
 
-/** Current source proof has its own whole111 cells; old first-parent authority is never lent to it. */
 export function qualifyOwnedReaderFrame(root: string) {
   const head = git(root, ["rev-parse", "HEAD"]).toString().trim();
   assert.equal(git(root, ["for-each-ref", "--format=%(refname)", "refs/replace"]).length, 0);
@@ -177,7 +178,6 @@ export function qualifyOwnedReaderFrame(root: string) {
   };
 }
 
-/** Execute the whole unchanged five-law module on authenticated actual248 physical bytes. */
 export function runRetainedReaderLaw(root: string) {
   for (const source of [
     data.retainedSource,
