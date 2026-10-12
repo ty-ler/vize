@@ -41,6 +41,13 @@ export const ownedCorsaRecoveryMainBaseline = Object.freeze({
   rawCommitBytes: 1101,
 });
 
+export const ownedCorsaMuseaDocumentationMainBaseline = Object.freeze({
+  revision: "a93e78147b0990c813e965a7868b32dda341eb77",
+  tree: "5ff35375c2c2e24654139227e53ee0cbb357116c",
+  rawCommitSHA256: "b7d4981e01688fd26fe3124a2291d96fde2a8e4459762cb493d0299ea11de1aa",
+  rawCommitBytes: 1083,
+});
+
 export function retainedOwnedCorsaBaseline(root, baseline) {
   // Unknown contexts stay literal and the original complete qualifier refuses them.
   const context =
@@ -54,7 +61,9 @@ export function retainedOwnedCorsaBaseline(root, baseline) {
             ? ownedCorsaDocumentationMainBaseline
             : baseline === ownedCorsaRecoveryMainBaseline.revision
               ? ownedCorsaRecoveryMainBaseline
-              : null;
+              : baseline === ownedCorsaMuseaDocumentationMainBaseline.revision
+                ? ownedCorsaMuseaDocumentationMainBaseline
+                : null;
   if (!context) return baseline;
   const git = (args) =>
     execFileSync("git", ["--no-replace-objects", ...args], {

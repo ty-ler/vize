@@ -101,6 +101,23 @@ void test("the whole old checker genuinely refuses the owned graph; its finite s
         maxBuffer: 4 * 1024 * 1024,
       });
     };
+    const manifests = [
+      "corsa_core",
+      "corsa_jsonrpc",
+      "corsa_client",
+      "corsa_lsp",
+      "corsa_orchestrator",
+      "corsa",
+    ].map((name) => "vendor/" + name + "/Cargo.toml");
+    const currentManifests = manifests.map((file) => [
+      file,
+      fs.readFileSync(path.join(root, file)),
+    ]);
+    for (const file of manifests)
+      fs.writeFileSync(
+        path.join(root, file),
+        git(originalRoot, ["cat-file", "blob", "b2caebeab6fb5bc817b4e31a65d5d560449b691b:" + file]),
+      );
     const red = execute(before);
     assert.equal(red.error, undefined);
     assert.equal(red.signal, null);
@@ -108,6 +125,22 @@ void test("the whole old checker genuinely refuses the owned graph; its finite s
     assert(red.stderr.includes("AssertionError [ERR_ASSERTION]: Cargo.toml"));
     assert(red.stderr.includes("d90342f5ab6e02f2bc254387d2c62c2f4e931909bb0d6e3ba4ec6bfbdf31f4d7"));
     assert(red.stderr.includes("b92c9f94f932a73e6d34e93c8cea493b744322b5c4892d6bf0b79654fd0c7e13"));
+    for (const [file, body] of currentManifests) fs.writeFileSync(path.join(root, file), body);
+    const currentRed = execute(before);
+    assert.equal(currentRed.error, undefined);
+    assert.equal(currentRed.signal, null);
+    assert.equal(currentRed.status, 1);
+    assert(currentRed.stderr.includes("AssertionError [ERR_ASSERTION]: Cargo.toml"));
+    assert(
+      currentRed.stderr.includes(
+        sha(fs.readFileSync(path.join(root, "vendor/corsa_core/Cargo.toml"))),
+      ),
+    );
+    assert(
+      currentRed.stderr.includes(
+        "b92c9f94f932a73e6d34e93c8cea493b744322b5c4892d6bf0b79654fd0c7e13",
+      ),
+    );
     const green = execute(checker);
     assert.equal(green.error, undefined);
     assert.equal(green.signal, null);
@@ -135,7 +168,8 @@ void test("the whole old checker genuinely refuses the owned graph; its finite s
     console.log(
       JSON.stringify({
         scope: "source-only whole checker counterfactual",
-        before: { status: red.status, stdout: red.stdout, stderr: red.stderr },
+        retainedBefore: { status: red.status, stdout: red.stdout, stderr: red.stderr },
+        before: { status: currentRed.status, stdout: currentRed.stdout, stderr: currentRed.stderr },
         after: { status: green.status, stdout: green.stdout, stderr: green.stderr },
       }),
     );
