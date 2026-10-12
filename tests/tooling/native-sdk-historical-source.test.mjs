@@ -30,6 +30,10 @@ test("genuine current237 and two complete raw Git callers qualify separately fro
   assert.equal(current.receipt.currentAfterContext.wholeCurrentBodies, 237);
   assert.equal(current.receipt.currentAfterContext.wholeManifestBodies, 6);
   assert.equal(current.receipt.currentAfterContext.clippyExecutionCredit, false);
+  assert.equal(current.receipt.currentAfterContext.wholeCorrectedRustBodies, 1);
+  assert.deepEqual(current.receipt.currentAfterContext.correctedSourceFiles, [
+    "vendor/corsa_client/src/api/handles.rs",
+  ]);
   const afterIdentities = new Map(
     current.currentAfterIdentities.map(({ file, identity }) => [file, identity]),
   );
@@ -40,7 +44,8 @@ test("genuine current237 and two complete raw Git callers qualify separately fro
     ),
   );
   for (const row of ownedCorsaSource.rows) {
-    if (six.has(row.file)) assert.notDeepEqual(afterIdentities.get(row.file), row.after);
+    if (six.has(row.file) || row.file === "vendor/corsa_client/src/api/handles.rs")
+      assert.notDeepEqual(afterIdentities.get(row.file), row.after);
     else assert.deepEqual(afterIdentities.get(row.file), row.after);
     for (const side of ["before", "after"]) {
       const expected = side === "before" ? row.before : afterIdentities.get(row.file);
@@ -194,7 +199,7 @@ test("all four complete historical parser modules and the original206 fixture cl
 test("mixing exactly one retained old whole manifest into the real current six-manifest class refuses", () => {
   const current = nativeSdkHistoricalView();
   const bytes = physical("tools/support/compat/github/owned-corsa-clippy-source.json");
-  assert.equal(sha(bytes), "9dec771413262e89eb1e34abfac1594207da8eb2e04bf68388e96049358f70a7");
+  assert.equal(sha(bytes), "b38685b9f740fc5444f70d51a2adcb9c7463ed5dc720d46f7ff8aabf8eb8dc94");
   const entries = JSON.parse(bytes).entries;
   assert.equal(entries.length, 6);
   for (const entry of entries) {

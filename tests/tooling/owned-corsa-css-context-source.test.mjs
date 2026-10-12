@@ -106,7 +106,7 @@ void test("only one original checksum-list branch and a whole import inverse cha
     "tools/support/dependencies/css-engine-producer-context-custody.mjs",
   );
   const guardSHA = sha(fs.readFileSync(guardFile));
-  assert.equal(guardSHA, "613c4ad73c29fe1549b99fb40ee2f34cb89331fd850754e5ba9dcce1733ba576");
+  assert.equal(guardSHA, "81fdd0a6f99bd24d013722d2e16c79ef7e572c5d408804dd9f8b7c4ed2d5832b");
   const imported = 'import { pathToFileURL } from "node:url";\n';
   assert.equal(current.split(imported).length, 2);
   current = current.replace(imported, "");
