@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import fs from "node:fs";
 import { test } from "node:test";
+import fs from "node:fs";
+import { historicalCompositionBody } from "./support/native-lexical-composition-source.ts";
 import {
   assertNativeTerminalLocks,
   nativeTerminalManifest,
@@ -39,13 +40,11 @@ test("the complete reviewed repair preserves every original request and admits i
   assert.throws(() => assertNativeTerminalLocks(locks("before"), locks("after"), null));
 });
 
-test("every current whole source and original request body matches the finite review", () => {
+test("retained SDK source and original request bodies match their finite review", () => {
   const actual = (side: "before" | "after", file: string) =>
     side === "before"
       ? digest(side, file)
-      : createHash("sha256")
-          .update(fs.readFileSync(new URL("../../" + file, import.meta.url)))
-          .digest("hex");
+      : createHash("sha256").update(historicalCompositionBody("sdk", file)).digest("hex");
   assert.ok(
     qualifyNativeTerminalHost(production, new Set(), actual) ||
       qualifyOwnedImageHost(nativeOwnedImageProduction, new Set(), actual),

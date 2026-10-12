@@ -199,3 +199,17 @@ this composition heading. Remove that formatting whitespace and preserve its
 complete failed log. No compiled source, custody, assertion, deadline or
 workflow changes. Other in-flight native/original400 results remain bound to
 91d2 and cannot qualify the later formatted head.
+
+The same run's tooling job114631587671 retains one historical terminal-source
+positive law that still reads current composed bodies. Original120/122 guards
+correctly refuse those bodies. Replay that positive through the same complete,
+Git-authenticated b4 capsules as the SDK successor law; leave every original
+manifest, production guard and refusal assertion unchanged. The separate
+current-composition law remains mandatory. All24 combined source laws pass
+locally, with no skips or runtime credit; fresh Actions are still required.
+
+Emergency disk reclamation removes only1135 inactive reproducible `.rlib` and
+`.rmeta` files from this lane's provider target (2,273,252,007 bytes). Retain
+full removed-body digests and every21,837 other entry unchanged, including
+libtest body `08c676dafe2c6b93b8765d8f96daff642589769474552ffac7cdaa0c944b1fce`.
+No source, native provider, shared library or qualification packet is removed.
