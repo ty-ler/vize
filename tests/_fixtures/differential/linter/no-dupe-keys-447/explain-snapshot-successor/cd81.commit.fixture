@@ -1,0 +1,6 @@
+tree 86d5f6876216df069eb4df9a5a71ae09c52028b2
+parent 55369fc6c649f51fa802cb44a4ad81a0768ffd86
+author ubugeeei <ubuge1122@gmail.com> 1791816282 +0900
+committer ubugeeei <ubuge1122@gmail.com> 1791816282 +0900
+
+test(lint): authenticate the current duplicate-key source successor

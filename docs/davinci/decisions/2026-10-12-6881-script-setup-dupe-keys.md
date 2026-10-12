@@ -94,3 +94,38 @@ inverse restores every original byte. Fresh exact-head Actions, protected
 Stack merge and released acceptance remain unfinished.
 
 Paired explain decision: [three locale domain rows](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6127254036).
+
+Exact `10ebcea` passes all four Rust shards, the unchanged whole all-locale
+explain assertion, the original 51/88 regression and 39/8 controls. EN, JA and
+ZH now have actual native evidence. TypeNative run 38269903878 passes; these
+results belong to that exact head.
+
+The older public Vue-import example law pins whole snapshots from before the
+NoDup domain update. Preserve its entire primary, compressed contract, producer,
+reference helper and original one-case law. The finite
+`explain-snapshot-successor` first qualifies the actual current 14-file physical
+family, all 21 immutable archives and raw cd81 commit/tree evidence. Each current
+snapshot inverts by its single reviewed NoDup domain row to the complete original
+body; all six explain producers and public-import identities remain literal.
+Only after that qualification, execute the complete original one-case law at its
+original path in a real cd81 source frame. The caller delegates to this guard and
+removes only its four now-unused imports. All original imports, assertions and
+expected hashes stay intact in the archived law, with a complete 14-file inverse.
+
+Four new source controls and the adapted caller pass five focused Node cases with
+zero skips; the original whole historical case passes independently. These are
+source/history results with compiled, native and performance credit false. The
+prior 38 source checks and separate 20 historical cases retain their recorded
+scope. Current MF532, parent49 and shared production sources stay byte-exact.
+
+Lossless `10eb-terminal-actions-evidence.json.gz` retains complete success and
+failure logs. The mixed-directory 8507 deadline failure used the old physical
+2334-byte native hook; the merged load-boundary source was absent from that actual
+CI checkout, so this is not a measured recurrence with the new hook. CPU/RSS cause
+remains unknown. Unused stopped on a curl TLS timeout before tests. Actual common
+main composition, fresh Actions, protected Stack merge, release and installed
+acceptance remain unfinished. The extra generic-specialization false negative
+remains unfinished; actual compiler-owned runtime `foo` collisions remain
+diagnostics.
+
+Paired history decision: [current explain qualification and preserved public-import law](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6127883529).
