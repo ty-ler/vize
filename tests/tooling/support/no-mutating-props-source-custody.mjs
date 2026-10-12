@@ -1,3 +1,4 @@
+import { reviewedNoMutatingTestCorrectionReadView } from "./no-mutating-props-test-correction-source-custody.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -62,6 +63,7 @@ export function composeNoMutatingHistoricalLaw(original) {
 
 /** Source custody only: no measured, compiled or installed acceptance is returned. */
 export function authenticateNoMutatingPropsSourceFamily(root, read = reader(root)) {
+  read = reviewedNoMutatingTestCorrectionReadView(root, read);
   const bytes = read(`${noMutatingCustodyDirectory}/successor.json`);
   assert.equal(digest(bytes), "052f284b2d11f94e6d81dc68096ae74e1334c8ab4323ccaa01951e94e20a7fd1");
   const manifest = JSON.parse(bytes);

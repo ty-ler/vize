@@ -257,7 +257,7 @@ fn one_existing_rule_owns_activation_severity_and_all_configured_options() {
         1
     );
     assert_eq!(
-        crate::linter::builtin_script_rules()
+        crate::builtin_script_rules()
             .iter()
             .filter(|entry| entry.name == RULE)
             .count(),

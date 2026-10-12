@@ -69,3 +69,18 @@ Both corpus carriers use .vue.txt so the compiler S3 discovery vector remains
 unchanged. Real Linter include_str consumers retain the whole original bytes;
 the display filenames, diagnostic locations and eventual CLI .vue materialization
 stay original. The move-only commit preserves both complete blob identities.
+
+The first published head dd760a4 exposed an E0425 in the new registry test:
+the public re-export is crate::builtin_script_rules, rather than the private
+linter module. The correction changes only that namespace and preserves all
+nine complete tests. A separately declared whole 23-body successor retains
+the failed head, original twelve-body authority, four historical source laws
+and their refusal loops. Five additive laws authenticate the complete physical
+family and reject missing, mutated, executable, linked or foreign bodies.
+The unchanged Node producer regenerates only the Patina migration shard
+(14 additions, three removals); its complete before/after and eleven producer
+bodies are retained. All 24 source laws pass without skips. This is source
+qualification only: the original native phase succeeded, while the new exact
+head still requires its own Actions. The original MoonBit transport 403 and
+failed source/native jobs remain separate evidence; no retry or release credit
+is transferred.

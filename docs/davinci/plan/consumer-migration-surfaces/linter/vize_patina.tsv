@@ -210,6 +210,8 @@ linter	Linter	source	crates/vize_patina/src/linter/script_rules.rs	5	raw_oxc	raw
 linter	Linter	source	crates/vize_patina/src/linter/script_rules.rs	5	raw_oxc	raw OXC	raw	oxc_parser	raw	1
 linter	Linter	test/dev	crates/vize_patina/src/linter/script_rules.rs	175	raw_oxc	raw OXC	raw	oxc_parser	raw	1
 linter	Linter	test/dev	crates/vize_patina/src/linter/script_rules/deep_props_dispatch_tests.rs	7	raw_oxc	raw OXC	raw	oxc_ast	raw	1
+linter	Linter	source	crates/vize_patina/src/linter/script_rules/registered_sfc.rs	5	l0	L0	stage	vize_l0	preferred	1
+linter	Linter	source	crates/vize_patina/src/linter/script_rules/registered_sfc.rs	5	raw_oxc	raw OXC	raw	oxc_parser	raw	1
 linter	Linter	test/dev	crates/vize_patina/src/linter/script_rules/runtime_props_dispatch_tests.rs	7	raw_oxc	raw OXC	raw	oxc_ast	raw	1
 linter	Linter	test/dev	crates/vize_patina/src/linter/script_rules/setup_emits_dispatch_tests.rs	4	raw_oxc	raw OXC	raw	oxc_ast	raw	1
 linter	Linter	source	crates/vize_patina/src/linter/script_rules/sfc.rs	14	l0	L0	stage	vize_l0	preferred	1
@@ -998,9 +1000,9 @@ linter	Linter	source	crates/vize_patina/src/rules/vue/no_multi_spaces.rs	24	old_
 linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_multiple_template_root.rs	24	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_multiple_template_root.rs	24	old_ast	old AST/parser	old	vize_relief	legacy	1
 linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_multiple_template_root/tests.rs	13	l0	L0	stage	vize_l0	preferred	1
-linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_mutating_props.rs	33	l0	L0	stage	vize_l0	preferred	4
-linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_mutating_props.rs	33	old_ast	old AST/parser	old	vize_relief	legacy	2
-linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_mutating_props.rs	33	croquis	Croquis analysis	old	vize_croquis	legacy	3
+linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_mutating_props.rs	30	l0	L0	stage	vize_l0	preferred	4
+linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_mutating_props.rs	30	old_ast	old AST/parser	old	vize_relief	legacy	2
+linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_mutating_props.rs	30	croquis	Croquis analysis	old	vize_croquis	legacy	3
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/handlers.rs	42	raw_oxc	raw OXC	raw	oxc_allocator	raw	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/handlers.rs	42	raw_oxc	raw OXC	raw	oxc_ast	raw	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/handlers.rs	42	raw_oxc	raw OXC	raw	oxc_ast_visit	raw	1
@@ -1008,6 +1010,15 @@ linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/handlers
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/handlers.rs	42	raw_oxc	raw OXC	raw	oxc_syntax	raw	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/mutation_targets.rs	7	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_mutating_props/mutation_targets.rs	129	l0	L0	stage	vize_l0	preferred	1
+linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_mutating_props/options_api.rs	11	raw_oxc	raw OXC	raw	oxc_ast	raw	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/options_api/component.rs	3	l0	L0	stage	vize_l0	preferred	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/options_api/component.rs	3	raw_oxc	raw OXC	raw	oxc_ast	raw	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/options_api/mutations.rs	3	l0	L0	stage	vize_l0	preferred	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/options_api/mutations.rs	3	raw_oxc	raw OXC	raw	oxc_ast	raw	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/options_api/mutations.rs	3	raw_oxc	raw OXC	raw	oxc_ast_visit	raw	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/options_api/mutations.rs	3	raw_oxc	raw OXC	raw	oxc_syntax	raw	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/options_api/targets.rs	3	l0	L0	stage	vize_l0	preferred	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/options_api/targets.rs	3	raw_oxc	raw OXC	raw	oxc_ast	raw	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/scope.rs	3	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/scope.rs	3	old_ast	old AST/parser	old	vize_relief	legacy	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/script_mutations.rs	14	l0	L0	stage	vize_l0	preferred	1
