@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { test } from "node:test";
@@ -82,15 +81,39 @@ const locks = (side: Side) =>
     ),
   );
 
-test("retained original guard authenticates complete composition and both immutable authorities", () => {
-  const final = "tests/performance/support/warm-type-backed-native-terminal-final.ts";
-  const retained = execFileSync(
-    "git",
-    ["--no-replace-objects", "show", "e17c27d04521ca1409ffb65b7c700d417fc66733:" + final],
-    { cwd: new URL("../../", import.meta.url) },
+const retainedFinalCapsule = JSON.parse(
+  fs.readFileSync(new URL("./support/native-proxy-original-final.json", import.meta.url), "utf8"),
+) as Record<string, unknown>;
+const retainedOriginalFinalDigest = (capsule: unknown) => {
+  assert.ok(capsule && typeof capsule === "object" && !Array.isArray(capsule));
+  const { rawBase64, ...identity } = capsule as Record<string, unknown>;
+  assert.deepEqual(identity, {
+    version: 1,
+    source: "e17c27d04521ca1409ffb65b7c700d417fc66733",
+    file: "tests/performance/support/warm-type-backed-native-terminal-final.ts",
+    mode: "100644",
+    blob: "20ad1caaaaf3cdea63ed741a81ad0dfdb8e85345",
+    bytes: 1144,
+    sha256: "e5cf6338b4edbc08641aee70888b79fe0d69b27118571fcb86cd5041479f503a",
+  });
+  assert.ok(typeof rawBase64 === "string");
+  const retained = Buffer.from(rawBase64, "base64");
+  assert.equal(retained.toString("base64"), rawBase64);
+  assert.equal(retained.length, identity.bytes);
+  assert.equal(
+    createHash("sha1")
+      .update(Buffer.concat([Buffer.from(`blob ${retained.length}\0`), retained]))
+      .digest("hex"),
+    identity.blob,
   );
   const retainedDigest = createHash("sha256").update(retained).digest("hex");
-  assert.equal(retainedDigest, "e5cf6338b4edbc08641aee70888b79fe0d69b27118571fcb86cd5041479f503a");
+  assert.equal(retainedDigest, identity.sha256);
+  return retainedDigest;
+};
+
+test("retained original guard authenticates complete composition and both immutable authorities", () => {
+  const final = "tests/performance/support/warm-type-backed-native-terminal-final.ts";
+  const retainedDigest = retainedOriginalFinalDigest(retainedFinalCapsule);
   const actual = (side: Side, file: string) =>
     side === "before" ? digest(side, file) : file === final ? retainedDigest : hash(file);
   assert.equal(qualifySdk(production, new Set(), actual), null);
@@ -217,4 +240,33 @@ test("native lexical source custody accepts only original complete lexical or wh
     );
     assert.throws(() => validateLexicalSourceBodies(lexical, changed), undefined, file);
   }
+});
+
+test("self-contained original final capsule refuses missing foreign and changed source bytes without Git", () => {
+  assert.equal(
+    retainedOriginalFinalDigest(retainedFinalCapsule),
+    "e5cf6338b4edbc08641aee70888b79fe0d69b27118571fcb86cd5041479f503a",
+  );
+  for (const field of Object.keys(retainedFinalCapsule)) {
+    const missing = { ...retainedFinalCapsule };
+    delete missing[field];
+    assert.throws(() => retainedOriginalFinalDigest(missing), undefined, field);
+    assert.throws(
+      () => retainedOriginalFinalDigest({ ...retainedFinalCapsule, [field]: "foreign" }),
+      undefined,
+      field,
+    );
+  }
+  assert.throws(() => retainedOriginalFinalDigest({ ...retainedFinalCapsule, unknown: true }));
+  const bytes = Buffer.from(retainedFinalCapsule.rawBase64 as string, "base64");
+  bytes[0] ^= 1;
+  assert.throws(() =>
+    retainedOriginalFinalDigest({ ...retainedFinalCapsule, rawBase64: bytes.toString("base64") }),
+  );
+  assert.throws(() =>
+    retainedOriginalFinalDigest({
+      ...retainedFinalCapsule,
+      rawBase64: String(retainedFinalCapsule.rawBase64) + "\n",
+    }),
+  );
 });

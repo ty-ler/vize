@@ -91,8 +91,10 @@ final-guard successor are required before any original400 qualification or
 protected queue admission.
 
 The joint `56b417` source-host run retained 32 passes and one failed original
-guard positive. That positive now reads the complete `e17c27d` final body
-through raw Git and authenticates its whole SHA. Every other current source
-read and original refusal stays unchanged. The seven successor laws and actual
-Git final-boundary proof require the new complete body separately; this source
-test preserves the original guard without historical runtime credit.
+guard positive. That positive now reads a capsule of the complete `e17c27d`
+final body, captured from raw Git. Its exact source, mode, Git blob, byte length
+and whole SHA remain mandatory; missing, foreign or changed capsules refuse.
+The capsule needs no historical Git object or network fetch in shallow CI.
+Every other current source read and original refusal stays unchanged. The seven
+successor laws and actual Git final-boundary proof require the new complete body
+separately; this source test grants no historical runtime credit.
