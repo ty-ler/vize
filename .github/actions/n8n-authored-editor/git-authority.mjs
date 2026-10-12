@@ -19,6 +19,10 @@ const authorities = new Map([
     "tests/tooling/warm-type-backed-inline-bucket-authority.test.ts",
     ["warm-type-backed-inline-bucket-manifest.json", ["originalSource", "reviewedSource"]],
   ],
+  [
+    "tests/tooling/lsp-allocation-source.test.ts",
+    ["allocation-diagnostic/source-manifest.json", ["originalSource", "reviewedSource"]],
+  ],
 ]);
 const diagnosticParent = "aaf051206778b1f189dcc51386e992eb342ee8b0";
 
@@ -46,6 +50,18 @@ export function references(plan, shard, cwd) {
     }
     if (test === "tests/tooling/warm-type-backed-diagnostic-authority.test.ts")
       refs.add(diagnosticParent);
+    if (test === "tests/tooling/warm-type-backed-inline-bucket-authority.test.ts") {
+      const allocation = path.join(
+        cwd,
+        "tests/performance/support/allocation-diagnostic/source-manifest.json",
+      );
+      if (fs.existsSync(allocation))
+        for (const key of ["originalSource", "reviewedSource"]) {
+          const ref = JSON.parse(fs.readFileSync(allocation, "utf8"))[key];
+          assert.match(ref, /^(?!0{40}$)[a-f0-9]{40}$/u);
+          refs.add(ref);
+        }
+    }
   }
   return [...refs].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
 }

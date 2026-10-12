@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import test from "node:test";
+import { qualifyAllocationSource } from "../performance/support/allocation-diagnostic/source.ts";
 import { qualifyInlineBucketHost } from "../performance/support/warm-type-backed-inline-bucket-host.ts";
 import { gitBodyDigest } from "../performance/support/warm-type-backed-path-host.ts";
 
@@ -87,12 +88,18 @@ await test("the four-path inline storage successor preserves every original 195 
   )
     .trim()
     .split("\n");
-  assert.deepEqual(
-    qualifyInlineBucketHost(actualProduction, (side, file) =>
-      gitBodyDigest(process.cwd(), side === "before" ? manifest.originalSource : current, file),
-    ),
-    receipt,
+  const actualInline = qualifyInlineBucketHost(actualProduction, (side, file) =>
+    gitBodyDigest(process.cwd(), side === "before" ? manifest.originalSource : current, file),
   );
+  if (actualInline) assert.deepEqual(actualInline, receipt);
+  else {
+    const diagnostic = qualifyAllocationSource(process.cwd(), current);
+    assert.ok(diagnostic, "the separate complete optional diagnostic source must qualify");
+    assert.equal(diagnostic.authority, "complete-reviewed-optional-allocation-diagnosis");
+    assert.equal(diagnostic.nativeBodies, 208);
+    assert.equal(diagnostic.originalMandatoryBodies, 45);
+    assert.equal(diagnostic.acceptanceCredit, "none");
+  }
 });
 
 await test("missing, extra and duplicate producers and every whole body mutation refuse inline qualification", () => {

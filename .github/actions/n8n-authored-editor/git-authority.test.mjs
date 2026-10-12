@@ -83,3 +83,56 @@ void test("failed fetch, missing post-fetch commit and original process error re
     (actual) => actual === failure,
   );
 });
+
+void test("only selected inline or allocation source laws request their two explicit diagnostic objects", (t) => {
+  const root = workspace(t);
+  const before = "e7ec9790a0ec5586588f97d21b8e5913ad01861c";
+  const after = "9e5d01d3c1ec7f05bf5631c1b7bde0f24f780f62";
+  const file = path.join(
+    root,
+    "tests/performance/support/allocation-diagnostic/source-manifest.json",
+  );
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify({ originalSource: before, reviewedSource: after }));
+  fs.writeFileSync(
+    path.join(root, "tests/performance/support/warm-type-backed-inline-bucket-manifest.json"),
+    JSON.stringify({ originalSource: graph, reviewedSource: parent }),
+  );
+  const allocation = "tests/tooling/lsp-allocation-source.test.ts";
+  const selected = {
+    version: 1,
+    tier: "pr",
+    tests: ["tests/tooling/unrelated.test.ts", allocation],
+  };
+  assert.deepEqual(references(selected, "1/2", root), []);
+  assert.deepEqual(references(selected, "2/2", root), [before, after].sort());
+  assert.deepEqual(
+    references({ ...selected, tests: [inline] }, "1/1", root),
+    [before, after, graph, parent].sort(),
+  );
+  const calls = [];
+  const present = new Set([before]);
+  const run = (_command, args) => {
+    calls.push(args);
+    if (args[0] === "fetch") {
+      assert.deepEqual(args, ["fetch", "--no-tags", "--depth=1", "origin", after]);
+      present.add(after);
+    }
+    return {
+      status: args[0] === "fetch" || present.has(args[2].slice(0, 40)) ? 0 : 128,
+      signal: null,
+    };
+  };
+  assert.deepEqual(prepare(selected, "2/2", root, run).fetched, [after]);
+  assert.equal(calls.filter(([name]) => name === "fetch").length, 1);
+  assert.deepEqual(prepare(selected, "2/2", root, run).fetched, []);
+  fs.writeFileSync(file, JSON.stringify({ originalSource: before, reviewedSource: "main" }));
+  assert.throws(() => references(selected, "2/2", root));
+  assert.throws(() => references({ ...selected, tests: [inline] }, "1/1", root));
+  fs.rmSync(file);
+  assert.throws(() => references(selected, "2/2", root));
+  assert.deepEqual(
+    references({ ...selected, tests: [inline] }, "1/1", root),
+    [graph, parent].sort(),
+  );
+});
