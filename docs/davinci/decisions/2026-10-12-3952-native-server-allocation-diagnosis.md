@@ -153,21 +153,23 @@ cap failure can proceed to the diagnostic arm, but final workflow status still
 fails the original gate. Incomplete capture refuses the pair without retries.
 
 The finite source manifest binds the actual reviewed producer source
-`9e5d01d3c1ec7f05bf5631c1b7bde0f24f780f62` to frozen e7ec: 208 native
-whole-body pairs, all original 45 workload pairs and 28 bounded helper pairs.
+`a20b3d9dcb88002ccfa0c03c51300ea38d0d32a2` to frozen e7ec: 208 native
+whole-body pairs, all original 45 workload pairs and 31 bounded helper pairs.
 Its semantic SHA-256 is
-`207a99e7e8c7b0dfaaae84fe572c1b9c2df6e325cbcd105e681bab8bcfaa7962`.
+`8c242d7b3d784c94f8f36a38c7f671a4712138f3fbd2ef6ddb45ceb539ba897e`.
 All original 196 producers and the original 196/45 manifest remain mandatory;
 the old manifest retains whole-file SHA-256
 `0eb167a2811ad25303d53d4e8ac72f297a439f0bfa5368f309ca7622c2284ada`.
-Exactly nine native paths and 32 complete changed source paths are admitted.
+Exactly nine native paths and 35 complete changed source paths are admitted.
 Raw replacement-disabled Git modes and before/after bodies are required;
 genuine replacement-object borrowing, unknown/missing/duplicate producers,
 symlink/executable modes and every complete body mutation refuse qualification.
-The separate diagnostic receipt supplies no old inline-bucket acceptance
-receipt: that old actual-head positive honestly refuses the new opt-in delta.
-A source-guard composition must preserve its historical positive and negatives
-before publication; no bypass or ordinary source-green claim is authorized.
+The original f3 historical inline-bucket positive and complete negative laws remain
+byte-exact. Its actual-head guard accepts the unchanged original receipt or the
+separate complete diagnostic receipt, explicitly with no acceptance credit. The
+finite selected tooling shard prepares only its named original and reviewed
+diagnostic objects; missing bodies still refuse full source qualification.
+The old SDK, default eligibility and 400-provider authorities remain unchanged.
 
 TODO: obtain independent finite source and runner review before remote
 publication or execution. Rust feature/layout and

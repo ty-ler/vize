@@ -1,7 +1,7 @@
 {
   "version": 1,
   "originalSource": "e7ec9790a0ec5586588f97d21b8e5913ad01861c",
-  "reviewedSource": "9e5d01d3c1ec7f05bf5631c1b7bde0f24f780f62",
+  "reviewedSource": "a20b3d9dcb88002ccfa0c03c51300ea38d0d32a2",
   "nativeDelta": [
     "crates/vize/Cargo.toml",
     "crates/vize/src/commands/lsp.rs",
@@ -14,6 +14,8 @@
     "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build/consumption/allocation.rs"
   ],
   "sourceDelta": [
+    ".github/actions/n8n-authored-editor/git-authority.mjs",
+    ".github/actions/n8n-authored-editor/git-authority.test.mjs",
     ".github/workflows/lsp-allocation-diagnostic.yml",
     "crates/vize/Cargo.toml",
     "crates/vize/src/commands/lsp.rs",
@@ -45,7 +47,8 @@
     "tests/tooling/lsp-allocation-diagnostic.test.ts",
     "tests/tooling/lsp-allocation-packets.test.ts",
     "tests/tooling/lsp-allocation-source.test.ts",
-    "tests/tooling/support/lsp/session-process.ts"
+    "tests/tooling/support/lsp/session-process.ts",
+    "tests/tooling/warm-type-backed-inline-bucket-authority.test.ts"
   ],
   "files": [
     "crates/vize/Cargo.toml\t57d9326754025e484b1a09571e10cefe34cb855e0032dc29079d1d6b5654a6b7\tddaeda1fc23dcc1cd068f443aa1d82f9a3c2f7fac98b95a71133d89d196e1654",
@@ -306,7 +309,9 @@
   ],
   "harnessBodies": [
     ".cargo/config.toml\t9087d9834c7170cfa25b764557d51b652081f674af8ee03f83e3a947eabb13e5\t9087d9834c7170cfa25b764557d51b652081f674af8ee03f83e3a947eabb13e5",
-    ".github/workflows/lsp-allocation-diagnostic.yml\t-\t972359d9ce2d2575f236442cfd10437692b819e3609d68dd2ad7c73b725a781d",
+    ".github/actions/n8n-authored-editor/git-authority.mjs\t473af4de7ee26334d56fc06cdc69532aa98d6b456aa425f7027538c8435cfaa4\t30e341a0c518e8b4ea190b46ba5cf253fefcc0b7fc676086c90b41acea9e5520",
+    ".github/actions/n8n-authored-editor/git-authority.test.mjs\td017d6c22b212d09397d942f195c2d7a4f250ae0b965a87fbf740227babea4eb\tde753473aff238f74d1399439abdffdbd79dd0592ce80a0f83236d37d3580675",
+    ".github/workflows/lsp-allocation-diagnostic.yml\t-\t12cb04631af89676c8ef84b1dcc61a6e0fc3c798b068d0791a8d806ee30daa9f",
     "tests/_fixtures/vue-ecosystem-fixtures.json\t95e1f92ae1432a80047b67e2f2854ce7a4cb0c659a1fbbcfcaf4b0ec22ca37a7\t95e1f92ae1432a80047b67e2f2854ce7a4cb0c659a1fbbcfcaf4b0ec22ca37a7",
     "tests/_helpers/realworld-typecheck.ts\t0a56e4845f867104c3d3d12ddf29bbfca29b01e7e34d34c80c9eedf6319c0aba\t0a56e4845f867104c3d3d12ddf29bbfca29b01e7e34d34c80c9eedf6319c0aba",
     "tests/performance/lsp-churn-stress.test.ts\t7d64733877f7f97cb53cc1c9553b5bc589574e5159da80f10eb25f460ee730de\t7d64733877f7f97cb53cc1c9553b5bc589574e5159da80f10eb25f460ee730de",
@@ -332,6 +337,7 @@
     "tests/tooling/lsp-allocation-command.test.ts\t-\t4acb72f865880394f24d055e124ceb6b2794d7a3fd72aa8b85802e0a4aeecd05",
     "tests/tooling/lsp-allocation-diagnostic.test.ts\t-\t2c2b6437a72c2e5815193caf2cad1ed69df27cfcdd44b4625768c8a522357732",
     "tests/tooling/lsp-allocation-packets.test.ts\t-\teef4e1ee92e61b46a7dc052c864b57edaa1defc43fe46685c4b2c203c3738953",
-    "tests/tooling/lsp-allocation-source.test.ts\t-\tb9a53c3a7c3a9ccdef27c61a034eb263dd89685daef9b00090570c5fffb33abc"
+    "tests/tooling/lsp-allocation-source.test.ts\t-\tb9a53c3a7c3a9ccdef27c61a034eb263dd89685daef9b00090570c5fffb33abc",
+    "tests/tooling/warm-type-backed-inline-bucket-authority.test.ts\tf10f3ae6f8b855d1db9ceb17fcff373af1e91d4abf1b2ca75ec0498effef8cd7\tdedff50bd03b4ef333cfcaf8e40d062f2561ed749da6bb7c2503dfb0c9d08aa6"
   ]
 }
