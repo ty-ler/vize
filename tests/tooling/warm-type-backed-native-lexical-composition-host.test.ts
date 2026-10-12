@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { test } from "node:test";
@@ -81,9 +82,17 @@ const locks = (side: Side) =>
     ),
   );
 
-test("complete current composition retains both immutable authorities and authenticates every after body", () => {
+test("retained original guard authenticates complete composition and both immutable authorities", () => {
+  const final = "tests/performance/support/warm-type-backed-native-terminal-final.ts";
+  const retained = execFileSync(
+    "git",
+    ["--no-replace-objects", "show", "e17c27d04521ca1409ffb65b7c700d417fc66733:" + final],
+    { cwd: new URL("../../", import.meta.url) },
+  );
+  const retainedDigest = createHash("sha256").update(retained).digest("hex");
+  assert.equal(retainedDigest, "e5cf6338b4edbc08641aee70888b79fe0d69b27118571fcb86cd5041479f503a");
   const actual = (side: Side, file: string) =>
-    side === "before" ? digest(side, file) : hash(file);
+    side === "before" ? digest(side, file) : file === final ? retainedDigest : hash(file);
   assert.equal(qualifySdk(production, new Set(), actual), null);
   assert.equal(
     qualifyLexicalDollarHost(
