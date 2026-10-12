@@ -162,3 +162,41 @@ The28-law receipt predates this I/O-only correction. Raw nonfatal Git
 gitmodulesMissing/gitattributesMissing diagnostics remain retained; only the
 declared object/path closure is qualified, without full object-graph fsck
 credit. Final exact-head Actions remain required.
+
+### Whole source authority after the component-value merge
+
+The 19 source-only delegates authenticate the complete 206-path
+NoMutating/component-value union and its explicit helper, caller, custody and
+scanner dependencies before executing either historical context. The finite
+registry records all 20 current entrypoints and each authentic predecessor's
+presence or absence. Every declared pure predecessor runs as its complete
+original module at its original path in isolated physical 49d95b8 and f20740e
+Git frames, including seven shared 49 predecessors. The original e53/90d
+declarations, 425-row frame and both original 20-case families remain literal;
+their child stdout/status packets are retained separately. The authored case
+arithmetic is 126 original source cases, plus four outer adapter registrations,
+across 30 outer processes and the original nested packets. Only actual
+per-process terminal receipts qualify execution.
+
+The remaining entrypoint keeps all 36 native CLI vectors live, preserving the
+original build receipt, argv, environment, 60-second timeout and output
+assertions. Its four explicit source seams authenticate the complete physical
+and committed current family first. The F207 deep-props family is labelled
+historical and source-only; the build revision must equal actual current HEAD,
+with the whole committed family checked again. Native execution remains
+pending until genuine exact-head Actions.
+
+The joint receipt grants source authority only. Old400 migration and setup
+measurement predicates must return null; the old111 reader receipt and native
+or performance acceptance do not transfer. Every actual body and before-frame
+capsule rejects missing or altered bytes, executable or symlink files, and
+partial, duplicate, unknown or hybrid declarations. Private hydration binds
+the complete declared cold Git paths, real commit/tree identities and authentic
+absence before unchanged historical helpers execute. The 49 frame also binds
+all 4,464 original registered scanner inputs so its unchanged whole layout law
+can render the authentic inventory. These historical inputs do not expand the
+323 current source rows. Only proven missing object IDs permit one private
+exact-source fetch; corrupt objects, framing and I/O errors refuse. Partial
+cohorts follow only required path ancestors and prove each actual file mode
+and blob ID before hydration. No product source or
+measured budget changes in this integration.
