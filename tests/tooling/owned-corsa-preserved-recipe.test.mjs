@@ -34,7 +34,7 @@ const read = (b, a) => (side, requested) => {
   assert.equal(requested, file);
   return side === "before" ? b : a;
 };
-test("both complete authentic incoming raw locks retain the literal old source cell", () => {
+void test("both complete authentic incoming raw locks retain the literal old source cell", () => {
   const recipe = qualifyOwnedCorsaPreservedRecipe(read(before, after));
   assert.equal(recipe.actualBeforeSHA256, sha(before.body));
   assert.equal(recipe.actualAfterSHA256, sha(after.body));
@@ -53,11 +53,11 @@ test("both complete authentic incoming raw locks retain the literal old source c
   assert.equal(recipe.runtimeCredit, false);
   assert.equal(recipe.performanceCredit, false);
 });
-test("the complete unchanged historical class follows the original qualification", () => {
+void test("the complete unchanged historical class follows the original qualification", () => {
   assert.equal(qualifyOwnedCorsaPreservedRecipe(read(historical, historical)), null);
   assert.equal(preservedRecipeDigest(null, () => "original")("before", file), "original");
 });
-test("mixed, missing, partial, mutated, wrong-blob and executable lock cells refuse", () => {
+void test("mixed, missing, partial, mutated, wrong-blob and executable lock cells refuse", () => {
   for (const [b, a] of [
     [before, historical],
     [historical, after],

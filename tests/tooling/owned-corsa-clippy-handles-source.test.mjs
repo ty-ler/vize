@@ -25,7 +25,7 @@ const context = JSON.parse(
   ),
 );
 const correction = context.sourceCorrections[0];
-assert.equal(context.sourceCorrections.length, 1);
+assert.equal(context.sourceCorrections.length, 2);
 const oldBody = Buffer.from(correction.retainedOldAfter.rawBase64, "base64");
 const newBody = Buffer.from(correction.currentAfter.rawBase64, "base64");
 const sha = (body) => createHash("sha256").update(body).digest("hex");
@@ -71,6 +71,9 @@ function fixture(run) {
     git(root, ["symbolic-ref", "HEAD", "refs/heads/current"]);
     for (const row of context.entries)
       head = write(root, head, row.file, Buffer.from(row.currentAfter.rawBase64, "base64"));
+    // This predecessor campaign deliberately retains the whole old benchmark body.
+    for (const row of context.sourceCorrections.slice(1))
+      head = write(root, head, row.file, Buffer.from(row.retainedOldAfter.rawBase64, "base64"));
     head = write(root, head, correction.file, oldBody);
     run(root, head);
   } finally {

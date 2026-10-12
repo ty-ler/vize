@@ -19,7 +19,7 @@ const gitBlob = (body) =>
   createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
 const physical = (file) => fs.readFileSync(path.join(nativeSdkSourceRoot, file));
 
-test("genuine current237 and two complete raw Git callers qualify separately from original121", () => {
+void test("genuine current237 and two complete raw Git callers qualify separately from original121", () => {
   const current = createNativeSdkHistoricalView();
   assert.equal(current.receipt.completeProductionBodies, 237);
   assert.equal(current.receipt.completeCallerBodies, 2);
@@ -69,7 +69,7 @@ test("genuine current237 and two complete raw Git callers qualify separately fro
   }
 });
 
-test("the original two-package lock law and the real current six-package graph remain separate", () => {
+void test("the original two-package lock law and the real current six-package graph remain separate", () => {
   const current = nativeSdkHistoricalView();
   const old = current.body("Cargo.lock").toString();
   assert.deepEqual(
@@ -111,7 +111,7 @@ test("the original two-package lock law and the real current six-package graph r
   }
 });
 
-test("foreign, missing, nonregular and mixed complete actual source or caller bodies refuse before a loan", () => {
+void test("foreign, missing, nonregular and mixed complete actual source or caller bodies refuse before a loan", () => {
   const current = nativeSdkHistoricalView();
   const added = ownedCorsaSource.rows.find((row) => row.archiveMember).file;
   const final = "tests/performance/support/warm-type-backed-native-terminal-final.ts";
@@ -146,7 +146,7 @@ test("foreign, missing, nonregular and mixed complete actual source or caller bo
     );
 });
 
-test("a supplied callback is authenticated again before a requested historical whole body is returned", () => {
+void test("a supplied callback is authenticated again before a requested historical whole body is returned", () => {
   const current = nativeSdkHistoricalView();
   let foreign = false;
   const loan = createNativeSdkHistoricalView(nativeSdkSourceRoot, (side, file) => {
@@ -160,7 +160,7 @@ test("a supplied callback is authenticated again before a requested historical w
   assert.throws(() => loan.body("Cargo.lock"));
 });
 
-test("unknown paths and modules refuse and returned historical buffers cannot mutate retained authority", () => {
+void test("unknown paths and modules refuse and returned historical buffers cannot mutate retained authority", () => {
   const current = nativeSdkHistoricalView();
   for (const file of ["vendor/corsa_core/src/unknown.rs", "../Cargo.lock", "/Cargo.lock"])
     assert.throws(() => current.body(file));
@@ -172,7 +172,7 @@ test("unknown paths and modules refuse and returned historical buffers cannot mu
   assert.deepEqual(current.body("Cargo.lock"), original);
 });
 
-test("all four complete historical parser modules and the original206 fixture closure remain nonexecuted", () => {
+void test("all four complete historical parser modules and the original206 fixture closure remain nonexecuted", () => {
   const manifest = JSON.parse(
     physical("tests/performance/support/warm-type-backed-lexical-dollar-manifest.json"),
   );
@@ -196,7 +196,7 @@ test("all four complete historical parser modules and the original206 fixture cl
   assert.equal(nativeSdkHistoricalView().receipt.runtimeCredit, false);
 });
 
-test("mixing exactly one retained old whole manifest into the real current six-manifest class refuses", () => {
+void test("mixing exactly one retained old whole manifest into the real current six-manifest class refuses", () => {
   const current = nativeSdkHistoricalView();
   const bytes = physical("tools/support/compat/github/owned-corsa-clippy-source.json");
   assert.equal(sha(bytes), "b38685b9f740fc5444f70d51a2adcb9c7463ed5dc720d46f7ff8aabf8eb8dc94");
@@ -221,7 +221,7 @@ test("mixing exactly one retained old whole manifest into the real current six-m
   }
 });
 
-test("the whole incoming main lock is genuine current source and the original206 receives only its exact old historical lock", () => {
+void test("the whole incoming main lock is genuine current source and the original206 receives only its exact old historical lock", () => {
   const current = nativeSdkHistoricalView();
   const real = current.actualReader("after", "pnpm-lock.yaml");
   assert.equal(real.blob, "ab601a6961c855d1f52948750cc72f117fbf2c1d");

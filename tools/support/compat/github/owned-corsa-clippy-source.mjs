@@ -9,7 +9,7 @@ const url = new URL("./owned-corsa-clippy-source.json", import.meta.url);
 const stat = fs.lstatSync(url);
 assert(stat.isFile() && (stat.mode & 0o777) === 0o644);
 const bytes = fs.readFileSync(url);
-assert.equal(sha(bytes), "b38685b9f740fc5444f70d51a2adcb9c7463ed5dc720d46f7ff8aabf8eb8dc94");
+assert.equal(sha(bytes), "9b9212acd2ae6a56c4c4a8fb86abec5e550a2a55347ae030a896785e77f8c96f");
 const data = JSON.parse(bytes);
 assert.equal(data.schema, 1);
 assert.equal(
@@ -49,7 +49,10 @@ for (const row of data.entries) {
   );
   capsules.set(row.file, values);
 }
-const sourceFiles = Object.freeze(["vendor/corsa_client/src/api/handles.rs"]);
+const sourceFiles = Object.freeze([
+  "vendor/corsa_client/src/api/handles.rs",
+  "vendor/corsa/src/bin/bench_real_corsa/args.rs",
+]);
 assert.deepEqual(
   data.sourceCorrections.map(({ file }) => file),
   sourceFiles,
@@ -66,13 +69,17 @@ for (const row of data.sourceCorrections) {
     assert.equal(blob(body), cell.blob);
     values[side] = { ...cell, body };
   }
-  assert.equal(row.clauses.length, 4);
+  assert.equal(row.clauses.length, row.file === sourceFiles[0] ? 4 : 1);
   let inverse = values.currentAfter.body.toString();
   for (const [before, after] of [...row.clauses].reverse()) {
     assert.equal(inverse.split(after).length - 1, 1);
     inverse = inverse.replace(after, before);
   }
-  assert.deepEqual(Buffer.from(inverse), values.retainedOldAfter.body, "whole four-borrow inverse");
+  assert.deepEqual(
+    Buffer.from(inverse),
+    values.retainedOldAfter.body,
+    "whole named source inverse: " + row.file,
+  );
   capsules.set(row.file, values);
 }
 function same(actual, expected) {
@@ -110,17 +117,18 @@ export function authenticateOwnedCorsaAfterContext(rows, reader, onMismatch) {
   const old = files.every((file) => same(reader(file), capsules.get(file).retainedOldAfter));
   const current = files.every((file) => same(reader(file), capsules.get(file).currentAfter));
   if (!old && !current) return null;
-  const oldSource = sourceFiles.every((file) =>
-    same(reader(file), capsules.get(file).retainedOldAfter),
+  // Only ordered prefixes admit old, handles-only, or handles+benchmark whole bodies.
+  const sourceClass = [0, 1, 2].find((count) =>
+    sourceFiles.every((file, index) =>
+      same(reader(file), capsules.get(file)[index < count ? "currentAfter" : "retainedOldAfter"]),
+    ),
   );
-  const correctedSource = sourceFiles.every((file) =>
-    same(reader(file), capsules.get(file).currentAfter),
-  );
-  if (!oldSource && !(current && correctedSource)) return null;
+  if (sourceClass === undefined || (!current && sourceClass !== 0)) return null;
+  const correctedSourceFiles = sourceFiles.slice(0, sourceClass);
   const mismatched = [];
   for (const row of rows) {
     const expected =
-      current && (files.includes(row.file) || (correctedSource && sourceFiles.includes(row.file)))
+      current && (files.includes(row.file) || correctedSourceFiles.includes(row.file))
         ? capsules.get(row.file).currentAfter
         : row.after;
     if (!same(reader(row.file), expected)) {
@@ -139,8 +147,8 @@ export function authenticateOwnedCorsaAfterContext(rows, reader, onMismatch) {
           sourceContextSHA256: sha(bytes),
           wholeCurrentBodies: 237,
           wholeManifestBodies: 6,
-          wholeCorrectedRustBodies: correctedSource ? 1 : 0,
-          correctedSourceFiles: correctedSource ? sourceFiles : [],
+          wholeCorrectedRustBodies: sourceClass,
+          correctedSourceFiles,
           retainedOldAfterSource: data.retainedOldAfterSource,
           runtimeCredit: false,
           performanceCredit: false,
