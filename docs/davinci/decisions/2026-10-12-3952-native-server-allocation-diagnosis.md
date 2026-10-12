@@ -75,6 +75,22 @@ depth-one, no-tags fetch and hard refusal behavior. All original law bodies,
 workload bounds and native producers remain unchanged. A new immutable-head
 campaign requires separate review; this setup failure supplies no acceptance.
 
+The corrected setup at exact `7abc0918da96cd701aaf6d4c83d1b9869499a533`,
+[38188776862](https://github.com/ubugeeei-prod/vize/actions/runs/38188776862),
+passes all 29 Node laws with zero skips, all 35 default consumption laws and
+one default layout law, the existing legacy/profiling CLI check, and all 37
+diagnostic consumption laws plus one diagnostic layout law. Strict Clippy
+then refuses the new storage observer's `#[allow(clippy::vec_init_then_push)]`
+under the original `clippy::allow_attributes` policy. The complete job log
+has SHA-256
+`6bf96ee74804e4f0b5e1cdee82cd5fa1d0948a07cc2c50ceb7c0c84d4907da81`.
+The paired runner never starts: neither arm has a binary receipt, workload
+measurement or campaign artifact. The narrow repair uses `#[expect]` with
+the same reason, preserving the complete observer body and original owned
+Vec first-push capacity operation. Every existing law, default/profile-only
+body, input and cap stays fixed. A fresh exact-source campaign still requires
+review; these native law passes do not supply paired-arm acceptance.
+
 ## Two distinct binaries and unchanged original workload
 
 The first arm rebuilds the frozen e7ec source with its exact original CI+legacy

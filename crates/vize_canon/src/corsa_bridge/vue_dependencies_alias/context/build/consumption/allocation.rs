@@ -46,7 +46,7 @@ fn capture(enabled: bool, facts: &NativeFacts) -> Option<Dimensions> {
     })
 }
 
-#[allow(
+#[expect(
     clippy::vec_init_then_push,
     reason = "Observe the original Vec first-push capacity"
 )]
