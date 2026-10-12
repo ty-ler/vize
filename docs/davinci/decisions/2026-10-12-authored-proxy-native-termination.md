@@ -49,6 +49,20 @@ workflow byte-for-byte. Missing, duplicate, foreign and partial fixture sets
 still refuse; neither source admission nor these test-only changes grants
 performance credit.
 
+The first actual d6 original400 run retained both sides and `paired.json`,
+then refused at final source custody: the final SDK guard had not enrolled
+the separately authenticated seven fixture paths. The final boundary now
+rechecks all seven actual Git bodies and the complete stored fixture receipt
+before enrolling only those paths. An independent finite source pair admits
+one complete final-caller successor alongside either complete reviewed
+fixture variant. Its complete helper body and metadata are authenticated too.
+Both original caller bodies, all 121 SDK sources, 122 whole bodies, 23 preserved
+bodies and lock checks remain mandatory. The whole original `requests.ts`,
+workflow, inputs and budgets stay unchanged. Removing only the finite caller
+edits restores the original complete final body; partial, foreign, changed
+or mismatched receipts remain refusals. Source admission supplies no
+historical or new original400 runtime acceptance.
+
 The original pending/killed Exit-with-open-writer probe and the intermediate
 Perl descriptor warning are retained as failures. Corrected direct Darwin
 controls complete actual Exit/EOF, Exit with an open parent writer, and

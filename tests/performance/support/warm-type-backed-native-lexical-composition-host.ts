@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
+import {
+  qualifyNativeProxyFinalBody,
+  nativeProxyFinalManifestBodySHA256,
+} from "./warm-type-backed-native-proxy-final-body.ts";
 import { nativeTerminalManifest as original } from "./warm-type-backed-native-terminal-host.ts";
 import {
   nativeOwnedImageBodyPairs,
@@ -153,8 +157,22 @@ export function qualifyNativeTerminalHost(
     )
       return null;
   }
-  for (const [file, before, after] of harness)
-    if (digest("before", file) !== before || digest("after", file) !== after) return null;
+  const helper = "tests/performance/support/warm-type-backed-native-proxy-final-body.ts";
+  const metadata =
+    "tests/performance/support/warm-type-backed-native-proxy-final-body-manifest.json";
+  const finalBody =
+    digest("before", helper) === null &&
+    digest("after", helper) ===
+      "1d8803f466a468508b794e32ca664543bea519f181b658cc542b38aa501abefc" &&
+    digest("before", metadata) === null &&
+    digest("after", metadata) === nativeProxyFinalManifestBodySHA256
+      ? qualifyNativeProxyFinalBody(production, digest)
+      : null;
+  for (const [file, before, after] of harness) {
+    const expectedAfter = finalBody?.file === file ? finalBody.afterSHA256 : after;
+    if (finalBody?.file === file && finalBody.previousAfterSHA256 !== after) return null;
+    if (digest("before", file) !== before || digest("after", file) !== expectedAfter) return null;
+  }
   return {
     authority: "complete-reviewed-native-owned-image-incoming-lexical-composition",
     manifestSHA256,
@@ -178,6 +196,7 @@ export function qualifyNativeTerminalHost(
     },
     runtimeCredit: false,
     performanceCredit: false,
+    ...(finalBody ? { nativeProxyFinalBody: finalBody } : {}),
     files: expected,
   };
 }
