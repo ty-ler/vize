@@ -1,0 +1,632 @@
+{
+  "provider": {
+    "name": "eslint-plugin-vue",
+    "version": "10.9.2"
+  },
+  "parser": "10.4.1",
+  "scope": "Narrow pinned provider replay; original complete native/reference owner packet remains authoritative",
+  "rows": [
+    {
+      "id": "runtime-object",
+      "filename": "runtime-object.vue",
+      "source": "<script setup lang=\"ts\">const props = defineProps({ foo: String }); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 75,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 82
+        }
+      ]
+    },
+    {
+      "id": "runtime-array",
+      "filename": "runtime-array.vue",
+      "source": "<script setup lang=\"ts\">const props = defineProps([\"foo\"]); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 67,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 74
+        }
+      ]
+    },
+    {
+      "id": "type-literal",
+      "filename": "type-literal.vue",
+      "source": "<script setup lang=\"ts\">const props = defineProps<{ foo: string }>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 77,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 84
+        }
+      ]
+    },
+    {
+      "id": "local-interface",
+      "filename": "local-interface.vue",
+      "source": "<script setup lang=\"ts\">interface Props { foo: string }; const props = defineProps<Props>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 100,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 107
+        }
+      ]
+    },
+    {
+      "id": "local-type-alias",
+      "filename": "local-type-alias.vue",
+      "source": "<script setup lang=\"ts\">type Props = { foo: string }; const props = defineProps<Props>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 97,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 104
+        }
+      ]
+    },
+    {
+      "id": "sibling-interface",
+      "filename": "sibling-interface.vue",
+      "source": "<script lang=\"ts\">export interface Props { foo: string }</script>\n<script setup lang=\"ts\">const props = defineProps<Props>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 2,
+          "column": 67,
+          "messageId": "duplicateKey",
+          "endLine": 2,
+          "endColumn": 74
+        }
+      ]
+    },
+    {
+      "id": "sibling-type-alias",
+      "filename": "sibling-type-alias.vue",
+      "source": "<script lang=\"ts\">export type Props = { foo: string }</script>\n<script setup lang=\"ts\">const props = defineProps<Props>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 2,
+          "column": 67,
+          "messageId": "duplicateKey",
+          "endLine": 2,
+          "endColumn": 74
+        }
+      ]
+    },
+    {
+      "id": "sibling-value",
+      "filename": "sibling-value.vue",
+      "source": "<script lang=\"ts\">export const foo = 1;</script>\n<script setup lang=\"ts\">const props = defineProps<{ foo: string }>();</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 32,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 39
+        }
+      ]
+    },
+    {
+      "id": "with-defaults",
+      "filename": "with-defaults.vue",
+      "source": "<script setup lang=\"ts\">const props = withDefaults(defineProps<{ foo?: string }>(), { foo: \"x\" }); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 106,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 113
+        }
+      ]
+    },
+    {
+      "id": "unassigned-props",
+      "filename": "unassigned-props.vue",
+      "source": "<script setup lang=\"ts\">defineProps<{ foo: string }>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 63,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 70
+        }
+      ]
+    },
+    {
+      "id": "unassigned-defaults",
+      "filename": "unassigned-defaults.vue",
+      "source": "<script setup lang=\"ts\">withDefaults(defineProps<{ foo: string }>(), {foo: \"x\"}); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 89,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 96
+        }
+      ]
+    },
+    {
+      "id": "function-collision",
+      "filename": "function-collision.vue",
+      "source": "<script setup lang=\"ts\">defineProps<{ foo: string }>(); function foo() { return 1 }</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 57,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 84
+        }
+      ]
+    },
+    {
+      "id": "import-collision",
+      "filename": "import-collision.vue",
+      "source": "<script setup lang=\"ts\">import { ref as foo } from \"vue\"; defineProps<{ foo: string }>();</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 34,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 44
+        }
+      ]
+    },
+    {
+      "id": "destructure-collision",
+      "filename": "destructure-collision.vue",
+      "source": "<script setup lang=\"ts\">defineProps<{ foo: string; bar: string }>(); const { foo, bar } = source;</script>\n<template><div /></template>",
+      "expectedNativeCount": 2,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 76,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 97
+        },
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'bar'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 76,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 97
+        }
+      ]
+    },
+    {
+      "id": "array-pattern-collision",
+      "filename": "array-pattern-collision.vue",
+      "source": "<script setup lang=\"ts\">defineProps<{ foo: string }>(); const [foo] = source;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 63,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 77
+        }
+      ]
+    },
+    {
+      "id": "multi-declarator-collision",
+      "filename": "multi-declarator-collision.vue",
+      "source": "<script setup lang=\"ts\">defineProps<{ foo: string }>(); const unrelated = 1, foo = 2;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 78,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 85
+        }
+      ]
+    },
+    {
+      "id": "direct-prop-derived",
+      "filename": "direct-prop-derived.vue",
+      "source": "<script setup lang=\"ts\">const props = defineProps<{ foo: string }>(); const foo = props.foo;</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "computed-prop-derived",
+      "filename": "computed-prop-derived.vue",
+      "source": "<script setup lang=\"ts\">const props = defineProps<{ foo: string }>(); const foo = computed(() => props.foo);</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "to-refs-prop-derived",
+      "filename": "to-refs-prop-derived.vue",
+      "source": "<script setup lang=\"ts\">const props = defineProps<{ foo: string }>(); const { foo } = toRefs(props);</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "use-v-model-prop-derived",
+      "filename": "use-v-model-prop-derived.vue",
+      "source": "<script setup lang=\"ts\">const props = defineProps<{ foo: string }>(); const foo = useVModel(props, \"foo\", emit);</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "shadowed-initializer-reference",
+      "filename": "shadowed-initializer-reference.vue",
+      "source": "<script setup lang=\"ts\">const props = defineProps<{ foo: string }>(); const foo = ((props) => props.foo)({foo: 1});</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 77,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 115
+        }
+      ]
+    },
+    {
+      "id": "props-direct-destructure",
+      "filename": "props-direct-destructure.vue",
+      "source": "<script setup lang=\"ts\">const { foo } = defineProps<{ foo: string }>();</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "props-destructure-default",
+      "filename": "props-destructure-default.vue",
+      "source": "<script setup lang=\"ts\">const { foo = \"x\" } = defineProps<{ foo?: string }>();</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "renamed-prop",
+      "filename": "renamed-prop.vue",
+      "source": "<script setup lang=\"ts\">const { foo: propFoo } = defineProps<{ foo: string }>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "renamed-derived-prop",
+      "filename": "renamed-derived-prop.vue",
+      "source": "<script setup lang=\"ts\">const { foo: propFoo } = defineProps<{ foo: string }>(); const foo = computed(() => propFoo);</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "props-own-binding",
+      "filename": "props-own-binding.vue",
+      "source": "<script setup lang=\"ts\">const foo = defineProps<{ foo: string }>();</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "nested-value-only",
+      "filename": "nested-value-only.vue",
+      "source": "<script setup lang=\"ts\">const props = defineProps<{ foo: string }>(); function nested() { const foo = 1; return foo }</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "block-value-only",
+      "filename": "block-value-only.vue",
+      "source": "<script setup lang=\"ts\">defineProps<{ foo: string }>(); { let foo = 1; }</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "nested-macro-call",
+      "filename": "nested-macro-call.vue",
+      "source": "<script setup lang=\"ts\">function nested() { const props = defineProps<{ foo: string }>(); const foo = 1; }</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "plain-script-macro",
+      "filename": "plain-script-macro.ts",
+      "source": "const props = defineProps<{ foo: string }>(); const foo = 1;",
+      "expectedNativeCount": 0,
+      "mode": "plain",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": null,
+          "severity": 1,
+          "message": "No matching configuration found for plain-script-macro.ts.",
+          "line": 0,
+          "column": 0
+        }
+      ]
+    },
+    {
+      "id": "normal-script-macro",
+      "filename": "normal-script-macro.vue",
+      "source": "<script lang=\"ts\">const props = defineProps<{ foo: string }>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "foreign-macro-function",
+      "filename": "foreign-macro-function.vue",
+      "source": "<script setup lang=\"ts\">function defineProps() { return {} }; const props = defineProps<{ foo: string }>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "unsupported macro ownership or erased type",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 115,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 122
+        }
+      ]
+    },
+    {
+      "id": "foreign-macro-import",
+      "filename": "foreign-macro-import.vue",
+      "source": "<script setup lang=\"ts\">import { defineProps } from \"other\"; const props = defineProps<{ foo: string }>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "unsupported macro ownership or erased type",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 114,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 121
+        }
+      ]
+    },
+    {
+      "id": "sibling-foreign-macro",
+      "filename": "sibling-foreign-macro.vue",
+      "source": "<script lang=\"ts\">export function defineProps() { return {} }</script>\n<script setup lang=\"ts\">const props = defineProps<{ foo: string }>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "unsupported macro ownership or erased type",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 2,
+          "column": 77,
+          "messageId": "duplicateKey",
+          "endLine": 2,
+          "endColumn": 84
+        }
+      ]
+    },
+    {
+      "id": "foreign-defaults",
+      "filename": "foreign-defaults.vue",
+      "source": "<script setup lang=\"ts\">function withDefaults() { return {} }; const props = withDefaults(defineProps<{ foo: string }>(), {}); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "unsupported macro ownership or erased type",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 134,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 141
+        }
+      ]
+    },
+    {
+      "id": "erased-type-name",
+      "filename": "erased-type-name.vue",
+      "source": "<script setup lang=\"ts\">type foo = string; defineProps<{ foo: string }>();</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "unsupported macro ownership or erased type",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 1,
+          "column": 25,
+          "messageId": "duplicateKey",
+          "endLine": 1,
+          "endColumn": 43
+        }
+      ]
+    },
+    {
+      "id": "unrelated-imported-props-type",
+      "filename": "unrelated-imported-props-type.vue",
+      "source": "<script lang=\"ts\">export interface Props { foo: string }</script>\n<script setup lang=\"ts\">import type { Props } from \"other\"; defineProps<Props>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "local-type-precedence",
+      "filename": "local-type-precedence.vue",
+      "source": "<script lang=\"ts\">export interface Props { foo: string }</script>\n<script setup lang=\"ts\">interface Props { bar: string }; defineProps<Props>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 0,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": []
+    },
+    {
+      "id": "unicode-prefix",
+      "filename": "unicode-prefix.vue",
+      "source": "<script setup lang=\"ts\">// 日本語 🦉\nconst props = defineProps<{ foo: string }>(); const foo = 1;</script>\n<template><div /></template>",
+      "expectedNativeCount": 1,
+      "mode": "sfc",
+      "referenceStatus": "pinned oracle comparable",
+      "messages": [
+        {
+          "ruleId": "vue/no-dupe-keys",
+          "severity": 2,
+          "message": "Duplicate key 'foo'. May cause name collision in script or template tag.",
+          "line": 2,
+          "column": 53,
+          "messageId": "duplicateKey",
+          "endLine": 2,
+          "endColumn": 60
+        }
+      ]
+    }
+  ]
+}

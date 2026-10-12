@@ -1,0 +1,6 @@
+tree aac71e4409ddf765ec151381273d2b9cba8940a7
+parent cd81dd8c796d1b13399158ec1fa107b65b064966
+author ubugeeei <ubuge1122@gmail.com> 1791818587 +0900
+committer ubugeeei <ubuge1122@gmail.com> 1791818587 +0900
+
+test(lint): preserve the setup duplicate-key explain domain

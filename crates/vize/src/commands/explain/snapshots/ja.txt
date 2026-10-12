@@ -2164,7 +2164,7 @@ script/no-dupe-keys · lint ルール
 Options API の props・data・computed・methods・setup・inject の間でのキーの重複を禁止する
 
 精度: exact
-対象: Options API component definitions written as object literals
+対象: members of resolved Options API objects and compiler-owned inline SFC setup props with locally declared runtime or typed keys, checked against resolved value bindings in setup and its sibling module
 重大度: エラー
 カテゴリー: script
 自動修正: なし

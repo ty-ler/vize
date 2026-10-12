@@ -1,0 +1,326 @@
+{
+  "phase": "independent read-only JavaScript provider/compiler replay; no Vize native execution",
+  "provider": {
+    "name": "eslint-plugin-vue",
+    "version": "10.9.2",
+    "parser": "10.4.1",
+    "eslint": "10.4.1",
+    "typescriptParser": "8.65.0",
+    "config": {
+      "files": [
+        "**/*.vue"
+      ],
+      "parser": "vue-eslint-parser",
+      "nestedParser": "@typescript-eslint/parser",
+      "ecmaVersion": "latest",
+      "sourceType": "module",
+      "rules": {
+        "vue/no-dupe-keys": "error"
+      }
+    }
+  },
+  "rows": [
+    {
+      "id": "alias-local-parameter-sibling",
+      "filename": "alias-local-parameter-sibling.vue",
+      "source": "<script lang=\"ts\">export interface T { foo: string }</script>\n<script setup lang=\"ts\">type Props<T> = T; defineProps<Props<{ bar:string }>>(); const foo = 1;</script>\n<template><div/></template>",
+      "sourceSha256": "6cc4ec90251ae9363471af3b281075adfa3db6b13bbeba68838706c6b41f8e58",
+      "provider": {
+        "messages": []
+      },
+      "officialCompilers": [
+        {
+          "version": "3.5.43",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.5.43/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "884835f119c169afc7c3913a3f80bea700491ea96a3606e815441a0e9e8b702b",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype Props<T> = T; export interface T { foo: string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'alias-local-parameter-sibling',\n  props: {\n    foo: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n const foo = 1;\nconst __returned__ = { foo }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "foo": "setup-const"
+          }
+        },
+        {
+          "version": "3.6.0-rc.10",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.6.0-rc.10/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "a6d9c526e8b05bade6d44350db27b953405729903c98a12737e2d61f24842eb1",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype Props<T> = T; export interface T { foo: string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'alias-local-parameter-sibling',\n  props: {\n    foo: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n const foo = 1;\nconst __returned__ = { foo }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "foo": "setup-const"
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-local-parameter-root",
+      "filename": "alias-local-parameter-root.vue",
+      "source": "<script setup lang=\"ts\">type T = { foo:string }; type Props<T> = T; defineProps<Props<{ bar:string }>>(); const foo = 1;</script>\n<template><div/></template>",
+      "sourceSha256": "39efa35c2e800a79f1597d8732ccc671b26d08e067c17c84331290460cc57af5",
+      "provider": {
+        "messages": []
+      },
+      "officialCompilers": [
+        {
+          "version": "3.5.43",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.5.43/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "884835f119c169afc7c3913a3f80bea700491ea96a3606e815441a0e9e8b702b",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype T = { foo:string }; type Props<T> = T; const foo = 1;\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'alias-local-parameter-root',\n  props: {\n    foo: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n \nconst __returned__ = { foo }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "foo": "literal-const"
+          }
+        },
+        {
+          "version": "3.6.0-rc.10",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.6.0-rc.10/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "a6d9c526e8b05bade6d44350db27b953405729903c98a12737e2d61f24842eb1",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype T = { foo:string }; type Props<T> = T; const foo = 1;\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'alias-local-parameter-root',\n  props: {\n    foo: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n \nconst __returned__ = { foo }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "foo": "literal-const"
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-local-parameter-no-owner",
+      "filename": "alias-local-parameter-no-owner.vue",
+      "source": "<script setup lang=\"ts\">type Props<T> = T; defineProps<Props<{ bar:string }>>(); const bar = 1;</script>\n<template><div/></template>",
+      "sourceSha256": "986019801115ce9e923e04b346d7192b98ebe904abcf18c2bc00282d6ce4693e",
+      "provider": {
+        "messages": []
+      },
+      "officialCompilers": [
+        {
+          "version": "3.5.43",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.5.43/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "884835f119c169afc7c3913a3f80bea700491ea96a3606e815441a0e9e8b702b",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype Props<T> = T; const bar = 1;\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'alias-local-parameter-no-owner',\n  props: {\n    bar: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n \nconst __returned__ = { bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "bar": "literal-const"
+          }
+        },
+        {
+          "version": "3.6.0-rc.10",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.6.0-rc.10/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "a6d9c526e8b05bade6d44350db27b953405729903c98a12737e2d61f24842eb1",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype Props<T> = T; const bar = 1;\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'alias-local-parameter-no-owner',\n  props: {\n    bar: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n \nconst __returned__ = { bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "bar": "literal-const"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ordinary-local-alias",
+      "filename": "ordinary-local-alias.vue",
+      "source": "<script lang=\"ts\">export interface T { foo:string }</script>\n<script setup lang=\"ts\">type Props = { bar:string }; defineProps<Props>(); const foo=1, bar=2;</script>\n<template><div/></template>",
+      "sourceSha256": "96a689451711733f0bb10d7312009394158ef0c741050fb7e343509ba0388fec",
+      "provider": {
+        "messages": [
+          {
+            "ruleId": "vue/no-dupe-keys",
+            "severity": 2,
+            "message": "Duplicate key 'bar'. May cause name collision in script or template tag.",
+            "line": 2,
+            "column": 89,
+            "messageId": "duplicateKey",
+            "endLine": 2,
+            "endColumn": 94
+          }
+        ]
+      },
+      "officialCompilers": [
+        {
+          "version": "3.5.43",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.5.43/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "884835f119c169afc7c3913a3f80bea700491ea96a3606e815441a0e9e8b702b",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype Props = { bar:string }; export interface T { foo:string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'ordinary-local-alias',\n  props: {\n    bar: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n const foo=1, bar=2;\nconst __returned__ = { foo, bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "foo": "setup-const",
+            "bar": "setup-const"
+          }
+        },
+        {
+          "version": "3.6.0-rc.10",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.6.0-rc.10/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "a6d9c526e8b05bade6d44350db27b953405729903c98a12737e2d61f24842eb1",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype Props = { bar:string }; export interface T { foo:string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'ordinary-local-alias',\n  props: {\n    bar: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n const foo=1, bar=2;\nconst __returned__ = { foo, bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "bar": "setup-const",
+            "foo": "setup-const"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ordinary-generic-object-alias",
+      "filename": "ordinary-generic-object-alias.vue",
+      "source": "<script lang=\"ts\">export interface T { foo:string }</script>\n<script setup lang=\"ts\">type Props<T> = { bar:T }; defineProps<Props<string>>(); const foo=1, bar=2;</script>\n<template><div/></template>",
+      "sourceSha256": "96960964c5ef09896a4bda048d083d646c3e6f342f8568319a75b7233a1df5c5",
+      "provider": {
+        "messages": [
+          {
+            "ruleId": "vue/no-dupe-keys",
+            "severity": 2,
+            "message": "Duplicate key 'bar'. May cause name collision in script or template tag.",
+            "line": 2,
+            "column": 95,
+            "messageId": "duplicateKey",
+            "endLine": 2,
+            "endColumn": 100
+          }
+        ]
+      },
+      "officialCompilers": [
+        {
+          "version": "3.5.43",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.5.43/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "884835f119c169afc7c3913a3f80bea700491ea96a3606e815441a0e9e8b702b",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype Props<T> = { bar:T }; export interface T { foo:string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'ordinary-generic-object-alias',\n  props: {\n    bar: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n const foo=1, bar=2;\nconst __returned__ = { foo, bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "foo": "setup-const",
+            "bar": "setup-const"
+          }
+        },
+        {
+          "version": "3.6.0-rc.10",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.6.0-rc.10/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "a6d9c526e8b05bade6d44350db27b953405729903c98a12737e2d61f24842eb1",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype Props<T> = { bar:T }; export interface T { foo:string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'ordinary-generic-object-alias',\n  props: {\n    bar: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n const foo=1, bar=2;\nconst __returned__ = { foo, bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "bar": "setup-const",
+            "foo": "setup-const"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ordinary-generic-interface",
+      "filename": "ordinary-generic-interface.vue",
+      "source": "<script lang=\"ts\">export interface T { foo:string }</script>\n<script setup lang=\"ts\">interface Props<T> { bar:T }; defineProps<Props<string>>(); const foo=1, bar=2;</script>\n<template><div/></template>",
+      "sourceSha256": "7985b29a634c8dbd4d6e6fc13e23eeb1644b99045cbd453b1ae95de31c93a6db",
+      "provider": {
+        "messages": [
+          {
+            "ruleId": "vue/no-dupe-keys",
+            "severity": 2,
+            "message": "Duplicate key 'bar'. May cause name collision in script or template tag.",
+            "line": 2,
+            "column": 98,
+            "messageId": "duplicateKey",
+            "endLine": 2,
+            "endColumn": 103
+          }
+        ]
+      },
+      "officialCompilers": [
+        {
+          "version": "3.5.43",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.5.43/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "884835f119c169afc7c3913a3f80bea700491ea96a3606e815441a0e9e8b702b",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ninterface Props<T> { bar:T }export interface T { foo:string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'ordinary-generic-interface',\n  props: {\n    bar: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n;  const foo=1, bar=2;\nconst __returned__ = { foo, bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "foo": "setup-const",
+            "bar": "setup-const"
+          }
+        },
+        {
+          "version": "3.6.0-rc.10",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.6.0-rc.10/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "a6d9c526e8b05bade6d44350db27b953405729903c98a12737e2d61f24842eb1",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ninterface Props<T> { bar:T }export interface T { foo:string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'ordinary-generic-interface',\n  props: {\n    bar: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n;  const foo=1, bar=2;\nconst __returned__ = { foo, bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "bar": "setup-const",
+            "foo": "setup-const"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ordinary-generic-interface-inheritance",
+      "filename": "ordinary-generic-interface-inheritance.vue",
+      "source": "<script lang=\"ts\">export interface T { foo:string }</script>\n<script setup lang=\"ts\">interface Base<T> { bar:T }; interface Props<T> extends Base<T> {}; defineProps<Props<string>>(); const foo=1, bar=2;</script>\n<template><div/></template>",
+      "sourceSha256": "0a21a961d21c482e0322a3cfb4201665830b3db7f53d9c41c88096b4d049bb1a",
+      "provider": {
+        "messages": []
+      },
+      "officialCompilers": [
+        {
+          "version": "3.5.43",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.5.43/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "884835f119c169afc7c3913a3f80bea700491ea96a3606e815441a0e9e8b702b",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ninterface Base<T> { bar:T }interface Props<T> extends Base<T> {}export interface T { foo:string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'ordinary-generic-interface-inheritance',\n  props: {\n    bar: { type: Object, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n; ;  const foo=1, bar=2;\nconst __returned__ = { foo, bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "foo": "setup-const",
+            "bar": "setup-const"
+          }
+        },
+        {
+          "version": "3.6.0-rc.10",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.6.0-rc.10/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "a6d9c526e8b05bade6d44350db27b953405729903c98a12737e2d61f24842eb1",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ninterface Base<T> { bar:T }interface Props<T> extends Base<T> {}export interface T { foo:string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'ordinary-generic-interface-inheritance',\n  props: {\n    bar: { type: Object, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n; ;  const foo=1, bar=2;\nconst __returned__ = { foo, bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "bar": "setup-const",
+            "foo": "setup-const"
+          }
+        }
+      ]
+    },
+    {
+      "id": "alias-local-parameter-intersection",
+      "filename": "alias-local-parameter-intersection.vue",
+      "source": "<script lang=\"ts\">export interface T { foo:string }</script>\n<script setup lang=\"ts\">type Props<T> = T & { bar:string }; defineProps<Props<{}>>(); const foo=1, bar=2;</script>\n<template><div/></template>",
+      "sourceSha256": "bc624f78f3a82003e856d87092068f47e23bc499a7edbc37dc8de47c8c78a1e6",
+      "provider": {
+        "messages": [
+          {
+            "ruleId": "vue/no-dupe-keys",
+            "severity": 2,
+            "message": "Duplicate key 'bar'. May cause name collision in script or template tag.",
+            "line": 2,
+            "column": 100,
+            "messageId": "duplicateKey",
+            "endLine": 2,
+            "endColumn": 105
+          }
+        ]
+      },
+      "officialCompilers": [
+        {
+          "version": "3.5.43",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.5.43/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "884835f119c169afc7c3913a3f80bea700491ea96a3606e815441a0e9e8b702b",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype Props<T> = T & { bar:string }; export interface T { foo:string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'alias-local-parameter-intersection',\n  props: {\n    foo: { type: String, required: true },\n    bar: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n const foo=1, bar=2;\nconst __returned__ = { foo, bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "foo": "setup-const",
+            "bar": "setup-const"
+          }
+        },
+        {
+          "version": "3.6.0-rc.10",
+          "artifact": "/Users/ubugeeei/Source/github.com/ubugeeei-prod/vize/node_modules/.pnpm/@vue+compiler-sfc@3.6.0-rc.10/node_modules/@vue/compiler-sfc/dist/compiler-sfc.cjs.js",
+          "artifactSha256": "a6d9c526e8b05bade6d44350db27b953405729903c98a12737e2d61f24842eb1",
+          "parseErrors": [],
+          "content": "import { defineComponent as _defineComponent } from 'vue'\ntype Props<T> = T & { bar:string }; export interface T { foo:string }\nexport default /*@__PURE__*/_defineComponent({\n  __name: 'alias-local-parameter-intersection',\n  props: {\n    foo: { type: String, required: true },\n    bar: { type: String, required: true }\n  },\n  setup(__props: any, { expose: __expose }) {\n  __expose();\n const foo=1, bar=2;\nconst __returned__ = { foo, bar }\nObject.defineProperty(__returned__, '__isScriptSetup', { enumerable: false, value: true })\nreturn __returned__\n}\n\n})",
+          "bindings": {
+            "foo": "setup-const",
+            "bar": "setup-const"
+          }
+        }
+      ]
+    }
+  ]
+}

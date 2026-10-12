@@ -1,0 +1,454 @@
+{
+  "schema": "vize.lint.no-dupe-keys-explain-snapshot-successor",
+  "version": 1,
+  "currentSource": "10ebcea74fb34dc2f22626c45bc92c857643cd54",
+  "historicalSource": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+  "current": [
+    {
+      "path": "crates/vize/src/commands/explain/snapshots/en.txt",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-00.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 185537,
+        "sha256": "72f7cce563c10d0f784137e13e9f0ae781b1674f9184b40a87b01d9d72dd960b",
+        "gitBlob": "29333ca2c2645ba2ffb2546a62991d8d1ea87657"
+      },
+      "after": {
+        "bytes": 185675,
+        "sha256": "c6aac4d1c45e141b54694312e737a1fdedb3b5dd967190d1f934d00269c5cbe9",
+        "gitBlob": "ddbccfdc18435fb39a1111567afbe135c2fa7429"
+      },
+      "changed": true
+    },
+    {
+      "path": "crates/vize/src/commands/explain/snapshots/ja.txt",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-01.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 215020,
+        "sha256": "3d4fa160d0697a93a3b34759fb92b367b3917182a5810cb3c485f2920088531f",
+        "gitBlob": "a97741265c0869c62288504650f8e1c586feebc5"
+      },
+      "after": {
+        "bytes": 215158,
+        "sha256": "d4c66173866d0937ca1c47f89752e34f9fc19fa98b071ff67336533dc5a00046",
+        "gitBlob": "36b1f009c15dd617d7887fe476f3f998e5a7c06d"
+      },
+      "changed": true
+    },
+    {
+      "path": "crates/vize/src/commands/explain/snapshots/zh.txt",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-02.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 197156,
+        "sha256": "3e32eeaac07da96244d6c2679d3fd8e900d06ca3b92b54501eef49eae1858359",
+        "gitBlob": "d68255d92d31bdccd2b4e270c34a882c28f8d20f"
+      },
+      "after": {
+        "bytes": 197294,
+        "sha256": "7c7e3117e3b9b64768dd53e04ba2c5defafc82cb1807bf5b52c48c593cee2664",
+        "gitBlob": "ebe6dcea4b207268a85b6f8de52b1dd4a6c0efc5"
+      },
+      "changed": true
+    },
+    {
+      "path": "crates/vize/src/commands/explain/page.rs",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-03.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 7819,
+        "sha256": "ef8a4c88f653476093143fa91227dc0c25f7ff4c956763f1dae4ea80adb2ec95",
+        "gitBlob": "f7344db7bb0aa95d01e481b31dc20734a1a27f0e"
+      },
+      "after": {
+        "bytes": 7819,
+        "sha256": "ef8a4c88f653476093143fa91227dc0c25f7ff4c956763f1dae4ea80adb2ec95",
+        "gitBlob": "f7344db7bb0aa95d01e481b31dc20734a1a27f0e"
+      },
+      "changed": false
+    },
+    {
+      "path": "crates/vize/src/commands/explain/subjects.rs",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-04.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 6132,
+        "sha256": "2672722f174825906e3c132190cfc3bf90394077e67cb1764c817a3250c4c912",
+        "gitBlob": "ca6e91ad11585d2867fa51ed4565c911e78a939b"
+      },
+      "after": {
+        "bytes": 6132,
+        "sha256": "2672722f174825906e3c132190cfc3bf90394077e67cb1764c817a3250c4c912",
+        "gitBlob": "ca6e91ad11585d2867fa51ed4565c911e78a939b"
+      },
+      "changed": false
+    },
+    {
+      "path": "crates/vize/src/commands/explain/tests.rs",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-05.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 6501,
+        "sha256": "f00e574d386c10c277093fa92e4e6d2e755e7654459c6c2c74ec2e8d45f6f940",
+        "gitBlob": "d5af37d590f89f6a34f9e58c7e90ca17a6715936"
+      },
+      "after": {
+        "bytes": 6501,
+        "sha256": "f00e574d386c10c277093fa92e4e6d2e755e7654459c6c2c74ec2e8d45f6f940",
+        "gitBlob": "d5af37d590f89f6a34f9e58c7e90ca17a6715936"
+      },
+      "changed": false
+    },
+    {
+      "path": "crates/vize/src/commands/explain/catalog.rs",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-06.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 2523,
+        "sha256": "f9616d5fbbd1f7bc83a3fe6ba53b7c2e45a7301c5ca6846fad65da8f38f4ad54",
+        "gitBlob": "1d321663a8db7b5b08150357a0720789f1dfa3bd"
+      },
+      "after": {
+        "bytes": 2523,
+        "sha256": "f9616d5fbbd1f7bc83a3fe6ba53b7c2e45a7301c5ca6846fad65da8f38f4ad54",
+        "gitBlob": "1d321663a8db7b5b08150357a0720789f1dfa3bd"
+      },
+      "changed": false
+    },
+    {
+      "path": "crates/vize/src/commands/explain.rs",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-07.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 3536,
+        "sha256": "6a514387bdffc1a020015531a6fac44ab2e8f1eb90ca8333ca44dd40f7354763",
+        "gitBlob": "b9c437eb6f5c9f4720b6a864b2bbfdd90f6c969d"
+      },
+      "after": {
+        "bytes": 3536,
+        "sha256": "6a514387bdffc1a020015531a6fac44ab2e8f1eb90ca8333ca44dd40f7354763",
+        "gitBlob": "b9c437eb6f5c9f4720b6a864b2bbfdd90f6c969d"
+      },
+      "changed": false
+    },
+    {
+      "path": "crates/vize_patina/src/rule_contracts/table.rs",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-08.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 19857,
+        "sha256": "0adb8d7e75f43846e07d781a1ff4e58c08dc3016ad5a5abb3fea4b8393be53fb",
+        "gitBlob": "daa61391b47f3c65122f1cf6cfb9ea208b394118"
+      },
+      "after": {
+        "bytes": 19857,
+        "sha256": "0adb8d7e75f43846e07d781a1ff4e58c08dc3016ad5a5abb3fea4b8393be53fb",
+        "gitBlob": "daa61391b47f3c65122f1cf6cfb9ea208b394118"
+      },
+      "changed": false
+    },
+    {
+      "path": "crates/vize_patina/src/rules/script/prefer_import_from_vue.rs",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-09.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 7769,
+        "sha256": "79d3814ecd8822cf81ad475ecfc850897ee907b587e2312749edb8b0e8795abb",
+        "gitBlob": "3b8ab23661b6250365780a34b8843c8d08b8394e"
+      },
+      "after": {
+        "bytes": 7769,
+        "sha256": "79d3814ecd8822cf81ad475ecfc850897ee907b587e2312749edb8b0e8795abb",
+        "gitBlob": "3b8ab23661b6250365780a34b8843c8d08b8394e"
+      },
+      "changed": false
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/public-vue-imports-8090/primary-sources.json",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-10.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 188946,
+        "sha256": "90a915a522ce883120e1667e02310cfd7cb26fe093383511ae58f07e0ebf35ed",
+        "gitBlob": "748c74d0171ec0ef5aef55883229ebb63e85cb78"
+      },
+      "after": {
+        "bytes": 188946,
+        "sha256": "90a915a522ce883120e1667e02310cfd7cb26fe093383511ae58f07e0ebf35ed",
+        "gitBlob": "748c74d0171ec0ef5aef55883229ebb63e85cb78"
+      },
+      "changed": false
+    },
+    {
+      "path": "tests/_fixtures/differential/lint/public-vue-imports-8090/explain-snapshot-contract.json.gz",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-11.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 188194,
+        "sha256": "696a93a6477d61991ab3e91b12adb7f0ae5ae44de1bceab4587f21c77144511c",
+        "gitBlob": "def8123142970a5f1edfbde5b6c65edceb08c624"
+      },
+      "after": {
+        "bytes": 188194,
+        "sha256": "696a93a6477d61991ab3e91b12adb7f0ae5ae44de1bceab4587f21c77144511c",
+        "gitBlob": "def8123142970a5f1edfbde5b6c65edceb08c624"
+      },
+      "changed": false
+    },
+    {
+      "path": "tests/tooling/public-vue-imports-explain.test.mjs",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-12.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 2187,
+        "sha256": "c464134f06144f2227cd8a9f384e6d26d54346a600960984825367fd2b8106d3",
+        "gitBlob": "cb97d8c4d23e063227c637664ee24995a8539c7d"
+      },
+      "after": {
+        "bytes": 447,
+        "sha256": "095520ffdcf3e7f42aad3c9920c6810b00b95cd69ba0e90bb7879dc26403d501",
+        "gitBlob": "db7bd556d4cc989e4e6c0d276acebb4bdda1c42e"
+      },
+      "changed": true
+    },
+    {
+      "path": "tests/tooling/lint-default-correctness-reference.mjs",
+      "before": {
+        "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-13.fixture",
+        "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+        "bytes": 3048,
+        "sha256": "d0fe46840f15d3aee0cad8b0394b4c67dd1f738a9ddaba39f55073fefd9df6b7",
+        "gitBlob": "6395d65599a8c40343cb12d64a1bf735dd77acb7"
+      },
+      "after": {
+        "bytes": 3048,
+        "sha256": "d0fe46840f15d3aee0cad8b0394b4c67dd1f738a9ddaba39f55073fefd9df6b7",
+        "gitBlob": "6395d65599a8c40343cb12d64a1bf735dd77acb7"
+      },
+      "changed": false
+    }
+  ],
+  "archives": [
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-00.fixture",
+      "bytes": 185537,
+      "sha256": "72f7cce563c10d0f784137e13e9f0ae781b1674f9184b40a87b01d9d72dd960b",
+      "gitBlob": "29333ca2c2645ba2ffb2546a62991d8d1ea87657"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-01.fixture",
+      "bytes": 215020,
+      "sha256": "3d4fa160d0697a93a3b34759fb92b367b3917182a5810cb3c485f2920088531f",
+      "gitBlob": "a97741265c0869c62288504650f8e1c586feebc5"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-02.fixture",
+      "bytes": 197156,
+      "sha256": "3e32eeaac07da96244d6c2679d3fd8e900d06ca3b92b54501eef49eae1858359",
+      "gitBlob": "d68255d92d31bdccd2b4e270c34a882c28f8d20f"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-03.fixture",
+      "bytes": 7819,
+      "sha256": "ef8a4c88f653476093143fa91227dc0c25f7ff4c956763f1dae4ea80adb2ec95",
+      "gitBlob": "f7344db7bb0aa95d01e481b31dc20734a1a27f0e"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-04.fixture",
+      "bytes": 6132,
+      "sha256": "2672722f174825906e3c132190cfc3bf90394077e67cb1764c817a3250c4c912",
+      "gitBlob": "ca6e91ad11585d2867fa51ed4565c911e78a939b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-05.fixture",
+      "bytes": 6501,
+      "sha256": "f00e574d386c10c277093fa92e4e6d2e755e7654459c6c2c74ec2e8d45f6f940",
+      "gitBlob": "d5af37d590f89f6a34f9e58c7e90ca17a6715936"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-06.fixture",
+      "bytes": 2523,
+      "sha256": "f9616d5fbbd1f7bc83a3fe6ba53b7c2e45a7301c5ca6846fad65da8f38f4ad54",
+      "gitBlob": "1d321663a8db7b5b08150357a0720789f1dfa3bd"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-07.fixture",
+      "bytes": 3536,
+      "sha256": "6a514387bdffc1a020015531a6fac44ab2e8f1eb90ca8333ca44dd40f7354763",
+      "gitBlob": "b9c437eb6f5c9f4720b6a864b2bbfdd90f6c969d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-08.fixture",
+      "bytes": 19857,
+      "sha256": "0adb8d7e75f43846e07d781a1ff4e58c08dc3016ad5a5abb3fea4b8393be53fb",
+      "gitBlob": "daa61391b47f3c65122f1cf6cfb9ea208b394118"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-09.fixture",
+      "bytes": 7769,
+      "sha256": "79d3814ecd8822cf81ad475ecfc850897ee907b587e2312749edb8b0e8795abb",
+      "gitBlob": "3b8ab23661b6250365780a34b8843c8d08b8394e"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-10.fixture",
+      "bytes": 188946,
+      "sha256": "90a915a522ce883120e1667e02310cfd7cb26fe093383511ae58f07e0ebf35ed",
+      "gitBlob": "748c74d0171ec0ef5aef55883229ebb63e85cb78"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-11.fixture",
+      "bytes": 188194,
+      "sha256": "696a93a6477d61991ab3e91b12adb7f0ae5ae44de1bceab4587f21c77144511c",
+      "gitBlob": "def8123142970a5f1edfbde5b6c65edceb08c624"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-12.fixture",
+      "bytes": 2187,
+      "sha256": "c464134f06144f2227cd8a9f384e6d26d54346a600960984825367fd2b8106d3",
+      "gitBlob": "cb97d8c4d23e063227c637664ee24995a8539c7d"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/old-13.fixture",
+      "bytes": 3048,
+      "sha256": "d0fe46840f15d3aee0cad8b0394b4c67dd1f738a9ddaba39f55073fefd9df6b7",
+      "gitBlob": "6395d65599a8c40343cb12d64a1bf735dd77acb7"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/10eb-tooling4.raw.log.fixture",
+      "bytes": 737405,
+      "sha256": "03a8609740bee460df28021316f656a95fe27bc566d631e31c0a1d1bf535576d",
+      "gitBlob": "48041036a4edebaf1d18213c6b4d2cc4e8abb8a6"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/cd81.commit.fixture",
+      "bytes": 276,
+      "sha256": "e31d69fb8b596abdd0485ecbb04131395afce1804f536d452462ffe595a9cac8",
+      "gitBlob": "9c5760056a34e13fddce2f801d9065e18fbebbe4"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/cd81.root-tree.fixture",
+      "bytes": 2259,
+      "sha256": "0b1444244ec52541a320db5e533b7862d76a18f1c3af0a9a8477ec690e96049d",
+      "gitBlob": "9e5a7a796b434c84ddca6897a5e0af38c9c3b378"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/cd81.recursive-tree.fixture",
+      "bytes": 3681621,
+      "sha256": "2285a503368268ba7817a3f1fd423cb71590d55269959c82d8c0774835b8f6d1",
+      "gitBlob": "bffe9ef8e5374f8cece30a6fb0f9f24563a3432b"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/10eb.commit.fixture",
+      "bytes": 268,
+      "sha256": "02f4b9d17e8252af7398585db3190481c7dcde2295ccc980d885c820b1ac3a20",
+      "gitBlob": "ea5793e0418463795cdb209cb31ce19acc26bdf1"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/cd81-to-10eb.diff.fixture",
+      "bytes": 1087658,
+      "sha256": "339409124294ce70f21ea5ecbeda549c3f20197276a5676c05df288d7c023d9e",
+      "gitBlob": "66576dc354a00f7a0f298215dd2f0549467b4458"
+    },
+    {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/cd81-to-10eb.paths.fixture",
+      "bytes": 387,
+      "sha256": "368383ab8c60dbd3fa9ea23d343bb948d718060bcc5aba3c0701c812fbef9a16",
+      "gitBlob": "1649ea50d7a6f3838b8362b4b876871fc8e40596"
+    }
+  ],
+  "snapshotRows": [
+    {
+      "path": "crates/vize/src/commands/explain/snapshots/en.txt",
+      "locale": "en",
+      "label": "domain",
+      "prefixSha256": "a75d2c174a0ae698464a8eff99c3d5d81621cb0202aa962eed9cb0bbf2beabfc",
+      "suffixSha256": "53dbeb204fd175cd25bf874c9bd54229e6e43eedf45bb92b861426ec15d4f42a"
+    },
+    {
+      "path": "crates/vize/src/commands/explain/snapshots/ja.txt",
+      "locale": "ja",
+      "label": "対象",
+      "prefixSha256": "b429d7e223400ec71d8790d182d644c9e6fac6bdb093df0e86638c88704de11b",
+      "suffixSha256": "8c58de54f67e49e659dc7cc1ac3bbc0d9ae85553e8dac26db16e5582dd17cac1"
+    },
+    {
+      "path": "crates/vize/src/commands/explain/snapshots/zh.txt",
+      "locale": "zh",
+      "label": "适用范围",
+      "prefixSha256": "28ec308f2124b4267ea874f992aaaae4527a944d1a8ffb4fec98d65bd4ad0b03",
+      "suffixSha256": "0179b1da84b1b99fb1dc2508b176ad24d2d07ab1db3e66dd1b9129937c07fba9"
+    }
+  ],
+  "oldDomain": "Options API component definitions written as object literals",
+  "newDomain": "members of resolved Options API objects and compiler-owned inline SFC setup props with locally declared runtime or typed keys, checked against resolved value bindings in setup and its sibling module",
+  "oldLaw": "tests/tooling/public-vue-imports-explain.test.mjs",
+  "referenceHelper": "tests/tooling/lint-default-correctness-reference.mjs",
+  "publicPrimary": "tests/_fixtures/differential/lint/public-vue-imports-8090/primary-sources.json",
+  "publicContract": "tests/_fixtures/differential/lint/public-vue-imports-8090/explain-snapshot-contract.json.gz",
+  "publicProducer": "crates/vize_patina/src/rules/script/prefer_import_from_vue.rs",
+  "actualFailure": {
+    "job": 114882320594,
+    "archive": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/10eb-tooling4.raw.log.fixture",
+    "sha256": "03a8609740bee460df28021316f656a95fe27bc566d631e31c0a1d1bf535576d"
+  },
+  "credit": {
+    "compiled": false,
+    "native": false,
+    "performance": false
+  },
+  "qualification": "standalone complete current physical closure before unchanged historical law; snapshot current native success remains separately owned Actions evidence",
+  "historicalProof": {
+    "source": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+    "tree": "86d5f6876216df069eb4df9a5a71ae09c52028b2",
+    "commit": {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/cd81.commit.fixture",
+      "bytes": 276,
+      "sha256": "e31d69fb8b596abdd0485ecbb04131395afce1804f536d452462ffe595a9cac8",
+      "gitBlob": "9c5760056a34e13fddce2f801d9065e18fbebbe4"
+    },
+    "rootTree": {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/cd81.root-tree.fixture",
+      "bytes": 2259,
+      "sha256": "0b1444244ec52541a320db5e533b7862d76a18f1c3af0a9a8477ec690e96049d",
+      "gitBlob": "9e5a7a796b434c84ddca6897a5e0af38c9c3b378"
+    },
+    "recursiveTree": {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/cd81.recursive-tree.fixture",
+      "bytes": 3681621,
+      "sha256": "2285a503368268ba7817a3f1fd423cb71590d55269959c82d8c0774835b8f6d1",
+      "gitBlob": "bffe9ef8e5374f8cece30a6fb0f9f24563a3432b"
+    }
+  },
+  "actualTransition": {
+    "from": "cd81dd8c796d1b13399158ec1fa107b65b064966",
+    "to": "10ebcea74fb34dc2f22626c45bc92c857643cd54",
+    "commit": {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/10eb.commit.fixture",
+      "bytes": 268,
+      "sha256": "02f4b9d17e8252af7398585db3190481c7dcde2295ccc980d885c820b1ac3a20",
+      "gitBlob": "ea5793e0418463795cdb209cb31ce19acc26bdf1"
+    },
+    "diff": {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/cd81-to-10eb.diff.fixture",
+      "bytes": 1087658,
+      "sha256": "339409124294ce70f21ea5ecbeda549c3f20197276a5676c05df288d7c023d9e",
+      "gitBlob": "66576dc354a00f7a0f298215dd2f0549467b4458"
+    },
+    "paths": {
+      "path": "tests/_fixtures/differential/linter/no-dupe-keys-447/explain-snapshot-successor/cd81-to-10eb.paths.fixture",
+      "bytes": 387,
+      "sha256": "368383ab8c60dbd3fa9ea23d343bb948d718060bcc5aba3c0701c812fbef9a16",
+      "gitBlob": "1649ea50d7a6f3838b8362b4b876871fc8e40596"
+    },
+    "changedPaths": [
+      "crates/vize/src/commands/explain/snapshots/en.txt",
+      "crates/vize/src/commands/explain/snapshots/ja.txt",
+      "crates/vize/src/commands/explain/snapshots/zh.txt",
+      "docs/davinci/decisions/2026-09-27-level-restructure.md",
+      "docs/davinci/decisions/2026-10-12-6881-script-setup-dupe-keys.md",
+      "tests/_fixtures/differential/linter/no-dupe-keys-447/source-custody/ci-repair/explain-domain-snapshot-repair.json.gz"
+    ],
+    "sourceCodeChanges": false
+  }
+}

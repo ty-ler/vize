@@ -2245,7 +2245,7 @@ script/no-dupe-keys · lint 规则
 禁止在选项式 API 的 props/data/computed/methods/setup/inject 之间出现重复的键
 
 精度层级: exact
-适用范围: Options API component definitions written as object literals
+适用范围: members of resolved Options API objects and compiler-owned inline SFC setup props with locally declared runtime or typed keys, checked against resolved value bindings in setup and its sibling module
 严重级别: 错误
 类别: script
 自动修复: 不支持
