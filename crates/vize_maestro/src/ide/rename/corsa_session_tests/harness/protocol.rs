@@ -11,6 +11,7 @@ use vize_l0::cstr;
 
 mod executable;
 mod identity;
+mod lifecycle_tests;
 mod proxy;
 mod readiness;
 
@@ -143,6 +144,27 @@ pub(in crate::ide) fn traced_corsa_executable(
     };
     fs::write(root.join("trace-stdio.pl"), proxy::TRACE_STDIO_PROXY)
         .map_err(|error| error.to_string())?;
+    for (name, body) in [
+        (
+            "native-proxy-lifecycle.pl",
+            include_str!("../../../../../tests/fixtures/native-proxy-lifecycle.pl"),
+        ),
+        (
+            "native-proxy-initialize.json",
+            include_str!("../../../../../tests/fixtures/native-proxy-initialize.json"),
+        ),
+    ] {
+        fs::write(root.join(name), body).map_err(|error| error.to_string())?;
+    }
+    if std::env::var("CI").is_ok_and(|value| value == "true") {
+        let capture = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../target/nextest/full/native-proxy-termination");
+        fs::write(
+            root.join("native-proxy-capture.path"),
+            capture.to_string_lossy().as_bytes(),
+        )
+        .map_err(|error| error.to_string())?;
+    }
     executable::link_session_wrapper(&wrapper)?;
     Ok((wrapper, trace_dir, shutdown_gate))
 }
@@ -228,6 +250,7 @@ pub(super) fn assert_graceful_lsp_lifecycle(
         .and_then(|name| name.strip_prefix("client-"))
         .ok_or_else(|| cstr!("unexpected protocol trace name: {}", path.display()))?;
     assert_clean_stderr(trace_dir, pid)?;
+    lifecycle_tests::assert_native_termination(trace_dir, pid)?;
     assert_reaped(trace_dir, pid)
 }
 
