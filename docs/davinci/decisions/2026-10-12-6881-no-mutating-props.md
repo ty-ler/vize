@@ -96,3 +96,16 @@ there is no rule-name or filename allowlist. Source-model laws and the genuine
 Node generator qualify this model only, not Rust behavior, Matrix completion,
 performance, merge or release acceptance. The original collector and refusal
 remain retained separately. This source correction stays paired with #6881.
+
+The c989 source Plan passed all five generated ledgers, then the unchanged
+module-layout law rejected the callback's path attribute. A move-only commit
+relocates the complete callback body to ordinary SFC module discovery; the
+following change removes only that attribute. The separate complete layout
+frame authenticates the current twelve-source family, relocated callback,
+old-path absence and unchanged remaining bodies before historical selection.
+Both old custody manifests, the namespace guard and all original law bodies
+remain sealed; current generator output is separately required. Three actual
+check-js no-floating-promises warnings are corrected only with void on the
+new model test registrations, retaining every assertion. These source repairs
+need their own new-head Actions; earlier source or native results do not
+qualify the successor, Matrix completion, performance or release acceptance.

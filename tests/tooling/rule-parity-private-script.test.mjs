@@ -44,7 +44,7 @@ const sources = (parent = owner, child = callback) => [
 const associate = (files, registered = new Set(["Owner"])) =>
   collectPrivateScriptCallbacks(files, registered);
 
-test("direct private callbacks retain one generic owner identity and no template hook", () => {
+void test("direct private callbacks retain one generic owner identity and no template hook", () => {
   for (const files of [
     sources(),
     sources(
@@ -75,7 +75,7 @@ test("direct private callbacks retain one generic owner identity and no template
   }
 });
 
-test("foreign, missing, ambiguous and standalone callback evidence fails closed", async (t) => {
+void test("foreign, missing, ambiguous and standalone callback evidence fails closed", async (t) => {
   const variants = [
     ["missing owner", () => sources().slice(1)],
     [
@@ -232,7 +232,7 @@ test("foreign, missing, ambiguous and standalone callback evidence fails closed"
   });
 });
 
-test("the actual repository matrix adds the parent's SFC script surface without a second rule or JSX change", () => {
+void test("the actual repository matrix adds the parent's SFC script surface without a second rule or JSX change", () => {
   const matrix = buildMatrix();
   assert.equal(matrix.privateScripts.byCallback.size, 1);
   const binding = [...matrix.privateScripts.byParent.values()][0];

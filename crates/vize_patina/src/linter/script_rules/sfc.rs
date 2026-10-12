@@ -206,5 +206,4 @@ pub(crate) fn append_builtin_script_diagnostics<'a>(
         );
     }
 }
-#[path = "registered_sfc.rs"]
 mod registered_sfc;
