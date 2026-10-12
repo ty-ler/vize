@@ -1,3 +1,4 @@
+import { reviewedNoDupeSourceReadView } from "./no-dupe-keys-source-custody.mjs";
 import { reviewedNoMutatingModuleLayoutReadView } from "./no-mutating-props-module-layout-source-custody.mjs";
 import { reviewedNoMutatingTestCorrectionReadView } from "./no-mutating-props-test-correction-source-custody.mjs";
 import assert from "node:assert/strict";
@@ -67,6 +68,7 @@ export function authenticateNoMutatingPropsSourceFamily(root, read = reader(root
   const moduleLayoutAuthority = reviewedNoMutatingModuleLayoutReadView(root, read);
   root = moduleLayoutAuthority.root;
   read = moduleLayoutAuthority.read;
+  read = reviewedNoDupeSourceReadView(root, read);
   read = reviewedNoMutatingTestCorrectionReadView(root, read);
   const bytes = read(`${noMutatingCustodyDirectory}/successor.json`);
   assert.equal(digest(bytes), "052f284b2d11f94e6d81dc68096ae74e1334c8ab4323ccaa01951e94e20a7fd1");
@@ -179,6 +181,7 @@ export function authenticateNoMutatingPropsSourceFamily(root, read = reader(root
 
 /** Only the one declared incoming SFC body may be read by historical predicates. */
 export function reviewedNoMutatingSourceReadView(root, read = reader(root)) {
+  read = reviewedNoDupeSourceReadView(root, read);
   if (digest(read(noMutatingSfcCarrier)) === originalSfc) return read;
   const manifest = authenticateNoMutatingPropsSourceFamily(root, read);
   const source = manifest.sources.find(({ changed }) => changed);
@@ -188,6 +191,7 @@ export function reviewedNoMutatingSourceReadView(root, read = reader(root)) {
 
 /** Retain the old whole helper integration assertion after proving current bodies. */
 export function reviewedNoMutatingHelperHistoryReadView(root, read = reader(root)) {
+  read = reviewedNoDupeSourceReadView(root, read);
   const manifest = authenticateNoMutatingPropsSourceFamily(root, read);
   return (name, ...args) => {
     const helper = manifest.originalHelpers.find(({ path }) => path === name);
@@ -197,6 +201,7 @@ export function reviewedNoMutatingHelperHistoryReadView(root, read = reader(root
 
 /** Full old cases execute under their explicitly authenticated historical context. */
 export function reviewedNoMutatingHistoricalCaseReadView(root, read = reader(root)) {
+  read = reviewedNoDupeSourceReadView(root, read);
   const manifest = authenticateNoMutatingPropsSourceFamily(root, read);
   const source = manifest.sources.find(({ changed }) => changed);
   return (name, ...args) => {

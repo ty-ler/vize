@@ -1,0 +1,363 @@
+{
+  "allOriginal51WholeWantedRuleVectorsMatch": true,
+  "originalFN": 88,
+  "rows": [
+    {
+      "project": "dbx",
+      "file": "apps/desktop/src/components/grid/DataGrid.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "dbx",
+      "file": "apps/desktop/src/components/mq/ProducerConsumerPanel.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "lew-ui",
+      "file": "lib/_components/CommonInput.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "inspira-ui",
+      "file": "app/components/inspira/examples/gradient-button/GradientButtonDemo.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "inspira-ui",
+      "file": "app/components/inspira/examples/line-shadow-text/LineShadowTextDemo.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "nativescript-vue",
+      "file": "demo/src/components/Home.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "frappe-builder",
+      "file": "frontend/src/components/PropsOptions/SelectOptions.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Autocomplete/AutocompleteRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Calendar/CalendarRoot.vue",
+      "originalFN": 6,
+      "replayDiagnostics": 6,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/ColorField/ColorFieldRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/ColorSlider/ColorSliderRoot.vue",
+      "originalFN": 2,
+      "replayDiagnostics": 2,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Combobox/ComboboxViewport.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/DateField/DateFieldRoot.vue",
+      "originalFN": 2,
+      "replayDiagnostics": 2,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/DateRangeField/DateRangeFieldRoot.vue",
+      "originalFN": 2,
+      "replayDiagnostics": 2,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Editable/EditableRoot.vue",
+      "originalFN": 2,
+      "replayDiagnostics": 2,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Listbox/ListboxRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Menu/MenuRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Menubar/MenubarRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/MonthPicker/MonthPickerRoot.vue",
+      "originalFN": 6,
+      "replayDiagnostics": 6,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/MonthRangePicker/MonthRangePickerRoot.vue",
+      "originalFN": 6,
+      "replayDiagnostics": 6,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/NavigationMenu/NavigationMenuRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/NumberField/NumberFieldRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/PinInput/PinInputRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/RadioGroup/RadioGroupRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/RangeCalendar/RangeCalendarRoot.vue",
+      "originalFN": 7,
+      "replayDiagnostics": 7,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/RovingFocus/RovingFocusGroup.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/ScrollArea/ScrollAreaRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/ScrollArea/ScrollAreaViewport.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Select/SelectRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Select/SelectViewport.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Slider/SliderRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Splitter/SplitterResizeHandle.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Stepper/StepperRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Tabs/TabsRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/TagsInput/TagsInputRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/TimeField/TimeFieldRoot.vue",
+      "originalFN": 2,
+      "replayDiagnostics": 2,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/TimeRangeField/TimeRangeFieldRoot.vue",
+      "originalFN": 2,
+      "replayDiagnostics": 2,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/ToggleGroup/ToggleGroupRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Toolbar/ToolbarRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Tree/TreeRoot.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/Viewport/Viewport.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/YearPicker/YearPickerRoot.vue",
+      "originalFN": 6,
+      "replayDiagnostics": 6,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "reka-ui",
+      "file": "packages/core/src/YearRangePicker/YearRangePickerRoot.vue",
+      "originalFN": 6,
+      "replayDiagnostics": 6,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "tiny-rdm",
+      "file": "frontend/src/components/common/TtlInput.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "tiny-rdm",
+      "file": "frontend/src/components/content_value/ContentToolbar.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "tiny-rdm",
+      "file": "frontend/src/components/content_value/ContentValueHash.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "tiny-rdm",
+      "file": "frontend/src/components/content_value/ContentValueList.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "tiny-rdm",
+      "file": "frontend/src/components/content_value/ContentValueSet.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "tiny-rdm",
+      "file": "frontend/src/components/content_value/ContentValueStream.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "tiny-rdm",
+      "file": "frontend/src/components/content_value/ContentValueZSet.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    },
+    {
+      "project": "vue-netcore",
+      "file": "vol.web/src/components/basic/VolBox.vue",
+      "originalFN": 1,
+      "replayDiagnostics": 1,
+      "wholeVectorsMatch": true
+    }
+  ]
+}

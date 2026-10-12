@@ -76,4 +76,24 @@ export default {
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
+## Script setup
+
+`<script setup>` で props と同じ名前の独立した変数を宣言した場合も重複を検出します。実際の props オブジェクトから値を取得する変数や `computed` は許可します。props のローカルな型は通常の script ブロックで宣言できます。
+
+```vue
+<script setup lang="ts">
+const props = defineProps<{ count: number }>();
+const count = 0; // prop と同じ名前
+</script>
+```
+
+```vue
+<script setup lang="ts">
+import { computed } from "vue";
+
+const props = defineProps<{ count: number }>();
+const count = computed(() => props.count);
+</script>
+```
+
 [実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_dupe_keys.rs#L52) · [全ルール](../all.md)

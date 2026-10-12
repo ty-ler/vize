@@ -42,7 +42,10 @@
 //! }
 //! ```
 
-use super::{ScriptLintResult, ScriptRule, ScriptRuleMeta};
+mod setup;
+pub use setup::NoDupeKeysModuleScript;
+
+use super::{ScriptLintResult, ScriptRule, ScriptRuleMeta, SfcScriptContext};
 use crate::diagnostic::{LintDiagnostic, Severity};
 use oxc_ast::ast::Program;
 use vize_croquis::OptionMember;
@@ -68,6 +71,10 @@ impl ScriptRule for NoDupeKeys {
         true
     }
 
+    fn as_setup_dupe_keys(&self) -> Option<&NoDupeKeys> {
+        Some(self)
+    }
+
     #[inline]
     fn check_program<'a>(
         &self,
@@ -80,6 +87,45 @@ impl ScriptRule for NoDupeKeys {
             return;
         };
         check_descriptor_members(&descriptor.members, offset, result);
+    }
+    fn check_program_with_sfc<'a>(
+        &self,
+        program: &'a Program<'a>,
+        source: &str,
+        offset: usize,
+        sfc: SfcScriptContext<'_>,
+        result: &mut ScriptLintResult,
+    ) {
+        if sfc.is_sfc && sfc.is_script_setup {
+            let module = if sfc.sole_script_block {
+                NoDupeKeysModuleScript::Absent
+            } else {
+                NoDupeKeysModuleScript::Unavailable
+            };
+            self.check_setup_with_module(program, source, offset, module, result);
+        } else {
+            self.check_program(program, source, offset, result);
+        }
+    }
+}
+
+impl NoDupeKeys {
+    pub(crate) fn setup_needs_module(program: &Program<'_>) -> bool {
+        setup::has_candidate(program)
+    }
+
+    pub(crate) fn check_setup_with_module<'a>(
+        &self,
+        program: &'a Program<'a>,
+        source: &str,
+        offset: usize,
+        module: NoDupeKeysModuleScript<'a>,
+        result: &mut ScriptLintResult,
+    ) {
+        // Preserve every pre-existing Options descriptor diagnostic in this
+        // block before adding the compiler-owned setup namespace check.
+        self.check_program(program, source, offset, result);
+        setup::check(program, offset, module, result);
     }
 }
 

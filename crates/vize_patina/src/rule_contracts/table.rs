@@ -31,6 +31,9 @@ const MUSEA: Domain = Domain::new("<art> and <variant> blocks of .art.vue files"
 const NUXT: Domain =
     Domain::new("Nuxt configuration objects and definePageMeta calls written as literals");
 const OPTIONS: Domain = Domain::new("Options API component definitions written as object literals");
+const DUPLICATE_KEYS: Domain = Domain::new(
+    "members of resolved Options API objects and compiler-owned inline SFC setup props with locally declared runtime or typed keys, checked against resolved value bindings in setup and its sibling module",
+);
 const EMITS_RETURN: Domain = Domain::new(
     "Vue emits validator functions in resolved Options API objects and compiler-owned inline setup runtime objects or immutable const chains; unavailable external blocks, namespace-shadowed calls and all-path return analysis are outside",
 );
@@ -141,7 +144,7 @@ pub static RULE_CONTRACTS: &[RuleEntry] = &[
     row!("script/no-deprecated-dollar-scopedslots-api", Exact, OPTIONS, Error),
     row!("script/no-deprecated-events-api", Exact, OPTIONS, Error),
     row!("script/no-deprecated-props-default-this", Exact, OPTIONS, Error),
-    row!("script/no-dupe-keys", Exact, OPTIONS, Error),
+    row!("script/no-dupe-keys", Exact, DUPLICATE_KEYS, Error),
     row!("script/no-duplicate-attr-inheritance", Complete, BINDINGS, Warning),
     row!("script/no-export-in-script-setup", Exact, SCRIPT, Error),
     row!("script/no-get-current-instance", Exact, SCRIPT, Error),

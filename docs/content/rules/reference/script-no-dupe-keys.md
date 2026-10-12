@@ -76,4 +76,24 @@ export default {
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
+## Script setup
+
+A prop name also conflicts with an independently initialized binding exposed by `<script setup>`. Deriving a binding from the actual props object, including inside `computed`, keeps that binding associated with the prop and is allowed. Local props interfaces can be declared in the normal script block.
+
+```vue
+<script setup lang="ts">
+const props = defineProps<{ count: number }>();
+const count = 0; // duplicate prop name
+</script>
+```
+
+```vue
+<script setup lang="ts">
+import { computed } from "vue";
+
+const props = defineProps<{ count: number }>();
+const count = computed(() => props.count);
+</script>
+```
+
 [Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_dupe_keys.rs#L52) · [All rules](../all.md)

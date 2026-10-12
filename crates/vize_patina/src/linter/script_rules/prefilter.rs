@@ -42,7 +42,10 @@ pub(super) fn script_rule_may_match(rule_name: &str, source: &str) -> bool {
             contains(bytes, b"vue") && contains_any(bytes, INTERNAL_IMPORT_NEEDLES)
         }
         RULE_NO_RESERVED_IDENTIFIERS => contains_any(bytes, RESERVED_IDENTIFIER_NEEDLES),
-        RULE_NO_RESERVED_KEYS | RULE_NO_DUPE_KEYS | RULE_NO_POTENTIAL_COMPONENT_OPTION_TYPO => {
+        RULE_NO_DUPE_KEYS => {
+            source_may_define_component_options(bytes) || contains(bytes, b"defineProps")
+        }
+        RULE_NO_RESERVED_KEYS | RULE_NO_POTENTIAL_COMPONENT_OPTION_TYPO => {
             source_may_define_component_options(bytes)
         }
         RULE_NO_SIDE_EFFECTS_IN_COMPUTED => {
@@ -324,6 +327,21 @@ mod tests {
         assert!(script_rule_may_match(
             RULE_NO_ARROW_FUNCTIONS_IN_WATCH,
             "export /* component */ default { watch: { value: () => {} } }"
+        ));
+    }
+
+    #[test]
+    fn setup_dupe_candidates_do_not_widen_other_options_rule_prefilters() {
+        let source = "const props = defineProps<{ foo: string }>(); const foo = 1;";
+        assert!(script_rule_may_match(super::RULE_NO_DUPE_KEYS, source));
+        assert!(!script_rule_may_match(super::RULE_NO_RESERVED_KEYS, source));
+        assert!(!script_rule_may_match(
+            super::RULE_NO_POTENTIAL_COMPONENT_OPTION_TYPO,
+            source
+        ));
+        assert!(!script_rule_may_match(
+            super::RULE_NO_DUPE_KEYS,
+            "const foo = 1;"
         ));
     }
 
