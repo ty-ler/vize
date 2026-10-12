@@ -23,7 +23,7 @@ const current = () => authenticateNoDupeCIRepairPhysical(root, read);
 void test("the complete CI successor authenticates actual current sources before both whole predecessors", () => {
   assert.equal(
     digest(read(helperPath)),
-    "a5b1075abf4fcca2b2aa2d2fd8bcbe8a103834b78ba9dfd23291723d2e76313e",
+    "66a81e7a5ec16f2c8d2d8b6e3eb6d4b4ca955c89d96bec8e29f5caeda298117c",
   );
   const manifest = authenticateNoDupeCIRepair(root, read);
   assert.equal(
@@ -210,7 +210,7 @@ void test("each changed source helper retains its complete predecessor through a
   body = body.replace(imported, "").split(selected).join("");
   assert.equal(
     body,
-    read(`${noDupeCIRepairDirectory}/36379493-formatted-original-helper.fixture`, "utf8"),
+    read(`${noDupeCIRepairDirectory}/b48dbb85-formatted-original-helper.fixture`, "utf8"),
   );
   assert(
     historicalArchive(ownHelper).includes(
@@ -230,7 +230,7 @@ void test("each changed source helper retains its complete predecessor through a
     .replace(context, "const read = (name) => fs.readFileSync(path.join(root, name));\n");
   assert.equal(
     body,
-    read(`${noDupeCIRepairDirectory}/36379493-formatted-original-five-laws.fixture`, "utf8"),
+    read(`${noDupeCIRepairDirectory}/b48dbb85-formatted-original-five-laws.fixture`, "utf8"),
   );
   const guard = "tests/tooling/support/no-mutating-props-test-correction-source-custody.mjs";
   assert.equal(read(guard, "utf8"), parentArchive(guard));
@@ -256,6 +256,7 @@ void test("each changed source helper retains its complete predecessor through a
     "tests/tooling/reserved-suppression-default-routes.test.mjs",
     "tests/tooling/warm-type-backed-default-migration-host.test.ts",
     "tests/tooling/warm-type-backed-git-reader-nodeep.test.ts",
+    "tests/tooling/setup-export-default-reference.test.mjs",
   ]) {
     const actual = read(name, "utf8");
     assert.equal(actual.split("runNoDupeParentCurrentCallerHistory").length, 3);

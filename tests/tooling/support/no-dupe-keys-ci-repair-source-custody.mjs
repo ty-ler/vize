@@ -6,6 +6,8 @@ import path from "node:path";
 import os from "node:os";
 import { pathToFileURL } from "node:url";
 import { gunzipSync } from "node:zlib";
+import { copyNoMutatingCallerShallowBoundary } from "./no-mutating-props-current-caller-git.mjs";
+import { prepareLiteralSource } from "../../performance/support/warm-type-backed-git-reader-nodeep.ts";
 import {
   authenticateNoDupeKeysSourceFamily,
   reviewedNoDupeSourceReadView,
@@ -59,13 +61,13 @@ export function authenticateNoDupeCIRepairPhysical(root, read = reader(root)) {
   const manifestPath = `${noDupeCIRepairDirectory}/successor.json`;
   regular(manifestPath);
   const bytes = read(manifestPath);
-  assert.equal(digest(bytes), "e88b25363c88f221002b8c8a09523ba5951973c938664f37d392596107352b88");
+  assert.equal(digest(bytes), "a5824b2c80ef3ebf511ff09e45ff27e430e2ca2f08515077a59231f9c8fd86bb");
   assert.deepEqual(physical(manifestPath), bytes);
   const manifest = JSON.parse(bytes);
   assert.equal(manifest.schema, "vize.lint.no-dupe-keys-ci-source-successor");
   assert.equal(manifest.version, 1);
   assert.equal(manifest.source, "9da2c1f2469f256a06b304785641c6e2e376a10e");
-  assert.equal(manifest.parent, "363794932d3776dcdca521531c7cec86c27e5e06");
+  assert.equal(manifest.parent, "b48dbb85e257f1875a4df83113dfb20f4830e3a2");
   assert.equal(
     new Set(manifest.current.map(({ path: name }) => name)).size,
     manifest.current.length,
@@ -164,6 +166,7 @@ export function reviewedNoDupeCIRepairParentPhysicalReadView(root) {
   return project(root, read, authenticateNoDupeCIRepairPhysical(root, read), "parent");
 }
 
+const literalParentPools = new Map();
 const parentFrames = new Map();
 const legacyFrames = new Map();
 const frameRoots = new Set();
@@ -224,6 +227,52 @@ function qualifyMaterializedParentFrame(root, rows, source) {
   assert(status.isFile() && !status.isSymbolicLink() && !(status.mode & 0o111));
   assert.equal(fs.readFileSync(head, "utf8"), source + "\n");
 }
+/** Only this declared parent can hydrate into independently owned metadata and objects. */
+function literalParentGit(root, source) {
+  assert.equal(source, "b48dbb85e257f1875a4df83113dfb20f4830e3a2");
+  for (const name of [
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_COMMON_DIR",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_INDEX_FILE",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  ])
+    assert(!process.env[name], "private parent Git refuses inherited path override: " + name);
+  const git = (where, args) =>
+    execFileSync("git", ["--no-replace-objects", ...args], { cwd: where });
+  const key = fs.realpathSync(root) + "\0" + source;
+  if (!literalParentPools.has(key)) {
+    const common = git(root, ["rev-parse", "--git-common-dir"]).toString().trim();
+    const objects = fs.realpathSync(path.resolve(root, common, "objects"));
+    const origin = git(root, ["remote", "get-url", "origin"]).toString().trim();
+    assert(origin && !/[\r\n]/u.test(origin));
+    assert(!/[\r\n]/u.test(objects));
+    const owned = fs.mkdtempSync(path.join(os.tmpdir(), "vize-no-dupe-literal-parent-git-"));
+    fs.mkdirSync(path.join(owned, ".git/objects/info"), { recursive: true });
+    fs.mkdirSync(path.join(owned, ".git/refs"));
+    fs.writeFileSync(path.join(owned, ".git/objects/info/alternates"), objects + "\n");
+    fs.writeFileSync(path.join(owned, ".git/HEAD"), source + "\n");
+    fs.writeFileSync(
+      path.join(owned, ".git/config"),
+      '[core]\nrepositoryformatversion = 0\nbare = false\n[remote "origin"]\nurl = ' +
+        JSON.stringify(origin) +
+        "\n",
+    );
+    copyNoMutatingCallerShallowBoundary(root, owned);
+    frameRoots.add(owned);
+    literalParentPools.set(key, owned);
+  }
+  const owned = literalParentPools.get(key);
+  prepareLiteralSource(owned, source);
+  const commit = git(owned, ["cat-file", "commit", source]);
+  assert.equal(
+    createHash("sha1").update(`commit ${commit.length}\0`).update(commit).digest("hex"),
+    source,
+  );
+  assert.equal(git(owned, ["rev-parse", "HEAD"]).toString().trim(), source);
+  return owned;
+}
 /** Every materialized body joins the real parent Git tree; the isolated HEAD is that literal commit. */
 function authenticateLiteralParentFrame(root, manifest, rows, owned) {
   const git = (where, args) =>
@@ -232,9 +281,10 @@ function authenticateLiteralParentFrame(root, manifest, rows, owned) {
       maxBuffer: 32 * 1024 * 1024,
     });
   assert.match(manifest.parent, /^[a-f0-9]{40}$/u);
-  assert.equal(git(root, ["cat-file", "-t", manifest.parent]).toString().trim(), "commit");
+  const sourceGit = literalParentGit(root, manifest.parent);
+  assert.equal(git(sourceGit, ["cat-file", "-t", manifest.parent]).toString().trim(), "commit");
   const tree = new Map();
-  for (const line of git(root, ["ls-tree", "-r", "-z", manifest.parent])
+  for (const line of git(sourceGit, ["ls-tree", "-r", "-z", manifest.parent])
     .toString("utf8")
     .split("\0")) {
     if (!line) continue;
@@ -248,15 +298,16 @@ function authenticateLiteralParentFrame(root, manifest, rows, owned) {
     assert(row && row.mode === "100644" && row.kind === "blob", name);
     assert.equal(blob(body), row.blob, "parent whole Git body: " + name);
   }
-  const common = git(root, ["rev-parse", "--git-common-dir"]).toString().trim();
-  const objects = fs.realpathSync(path.resolve(root, common, "objects"));
-  const origin = git(root, ["remote", "get-url", "origin"]).toString().trim();
+  const common = git(sourceGit, ["rev-parse", "--git-common-dir"]).toString().trim();
+  const objects = fs.realpathSync(path.resolve(sourceGit, common, "objects"));
+  const origin = git(sourceGit, ["remote", "get-url", "origin"]).toString().trim();
   assert(origin && !/[\r\n]/u.test(origin));
   assert(!/[\r\n]/u.test(objects));
   fs.mkdirSync(path.join(owned, ".git/objects/info"), { recursive: true });
   fs.mkdirSync(path.join(owned, ".git/refs"));
   fs.writeFileSync(path.join(owned, ".git/objects/info/alternates"), objects + "\n");
   fs.writeFileSync(path.join(owned, ".git/HEAD"), manifest.parent + "\n");
+  copyNoMutatingCallerShallowBoundary(sourceGit, owned);
   fs.writeFileSync(
     path.join(owned, ".git/config"),
     '[core]\nrepositoryformatversion = 0\nbare = false\n[remote "origin"]\nurl = ' +
@@ -266,7 +317,7 @@ function authenticateLiteralParentFrame(root, manifest, rows, owned) {
   assert.equal(git(owned, ["rev-parse", "HEAD"]).toString().trim(), manifest.parent);
   assert.deepEqual(
     git(owned, ["cat-file", "commit", manifest.parent]),
-    git(root, ["cat-file", "commit", manifest.parent]),
+    git(sourceGit, ["cat-file", "commit", manifest.parent]),
   );
 }
 function legacyParentBodies(root, manifest) {
@@ -365,6 +416,17 @@ export async function runNoDupeParentCurrentCallerLaws(root) {
   const manifest = authenticateNoDupeCIRepairPhysical(root);
   const parent = relocatedParentContext(root, reader(root), manifest);
   const law = "tests/tooling/no-mutating-props-current-callers-source.test.mjs";
+  const archived = manifest.parentProjection.find(({ path: name }) => name === law);
+  assert(archived);
+  assert.deepEqual(parent.read(law), reader(root)(archived.archive));
+  await import(pathToFileURL(path.join(parent.root, law)).href);
+}
+
+/** The parent's genuine missing-source and two-hop borrower controls retain all original assertions. */
+export async function runNoDupeParentCurrentCallerShallowLaw(root) {
+  const manifest = authenticateNoDupeCIRepairPhysical(root);
+  const parent = relocatedParentContext(root, reader(root), manifest);
+  const law = "tests/tooling/no-mutating-props-current-callers-shallow.test.mjs";
   const archived = manifest.parentProjection.find(({ path: name }) => name === law);
   assert(archived);
   assert.deepEqual(parent.read(law), reader(root)(archived.archive));

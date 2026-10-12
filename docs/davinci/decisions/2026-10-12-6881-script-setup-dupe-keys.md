@@ -32,3 +32,18 @@ These are source checks; fresh exact-head Actions, protected native Stack merge,
 and released consumer acceptance remain unfinished.
 
 Paired final source decision: [complete parent composition](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6124348383).
+
+The final shallow-history repair composes the actual NoMutating parent
+`b48dbb85e257f1875a4df83113dfb20f4830e3a2`. All 50 coupled source tests pass
+without skips, including the unchanged four historical caller modules and all
+20 original cases. The parent's actual configured Actions lint and Plan pass;
+local sparse lint inference is not CI evidence. An independently owned private
+Git pool hydrates only this exact parent when a shallow child checkout omits
+its objects, preserves genuine shallow boundaries across both borrower hops,
+and joins each parent-frame body to its literal commit tree. Shared Git remains
+unchanged. All 86/363/420 predecessor bodies and raw failures remain intact;
+current metadata is checked separately through the original 19-file generator.
+Fresh child Actions, protected Stack merge and released acceptance remain
+unfinished.
+
+Paired shallow-source decision: [actual parent and complete historical callers](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6125318190).
