@@ -231,7 +231,10 @@ void test("github/build-vitrine-wasm builds once and binds every output director
     });
   const usage = run([], {});
   assert.equal(usage.status, 1);
-  assert.match(usage.stdout, /^Usage: .*build-vitrine-wasm\.ts <out-dir> \[out-dir\.\.\.\]\n$/u);
+  assert.match(
+    usage.stdout,
+    /^Usage: .*build-vitrine-wasm\.ts \[--profile release\|ci-wasm\] <out-dir> \[out-dir\.\.\.\]\n$/u,
+  );
   assert.equal(
     run(["npm/wasm", "playground/src/wasm", "never"], { RUSTFLAGS: undefined }).status,
     8,

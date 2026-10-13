@@ -32,7 +32,7 @@ const producerHashes = {
   "tools/commands/ci/github/app-e2e-plan.rs":
     "46983c8019bfb809f418eccdab5afeb73b3cea5dcc7c4aa8354d2726bf9c617b",
   "tools/support/github/build-vitrine-wasm.ts":
-    "1cdcb19eb0e60ad688a965fbdaa2dc7de90f306c910461c25a11f2ad651c61f7",
+    "dd4eb022fa17883f09034d6d8d45c241b89ee02978d394e04cd2564a3fb1eea5",
   "tools/support/tasks/build-vitrine-wasm.ts":
     "550f407144f1600c59d5dc849de0423e07966afbbac910fc5211bc026454492c",
   "tools/support/command-runtime.ts":
