@@ -138,7 +138,9 @@ export function projectOwnedCorsaLexicalCopied({
     const graphBody = graph.historicalReader("after", file);
     const mainBody = mainReader("after", file);
     const jsBody = javascriptSfcSourcePaths.includes(file) && !original.has(file)
-      ? javascript.historicalAfter(file) : null;
+      ? file === "tests/_fixtures/differential/typechecker/manifest.json"
+        ? javascript.retainedOwnedAfter(file) : javascript.historicalAfter(file)
+      : null;
     const value = caller?.blob !== reader("after", file)?.blob ? caller
       : mainBody?.blob !== reader("after", file)?.blob ? mainBody
       : jsBody ? { mode: "100644", blob: createHash("sha1").update(`blob ${jsBody.length}\0`).update(jsBody).digest("hex"), body: jsBody }

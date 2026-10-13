@@ -14,7 +14,7 @@ const read = (name) => {
   return fs.readFileSync(url);
 };
 const bytes = read("./owned-corsa-javascript-source.json");
-assert.equal(sha(bytes), "ae363608cef794e01a6b1fcde0a12800f7fb19e466360b1cd68c6944beb2b783");
+assert.equal(sha(bytes), "cac78d39a70c17cd5e9cf7e9a7ad167dd443599413d6c2805a54263fb08af470");
 const data = JSON.parse(bytes);
 assert.equal(data.schema, 1);
 assert.equal(data.mainSource, "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38");
@@ -33,7 +33,7 @@ const cells = new Map();
 for (const row of rows) {
   assert(javascriptSfcSourcePaths.includes(row.file));
   const pair = {};
-  for (const side of ["main", "owned"]) {
+  for (const side of row.retainedSdk ? ["main", "owned", "retainedSdk"] : ["main", "owned"]) {
     const cell = row[side], body = Buffer.from(cell.rawBase64, "base64");
     assert.equal(body.toString("base64"), cell.rawBase64);
     assert.equal(cell.mode, "100644");
@@ -63,7 +63,11 @@ export const ownedJavaScriptLexicalPaths = Object.freeze([
 export function authenticateOwnedJavaScriptSource(reader) {
   for (const [file, pair] of cells)
     assert.deepEqual(reader("after", file), pair.owned, "whole actual JS/SDK composition: " + file);
-  return authenticateJavaScriptSfcSource((file) => cells.has(file)
+  const context = authenticateJavaScriptSfcSource((file) => cells.has(file)
     ? Buffer.from(cells.get(file).main.body)
     : reader("after", file).body);
+  return { ...context, retainedOwnedAfter(file) {
+    assert.equal(file, "tests/_fixtures/differential/typechecker/manifest.json");
+    return Buffer.from(cells.get(file).retainedSdk.body);
+  } };
 }
