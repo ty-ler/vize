@@ -4,6 +4,7 @@ PR #8675 retains the required semantic-completion and actual-owner close repair.
 Its previous source `fbf745f4d0515a195a73c970f16c88944e35e15a` failed Check
 `38319125226` and native run `38319125164`. Those failures remain evidence.
 This source repair grants no native, performance, package, merge or release credit.
+The [paired #6879 decision](https://github.com/ubugeeei-prod/vize/issues/6879#issuecomment-6140182086) records the same scope.
 
 The native lexical producer had selected the historical `2489128d` baseline.
 After unrelated fixes merged, its complete production delta included 508 paths,
