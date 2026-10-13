@@ -41,7 +41,7 @@ function regular(root, file) {
 }
 const moduleRoot = fs.realpathSync(new URL("../../../../", import.meta.url));
 const metadataBody = regular(moduleRoot, metadataPath);
-assert.equal(sha(metadataBody), "253e865e416c6aef2d8a728f1eabc48e1a7640f745f9c201e74503e507b35a00");
+assert.equal(sha(metadataBody), "40fedf6839dd2b8b79cd8dc47e5b56d2c7adfecca7ed76e4a43cdf0b805d3af8");
 const metadata = JSON.parse(metadataBody);
 assert.equal(metadata.schema, "vize.empty-vue-star.literal-bd-listing-source");
 assert.equal(metadata.base, base);
@@ -235,6 +235,33 @@ export function qualifyStarListingBD(production, qualified, digest) {
     if (digest("before", file) !== null || digest("after", file) !== sha(body)) return null;
   return {
     authority: "exact-reviewed-bd-star-listing-singleton",
+    files: [execution],
+    completeBodyPairs: 1,
+    retainedCurrentBodyPairs: rows.length - 1,
+    runtimeCredit: false,
+    performanceCredit: false,
+    original400Credit: false,
+  };
+}
+/** The actual merged SDK before-image is a separate exact singleton authority. */
+export function qualifyStarListingSDK(production, qualified, digest) {
+  if (production.length !== 1 || production[0] !== execution || qualified.has(execution))
+    return null;
+  const before = new Map(metadata.sdkShippingBefore.map(([file, checksum]) => [file, checksum]));
+  for (const [file, , , originalBefore, , , afterSHA] of rows)
+    if (
+      digest("before", file) !== (before.has(file) ? before.get(file) : originalBefore) ||
+      digest("after", file) !== afterSHA
+    )
+      return null;
+  for (const [file, body] of loaded)
+    if (
+      digest("before", file) !== (before.get(file) ?? null) ||
+      digest("after", file) !== sha(body)
+    )
+      return null;
+  return {
+    authority: "exact-reviewed-sdk-star-listing-singleton",
     files: [execution],
     completeBodyPairs: 1,
     retainedCurrentBodyPairs: rows.length - 1,

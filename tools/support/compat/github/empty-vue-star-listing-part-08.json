@@ -229,9 +229,9 @@
     "6ec974bcbc6c28ed5536084c3f09044430ca00d4",
     3465,
     "9d22006fc19d80e1ebb8051cba2dc753a5bbf7756d87e4e5216bdf4fa2a46be4",
-    "dc65f3faaf37bbd678b8453aaa719c564b072b5d",
-    4887,
-    "d18c9b6f61abb25575c2453e1f5bdf18dccc79e6ed71f4cbb3c73003666a5bd3"
+    "c46d887472a9b3b43dd9a3288432221f54e207cc",
+    5101,
+    "21a22feecd72f459293bca799795253e98d23b7100cd600db4b931974a094846"
   ],
   [
     "tests/performance/support/warm-type-backed-html-hover-host.ts",
