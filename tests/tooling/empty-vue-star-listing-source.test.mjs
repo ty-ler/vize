@@ -191,6 +191,10 @@ await test("actual incoming main singleton retains every complete source cell an
   const mainCells = new Map(
     manifest.mainUnion.cells.map(([file, , , before, , , after]) => [file, { before, after }]),
   );
+  if (manifest.mainUnion.canonicalSuccessor) {
+    const [file, , , after] = manifest.mainUnion.canonicalSuccessor.after;
+    mainCells.get(file).after = after;
+  }
   const mainDigest = (side, file) =>
     side === "before" && overrides.has(file)
       ? overrides.get(file)
