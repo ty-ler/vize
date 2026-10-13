@@ -2,6 +2,8 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { scriptParsersByLanguage } from "./lint-divergence-parsers.mjs";
+
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 
 /**
@@ -73,7 +75,7 @@ export function baselineConfig(runtime, rules) {
       languageOptions: {
         parser: runtime.vueParser,
         parserOptions: {
-          parser: runtime.scriptParser,
+          parser: scriptParsersByLanguage(runtime.scriptParser),
           ecmaVersion: "latest",
           sourceType: "module",
           ecmaFeatures: { jsx: true },

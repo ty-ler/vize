@@ -268,6 +268,7 @@ fn run_eslint_baseline(
     let script = r#"
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
+import { scriptParsersByLanguage } from "./tools/support/compat/fixtures/lint-divergence-parsers.mjs";
 const input = JSON.parse(readFileSync(0, "utf8"));
 const requireFromBench = createRequire(input.benchPackageJson);
 const ESLint = requireFromBench("eslint").ESLint;
@@ -284,7 +285,7 @@ const eslint = new ESLint({
     languageOptions: {
       parser: vueParser,
       parserOptions: {
-        parser: scriptParser,
+        parser: scriptParsersByLanguage(scriptParser),
         ecmaVersion: "latest",
         sourceType: "module",
         ecmaFeatures: { jsx: true },
