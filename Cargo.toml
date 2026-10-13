@@ -104,22 +104,22 @@ vize_l4 = { path = "davinci/vize_l4", version = "=0.443.0" }
 
 # OXC dependencies (pinned to a specific upstream revision for reproducibility)
 oxc_parser = { package = "vize_oxc_parser", version = "=0.443.0", path = "vendor/oxc_parser" }
-oxc_ast = { version = "=0.142.0", git = "https://github.com/oxc-project/oxc", rev = "fc702c1fa9f0412d06ec6908b58cd395b826cf7f" }
-oxc_ast_visit = { version = "=0.142.0", git = "https://github.com/oxc-project/oxc", rev = "fc702c1fa9f0412d06ec6908b58cd395b826cf7f" }
-oxc_span = { version = "=0.142.0", git = "https://github.com/oxc-project/oxc", rev = "fc702c1fa9f0412d06ec6908b58cd395b826cf7f" }
-oxc_allocator = { version = "=0.142.0", git = "https://github.com/oxc-project/oxc", rev = "fc702c1fa9f0412d06ec6908b58cd395b826cf7f" }
-oxc_syntax = { version = "=0.142.0", git = "https://github.com/oxc-project/oxc", rev = "fc702c1fa9f0412d06ec6908b58cd395b826cf7f" }
-oxc_diagnostics = { version = "=0.142.0", git = "https://github.com/oxc-project/oxc", rev = "fc702c1fa9f0412d06ec6908b58cd395b826cf7f" }
+oxc_ast = { version = "=0.154.0", git = "https://github.com/oxc-project/oxc", rev = "d47efe5cb875e118e845ee6eda15d205ce3b566d" }
+oxc_ast_visit = { version = "=0.154.0", git = "https://github.com/oxc-project/oxc", rev = "d47efe5cb875e118e845ee6eda15d205ce3b566d" }
+oxc_span = { version = "=0.154.0", git = "https://github.com/oxc-project/oxc", rev = "d47efe5cb875e118e845ee6eda15d205ce3b566d" }
+oxc_allocator = { version = "=0.154.0", git = "https://github.com/oxc-project/oxc", rev = "d47efe5cb875e118e845ee6eda15d205ce3b566d" }
+oxc_syntax = { version = "=0.154.0", git = "https://github.com/oxc-project/oxc", rev = "d47efe5cb875e118e845ee6eda15d205ce3b566d" }
+oxc_diagnostics = { version = "=0.154.0", git = "https://github.com/oxc-project/oxc", rev = "d47efe5cb875e118e845ee6eda15d205ce3b566d" }
 oxc_sourcemap = "=8.1.2"
-oxc_semantic = { version = "=0.142.0", git = "https://github.com/oxc-project/oxc", rev = "fc702c1fa9f0412d06ec6908b58cd395b826cf7f" }
-oxc_transformer = { version = "=0.142.0", git = "https://github.com/oxc-project/oxc", rev = "fc702c1fa9f0412d06ec6908b58cd395b826cf7f" }
-oxc_codegen = { version = "=0.142.0", git = "https://github.com/oxc-project/oxc", rev = "fc702c1fa9f0412d06ec6908b58cd395b826cf7f" }
+oxc_semantic = { version = "=0.154.0", git = "https://github.com/oxc-project/oxc", rev = "d47efe5cb875e118e845ee6eda15d205ce3b566d" }
+oxc_transformer = { version = "=0.154.0", git = "https://github.com/oxc-project/oxc", rev = "d47efe5cb875e118e845ee6eda15d205ce3b566d" }
+oxc_codegen = { version = "=0.154.0", git = "https://github.com/oxc-project/oxc", rev = "d47efe5cb875e118e845ee6eda15d205ce3b566d" }
 # oxc_formatter is not yet on crates.io, so vize_glyph is excluded from crates.io publish.
 # `oxc_formatter_core` carries the language-agnostic option types (`IndentStyle`,
 # `IndentWidth`, `LineEnding`, `LineWidth`) that `oxc_formatter` takes but does not
 # re-export; it is `publish = false` upstream for the same reason.
 oxc_formatter = { package = "vize_oxc_formatter", version = "=0.443.0", path = "vendor/oxc_formatter" }
-oxc_formatter_core = { version = "=0.60.0", git = "https://github.com/oxc-project/oxc", rev = "fc702c1fa9f0412d06ec6908b58cd395b826cf7f" }
+oxc_formatter_core = { git = "https://github.com/oxc-project/oxc", rev = "d47efe5cb875e118e845ee6eda15d205ce3b566d" }
 
 # Serialization and schema formats
 serde = { version = "=1.0.228", features = ["derive"] }

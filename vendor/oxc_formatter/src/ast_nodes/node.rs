@@ -107,6 +107,12 @@ impl<'a, T> AstNode<'a, T> {
         &self.parent
     }
 
+    /// The start of the following sibling node (0 if none), the bound of this node's trailing comments.
+    #[inline]
+    pub fn following_span_start(&self) -> u32 {
+        self.following_span_start
+    }
+
     /// Returns the grandparent node (parent's parent).
     ///
     /// This is a convenience method equivalent to `self.parent().parent()`.
@@ -139,17 +145,17 @@ impl<T: GetSpan> AstNode<'_, T> {
     }
 }
 
-impl<'a> AstNode<'a, ExpressionStatement<'a>> {
-    /// Check if this ExpressionStatement is the body of an arrow function expression
-    ///
-    /// Example:
-    /// `() => expression;`
-    ///        ^^^^^^^^^^ This ExpressionStatement is the body of an arrow function
-    ///
-    /// `() => { return expression; }`
-    ///         ^^^^^^^^^^^^^^^^^^^^ This ExpressionStatement is NOT the body of an arrow function
-    pub fn is_arrow_function_body(&self) -> bool {
-        matches!(self.parent().parent(), AstNodes::ArrowFunctionExpression(arrow) if arrow.expression)
+impl<'a> AstNode<'a, ArrowFunctionBody<'a>> {
+    /// Returns the concise expression body as an [`AstNode`].
+    pub fn as_expression(&self) -> Option<&AstNode<'a, Expression<'a>>> {
+        self.allocator
+            .alloc(self.inner.as_expression().map(|inner| AstNode {
+                inner,
+                parent: self.parent,
+                allocator: self.allocator,
+                following_span_start: self.following_span_start,
+            }))
+            .as_ref()
     }
 }
 

@@ -29,7 +29,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
     }
 
     pub(crate) fn parse_function_body(&mut self) -> ArenaBox<'a, FunctionBody<'a>> {
-        let span = self.start_span();
+        let start = self.cur_start();
         let opening_span = self.cur_token().span();
         self.expect(Kind::LCurly);
 
@@ -39,20 +39,22 @@ impl<'a, C: Config> ParserImpl<'a, C> {
         });
 
         self.expect_closing(Kind::RCurly, opening_span);
-        FunctionBody::boxed(self.end_span(span), directives, statements, self)
+        FunctionBody::boxed(self.end_span(start), directives, statements, self)
     }
 
     pub(crate) fn parse_formal_parameters(
         &mut self,
         func_kind: FunctionKind,
         params_kind: FormalParameterKind,
-    ) -> (Option<TSThisParameter<'a>>, ArenaBox<'a, FormalParameters<'a>>) {
-        let span = self.start_span();
+    ) -> (Option<ArenaBox<'a, TSThisParameter<'a>>>, ArenaBox<'a, FormalParameters<'a>>) {
+        let start = self.cur_start();
         let opening_span = self.cur_token().span();
         self.expect(Kind::LParen);
         let this_param = if self.is_ts && self.at(Kind::This) {
             let param = self.parse_ts_this_parameter();
-            self.bump(Kind::Comma);
+            if !self.at(Kind::RParen) {
+                self.expect(Kind::Comma);
+            }
             Some(param)
         } else {
             None
@@ -61,7 +63,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
         self.expect(Kind::RParen);
 
         let formal_parameters =
-            FormalParameters::boxed(self.end_span(span), params_kind, list, rest, self);
+            FormalParameters::boxed(self.end_span(start), params_kind, list, rest, self);
         (this_param, formal_parameters)
     }
 
@@ -137,7 +139,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
                 break;
             }
 
-            let span = self.start_span();
+            let start = self.cur_start();
             let decorators = self.parse_decorators();
 
             if self.at(Kind::Dot3) {
@@ -155,7 +157,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
                 }
 
                 rest = Some(FormalParameterRest::boxed(
-                    self.end_span(span),
+                    self.end_span(start),
                     decorators,
                     rest_element,
                     type_annotation,
@@ -163,7 +165,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
                 ));
             } else {
                 let param =
-                    self.parse_formal_parameter_with_decorators(func_kind, span, decorators);
+                    self.parse_formal_parameter_with_decorators(func_kind, start, decorators);
                 if param.optional {
                     has_optional = true;
                 } else if has_optional && param.initializer.is_none() {
@@ -209,7 +211,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
     fn parse_formal_parameter_with_decorators(
         &mut self,
         func_kind: FunctionKind,
-        span: u32,
+        start: u32,
         decorators: ArenaVec<'a, Decorator<'a>>,
     ) -> FormalParameter<'a> {
         let modifiers = self.parse_modifiers(false, false);
@@ -253,7 +255,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
                     pattern.span(),
                 ));
             }
-            Some(init)
+            Some(ArenaBox::new_in(init, self))
         } else {
             None
         };
@@ -270,7 +272,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
                 }
             } else {
                 self.error(diagnostics::parameter_property_cannot_be_binding_pattern(Span::new(
-                    span,
+                    start,
                     self.prev_token_end,
                 )));
             }
@@ -285,7 +287,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
             }
         }
         FormalParameter::new(
-            self.end_span(span),
+            self.end_span(start),
             decorators,
             pattern,
             type_annotation,
@@ -300,7 +302,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
 
     pub(crate) fn parse_function(
         &mut self,
-        span: u32,
+        start: u32,
         id: Option<BindingIdentifier<'a>>,
         r#async: bool,
         generator: Option<u32>,
@@ -332,7 +334,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
             .and_yield(ctx.has_yield())
             .and_new_target(ctx.has_new_target());
         if (!self.is_ts || matches!(func_kind, FunctionKind::ObjectMethod)) && body.is_none() {
-            return self.fatal_error(diagnostics::expect_function_body(self.end_span(span)));
+            return self.fatal_error(diagnostics::expect_function_body(self.end_span(start)));
         }
         let function_type = match func_kind {
             FunctionKind::Declaration | FunctionKind::DefaultExport => {
@@ -382,7 +384,9 @@ impl<'a, C: Config> ParserImpl<'a, C> {
             if ctx.has_ambient() {
                 self.error(diagnostics::generator_in_ambient_context(self.end_span(generator)));
             } else if body.is_none() {
-                self.error(diagnostics::overload_signature_generator(self.end_span(span)));
+                self.error(diagnostics::overload_signature_generator(
+                    self.end_span(start.min(generator)),
+                ));
             }
         }
         self.verify_modifiers(
@@ -393,7 +397,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
         );
 
         Function::boxed(
-            self.end_span(span),
+            self.end_span(start),
             function_type,
             id,
             generator.is_some(),
@@ -411,12 +415,12 @@ impl<'a, C: Config> ParserImpl<'a, C> {
     /// [Function Declaration](https://tc39.es/ecma262/#prod-FunctionDeclaration)
     pub(crate) fn parse_function_declaration(
         &mut self,
-        span: u32,
+        start: u32,
         r#async: bool,
         stmt_ctx: StatementContext,
     ) -> Statement<'a> {
         let func_kind = FunctionKind::Declaration;
-        let decl = self.parse_function_impl(span, r#async, func_kind);
+        let decl = self.parse_function_impl(start, r#async, func_kind);
         if stmt_ctx.is_single_statement() {
             if decl.r#async {
                 self.error(diagnostics::async_function_declaration(Span::new(
@@ -437,7 +441,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
     /// at `function` or `async function`
     pub(crate) fn parse_function_impl(
         &mut self,
-        span: u32,
+        start: u32,
         r#async: bool,
         func_kind: FunctionKind,
     ) -> ArenaBox<'a, Function<'a>> {
@@ -445,7 +449,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
         let generator = self.eat(Kind::Star).then_some(self.prev_token_end - 1);
         let id = self.parse_function_id(func_kind, r#async, generator.is_some());
         self.parse_function(
-            span,
+            start,
             id,
             r#async,
             generator,
@@ -459,7 +463,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
     /// at `function`
     pub(crate) fn parse_ts_function_impl(
         &mut self,
-        start_span: u32,
+        start: u32,
         func_kind: FunctionKind,
         modifiers: &Modifiers,
     ) -> ArenaBox<'a, Function<'a>> {
@@ -468,7 +472,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
         let generator = self.eat(Kind::Star).then_some(self.prev_token_end - 1);
         let id = self.parse_function_id(func_kind, r#async, generator.is_some());
         self.parse_function(
-            start_span,
+            start,
             id,
             r#async,
             generator,
@@ -479,14 +483,18 @@ impl<'a, C: Config> ParserImpl<'a, C> {
     }
 
     /// [Function Expression](https://tc39.es/ecma262/#prod-FunctionExpression)
-    pub(crate) fn parse_function_expression(&mut self, span: u32, r#async: bool) -> Expression<'a> {
+    pub(crate) fn parse_function_expression(
+        &mut self,
+        start: u32,
+        r#async: bool,
+    ) -> Expression<'a> {
         let func_kind = FunctionKind::Expression;
         self.expect(Kind::Function);
 
         let generator = self.eat(Kind::Star).then_some(self.prev_token_end - 1);
         let id = self.parse_function_id(func_kind, r#async, generator.is_some());
         let function = self.parse_function(
-            span,
+            start,
             id,
             r#async,
             generator,
@@ -511,9 +519,9 @@ impl<'a, C: Config> ParserImpl<'a, C> {
         generator: Option<u32>,
         func_kind: FunctionKind,
     ) -> ArenaBox<'a, Function<'a>> {
-        let span = self.start_span();
+        let start = self.cur_start();
         self.parse_function(
-            span,
+            start,
             None,
             r#async,
             generator,
@@ -528,12 +536,12 @@ impl<'a, C: Config> ParserImpl<'a, C> {
     /// yield [no `LineTerminator` here] `AssignmentExpression`
     /// yield [no `LineTerminator` here] * `AssignmentExpression`
     pub(crate) fn parse_yield_expression(&mut self) -> Expression<'a> {
-        let span = self.start_span();
+        let start = self.cur_start();
         self.bump_any(); // advance `yield`
 
         let has_yield = self.ctx.has_yield();
         if !has_yield {
-            self.error(diagnostics::yield_expression(Span::sized(span, 5)));
+            self.error(diagnostics::yield_expression(Span::sized(start, 5)));
         }
 
         let mut delegate = false;
@@ -558,7 +566,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
             }
         }
 
-        Expression::new_yield_expression(self.end_span(span), delegate, argument, self)
+        Expression::new_yield_expression(self.end_span(start), delegate, argument, self)
     }
 
     // id: None - for AnonymousDefaultExportedFunctionDeclaration

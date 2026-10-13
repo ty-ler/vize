@@ -1,22 +1,22 @@
 mod embed;
 
+pub use embed::embed_hug;
+
 use unicode_width::UnicodeWidthStr;
 
 use std::cmp;
 
 use oxc_allocator::{ArenaStringBuilder, ArenaVec};
 use oxc_ast::ast::*;
-use oxc_formatter_core::IndentWidth;
+use oxc_formatter_core::{Format, FormatElement, IndentWidth, RemoveSoftLinesBuffer, VecBuffer};
 use oxc_span::{GetSpan, Span};
 
 use crate::{
     ast_nodes::{AstNode, AstNodeIterator},
     format_args,
     formatter::{
-        Format, FormatElement, TailwindContextEntry, VecBuffer,
-        buffer::RemoveSoftLinesBuffer,
+        TailwindContextEntry,
         prelude::{document::Document, *},
-        printer::Printer,
         trivia::{FormatLeadingComments, FormatTrailingComments},
     },
     utils::{
@@ -32,20 +32,7 @@ use super::FormatWrite;
 
 impl<'a> FormatWrite<'a> for AstNode<'a, TemplateLiteral<'a>> {
     fn write(&self, f: &mut JsFormatter<'_, 'a>) {
-        // Angular `@Component({ template, styles })`
-        if embed::try_format_angular_component(self, f) {
-            return;
-        }
-        // styled-jsx: <style jsx>{`...`}</style> or <div css={`...`} />
-        if embed::try_format_css_template(self, f) {
-            return;
-        }
-        // graphql(`...`) function call
-        if embed::try_format_graphql_call(self, f) {
-            return;
-        }
-        // Language comment: /* HTML */ `...` or /* GraphQL */ `...`
-        if embed::try_format_comment_embedded(self, f) {
+        if embed::try_format_template_literal(self, f) {
             return;
         }
         let template = TemplateLike::TemplateLiteral(self);
@@ -730,12 +717,14 @@ impl<'a> EachTemplateTable<'a> {
 
             recording.stop();
 
-            let root = Document::new(vec_buffer.into_vec(), Vec::default());
+            // TODO: The printed text IS the output, not just a width measurement,
+            // so a `TailwindClass` inside `expr` (e.g. JSX `className` under `sortTailwindcss`) prints UNSORTED.
+            let root =
+                Document::new(vec_buffer.into_vec(), f.session().unsorted_tailwind_classes());
 
-            // let range = element.range();
             let print_options = f.options().as_print_options();
             // TODO: if `unwrap()` panics here, it's a internal error
-            let printed = Printer::new(print_options, &[]).print(&root).unwrap();
+            let printed = root.print(expr.span().size() as usize, print_options).unwrap();
             let text = f.allocator().alloc_str(&printed.into_code());
             let will_break = text.contains('\n');
 
