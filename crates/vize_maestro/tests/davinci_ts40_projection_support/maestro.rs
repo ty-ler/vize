@@ -38,7 +38,7 @@ pub(super) fn capture_maestro(
         let (observed_text, shift) = if helper_counterpart {
             super::navigation_helper_successor::restore(&document.content)
         } else {
-            (document.content.clone(), None)
+            (String::from(document.content.as_str()), None)
         };
         let generated = |position| shift.map_or(position, |edit| edit.original(position));
         text_bytes += observed_text.len();
