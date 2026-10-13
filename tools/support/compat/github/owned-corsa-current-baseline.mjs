@@ -72,6 +72,14 @@ export const ownedCorsaJapaneseComponentDocumentationMainBaseline = Object.freez
   rawCommitBytes: 1190,
 });
 
+// Current merged main is a separate source identity; all237 actual pairs remain mandatory.
+export const ownedCorsaNativeGatesMainBaseline = Object.freeze({
+  revision: "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38",
+  tree: "4dfec533534c3c15e5be3678423d297a44ab229e",
+  rawCommitSHA256: "a45bd8226630844bf461db4ee8f7bb651acffaa087cdb0a0288d55c9959da163",
+  rawCommitBytes: 1265,
+});
+
 export function retainedOwnedCorsaBaseline(root, baseline) {
   // Unknown contexts stay literal and the original complete qualifier refuses them.
   const context =
@@ -93,7 +101,9 @@ export function retainedOwnedCorsaBaseline(root, baseline) {
                     ? ownedCorsaNoMutatingPropsMainBaseline
                     : baseline === ownedCorsaJapaneseComponentDocumentationMainBaseline.revision
                       ? ownedCorsaJapaneseComponentDocumentationMainBaseline
-                      : null;
+                      : baseline === ownedCorsaNativeGatesMainBaseline.revision
+                        ? ownedCorsaNativeGatesMainBaseline
+                        : null;
   if (!context) return baseline;
   const git = (args) =>
     execFileSync("git", ["--no-replace-objects", ...args], {

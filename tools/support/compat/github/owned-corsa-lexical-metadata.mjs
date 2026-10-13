@@ -4,6 +4,7 @@ import {
   lexicalSourcePaths,
   validateLexicalSourceBodies,
 } from "./native-lexical-composition-custody.mjs";
+import { ownedCorsaNativeGatesMainBaseline } from "./owned-corsa-current-baseline.mjs";
 import { ownedCorsaReader } from "./owned-corsa-source-reader.mjs";
 import { ownedCorsaSource } from "./owned-corsa-source-custody.mjs";
 import {
@@ -23,7 +24,7 @@ export function validateOwnedLexicalSourceBodies(manifest, copied, context) {
   if (!copied.some(({ file }) => file === "vendor/corsa/Cargo.toml"))
     return validateLexicalSourceBodies(manifest, copied);
   const { root, head } = context;
-  const baseline = ownedCorsaSource.baseline;
+  const baseline = ownedCorsaNativeGatesMainBaseline.revision;
   const reader = ownedCorsaReader(root, baseline, head);
   const production = execFileSync(
     "git",
@@ -65,7 +66,7 @@ export function validateOwnedLexicalSourceBodies(manifest, copied, context) {
   const view = projectOwnedCorsaLexicalCopied({
     copied,
     originalPaths,
-    baseline,
+    baseline: ownedCorsaSource.baseline,
     production,
     alreadyQualified: new Set(nativeProxyManifest.files.map(([file]) => file)),
     reader,

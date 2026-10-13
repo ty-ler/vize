@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
+import { projectOwnedCorsaTestSources } from "./owned-corsa-test-source.mjs";
 
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const blob = (body) =>
@@ -96,6 +97,10 @@ function same(actual, expected) {
 
 /** All237 current after bodies precede any old after projection; six variants are atomic. */
 export function authenticateOwnedCorsaAfterContext(rows, reader, onMismatch) {
+  const actualReader = reader;
+  const tests = projectOwnedCorsaTestSources(rows, reader);
+  if (!tests) return null;
+  reader = tests.reader;
   assert.equal(rows.length, 237);
   assert.equal(new Set(rows.map(({ file }) => file)).size, 237);
   for (const file of [...files, ...sourceFiles]) {
@@ -149,6 +154,7 @@ export function authenticateOwnedCorsaAfterContext(rows, reader, onMismatch) {
           wholeManifestBodies: 6,
           wholeCorrectedRustBodies: sourceClass,
           correctedSourceFiles,
+          ...(tests.context ? { testSourceContext: tests.context } : {}),
           retainedOldAfterSource: data.retainedOldAfterSource,
           runtimeCredit: false,
           performanceCredit: false,
@@ -161,7 +167,7 @@ export function authenticateOwnedCorsaAfterContext(rows, reader, onMismatch) {
       return value ? { ...value, body: Buffer.from(value.body) } : null;
     },
     actualAfter: (file) => {
-      const value = reader(file);
+      const value = actualReader(file);
       return value ? { ...value, body: Buffer.from(value.body) } : null;
     },
   };
