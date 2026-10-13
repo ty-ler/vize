@@ -9,7 +9,8 @@ the generic normalizer rejected its expected stderr warning.
 
 Mark only the existing escaped-keyword and malformed-import/export fixtures
 as expecting parser recovery. For their untimed parity and parity-profile
-processes, accept the exact check-failure recovery notice, optionally followed
+processes, accept the exact check-failure recovery notice (single CLI to session,
+or the first sharded CLI to single CLI step on two-server runs), optionally followed
 by the known native session EOF shutdown notice, only with exit status 1 and a
 syntax diagnostic. Retain original raw stderr before adapting the result.
 

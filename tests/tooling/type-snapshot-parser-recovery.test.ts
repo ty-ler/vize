@@ -43,6 +43,19 @@ test("successful session shutdown does not require the optional EOF notice", () 
   );
 });
 
+test("two-server parser recovery retains the first sharded fallback notice", () => {
+  const stderr = recovered.stderr.replace(
+    "Corsa CLI fast path unavailable; degraded to the slower project-session API",
+    "sharded Corsa CLI check failed; degraded to a single CLI program",
+  );
+  const raw = { ...recovered, stderr };
+  const result = normalizeParserRecovery(raw, true, "parity");
+  assert.equal(result.stderr, "");
+  assert.equal(raw.stderr, stderr);
+  assert.equal(normalizeTypecheckResult(result, process.cwd(), "json").diagnostics.length, 2);
+  assert.equal(normalizeParserRecovery(raw, true, "timed-0"), raw);
+});
+
 test("timed, cold, gate and unmarked fixtures still reject recovery stderr", () => {
   for (const [expected, phase] of [
     [false, "parity"],
