@@ -1,4 +1,0 @@
-<script setup lang="ts">
-import { ref } from 'other'
-</script>
-<template><div>ok</div></template>

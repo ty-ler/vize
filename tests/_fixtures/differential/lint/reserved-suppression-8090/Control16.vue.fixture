@@ -1,4 +1,0 @@
-<script lang="ts">
-// eslint-disable-next-line
-export default { data() { return { _private: 0 } } }
-</script>

@@ -1,2 +1,0 @@
-<script setup lang="ts"></script>
-<template><i v-for="$item in $outside.items">{{ $item.label }}</i></template>

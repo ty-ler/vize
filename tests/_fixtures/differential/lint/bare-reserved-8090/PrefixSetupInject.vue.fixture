@@ -1,3 +1,0 @@
-<script lang="ts">
-export default { setup() { return { $slots: 0, _setupToken: 0 } }, inject: { $refs: "refs", _injectToken: "token" } }
-</script>

@@ -1,5 +1,0 @@
-<script setup lang="ts">
-import { ref } from '@vue/reactivity'
-import { isString } from '@vue/shared'
-</script>
-<template><div>ok</div></template>

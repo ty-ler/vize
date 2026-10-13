@@ -1,4 +1,0 @@
-<script setup lang="ts">
-export const answer = 42;
-</script>
-<template><div /></template>

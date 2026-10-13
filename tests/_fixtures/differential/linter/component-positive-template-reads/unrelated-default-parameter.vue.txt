@@ -1,5 +1,0 @@
-<script setup lang="ts">
-import Child from "./Child.vue";
-const f = (value = 1) => value;
-</script>
-<template><Control :component="Child" /></template>

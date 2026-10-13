@@ -1,5 +1,0 @@
-<script setup lang="ts">
-defineProps<{ title?: string }>()
-defineSlots<{ default(props: { label: string; items: { label: string }[] }): unknown }>()
-</script>
-<template><slot label="typed" :items="[{ label: 'child' }]" /></template>

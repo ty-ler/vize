@@ -1,4 +1,0 @@
-<script setup>
-const message="hello"
-</script>
-<template><p>{{ message }}</p></template>
