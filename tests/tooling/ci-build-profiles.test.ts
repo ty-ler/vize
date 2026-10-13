@@ -32,7 +32,7 @@ test("native CI installs the named repository toolchain without a second stable 
     // The SemVer comparison intentionally pins both sides via RUSTUP_TOOLCHAIN.
     const jobs = document.jobs
       ? Object.entries(document.jobs)
-          .filter(([name]) => name !== "cargo-semver-checks")
+          .filter(([name]) => name !== "semver-checks")
           .map(([, job]) => job)
       : [document.runs];
     for (const job of jobs as { steps?: { uses?: string; with?: { toolchain?: string } }[] }[]) {
