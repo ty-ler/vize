@@ -24,22 +24,8 @@
         "",
         "import { reviewedNoMutatingSourceReadView } from \"./no-mutating-props-source-custody.mjs\";\n"
       ],
-      [
-        46,
-        46,
-        47,
-        48,
-        "",
-        "  read = reviewedNoMutatingSourceReadView(root, read);\n"
-      ],
-      [
-        117,
-        117,
-        119,
-        120,
-        "",
-        "  read = reviewedNoMutatingSourceReadView(root, read);\n"
-      ]
+      [46, 46, 47, 48, "", "  read = reviewedNoMutatingSourceReadView(root, read);\n"],
+      [117, 117, 119, 120, "", "  read = reviewedNoMutatingSourceReadView(root, read);\n"]
     ]
   },
   {
@@ -67,14 +53,7 @@
         "",
         "import { reviewedNoMutatingSourceReadView } from \"./no-mutating-props-source-custody.mjs\";\n"
       ],
-      [
-        20,
-        20,
-        21,
-        22,
-        "",
-        "  read = reviewedNoMutatingSourceReadView(root, read);\n"
-      ]
+      [20, 20, 21, 22, "", "  read = reviewedNoMutatingSourceReadView(root, read);\n"]
     ]
   },
   {
@@ -102,14 +81,7 @@
         "import assert from \"node:assert/strict\";\nimport { execFileSync } from \"node:child_process\";\nimport { createHash } from \"node:crypto\";\nimport fs from \"node:fs\";\nimport os from \"node:os\";\n",
         ""
       ],
-      [
-        6,
-        6,
-        1,
-        2,
-        "",
-        "import { fileURLToPath } from \"node:url\";\n"
-      ],
+      [6, 6, 1, 2, "", "import { fileURLToPath } from \"node:url\";\n"],
       [
         7,
         8,
@@ -228,14 +200,7 @@
         "import assert from \"node:assert/strict\";\nimport { execFileSync } from \"node:child_process\";\nimport { createHash } from \"node:crypto\";\nimport fs from \"node:fs\";\nimport os from \"node:os\";\n",
         ""
       ],
-      [
-        6,
-        6,
-        1,
-        2,
-        "",
-        "import { fileURLToPath } from \"node:url\";\n"
-      ],
+      [6, 6, 1, 2, "", "import { fileURLToPath } from \"node:url\";\n"],
       [
         7,
         16,

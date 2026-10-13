@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { javascriptSfcSourcePaths } from "./javascript-sfc-source-context.mjs";
-import { authenticateOwnedJavaScriptSource, ownedJavaScriptLexicalPaths } from "./owned-corsa-javascript-source.mjs";
+import {
+  authenticateOwnedJavaScriptSource,
+  ownedJavaScriptLexicalPaths,
+} from "./owned-corsa-javascript-source.mjs";
 import { projectOwnedCorsaNativeMainAfter } from "./owned-corsa-native-main-source.mjs";
 import { ownedCorsaSource, qualifyOwnedCorsaSource } from "./owned-corsa-source-custody.mjs";
 import { verifyOwnedCorsaCallers, ownedCorsaCallerPaths } from "./owned-corsa-caller-custody.mjs";
@@ -58,7 +61,13 @@ export function verifyOwnedCorsaLexicalAdapter(reader) {
 const prefix = "tools/support/compat/github/";
 export const ownedCorsaSupplementPaths = [
   ...ownedJavaScriptLexicalPaths,
-  ...["owned-corsa-current-baseline.mjs", "owned-corsa-native-main-source.mjs", "owned-corsa-native-main-source.json", "owned-corsa-test-source.mjs", "owned-corsa-test-source.json"].map((name) => prefix + name),
+  ...[
+    "owned-corsa-current-baseline.mjs",
+    "owned-corsa-native-main-source.mjs",
+    "owned-corsa-native-main-source.json",
+    "owned-corsa-test-source.mjs",
+    "owned-corsa-test-source.json",
+  ].map((name) => prefix + name),
   prefix + "native-lexical-dollar-plan.mjs",
   ...ownedCorsaCallerPaths,
   prefix + "owned-corsa-source-custody.mjs",
@@ -137,14 +146,27 @@ export function projectOwnedCorsaLexicalCopied({
     const caller = callers.reader("after", file);
     const graphBody = graph.historicalReader("after", file);
     const mainBody = mainReader(file);
-    const jsBody = javascriptSfcSourcePaths.includes(file) && !original.has(file)
-      ? file === "tests/_fixtures/differential/typechecker/manifest.json"
-        ? javascript.retainedOwnedAfter(file) : javascript.historicalAfter(file)
-      : null;
-    const value = caller?.blob !== reader("after", file)?.blob ? caller
-      : mainBody?.blob !== reader("after", file)?.blob ? mainBody
-      : jsBody ? { mode: "100644", blob: createHash("sha1").update(`blob ${jsBody.length}\0`).update(jsBody).digest("hex"), body: jsBody }
-      : graphBody;
+    const jsBody =
+      javascriptSfcSourcePaths.includes(file) && !original.has(file)
+        ? file === "tests/_fixtures/differential/typechecker/manifest.json"
+          ? javascript.retainedOwnedAfter(file)
+          : javascript.historicalAfter(file)
+        : null;
+    const value =
+      caller?.blob !== reader("after", file)?.blob
+        ? caller
+        : mainBody?.blob !== reader("after", file)?.blob
+          ? mainBody
+          : jsBody
+            ? {
+                mode: "100644",
+                blob: createHash("sha1")
+                  .update(`blob ${jsBody.length}\0`)
+                  .update(jsBody)
+                  .digest("hex"),
+                body: jsBody,
+              }
+            : graphBody;
     assert(value);
     return { ...value, body: Buffer.from(value.body) };
   };

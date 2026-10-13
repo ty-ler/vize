@@ -163,7 +163,7 @@ const validateCurrentCopied = (manifest, entries) => {
   return validateLexicalSourceBodies(manifest, view.historicalCopied, view.historicalReader);
 };
 
-await runOwnedCargoOriginalRefusal({ actualView, copied, old, manifest });
+await runOwnedCargoOriginalRefusal({ actualView, copied, old, manifest, after });
 
 await test("authenticated whole incoming recipe source retains the exact original caller refusal and finite successor", () => {
   let refusal;

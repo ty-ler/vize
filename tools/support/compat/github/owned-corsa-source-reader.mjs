@@ -38,7 +38,10 @@ export function ownedCorsaReader(root, baseline, head) {
           let component = root;
           for (const part of file.split("/")) {
             component = path.join(component, part);
-            assert(!fs.lstatSync(component).isSymbolicLink(), "physical source ancestor: " + component);
+            assert(
+              !fs.lstatSync(component).isSymbolicLink(),
+              "physical source ancestor: " + component,
+            );
           }
           const stat = fs.lstatSync(target);
           assert(

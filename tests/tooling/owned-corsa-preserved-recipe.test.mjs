@@ -28,7 +28,11 @@ const cell = (revision) => {
   });
   return { mode: "100644", blob: match[1], body };
 };
-for (const revision of ["a93e78147b0990c813e965a7868b32dda341eb77", "437c7f8cba66dc9517b8c01659063143185747ea", "b2caebeab6fb5bc817b4e31a65d5d560449b691b"])
+for (const revision of [
+  "a93e78147b0990c813e965a7868b32dda341eb77",
+  "437c7f8cba66dc9517b8c01659063143185747ea",
+  "b2caebeab6fb5bc817b4e31a65d5d560449b691b",
+])
   ensureHostedLiteralSource(root, revision);
 const before = cell("a93e78147b0990c813e965a7868b32dda341eb77");
 const after = cell("437c7f8cba66dc9517b8c01659063143185747ea");

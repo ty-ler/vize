@@ -56,14 +56,7 @@
         "",
         "    if let Some((source, offset)) = script {\n        registered_sfc::run(\n            linter,\n            source,\n            offset,\n            script_parsed.as_ref(),\n            sfc_context,\n            result,\n        );\n    }\n"
       ],
-      [
-        193,
-        193,
-        208,
-        209,
-        "",
-        "mod registered_sfc;\n"
-      ]
+      [193, 193, 208, 209, "", "mod registered_sfc;\n"]
     ]
   },
   {
@@ -196,30 +189,9 @@
         "",
         "import { reviewedNoMutatingSourceReadView } from \"./no-mutating-props-source-custody.mjs\";\n"
       ],
-      [
-        24,
-        24,
-        25,
-        26,
-        "",
-        "  read = reviewedNoMutatingSourceReadView(root, read);\n"
-      ],
-      [
-        141,
-        141,
-        143,
-        144,
-        "",
-        "  read = reviewedNoMutatingSourceReadView(root, read);\n"
-      ],
-      [
-        198,
-        198,
-        201,
-        202,
-        "",
-        "  read = reviewedNoMutatingSourceReadView(root, read);\n"
-      ]
+      [24, 24, 25, 26, "", "  read = reviewedNoMutatingSourceReadView(root, read);\n"],
+      [141, 141, 143, 144, "", "  read = reviewedNoMutatingSourceReadView(root, read);\n"],
+      [198, 198, 201, 202, "", "  read = reviewedNoMutatingSourceReadView(root, read);\n"]
     ]
   }
 ]

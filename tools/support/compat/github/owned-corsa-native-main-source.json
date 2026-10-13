@@ -32,40 +32,12 @@
       },
       "clauses": {
         "before": [
-          [
-            20,
-            20,
-            20,
-            21,
-            "",
-            "mod javascript_sfc_membership;\n"
-          ],
-          [
-            346,
-            346,
-            347,
-            349,
-            "",
-            "\nmod options_projection;\n"
-          ]
+          [20, 20, 20, 21, "", "mod javascript_sfc_membership;\n"],
+          [346, 346, 347, 349, "", "\nmod options_projection;\n"]
         ],
         "after": [
-          [
-            20,
-            20,
-            20,
-            21,
-            "",
-            "mod javascript_sfc_membership;\n"
-          ],
-          [
-            346,
-            346,
-            347,
-            349,
-            "",
-            "\nmod options_projection;\n"
-          ]
+          [20, 20, 20, 21, "", "mod javascript_sfc_membership;\n"],
+          [346, 346, 347, 349, "", "\nmod options_projection;\n"]
         ]
       }
     },

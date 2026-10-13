@@ -7,14 +7,16 @@ import {
   javascriptSfcContextPaths,
 } from "./javascript-sfc-source-context.mjs";
 const sha = (body) => createHash("sha256").update(body).digest("hex");
-const blob = (body) => createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
+const blob = (body) =>
+  createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
 const read = (name) => {
-  const url = new URL(name, import.meta.url), stat = fs.lstatSync(url);
+  const url = new URL(name, import.meta.url),
+    stat = fs.lstatSync(url);
   assert(stat.isFile() && (stat.mode & 0o777) === 0o644);
   return fs.readFileSync(url);
 };
 const bytes = read("./owned-corsa-javascript-source.json");
-assert.equal(sha(bytes), "2d6df4f4d7609bb8082fd69b3d87f604bf313079b2d0011341e528733edc3c46");
+assert.equal(sha(bytes), "17f2b614ffb85b4a90c56378b6b0772541ee2fd05f56134d324699fdade42ef8");
 const data = JSON.parse(bytes);
 assert.equal(data.schema, 1);
 assert.equal(data.mainSource, "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38");
@@ -34,7 +36,8 @@ for (const row of rows) {
   assert(javascriptSfcSourcePaths.includes(row.file));
   const pair = {};
   for (const side of row.retainedSdk ? ["main", "owned", "retainedSdk"] : ["main", "owned"]) {
-    const cell = row[side], body = Buffer.from(cell.rawBase64, "base64");
+    const cell = row[side],
+      body = Buffer.from(cell.rawBase64, "base64");
     assert.equal(body.toString("base64"), cell.rawBase64);
     assert.equal(cell.mode, "100644");
     assert.equal(body.length, cell.bytes);
@@ -47,13 +50,14 @@ for (const row of rows) {
   for (const [i, j, k, l, before, after] of row.clauses.toReversed()) {
     assert.equal(original.slice(i, j).join(""), before);
     assert.equal(restored.slice(k, l).join(""), after);
-    restored.splice(k, l-k, ...(before ? before.split(/(?<=\n)/u) : []));
+    restored.splice(k, l - k, ...(before ? before.split(/(?<=\n)/u) : []));
   }
   assert.deepEqual(Buffer.from(restored.join("")), pair.main.body);
   cells.set(row.file, pair);
 }
 export const ownedJavaScriptLexicalPaths = Object.freeze([
-  ...javascriptSfcSourcePaths, ...javascriptSfcContextPaths,
+  ...javascriptSfcSourcePaths,
+  ...javascriptSfcContextPaths,
   "tools/support/compat/github/owned-corsa-javascript-source.mjs",
   "tools/support/compat/github/owned-corsa-javascript-source.json",
   ...data.parts.map(([name]) => "tools/support/compat/github/" + name),
@@ -63,11 +67,14 @@ export const ownedJavaScriptLexicalPaths = Object.freeze([
 export function authenticateOwnedJavaScriptSource(reader) {
   for (const [file, pair] of cells)
     assert.deepEqual(reader("after", file), pair.owned, "whole actual JS/SDK composition: " + file);
-  const context = authenticateJavaScriptSfcSource((file) => cells.has(file)
-    ? Buffer.from(cells.get(file).main.body)
-    : reader("after", file).body);
-  return { ...context, retainedOwnedAfter(file) {
-    assert.equal(file, "tests/_fixtures/differential/typechecker/manifest.json");
-    return Buffer.from(cells.get(file).retainedSdk.body);
-  } };
+  const context = authenticateJavaScriptSfcSource((file) =>
+    cells.has(file) ? Buffer.from(cells.get(file).main.body) : reader("after", file).body,
+  );
+  return {
+    ...context,
+    retainedOwnedAfter(file) {
+      assert.equal(file, "tests/_fixtures/differential/typechecker/manifest.json");
+      return Buffer.from(cells.get(file).retainedSdk.body);
+    },
+  };
 }

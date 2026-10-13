@@ -246,8 +246,13 @@ export function qualifyDualCurrentFrame(root: string) {
   assert.equal(beforeCommit.length, review.beforeCommit.bytes);
   assert.equal(hash(beforeCommit), review.beforeCommit.sha256);
   const before = reader.frame(root, review.beforeSource);
-  const projection = projectOwnedDualSourceFrame(root, head, review.beforeSource,
-    reader.frame(root, head), (file) => reader.physical(root, file));
+  const projection = projectOwnedDualSourceFrame(
+    root,
+    head,
+    review.beforeSource,
+    reader.frame(root, head),
+    (file) => reader.physical(root, file),
+  );
   const after = projection.raw;
   for (const row of review.beforeRows)
     assert(

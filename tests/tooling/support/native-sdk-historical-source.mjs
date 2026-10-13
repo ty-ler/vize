@@ -245,7 +245,8 @@ export function createNativeSdkHistoricalView(root = nativeSdkSourceRoot, suppli
   );
   assert.equal(currentCells.size, 8);
   const currentAfterIdentities = ownedCorsaSource.rows.map((row) => {
-    const expected = ownedCorsaTestSourceIdentities.get(row.file) ?? currentCells.get(row.file) ?? row.after;
+    const expected =
+      ownedCorsaTestSourceIdentities.get(row.file) ?? currentCells.get(row.file) ?? row.after;
     const value = currentAfter.actualAfter(row.file);
     assert(value && value.mode === expected.mode);
     assert.equal(value.blob, expected.blob);

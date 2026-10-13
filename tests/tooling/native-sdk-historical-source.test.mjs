@@ -47,7 +47,8 @@ void test("genuine current237 and two complete raw Git callers qualify separatel
   );
   for (const row of ownedCorsaSource.rows) {
     if (
-      ownedCorsaTestSourceIdentities.has(row.file) || six.has(row.file) ||
+      ownedCorsaTestSourceIdentities.has(row.file) ||
+      six.has(row.file) ||
       row.file === "vendor/corsa_client/src/api/handles.rs" ||
       row.file === "vendor/corsa/src/bin/bench_real_corsa/args.rs"
     )

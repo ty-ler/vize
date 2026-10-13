@@ -31,7 +31,19 @@ const git = (cwd, args, options = {}) =>
   execFileSync("git", ["--no-replace-objects", ...args], { cwd, ...options });
 const head = git(root, ["rev-parse", "HEAD"]).toString().trim();
 const baseline = ownedCorsaCurrentBaseline.revision;
-for (const revision of [baseline, ownedCorsaSource.baseline, ownedCorsaMergedMainBaseline.revision, ownedCorsaLatestMergedBaseline.revision, ownedCorsaDocumentationMainBaseline.revision, ownedCorsaRecoveryMainBaseline.revision, ownedCorsaMuseaDocumentationMainBaseline.revision, ownedCorsaAccessibilityDocumentationMainBaseline.revision, ownedCorsaNoMutatingPropsMainBaseline.revision, ownedCorsaJapaneseComponentDocumentationMainBaseline.revision, ownedCorsaNativeGatesMainBaseline.revision])
+for (const revision of [
+  baseline,
+  ownedCorsaSource.baseline,
+  ownedCorsaMergedMainBaseline.revision,
+  ownedCorsaLatestMergedBaseline.revision,
+  ownedCorsaDocumentationMainBaseline.revision,
+  ownedCorsaRecoveryMainBaseline.revision,
+  ownedCorsaMuseaDocumentationMainBaseline.revision,
+  ownedCorsaAccessibilityDocumentationMainBaseline.revision,
+  ownedCorsaNoMutatingPropsMainBaseline.revision,
+  ownedCorsaJapaneseComponentDocumentationMainBaseline.revision,
+  ownedCorsaNativeGatesMainBaseline.revision,
+])
   ensureHostedLiteralSource(root, revision);
 const reader = ownedCorsaReader(root, baseline, head);
 const input = {

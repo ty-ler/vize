@@ -3,7 +3,8 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 
 const sha = (body) => createHash("sha256").update(body).digest("hex");
-const blob = (body) => createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
+const blob = (body) =>
+  createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
 const url = new URL("./owned-corsa-test-source.json", import.meta.url);
 const stat = fs.lstatSync(url);
 assert(stat.isFile() && (stat.mode & 0o777) === 0o644);
@@ -14,16 +15,20 @@ assert.equal(data.schema, 1);
 assert.equal(data.sourceOnly, true);
 assert.equal(data.runtimeCredit, false);
 assert.equal(data.performanceCredit, false);
-assert.equal(data.original237ManifestSHA256, "bffe80f1e770ad10df3af2670e01b5f53a9574f357d42df6948a458f5311040c");
-assert.deepEqual(data.entries.map(({ file }) => file), [
-  "vendor/corsa/tests/policy.rs",
-  "vendor/corsa/tests/real_corsa_baseline.rs",
-]);
+assert.equal(
+  data.original237ManifestSHA256,
+  "bffe80f1e770ad10df3af2670e01b5f53a9574f357d42df6948a458f5311040c",
+);
+assert.deepEqual(
+  data.entries.map(({ file }) => file),
+  ["vendor/corsa/tests/policy.rs", "vendor/corsa/tests/real_corsa_baseline.rs"],
+);
 const cells = new Map();
 for (const row of data.entries) {
   const values = {};
   for (const side of ["retainedBefore", "currentAfter"]) {
-    const cell = row[side], body = Buffer.from(cell.rawBase64, "base64");
+    const cell = row[side],
+      body = Buffer.from(cell.rawBase64, "base64");
     assert.equal(body.toString("base64"), cell.rawBase64);
     assert.equal(cell.mode, "100644");
     assert.equal(body.length, cell.bytes);
@@ -41,12 +46,24 @@ for (const row of data.entries) {
   assert.deepEqual(Buffer.from(restored.join("")), values.retainedBefore.body);
   cells.set(row.file, values);
 }
-const same = (actual, expected) => !!actual && Buffer.isBuffer(actual.body) &&
-  actual.mode === expected.mode && actual.blob === expected.blob &&
-  actual.body.equals(expected.body) && blob(actual.body) === expected.blob;
-const testSourceIdentities = new Map([...cells].map(([file, pair]) => [file,
-  Object.freeze({ mode: pair.currentAfter.mode, blob: pair.currentAfter.blob,
-    bytes: pair.currentAfter.bytes, sha256: pair.currentAfter.sha256 })]));
+const same = (actual, expected) =>
+  !!actual &&
+  Buffer.isBuffer(actual.body) &&
+  actual.mode === expected.mode &&
+  actual.blob === expected.blob &&
+  actual.body.equals(expected.body) &&
+  blob(actual.body) === expected.blob;
+const testSourceIdentities = new Map(
+  [...cells].map(([file, pair]) => [
+    file,
+    Object.freeze({
+      mode: pair.currentAfter.mode,
+      blob: pair.currentAfter.blob,
+      bytes: pair.currentAfter.bytes,
+      sha256: pair.currentAfter.sha256,
+    }),
+  ]),
+);
 
 export const ownedCorsaTestSourceIdentities = Object.freeze({
   get: (file) => testSourceIdentities.get(file),
@@ -65,10 +82,23 @@ export function projectOwnedCorsaTestSources(rows, reader) {
   const current = [...cells].every(([file, value]) => same(reader(file), value.currentAfter));
   if (!old && !current) return null;
   return {
-    reader: (file) => current && cells.has(file)
-      ? { ...cells.get(file).retainedBefore, body: Buffer.from(cells.get(file).retainedBefore.body) }
-      : reader(file),
-    context: current ? { authority: data.authority, manifestSHA256: sha(bytes), completeWholeTestBodies: 2,
-      completePinnedUnownedPolicyBodies: 6, sourceOnly: true, runtimeCredit: false, performanceCredit: false } : null,
+    reader: (file) =>
+      current && cells.has(file)
+        ? {
+            ...cells.get(file).retainedBefore,
+            body: Buffer.from(cells.get(file).retainedBefore.body),
+          }
+        : reader(file),
+    context: current
+      ? {
+          authority: data.authority,
+          manifestSHA256: sha(bytes),
+          completeWholeTestBodies: 2,
+          completePinnedUnownedPolicyBodies: 6,
+          sourceOnly: true,
+          runtimeCredit: false,
+          performanceCredit: false,
+        }
+      : null,
   };
 }
