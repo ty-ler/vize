@@ -50,8 +50,7 @@ function physicalSource(cwd, file) {
   }
 }
 
-// The actual workflow uses only literals, * and **. Implement that documented
-// subset in order; reject new syntax instead of guessing GitHub's semantics.
+// Match literal, * and ** workflow patterns in order; reject unknown GitHub syntax.
 function matches(path, pattern) {
   assert.match(pattern, /^[A-Za-z0-9_./*!-]+$/);
   const source = pattern.replace(/\*\*|\*|[.+^${}()|[\]\\]/g, (part) =>
