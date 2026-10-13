@@ -44,6 +44,15 @@ pub enum Drift {
 }
 
 pub fn capture_fixture(fixture: &Fixture) -> ProjectionRecord {
+    capture_fixture_inner(fixture, false)
+}
+
+/// Separate source-only view; every actual current body remains captured first.
+pub fn capture_fixture_helper_counterpart(fixture: &Fixture) -> ProjectionRecord {
+    capture_fixture_inner(fixture, true)
+}
+
+fn capture_fixture_inner(fixture: &Fixture, helper_counterpart: bool) -> ProjectionRecord {
     let source = fixture.source();
     let mapper = capture_content_mapper(fixture, &source);
     if fixture.legacy_vue2 && !cfg!(feature = "legacy") {
@@ -59,9 +68,9 @@ pub fn capture_fixture(fixture: &Fixture) -> ProjectionRecord {
     ProjectionRecord {
         fixture: fixture.id.clone(),
         source_sha256: sha256(&source),
-        canon: capture_canon(fixture, &source, &mapper),
+        canon: capture_canon(fixture, &source, &mapper, helper_counterpart),
         content_mapper: mapper,
-        maestro: capture_maestro(fixture, &source),
+        maestro: capture_maestro(fixture, &source, helper_counterpart),
     }
 }
 

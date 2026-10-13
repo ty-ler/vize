@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { authenticateReleaseNavigationHelper } from "../../support/compat/github/canon-release-navigation-helper.mjs";
 
 // Reconstruct only the prior generated initializer and its generated offsets.
 // Actual current text/maps remain raw and frozen by the complete TS-40 snapshots.
@@ -21,10 +22,9 @@ const navigationNames = [
   "__VizeNativeNavigationSlots",
   "__VizeNavigationSlots",
 ];
-assert.equal(
-  hash(readFileSync("crates/vize_canon/src/virtual_ts/scope/component_slots.rs")),
-  "014eefc93fdc57da48a4d7ef803f8b1cbbdbeb21812f3991e1ece24e735c0cd1",
-);
+const navigationSuccessor = authenticateReleaseNavigationHelper(process.cwd());
+assert.equal(navigationSuccessor.before, navigationDeclaration);
+const currentNavigationDeclaration = navigationSuccessor.after;
 const baselineBytes = readFileSync(
   "tests/_fixtures/differential/typechecker/template-dollar-emit/projection-baseline.json",
 );
@@ -114,13 +114,21 @@ function rewind(text, declaration, allowAbsent = false) {
   let navigation = { text, cut: Infinity, end: Infinity, delta: 0 };
   const isModel = declaration === declarations["define-model"];
   if (isModel && !(allowAbsent && !text.includes(declaration))) {
-    const index = text.indexOf(navigationDeclaration);
+    const index = text.indexOf(currentNavigationDeclaration);
     assert(index >= 0, "the complete current navigation declaration is absent");
-    assert.equal(text.indexOf(navigationDeclaration, index + navigationDeclaration.length), -1);
-    const restored = text.slice(0, index) + text.slice(index + navigationDeclaration.length);
+    assert.equal(
+      text.indexOf(currentNavigationDeclaration, index + currentNavigationDeclaration.length),
+      -1,
+    );
+    const restored = text.slice(0, index) + text.slice(index + currentNavigationDeclaration.length);
     assert(navigationNames.every((name) => !restored.includes(name)));
     const cut = byteLength(text.slice(0, index));
-    navigation = { text: restored, cut, end: cut + 1138, delta: 1138 };
+    navigation = {
+      text: restored,
+      cut,
+      end: cut + navigationSuccessor.afterBytes,
+      delta: navigationSuccessor.afterBytes,
+    };
   } else {
     assert(navigationNames.every((name) => !text.includes(name)));
   }

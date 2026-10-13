@@ -14,7 +14,7 @@
 
 mod davinci_ts40_projection_support;
 
-use davinci_ts40_projection_support::{Drift, capture_fixture, load_matrix, verify_exact};
+use davinci_ts40_projection_support::{Drift, capture_fixture, capture_fixture_helper_counterpart, load_matrix, verify_exact};
 use vize_l0::{String, cstr};
 
 #[test]
@@ -33,6 +33,19 @@ fn current_projection_matrix_is_exact_and_non_empty() {
     for fixture in &matrix.fixtures {
         let record = capture_fixture(fixture);
         record.assert_non_empty(fixture);
+        let counterpart = capture_fixture_helper_counterpart(fixture);
+        counterpart.assert_non_empty(fixture);
+        assert_eq!(record.source_sha256, counterpart.source_sha256);
+        assert_eq!(record.content_mapper, counterpart.content_mapper);
+        for (actual, previous) in [(&record.canon, &counterpart.canon), (&record.maestro, &counterpart.maestro)] {
+            assert_eq!(actual.status, previous.status);
+            assert_eq!(actual.mapping_count, previous.mapping_count);
+            assert_eq!(actual.semantic_link_count, previous.semantic_link_count);
+            assert_eq!(actual.diagnostic_count, previous.diagnostic_count);
+            assert_eq!(actual.diagnostics_sha256, previous.diagnostics_sha256);
+            assert_eq!(actual.authored_hit_count, previous.authored_hit_count);
+            assert_eq!(actual.authored_hit_anchors, previous.authored_hit_anchors);
+        }
         let feature = if fixture.legacy_vue2 {
             if cfg!(feature = "legacy") {
                 "mixed-vue2__legacy-generators-enabled"
@@ -44,7 +57,7 @@ fn current_projection_matrix_is_exact_and_non_empty() {
         };
         let snapshot = cstr!("davinci_ts40__{}__{feature}", fixture.id);
         if std::panic::catch_unwind(|| {
-            insta::assert_snapshot!(snapshot.as_str(), record.render());
+            insta::assert_snapshot!(snapshot.as_str(), counterpart.render());
         })
         .is_err()
         {

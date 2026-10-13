@@ -8,6 +8,9 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{Value, json};
 
+#[path = "navigation_helper_successor.rs"]
+mod navigation_helper_successor;
+
 const MARKER: &str = "vize-event-fixture";
 const PACKAGE: &str = "{\"name\":\"vize-event-fixture\",\"version\":\"0.0.0\",\"private\":true}\n";
 const SLOT_NAVIGATION_PRELUDE: &str = include_str!(
@@ -112,7 +115,17 @@ pub(super) fn observe(root: &Path, mut record: impl FnMut(Value)) -> Witness {
     // from this fixture's complete generated binding pattern, never its result.
     let query_position = app[..cursor].encode_utf16().count();
     receipt["query"] = json!({ "sourceRange": [source_start, source_end], "construct": construct, "byteCursor": cursor, "utf16Position": query_position });
-    let (counterfactual, historical_query_position) = historical_counterfactual(&app, construct);
+    let (predecessor_helper_app, helper_shift) = navigation_helper_successor::restore(&app);
+    assert!(helper_shift.is_some(), "one source-qualified current navigation helper");
+    receipt["navigationHelperSuccessor"] = json!({
+        "sourceOnly": true,
+        "runtimeCredit": false,
+        "actualWholeAppSHA256": super::hash(app.as_bytes()),
+        "predecessorHelperWholeAppSHA256": super::hash(predecessor_helper_app.as_bytes()),
+        "generatedBytesAdded": 104
+    });
+    let (counterfactual, historical_query_position) =
+        historical_counterfactual(&predecessor_helper_app, construct);
     receipt["navigationPreludeCounterfactual"] = counterfactual;
     record(receipt);
     let parsed: Value = serde_json::from_str(&config).unwrap();

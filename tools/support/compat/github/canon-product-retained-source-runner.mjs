@@ -130,3 +130,29 @@ export async function importCanonProductMisskeyModule(root) {
     throw error;
   }
 }
+
+export async function importCanonProductTemplateEmitModule(root) {
+  const { authenticateReleaseNavigationHelper } =
+    await import("./canon-release-navigation-helper.mjs");
+  const proof = authenticateReleaseNavigationHelper(root);
+  const { listStarCounterpartFiles, provisionStarSourceCounterpart } =
+    await import("./source-counterpart-snapshot.mjs");
+  const source = "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6";
+  const file = "tests/tooling/template-emit-navigation-receipt.test.mjs";
+  const fixture = provisionStarSourceCounterpart(
+    root,
+    source,
+    listStarCounterpartFiles(root, source, [file]),
+  );
+  process.once("exit", () => fixture.cleanup());
+  try {
+    assert.equal(proof.head, git(root, ["rev-parse", "HEAD"]).toString().trim());
+    const original = await import(pathToFileURL(path.join(fixture.root, file)).href);
+    const { after } = await import("node:test");
+    after(() => fixture.cleanup());
+    return original;
+  } catch (error) {
+    fixture.cleanup();
+    throw error;
+  }
+}

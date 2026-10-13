@@ -45,6 +45,8 @@ const retainedHistory = Object.freeze([
   "e78d2cb93e278032cd262201b0a444273618ee25",
   "43afa9b09ae0f334d7fcba41f721ac52a8d1ab23",
 ]);
+// Object acquisition for the unchanged original negative fixture only; grants no source or runtime view.
+const retainedNegativeSetup = Object.freeze(["b401784c472d850a8be08ca1122659a6883dde6e"]);
 const parts = [
   [
     "canon-product-source-cells-0.tsv",
@@ -206,7 +208,11 @@ export function authenticateCanonProductSource(root) {
   root = fs.realpathSync(root);
   assert.equal(git(root, ["for-each-ref", "--format=%(refname)", "refs/replace"]).length, 0);
   const head = git(root, ["rev-parse", "HEAD"]).toString().trim();
-  for (const revision of new Set([...Object.values(revisions), ...retainedHistory]))
+  for (const revision of new Set([
+    ...Object.values(revisions),
+    ...retainedHistory,
+    ...retainedNegativeSetup,
+  ]))
     ensureHostedLiteralSource(root, revision);
   const frames = Object.fromEntries(
     Object.entries(revisions).map(([side, revision]) => [side, frame(root, revision, side)]),
@@ -221,6 +227,9 @@ export function authenticateCanonProductSource(root) {
     );
   const admitted = new Set([
     ...canonProductCompositionPaths,
+    "tools/support/compat/github/canon-release-navigation-helper.mjs",
+    "tests/tooling/canon-release-navigation-receipt-current.test.mjs",
+    "tests/_fixtures/differential/canon/release-js-pragma-opaque-slots/navigation-helper-successor.json",
     "tools/support/compat/github/canon-product-main-composition.mjs",
     "tools/support/compat/github/canon-product-main-composition.json.gz",
     "tools/support/compat/github/canon-product-sdk-three-union.json",
@@ -290,6 +299,8 @@ export function retainedCanonProductSource(receipt, side, file) {
 }
 
 export const canonProductSourceMetadataPaths = Object.freeze([
+  "tools/support/compat/github/canon-release-navigation-helper.mjs",
+  "tests/_fixtures/differential/canon/release-js-pragma-opaque-slots/navigation-helper-successor.json",
   "tools/support/compat/github/canon-product-main-composition.mjs",
   "tools/support/compat/github/canon-product-main-composition.json.gz",
   "tools/support/compat/github/canon-product-sdk-three-union.json",
