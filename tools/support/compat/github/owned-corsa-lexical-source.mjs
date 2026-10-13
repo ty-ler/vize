@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
+import { javascriptSfcSourcePaths } from "./javascript-sfc-source-context.mjs";
+import { authenticateOwnedJavaScriptSource, ownedJavaScriptLexicalPaths } from "./owned-corsa-javascript-source.mjs";
+import { projectOwnedCorsaNativeMainReader } from "./owned-corsa-native-main-source.mjs";
+import { ownedCorsaNativeGatesMainBaseline } from "./owned-corsa-current-baseline.mjs";
 import { ownedCorsaSource, qualifyOwnedCorsaSource } from "./owned-corsa-source-custody.mjs";
 import { verifyOwnedCorsaCallers, ownedCorsaCallerPaths } from "./owned-corsa-caller-custody.mjs";
 
@@ -54,6 +58,8 @@ export function verifyOwnedCorsaLexicalAdapter(reader) {
 
 const prefix = "tools/support/compat/github/";
 export const ownedCorsaSupplementPaths = [
+  ...ownedJavaScriptLexicalPaths,
+  ...["owned-corsa-current-baseline.mjs", "owned-corsa-native-main-source.mjs", "owned-corsa-native-main-source.json", "owned-corsa-test-source.mjs", "owned-corsa-test-source.json"].map((name) => prefix + name),
   prefix + "native-lexical-dollar-plan.mjs",
   ...ownedCorsaCallerPaths,
   prefix + "owned-corsa-source-custody.mjs",
@@ -123,11 +129,20 @@ export function projectOwnedCorsaLexicalCopied({
     assert.equal(entry.byteLength, actual.body.length);
     assert.equal(entry.sha256, sha(actual.body));
   }
+  const javascript = authenticateOwnedJavaScriptSource(reader);
+  const mainReader = projectOwnedCorsaNativeMainReader(ownedCorsaNativeGatesMainBaseline.revision, reader);
+  const original = new Set(ownedCorsaSource.rows.map(({ file }) => file));
   const old = new Set(originalPaths);
   const source = (file) => {
     const caller = callers.reader("after", file);
     const graphBody = graph.historicalReader("after", file);
-    const value = caller?.blob !== reader("after", file)?.blob ? caller : graphBody;
+    const mainBody = mainReader("after", file);
+    const jsBody = javascriptSfcSourcePaths.includes(file) && !original.has(file)
+      ? javascript.historicalAfter(file) : null;
+    const value = caller?.blob !== reader("after", file)?.blob ? caller
+      : mainBody?.blob !== reader("after", file)?.blob ? mainBody
+      : jsBody ? { mode: "100644", blob: createHash("sha1").update(`blob ${jsBody.length}\0`).update(jsBody).digest("hex"), body: jsBody }
+      : graphBody;
     assert(value);
     return { ...value, body: Buffer.from(value.body) };
   };
