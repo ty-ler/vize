@@ -20,6 +20,31 @@ const revisions = Object.freeze({
   main: "b2f56c584c82f0da96db88c1faee565dd838ead8",
   current: "abafabd150fe370152dab46e49d44b075edddae9",
 });
+// Finite original JS/Star and literal SDK427 references, acquired only by the owned hosted boundary.
+const retainedHistory = Object.freeze([
+  "2489128d5f8fab1b7442a1e5c09b4e1701cbf185",
+  "3a680d0a0b59b720af0d23a70a85cf56c5c4f175",
+  "3dda8f9d71fbd7e701f0805187daff6191865190",
+  "49d95b8e93a9f5bcb73e0c1c307815d4b3a9d570",
+  "5c54b1195fa8c0bf151e0a2862bf4238a3597b4e",
+  "5c8f3825fd2eb698c27d3b97d0a47b0671b33e01",
+  "66d2cfab35dd6dc8f730371b3b127543b6cc9505",
+  "8a5f5b8f3a39e123ad20ad8ccd9ecd3b39276695",
+  "a93e78147b0990c813e965a7868b32dda341eb77",
+  "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38",
+  "d95c151c18d85c8fdd95541291bc614e44790101",
+  "eafe5bed4f602e0787ff9f2f48ec4155d115ab7f",
+  "f20740ef6b0958ddb0bbbd64fd1b38210ea5e207",
+  "f518d884e3a1c70ce147fb966093cd9721e0e81f",
+  "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6",
+  "b45d789b317933d48dadbba4841c8e353231547b",
+  "6fb01f335952780d7a6321ca092049753645c83d",
+  "ea1fc59ee6ef61a3509b1ef42a6fa7aacd9f8586",
+  "e02a861cc1c6ad12724036c70bfdd5d48173b189",
+  "f6017bf3a9837136f7ce60d52d67ecc3ee649dd0",
+  "e78d2cb93e278032cd262201b0a444273618ee25",
+  "43afa9b09ae0f334d7fcba41f721ac52a8d1ab23",
+]);
 const parts = [
   [
     "canon-product-source-cells-0.tsv",
@@ -181,7 +206,8 @@ export function authenticateCanonProductSource(root) {
   root = fs.realpathSync(root);
   assert.equal(git(root, ["for-each-ref", "--format=%(refname)", "refs/replace"]).length, 0);
   const head = git(root, ["rev-parse", "HEAD"]).toString().trim();
-  for (const revision of Object.values(revisions)) ensureHostedLiteralSource(root, revision);
+  for (const revision of new Set([...Object.values(revisions), ...retainedHistory]))
+    ensureHostedLiteralSource(root, revision);
   const frames = Object.fromEntries(
     Object.entries(revisions).map(([side, revision]) => [side, frame(root, revision, side)]),
   );

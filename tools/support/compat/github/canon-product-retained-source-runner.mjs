@@ -118,11 +118,13 @@ export async function importCanonProductMisskeyModule(root) {
   const fixture = provisionStarSourceCounterpart(root, source, names);
   try {
     assert.equal(receipt.head, git(root, ["rev-parse", "HEAD"]).toString().trim());
-    const { after } = await import("node:test");
-    after(() => fixture.cleanup());
-    return await import(
+    process.once("exit", () => fixture.cleanup());
+    const original = await import(
       pathToFileURL(path.join(fixture.root, "tests/tooling/misskey-registry-source.test.mjs")).href
     );
+    const { after } = await import("node:test");
+    after(() => fixture.cleanup());
+    return original;
   } catch (error) {
     fixture.cleanup();
     throw error;
