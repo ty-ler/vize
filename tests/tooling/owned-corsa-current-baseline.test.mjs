@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
   ownedCorsaCurrentBaseline,
+  ownedCorsaNativeGatesMainBaseline,
   ownedCorsaMergedMainBaseline,
   ownedCorsaLatestMergedBaseline,
   ownedCorsaDocumentationMainBaseline,
@@ -22,6 +23,7 @@ import {
   qualifyOwnedCorsaSource,
 } from "../../tools/support/compat/github/owned-corsa-source-custody.mjs";
 import { ownedCorsaReader } from "../../tools/support/compat/github/owned-corsa-source-reader.mjs";
+import { ensureHostedLiteralSource } from "../performance/support/warm-type-backed-git-reader-literal-source.ts";
 import { nativeLexicalCompositionBodyPairs } from "../performance/support/warm-type-backed-native-lexical-composition-host.ts";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -29,6 +31,8 @@ const git = (cwd, args, options = {}) =>
   execFileSync("git", ["--no-replace-objects", ...args], { cwd, ...options });
 const head = git(root, ["rev-parse", "HEAD"]).toString().trim();
 const baseline = ownedCorsaCurrentBaseline.revision;
+for (const revision of [baseline, ownedCorsaSource.baseline, ownedCorsaMergedMainBaseline.revision, ownedCorsaLatestMergedBaseline.revision, ownedCorsaDocumentationMainBaseline.revision, ownedCorsaRecoveryMainBaseline.revision, ownedCorsaMuseaDocumentationMainBaseline.revision, ownedCorsaAccessibilityDocumentationMainBaseline.revision, ownedCorsaNoMutatingPropsMainBaseline.revision, ownedCorsaJapaneseComponentDocumentationMainBaseline.revision, ownedCorsaNativeGatesMainBaseline.revision])
+  ensureHostedLiteralSource(root, revision);
 const reader = ownedCorsaReader(root, baseline, head);
 const input = {
   baseline: retainedOwnedCorsaBaseline(root, baseline),
@@ -50,6 +54,7 @@ void test("literal current main and all474 raw/physical pair cells retain the or
     ownedCorsaSource.baseline,
   );
   for (const context of [
+    ownedCorsaNativeGatesMainBaseline,
     ownedCorsaMergedMainBaseline,
     ownedCorsaLatestMergedBaseline,
     ownedCorsaDocumentationMainBaseline,

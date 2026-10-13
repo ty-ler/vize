@@ -44,6 +44,14 @@ for (const row of data.entries) {
 const same = (actual, expected) => !!actual && Buffer.isBuffer(actual.body) &&
   actual.mode === expected.mode && actual.blob === expected.blob &&
   actual.body.equals(expected.body) && blob(actual.body) === expected.blob;
+const testSourceIdentities = new Map([...cells].map(([file, pair]) => [file,
+  Object.freeze({ mode: pair.currentAfter.mode, blob: pair.currentAfter.blob,
+    bytes: pair.currentAfter.bytes, sha256: pair.currentAfter.sha256 })]));
+
+export const ownedCorsaTestSourceIdentities = Object.freeze({
+  get: (file) => testSourceIdentities.get(file),
+  has: (file) => testSourceIdentities.has(file),
+});
 
 /** Both whole test bodies must belong to one atomic class before the original237 gate runs. */
 export function projectOwnedCorsaTestSources(rows, reader) {

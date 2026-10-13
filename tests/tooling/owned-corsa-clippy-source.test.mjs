@@ -25,6 +25,7 @@ const context = JSON.parse(
 
 function fixture(run) {
   ensureHostedLiteralSource(originalRoot, ownedCorsaSource.baseline);
+  ensureHostedLiteralSource(originalRoot, context.retainedOldAfterSource);
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-vendor-source-"));
   try {
     let head = git(originalRoot, ["rev-parse", "HEAD"]).toString().trim();
@@ -52,6 +53,13 @@ function fixture(run) {
     }
     for (const row of context.sourceCorrections) {
       const old = Buffer.from(row.retainedOldAfter.rawBase64, "base64");
+      fs.writeFileSync(path.join(root, row.file), old);
+      head = sourceCommit(root, head, row.file, old);
+    }
+    const testContext = JSON.parse(fs.readFileSync(new URL(
+      "../../tools/support/compat/github/owned-corsa-test-source.json", import.meta.url)));
+    for (const row of testContext.entries) {
+      const old = Buffer.from(row.retainedBefore.rawBase64, "base64");
       fs.writeFileSync(path.join(root, row.file), old);
       head = sourceCommit(root, head, row.file, old);
     }
@@ -189,6 +197,8 @@ void test("physical metadata body/mode/missing/symlink controls refuse before mo
       new URL("../../tools/support/compat/github/owned-corsa-clippy-source.json", import.meta.url),
     );
     fs.writeFileSync(path.join(root, "owned-corsa-clippy-source.mjs"), helper);
+    for (const name of ["owned-corsa-test-source.mjs", "owned-corsa-test-source.json"])
+      fs.copyFileSync(new URL("../../tools/support/compat/github/" + name, import.meta.url), path.join(root, name));
     const target = path.join(root, "owned-corsa-clippy-source.json");
     const run = () =>
       spawnSync(

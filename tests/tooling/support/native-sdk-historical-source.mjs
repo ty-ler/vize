@@ -20,6 +20,8 @@ import { nativeLexicalCompositionBodyPairs } from "../../performance/support/war
 import { ensureHostedLiteralSource } from "../../performance/support/warm-type-backed-git-reader-literal-source.ts";
 import { historicalCompositionBody as retainedCompositionBody } from "./native-lexical-composition-source.ts";
 import { authenticateHistoricalIncomingLock } from "./native-sdk-incoming-lock.mjs";
+import { ownedCorsaSdkRepairFrames } from "./owned-corsa-sdk-repair-source.mjs";
+import { ownedCorsaTestSourceIdentities } from "../../../tools/support/compat/github/owned-corsa-test-source.mjs";
 export const nativeSdkSourceRoot = fs.realpathSync(new URL("../../../", import.meta.url));
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const blob = (body) =>
@@ -200,7 +202,7 @@ export function createNativeSdkHistoricalView(root = nativeSdkSourceRoot, suppli
       null,
       "genuine before absence for the two new policy bodies: " + file,
     );
-  for (const [file, expected] of frames) {
+  for (const [file, expected] of ownedCorsaSdkRepairFrames(frames, actual)) {
     const value = actual("after", file);
     assert(value && value.mode === expected.mode);
     assert.equal(value.blob, expected.blob);
@@ -243,7 +245,7 @@ export function createNativeSdkHistoricalView(root = nativeSdkSourceRoot, suppli
   );
   assert.equal(currentCells.size, 8);
   const currentAfterIdentities = ownedCorsaSource.rows.map((row) => {
-    const expected = currentCells.get(row.file) ?? row.after;
+    const expected = ownedCorsaTestSourceIdentities.get(row.file) ?? currentCells.get(row.file) ?? row.after;
     const value = currentAfter.actualAfter(row.file);
     assert(value && value.mode === expected.mode);
     assert.equal(value.blob, expected.blob);

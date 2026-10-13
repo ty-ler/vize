@@ -13,6 +13,7 @@ import {
 import { sourcePaths } from "./support/native-sdk-historical-packets.mjs";
 import { ownedCorsaSource } from "../../tools/support/compat/github/owned-corsa-source-custody.mjs";
 import { authenticateOwnedCorsaAfterContext } from "../../tools/support/compat/github/owned-corsa-clippy-source.mjs";
+import { ownedCorsaTestSourceIdentities } from "../../tools/support/compat/github/owned-corsa-test-source.mjs";
 
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const gitBlob = (body) =>
@@ -46,7 +47,7 @@ void test("genuine current237 and two complete raw Git callers qualify separatel
   );
   for (const row of ownedCorsaSource.rows) {
     if (
-      six.has(row.file) ||
+      ownedCorsaTestSourceIdentities.has(row.file) || six.has(row.file) ||
       row.file === "vendor/corsa_client/src/api/handles.rs" ||
       row.file === "vendor/corsa/src/bin/bench_real_corsa/args.rs"
     )
