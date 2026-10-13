@@ -1,6 +1,6 @@
 //! Prop-name scope for the template walk of `vue/no-mutating-props`.
 
-use vize_l0::{FxHashSet, String};
+use vize_l0::{FxHashSet, String, ToCompactString};
 use vize_relief::{DirectiveNode, ExpressionNode};
 
 use super::mutation_targets::{MutationTargetKind, prop_mutation_target_kind};
@@ -100,4 +100,17 @@ fn is_identifier_start(byte: u8) -> bool {
 #[inline]
 fn is_identifier_byte(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
+}
+
+/// Component Options props remain instance-owned even when binding analysis
+/// deliberately excludes the wider Options API binding surface.
+pub(super) fn add_options_prop_names(
+    analysis: &vize_croquis::Croquis,
+    names: &mut FxHashSet<String>,
+) {
+    if let Some(options) = analysis.options_descriptor.as_ref() {
+        for prop in options.members_in(vize_croquis::OptionGroup::Props) {
+            names.insert(prop.name.to_compact_string());
+        }
+    }
 }

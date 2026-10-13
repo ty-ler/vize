@@ -11,7 +11,7 @@ One shard of the [Croquis consumption matrix](../croquis-consumption.md): resolv
 | product                                    | kind  | module                         | files | sites |
 | ------------------------------------------ | ----- | ------------------------------ | ----: | ----: |
 | `COMPILER_MACRO_NAMES`                     | type  | `croquis`                      |     1 |     1 |
-| `Croquis`                                  | type  | `croquis`                      |    18 |    38 |
+| `Croquis`                                  | type  | `croquis`                      |    19 |    39 |
 | `Drawer`                                   | type  | `drawer`                       |     2 |     2 |
 | `DrawerOptions`                            | type  | `drawer`                       |     1 |     1 |
 | `ElementIdKind`                            | type  | `croquis::template`            |     1 |     2 |
