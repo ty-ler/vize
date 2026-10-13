@@ -64,7 +64,9 @@ for (const row of [
       bodies.set(
         `${side}:${file}`,
         createHash("sha256")
-          .update(execFileSync("git", ["show", `${source}:${file}`]))
+          .update(
+            execFileSync("git", ["show", `${source}:${file}`], { maxBuffer: 2 * 1024 * 1024 }),
+          )
           .digest("hex"),
       );
     }

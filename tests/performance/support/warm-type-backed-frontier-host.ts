@@ -97,7 +97,10 @@ export function qualifyFrontierHost(
 export function qualifyFrontierSource(root: string, revision: string) {
   assert.match(revision, /^[a-f0-9]{40}$/u);
   const raw = (...args: string[]) =>
-    execFileSync("git", ["--no-replace-objects", ...args], { cwd: root });
+    execFileSync("git", ["--no-replace-objects", ...args], {
+      cwd: root,
+      maxBuffer: 2 * 1024 * 1024,
+    });
   const production = raw(
     "diff",
     "--name-only",

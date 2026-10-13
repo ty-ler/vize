@@ -150,7 +150,12 @@ campaign failure remain. The separate e7 71,162.334053 ms observation cannot
 establish a causal speed effect; there is no 10x, deadline or speed acceptance.
 
 The same exact full Check 38356401897 additionally preserves actual old
-MoonBit HTTP403 setup/Nix failures while its Rust job continues separately.
+MoonBit HTTP403 setup/Nix failures. All three new frontier Rust laws pass;
+17,655 of 17,656 workspace tests pass. The one ElementPlus failure retains
+its exact upstream pin assertion: the fixture checkout was absent and Git
+climbed to the candidate workspace HEAD. The existing whole pinned fixture
+must be hydrated before this native law, never bypassed. Vue parity separately
+retains Misskey 131.2 MiB against its unchanged 128 MiB RSS budget.
 Inherit precisely already merged #8766 (`01fb9eaa`) and #8801 (`ea1fc59`),
 including both decisions, all original regression/custody controls and their
 complete fixture bodies. Preserve all incoming central decisions. Twenty-one
@@ -161,3 +166,11 @@ installer smoke/update/bundle operation or timeout budget changes in this
 infrastructure incorporation. The four MoonBit regression files pass all
 16 controls locally with zero skips. No optional capture is repeated, and
 fresh exact successor source/native qualification remains required.
+
+The complete new Node source law exposes `ENOBUFS` when the default 1 MiB
+process-output buffer tries to read the tracked 1,449,345-byte fixed core.
+Use a bounded 2 MiB whole-blob reader in both the law and raw qualifier;
+original runtime/resource budgets are unchanged. All three actual Node laws
+then pass with zero skips, including 614 complete body mutations and raw Git
+replacement/executable/symlink refusal. Fast streamed hashes alone did not
+qualify this consumer boundary; the initial failure remains recorded.
