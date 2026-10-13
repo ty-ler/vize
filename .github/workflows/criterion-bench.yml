@@ -105,11 +105,9 @@ jobs:
           if node -e 'const s = require(process.argv[1]); process.exit(s.selected.includes("vize_atelier_vapor") ? 0 : 1)' "$GITHUB_WORKSPACE/criterion-impact.json"; then
             echo 'vapor_selected=true' >> "$GITHUB_OUTPUT"
           fi
-      - name: Setup Wild linker
-        uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
+      - name: Setup mold linker
+        uses: ./.github/actions/setup-mold
         if: steps.impact.outputs.has_suites == 'true'
-        with:
-          wild-version: "0.9.0"
       # Criterion stores base/head build artifacts in isolated subdirectories
       # under head/target, while the surrounding cache keeps both sides warm.
       - name: Mount Criterion cache
@@ -178,9 +176,7 @@ jobs:
           ref: ${{ inputs.head_sha }}
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
         with: { toolchain: stable }
-      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
-        with:
-          wild-version: "0.9.0"
+      - uses: ./.github/actions/setup-mold
       - uses: ./.github/actions/setup-rust-sticky-cache
         with:
           key: dialect-guard
@@ -239,9 +235,7 @@ jobs:
           git merge-base --is-ancestor "$BASE_SHA" "$HEAD_SHA"
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
         with: { toolchain: stable, components: clippy }
-      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
-        with:
-          wild-version: "0.9.0"
+      - uses: ./.github/actions/setup-mold
       - uses: ./.github/actions/setup-rust-sticky-cache
         with:
           key: davinci-production-pairs-${{ matrix.repetition }}

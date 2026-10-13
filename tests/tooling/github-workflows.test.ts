@@ -255,7 +255,7 @@ test("App E2E workflow keeps Blacksmith Testbox dispatch hydration separate", ()
   );
 });
 
-test("Linux Rust CI installs Wild linker before cargo builds", () => {
+test("Linux Rust CI installs mold before cargo builds", () => {
   for (const relativePath of [
     ".github/workflows/benchmark.yml",
     ".github/workflows/build-docs.yml",
@@ -271,10 +271,9 @@ test("Linux Rust CI installs Wild linker before cargo builds", () => {
     const file = readRepoFile(...relativePath.split("/"));
     assert.match(
       file,
-      /uses:\s*wild-linker\/action@[0-9a-f]{40}\s*# v0\.9\.0/,
-      `${relativePath} should install the pinned Wild linker action`,
+      /uses:\s*\.\/\.github\/actions\/setup-mold/,
+      `${relativePath} should use the shared mold linker action`,
     );
-    assert.match(file, /wild-version:\s*"0\.9\.0"/);
   }
 });
 

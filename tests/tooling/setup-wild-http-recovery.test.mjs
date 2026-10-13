@@ -86,34 +86,36 @@ void test("Wild delegation is complementary for every unsupported host or input"
           assert.equal(applies(steps[0].if, values), !owned);
         }
 });
-void test("Only Playground and canonical SSR-Pug use the new adapter", () => {
+void test("Live Playground and canonical SSR-Pug jobs use mold instead of historical Wild", () => {
   const pr = parse(fs.readFileSync(".github/workflows/pr-source-checks.yml", "utf8"));
-  const local = "./.github/actions/setup-wild-http-recovery";
+  const local = "./.github/actions/setup-mold";
   assert.equal(pr.jobs["pr-playground-test"].steps.filter((s) => s.uses === local).length, 1);
   const uses = (jobs, action) =>
     Object.entries(jobs).flatMap(([name, job]) =>
       (job.steps ?? []).filter((s) => s.uses === action).map(() => name),
     );
-  // Every other Wild user keeps the pinned upstream action, counted per file.
-  assert.deepEqual(uses(pr.jobs, local), ["pr-playground-test"]);
-  assert.deepEqual(uses(pr.jobs, upstream), ["pr-tooling-scripts"]);
+  assert.deepEqual(uses(pr.jobs, local), ["pr-tooling-scripts", "pr-playground-test"]);
+  assert.deepEqual(uses(pr.jobs, upstream), []);
   const js = parse(fs.readFileSync(".github/workflows/pr-js-checks.yml", "utf8"));
-  assert.deepEqual(uses(js.jobs, local), []);
-  assert.deepEqual(uses(js.jobs, upstream), Object.keys(js.jobs));
+  assert.deepEqual(uses(js.jobs, local), Object.keys(js.jobs));
+  assert.deepEqual(uses(js.jobs, upstream), []);
   const canonical = parse(
     fs.readFileSync(".github/workflows/davinci-canonical-corpus.yml", "utf8"),
   );
   const steps = canonical.jobs["canonical-observers"].steps;
   assert.deepEqual(
-    steps.find((s) => s.uses === local),
+    steps.find((s) => s.uses === local && s.if === "${{ matrix.observer == 'ssr-pug' }}"),
     {
-      name: "Setup Wild linker recovery (SSR-Pug)",
+      name: "Setup mold linker (SSR-Pug)",
       if: "${{ matrix.observer == 'ssr-pug' }}",
       uses: local,
-      with: { "wild-version": "0.9.0" },
     },
   );
-  assert.equal(steps.find((s) => s.uses === upstream).if, "${{ matrix.observer != 'ssr-pug' }}");
+  assert.equal(steps.filter((s) => s.uses === local).length, 2);
+  assert.equal(
+    steps.some((s) => s.uses === upstream),
+    false,
+  );
 });
 void test("Expanded primary success equals original stdout/stderr/files/config and removes archive", () =>
   fixture(({ run }) => {
