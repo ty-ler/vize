@@ -175,7 +175,7 @@ export function createRunner(directory, binaries, runtimePath) {
     const expected =
       corpus.expectedVuePaths ?? readdirSync(cwd).filter((file) => file.endsWith(".vue"));
     const normalized = normalizeCliReport(
-      normalizeParserRecovery(result, corpus.expectedParserRecovery === true, phase),
+      normalizeParserRecovery(result, corpus.expectedParserRecovery ?? false, phase),
       cwd,
       expected,
     );

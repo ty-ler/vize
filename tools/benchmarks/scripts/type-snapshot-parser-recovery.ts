@@ -2,10 +2,10 @@ import { stripVTControlCharacters } from "node:util";
 
 type ProcessResult = { stdout: string; stderr: string; status: number | null };
 
-/** Malformed, untimed parity fixtures require the semantic recovery path. */
+/** Explicit untimed syntax and JS JSX fixtures require semantic recovery. */
 export function normalizeParserRecovery<T extends ProcessResult>(
   result: T,
-  expected: boolean,
+  expected: boolean | "js-jsx",
   phase: string,
 ): T {
   if (!expected || !["parity", "parity-profile"].includes(phase) || result.status !== 1)
@@ -24,13 +24,16 @@ export function normalizeParserRecovery<T extends ProcessResult>(
   )
     return result;
   const report = JSON.parse(result.stdout) as {
-    files?: { diagnostics?: unknown[] }[];
+    files?: { file?: string; diagnostics?: unknown[] }[];
   };
   if (
     !report.files?.some((file) =>
       file.diagnostics?.some(
         (diagnostic) =>
-          typeof diagnostic === "string" && /^error:\d+:\d+ \[TS1[0-4]\d{2}\]/u.test(diagnostic),
+          typeof diagnostic === "string" &&
+          (expected === "js-jsx"
+            ? file.file === "loader.js" && /^error:\d+:\d+ \[TS7026\]/u.test(diagnostic)
+            : /^error:\d+:\d+ \[TS1[0-4]\d{2}\]/u.test(diagnostic)),
       ),
     )
   )

@@ -146,6 +146,7 @@ const CASES = [
     include: ["*.vue", "*.ts", "*.js", "*.tsx"],
     options,
     expectedError: file === "loader.js",
+    expectedParserRecovery: file === "loader.js" ? "js-jsx" : false,
     split: false,
   })),
   ...INHERITED_JSX_CASES.map(([id, inherited]) => ({
