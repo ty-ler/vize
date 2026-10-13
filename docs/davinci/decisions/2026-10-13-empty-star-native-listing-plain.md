@@ -160,3 +160,13 @@ unrelated setup time no longer supplies a CPU wall-clock assertion. Production
 240s priming and original400 budgets remain unchanged. The configured formatter
 and type-aware lint also require the default UTF16-preserving explicit sort
 comparator and the companion document's regular paragraph spacing.
+
+Actual main c4f74b48 includes the already qualified SDK declaration preparation.
+Keep its complete registry and admit only the two exact shared source-law
+entrypoint counterparts through three sealed mode/blob/length/SHA pairs and
+whole inverses to literal 2da. Every other original listing cohort row and
+the configured native execution body remain unchanged. The complete original
+SDK427 source test, metadata, table and helper execute unchanged at literal
+2da only after the complete actual listing/SDK union has been authenticated.
+This reuses the existing three-literal snapshot primitive and grants no
+runtime, performance, public or protected acceptance.

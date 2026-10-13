@@ -41,7 +41,7 @@ function regular(root, file) {
 }
 const moduleRoot = fs.realpathSync(new URL("../../../../", import.meta.url));
 const metadataBody = regular(moduleRoot, metadataPath);
-assert.equal(sha(metadataBody), "48ae31503821b74c41600e6c9fd0c810ae35d52b81e4558ed377565ba5fb3c01");
+assert.equal(sha(metadataBody), "253e865e416c6aef2d8a728f1eabc48e1a7640f745f9c201e74503e507b35a00");
 const metadata = JSON.parse(metadataBody);
 assert.equal(metadata.schema, "vize.empty-vue-star.literal-bd-listing-source");
 assert.equal(metadata.base, base);
@@ -122,6 +122,50 @@ export function authenticateStarListingSource(root) {
   assert.equal(new Set(files).size, files.length);
   const before = raw(root, base, files),
     current = raw(root, head, files);
+  const sdkCells = metadata.sdkUnion.cells;
+  assert.deepEqual(
+    sdkCells.map(({ file }) => file),
+    [
+      "tests/_fixtures/vue-ecosystem-fixtures.json",
+      "tests/tooling/empty-vue-star-javascript-source.test.mjs",
+      "tests/tooling/warm-type-backed-empty-vue-star-custody.test.ts",
+    ],
+    "only the three actual SDK overlaps",
+  );
+  const sdkBefore = raw(
+    root,
+    metadata.sdkUnion.source,
+    sdkCells.map(({ file }) => file),
+  );
+  const sdkIncoming = raw(
+    root,
+    metadata.sdkUnion.actualIncoming,
+    sdkCells.map(({ file }) => file),
+  );
+  for (const cell of sdkCells) {
+    const old = sdkBefore.get(cell.file),
+      body = current.get(cell.file);
+    assert.deepEqual(sdkIncoming.get(cell.file), old, "actual merged SDK whole preimage");
+    for (const [actual, expected] of [
+      [old, cell.before],
+      [body, cell.after],
+    ]) {
+      assert.equal(expected.mode, "100644");
+      assert.equal(blob(actual), expected.blob);
+      assert.equal(actual.length, expected.length);
+      assert.equal(sha(actual), expected.sha256);
+    }
+    let restored = Buffer.from(body);
+    for (const [start, end, from, to] of [...cell.clauses].reverse()) {
+      assert.deepEqual(restored.subarray(start, end), Buffer.from(from, "base64"));
+      restored = Buffer.concat([
+        restored.subarray(0, start),
+        Buffer.from(to, "base64"),
+        restored.subarray(end),
+      ]);
+    }
+    assert.deepEqual(restored, old, "complete original SDK overlap inverse");
+  }
   for (const [
     file,
     beforeBlob,
