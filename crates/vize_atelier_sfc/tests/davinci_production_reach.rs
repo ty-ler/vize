@@ -41,6 +41,7 @@
 mod davinci_production_reach {
     pub mod acceptance;
     pub mod diff;
+    pub mod fixtures;
     #[cfg(test)]
     mod inline_parity_regressions;
     pub mod parity;
@@ -53,12 +54,12 @@ mod davinci_production_reach {
 }
 
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use davinci_production_reach::acceptance::report;
 use davinci_production_reach::diff::{divergence, error_divergence};
+use davinci_production_reach::fixtures::collect_committed_fixtures;
 use davinci_production_reach::parity::{absorb_prebackend, parity_failures};
 use davinci_production_reach::shapes::{Shape, compile, explicit_vapor_source};
 use davinci_production_reach::tally::{Lane, Tally, classify, classify_route, floors};
@@ -378,31 +379,6 @@ fn production_reach_body() {
     let hydrated = sweep(&sweep_root.root, &sweep_root.files);
     report(sweep_root.scope_label(), &hydrated);
     assert_parity(&hydrated);
-}
-
-/// Every `.vue` file under `tests/_fixtures`, sorted, skipping the
-/// `_git` submodule corpus (swept only through the env root) and
-/// `node_modules`.
-fn collect_committed_fixtures(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    let mut children: Vec<PathBuf> = entries
-        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
-        .collect();
-    children.sort();
-    for child in children {
-        if child.is_dir() {
-            if child.file_name().is_some_and(|name| {
-                name == "node_modules" || name == "_git" || name == "_git-worktrees"
-            }) {
-                continue;
-            }
-            collect_committed_fixtures(&child, out);
-        } else if child.extension().is_some_and(|ext| ext == "vue") {
-            out.push(child);
-        }
-    }
 }
 
 struct Sweep {
