@@ -169,7 +169,6 @@ impl Rule for ValidVFor {
                         &directive.loc,
                         ctx.t("vue/valid-v-for.help"),
                     );
-                    return;
                 }
             }
         }
