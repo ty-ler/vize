@@ -10,6 +10,7 @@ use crate::context::LintContext;
 use crate::rules::script::{collect_options_props, script_source_type};
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
+use oxc_span::SourceType;
 
 /// A declared prop and where it is written.
 pub(super) struct Declaration {
@@ -30,7 +31,12 @@ pub(super) fn declarations(ctx: &LintContext<'_>) -> Vec<Declaration> {
         .filter(|block| block.src.is_none())
     {
         let allocator = Allocator::default();
-        let parsed = Parser::new(&allocator, script.content.as_ref(), script_source_type()).parse();
+        let source_type = match script.lang.as_deref().map(str::trim) {
+            Some("tsx") => SourceType::tsx(),
+            Some("jsx") => SourceType::jsx(),
+            _ => script_source_type(),
+        };
+        let parsed = Parser::new(&allocator, script.content.as_ref(), source_type).parse();
         if !parsed.panicked
             && parsed.diagnostics.is_empty()
             && let Some(props) = collect_options_props(&parsed.program)

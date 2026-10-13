@@ -115,6 +115,11 @@ pub(super) fn template_props(
     for prop in analysis.macros.props() {
         names.insert(prop.name.to_compact_string());
     }
+    if let Some(options) = analysis.options_descriptor.as_ref() {
+        for prop in options.members_in(vize_croquis::OptionGroup::Props) {
+            names.insert(prop.name.to_compact_string());
+        }
+    }
     let mut facts = CroquisFacts::new(analysis);
     let prepared = facts.prepare::<super::NoMutatingProps>();
     let bindings = prepared.get::<Bindings>().ok()?;
@@ -123,11 +128,6 @@ pub(super) fn template_props(
             names.insert(name.to_compact_string());
         } else {
             names.remove(name);
-        }
-    }
-    if let Some(options) = analysis.options_descriptor.as_ref() {
-        for prop in options.members_in(vize_croquis::OptionGroup::Props) {
-            names.insert(prop.name.to_compact_string());
         }
     }
     let has_props_object_binding = vize_croquis::facts::reactivity_lookup(analysis, "props")
