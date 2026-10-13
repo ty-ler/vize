@@ -5,6 +5,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse as parseToml } from "@iarna/toml";
 
 import { runtimeGraph } from "./warm-type-backed-runtime.ts";
 
@@ -168,4 +169,36 @@ export function sourceIdentity(repoRoot: string) {
     recipe:
       profile === "release" ? "cargo build --release -p vize" : "cargo build --profile ci -p vize",
   };
+}
+
+/** Compare every dependency and selected build setting, retaining raw source locks above. */
+export function assertWarmSourceLocks(before: string, after: string, profile: "ci" | "release") {
+  const comparable = (root: string) => {
+    const manifest = parseToml(fs.readFileSync(path.join(root, "Cargo.toml"), "utf8"));
+    const profiles = manifest.profile as Record<string, { inherits?: string }> | undefined;
+    const inherited = new Set<string>();
+    let current: string | undefined = profile;
+    while (current) {
+      assert.ok(!inherited.has(current), "Cargo profile inheritance must be acyclic");
+      inherited.add(current);
+      current = profiles?.[current]?.inherits;
+    }
+    // These profiles do not affect a release pair unless its inheritance selects them.
+    for (const name of ["ci", "ci-wasm"])
+      if (profiles && !inherited.has(name)) delete profiles[name];
+    return {
+      "Cargo.toml": manifest,
+      ...Object.fromEntries(
+        ["Cargo.lock", "package.json", "pnpm-lock.yaml", "rust-toolchain.toml"].map((file) => [
+          file,
+          sha256(fs.readFileSync(path.join(root, file))),
+        ]),
+      ),
+    };
+  };
+  assert.deepEqual(
+    comparable(before),
+    comparable(after),
+    "unchanged paired dependencies and build settings",
+  );
 }

@@ -38,3 +38,9 @@ reduction in optimization work.
 Deliver this change after the mold migration in the same native Stack. Both
 changes touch the same setup steps; the combined version retains the pinned
 toolchain, mold and the cheaper CI profiles without restoring retired checks.
+
+The paired 400-provider benchmark retains raw manifests and hashes for both
+sources. Its comparison permits differences in CI profiles only when the
+selected benchmark profile does not inherit them. Dependencies, lockfiles,
+toolchains and all selected release settings must still match; tests reject
+changes to each and to indirectly inherited CI settings.

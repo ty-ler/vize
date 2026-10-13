@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { finiteCut } from "./warm-type-backed-cut.ts";
 import {
+  assertWarmSourceLocks,
   driverRoot,
   git,
   inputAuthority,
@@ -168,8 +169,11 @@ if (process.argv[2] === "prepare") {
       2,
     ) + "\n",
   );
-  if (!cut) assert.deepEqual(sourceIdentity(before).locks, sourceIdentity(afterRoot).locks);
-  else fs.writeFileSync(path.join(output, "changed-tree-manifest.json"), cut.manifestBytes);
+  if (!cut) {
+    const profile = process.env.WARM_REQUEST_BUILD_PROFILE ?? "ci";
+    assert.ok(profile === "ci" || profile === "release");
+    assertWarmSourceLocks(before, afterRoot, profile);
+  } else fs.writeFileSync(path.join(output, "changed-tree-manifest.json"), cut.manifestBytes);
 } else {
   throw new Error("usage: warm-type-backed-workflow.ts prepare");
 }

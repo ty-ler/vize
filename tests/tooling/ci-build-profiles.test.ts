@@ -11,8 +11,53 @@ import {
   writeRecordingCommand,
 } from "./_helpers/tool-commands.ts";
 import { readRepoFile } from "./support/github-workflows.ts";
+import { assertWarmSourceLocks } from "../performance/support/warm-type-backed-source.ts";
 
 const builder = "tools/support/github/build-vitrine-wasm.ts";
+
+test("release pairs ignore unused CI profiles but retain dependencies and selected build settings", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-paired-profiles-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const [before, after] = ["before", "after"].map((side) => path.join(root, side));
+  const current = readRepoFile("Cargo.toml");
+  const original = current
+    .replace('opt-level = 0\nlto = "off"\n', "")
+    .replace(/\[profile\.ci-wasm\][\s\S]*?(?=\[profile\.)/, "");
+  assert.notEqual(original, current);
+  for (const directory of [before, after]) {
+    fs.mkdirSync(directory);
+    for (const file of ["Cargo.lock", "package.json", "pnpm-lock.yaml", "rust-toolchain.toml"])
+      fs.writeFileSync(path.join(directory, file), file);
+  }
+  fs.writeFileSync(path.join(before, "Cargo.toml"), original);
+  const check = (body: string, profile: "ci" | "release" = "release") => {
+    fs.writeFileSync(path.join(after, "Cargo.toml"), body);
+    assertWarmSourceLocks(before, after, profile);
+  };
+  check(current);
+  assert.throws(() => check(current, "ci"));
+  for (const changed of [
+    current.replace('lto = "fat"', 'lto = "off"'),
+    current.replace("opt-level = 3", "opt-level = 2"),
+    current.replace('version = "=1.14.0"', 'version = "=1.14.1"'),
+  ]) {
+    assert.notEqual(changed, current);
+    assert.throws(() => check(changed));
+  }
+  for (const file of ["Cargo.lock", "package.json", "pnpm-lock.yaml", "rust-toolchain.toml"]) {
+    fs.writeFileSync(path.join(after, file), "changed");
+    assert.throws(() => check(current));
+    fs.writeFileSync(path.join(after, file), file);
+  }
+  const inherited = (body: string) =>
+    body.replace("[profile.release]", '[profile.release]\ninherits = "bridge"') +
+    '\n[profile.bridge]\ninherits = "ci"\n';
+  fs.writeFileSync(path.join(before, "Cargo.toml"), inherited(original));
+  assert.throws(
+    () => check(inherited(current)),
+    "indirect release inheritance keeps CI settings relevant",
+  );
+});
 
 test("native CI installs the named repository toolchain without a second stable download", () => {
   const channel = /channel = "([^"]+)"/.exec(readRepoFile("rust-toolchain.toml"))?.[1];
