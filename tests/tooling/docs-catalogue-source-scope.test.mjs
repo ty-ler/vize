@@ -18,7 +18,7 @@ const metadata = "docs/scripts/rules/catalogue-subgroups.ts";
 const toolingOnly = { rust: false, js: false, tooling: true, playground: false };
 const full = { rust: true, js: true, tooling: true, playground: true };
 
-test("only the original subgroup metadata selects Docs tooling without Rust products", () => {
+void test("only the original subgroup metadata selects Docs tooling without Rust products", () => {
   assert.deepEqual(planSourceChecks([metadata]), toolingOnly);
   assert.deepEqual(
     planSourceChecks([metadata, "docs/content/ja/rules/vue-components.md"]),
@@ -36,7 +36,7 @@ test("only the original subgroup metadata selects Docs tooling without Rust prod
   for (const file of consumers) assert.ok(plan.tests.includes(file), file);
 });
 
-test("the exception retains literal metadata and every actual Docs render consumer", () => {
+void test("the exception retains literal metadata and every actual Docs render consumer", () => {
   assert.deepEqual(localImportInputs(metadata), { files: [metadata], complete: true });
   assert.match(readFileSync(join(root, metadata), "utf8"), /export const catalogueSubgroups:/);
   for (const file of [
@@ -60,7 +60,7 @@ test("the exception retains literal metadata and every actual Docs render consum
   );
 });
 
-test("no tracked Rust or product runtime consumes subgroup metadata", () => {
+void test("no tracked Rust or product runtime consumes subgroup metadata", () => {
   const files = execFileSync("git", ["ls-files", "-z"], {
     cwd: root,
     encoding: "utf8",
@@ -84,7 +84,7 @@ test("no tracked Rust or product runtime consumes subgroup metadata", () => {
   }
 });
 
-test("nearby contracts and mixed product changes retain their required gates", () => {
+void test("nearby contracts and mixed product changes retain their required gates", () => {
   for (const path of [
     "docs/scripts/rules/catalogue-subgroups-extra.ts",
     "docs/scripts/rules/catalogue-routes.ts",
