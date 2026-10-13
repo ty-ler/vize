@@ -184,6 +184,9 @@ void test("PR CI runs every group once and the qualification and conformance job
     .flatMap((step) => step.run ?? [])
     .join("\n");
   assert.ok(conformance.includes("vp run --filter './npm/native' build:ci"));
+  // The trusted job runs the UI check script; PR CI runs that script's parts.
+  assert.ok(trusted.includes("vp run --filter './npm/ui' check"));
+  assert.ok(conformance.includes("run-package-check-parts.ts npm/ui check"));
   for (const run of conformance.split(" && ").filter((part) => part.startsWith("vp run --filter")))
     assert.ok(trusted.includes(run), `the trusted build-js-packages job also runs ${run}`);
 });

@@ -25,7 +25,6 @@ const jsChecksPath = "./.github/workflows/pr-js-checks.yml";
 const jsChecks = parse(readFileSync(join(root, jsChecksPath), "utf8"));
 const selectedJs = "${{ needs.pr-source-plan.outputs.js == 'true' }}";
 const inputJs = "${{ inputs.run-js }}";
-const evidenceJs = "${{ always() && inputs.run-js }}";
 const groupCommand =
   'python3 .github/actions/test-js-packages-with-history/native-fault-evidence.py -- vp run --workspace-root "test:js:$VIZE_JS_PACKAGE_GROUP"';
 const historyActionPath = "./.github/actions/test-js-packages-with-history";
@@ -33,11 +32,12 @@ const history = parse(readFileSync(join(root, historyActionPath, "action.yml"), 
 
 function recordingCli(directory, source = "process.exit(0);") {
   const calls = join(directory, "calls.jsonl");
-  writeFileSync(
-    join(directory, "vp"),
-    `#!${process.execPath}\nimport fs from 'node:fs'; import path from 'node:path'; import {spawnSync} from 'node:child_process'; const args=process.argv.slice(2); fs.appendFileSync(${JSON.stringify(calls)},JSON.stringify({args,cwd:process.cwd()})+'\\n'); ${source}\n`,
-    { mode: 0o755 },
-  );
+  for (const tool of ["vp", "pnpm"])
+    writeFileSync(
+      join(directory, tool),
+      `#!${process.execPath}\nimport fs from 'node:fs'; import path from 'node:path'; import {spawnSync} from 'node:child_process'; const args=process.argv.slice(2); fs.appendFileSync(${JSON.stringify(calls)},JSON.stringify({${tool === "vp" ? "" : `tool:${JSON.stringify(tool)},`}args,cwd:process.cwd()})+'\\n'); ${source}\n`,
+      { mode: 0o755 },
+    );
   return {
     calls,
     env: { ...process.env, PATH: `${directory}:${process.env.PATH}` },
@@ -127,13 +127,23 @@ void test("PR and merge queue preserve package tests, native declaration, type a
             ["run", "--filter", "./npm/fresco-native", "check:generated"],
             ["run", "--filter", "./npm/fresco-native", "check:types"],
             ["run", "--filter", "./npm/native", "build:ci"],
-            ["run", "--filter", "./npm/ui", "check"],
           ]
         : [];
+      const records = cli.records();
       assert.deepEqual(
-        cli.records().map((record) => record.args),
+        records.filter((record) => !record.tool).map((record) => record.args),
         expected,
       );
+      // The UI check script's parts run concurrently in the UI package.
+      const parts = records.filter((record) => record.tool === "pnpm");
+      assert.deepEqual(
+        parts.map((record) => record.args).sort(),
+        js
+          ? [["check:static"], ["check:story-testbed"], ["check:vapor-runtime"], ["lint:sfc"]]
+          : [],
+      );
+      for (const { cwd } of parts)
+        assert.equal(realpathSync(cwd), realpathSync(join(root, "npm/ui")));
     }
   } finally {
     rmSync(fixture, { recursive: true, force: true });
@@ -201,64 +211,7 @@ void test("public native evidence remains reachable after prior build or package
   });
   assert.equal(cleanup["continue-on-error"], undefined);
   assert.equal(fault.if, "${{ always() }}");
-
-  // Each PR package group uploads the same evidence under a per-group name.
-  const groupJob = jsChecks.jobs["pr-js-package-tests"];
-  const groupStep = (name) => groupJob.steps.find((step) => step.name === name);
-  const perGroup = (name) =>
-    name.replace(/\$\{\{ github\.job \}\}$/, "${{ github.job }}-${{ matrix.group }}");
-  const stagingPath = "target/oxlint-original-project-transport/**\n";
-  for (const original of [upload, style, oxlint, fault]) {
-    const step = groupStep(original.name.replace("bridge locations", "package locations"));
-    assert.ok(step, original.name);
-    assert.equal(step.if, evidenceJs);
-    assert.equal(step.uses, original.uses);
-    assert.equal(step["continue-on-error"], undefined);
-    assert.deepEqual(step.with, {
-      ...original.with,
-      name: perGroup(original.with.name),
-      // Only the qualification job writes project qualification staging.
-      path: original.with.path.replace(stagingPath, ""),
-    });
-  }
-  assert.equal(
-    new Set(groupJob.steps.flatMap((step) => step.with?.name ?? [])).size,
-    groupJob.steps.filter((step) => step.with?.name).length,
-  );
-
-  // The qualification job keeps the original command, guards and evidence.
-  const qualify = jsChecks.jobs["pr-oxlint-project-qualification"].steps;
-  const index = (predicate) => qualify.findIndex(predicate);
-  const build = index((step) => step.run === "vp run --workspace-root build:oxlint-qualification");
-  const run = index((step) => step.id === qualification.id);
-  const native = index((step) => step.name === upload.name);
-  const evidence = index((step) => step.id === oxlint.id);
-  const clean = index((step) => step.name === cleanup.name);
-  assert.ok(0 < build && build < run && run < native && native < evidence && evidence < clean);
-  assert.equal(qualify[build].if, inputJs);
-  assert.deepEqual(
-    { ...qualify[run] },
-    {
-      name: qualification.name,
-      id: qualification.id,
-      if: inputJs,
-      env: qualification.env,
-      run: qualification.run,
-    },
-  );
-  for (const [step, original] of [
-    [qualify[native], upload],
-    [qualify[evidence], oxlint],
-  ]) {
-    assert.equal(step.if, evidenceJs);
-    assert.equal(step.uses, original.uses);
-    assert.deepEqual(step.with, original.with);
-  }
-  assert.equal(qualify[evidence].id, oxlint.id);
-  assert.deepEqual(
-    { ...qualify[clean] },
-    { name: cleanup.name, if: cleanup.if, env: cleanup.env, run: cleanup.run },
-  );
+  // PR evidence mirrors these steps: tests/tooling/pr-js-checks-evidence.test.ts.
 });
 
 void test("Fresco checks generate declarations and invoke static TypeScript without executing the loader", () => {

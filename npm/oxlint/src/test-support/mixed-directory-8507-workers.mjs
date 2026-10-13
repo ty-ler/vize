@@ -1,8 +1,9 @@
-// Fixed independent fixture partitions; one unchanged deadline owns both children.
+// Fixed independent fixture partitions; one unchanged deadline owns every child.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { processCount } from "../../scripts/qualification-parallelism.ts";
 
 const wholeError = (error) =>
   error == null
@@ -23,8 +24,29 @@ export function mixedCells(plan) {
   );
 }
 
+// Two workers unless CI selects another fixed count; every child reads the
+// count its parent passes and takes every count-th cell in plan order.
+export function mixedWorkerCount(environment = process.env) {
+  return processCount(environment, "VIZE_OXLINT_MIXED_WORKERS", 2, { min: 2, max: 16 });
+}
+
+export function mixedWorkerCells(plan, workerIndex, workers) {
+  assert.ok(Number.isSafeInteger(workers) && workers >= 2, "at least two fixed workers");
+  assert.ok(Number.isSafeInteger(workerIndex) && workerIndex >= 0 && workerIndex < workers);
+  return mixedCells(plan).filter((_, cellIndex) => cellIndex % workers === workerIndex);
+}
+
+export function mixedWorkerPasses(plan, workerIndex, workers) {
+  const selected = mixedWorkerCells(plan, workerIndex, workers);
+  return {
+    cli: selected.filter(({ fixture }) => fixture.surface === "cli").length,
+    native: selected.filter(({ fixture }) => fixture.surface === "native").length,
+  };
+}
+
 export function joinMixedCaptures(plan, custody, captures) {
-  assert.equal(captures.length, 2);
+  const workers = captures.length;
+  assert.ok(workers >= 2, "at least two fixed workers");
   const cells = mixedCells(plan);
   const keys = (selected) =>
     selected.flatMap(({ fixture, format }) =>
@@ -39,11 +61,9 @@ export function joinMixedCaptures(plan, custody, captures) {
   for (const [index, capture] of captures.entries()) {
     assert.equal(capture.complete, true);
     assert.equal(capture.workerIndex, index);
-    const selected = cells.filter((_, cellIndex) => cellIndex % 2 === index);
-    assert.deepEqual(capture.passed, {
-      cli: selected.filter(({ fixture }) => fixture.surface === "cli").length,
-      native: selected.filter(({ fixture }) => fixture.surface === "native").length,
-    });
+    assert.equal(capture.workers, workers);
+    const selected = mixedWorkerCells(plan, index, workers);
+    assert.deepEqual(capture.passed, mixedWorkerPasses(plan, index, workers));
     assert.deepEqual(capture.observations.map(observationKey), keys(selected));
     const {
       complete: _complete,
@@ -107,11 +127,13 @@ export async function runMixedWorkers({
   preload,
   environment,
   deadlineMs = 180_000,
+  workers = mixedWorkerCount(environment),
 }) {
   assert.notEqual(process.platform, "win32", "source Actions requires owned POSIX process groups");
   assert.ok(Number.isSafeInteger(deadlineMs) && deadlineMs > 0 && deadlineMs <= 180_000);
+  assert.ok(Number.isSafeInteger(workers) && workers >= 2 && workers <= 16);
   const argv = ["src/mixed-directory-8507.test.mjs"];
-  const records = [0, 1].map((index) => {
+  const records = Array.from({ length: workers }, (_, index) => {
     const directory = path.join(output, `worker-${index}`);
     fs.mkdirSync(directory);
     const configuration = path.join(directory, "source-custody.json");
@@ -177,6 +199,7 @@ export async function runMixedWorkers({
           VIZE_OXLINT_SOURCE_BIN: path.join(packageDir, "dist/cli.mjs"),
           VIZE_OXLINT_MIXED_CAPTURE: capture,
           VIZE_OXLINT_MIXED_WORKER: String(index),
+          VIZE_OXLINT_MIXED_WORKERS: String(workers),
         };
         const save = () =>
           fs.writeFileSync(

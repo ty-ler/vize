@@ -17,6 +17,7 @@ on:
             native,
             n8n-baseline,
             n8n-preparation,
+            oxlint-parallelism,
             artifact-payload,
             rust-archive-window,
             owned-worker-fault,
@@ -46,6 +47,9 @@ jobs:
     with:
       source-sha: ${{ inputs.owned_worker_source_sha }}
       controls-only: ${{ inputs.component == 'owned-worker-controls' }}
+  oxlint-parallelism:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.component == 'oxlint-parallelism' }}
+    uses: ./.github/workflows/oxlint-qualification-parallelism.yml
   js:
     if: ${{ (github.event_name == 'pull_request' && (github.event.label.name == 'ci-walltime-benchmark' || (github.event.action != 'labeled' && startsWith(github.head_ref, 'ci/optimize-')))) || (github.event_name == 'workflow_dispatch' && (inputs.component == 'all' || inputs.component == 'js')) }}
     runs-on: blacksmith-32vcpu-ubuntu-2404

@@ -11,7 +11,7 @@ import {
   until,
 } from "../../../tests/tooling/support/oxlint-preparation-fixture.mjs";
 
-void test("the actual host worker runs all original preparation commands before waiting and refuses failed baseline before n8n", async (t) => {
+void test("the actual host worker runs all original preparation commands while awaiting the baseline and refuses failed baseline before n8n", async (t) => {
   const f = preparationFixture(t);
   const packageDir = path.join(f.artifacts, "controlled-package");
   const temporary = path.join(f.artifacts, "controlled-installed-host");
@@ -103,9 +103,12 @@ console.log("complete HTML raw output");
   void terminal.then((results) => {
     completed = results;
   });
-  await until(() => fs.existsSync(marker) || completed);
+  // Transport and HTML preparation run concurrently with the baseline wait.
+  const prepared = () =>
+    fs.existsSync(marker) && fs.existsSync(path.join(output, "original-project.json"));
+  await until(() => prepared() || completed);
   assert.ok(
-    fs.existsSync(marker),
+    prepared(),
     `host ended before baseline wait: ${JSON.stringify(completed)}\n${fs.readFileSync(path.join(output, "worker.stderr.log"), "utf8")}`,
   );
   await new Promise((resolve) => setTimeout(resolve, 100));

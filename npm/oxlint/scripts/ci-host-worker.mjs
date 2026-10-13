@@ -7,6 +7,7 @@ import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 import { replayN8nHost } from "./n8n-replay-qualification.mjs";
 import { waitForReplayReady } from "./n8n-preparation-overlap.mjs";
+import { captureProjectCommand } from "./project-command-capture.mjs";
 
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
@@ -46,25 +47,45 @@ export function verifyProjectHostCalls(events, custody, receipt) {
   return { calls, batchCalls, processes: loaded.size };
 }
 
+function recordHostCommand({ output, version }, captureName, command, args, result) {
+  fs.writeFileSync(
+    path.join(output, `${captureName}.json`),
+    JSON.stringify({ command, args, ...result }, null, 2) + "\n",
+  );
+  process.stdout.write(result.stdout ?? "");
+  process.stderr.write(result.stderr ?? "");
+  assert.equal(result.error, undefined);
+  assert.equal(result.signal, null);
+  assert.equal(result.status, 0, `Oxlint ${version} original-project qualification failed`);
+}
+
+const hostCommandOptions = (temporary, options) => ({
+  cwd: temporary,
+  encoding: "utf8",
+  timeout: 180_000,
+  maxBuffer: 64 * 1024 * 1024,
+  ...options,
+});
+
 export function createHostCommandRunner({ temporary, output, version }) {
   return (command, args, options = {}, captureName = command === "npm" ? "install" : "tests") => {
     assert.ok(["install", "tests", "html-tests"].includes(captureName));
-    const result = spawnSync(command, args, {
-      cwd: temporary,
-      encoding: "utf8",
-      timeout: 180_000,
-      maxBuffer: 64 * 1024 * 1024,
-      ...options,
-    });
-    fs.writeFileSync(
-      path.join(output, `${captureName}.json`),
-      JSON.stringify({ command, args, ...result }, null, 2) + "\n",
+    const result = spawnSync(command, args, hostCommandOptions(temporary, options));
+    recordHostCommand({ output, version }, captureName, command, args, result);
+  };
+}
+
+// The same command, capture and assertions without blocking the worker, so
+// independent host checks run concurrently over one pinned installation.
+export function createConcurrentHostCommandRunner({ temporary, output, version }) {
+  return async (command, args, options = {}, captureName = "tests") => {
+    assert.ok(["tests", "html-tests"].includes(captureName));
+    const result = await captureProjectCommand(
+      command,
+      args,
+      hostCommandOptions(temporary, options),
     );
-    process.stdout.write(result.stdout ?? "");
-    process.stderr.write(result.stderr ?? "");
-    assert.equal(result.error, undefined);
-    assert.equal(result.signal, null);
-    assert.equal(result.status, 0, `Oxlint ${version} original-project qualification failed`);
+    recordHostCommand({ output, version }, captureName, command, args, result);
   };
 }
 
@@ -77,19 +98,20 @@ async function runProjectHost({ packageDir, artifacts, binary, version, types, t
   const phaseWalltimeMs = {};
   const started = performance.now();
   let status = "failed";
-  const timed = (name, action) => {
+  const timed = async (name, action) => {
     const phaseStart = performance.now();
     try {
-      return action();
+      return await action();
     } finally {
       phaseWalltimeMs[name] = performance.now() - phaseStart;
     }
   };
   const run = createHostCommandRunner({ temporary, output, version });
+  const runConcurrently = createConcurrentHostCommandRunner({ temporary, output, version });
   try {
     // These are the actual two pinned host tools, installed outside the source
     // checkout. No package is published and no downloaded addon is qualified.
-    timed("install", () =>
+    await timed("install", () =>
       run("npm", [
         "install",
         "--ignore-scripts",
@@ -125,8 +147,11 @@ async function runProjectHost({ packageDir, artifacts, binary, version, types, t
     const configuration = path.join(output, "custody.json");
     fs.writeFileSync(configuration, JSON.stringify(custody, null, 2) + "\n");
     const preload = fileURLToPath(new URL("./project-native-custody.cjs", import.meta.url));
-    const qualification = timed("transport", () => {
-      run(
+    // The transport, HTML and n8n checks share only the read-only installed
+    // host and staged binary; each owns its captures, ledger and temporary
+    // directories, so they run concurrently as the two hosts already do.
+    const transport = timed("transport", async () => {
+      await runConcurrently(
         process.execPath,
         [
           "--test",
@@ -163,12 +188,12 @@ async function runProjectHost({ packageDir, artifacts, binary, version, types, t
         originalProject: capture.qualified,
       };
     });
-    timed("htmlTransport", () => {
+    const html = timed("htmlTransport", async () => {
       const htmlCustody = { ...custody, calls: path.join(output, "html-native-calls.jsonl") };
       const htmlConfiguration = path.join(output, "html-custody.json");
       fs.writeFileSync(htmlConfiguration, JSON.stringify(htmlCustody, null, 2) + "\n");
       const htmlPreload = fileURLToPath(new URL("./project-html-custody.cjs", import.meta.url));
-      run(
+      await runConcurrently(
         process.execPath,
         ["src/html-cli.test.mjs"],
         {
@@ -186,18 +211,29 @@ async function runProjectHost({ packageDir, artifacts, binary, version, types, t
       );
       const htmlCapture = JSON.parse(fs.readFileSync(path.join(output, "original-html-cli.json")));
       assert.equal(htmlCapture.complete, true);
-      qualification.originalHtml = htmlCapture.qualified;
+      return htmlCapture.qualified;
     });
-    const waiting = performance.now();
-    let replay;
-    try {
-      replay = await waitForReplayReady({ artifacts, receipt, binary });
-    } finally {
-      phaseWalltimeMs.baselineWait = performance.now() - waiting;
-    }
-    const { host: n8nHost, custody: n8nCustody } = timed("n8nReplay", () =>
-      replayN8nHost({ ...replay, hosts: [], hostCustodies: [] }, engine, version),
+    const n8n = (async () => {
+      const waiting = performance.now();
+      let replay;
+      try {
+        replay = await waitForReplayReady({ artifacts, receipt, binary });
+      } finally {
+        phaseWalltimeMs.baselineWait = performance.now() - waiting;
+      }
+      return timed("n8nReplay", () =>
+        replayN8nHost({ ...replay, hosts: [], hostCustodies: [] }, engine, version),
+      );
+    })();
+    const settled = await Promise.allSettled([transport, html, n8n]);
+    const failures = settled.flatMap((outcome) =>
+      outcome.status === "rejected" ? [outcome.reason] : [],
     );
+    if (failures.length)
+      throw new AggregateError(failures, `Oxlint ${version} host checks failed; evidence retained`);
+    const [{ value: qualification }, { value: originalHtml }, { value: replayed }] = settled;
+    qualification.originalHtml = originalHtml;
+    const { host: n8nHost, custody: n8nCustody } = replayed;
     assert.equal(hash(fs.readFileSync(binary)), receipt.frozen.sha256);
     fs.writeFileSync(
       path.join(output, "host-worker-result.json"),

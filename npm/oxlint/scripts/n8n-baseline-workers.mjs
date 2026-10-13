@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
-import { baselinePartitions, seedOriginalSources } from "./n8n-baseline-partitions.mjs";
+import {
+  baselinePartitionCount,
+  baselinePartitions,
+  seedOriginalSources,
+} from "./n8n-baseline-partitions.mjs";
 import { runBaselineProcesses } from "./n8n-baseline-processes.mjs";
 import { joinBaselinePartitions } from "./n8n-baseline-join.mjs";
 import { sha256 } from "./n8n-replay-inputs.mjs";
@@ -18,7 +22,8 @@ export async function runBaselineWorkers({ packageDir, output, custody, inventor
     path.join(output, "baseline-source-store.json"),
     JSON.stringify(seeded, null, 2) + "\n",
   );
-  const jobs = baselinePartitions(inventory.files.length).map((partition) => {
+  const count = baselinePartitionCount();
+  const jobs = baselinePartitions(inventory.files.length, count).map((partition) => {
     const directory = path.join(output, `baseline-worker-${partition.index}`);
     fs.mkdirSync(directory);
     const calls = path.join(directory, "native-calls.jsonl");
@@ -51,6 +56,6 @@ export async function runBaselineWorkers({ packageDir, output, custody, inventor
   assert.equal(result.status, 0);
   assert.equal(sha256(fs.readFileSync(custody.binary.path)), custody.binary.sha256);
   fs.mkdirSync(path.join(output, "bridge"));
-  joinBaselinePartitions(inventory, custody, jobs, output);
+  joinBaselinePartitions(inventory, custody, jobs, output, { count });
   return result;
 }

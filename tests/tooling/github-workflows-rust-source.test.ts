@@ -143,7 +143,10 @@ test("PR and merge-group source checks are included in the required report", () 
     .map((step) => step.run ?? "")
     .join("\n");
   assert.match(jsCommands, /vp run --workspace-root "test:js:\$VIZE_JS_PACKAGE_GROUP"/);
-  assert.match(jsCommands, /vp run --filter '\.\/npm\/ui' check/);
+  assert.match(
+    jsCommands,
+    /vp run --filter '\.\/npm\/native' build:ci && node tools\/support\/compat\/github\/run-package-check-parts\.ts npm\/ui check/,
+  );
   assert.match(commands("pr-tooling-scripts"), /vp run --workspace-root test:scripts/);
   assert.match(commands("pr-playground-test"), /vp run --filter '\.\/playground' test:browser/);
   assert.equal(sourceWorkflow.jobs?.["source-report"]?.if, "${{ always() }}");

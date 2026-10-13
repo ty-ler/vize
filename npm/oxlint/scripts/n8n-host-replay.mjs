@@ -14,54 +14,214 @@ import {
   verifyCorpus,
 } from "./n8n-replay-inputs.mjs";
 
-export function qualifyN8nHost(engine, version, output, environment, reference) {
-  const inventory = verifyCorpus();
+// Hang guards, not checks. One whole-project reference run made 69,813 native
+// calls in 153-157 s on the PR runner, so its guard leaves about 4x headroom
+// inside the 1,800 s host worker deadline. Every other host process, including
+// one reference slice, takes under 30 s.
+export const hostModeHangGuardMs = 180_000;
+export const wholeReferenceHangGuardMs = 600_000;
+
+export const hostPlugin = path.join(repository, "npm/oxlint/dist/index.mjs");
+export const hostWrapper = path.join(repository, "npm/oxlint/dist/cli.mjs");
+
+// One owned original project: the selected exact inputs, an empty Git root
+// and the pinned host engine, as every host mode lints it.
+export function materializeOriginal(root, engine, inventory, entries = inventory.files) {
+  fs.mkdirSync(path.join(root, ".git"));
+  fs.writeFileSync(path.join(root, ".gitignore"), "");
+  fs.mkdirSync(path.join(root, "node_modules/oxlint/bin"), { recursive: true });
+  fs.symlinkSync(engine, path.join(root, "node_modules/oxlint/bin/oxlint"));
+  for (const { file, sha256: expected } of entries) {
+    const target = path.join(root, file);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(path.join(inventory.fixture, file), target, fs.constants.COPYFILE_EXCL);
+    assert.equal(sha256(fs.readFileSync(target)), expected);
+  }
+}
+
+export function modeInvocation(mode, { engine, reference, root, output, wrapper = hostWrapper }) {
+  const config = replayConfig(
+    mode === "reference" ? reference.plugin : hostPlugin,
+    mode === "reference" ? "baseline" : mode,
+  );
+  // This is the functional frozen native/Vize object projection, not a
+  // redistributed adoption-branch source or a JSONC approximation.
+  const bytes = `export default ${JSON.stringify(config, null, 2)};\n`;
+  const configPath = path.join(root, ".oxlintrc.mts");
+  fs.writeFileSync(configPath, bytes);
+  fs.writeFileSync(path.join(output, `${mode}.mts`), bytes);
+  const args = [
+    mode === "stock" ? engine : mode === "reference" ? reference.wrapper : wrapper,
+    "-c",
+    configPath,
+    "-f",
+    "json",
+    "--threads",
+    "1",
+    "packages",
+  ];
+  return { bytes, configPath, args };
+}
+
+export function assertModeRun(result, configPath, bytes) {
+  assert.equal(result.error, undefined, result.stderr);
+  assert.equal(result.signal, null);
+  assert.ok([0, 1].includes(result.status), result.stderr);
+  assert.equal(result.stderr, "");
+  assert.equal(fs.readFileSync(configPath, "utf8"), bytes);
+}
+
+export function assertEffectiveRefusal(result) {
+  // Neither pinned host accepts settings inside an override. Preserve this
+  // actual rejected packet; the native effective-map API remains
+  // independently qualified, but cannot grant host batching credit.
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /unknown field `settings`/u);
+}
+
+export function assertEffectiveOriginal(result, original) {
+  assert.equal(original.error, undefined);
+  assert.equal(original.signal, null);
+  assert.equal(original.status, result.status);
+  assert.equal(original.stdout, result.stdout);
+  assert.equal(original.stderr, result.stderr);
+}
+
+export function judgeModeReport(version, mode, report, reports, inventory) {
+  assert.ok(Array.isArray(report.diagnostics));
+  assert.equal(report.number_of_files, inventory.files.length);
+  if (mode === "stock") return;
+  const foreign = report.diagnostics.filter((packet) => !packet.code?.startsWith("vize("));
+  assert.deepEqual(
+    foreign,
+    reports.stock.diagnostics,
+    `${version}/${mode}: complete original foreign packets/order/multiplicity`,
+  );
+  for (const packet of report.diagnostics.filter((packet) => packet.code?.startsWith("vize("))) {
+    const rules = effectiveRules(packet.filename);
+    const name = `vize/${packet.code.slice(5, -1)}`;
+    const entry = rules[name];
+    assert.ok(entry, `foreign selected rule ${name}`);
+    const severity = Array.isArray(entry) ? entry[0] : entry;
+    assert.ok(["error", "warn"].includes(severity));
+    assert.equal(packet.severity, severity === "warn" ? "warning" : "error");
+    assert.ok(inventory.files.some(({ file }) => file === packet.filename));
+    assert.ok(packet.labels.length > 0);
+  }
+}
+
+// The whole-project comparisons every host qualification makes after all
+// modes ran, including the exact binding of native vectors to SDK packets.
+export function judgeHostReports({ version, inventory, reports, statuses, capture, output }) {
+  for (const mode of ["reference", "shared"]) {
+    assert.deepEqual(
+      reports[mode].diagnostics,
+      reports.baseline.diagnostics,
+      `${version}/${mode}: whole ordered host vectors`,
+    );
+    // Keep timing fields in the raw reports; compare every other field.
+    const { start_time: baselineTime, ...baseline } = reports.baseline;
+    const { start_time: candidateTime, ...candidate } = reports[mode];
+    assert.equal(typeof baselineTime, "number");
+    assert.equal(typeof candidateTime, "number");
+    assert.deepEqual(candidate, baseline);
+    assert.equal(statuses[mode], statuses.baseline);
+  }
+  const nativeVectors = fs
+    .readFileSync(path.join(path.dirname(output), "bridge/bridge-vectors.jsonl"), "utf8")
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line))
+    .filter(({ mode }) => mode === "scopedPerRule");
+  assert.equal(nativeVectors.length, inventory.files.length);
+  // Bind every emitted native finding to the corresponding complete SDK
+  // packet and exact original UTF-8 span; no count-only coverage claim.
+  for (const row of nativeVectors) {
+    for (const requested of row.cold) {
+      const packets = reports.baseline.diagnostics.filter(
+        (packet) => packet.filename === row.file && packet.code === `vize(${requested.rule})`,
+      );
+      assert.equal(packets.length, requested.diagnostics.length, `${row.file}/${requested.rule}`);
+      for (const [index, diagnostic] of requested.diagnostics.entries()) {
+        assert.equal(packets[index].message, diagnostic.message);
+        const start = diagnostic.location.start.offset,
+          end = diagnostic.location.end.offset;
+        assert.deepEqual(
+          packets[index].labels,
+          [
+            {
+              span: {
+                offset: start,
+                length: end - start,
+                line: diagnostic.location.start.line,
+                column: diagnostic.location.start.column,
+              },
+            },
+          ],
+          `${row.file}/${requested.rule}: complete original span`,
+        );
+      }
+    }
+  }
+  const summary = {
+    version,
+    files: inventory.files.length,
+    scriptless: 19,
+    disabledFiles: inventory.disabledFiles,
+    modes: capture.map(({ mode, slice, elapsedMs, status }) => ({
+      mode,
+      ...(slice ? { slice } : {}),
+      elapsedMs,
+      status,
+    })),
+    vectorSha256: sha256(JSON.stringify(reports.baseline.diagnostics)),
+    limits: [
+      "native/Vize layer and six scopes on owned exact master copies",
+      "two n8n-local plugins and unrelated frontend/workspace layers excluded",
+      "wrapper qualification does not repair direct SDK scriptless callbacks",
+      "no-hint source reference retains per-rule calls; current valid override.rules collector uses one call",
+      "override.settings is rejected; native effective maps and actual host collection are separate",
+    ],
+  };
+  return summary;
+}
+
+export function writeHostSummary(output, summary) {
+  fs.writeFileSync(path.join(output, "host-summary.json"), JSON.stringify(summary, null, 2) + "\n");
+}
+
+export function qualifyN8nHost(
+  engine,
+  version,
+  output,
+  environment,
+  reference,
+  { verify = verifyCorpus, wrapper = hostWrapper } = {},
+) {
+  const inventory = verify();
   const original = fs.mkdtempSync(path.join(os.tmpdir(), "vize-n8n-original-project-"));
-  const plugin = path.join(repository, "npm/oxlint/dist/index.mjs");
-  const wrapper = path.join(repository, "npm/oxlint/dist/cli.mjs");
   const capture = [];
   const capturePath = path.join(output, "host-results.json");
-  const configPath = path.join(original, ".oxlintrc.mts");
   fs.mkdirSync(output, { recursive: true });
   const save = () => fs.writeFileSync(capturePath, JSON.stringify(capture, null, 2) + "\n");
   try {
-    fs.mkdirSync(path.join(original, ".git"));
-    fs.writeFileSync(path.join(original, ".gitignore"), "");
-    fs.mkdirSync(path.join(original, "node_modules/oxlint/bin"), { recursive: true });
-    fs.symlinkSync(engine, path.join(original, "node_modules/oxlint/bin/oxlint"));
-    for (const { file, sha256: expected } of inventory.files) {
-      const target = path.join(original, file);
-      fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.copyFileSync(path.join(inventory.fixture, file), target, fs.constants.COPYFILE_EXCL);
-      assert.equal(sha256(fs.readFileSync(target)), expected);
-    }
+    materializeOriginal(original, engine, inventory);
     const reports = {};
+    const statuses = {};
     const modes = ["stock", "reference", "baseline", "shared", "effective"];
     for (const mode of modes) {
-      const config = replayConfig(
-        mode === "reference" ? reference.plugin : plugin,
-        mode === "reference" ? "baseline" : mode,
-      );
-      // This is the functional frozen native/Vize object projection, not a
-      // redistributed adoption-branch source or a JSONC approximation.
-      const bytes = `export default ${JSON.stringify(config, null, 2)};\n`;
-      fs.writeFileSync(configPath, bytes);
-      fs.writeFileSync(path.join(output, `${mode}.mts`), bytes);
-      const args = [
-        mode === "stock" ? engine : mode === "reference" ? reference.wrapper : wrapper,
-        "-c",
-        configPath,
-        "-f",
-        "json",
-        "--threads",
-        "1",
-        "packages",
-      ];
+      const { bytes, configPath, args } = modeInvocation(mode, {
+        engine,
+        reference,
+        root: original,
+        output,
+        wrapper,
+      });
       const start = performance.now();
       const result = spawnSync(process.execPath, args, {
         cwd: original,
         encoding: "utf8",
-        timeout: 180_000,
+        timeout: mode === "reference" ? wholeReferenceHangGuardMs : hostModeHangGuardMs,
         maxBuffer: 64 * 1024 * 1024,
         env: { ...process.env, ...environment, VIZE_N8N_REPLAY_PHASE: `host:${version}:${mode}` },
       });
@@ -77,22 +237,15 @@ export function qualifyN8nHost(engine, version, output, environment, reference) 
         ...result,
       });
       save(); // Preserve complete output/status/errors before any assertion.
-      assert.equal(result.error, undefined, result.stderr);
-      assert.equal(result.signal, null);
-      assert.ok([0, 1].includes(result.status), result.stderr);
-      assert.equal(result.stderr, "");
-      assert.equal(fs.readFileSync(configPath, "utf8"), bytes);
+      assertModeRun(result, configPath, bytes);
+      statuses[mode] = result.status;
       if (mode === "effective") {
-        // Neither pinned host accepts settings inside an override. Preserve
-        // this actual rejected packet; the native effective-map API remains
-        // independently qualified, but cannot grant host batching credit.
-        assert.equal(result.status, 1);
-        assert.match(result.stdout, /unknown field `settings`/u);
+        assertEffectiveRefusal(result);
         const originalStart = performance.now();
         const originalResult = spawnSync(process.execPath, [engine, ...args.slice(1)], {
           cwd: original,
           encoding: "utf8",
-          timeout: 180_000,
+          timeout: hostModeHangGuardMs,
           maxBuffer: 64 * 1024 * 1024,
           env: {
             ...process.env,
@@ -112,113 +265,17 @@ export function qualifyN8nHost(engine, version, output, environment, reference) 
           ...originalResult,
         });
         save();
-        assert.equal(originalResult.error, undefined);
-        assert.equal(originalResult.signal, null);
-        assert.equal(originalResult.status, result.status);
-        assert.equal(originalResult.stdout, result.stdout);
-        assert.equal(originalResult.stderr, result.stderr);
+        assertEffectiveOriginal(result, originalResult);
         continue;
       }
-      const report = (reports[mode] = JSON.parse(result.stdout));
-      assert.ok(Array.isArray(report.diagnostics));
-      assert.equal(report.number_of_files, inventory.files.length);
-      if (mode !== "stock") {
-        const foreign = report.diagnostics.filter((packet) => !packet.code?.startsWith("vize("));
-        assert.deepEqual(
-          foreign,
-          reports.stock.diagnostics,
-          `${version}/${mode}: complete original foreign packets/order/multiplicity`,
-        );
-        for (const packet of report.diagnostics.filter((packet) =>
-          packet.code?.startsWith("vize("),
-        )) {
-          const rules = effectiveRules(packet.filename);
-          const name = `vize/${packet.code.slice(5, -1)}`;
-          const entry = rules[name];
-          assert.ok(entry, `foreign selected rule ${name}`);
-          const severity = Array.isArray(entry) ? entry[0] : entry;
-          assert.ok(["error", "warn"].includes(severity));
-          assert.equal(packet.severity, severity === "warn" ? "warning" : "error");
-          assert.ok(inventory.files.some(({ file }) => file === packet.filename));
-          assert.ok(packet.labels.length > 0);
-        }
-      }
+      reports[mode] = JSON.parse(result.stdout);
+      judgeModeReport(version, mode, reports[mode], reports, inventory);
     }
-    for (const mode of ["reference", "shared"]) {
-      assert.deepEqual(
-        reports[mode].diagnostics,
-        reports.baseline.diagnostics,
-        `${version}/${mode}: whole ordered host vectors`,
-      );
-      // Keep timing fields in the raw reports; compare every other field.
-      const { start_time: baselineTime, ...baseline } = reports.baseline;
-      const { start_time: candidateTime, ...candidate } = reports[mode];
-      assert.equal(typeof baselineTime, "number");
-      assert.equal(typeof candidateTime, "number");
-      assert.deepEqual(candidate, baseline);
-      assert.equal(
-        capture.find((row) => row.mode === mode).status,
-        capture.find((row) => row.mode === "baseline").status,
-      );
-    }
-    const nativeVectors = fs
-      .readFileSync(path.join(path.dirname(output), "bridge/bridge-vectors.jsonl"), "utf8")
-      .trim()
-      .split("\n")
-      .map((line) => JSON.parse(line))
-      .filter(({ mode }) => mode === "scopedPerRule");
-    assert.equal(nativeVectors.length, inventory.files.length);
-    // Bind every emitted native finding to the corresponding complete SDK
-    // packet and exact original UTF-8 span; no count-only coverage claim.
-    for (const row of nativeVectors) {
-      for (const requested of row.cold) {
-        const packets = reports.baseline.diagnostics.filter(
-          (packet) => packet.filename === row.file && packet.code === `vize(${requested.rule})`,
-        );
-        assert.equal(packets.length, requested.diagnostics.length, `${row.file}/${requested.rule}`);
-        for (const [index, diagnostic] of requested.diagnostics.entries()) {
-          assert.equal(packets[index].message, diagnostic.message);
-          const start = diagnostic.location.start.offset,
-            end = diagnostic.location.end.offset;
-          assert.deepEqual(
-            packets[index].labels,
-            [
-              {
-                span: {
-                  offset: start,
-                  length: end - start,
-                  line: diagnostic.location.start.line,
-                  column: diagnostic.location.start.column,
-                },
-              },
-            ],
-            `${row.file}/${requested.rule}: complete original span`,
-          );
-        }
-      }
-    }
+    const summary = judgeHostReports({ version, inventory, reports, statuses, capture, output });
     for (const { file, sha256: expected } of inventory.files)
       assert.equal(sha256(fs.readFileSync(path.join(original, file))), expected);
-    assert.deepEqual(verifyCorpus(), inventory);
-    const summary = {
-      version,
-      files: inventory.files.length,
-      scriptless: 19,
-      disabledFiles: inventory.disabledFiles,
-      modes: capture.map(({ mode, elapsedMs, status }) => ({ mode, elapsedMs, status })),
-      vectorSha256: sha256(JSON.stringify(reports.baseline.diagnostics)),
-      limits: [
-        "native/Vize layer and six scopes on owned exact master copies",
-        "two n8n-local plugins and unrelated frontend/workspace layers excluded",
-        "wrapper qualification does not repair direct SDK scriptless callbacks",
-        "no-hint source reference retains per-rule calls; current valid override.rules collector uses one call",
-        "override.settings is rejected; native effective maps and actual host collection are separate",
-      ],
-    };
-    fs.writeFileSync(
-      path.join(output, "host-summary.json"),
-      JSON.stringify(summary, null, 2) + "\n",
-    );
+    assert.deepEqual(verify(), inventory);
+    writeHostSummary(output, summary);
     return { ...summary, original };
   } finally {
     save();

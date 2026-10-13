@@ -20,6 +20,10 @@ import {
   judgeCli,
   judgeNative,
 } from "./test-support/mixed-directory-8507-assertions.mjs";
+import {
+  mixedWorkerCount,
+  mixedWorkerPasses,
+} from "./test-support/mixed-directory-8507-workers.mjs";
 
 const packageDir = fileURLToPath(new URL("..", import.meta.url));
 const repository = path.resolve(packageDir, "../..");
@@ -31,8 +35,10 @@ const plan = JSON.parse(fs.readFileSync(path.join(corpus, "controls.json")));
 const engine = fs.realpathSync(process.env.VIZE_OXLINT_TEST_ENTRYPOINT);
 const wrapper = fs.realpathSync(process.env.VIZE_OXLINT_SOURCE_BIN);
 const capturePath = process.env.VIZE_OXLINT_MIXED_CAPTURE;
+const workers = mixedWorkerCount(process.env);
 const workerIndex = Number(process.env.VIZE_OXLINT_MIXED_WORKER);
-assert.ok(["0", "1"].includes(process.env.VIZE_OXLINT_MIXED_WORKER));
+assert.match(process.env.VIZE_OXLINT_MIXED_WORKER ?? "", /^(?:0|[1-9][0-9]*)$/u);
+assert.ok(workerIndex < workers, "fixed worker index");
 const custody = JSON.parse(fs.readFileSync(process.env.VIZE_OXLINT_NATIVE_CUSTODY));
 assert.equal(custody.schema, "vize.oxlint.source-native");
 assert.equal(custody.version, 1);
@@ -121,6 +127,7 @@ const retainedEnvironment = Object.fromEntries(
 const capture = {
   complete: false,
   workerIndex,
+  workers,
   source: custody.source,
   custody,
   engine,
@@ -270,7 +277,7 @@ try {
   for (const fixture of plan.cases) {
     const formats = fixture.surface === "cli" ? ["implicit-default", ...plan.formats] : ["json"];
     for (const format of formats) {
-      if (cellIndex++ % 2 !== workerIndex) continue;
+      if (cellIndex++ % workers !== workerIndex) continue;
       const { cwd, workspace } = materialize(fixture);
       try {
         if (fixture.surface === "cli") {
@@ -302,13 +309,7 @@ try {
       }
     }
   }
-  assert.deepEqual(
-    capture.passed,
-    [
-      { cli: 23, native: 4 },
-      { cli: 22, native: 4 },
-    ][workerIndex],
-  );
+  assert.deepEqual(capture.passed, mixedWorkerPasses(plan, workerIndex, workers));
   assert.deepEqual(providerFiles(), providerBefore);
   for (const file of providerNative) {
     assert.equal(hash(fs.readFileSync(file.file)), file.sha256);

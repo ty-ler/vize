@@ -27,7 +27,9 @@ test("the actual caller stages standalone and emits its exact owned path only wh
     "utf8",
   );
   const start = caller.indexOf("const staged = stageProjectNative(");
-  const end = caller.indexOf("const [mixedDirectory8507, n8nResults] =", start);
+  // Staging ends where the input laws start, before any qualification branch.
+  const end = caller.indexOf('await timed("inputLaws"', start);
+  assert.ok(end < caller.indexOf("const [mixedDirectory8507, n8nResults] =", start));
   assert.ok(start >= 0 && end > start, "the complete live staging paragraph must be present");
   const context = {
     artifacts: undefined,

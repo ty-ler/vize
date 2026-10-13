@@ -9,13 +9,14 @@ import {
   compareBytes,
   editorPrefix,
   effectiveRules,
-  fixturePath,
   layerBytes,
   manifest,
   sha256,
   verifyCorpus,
 } from "./n8n-replay-inputs.mjs";
 import { expectedHostCalls, qualifyN8nHost, verifyNativeCalls } from "./n8n-host-replay.mjs";
+import { qualifyN8nHostSliced } from "./n8n-host-sliced-replay.ts";
+import { hostReferenceSliceCount } from "./n8n-host-slices.ts";
 import { prepareReferenceSource } from "./n8n-reference-source.mjs";
 import { aggregateNativeEvidence, hostVersions } from "./ci-host-concurrency.mjs";
 import { baselineMode } from "./n8n-baseline-partitions.mjs";
@@ -40,7 +41,7 @@ const nativeOptions = (rules, names) => {
   return result;
 };
 
-export async function beginN8nReplay({ root, packageDir, artifacts, receipt, binary }) {
+export async function beginN8nReplay({ packageDir, artifacts, receipt, binary }) {
   assert.equal(process.env.GITHUB_ACTIONS, "true");
   assert.equal(receipt.source.head, process.env.GITHUB_SHA);
   for (const key of [
@@ -52,46 +53,9 @@ export async function beginN8nReplay({ root, packageDir, artifacts, receipt, bin
   ])
     assert.ok(!process.env[key], `ambient ${key} cannot qualify the replay`);
   const output = path.join(artifacts, "n8n");
-  fs.mkdirSync(output, { recursive: true });
-  const laws = await captureProjectCommand(
-    process.execPath,
-    [
-      "--test",
-      "scripts/n8n-replay-inputs.test.mjs",
-      "scripts/n8n-native-custody.test.cjs",
-      "scripts/ci-host-concurrency.test.mjs",
-      "scripts/n8n-baseline-partitions.test.mjs",
-      "scripts/project-qualification-branches.test.mjs",
-      "scripts/project-command-capture.test.mjs",
-      "scripts/n8n-preparation-overlap.test.mjs",
-      "scripts/n8n-preparation-worker.test.mjs",
-      "scripts/n8n-preparation-cancellation.test.mjs",
-    ],
-    {
-      cwd: packageDir,
-      encoding: "utf8",
-      timeout: 30_000,
-      maxBuffer: 32 * 1024 * 1024,
-    },
-  );
-  fs.writeFileSync(path.join(output, "input-laws.json"), JSON.stringify(laws, null, 2) + "\n");
-  assert.equal(laws.error, undefined);
-  assert.equal(laws.signal, null);
-  assert.equal(laws.status, 0);
-  const hydrate = await captureProjectCommand(
-    "git",
-    ["submodule", "update", "--init", "--depth", "1", "--", fixturePath],
-    {
-      cwd: root,
-      encoding: "utf8",
-      timeout: 180_000,
-      maxBuffer: 32 * 1024 * 1024,
-    },
-  );
-  fs.writeFileSync(path.join(output, "hydrate.json"), JSON.stringify(hydrate, null, 2) + "\n");
-  assert.equal(hydrate.error, undefined);
-  assert.equal(hydrate.signal, null);
-  assert.equal(hydrate.status, 0);
+  // The controller already ran the input laws and the fixture hydrate.
+  for (const name of ["input-laws.json", "hydrate.json"])
+    assert.equal(JSON.parse(fs.readFileSync(path.join(output, name), "utf8")).status, 0, name);
   const inventory = verifyCorpus();
   fs.mkdirSync(path.join(output, "licenses"));
   for (const license of inventory.licenses)
@@ -119,9 +83,11 @@ export async function beginN8nReplay({ root, packageDir, artifacts, receipt, bin
     VIZE_N8N_REPLAY_OUTPUT: path.join(output, "bridge"),
     VIZE_N8N_REPLAY_PHASE: "frozenPerRule",
   };
-  if (baselineMode() === "partitioned") {
-    await runBaselineWorkers({ packageDir, output, custody, inventory, environment });
-  } else {
+  const baseline = async () => {
+    if (baselineMode() === "partitioned") {
+      await runBaselineWorkers({ packageDir, output, custody, inventory, environment });
+      return;
+    }
     const result = await captureProjectCommand(
       "vp",
       ["test", "run", "src/n8n-full-replay.test.ts"],
@@ -142,12 +108,22 @@ export async function beginN8nReplay({ root, packageDir, artifacts, receipt, bin
     assert.equal(result.error, undefined);
     assert.equal(result.signal, null);
     assert.equal(result.status, 0);
-  }
-  const reference = await prepareReferenceSource(output);
+  };
+  // The historical reference build reads only its pinned Git source, so it
+  // runs beside the baseline; readiness still requires both.
+  const [baselineOutcome, referenceOutcome] = await Promise.allSettled([
+    baseline(),
+    prepareReferenceSource(output),
+  ]);
+  const failures = [baselineOutcome, referenceOutcome].flatMap((outcome) =>
+    outcome.status === "rejected" ? [outcome.reason] : [],
+  );
+  if (failures.length) throw new AggregateError(failures, "n8n baseline or reference failed");
+  const reference = referenceOutcome.value;
   return { output, custody, inventory, reference, hosts: [], hostCustodies: [] };
 }
 
-export function replayN8nHost(replay, engine, version) {
+export async function replayN8nHost(replay, engine, version) {
   const output = path.join(replay.output, version);
   fs.mkdirSync(output, { recursive: true });
   // Keep complete append-only ledgers and source stores private to each host.
@@ -165,7 +141,19 @@ export function replayN8nHost(replay, engine, version) {
     VIZE_N8N_NATIVE_CUSTODY: custodyPath,
     VIZE_N8N_REPLAY_OUTPUT: path.join(output, "replay"),
   };
-  const host = qualifyN8nHost(engine, version, output, environment, replay.reference);
+  const slices = hostReferenceSliceCount();
+  const host =
+    slices === 1
+      ? qualifyN8nHost(engine, version, output, environment, replay.reference)
+      : await qualifyN8nHostSliced(
+          engine,
+          version,
+          output,
+          custody,
+          environment,
+          replay.reference,
+          slices,
+        );
   replay.hosts.push(host);
   replay.hostCustodies.push({ version, custody });
   return { host, custody };
@@ -206,14 +194,19 @@ export function finishN8nReplay(replay) {
   const observed = aggregateNativeEvidence(replay.custody, replay.inventory, segments);
   assert.deepEqual(observed.inventory, replay.inventory);
   const totals = {};
+  // A sliced host lints each reference input in the owned root of its slice.
+  const rootFor = (host, mode, index) =>
+    mode === "reference" && host.referenceSlices
+      ? host.referenceSlices.find(({ start, end }) => start <= index && index < end).root
+      : host.original;
   for (const phase of [...bridgePhases, ...hostPhases]) {
     const host = replay.hosts.find(({ version }) => phase.startsWith(`host:${version}:`));
     const mode = host ? phase.split(":")[2] : phase;
-    const root = host ? host.original : replay.inventory.fixture;
     const counts = observed.counts.get(phase) ?? new Map();
     const refused = ["stock", "effective", "effective-original"].includes(mode);
     assert.equal(counts.size, refused ? 0 : replay.inventory.files.length);
-    for (const { file } of replay.inventory.files) {
+    for (const [index, { file }] of replay.inventory.files.entries()) {
+      const root = host ? rootFor(host, mode, index) : replay.inventory.fixture;
       const rules = mode.startsWith("frozen") ? manifest.adoption.rules : effectiveRules(file);
       const names = activeNames(rules);
       const expected = host

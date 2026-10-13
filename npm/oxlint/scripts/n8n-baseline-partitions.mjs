@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
+import { contiguousRanges, processCount } from "./qualification-parallelism.ts";
 
 export const baselineModes = [
   "frozenPerRule",
@@ -21,22 +22,31 @@ export function baselineMode(environment = process.env) {
   return mode;
 }
 
+// Partitioned mode keeps two partitions unless CI selects another fixed count.
+// The parent and every child read the same inherited value.
+export function baselinePartitionCount(environment = process.env) {
+  return processCount(environment, "VIZE_N8N_BASELINE_PARTITIONS", 2, { min: 2, max: 32 });
+}
+
 // Fixed contiguous ranges preserve the original input/mode order in the join.
-export function baselinePartitions(length) {
-  assert.ok(Number.isSafeInteger(length) && length >= 2);
-  const split = Math.ceil(length / 2);
-  return [
-    { index: 0, start: 0, end: split, controls: false },
-    { index: 1, start: split, end: length, controls: true },
-  ];
+// Only the last partition runs the original cache controls, exactly once.
+export function baselinePartitions(length, count = 2) {
+  assert.ok(Number.isSafeInteger(count) && count >= 2, "at least two fixed partitions");
+  return contiguousRanges(length, count).map((range) => ({
+    ...range,
+    controls: range.index === count - 1,
+  }));
 }
 
 export function admittedPartition(inventory, environment = process.env) {
   const raw = environment.VIZE_N8N_BASELINE_PARTITION;
   if (raw === undefined) return null;
   const candidate = JSON.parse(raw);
-  const parts = baselinePartitions(inventory.files.length);
-  assert.ok([0, 1].includes(candidate.index), "unknown fixed partition");
+  const parts = baselinePartitions(inventory.files.length, baselinePartitionCount(environment));
+  assert.ok(
+    Number.isSafeInteger(candidate.index) && candidate.index >= 0 && candidate.index < parts.length,
+    "unknown fixed partition",
+  );
   const expected = parts[candidate.index];
   assert.deepEqual(candidate, expected, "fixed original input partition only");
   return expected;

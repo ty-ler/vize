@@ -13,23 +13,23 @@ const errorPacket = (error) =>
         ...Object.fromEntries(Object.getOwnPropertyNames(error).map((key) => [key, error[key]])),
       };
 
-// One original campaign deadline/output budget owns BOTH fixed child groups.
+// One original campaign deadline/output budget owns ALL fixed child groups.
 export async function runBaselineProcesses(
   jobs,
   output,
   { deadlineMs = 900_000, maxBufferBytes = 32 * 1024 * 1024, startedAt } = {},
 ) {
   assert.notEqual(process.platform, "win32", "source Actions requires owned POSIX groups");
-  assert.equal(jobs.length, 2);
+  assert.ok(jobs.length >= 2 && jobs.length <= 32, "two to thirty-two fixed child groups");
   assert.deepEqual(
     jobs.map(({ index }) => index),
-    [0, 1],
+    jobs.map((_, index) => index),
   );
   assert.ok(Number.isInteger(deadlineMs) && deadlineMs > 0 && deadlineMs <= 900_000);
   assert.ok(
     Number.isInteger(maxBufferBytes) && maxBufferBytes > 0 && maxBufferBytes <= 32 * 1024 * 1024,
   );
-  assert.equal(new Set(jobs.map((job) => path.resolve(job.output))).size, 2);
+  assert.equal(new Set(jobs.map((job) => path.resolve(job.output))).size, jobs.length);
   const started = startedAt ?? performance.now();
   assert.ok(Number.isFinite(started) && started <= performance.now());
   let failure = null,

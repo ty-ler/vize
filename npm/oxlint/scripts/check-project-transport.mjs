@@ -17,6 +17,7 @@ import { stageProjectNative } from "./project-native-staging.ts";
 import { qualifyMixedDirectory8507 } from "./mixed-directory-8507-qualification.mjs";
 import { runQualificationBranches } from "./project-qualification-branches.mjs";
 import { parsePreparationOptions, runPreparationBranches } from "./n8n-preparation-overlap.mjs";
+import { runInputLawsAndHydrate } from "./n8n-replay-preparation.ts";
 import {
   nativeHistoryReceipt,
   validateNativeHistoryBuild,
@@ -75,6 +76,11 @@ try {
       process.env.GITHUB_OUTPUT,
       `staging-directory=${artifacts}\nphase-walltime=${path.join(artifacts, "phase-walltime.json")}\n`,
     );
+  // The qualification scripts' own laws include real timing controls. They and
+  // the pinned fixture hydrate finish before any concurrent branch starts.
+  await timed("inputLaws", () =>
+    runInputLawsAndHydrate({ root, packageDir, output: path.join(artifacts, "n8n") }),
+  );
   const [mixedDirectory8507, n8nResults] = await runQualificationBranches(
     [
       {

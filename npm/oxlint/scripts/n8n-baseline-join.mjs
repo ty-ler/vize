@@ -8,10 +8,16 @@ import {
 } from "./n8n-baseline-partitions.mjs";
 import { effectiveRules, manifest, sha256, verifyCorpus } from "./n8n-replay-inputs.mjs";
 
-export function joinBaselinePartitions(inventory, custody, jobs, output) {
-  assert.equal(jobs.length, 2);
-  assert.deepEqual(verifyCorpus(), inventory);
-  const partitions = baselinePartitions(inventory.files.length);
+export function joinBaselinePartitions(
+  inventory,
+  custody,
+  jobs,
+  output,
+  { count = 2, verify = verifyCorpus } = {},
+) {
+  assert.equal(jobs.length, count);
+  assert.deepEqual(verify(), inventory);
+  const partitions = baselinePartitions(inventory.files.length, count);
   const vectorBytes = [],
     nativeBytes = [];
   const totals = {};
@@ -68,10 +74,11 @@ export function joinBaselinePartitions(inventory, custody, jobs, output) {
         fs.constants.COPYFILE_EXCL,
       );
   }
-  assert.deepEqual(
-    fs.readFileSync(path.join(jobs[0].output, "bridge/catalog.json")),
-    fs.readFileSync(path.join(jobs[1].output, "bridge/catalog.json")),
-  );
+  for (const job of jobs.slice(1))
+    assert.deepEqual(
+      fs.readFileSync(path.join(job.output, "bridge/catalog.json")),
+      fs.readFileSync(path.join(jobs[0].output, "bridge/catalog.json")),
+    );
   for (const name of ["inventory.json", "catalog.json"])
     fs.copyFileSync(
       path.join(jobs[0].output, "bridge", name),
@@ -99,5 +106,5 @@ export function joinBaselinePartitions(inventory, custody, jobs, output) {
     ) + "\n",
     { flag: "wx" },
   );
-  assert.deepEqual(verifyCorpus(), inventory);
+  assert.deepEqual(verify(), inventory);
 }

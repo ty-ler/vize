@@ -19,7 +19,12 @@ void test("walltime comparisons use the same source and runner without publishin
   assert.deepEqual(workflow.on.pull_request.types, ["opened", "reopened", "labeled"]);
   assert.deepEqual(
     Object.keys(workflow.jobs)
-      .filter((name) => !["js-native-fault-diagnostic", "owned-worker-fault"].includes(name))
+      .filter(
+        (name) =>
+          !["js-native-fault-diagnostic", "owned-worker-fault", "oxlint-parallelism"].includes(
+            name,
+          ),
+      )
       .sort(),
     [
       "artifact-payload",
@@ -72,6 +77,7 @@ void test("baseline input partitions are manual-only, build once and retain both
     "native",
     "n8n-baseline",
     "n8n-preparation",
+    "oxlint-parallelism",
     "artifact-payload",
     "rust-archive-window",
     "owned-worker-fault",

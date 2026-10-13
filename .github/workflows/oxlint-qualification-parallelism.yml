@@ -1,0 +1,65 @@
+name: Oxlint qualification parallelism
+run-name: Oxlint qualification parallelism @ ${{ github.sha }}
+# Manual only, also through ci-walltime-benchmark.yml. One native build
+# qualifies twice: with the original fixed process counts and with the counts
+# PR CI selects. The comparison fails when any result other than process
+# topology, timing or owned paths differs.
+on: { workflow_call: null, workflow_dispatch: null }
+permissions: { contents: read }
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CARGO_TERM_COLOR: always
+jobs:
+  compare:
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 60
+    env:
+      NODE_OPTIONS: "--disable-warning=DEP0040 --disable-warning=DEP0169"
+      CARGO_BUILD_JOBS: "12"
+      VIZE_N8N_BASELINE_MODE: partitioned
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with: { ref: "${{ github.sha }}" }
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with: { node-version-file: "package.json", cache: true, run-install: false }
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
+        with: { toolchain: stable }
+      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
+        with: { wild-version: "0.9.0" }
+      - uses: ./.github/actions/setup-rust-sticky-cache
+        with:
+          key: test-js-packages
+          cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
+      - name: Install JS dependencies
+        run: vp install --frozen-lockfile --prefer-offline
+      - name: Build the source addon and Oxlint bundles once
+        run: vp run --workspace-root build:oxlint-qualification
+      - name: Qualify with the original fixed process counts
+        id: previous
+        run: node npm/oxlint/scripts/check-project-transport.mjs
+      - name: Qualify with the PR CI process counts
+        id: current
+        if: ${{ !cancelled() }}
+        env:
+          VIZE_N8N_BASELINE_PARTITIONS: "12"
+          VIZE_OXLINT_MIXED_WORKERS: "6"
+          VIZE_N8N_HOST_REFERENCE_SLICES: "6"
+        run: node npm/oxlint/scripts/check-project-transport.mjs
+      - name: Compare both complete qualifications
+        if: ${{ !cancelled() }}
+        env:
+          PREVIOUS: ${{ steps.previous.outputs.staging-directory }}
+          CURRENT: ${{ steps.current.outputs.staging-directory }}
+        run: node tools/support/compat/github/compare-oxlint-qualifications.ts "$PREVIOUS" "$CURRENT" target/ci-walltime/oxlint-qualification-parallelism.json
+      - name: Preserve both qualifications, the comparison and the one native build
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: oxlint-qualification-parallelism-${{ github.sha }}
+          path: |
+            target/ci-walltime/
+            target/oxlint-original-project-transport/
+            npm/native/.artifacts/native/formatter-history/build-receipt.json
+            npm/native/.artifacts/native/formatter-history/build-process.json
+          if-no-files-found: error
+          retention-days: 14

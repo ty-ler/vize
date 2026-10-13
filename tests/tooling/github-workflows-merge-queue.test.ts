@@ -100,7 +100,10 @@ test("queue scope reaches the planner and every full source lane remains require
   const jsCommands = Object.values(jsChecks.jobs).map(commands).join("\n");
   assert.match(jsCommands, /vp run --workspace-root "test:js:\$VIZE_JS_PACKAGE_GROUP"/);
   assert.match(jsCommands, /node npm\/oxlint\/scripts\/check-project-transport\.mjs/);
-  assert.match(jsCommands, /vp run --filter '\.\/npm\/ui' check/);
+  assert.match(
+    jsCommands,
+    /vp run --filter '\.\/npm\/native' build:ci && node tools\/support\/compat\/github\/run-package-check-parts\.ts npm\/ui check/,
+  );
   assert.equal(jsHistory.runs.using, "composite");
   assert.equal(jsHistory.runs.steps[0].if, "${{ success() && job.status == 'success' }}");
   assert.ok(check.jobs["test-js-packages"].steps?.some((step) => step.uses === jsHistoryPath));

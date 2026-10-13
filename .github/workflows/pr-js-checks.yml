@@ -124,11 +124,16 @@ jobs:
       - name: Build the source addon and Oxlint bundles
         if: ${{ inputs.run-js }}
         run: vp run --workspace-root build:oxlint-qualification
+      # Fixed process counts over the same staged binary: baseline input
+      # partitions, mixed-directory workers and reference-mode slices.
       - name: Qualify original project checks with both real Oxlint hosts
         id: original-project-qualification
         if: ${{ inputs.run-js }}
         env:
           VIZE_N8N_BASELINE_MODE: partitioned
+          VIZE_N8N_BASELINE_PARTITIONS: "12"
+          VIZE_OXLINT_MIXED_WORKERS: "6"
+          VIZE_N8N_HOST_REFERENCE_SLICES: "6"
         run: node npm/oxlint/scripts/check-project-transport.mjs
       - name: Preserve public native formatter evidence
         if: ${{ always() && inputs.run-js }}
@@ -193,6 +198,7 @@ jobs:
       - name: Check Fresco native declarations and consumer types
         if: ${{ inputs.run-js }}
         run: vp run --filter './npm/fresco-native' check:generated && vp run --filter './npm/fresco-native' check:types
+      # The UI check script's independent parts run concurrently; all must pass.
       - name: Check UI package conformance
         if: ${{ inputs.run-js }}
-        run: vp run --filter './npm/native' build:ci && vp run --filter './npm/ui' check
+        run: vp run --filter './npm/native' build:ci && node tools/support/compat/github/run-package-check-parts.ts npm/ui check

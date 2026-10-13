@@ -69,12 +69,19 @@ void test("only the CI qualification steps opt into fixed baseline partitions", 
     (step) => step.id === "original-project-qualification",
   );
   assert.equal(pullRequestQualification.length, 1);
-  assert.deepEqual(pullRequestQualification[0].env, qualification.env);
+  // PR CI adds only fixed process counts over the same staged binary.
+  assert.deepEqual(pullRequestQualification[0].env, {
+    ...qualification.env,
+    VIZE_N8N_BASELINE_PARTITIONS: "12",
+    VIZE_OXLINT_MIXED_WORKERS: "6",
+    VIZE_N8N_HOST_REFERENCE_SLICES: "6",
+  });
   assert.equal(pullRequestQualification[0].run, controller);
   assert.equal(pullRequestQualification[0]["continue-on-error"], undefined);
   for (const step of pullRequestSteps) {
-    if (step !== pullRequestQualification[0])
-      assert.equal(step.env?.VIZE_N8N_BASELINE_MODE, undefined);
+    if (step === pullRequestQualification[0]) continue;
+    for (const key of Object.keys(pullRequestQualification[0].env))
+      assert.equal(step.env?.[key], undefined, key);
   }
   assert.equal(parseHostOptions([], {}).mode, "concurrent");
   assert.equal(parseHostOptions([], {}).workers, 2);

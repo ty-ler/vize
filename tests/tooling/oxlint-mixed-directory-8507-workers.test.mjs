@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
   mixedCells,
+  mixedWorkerCount,
+  mixedWorkerPasses,
   joinMixedCaptures,
   runMixedWorkers,
 } from "../../npm/oxlint/src/test-support/mixed-directory-8507-workers.mjs";
@@ -17,11 +19,12 @@ const plan = JSON.parse(
   ),
 );
 const custody = { schema: "partition-control", source: { head: "unit-only" }, calls: "joined" };
-function controls() {
-  return [0, 1].map((workerIndex) => {
-    const cells = mixedCells(plan).filter((_, index) => index % 2 === workerIndex);
+function controls(workers = 2) {
+  return Array.from({ length: workers }, (_, workerIndex) => {
+    const cells = mixedCells(plan).filter((_, index) => index % workers === workerIndex);
     return {
       workerIndex,
+      workers,
       complete: true,
       source: custody.source,
       custody: { ...custody, calls: `worker-${workerIndex}/source-native-calls.jsonl` },
@@ -49,19 +52,34 @@ await test("fixed partitions retain every original CLI/native cell and canonical
       { cli: 22, native: 4 },
     ],
   );
-  const joined = joinMixedCaptures(plan, custody, captures);
-  assert.deepEqual(joined.passed, { cli: 45, native: 8 });
-  assert.equal(joined.observations.length, 98);
   assert.deepEqual(
-    joined.observations.map((record) => [record.fixture, record.format ?? null, record.surface]),
-    plan.cases.flatMap((fixture) =>
-      fixture.surface === "cli"
-        ? ["implicit-default", "default", "json", "unix", "stylish"].flatMap((format) =>
-            ["stock", "wrapper"].map((surface) => [fixture.name, format, surface]),
-          )
-        : [[fixture.name, null, "native"]],
-    ),
+    captures.map((_, index) => mixedWorkerPasses(plan, index, 2)),
+    captures.map((capture) => capture.passed),
   );
+  const canonical = plan.cases.flatMap((fixture) =>
+    fixture.surface === "cli"
+      ? ["implicit-default", "default", "json", "unix", "stylish"].flatMap((format) =>
+          ["stock", "wrapper"].map((surface) => [fixture.name, format, surface]),
+        )
+      : [[fixture.name, null, "native"]],
+  );
+  const twoWorkers = joinMixedCaptures(plan, custody, captures);
+  // Any fixed worker count joins to the same complete canonical observation list.
+  for (const workers of [2, 3, 6, 16]) {
+    const joined = workers === 2 ? twoWorkers : joinMixedCaptures(plan, custody, controls(workers));
+    assert.deepEqual(joined.passed, { cli: 45, native: 8 });
+    assert.equal(joined.observations.length, 98);
+    assert.deepEqual(
+      joined.observations.map((record) => [record.fixture, record.format ?? null, record.surface]),
+      canonical,
+    );
+    assert.deepEqual(joined.observations, twoWorkers.observations);
+    assert.equal(joined.workers, workers);
+  }
+  assert.equal(mixedWorkerCount({}), 2);
+  assert.equal(mixedWorkerCount({ VIZE_OXLINT_MIXED_WORKERS: "6" }), 6);
+  for (const raw of ["1", "17", "0", "two"])
+    assert.throws(() => mixedWorkerCount({ VIZE_OXLINT_MIXED_WORKERS: raw }));
 });
 
 await test("duplicate, missing, reordered, incomplete and foreign-authority controls cannot qualify", () => {
@@ -81,6 +99,10 @@ await test("duplicate, missing, reordered, incomplete and foreign-authority cont
     (captures) => {
       captures[1].workerIndex = 0;
     },
+    (captures) => {
+      captures[1].workers = 3;
+    },
+    (captures) => captures.pop(),
     (captures) => {
       captures[1].custody.calls = captures[0].custody.calls;
     },
