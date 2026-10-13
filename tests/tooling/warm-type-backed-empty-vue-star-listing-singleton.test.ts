@@ -18,6 +18,7 @@ const root = path.resolve(import.meta.dirname, "../..");
 const baseInput = "b45d789b317933d48dadbba4841c8e353231547b";
 const before = "ea1fc59ee6ef61a3509b1ef42a6fa7aacd9f8586";
 const failedAfter = "e02a861cc1c6ad12724036c70bfdd5d48173b189";
+const integratedBase = "e78d2cb93e278032cd262201b0a444273618ee25";
 const execution = "crates/vize_canon/tests/empty_vue_star_exports/execution.rs";
 const listing = "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts";
 const singleton = "tests/performance/support/warm-type-backed-empty-vue-star-listing-singleton.ts";
@@ -36,7 +37,8 @@ const git = (args: string[], input?: Buffer) =>
     maxBuffer: 64 * 1024 * 1024,
   });
 const sha = (body: Buffer) => createHash("sha256").update(body).digest("hex");
-for (const source of [baseInput, before, failedAfter]) ensureHostedLiteralSource(root, source);
+for (const source of [baseInput, before, failedAfter, integratedBase])
+  ensureHostedLiteralSource(root, source);
 assert.equal(git(["merge-base", baseInput, failedAfter]).toString().trim(), before);
 const production = git([
   "diff",
@@ -57,33 +59,40 @@ const production = git([
   .toString()
   .trim()
   .split("\n");
-const entries = git(["ls-tree", "-z", before, "--", ...files])
-  .toString()
-  .split("\0")
-  .filter(Boolean);
-const rows = entries.map((entry) => {
-  const match = /^100644 blob ([a-f0-9]{40})\t(.+)$/u.exec(entry);
-  assert(match, "complete actual regular baseline source");
-  return { blob: match[1], file: match[2] };
-});
-const raw = git(["cat-file", "--batch"], Buffer.from(rows.map(({ blob }) => blob + "\n").join("")));
-const baseline = new Map<string, string>();
-let offset = 0;
-for (const row of rows) {
-  const end = raw.indexOf(10, offset);
-  const header = /^([a-f0-9]{40}) blob ([0-9]+)$/u.exec(raw.subarray(offset, end).toString());
-  assert(header);
-  assert.equal(header[1], row.blob);
-  const length = Number(header[2]);
-  const body = raw.subarray(end + 1, end + 1 + length);
-  assert.equal(
-    createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex"),
-    row.blob,
+function readBaseline(revision: string) {
+  const entries = git(["ls-tree", "-z", revision, "--", ...files])
+    .toString()
+    .split("\0")
+    .filter(Boolean);
+  const rows = entries.map((entry) => {
+    const match = /^100644 blob ([a-f0-9]{40})\t(.+)$/u.exec(entry);
+    assert(match, "complete actual regular baseline source");
+    return { blob: match[1], file: match[2] };
+  });
+  const raw = git(
+    ["cat-file", "--batch"],
+    Buffer.from(rows.map(({ blob }) => blob + "\n").join("")),
   );
-  baseline.set(row.file, sha(body));
-  offset = end + length + 2;
+  const baseline = new Map<string, string>();
+  let offset = 0;
+  for (const row of rows) {
+    const end = raw.indexOf(10, offset);
+    const header = /^([a-f0-9]{40}) blob ([0-9]+)$/u.exec(raw.subarray(offset, end).toString());
+    assert(header);
+    assert.equal(header[1], row.blob);
+    const length = Number(header[2]);
+    const body = raw.subarray(end + 1, end + 1 + length);
+    assert.equal(
+      createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex"),
+      row.blob,
+    );
+    baseline.set(row.file, sha(body));
+    offset = end + length + 2;
+  }
+  assert.equal(offset, raw.length);
+  return baseline;
 }
-assert.equal(offset, raw.length);
+const baseline = readBaseline(before);
 const candidate = new Map(
   files.map((file) => {
     const target = path.join(root, file);
@@ -113,6 +122,33 @@ await test("the real refused pair has one delta after its existing migration, no
   assert.equal(actual.emptyVueStarListingSingleton.retainedCurrentBodyPairs, 289);
   assert.equal(actual.emptyVueStarListingSingleton.runtimeCredit, false);
   assert.equal(actual.emptyVueStarListingSingleton.performanceCredit, false);
+});
+
+await test("the integrated main predecessor retains the whole current cohort and original failed law", () => {
+  const currentBefore = readBaseline(integratedBase);
+  const currentDigest = (side: "before" | "after", file: string) =>
+    (side === "before" ? currentBefore : candidate).get(file) ?? null;
+  for (const [file, , current] of pairs) assert.equal(currentBefore.get(file), current);
+  for (const file of oldHelpers) assert.equal(currentBefore.get(file), candidate.get(file));
+  assert.equal(currentBefore.get(listing), undefined);
+  assert.equal(currentBefore.get(singleton), undefined);
+  const qualified = qualifyHostMoves(production, new Set(), true, currentDigest);
+  assert.equal(qualified.emptyVueStarHost, undefined);
+  assert(qualified.emptyVueStarListingSingleton);
+  assert.deepEqual(qualified.emptyVueStarListingSingleton.files, [execution]);
+  assert.equal(qualified.emptyVueStarListingSingleton.retainedCurrentBodyPairs, 289);
+  for (const file of files)
+    for (const side of ["before", "after"] as const)
+      for (const changed of [null, "f".repeat(64)]) {
+        if (changed === currentDigest(side, file)) continue;
+        assert.equal(
+          qualifyHostMoves(production, new Set(), true, (s, name) =>
+            s === side && name === file ? changed : currentDigest(s, name),
+          ).emptyVueStarListingSingleton,
+          undefined,
+          `${side}:${file}`,
+        );
+      }
 });
 
 await test("every actual closed body on either side rejects absence and foreign source", () => {

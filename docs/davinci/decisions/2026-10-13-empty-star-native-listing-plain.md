@@ -37,3 +37,14 @@ regular modes, reproduce the old migration refusal, exercise the actual warm
 caller, and reject drift/absence in every closed body plus disallowed neighbors.
 They grant no runtime, native, memory or performance acceptance. Fresh exact-head
 source, original400, full Check and protected delivery remain required.
+
+Before treating the9eb source's original400 build observation as qualification,
+compose actual main e78d2cb93e278032cd262201b0a444273618ee25, tree
+78c5731791eef94920f1852ada5838ca50174278. Both complete290 CURRENT source
+cohorts remain exact; the real production index delta from e78 is still only
+the listing execution file. The original19 laws remain, and a fourth singleton
+control authenticates every regular e78 predecessor body and rejects both-sided
+cohort drift while retaining the original ea1/e02 failed-pair law. Preserve all
+incoming foundation bytes and both CI clauses at350lines. Old9eb observations
+stay historical; only fresh composed-head source/native/original400 Actions
+can qualify the successor. No observed speed or runtime credit transfers.
