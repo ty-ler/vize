@@ -135,7 +135,6 @@ await test("the actual BD union admits only one production path after complete c
   assert.deepEqual(production, [execution]);
   assert.deepEqual(qualifyStarListingBD(production, new Set(), digest)?.files, production);
 });
-
 await test("every complete BD counterpart and executing body on both sides refuses drift and absence", () => {
   for (const file of files)
     for (const side of ["before", "after"])
