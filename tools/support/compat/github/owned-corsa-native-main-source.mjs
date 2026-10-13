@@ -51,3 +51,12 @@ export function projectOwnedCorsaNativeMainReader(baseline, reader) {
     ? { ...values.get(file).retained, body: Buffer.from(values.get(file).retained.body) }
     : reader(side, file);
 }
+
+/** Copied source describes only the after side; this grants no before-side authority. */
+export function projectOwnedCorsaNativeMainAfter(reader) {
+  for (const [file, pair] of values)
+    assert.deepEqual(reader("after", file), pair.after, "whole actual native copied source: " + file);
+  return (file) => values.has(file)
+    ? { ...values.get(file).retained, body: Buffer.from(values.get(file).retained.body) }
+    : reader("after", file);
+}

@@ -3,9 +3,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { javascriptSfcSourcePaths } from "./javascript-sfc-source-context.mjs";
 import { authenticateOwnedJavaScriptSource, ownedJavaScriptLexicalPaths } from "./owned-corsa-javascript-source.mjs";
-import { projectOwnedCorsaNativeMainReader } from "./owned-corsa-native-main-source.mjs";
-import { ownedCorsaNativeGatesMainBaseline } from "./owned-corsa-current-baseline.mjs";
-import { preservedRecipeBody } from "../../../../tests/performance/support/warm-type-backed-owned-corsa-recipe.ts";
+import { projectOwnedCorsaNativeMainAfter } from "./owned-corsa-native-main-source.mjs";
 import { ownedCorsaSource, qualifyOwnedCorsaSource } from "./owned-corsa-source-custody.mjs";
 import { verifyOwnedCorsaCallers, ownedCorsaCallerPaths } from "./owned-corsa-caller-custody.mjs";
 
@@ -132,20 +130,18 @@ export function projectOwnedCorsaLexicalCopied({
     assert.equal(entry.sha256, sha(actual.body));
   }
   const javascript = authenticateOwnedJavaScriptSource(reader);
-  const mainReader = projectOwnedCorsaNativeMainReader(ownedCorsaNativeGatesMainBaseline.revision, reader);
+  const mainReader = projectOwnedCorsaNativeMainAfter(reader);
   const original = new Set(ownedCorsaSource.rows.map(({ file }) => file));
   const old = new Set(originalPaths);
   const source = (file) => {
     const caller = callers.reader("after", file);
     const graphBody = graph.historicalReader("after", file);
-    const mainBody = mainReader("after", file);
+    const mainBody = mainReader(file);
     const jsBody = javascriptSfcSourcePaths.includes(file) && !original.has(file)
       ? file === "tests/_fixtures/differential/typechecker/manifest.json"
         ? javascript.retainedOwnedAfter(file) : javascript.historicalAfter(file)
       : null;
-    const recipeBody = file === "pnpm-lock.yaml" ? preservedRecipeBody(reader, file) : null;
-    const value = recipeBody ? { mode: "100644", blob: createHash("sha1").update(`blob ${recipeBody.length}\0`).update(recipeBody).digest("hex"), body: recipeBody }
-      : caller?.blob !== reader("after", file)?.blob ? caller
+    const value = caller?.blob !== reader("after", file)?.blob ? caller
       : mainBody?.blob !== reader("after", file)?.blob ? mainBody
       : jsBody ? { mode: "100644", blob: createHash("sha1").update(`blob ${jsBody.length}\0`).update(jsBody).digest("hex"), body: jsBody }
       : graphBody;

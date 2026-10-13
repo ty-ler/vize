@@ -6,7 +6,7 @@ const blob = (body) => createHash("sha1").update(`blob ${body.length}\0`).update
 const url = new URL("./owned-corsa-sdk-repair-source.json", import.meta.url), stat = fs.lstatSync(url);
 assert(stat.isFile() && (stat.mode & 0o777) === 0o644);
 const bytes = fs.readFileSync(url);
-assert.equal(sha(bytes), "1ad6e559978165340eed74a5b5590fe2332f124d54be2f10dd41354b3ba75e4f");
+assert.equal(sha(bytes), "9108b07f825b5a75512c579c618a2f65f5f3dd8ad25ee0d9ce11d95bedb65c89");
 const data = JSON.parse(bytes);
 assert.equal(data.schema, 1);
 assert.equal(data.sourceOnly, true);

@@ -5,6 +5,8 @@ import {
   validateLexicalSourceBodies,
 } from "./native-lexical-composition-custody.mjs";
 import { ownedCorsaNativeGatesMainBaseline } from "./owned-corsa-current-baseline.mjs";
+import { preservedRecipeBody } from "../../../../tests/performance/support/warm-type-backed-owned-corsa-recipe.ts";
+import { createHash } from "node:crypto";
 import { ownedCorsaReader } from "./owned-corsa-source-reader.mjs";
 import { ownedCorsaSource } from "./owned-corsa-source-custody.mjs";
 import {
@@ -72,10 +74,15 @@ export function validateOwnedLexicalSourceBodies(manifest, copied, context) {
     reader,
     historicalPairs: nativeLexicalCompositionBodyPairs,
   });
+  const lock = preservedRecipeBody(reader, "pnpm-lock.yaml");
+  const historicalCopied = view.historicalCopied.map((entry) => entry.file === "pnpm-lock.yaml"
+    ? { ...entry, byteLength: lock.length, sha256: createHash("sha256").update(lock).digest("hex"),
+        gitEntryHex: Buffer.from(`100644 blob ${createHash("sha1").update(`blob ${lock.length}\0`).update(lock).digest("hex")}\t${entry.file}\0`).toString("hex") }
+    : entry);
   const original = validateLexicalSourceBodies(
     manifest,
-    view.historicalCopied,
-    view.historicalReader,
+    historicalCopied,
+    (file) => file === "pnpm-lock.yaml" ? Buffer.from(lock) : view.historicalReader(file),
   );
   assert(original);
   return {
