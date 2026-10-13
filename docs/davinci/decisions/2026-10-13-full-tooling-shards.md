@@ -84,3 +84,42 @@ Tooling checkouts fetch complete actual history: a depth-one HEAD refuses the
 reviewed shipping-cut merge base even when all raw objects are present. The
 existing checkout hydrates that graph; strict shallow and parent-edge refusals
 remain unchanged.
+
+The first cumulative full run exposed one deferred LSP guard that still read the
+old monolithic workflow for create-vue hydration. Its actual pinned SFC/TSX
+runtime test passed. Follow the real full-worker action from the parsed caller
+and retain the identical hydration assertion; all original LSP runtime bodies
+remain unchanged. This is the only T1 test that reads the old Check workflow.
+Retain the failed run and audit every worker before one combined successor.
+
+Actual cumulative [full run 38371279261](https://github.com/ubugeeei-prod/vize/actions/runs/38371279261)
+at `9d1def612911a6b95709cb566ebd3ee00f4b0a36` returned all four commands within
+their unchanged deadlines. This failed run is evidence of elapsed work, not
+full qualification or a controlled speed comparison. The producer took 97s;
+its original CLI/SFC command took 65s. All workers planned 1,229/1,229 files,
+deferred no T1 tests and consumed the same original receipt
+`e7397c13dfd13860ec0fc019b0edffd475bf31a9efbc2f5a63ed693aa7db097a`.
+
+| Worker | Preparation | Planned wrapper | Post-job | Total | Actual result |
+| ------ | ----------- | --------------- | -------- | ----- | ------------- |
+| 1 | 258.104s | 593.326s | 6.569s | 858s | Passed |
+| 2 | 68.571s | 524.032s | 4.396s | 597s | Passed |
+| 3 | 76.896s | 776.986s | 3.117s | 857s | Listing source test failed |
+| 4 | 71.452s | 510.379s | 3.168s | 585s | Old LSP guard location failed |
+
+The existing full JS quorum failed on the aggregated worker failure as required.
+The listing test also failed in source CI with only a file-level failure; its
+local six-case success does not explain the hosted failure. The separate Vue
+diagnostic parity failure remains a product blocker. Preserve the complete logs
+and source-coverage packets, repair actual causes and obtain fresh full results.
+
+For the observed listing file failure, retain structured built-in TAP alongside
+the original spec stdout only when that file is already selected on Actions.
+Keep every selected file, the original Node backend, concurrency one, TSGO
+requirement, environment and deadline. Record the outer command's actual status,
+signal, error and run/source identity before preserving its exit behavior. An
+independent real Node control proves TAP retains a terminated file child's
+SIGTERM while the outer process reports status 1. It explains neither hosted
+failure and grants no repaired-source credit. A separate always-run artifact
+keeps these observations without changing the original formatter evidence.
+Capture the existing inherited NODE_TEST_CONTEXT; do not change it on a theory.

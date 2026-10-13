@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { toolingTestFiles } from "./plan-tooling-tests.mjs";
 import { selectToolingShard } from "./tooling-test-shards.ts";
@@ -27,6 +27,27 @@ export function toolingTestCommand(plan, available = toolingTestFiles(), shard =
   return ["--test", "--test-concurrency=1", ...selectToolingShard(plan, shard)];
 }
 
+export function toolingTestObservation(args, env = process.env) {
+  if (
+    env.GITHUB_ACTIONS !== "true" ||
+    !env.RUNNER_TEMP ||
+    !args.includes("tests/tooling/empty-vue-star-listing-source.test.mjs")
+  )
+    return null;
+  const directory = join(env.RUNNER_TEMP, "tooling-listing-diagnostics");
+  return {
+    directory,
+    args: [
+      ...args.slice(0, 2),
+      "--test-reporter=spec",
+      "--test-reporter-destination=stdout",
+      "--test-reporter=tap",
+      `--test-reporter-destination=${join(directory, "tests.tap")}`,
+      ...args.slice(2),
+    ],
+  };
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const planPath =
     process.argv[2] ?? process.env.VIZE_TOOLING_TEST_PLAN ?? "target/tooling-test-plan.json";
@@ -40,7 +61,45 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     // Selection defers known scenarios. An unclassified new requirement must
     // still fail closed; disabling the requirement would hide missing coverage.
     const env = { ...process.env, VIZE_TEST_REQUIRE_TSGO: "1" };
-    const result = spawnSync(process.execPath, args, { cwd: root, env, stdio: "inherit" });
+    const observation = toolingTestObservation(args, env);
+    if (observation) {
+      mkdirSync(observation.directory, { recursive: true });
+      env.VIZE_TOOLING_LISTING_OBSERVATION_DIR = observation.directory;
+    }
+    const startedAt = new Date().toISOString();
+    const result = spawnSync(process.execPath, observation?.args ?? args, {
+      cwd: root,
+      env,
+      stdio: "inherit",
+    });
+    if (observation)
+      writeFileSync(
+        join(observation.directory, "outer-result.json"),
+        JSON.stringify(
+          {
+            source: env.GITHUB_SHA,
+            run: env.GITHUB_RUN_ID,
+            attempt: env.GITHUB_RUN_ATTEMPT,
+            job: env.GITHUB_JOB,
+            shard: env.VIZE_TOOLING_TEST_SHARD,
+            node: process.execPath,
+            version: process.version,
+            nodeTestContext: env.NODE_TEST_CONTEXT ?? null,
+            args: observation.args,
+            originalArgs: args,
+            cwd: root,
+            startedAt,
+            completedAt: new Date().toISOString(),
+            status: result.status,
+            signal: result.signal,
+            error: result.error
+              ? { name: result.error.name, message: result.error.message, code: result.error.code }
+              : null,
+          },
+          null,
+          2,
+        ) + "\n",
+      );
     if (result.error) throw result.error;
     process.exitCode = result.status ?? 1;
   } else {
