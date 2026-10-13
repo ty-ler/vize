@@ -89,49 +89,11 @@ jobs:
       run-rust: ${{ needs.pr-source-plan.outputs.rust == 'true' }}
       rust-plan: ${{ needs.pr-source-plan.outputs.rust-plan }}
   pr-js-packages:
-    name: PR JS package build and tests
+    name: PR JS packages
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
     needs: pr-source-plan
-    runs-on: blacksmith-32vcpu-ubuntu-2404
-    timeout-minutes: 35
-    env:
-      NODE_OPTIONS: "--disable-warning=DEP0040 --disable-warning=DEP0169"
-      CARGO_BUILD_JOBS: "12"
-    steps:
-      - name: Explain documentation-only skip
-        if: ${{ needs.pr-source-plan.outputs.js != 'true' }}
-        run: echo 'JS package checks skipped because this PR changes no package, compiler, or unknown source paths.' >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        if: ${{ needs.pr-source-plan.outputs.js == 'true' }}
-      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
-        if: ${{ needs.pr-source-plan.outputs.js == 'true' }}
-        with: { node-version-file: "package.json", cache: true, run-install: false }
-      - uses: ./.github/actions/setup-moonbit
-        if: ${{ needs.pr-source-plan.outputs.js == 'true' }}
-      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable }
-        if: ${{ needs.pr-source-plan.outputs.js == 'true' }}
-      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
-        if: ${{ needs.pr-source-plan.outputs.js == 'true' }}
-        with: { wild-version: "0.9.0" }
-      - uses: ./.github/actions/setup-rust-sticky-cache
-        if: ${{ needs.pr-source-plan.outputs.js == 'true' }}
-        with:
-          cache-key-prefix: ${{ github.event_name == 'pull_request' && format('pr-{0}-', github.event.pull_request.number) || format('merge-{0}-', github.sha) }}
-          key: test-js-packages
-          cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
-      - name: Install JS dependencies
-        if: ${{ needs.pr-source-plan.outputs.js == 'true' }}
-        run: vp install --frozen-lockfile --prefer-offline
-      - name: Test JS packages
-        if: ${{ always() && needs.pr-source-plan.outputs.js == 'true' }}
-        uses: ./.github/actions/test-js-packages-with-history
-      - name: Check Fresco native declarations and consumer types
-        if: ${{ needs.pr-source-plan.outputs.js == 'true' }}
-        run: vp run --filter './npm/fresco-native' check:generated && vp run --filter './npm/fresco-native' check:types
-      - name: Check UI package conformance
-        if: ${{ needs.pr-source-plan.outputs.js == 'true' }}
-        run: vp run --filter './npm/native' build:ci && vp run --filter './npm/ui' check
+    uses: ./.github/workflows/pr-js-checks.yml
+    with: { run-js: "${{ needs.pr-source-plan.outputs.js == 'true' }}" }
   pr-source-cli:
     needs: pr-source-plan
     uses: ./.github/workflows/pr-source-cli.yml
