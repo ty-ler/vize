@@ -49,6 +49,7 @@ impl RequireVForKey {
         ctx: &mut MarkupContext<'_, 'a>,
         element: &MarkupElement<'a>,
         range: ByteRange,
+        template_directive: bool,
     ) {
         // petite-vue does not require a `:key` on `v-for`.
         if ctx.lint().is_petite_vue() {
@@ -60,12 +61,12 @@ impl RequireVForKey {
         }
         if element.tag() == "template" || (!exact && element.is_tag("template")) {
             if has_markup_template_v_for_key(element, exact)
-                || (ctx.is_template() && markup_child_key_owners(element, exact) == (false, true))
+                || (template_directive && markup_child_key_owners(element, exact) == (false, true))
             {
                 return;
             }
         } else if has_markup_key(element, exact)
-            || (ctx.is_template() && markup_element_is_custom_component(element))
+            || (template_directive && markup_element_is_custom_component(element))
         {
             return;
         }
@@ -342,8 +343,9 @@ impl MarkupRule for RequireVForKey {
     }
 
     fn enter_attributes<'a>(&self, ctx: &mut MarkupContext<'_, 'a>, element: &MarkupElement<'a>) {
+        let template_directive = ctx.is_template();
         element.walk_authored_directive_ranges("for", &mut |range| {
-            Self::check_keyed_element(ctx, element, range);
+            Self::check_keyed_element(ctx, element, range, template_directive);
         });
     }
 
@@ -353,7 +355,7 @@ impl MarkupRule for RequireVForKey {
         }
         // Transformed scopes carry no authored directive attribute.
         list.walk_elements(&mut |element| {
-            Self::check_keyed_element(ctx, &element, element.range());
+            Self::check_keyed_element(ctx, &element, element.range(), false);
         });
     }
 }
