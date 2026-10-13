@@ -266,7 +266,7 @@ jobs:
         with: { node-version-file: "package.json", cache: true, run-install: false }
       - name: Build WASM
         if: ${{ env.RUN_PLAYGROUND == 'true' && steps.cache-wasm.outputs.cache-hit != 'true' }}
-        run: node tools/support/github/build-vitrine-wasm.ts playground/src/wasm
+        run: node tools/support/github/build-vitrine-wasm.ts --profile ci-wasm playground/src/wasm
       - name: Install JS dependencies
         if: ${{ env.RUN_PLAYGROUND == 'true' }}
         run: vp install --frozen-lockfile --prefer-offline

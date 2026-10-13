@@ -14,12 +14,12 @@ test("native Program and Vue whole responses share the same actual feature valid
   assert.notEqual(step["continue-on-error"], true);
   assert.equal(step.if, undefined);
   assert.deepEqual(step.run.trim().split("\n"), [
-    "cargo test --locked -p vize_maestro --features experimental-source-navigation --lib source_project:: -- --nocapture",
-    "cargo test --locked -p vize_maestro --features experimental-source-navigation --lib server::native_navigation:: -- --nocapture",
-    "cargo test --locked -p vize_maestro --features experimental-source-navigation --lib module_link -- --nocapture",
-    "cargo test --locked -p vize_maestro --no-default-features --features experimental-source-navigation --lib module_link -- --nocapture",
-    "cargo check --locked -p vize_maestro --no-default-features --features experimental-source-navigation",
-    "cargo clippy --locked -p vize_maestro --features experimental-source-navigation --all-targets -- -D warnings",
+    "cargo test --locked --profile ci -p vize_maestro --features experimental-source-navigation --lib source_project:: -- --nocapture",
+    "cargo test --locked --profile ci -p vize_maestro --features experimental-source-navigation --lib server::native_navigation:: -- --nocapture",
+    "cargo test --locked --profile ci -p vize_maestro --features experimental-source-navigation --lib module_link -- --nocapture",
+    "cargo test --locked --profile ci -p vize_maestro --no-default-features --features experimental-source-navigation --lib module_link -- --nocapture",
+    "cargo check --locked --profile ci -p vize_maestro --no-default-features --features experimental-source-navigation",
+    "cargo clippy --locked --profile ci -p vize_maestro --features experimental-source-navigation --all-targets -- -D warnings",
   ]);
   const full = parse(
     readRepoFile(".github", "actions", "test-rust-workspace-differential", "action.yml"),

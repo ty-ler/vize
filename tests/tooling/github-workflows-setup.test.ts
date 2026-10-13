@@ -104,13 +104,15 @@ test("WASM build jobs set up Node before invoking the TypeScript builders", () =
       workflowName: "check.yml",
       jobName: "playground-test",
       setup: "- name: Setup Vite+ and Node.js",
-      command: "run: node tools/support/github/build-vitrine-wasm.ts playground/src/wasm",
+      command:
+        "run: node tools/support/github/build-vitrine-wasm.ts --profile ci-wasm playground/src/wasm",
     },
     {
       workflowName: "pr-source-checks.yml",
       jobName: "pr-playground-test",
       setup: "- uses: voidzero-dev/setup-vp@",
-      command: "run: node tools/support/github/build-vitrine-wasm.ts playground/src/wasm",
+      command:
+        "run: node tools/support/github/build-vitrine-wasm.ts --profile ci-wasm playground/src/wasm",
     },
     {
       workflowName: "build-docs.yml",

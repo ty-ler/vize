@@ -56,7 +56,7 @@ jobs:
         if: ${{ inputs.run-rust }}
       - name: Clippy
         if: ${{ inputs.run-rust }}
-        run: cargo clippy --workspace -- -D warnings -D clippy::wildcard_imports
+        run: cargo clippy --workspace --profile ci -- -D warnings -D clippy::wildcard_imports
       - name: Skeleton todo ratchet
         if: ${{ inputs.run-rust }}
         run: rustc --edition 2024 tools/commands/ci/check-skeleton-todos.rs -o "$RUNNER_TEMP/check-skeleton-todos" && "$RUNNER_TEMP/check-skeleton-todos" --check
@@ -90,7 +90,7 @@ jobs:
         run: cargo nextest list --archive-file target/rust-test-archive/tests.tar.zst --extract-to "$GITHUB_WORKSPACE" --extract-overwrite --workspace-remap "$GITHUB_WORKSPACE" --profile full --message-format json > "$RUNNER_TEMP/rust-test-timings/workspace-tests.json"
       - name: Native L1 markup parity
         if: ${{ inputs.run-rust }}
-        run: cargo test -p vize_armature --features native-lex-parity,legacy --lib --test markup_lex_parity
+        run: cargo test --profile ci -p vize_armature --features native-lex-parity,legacy --lib --test markup_lex_parity
       - name: Run Rust workspace doctests
         id: rust-test-run
         if: ${{ inputs.run-rust }}
@@ -169,10 +169,10 @@ jobs:
         run: rustc --edition 2024 tools/commands/ci/check-skeleton-todos.rs -o "$RUNNER_TEMP/check-skeleton-todos" && "$RUNNER_TEMP/check-skeleton-todos" --check
       - name: Native L1 markup parity
         if: ${{ contains(fromJSON(inputs.rust-plan).packages, 'vize_l1') || contains(fromJSON(inputs.rust-plan).packages, 'vize_armature') }}
-        run: cargo test -p vize_armature --features native-lex-parity,legacy --lib --test markup_lex_parity
+        run: cargo test --profile ci -p vize_armature --features native-lex-parity,legacy --lib --test markup_lex_parity
       - name: Test L1 feature-enabled surface corpus
         if: ${{ contains(fromJSON(inputs.rust-plan).packages, 'vize_l1') }}
-        run: cargo test -p vize_l1 --features legacy-differential --test surface_corpus -- --nocapture
+        run: cargo test --profile ci -p vize_l1 --features legacy-differential --test surface_corpus -- --nocapture
       - name: Test affected native Program and Vue navigation
         if: ${{ contains(fromJSON(inputs.rust-plan).packages, 'vize_maestro') }}
         uses: ./.github/actions/test-native-navigation
