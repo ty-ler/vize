@@ -102,16 +102,35 @@ fn is_identifier_byte(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
 }
 
-/// Component Options props remain instance-owned even when binding analysis
-/// deliberately excludes the wider Options API binding surface.
-pub(super) fn with_options_prop_names(
+/// Resolve component props from the existing bindings facts and Options
+/// descriptor, preserving lexical setup shadowing before adding instance props.
+pub(super) fn template_props(
     analysis: &vize_croquis::Croquis,
-    mut names: FxHashSet<String>,
-) -> FxHashSet<String> {
+) -> Option<(FxHashSet<String>, bool)> {
+    use vize_croquis::facts::{Bindings, BindingsTable, CroquisFacts};
+    use vize_croquis::reactivity::ReactiveKind;
+    use vize_relief::BindingType;
+
+    let mut names: FxHashSet<String> = FxHashSet::default();
+    for prop in analysis.macros.props() {
+        names.insert(prop.name.to_compact_string());
+    }
+    let mut facts = CroquisFacts::new(analysis);
+    let prepared = facts.prepare::<super::NoMutatingProps>();
+    let bindings = prepared.get::<Bindings>().ok()?;
+    for (name, binding_type) in bindings.typed() {
+        if matches!(binding_type, BindingType::Props | BindingType::PropsAliased) {
+            names.insert(name.to_compact_string());
+        } else {
+            names.remove(name);
+        }
+    }
     if let Some(options) = analysis.options_descriptor.as_ref() {
         for prop in options.members_in(vize_croquis::OptionGroup::Props) {
             names.insert(prop.name.to_compact_string());
         }
     }
-    names
+    let has_props_object_binding = vize_croquis::facts::reactivity_lookup(analysis, "props")
+        .is_some_and(|source| matches!(source.kind, ReactiveKind::Readonly));
+    Some((names, has_props_object_binding))
 }

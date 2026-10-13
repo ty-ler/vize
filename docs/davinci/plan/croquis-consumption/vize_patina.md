@@ -39,7 +39,7 @@ One shard of the [Croquis consumption matrix](../croquis-consumption.md): resolv
 
 | item                                      | files | sites |
 | ----------------------------------------- | ----: | ----: |
-| `Bindings`                                |     1 |     2 |
+| `Bindings`                                |     2 |     2 |
 | `BlockLocation`                           |     2 |     3 |
 | `CroquisFacts`                            |     4 |     5 |
 | `Demand`                                  |     3 |     6 |

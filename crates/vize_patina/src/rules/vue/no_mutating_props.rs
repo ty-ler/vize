@@ -27,13 +27,10 @@ use self::scope::{PropScope, expression_source, push_for_aliases, push_identifie
 use crate::context::LintContext;
 use crate::diagnostic::Severity;
 use crate::rule::{Rule, RuleCategory, RuleMeta};
-use vize_croquis::facts::{Bindings, BindingsTable, CroquisFacts, Demand, FactConsumer, FactGroup};
-use vize_croquis::reactivity::ReactiveKind;
+use vize_croquis::facts::{Bindings, Demand, FactConsumer, FactGroup};
 use vize_l0::FxHashSet;
 use vize_l0::String;
-use vize_l0::ToCompactString;
 use vize_l0::cstr;
-use vize_relief::BindingType;
 use vize_relief::{DirectiveNode, ElementNode, ForNode, PropNode, RootNode, TemplateChildNode};
 
 static META: RuleMeta = RuleMeta {
@@ -299,40 +296,10 @@ impl Rule for NoMutatingProps {
             return;
         }
 
-        // Collect prop names first (to avoid borrow conflicts)
-        let (prop_names, has_props_object_binding): (FxHashSet<String>, bool) = {
-            let Some(analysis) = ctx.analysis() else {
-                return;
-            };
-
-            let mut names: FxHashSet<String> = FxHashSet::default();
-
-            for prop in analysis.macros.props() {
-                names.insert(prop.name.to_compact_string());
-            }
-
-            let mut facts = CroquisFacts::new(analysis);
-            // The rule declares the `Bindings` demand, so this lookup only
-            // fails if the facts engine is broken; lint nothing in that case.
-            let Ok(bindings) = facts.prepare::<NoMutatingProps>().get::<Bindings>() else {
-                return;
-            };
-            for (name, binding_type) in bindings.typed() {
-                if matches!(binding_type, BindingType::Props | BindingType::PropsAliased) {
-                    names.insert(name.to_compact_string());
-                } else {
-                    names.remove(name);
-                }
-            }
-
-            let has_props_object_binding =
-                vize_croquis::facts::reactivity_lookup(analysis, "props")
-                    .is_some_and(|source| matches!(source.kind, ReactiveKind::Readonly));
-
-            (
-                scope::with_options_prop_names(analysis, names),
-                has_props_object_binding,
-            )
+        let Some((prop_names, has_props_object_binding)) =
+            ctx.analysis().and_then(scope::template_props)
+        else {
+            return;
         };
 
         // If no props binding is visible, nothing to check.
