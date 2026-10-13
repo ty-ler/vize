@@ -57,3 +57,50 @@ single-parent edges checked. A separate owned temporary repository has only
 these unchanged objects and the explicit already-proved ea1 common boundary;
 Git must still return that exact original merge-base. No production/source
 body, caller qualification, historical law or oracle is changed.
+
+
+The fadd native-phase run loaded a newer default workflow that invokes
+`native-javascript-sfc-membership.sh`, while its e78-based source lacked that
+script. Compose literal main bd5702 without changing the workflow protocol.
+Main's four changed Star bodies are the already-admitted JavaScript source
+capsules; the original290 tables, JS93 API, Star322 API, auxiliary17, metadata
+and original custody runner remain byte-identical. The production difference
+from bd5702 is still only execution.rs. Incoming foundation paragraphs and
+all incoming-only source blobs are preserved.
+
+A separate named listing counterpart pins412 complete original BD source and
+entrypoint pairs, including the entire322 Star and93 JavaScript cohorts. It
+also binds its eleven table parts, manifest, executing module, fixed-source
+snapshot utility, negative test and two new listing entrypoints to committed
+raw regular bodies. Seven whole inverses recover exactly BD execution, union
+caller, four existing test entrypoints and the lexical source callsite. Their
+complete original Git bodies, lengths, SHA256 and blob identities are fixed;
+there is no partial-text source admission. Only the exact singleton production
+footprint may use the new qualification, and every closed cell is checked on
+both sides. Extra, duplicate, already-qualified, hybrid and foreign footprints
+continue to refuse. No runtime, original400 or performance credit is granted.
+
+Each current test entrypoint first authenticates the complete actual owned
+source, then executes its unchanged original law from an owned literal BD or
+19b Git frame. The original JS93/Star322/private controls and eight historical
+custody laws execute on BD; the original listing controls retain the exact
+ea1/e02/e78 inputs and five-commit finite ancestry law on19b. All historical
+objects needed by those laws are provisioned through the unchanged strict
+hosted helper in the actual Actions checkout before creating private frames.
+Frames select authenticated regular blobs from the literal source tree, keep
+its genuine commit/tree identity and an owned read-only object-pool alternate,
+and are removed after tests. The lexical source read is restricted to93
+known JS paths and lends only the complete BD caller after checking all actual
+current source and all copied current bytes. It preserves actual compiler,
+source, metadata and receipt ownership.
+
+New controls reject every source/metadata/entrypoint cell's absence or drift
+on either side, wrong neighbors and mixed qualified footprints, physical and
+committed mutations, executable modes, hybrids and replacement refs before
+any historical replay. The retained19b source lint warning for its raw parent
+header regex remains historical; the current entrypoint contains no such
+expression while the exact original parent-edge law still runs unchanged.
+Fresh exact-head source, native, original400, full Check and protected delivery
+remain required. Independent component-read and fixture-registry counterparts
+are not admitted by this listing-only footprint and require separate reviewed
+composition.

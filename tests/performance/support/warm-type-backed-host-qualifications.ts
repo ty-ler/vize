@@ -8,12 +8,15 @@ import { qualifyPathHostMove } from "./warm-type-backed-path-host.ts";
 import { qualifyTimingHostMove } from "./warm-type-backed-timing-host.ts";
 import { qualifyDefaultMigrationHost } from "./warm-type-backed-default-migration-host.ts";
 import { qualifyAsciiSymbolHost } from "./warm-type-backed-ascii-symbol-host.ts";
+import { qualifyJavaScriptSfcHost } from "./warm-type-backed-javascript-sfc-host.ts";
 
 import { qualifyEmptyVueStarHost } from "./warm-type-backed-empty-vue-star-host.ts";
 
 import { qualifyEmptyVueStarListingHost } from "./warm-type-backed-empty-vue-star-listing.ts";
 
 import { qualifyEmptyVueStarListingSingleton } from "./warm-type-backed-empty-vue-star-listing-singleton.ts";
+
+import { qualifyStarListingBD } from "../../../tools/support/compat/github/empty-vue-star-listing-source.mjs";
 
 /** Compose finite qualifications without changing existing path/timing authorities. */
 export function qualifyHostMoves(
@@ -22,6 +25,9 @@ export function qualifyHostMoves(
   enabled: boolean,
   digest: (side: "before" | "after", file: string) => string | null,
 ) {
+  const javascriptSfcHost = enabled
+    ? qualifyJavaScriptSfcHost(production, alreadyQualified, digest)
+    : null;
   const lexicalDollarHost = enabled
     ? qualifyLexicalDollarHost(production, alreadyQualified, digest)
     : null;
@@ -76,6 +82,9 @@ export function qualifyHostMoves(
     ) === "ec0fc623eb66eab0df4015d6bfe70cf106d53d427f395c0c1e7d39d060f899f6"
       ? qualifyEmptyVueStarListingSingleton(production, alreadyQualified, digest)
       : null;
+  const emptyVueStarListingBD = enabled
+    ? qualifyStarListingBD(production, alreadyQualified, digest)
+    : null;
   return {
     pathHostMove: enabled ? qualifyPathHostMove(production, alreadyQualified, digest) : null,
     timingHostMove: enabled ? qualifyTimingHostMove(production, alreadyQualified, digest) : null,
@@ -83,9 +92,11 @@ export function qualifyHostMoves(
       ? qualifyDefaultMigrationHost(production, alreadyQualified, digest)
       : null,
     ...(lexicalDollarHost ? { lexicalDollarHost } : {}),
+    ...(javascriptSfcHost ? { javascriptSfcHost } : {}),
     ...(asciiSymbolHost ? { asciiSymbolHost } : {}),
     ...(componentValueHost ? { componentValueHost } : {}),
     ...(emptyVueStarHost ? { emptyVueStarHost } : {}),
     ...(emptyVueStarListingSingleton ? { emptyVueStarListingSingleton } : {}),
+    ...(emptyVueStarListingBD ? { emptyVueStarListingBD } : {}),
   };
 }
