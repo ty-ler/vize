@@ -7,7 +7,7 @@ const url = new URL("./owned-corsa-native-main-source.json", import.meta.url);
 const stat = fs.lstatSync(url);
 assert(stat.isFile() && (stat.mode & 0o777) === 0o644);
 const bytes = fs.readFileSync(url);
-assert.equal(sha(bytes), "14b17ba54c05865c363791e36a2f10e89cd9f65b2e4fa00705fad7588f2be520");
+assert.equal(sha(bytes), "1fe3512e4a1a721e3ae58df1eea7f01bb734664ffd93e25669e456539d44976e");
 const data = JSON.parse(bytes);
 assert.equal(data.schema, 1);
 assert.equal(data.sourceOnly, true);
@@ -16,7 +16,6 @@ assert.equal(data.performanceCredit, false);
 assert.equal(data.baseline, "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38");
 assert.deepEqual(data.entries.map(({ file }) => file), [
   "crates/vize_canon/src/batch/type_checker/tests/recent_issues.rs",
-  "tests/performance/support/warm-type-backed-requests.ts",
   ".github/workflows/davinci-canon-scaling.yml",
 ]);
 const values = new Map();
