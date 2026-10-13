@@ -5,6 +5,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
 import { authenticateCanonProductSource } from "./canon-product-source-context.mjs";
+const equalBytes = (actual, expected, message) => {
+  assert(Buffer.isBuffer(actual) && Buffer.isBuffer(expected), "whole byte buffers");
+  assert.equal(actual.length, expected.length, message);
+  assert(actual.equals(expected), message);
+};
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const blob = (body) =>
   createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
@@ -60,10 +65,10 @@ export function authenticateReleaseNavigationHelper(root) {
     assert.equal(tree.toString(), `100644 blob ${cell.blob}\t${packet.producer.path}\0`);
     const body = git(["cat-file", "blob", cell.blob]);
     identity(body, cell);
-    assert.deepEqual(body, Buffer.from(cell.rawBase64, "base64"));
+    equalBytes(body, Buffer.from(cell.rawBase64, "base64"));
     assert.equal(helpers(body).length, 3);
     assert.equal(helpers(body).join(""), packet[side]);
-    if (side === "after") assert.deepEqual(regular(root, packet.producer.path), body);
+    if (side === "after") equalBytes(regular(root, packet.producer.path), body);
   }
   assert.equal(Buffer.byteLength(packet.before), 1138);
   assert.equal(Buffer.byteLength(packet.after), 1242);
@@ -106,19 +111,19 @@ export function authenticateReleaseNavigationHelper(root) {
       git(["ls-tree", "-z", receipt.head, "--", row.path]).toString(),
       `100644 blob ${row.after.blob}\t${row.path}\0`,
     );
-    assert.deepEqual(git(["cat-file", "blob", row.after.blob]), after);
+    equalBytes(git(["cat-file", "blob", row.after.blob]), after);
     let forward = before.toString();
     for (const clause of row.clauses) {
       assert.equal(forward.split(clause.before).length - 1, clause.count);
       forward = forward.replaceAll(clause.before, clause.after);
     }
-    assert.deepEqual(Buffer.from(forward), after);
+    equalBytes(Buffer.from(forward), after);
     let inverse = after.toString();
     for (const clause of row.clauses.toReversed()) {
       assert.equal(inverse.split(clause.after).length - 1, clause.count);
       inverse = inverse.replaceAll(clause.after, clause.before);
     }
-    assert.deepEqual(Buffer.from(inverse), before);
+    equalBytes(Buffer.from(inverse), before);
     const generated = row.path.startsWith("crates/")
       ? [after.toString()]
       : JSON.parse(after).files.map(({ virtualTs }) => virtualTs);
@@ -139,4 +144,28 @@ export function authenticateReleaseNavigationHelper(root) {
     nativeProducerCredit: false,
     head: receipt.head,
   });
+}
+
+/** Exactly the eleven reversible generated packets; no producer or runtime exemption. */
+export function qualifyCanonGeneratedHelperPackets(production, alreadyQualified, digest) {
+  const root = fs.realpathSync(new URL("../../../../", import.meta.url));
+  const packetBytes = regular(root, packetPath);
+  assert.equal(sha(packetBytes), packetSHA);
+  const packet = JSON.parse(packetBytes);
+  const metadataBytes = regular(root, packet.sealed11.metadataPath);
+  assert.equal(sha(metadataBytes), packet.sealed11.metadataSHA256);
+  const metadata = JSON.parse(metadataBytes);
+  const files = metadata.entries.map(({ path: file }) => file);
+  assert.equal(files.length, 11);
+  assert.equal(new Set(files).size, 11);
+  const selected = production.filter((file) => files.includes(file) && !alreadyQualified.has(file));
+  if (!selected.length) return null;
+  assert.equal(new Set(selected).size, selected.length, "duplicate generated packet selection refuses");
+  const proof = authenticateReleaseNavigationHelper(root);
+  assert.equal(proof.sealedPackets, 11);
+  for (const row of metadata.entries) {
+    assert.equal(digest("before", row.path), row.before.sha256, "whole original generated packet: " + row.path);
+    assert.equal(digest("after", row.path), row.after.sha256, "whole current generated packet: " + row.path);
+  }
+  return Object.freeze({ files: Object.freeze(files), sourceOnly: true, runtimeCredit: false });
 }

@@ -12,6 +12,16 @@ import { qualifyJavaScriptSfcHost } from "./warm-type-backed-javascript-sfc-host
 
 import { qualifyEmptyVueStarHost } from "./warm-type-backed-empty-vue-star-host.ts";
 
+import { qualifyEmptyVueStarListingHost } from "./warm-type-backed-empty-vue-star-listing.ts";
+
+import { qualifyEmptyVueStarListingSingleton } from "./warm-type-backed-empty-vue-star-listing-singleton.ts";
+
+import {
+  qualifyStarListingBD,
+  qualifyStarListingSDK,
+} from "../../../tools/support/compat/github/empty-vue-star-listing-source.mjs";
+import { qualifyCanonGeneratedHelperPackets } from "../../../tools/support/compat/github/canon-release-navigation-helper.mjs";
+
 /** Compose finite qualifications without changing existing path/timing authorities. */
 export function qualifyHostMoves(
   production: string[],
@@ -52,9 +62,39 @@ export function qualifyHostMoves(
       "4668a48d816279308c341ff3a7c839dc39ea129a2901b0484b65f4905e00386b" &&
     digest("before", "tests/tooling/warm-type-backed-empty-vue-star-host.test.ts") === null &&
     digest("after", "tests/tooling/warm-type-backed-empty-vue-star-host.test.ts") ===
-      "3dc6a16c6e9869302858df257d21e2e2b03acdc13606460bd7849d9d9ce28fc2"
-      ? qualifyEmptyVueStarHost(production, alreadyQualified, digest)
+      "3dc6a16c6e9869302858df257d21e2e2b03acdc13606460bd7849d9d9ce28fc2" &&
+    digest("before", "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts") ===
+      null &&
+    digest("after", "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts") ===
+      "6e7941072788c2fad4e678d5edd6d4abb5b8e3b87ad53b85c198a6e78d8af801"
+      ? qualifyEmptyVueStarListingHost(
+          production,
+          alreadyQualified,
+          digest,
+          qualifyEmptyVueStarHost,
+        )
       : null;
+  const emptyVueStarListingSingleton =
+    enabled &&
+    digest(
+      "before",
+      "tests/performance/support/warm-type-backed-empty-vue-star-listing-singleton.ts",
+    ) === null &&
+    digest(
+      "after",
+      "tests/performance/support/warm-type-backed-empty-vue-star-listing-singleton.ts",
+    ) === "ec0fc623eb66eab0df4015d6bfe70cf106d53d427f395c0c1e7d39d060f899f6"
+      ? qualifyEmptyVueStarListingSingleton(production, alreadyQualified, digest)
+      : null;
+  const emptyVueStarListingBD = enabled
+    ? qualifyStarListingBD(production, alreadyQualified, digest)
+    : null;
+  const emptyVueStarListingSDK = enabled
+    ? qualifyStarListingSDK(production, alreadyQualified, digest)
+    : null;
+  const canonGeneratedHelperPackets = enabled
+    ? qualifyCanonGeneratedHelperPackets(production, alreadyQualified, digest)
+    : null;
   return {
     pathHostMove: enabled ? qualifyPathHostMove(production, alreadyQualified, digest) : null,
     timingHostMove: enabled ? qualifyTimingHostMove(production, alreadyQualified, digest) : null,
@@ -66,5 +106,9 @@ export function qualifyHostMoves(
     ...(asciiSymbolHost ? { asciiSymbolHost } : {}),
     ...(componentValueHost ? { componentValueHost } : {}),
     ...(emptyVueStarHost ? { emptyVueStarHost } : {}),
+    ...(emptyVueStarListingSingleton ? { emptyVueStarListingSingleton } : {}),
+    ...(emptyVueStarListingBD ? { emptyVueStarListingBD } : {}),
+    ...(emptyVueStarListingSDK ? { emptyVueStarListingSDK } : {}),
+    ...(canonGeneratedHelperPackets ? { canonGeneratedHelperPackets } : {}),
   };
 }

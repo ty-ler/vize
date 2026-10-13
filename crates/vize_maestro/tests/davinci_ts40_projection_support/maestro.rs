@@ -7,7 +7,11 @@ use super::matrix::Fixture;
 use super::normalize::{ordered_lines, sha256};
 use super::record::LaneRecord;
 
-pub(super) fn capture_maestro(fixture: &Fixture, source: &str) -> LaneRecord {
+pub(super) fn capture_maestro(
+    fixture: &Fixture,
+    source: &str,
+    helper_counterpart: bool,
+) -> LaneRecord {
     let descriptor = match parse_sfc(
         source,
         SfcParseOptions {
@@ -31,13 +35,19 @@ pub(super) fn capture_maestro(fixture: &Fixture, source: &str) -> LaneRecord {
             &cstr!("maestro-document-{index}"),
             &[("text.ts", &document.content)],
         );
-        text_bytes += document.content.len();
+        let (observed_text, shift) = if helper_counterpart {
+            super::navigation_helper_successor::restore(&document.content)
+        } else {
+            (document.content.clone(), None)
+        };
+        let generated = |position| shift.map_or(position, |edit| edit.original(position));
+        text_bytes += observed_text.len();
         text.push(cstr!(
             "{}|{:?}|{}|{}",
             document.uri,
             document.language,
-            document.content.len(),
-            sha256(&document.content)
+            observed_text.len(),
+            sha256(&observed_text)
         ));
         let block_offset = document.source_map.authored_base();
         for row in document.source_map.rows() {
@@ -47,8 +57,8 @@ pub(super) fn capture_maestro(fixture: &Fixture, source: &str) -> LaneRecord {
                 document.uri,
                 mapping.src_range.start,
                 mapping.src_range.end,
-                mapping.gen_range.start,
-                mapping.gen_range.end,
+                generated(mapping.gen_range.start),
+                generated(mapping.gen_range.end),
                 features_record(row.meta.features),
                 data_record(row, source, block_offset)
             ));
@@ -79,8 +89,8 @@ pub(super) fn capture_maestro(fixture: &Fixture, source: &str) -> LaneRecord {
                     authored_hits.push(cstr!(
                         "{anchor}@{offset}|{}|{mapping_source_start}:{mapping_source_end}>{}:{}|{}",
                         document.uri,
-                        mapping.gen_range.start,
-                        mapping.gen_range.end,
+                        generated(mapping.gen_range.start),
+                        generated(mapping.gen_range.end),
                         features_record(row.meta.features)
                     ));
                 }
@@ -92,7 +102,11 @@ pub(super) fn capture_maestro(fixture: &Fixture, source: &str) -> LaneRecord {
     let authored_hits = ordered_lines(authored_hits);
     super::capture::retain(
         fixture,
-        "maestro",
+        if helper_counterpart {
+            "maestro-original-helper-source-counterpart"
+        } else {
+            "maestro"
+        },
         &[
             ("text.txt", &text),
             ("mappings.txt", &mappings),

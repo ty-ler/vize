@@ -116,7 +116,10 @@ pub(super) fn observe(root: &Path, mut record: impl FnMut(Value)) -> Witness {
     let query_position = app[..cursor].encode_utf16().count();
     receipt["query"] = json!({ "sourceRange": [source_start, source_end], "construct": construct, "byteCursor": cursor, "utf16Position": query_position });
     let (predecessor_helper_app, helper_shift) = navigation_helper_successor::restore(&app);
-    assert!(helper_shift.is_some(), "one source-qualified current navigation helper");
+    assert!(
+        helper_shift.is_some(),
+        "one source-qualified current navigation helper"
+    );
     receipt["navigationHelperSuccessor"] = json!({
         "sourceOnly": true,
         "runtimeCredit": false,

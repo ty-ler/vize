@@ -4,6 +4,11 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
+const equalBytes = (actual, expected, message) => {
+  assert(Buffer.isBuffer(actual) && Buffer.isBuffer(expected), "whole byte buffers");
+  assert.equal(actual.length, expected.length, message);
+  assert(actual.equals(expected), message);
+};
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const blob = (body) =>
   createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
@@ -31,14 +36,14 @@ for (const entry of packet.cells) {
   const before = entry.before && Buffer.from(entry.before.rawBase64, "base64");
   let recovered = Buffer.from(entry.after.rawBase64, "base64");
   for (const [start, end, current, original] of entry.clauses.toReversed()) {
-    assert.deepEqual(recovered.subarray(start, end), Buffer.from(current, "base64"));
+    equalBytes(recovered.subarray(start, end), Buffer.from(current, "base64"));
     recovered = Buffer.concat([
       recovered.subarray(0, start),
       Buffer.from(original, "base64"),
       recovered.subarray(end),
     ]);
   }
-  assert.deepEqual(recovered, before ?? Buffer.alloc(0));
+  equalBytes(recovered, before ?? Buffer.alloc(0));
   cells.set(entry.file, entry);
 }
 export const canonProductCompositionPaths = Object.freeze([...cells.keys()]);
@@ -52,7 +57,7 @@ const git = (root, args, input) =>
   });
 function raw(root, revision, side) {
   const tree = git(root, ["ls-tree", "-rz", revision, "--", ...cells.keys()]);
-  assert.deepEqual(Buffer.from(tree.toString()), tree);
+  equalBytes(Buffer.from(tree.toString()), tree);
   assert.equal(tree.at(-1), 0);
   const entries = new Map(
     tree
@@ -86,7 +91,7 @@ function raw(root, revision, side) {
     const body = Buffer.from(batch.subarray(end + 1, end + 1 + cell.bytes));
     offset = end + 2 + cell.bytes;
     assert.equal(batch[offset - 1], 10);
-    assert.deepEqual(body, Buffer.from(cell.rawBase64, "base64"));
+    equalBytes(body, Buffer.from(cell.rawBase64, "base64"));
     result.set(entry.file, { mode: cell.mode, blob: cell.blob, body });
   }
   assert.equal(offset, batch.length);
@@ -103,11 +108,7 @@ export function authenticateCanonProductComposition(root, head) {
     }
     const stat = fs.lstatSync(target);
     assert(stat.isFile() && (stat.mode & 0o777) === Number.parseInt(cell.mode.slice(3), 8));
-    assert.deepEqual(
-      fs.readFileSync(target),
-      cell.body,
-      "whole physical main composition: " + file,
-    );
+    equalBytes(fs.readFileSync(target), cell.body, "whole physical main composition: " + file);
   }
   const unionBytes = fs.readFileSync(
     new URL("canon-product-sdk-three-union.json", import.meta.url),
@@ -125,7 +126,7 @@ export function authenticateCanonProductComposition(root, head) {
     assert.equal(current.get(entry.file).mode, entry.after.mode);
     let restored = body;
     for (const [start, end, now, old] of entry.clauses.toReversed()) {
-      assert.deepEqual(restored.subarray(start, end), Buffer.from(now, "base64"));
+      equalBytes(restored.subarray(start, end), Buffer.from(now, "base64"));
       restored = Buffer.concat([
         restored.subarray(0, start),
         Buffer.from(old, "base64"),
@@ -133,7 +134,7 @@ export function authenticateCanonProductComposition(root, head) {
       ]);
     }
     const literal = git(root, ["show", union.source + ":" + entry.file]);
-    assert.deepEqual(restored, literal);
+    equalBytes(restored, literal);
     assert.equal(blob(literal), entry.before.blob);
     assert.equal(sha(literal), entry.before.sha256);
     assert.equal(literal.length, entry.before.length);

@@ -14,7 +14,9 @@
 
 mod davinci_ts40_projection_support;
 
-use davinci_ts40_projection_support::{Drift, capture_fixture, capture_fixture_helper_counterpart, load_matrix, verify_exact};
+use davinci_ts40_projection_support::{
+    Drift, capture_fixture, capture_fixture_helper_counterpart, load_matrix, verify_exact,
+};
 use vize_l0::{String, cstr};
 
 #[test]
@@ -37,7 +39,10 @@ fn current_projection_matrix_is_exact_and_non_empty() {
         counterpart.assert_non_empty(fixture);
         assert_eq!(record.source_sha256, counterpart.source_sha256);
         assert_eq!(record.content_mapper, counterpart.content_mapper);
-        for (actual, previous) in [(&record.canon, &counterpart.canon), (&record.maestro, &counterpart.maestro)] {
+        for (actual, previous) in [
+            (&record.canon, &counterpart.canon),
+            (&record.maestro, &counterpart.maestro),
+        ] {
             assert_eq!(actual.status, previous.status);
             assert_eq!(actual.mapping_count, previous.mapping_count);
             assert_eq!(actual.semantic_link_count, previous.semantic_link_count);

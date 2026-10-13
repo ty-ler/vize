@@ -12,6 +12,11 @@ import {
   canonProductCompositionPaths,
 } from "./canon-product-main-composition.mjs";
 
+const equalBytes = (actual, expected, message) => {
+  assert(Buffer.isBuffer(actual) && Buffer.isBuffer(expected), "whole byte buffers");
+  assert.equal(actual.length, expected.length, message);
+  assert(actual.equals(expected), message);
+};
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const blob = (body) =>
   createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
@@ -136,7 +141,7 @@ for (const entry of successors.entries) {
     assert.equal(restored.slice(k, l).join(""), newBody);
     restored.splice(k, l - k, ...(oldBody ? oldBody.split(/(?<=\n)/u) : []));
   }
-  assert.deepEqual(Buffer.from(restored.join("")), cells.before.body);
+  equalBytes(Buffer.from(restored.join("")), cells.before.body);
   successorCells.set(entry.file, cells);
 }
 
@@ -152,7 +157,7 @@ const git = (root, args, input) =>
   });
 function frame(root, revision, side, useSuccessors = false, composition = new Map()) {
   const tree = git(root, ["ls-tree", "-rz", revision, "--", ...canonProductSourcePaths]);
-  assert.deepEqual(Buffer.from(tree.toString()), tree);
+  equalBytes(Buffer.from(tree.toString()), tree);
   const entries = new Map(
     tree
       .toString()
@@ -219,12 +224,11 @@ export function authenticateCanonProductSource(root) {
   );
   ensureHostedLiteralSource(root, "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6");
   const composition = authenticateCanonProductComposition(root, head);
-  for (const [file, cell] of successorCells)
-    assert.deepEqual(
-      composition.get(file),
-      cell.after,
-      "whole composed caller agrees with its exact predecessor inverse: " + file,
-    );
+  for (const [file, cell] of successorCells) {
+    assert.equal(composition.get(file).mode, cell.after.mode);
+    assert.equal(composition.get(file).blob, cell.after.blob);
+    equalBytes(composition.get(file).body, cell.after.body, "whole composed caller agrees with its exact predecessor inverse: " + file);
+  }
   const admitted = new Set([
     ...canonProductCompositionPaths,
     "tools/support/compat/github/canon-release-navigation-helper.mjs",
@@ -250,11 +254,9 @@ export function authenticateCanonProductSource(root) {
   for (const { file } of rows) {
     const expected =
       composition.get(file) ?? successorCells.get(file)?.after ?? frames.current.get(file);
-    assert.deepEqual(
-      actual.get(file),
-      expected,
-      "whole selected child and named caller successor: " + file,
-    );
+    assert.equal(actual.get(file).mode, expected.mode);
+    assert.equal(actual.get(file).blob, expected.blob);
+    equalBytes(actual.get(file).body, expected.body, "whole selected child and named caller successor: " + file);
     const cell = actual.get(file);
     assert(cell);
     let target = root;
@@ -264,11 +266,7 @@ export function authenticateCanonProductSource(root) {
     }
     const stat = fs.lstatSync(target);
     assert(stat.isFile() && (stat.mode & 0o777) === Number.parseInt(cell.mode.slice(3), 8));
-    assert.deepEqual(
-      fs.readFileSync(target),
-      cell.body,
-      "physical equals whole raw child: " + file,
-    );
+    equalBytes(fs.readFileSync(target), cell.body, "physical equals whole raw child: " + file);
   }
   const original = authenticateJavaScriptSfcSource((file) => {
     assert(frames.original.has(file));

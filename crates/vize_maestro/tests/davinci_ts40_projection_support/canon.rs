@@ -10,7 +10,12 @@ use super::matrix::Fixture;
 use super::normalize::{fixture_path, ordered_lines, sha256};
 use super::record::LaneRecord;
 
-pub(super) fn capture_canon(fixture: &Fixture, source: &str, mapper: &LaneRecord, helper_counterpart: bool) -> LaneRecord {
+pub(super) fn capture_canon(
+    fixture: &Fixture,
+    source: &str,
+    mapper: &LaneRecord,
+    helper_counterpart: bool,
+) -> LaneRecord {
     let result = generate_vue_document_virtual_ts_with_options(
         fixture_path(fixture),
         source,
@@ -98,17 +103,36 @@ pub(super) fn capture_canon(fixture: &Fixture, source: &str, mapper: &LaneRecord
                     ("import-probes.txt", &import_map.raw_probes),
                 ],
             );
-            let (text, pre_rewrite_text, mappings, links, import_map):
-                (String, String, String, String, ImportSourceMapFacts) = if helper_counterpart {
+            let (text, pre_rewrite_text, mappings, links, import_map): (
+                String,
+                String,
+                String,
+                String,
+                ImportSourceMapFacts,
+            ) = if helper_counterpart {
                 let (text, _) = super::navigation_helper_successor::restore(&document.code);
-                let (pre, shift) = super::navigation_helper_successor::restore(&document.pre_rewrite_code);
+                let (pre, shift) =
+                    super::navigation_helper_successor::restore(&document.pre_rewrite_code);
                 let mappings = super::navigation_helper_successor::ranges(&mappings, shift, true);
                 let links = super::navigation_helper_successor::ranges(&links, shift, false);
                 // The frozen original snapshot also requires the entire import map and every probe.
-                let imports = import_source_map_facts(&document.import_source_map, pre.len(), text.len());
-                (text.into(), pre.into(), mappings.into(), links.into(), imports)
+                let imports =
+                    import_source_map_facts(&document.import_source_map, pre.len(), text.len());
+                (
+                    text.into(),
+                    pre.into(),
+                    mappings.into(),
+                    links.into(),
+                    imports,
+                )
             } else {
-                (document.code, document.pre_rewrite_code, mappings, links, import_map)
+                (
+                    document.code,
+                    document.pre_rewrite_code,
+                    mappings,
+                    links,
+                    import_map,
+                )
             };
             LaneRecord {
                 status: if fixture.legacy_vue2 {
