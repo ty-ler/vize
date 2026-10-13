@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { runOwnedCargoOriginalRefusal } from "./support/owned-corsa-cargo-original-refusal.mjs";
 import {
   lexicalFinalSourcePaths,
   lexicalSourcePaths as originalSourcePaths,
@@ -162,25 +163,7 @@ const validateCurrentCopied = (manifest, entries) => {
   return validateLexicalSourceBodies(manifest, view.historicalCopied, view.historicalReader);
 };
 
-await test("actual owned Cargo tuple separately refuses the original helper before historical caller qualification", () => {
-  const expectedLock = actualView.historicalCopied.find(({ file }) => file === "Cargo.lock").sha256;
-  const actualLock = copied.find(({ file }) => file === "Cargo.lock").sha256;
-  let refusal;
-  try {
-    assert.equal(actualLock, expectedLock, "Cargo.lock");
-  } catch (error) {
-    refusal = error;
-  }
-  assert.throws(() => old.validateLexicalSourceBodies(manifest, copied), {
-    name: refusal.name,
-    code: refusal.code,
-    message: refusal.message,
-    actual: refusal.actual,
-    expected: refusal.expected,
-    operator: refusal.operator,
-    generatedMessage: refusal.generatedMessage,
-  });
-});
+await runOwnedCargoOriginalRefusal({ actualView, copied, old, manifest });
 
 await test("authenticated whole incoming recipe source retains the exact original caller refusal and finite successor", () => {
   let refusal;
