@@ -41,6 +41,7 @@ const support = new Set([
   ".github/workflows/mold-linker.yml",
   "tools/support/compat/github/mold-linker.ts",
   "tools/support/compat/github/source-cli-identity.ts",
+  "tools/support/compat/github/canonical-corpus-selection.mjs",
   "tests/tooling/mold-linker.test.ts",
   "tests/tooling/github-source-cli-artifact.test.ts",
   "tests/tooling/github-workflows.test.ts",
