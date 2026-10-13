@@ -5,6 +5,7 @@ import path from "node:path";
 import { unqualifiedReceiptPaths } from "./warm-type-backed-build-receipt-extension.ts";
 import { finiteCut } from "./warm-type-backed-cut.ts";
 import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
+import { qualifyFrontierSource } from "./warm-type-backed-frontier-host.ts";
 import { qualifyHostMoves } from "./warm-type-backed-host-qualifications.ts";
 import { ownedSourcePaths as allowed } from "./warm-type-backed-owned-paths.ts";
 import {
@@ -122,6 +123,7 @@ if (process.argv[2] === "prepare") {
   } = qualifyHostMoves(production, allowed, !cut, (side, file) =>
     gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
   );
+  if (frontierHost) assert.deepEqual(qualifyFrontierSource(driverRoot, head), frontierHost);
   if (!cut) {
     for (const file of production)
       assert.ok(

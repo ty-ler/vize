@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
+import { execFileSync } from "node:child_process";
 
 const manifest = JSON.parse(
   fs.readFileSync(new URL("./warm-type-backed-frontier-manifest.json", import.meta.url), "utf8"),
@@ -10,20 +11,22 @@ const manifest = JSON.parse(
   reviewedSource: string;
   files: string[];
   preservedBodies: string[];
+  harnessBodies: string[];
 };
 const predecessor = JSON.parse(
-  fs.readFileSync(
-    new URL("./warm-type-backed-inline-bucket-manifest.json", import.meta.url),
-    "utf8",
-  ),
+  fs.readFileSync(new URL("./allocation-diagnostic/source-manifest.json", import.meta.url), "utf8"),
 ) as { files: string[]; preservedBodies: string[] };
 const manifestSHA256 = createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
-assert.equal(manifestSHA256, "0844ba65e65048385bc779772f12d06a8b3e5012c396bd041545cc05a8df288e");
-assert.equal(manifest.originalSource, "e7ec9790a0ec5586588f97d21b8e5913ad01861c");
-assert.equal(manifest.reviewedSource, "4c1f514a24bd47fe30124b5692866150032850fd");
+assert.equal(manifestSHA256, "429ebdaf0b28a610c7ea3ac8dd9c194753d698d6e4c87a4350f2f8572a3c6f5b");
+assert.equal(manifest.originalSource, "3dd6ae0707dc42302638257b86967d6a6ffe902f");
+assert.equal(manifest.reviewedSource, "a4d533751a594bfd4566f8756ccc3dff2b6f7c89");
 assert.equal(manifest.version, 1);
-assert.equal(manifest.files.length, 198);
-assert.deepEqual(manifest.preservedBodies, predecessor.preservedBodies);
+assert.equal(manifest.files.length, 210);
+assert.equal(manifest.harnessBodies.length, 31);
+assert.deepEqual(
+  manifest.preservedBodies,
+  predecessor.preservedBodies.map((row) => row.split("\t").slice(0, 2).join("\t")),
+);
 const pairs = manifest.files.map((row) => row.split("\t"));
 const files = pairs.map(([file]) => file);
 assert.deepEqual(files, files.toSorted());
@@ -58,6 +61,10 @@ export function qualifyFrontierHost(
       digest("after", file) !== after
     )
       return null;
+  for (const row of manifest.harnessBodies) {
+    const [file, before, after] = row.split("\t");
+    if (digest("before", file) !== before || digest("after", file) !== after) return null;
+  }
   for (const row of manifest.preservedBodies) {
     const [file, body] = row.split("\t");
     if (digest("before", file) !== body || digest("after", file) !== body) return null;
@@ -69,7 +76,49 @@ export function qualifyFrontierHost(
     manifestSHA256,
     completeBodyPairs: files.length,
     preservedBodyPairs: manifest.preservedBodies.length,
+    preservedHarnessPairs: manifest.harnessBodies.length,
     files: changed,
     acceptanceCredit: "none",
   };
+}
+
+/** Actual source verification cannot borrow Git replacement bodies or modes. */
+export function qualifyFrontierSource(root: string, revision: string) {
+  assert.match(revision, /^[a-f0-9]{40}$/u);
+  const raw = (...args: string[]) =>
+    execFileSync("git", ["--no-replace-objects", ...args], { cwd: root });
+  const production = raw(
+    "diff",
+    "--name-only",
+    manifest.originalSource,
+    revision,
+    "--",
+    "crates",
+    "davinci",
+    "vendor",
+    "npm",
+    "Cargo.toml",
+    "Cargo.lock",
+    ".cargo",
+    ".config",
+    "rust-toolchain.toml",
+  )
+    .toString()
+    .trim()
+    .split("\n")
+    .filter(Boolean);
+  return qualifyFrontierHost(production, (side, file) => {
+    const source = side === "before" ? manifest.originalSource : revision;
+    const entry = raw("ls-tree", "-z", source, "--", file);
+    if (!entry.length) return null;
+    const records = entry.toString().split("\0");
+    assert.equal(records.length, 2);
+    assert.equal(records[1], "");
+    const match = /^100644 blob ([a-f0-9]{40})\t(.+)$/u.exec(records[0]);
+    assert.ok(match, `complete regular source required: ${file}`);
+    assert.equal(match[2], file);
+    return createHash("sha256")
+      .update(raw("cat-file", "blob", match[1]))
+      .digest("hex");
+  });
 }

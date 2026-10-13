@@ -86,3 +86,24 @@ retain complete raw input/buffer/oracle equality and every original failure, the
 read actual parser call counts. Compare exact-head wall time under the original
 recipe and caps. No speed claim, 10x-target claim, merge/release completion or
 n8n acceptance follows before those Actions receipts exist.
+
+## Exact existing-Stack composition
+
+The narrow slice is composed once onto unchanged actual Stack #8607 top
+`3dd6ae0707dc42302638257b86967d6a6ffe902f` (#8724), preserving the separate
+move commit. Production has exactly the same seven-path footprint; the
+existing default and allocation diagnostic feature shapes remain unchanged.
+The named exact-parent counterpart now binds producer
+`a4d533751a594bfd4566f8756ccc3dff2b6f7c89` with 210 native whole-body pairs,
+the same 45 original workload bodies and every 31 predecessor helper pair.
+Semantic SHA-256 is
+`429ebdaf0b28a610c7ea3ac8dd9c194753d698d6e4c87a4350f2f8572a3c6f5b`.
+The earlier 198-pair e7-only record remains a distinct local proposal.
+
+Both immutable original inline/allocation manifests and every old negative,
+replacement-object, mode, observer and process law remain required. Their
+original success branches still qualify their frozen original producers; only
+the actual-head guard can use this separately named complete frontier receipt.
+No optional allocation or occupancy capture is repeated. Fresh exact child
+Actions, original n8n deadline, actual parser counts and all source-built Rust
+controls are required before any performance, queue or acceptance claim.

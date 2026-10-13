@@ -1,19 +1,19 @@
 consumer_id	consumer	class	file	first_line	surface_id	surface	surface_group	matched_name	name_kind	sites
 typechecker	Typechecker	test/dev	crates/vize_canon/benches/package_route.rs	36	l0	L0	stage	vize_l0	preferred	1
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	l0	L0	stage	vize_l0	preferred	2
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	carton	Carton host/compatibility	old	vize_carton	legacy	1
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	l1	L1	stage	vize_l1	preferred	2
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	l2	L2	stage	vize_l2	preferred	2
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	l1_to_l2	L1->L2	stage	vize_l1_to_l2	preferred	2
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	old_ast	old AST/parser	old	vize_relief	legacy	1
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	old_ast	old AST/parser	old	vize_armature	legacy	3
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	croquis	Croquis analysis	old	vize_croquis	legacy	2
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	raw_oxc	raw OXC	raw	oxc_allocator	raw	1
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	raw_oxc	raw OXC	raw	oxc_ast	raw	1
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	raw_oxc	raw OXC	raw	oxc_ast_visit	raw	1
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	raw_oxc	raw OXC	raw	oxc_parser	raw	1
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	raw_oxc	raw OXC	raw	oxc_semantic	raw	1
-typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	22	raw_oxc	raw OXC	raw	oxc_syntax	raw	1
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	l0	L0	stage	vize_l0	preferred	2
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	carton	Carton host/compatibility	old	vize_carton	legacy	1
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	l1	L1	stage	vize_l1	preferred	2
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	l2	L2	stage	vize_l2	preferred	2
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	l1_to_l2	L1->L2	stage	vize_l1_to_l2	preferred	2
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	old_ast	old AST/parser	old	vize_relief	legacy	1
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	old_ast	old AST/parser	old	vize_armature	legacy	3
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	croquis	Croquis analysis	old	vize_croquis	legacy	2
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	raw_oxc	raw OXC	raw	oxc_allocator	raw	1
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	raw_oxc	raw OXC	raw	oxc_ast	raw	1
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	raw_oxc	raw OXC	raw	oxc_ast_visit	raw	1
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	raw_oxc	raw OXC	raw	oxc_parser	raw	1
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	raw_oxc	raw OXC	raw	oxc_semantic	raw	1
+typechecker	Typechecker	manifest	crates/vize_canon/Cargo.toml	23	raw_oxc	raw OXC	raw	oxc_syntax	raw	1
 typechecker	Typechecker	test/dev	crates/vize_canon/src/batch.rs	64	carton	Carton host/compatibility	old	vize_carton	legacy	1
 typechecker	Typechecker	source	crates/vize_canon/src/batch/error.rs	4	carton	Carton host/compatibility	old	vize_carton	legacy	3
 typechecker	Typechecker	source	crates/vize_canon/src/batch/executor.rs	20	carton	Carton host/compatibility	old	vize_carton	legacy	1
@@ -399,6 +399,7 @@ typechecker	Typechecker	test/dev	crates/vize_canon/src/corsa_bridge/original_pro
 typechecker	Typechecker	test/dev	crates/vize_canon/src/corsa_bridge/original_program/tests.rs	5	l1	L1	stage	vize_l1	preferred	1
 typechecker	Typechecker	test/dev	crates/vize_canon/src/corsa_bridge/original_program/tests.rs	5	l2	L2	stage	vize_l2	preferred	1
 typechecker	Typechecker	test/dev	crates/vize_canon/src/corsa_bridge/outside_import_editor_tests.rs	7	carton	Carton host/compatibility	old	vize_carton	legacy	1
+typechecker	Typechecker	source	crates/vize_canon/src/corsa_bridge/preparation_trace/allocation.rs	4	l0	L0	stage	vize_l0	preferred	1
 typechecker	Typechecker	source	crates/vize_canon/src/corsa_bridge/script_document.rs	6	carton	Carton host/compatibility	old	vize_carton	legacy	1
 typechecker	Typechecker	test/dev	crates/vize_canon/src/corsa_bridge/script_document.rs	164	carton	Carton host/compatibility	old	vize_carton	legacy	1
 typechecker	Typechecker	source	crates/vize_canon/src/corsa_bridge/source_catalog.rs	10	carton	Carton host/compatibility	old	vize_carton	legacy	4
