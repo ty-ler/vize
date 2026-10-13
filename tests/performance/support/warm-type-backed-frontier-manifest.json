@@ -233,7 +233,7 @@
     "tests/differential/lsp-wire.ts\t88934c62469259e8acac42ce188a4b1fdb4903cf0321e45f769dbd22493d5bd5",
     "tests/differential/manifest.mjs\t849bacb78f595ce65ca401a2593035421b8fd90f7310f30917bc0b2fb333528a",
     "tests/differential/sha256.ts\t2edd1fc61e667219e59283a7ee9c65c4040b3f803f063df76ecdedac9df7197d",
-    "tests/performance/support/current-baseline/inputs.ts\t64f90788ce58b41ef9da2cad6639cb1816b6ae1086c9e2d5ebf44cd9a6d5a060",
+    "tests/performance/support/current-baseline/inputs.ts\t178e149f160b2dd55e2dec7ff8b06231ab550ac52ae999a9328f7eb26be3a13b",
     "tests/performance/support/current-baseline/observer.ts\t655f551d5299e82c15f987dddac06a01237b360855ccbffc6fbf90dc3e9da68f",
     "tests/performance/support/current-baseline/wire.ts\t7be01d48ebeb601a37d0363eba237343066ccc08b6535b8eeb1e2bb82cae3869",
     "tests/performance/support/warm-type-backed-build.ts\t7660e93cfa5c908f4065e91d498a3cb778814c38bb8689efefcaa159ef9003e3",
@@ -256,7 +256,7 @@
     "tests/tooling/support/lsp/protocol.ts\tb45a023821dcc13059b6b64bea92fc0d6f03f1f3189f12ba332f44699511701e",
     "tests/tooling/support/lsp/published-launch.ts\tcfdb87cb4869c072ca9b4bdc50553dd8dd4ee427242777928ebc14ba66f15ab7",
     "tests/tooling/support/lsp/session-capture.ts\t4f22d6bba54283b4376dd9f6f4f51d064f88e4e204e27a0507c0c77e0343de6d",
-    "tests/tooling/support/lsp/session-process.ts\t5875ac84343d6f2a9faedbf302cc866f1e4f92ebd7ee453b9c4c24c0fb58fd48",
+    "tests/tooling/support/lsp/session-process.ts\te72d5e9082dc75ccf1d6af65d0c01e0d12d4bd0817f8be4c3ff31409972d6897",
     "tests/tooling/support/lsp/session-source-links.ts\tcd03194ec315d7e24020af6f9750278527a255e7ed38b2799230fad1f4739c69",
     "tests/tooling/support/lsp/session.ts\te156e0649d6d22312cc55c2f9316f8fd8515f180bb422efe02294c3604df7ee4",
     "tools/support/compat/davinci/lib/lsp-resource-sampler.mjs\te1b4f34b1da2168233f64aeaf8c91e7df6173dc37fce451529e39e5a821a2335"

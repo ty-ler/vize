@@ -97,7 +97,7 @@ The named exact-parent counterpart now binds producer
 `a4d533751a594bfd4566f8756ccc3dff2b6f7c89` with 210 native whole-body pairs,
 the same 45 original workload bodies and every 31 predecessor helper pair.
 Semantic SHA-256 is
-`429ebdaf0b28a610c7ea3ac8dd9c194753d698d6e4c87a4350f2f8572a3c6f5b`.
+`68e5a6671e181ba11fea019c306e557aa47ae82782d6eadbc855cf6ea8e26e1c`.
 The earlier 198-pair e7-only record remains a distinct local proposal.
 
 Both immutable original inline/allocation manifests and every old negative,
@@ -107,3 +107,11 @@ the actual-head guard can use this separately named complete frontier receipt.
 No optional allocation or occupancy capture is repeated. Fresh exact child
 Actions, original n8n deadline, actual parser counts and all source-built Rust
 controls are required before any performance, queue or acceptance claim.
+
+The local complete-body check first refused two predecessor workload carriers:
+`current-baseline/inputs.ts` and `session-process.ts` already contain the
+separately reviewed optional observation hooks in actual #8724. Preserve each
+complete actual-top after body on both frontier sides, while retaining their
+original before/after pairs in the immutable allocation authority. Neither
+carrier changes in this slice; every original workload input/oracle/cap remains
+required. Original e7 body hashes cannot be mislabeled as actual #8724 bodies.
