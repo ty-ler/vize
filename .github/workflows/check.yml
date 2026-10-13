@@ -8,21 +8,30 @@ on:
     types: [checks_requested]
     branches: [main]
   schedule:
-    # Daily 03:11 UTC, staggered from native smoke and e2e.
     - cron: "11 3 * * *"
   workflow_dispatch:
     inputs:
+      vp-bootstrap-diagnostic:
+        description: Add isolated cold/warm Vite+ diagnostics on the owned branch; full Check still runs
+        type: boolean
+        default: false
       allocation-ownership-diagnostic:
         description: Run the finite allocation ownership experiment on its owned branch
         type: boolean
         default: false
 concurrency:
-  # A push to main must not cancel an exact-SHA full validation used by release.
   group: check-v3-${{ github.workflow }}-${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('full-{0}', github.sha) || (github.event.pull_request.number || github.ref) }}
   cancel-in-progress: true
 permissions: { contents: read }
 env: { CARGO_TERM_COLOR: always, FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true }
 jobs:
+  vp-bootstrap-diagnostic:
+    name: Vite+ bootstrap diagnostic
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.vp-bootstrap-diagnostic }}
+    permissions: { contents: read, actions: read }
+    uses: ./.github/workflows/vp-bootstrap-diagnostic.yml
+    with:
+      requested: ${{ inputs.vp-bootstrap-diagnostic }}
   allocation-ownership-diagnostic:
     if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/ci/vapor-allocation-ownership-20261004' && inputs.allocation-ownership-diagnostic }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
@@ -114,12 +123,10 @@ jobs:
         run: ./node_modules/@typescript/typescript-linux-x64/lib/tsc --noEmit --pretty false --project docs/tsconfig.json && vp run --workspace-root check:repo
   semver-checks:
     name: cargo-semver-checks (${{ matrix.crate }})
-    # Check published APIs before tag promotion and when resuming an exact release tag.
     if: ${{ github.event_name == 'workflow_dispatch' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/tags/v')) }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 25
     permissions: { contents: read }
-    # Keep this list in sync with crates published by tools/moon/cmd/publish_crates.
     strategy:
       fail-fast: false
       matrix:
@@ -144,7 +151,6 @@ jobs:
         with: { toolchain: 1.95.0 }
       - uses: ./.github/actions/setup-rust-script
       - name: Use candidate version for SemVer classification
-        # cargo-semver-checks derives the release type from the bumped version.
         run: |
           : > "$RUNNER_TEMP/semver-change-marker.txt"
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
@@ -236,7 +242,6 @@ jobs:
         run: (cd npm/cli && vp pack) && cargo build --profile ci -p vize && vp exec node tests/differential/build-receipt.ts
       - name: Install vize CLI
         run: sudo install -m 0755 target/ci/vize /usr/local/bin/vize
-      # Use this commit-built CLI without waiting for npm or building a second binary.
       - name: Lint authored source with the opinionated preset
         run: vp node tools/commands/ci/opinionated-source-lint.mjs
       - name: Test gallery Markdown renderer
@@ -458,7 +463,6 @@ jobs:
         with:
           node-version-file: "package.json"
           run-install: false
-      # The fixture-coverage runner evaluates the SFC Pkl fixtures.
       - name: Install Pkl CLI
         run: npm install --global @pkl-community/pkl@0.27.2
       - name: Coverage report
@@ -466,7 +470,6 @@ jobs:
   source-coverage:
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 40
-    # Source coverage is a daily/full-run trend metric; fast checks stay on PRs and pushes.
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     env:
       NODE_OPTIONS: "--disable-warning=DEP0040 --disable-warning=DEP0169"
@@ -513,7 +516,6 @@ jobs:
     runs-on: blacksmith-32vcpu-ubuntu-2404
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     timeout-minutes: 45
-    # Keep the strict nightly instrumentation gate on scheduled and explicit runs.
     env:
       NODE_OPTIONS: "--disable-warning=DEP0040 --disable-warning=DEP0169"
     steps:
@@ -562,7 +564,6 @@ jobs:
       - build-js-packages
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      # Rust is always needed for @vizejs/native (used by vite-plugin-vize)
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
         with: { toolchain: stable, targets: wasm32-unknown-unknown }
@@ -651,7 +652,6 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: ./.github/actions/report-test-inventory
-      # Runs last so the inventory is collected and uploaded either way.
       - name: Require every needed job to succeed
         env: { NEEDS_JSON: "${{ toJSON(needs) }}" }
         run: node tools/support/compat/github/require-needs-success.ts

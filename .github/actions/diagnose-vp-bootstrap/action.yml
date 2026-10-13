@@ -1,0 +1,84 @@
+name: Diagnose Vite+ bootstrap cache
+description: Owned manual cold/warm SDK preparation with run-scoped installed-runtime custody
+inputs:
+  lane:
+    required: true
+    description: cold or warm
+  cold-key:
+    default: ""
+    description: Exact immutable cold cache key
+  cold-plan-hash:
+    default: ""
+    description: Cold identity and source manifest digest
+outputs:
+  key:
+    description: Exact run-scoped cache key
+    value: ${{ steps.plan.outputs.key }}
+  plan-hash:
+    description: Cold identity and source manifest digest
+    value: ${{ steps.plan.outputs.plan-hash }}
+runs:
+  using: composite
+  steps:
+    - name: Download exact cold custody records
+      if: ${{ inputs.lane == 'warm' }}
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: vp-bootstrap-cold-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+        path: ${{ runner.temp }}/vp-bootstrap-cold-custody
+        digest-mismatch: error
+    - name: Validate owned identity and pristine runtime directories
+      id: plan
+      shell: bash
+      env:
+        VIZE_DIAG_REQUESTED: "true"
+        VIZE_DIAG_LANE: ${{ inputs.lane }}
+        VIZE_DIAG_COLD_KEY: ${{ inputs.cold-key }}
+        VIZE_DIAG_COLD_PLAN_HASH: ${{ inputs.cold-plan-hash }}
+      run: node tools/support/compat/github/vp-bootstrap-diagnostic.mjs plan "$VIZE_DIAG_LANE"
+    - name: Look up cold miss or restore exact cold snapshot
+      id: runtime-cache
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+      with:
+        path: ${{ steps.plan.outputs.paths }}
+        key: ${{ steps.plan.outputs.key }}
+        lookup-only: ${{ inputs.lane == 'cold' }}
+    - name: Require cache outcome and record setup start
+      shell: bash
+      env:
+        VIZE_DIAG_LANE: ${{ inputs.lane }}
+        VIZE_DIAG_CACHE_HIT: ${{ steps.runtime-cache.outputs.cache-hit }}
+        VIZE_DIAG_CACHE_MATCHED_KEY: ${{ steps.runtime-cache.outputs.cache-matched-key }}
+      run: node tools/support/compat/github/vp-bootstrap-diagnostic.mjs before "$VIZE_DIAG_LANE"
+    - name: Set up exact Vite+ and install the workspace
+      uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+      env:
+        VP_HOME: ${{ steps.plan.outputs.vp-home }}
+        VP_LOG: debug
+      with:
+        version: "1.1.0"
+        node-version-file: package.json
+        # The pinned SDK hardcodes production dependency cache keys. Disable
+        # that separate cache in both diagnostic lanes; vp install still runs.
+        cache: false
+        run-install: true
+    - name: Record setup and exercise installed TypeScript and Vue controls
+      shell: bash
+      env:
+        VIZE_DIAG_LANE: ${{ inputs.lane }}
+      run: node tools/support/compat/github/vp-bootstrap-diagnostic.mjs after "$VIZE_DIAG_LANE"
+    - name: Save only exact cold installed-runtime directories
+      if: ${{ inputs.lane == 'cold' }}
+      uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+      with:
+        path: ${{ steps.plan.outputs.paths }}
+        key: ${{ steps.plan.outputs.key }}
+    - name: Preserve diagnostic custody and complete control outputs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: vp-bootstrap-${{ inputs.lane }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+        path: ${{ runner.temp }}/vp-bootstrap-${{ inputs.lane }}/
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 7

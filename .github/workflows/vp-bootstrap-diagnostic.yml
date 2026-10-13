@@ -1,0 +1,64 @@
+name: Vite+ bootstrap diagnostic
+on:
+  workflow_call:
+    inputs:
+      requested:
+        type: boolean
+        required: true
+permissions: { contents: read }
+jobs:
+  vp-bootstrap-diagnostic-guard:
+    name: Validate requested Vite+ diagnostic ownership
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env: { VIZE_DIAG_REQUESTED: "${{ inputs.requested && 'true' || 'false' }}" }
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - run: node tools/support/compat/github/vp-bootstrap-diagnostic.mjs guard
+  vp-bootstrap-diagnostic-cold:
+    name: Vite+ bootstrap diagnostic (cold)
+    needs: [vp-bootstrap-diagnostic-guard]
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 30
+    outputs:
+      key: ${{ steps.diagnostic.outputs.key }}
+      plan-hash: ${{ steps.diagnostic.outputs.plan-hash }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: ./.github/actions/diagnose-vp-bootstrap
+        id: diagnostic
+        with: { lane: cold }
+  vp-bootstrap-diagnostic-warm:
+    name: Vite+ bootstrap diagnostic (warm)
+    needs: [vp-bootstrap-diagnostic-cold]
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: ./.github/actions/diagnose-vp-bootstrap
+        with:
+          lane: warm
+          cold-key: ${{ needs.vp-bootstrap-diagnostic-cold.outputs.key }}
+          cold-plan-hash: ${{ needs.vp-bootstrap-diagnostic-cold.outputs.plan-hash }}
+  vp-bootstrap-diagnostic-report:
+    name: Preserve Vite+ diagnostic raw SDK logs
+    needs:
+      [vp-bootstrap-diagnostic-guard, vp-bootstrap-diagnostic-cold, vp-bootstrap-diagnostic-warm]
+    if: ${{ always() && needs.vp-bootstrap-diagnostic-guard.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: { contents: read, actions: read }
+    env: { VIZE_DIAG_REQUESTED: "true" }
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Collect completed cold/warm job logs and phase timestamps
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: node tools/support/compat/github/vp-bootstrap-diagnostic.mjs logs
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ always() }}
+        with:
+          name: vp-bootstrap-report-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: ${{ runner.temp }}/vp-bootstrap-report/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
