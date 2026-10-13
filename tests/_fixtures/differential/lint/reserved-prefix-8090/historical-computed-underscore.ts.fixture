@@ -1,6 +1,0 @@
-
-export default {
-  computed: {
-    _foo() { return 1 }
-  }
-}

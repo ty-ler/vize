@@ -1,4 +1,0 @@
-<script setup lang="ts">
-const { items: [{ name }] } = defineProps<{ items: { name: string }[] }>();
-</script>
-<template><div /></template>

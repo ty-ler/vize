@@ -1,3 +1,0 @@
-<script lang="ts">
-export default { name: "OutsideGroups", watch: { _private() {} }, emits: { data: null }, provide: { props: 0 } }
-</script>

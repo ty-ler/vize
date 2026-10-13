@@ -1,9 +1,0 @@
-{
-  "setupDelayMs": 1200,
-  "viewport": { "width": 320, "height": 200, "name": "small" },
-  "variants": 6,
-  "workers": 6,
-  "waitForNetwork": false,
-  "settleTime": 0,
-  "changedStyle": "main{background:#ff0000!important;min-height:100vh}"
-}
