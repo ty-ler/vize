@@ -44,6 +44,13 @@ differential, native oracle and archive gate remains unchanged. The hydration
 source change has its own commit so a frozen older Stack can inherit it without
 the tooling sharder.
 
+Source coverage also retains the existing raw native syntax packets after
+failure. Only its report step receives `VIZE_NATIVE_SYNTAX_CAPTURE_DIR`; an
+always-run pinned artifact upload keeps the full temporary capture directory.
+The original coverage command, filters, normalization and 40-minute deadline
+remain unchanged. Missing packets warn and provide no byte proof; an original
+compile or assertion failure remains a failed qualification.
+
 The historical frozen diagnostic source had 1,217 files; fresh main has 1,219
 before this change's new control test. The proof uses the actual source inventory
 rather than freezing a stale count. All 113 T1 import closures were audited:

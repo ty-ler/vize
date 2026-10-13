@@ -474,7 +474,16 @@ jobs:
         with:
           tool: cargo-llvm-cov
       - name: Source coverage report
+        env:
+          VIZE_NATIVE_SYNTAX_CAPTURE_DIR: ${{ runner.temp }}/source-coverage-native-syntax
         run: vp run --workspace-root coverage:source
+      - name: Retain raw source coverage native syntax packets
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: source-coverage-native-syntax-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/source-coverage-native-syntax/
+          if-no-files-found: warn
       - name: Verify source coverage summary
         run: test -s target/llvm-cov/source-summary.json
       - name: Upload source coverage summary
