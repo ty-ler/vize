@@ -38,7 +38,7 @@
     ],
     [
       "tools/support/compat/github/empty-vue-star-listing-part-07.json",
-      "381272276fbf1d1a9ebcfe247c705fafdc3ef310ac8525c27123ce3801915202"
+      "2d631f14fa6c44386bcdd34ed14f45f68e6e4a433cf324418fd42f5cf173ef8a"
     ],
     [
       "tools/support/compat/github/empty-vue-star-listing-part-08.json",
@@ -58,7 +58,21 @@
     "tools/support/compat/github/source-counterpart-snapshot.mjs",
     "tests/tooling/empty-vue-star-listing-source.test.mjs",
     "tests/tooling/warm-type-backed-empty-vue-star-listing.test.ts",
-    "tests/tooling/warm-type-backed-empty-vue-star-listing-singleton.test.ts"
+    "tests/tooling/warm-type-backed-empty-vue-star-listing-singleton.test.ts",
+    "tools/support/compat/github/misskey-registry-source.json",
+    "tools/support/compat/github/misskey-registry-part-00.json",
+    "tools/support/compat/github/misskey-registry-part-01.json",
+    "tools/support/compat/github/misskey-registry-part-02.json",
+    "tools/support/compat/github/misskey-registry-part-03.json",
+    "tools/support/compat/github/misskey-registry-part-04.json",
+    "tools/support/compat/github/misskey-registry-part-05.json",
+    "tools/support/compat/github/misskey-registry-part-06.json",
+    "tools/support/compat/github/misskey-registry-part-07.json",
+    "tools/support/compat/github/misskey-registry-part-08.json",
+    "tools/support/compat/github/misskey-registry-part-09.json",
+    "tools/support/compat/github/misskey-registry-part-10.json",
+    "tools/support/compat/github/misskey-registry-source.mjs",
+    "tests/tooling/misskey-registry-source.test.mjs"
   ],
   "changed": [
     "crates/vize_canon/tests/empty_vue_star_exports/execution.rs",
@@ -70,7 +84,8 @@
     "tests/tooling/warm-type-backed-lexical-dollar-host.test.ts",
     "tools/support/compat/github/native-lexical-javascript-source.mjs",
     "tests/tooling/javascript-sfc-options-source.test.mjs",
-    "tests/tooling/javascript-sfc-star-source.test.mjs"
+    "tests/tooling/javascript-sfc-star-source.test.mjs",
+    "tests/_fixtures/vue-ecosystem-fixtures.json"
   ],
   "inverses": [
     {
@@ -182,6 +197,17 @@
           "aW1wb3J0IGFzc2VydCBmcm9tICJub2RlOmFzc2VydC9zdHJpY3QiOwppbXBvcnQgeyBleGVjRmlsZVN5bmMgfSBmcm9tICJub2RlOmNoaWxkX3Byb2Nlc3MiOwppbXBvcnQgeyBjcmVhdGVIYXNoIH0gZnJvbSAibm9kZTpjcnlwdG8iOwppbXBvcnQgZnMgZnJvbSAibm9kZTpmcyI7CmltcG9ydCBvcyBmcm9tICJub2RlOm9zIjsKaW1wb3J0IHBhdGggZnJvbSAibm9kZTpwYXRoIjsKaW1wb3J0IHsgdGVzdCB9IGZyb20gIm5vZGU6dGVzdCI7CmltcG9ydCB7CiAgYXV0aGVudGljYXRlSmF2YVNjcmlwdFNmY1NvdXJjZSwKICBqYXZhc2NyaXB0U2ZjU291cmNlUGF0aHMsCiAgamF2YXNjcmlwdFNmY1NvdXJjZVJlYWRlciwKfSBmcm9tICIuLi8uLi90b29scy9zdXBwb3J0L2NvbXBhdC9naXRodWIvamF2YXNjcmlwdC1zZmMtc291cmNlLWNvbnRleHQubWpzIjsKaW1wb3J0IHsKICByZXRhaW5lZEphdmFTY3JpcHRTZmNTdGFyT3B0aW9ucywKICBqYXZhc2NyaXB0U2ZjU3RhclNvdXJjZVJlY2VpcHQsCiAgamF2YXNjcmlwdFNmY1N0YXJDb250ZXh0Q2VsbHMsCn0gZnJvbSAiLi4vLi4vdG9vbHMvc3VwcG9ydC9jb21wYXQvZ2l0aHViL2phdmFzY3JpcHQtc2ZjLXN0YXItc291cmNlLm1qcyI7Cgpjb25zdCByb290ID0gcGF0aC5yZXNvbHZlKGltcG9ydC5tZXRhLmRpcm5hbWUsICIuLi8uLiIpOwpjb25zdCBkYXRhID0geyBjZWxsczogamF2YXNjcmlwdFNmY1N0YXJDb250ZXh0Q2VsbHMoKSB9Owpjb25zdCBzaGEgPSAoYm9keSkgPT4gY3JlYXRlSGFzaCgic2hhMjU2IikudXBkYXRlKGJvZHkpLmRpZ2VzdCgiaGV4Iik7CmNvbnN0IHJlYWRlciA9IGphdmFzY3JpcHRTZmNTb3VyY2VSZWFkZXIocm9vdCwgdHJ1ZSk7CmNvbnN0IGJvZGllcyA9IG5ldyBNYXAoamF2YXNjcmlwdFNmY1NvdXJjZVBhdGhzLm1hcCgoZmlsZSkgPT4gW2ZpbGUsIHJlYWRlcihmaWxlKV0pKTsKCnZvaWQgdGVzdCgiYWxsOTMgYWN0dWFsIGpvaW5lZCBib2RpZXMgcHJlY2VkZSBlaXRoZXIgZXhhY3QgT3B0aW9ucyBvciBvcmlnaW5hbCBzb3VyY2Utb25seSBsb2FuIiwgKCkgPT4gewogIGNvbnN0IGNvbnRleHQgPSBhdXRoZW50aWNhdGVKYXZhU2NyaXB0U2ZjU291cmNlKHJlYWRlcik7CiAgYXNzZXJ0LmVxdWFsKGNvbnRleHQucmVjZWlwdC5ib2R5UGFpcnMsIDkzKTsKICBhc3NlcnQuZGVlcEVxdWFsKGphdmFzY3JpcHRTZmNTdGFyU291cmNlUmVjZWlwdCwgewogICAgYXV0aG9yaXR5OiAiY29tcGxldGUtamF2YXNjcmlwdC1zdGFyLWN1cnJlbnQtc291cmNlLWNvbnRleHQiLAogICAgYm9keVBhaXJzOiA5MywKICAgIGJlZm9yZVNvdXJjZTogIjNhNjgwZDBhMGI1OWI3MjBhZjBkMjNhNzBhODVjZjU2YzVjNGYxNzUiLAogICAgd2hvbGVDb250ZXh0U291cmNlQm9kaWVzOiA2LAogICAgcmV0YWluZWRPcmlnaW5hbFNvdXJjZUJvZGllczogODgsCiAgICByZXRhaW5lZE9wdGlvbnNTb3VyY2VCb2RpZXM6IDkzLAogICAgc291cmNlT25seTogdHJ1ZSwKICAgIHJ1bnRpbWVDcmVkaXQ6IGZhbHNlLAogICAgb3JpZ2luYWw0MDBDcmVkaXQ6IGZhbHNlLAogICAgcGVyZm9ybWFuY2VDcmVkaXQ6IGZhbHNlLAogIH0pOwogIGNvbnN0IGJvcnJvd2VkID0gcmV0YWluZWRKYXZhU2NyaXB0U2ZjU3Rhck9wdGlvbnMoYm9kaWVzKTsKICBhc3NlcnQuZXF1YWwoYm9ycm93ZWQuc2l6ZSwgOTMpOwogIGZvciAoY29uc3QgY2VsbCBvZiBkYXRhLmNlbGxzKSB7CiAgICBhc3NlcnQuZGVlcEVxdWFsKGJvZGllcy5nZXQoY2VsbC5wYXRoKSwgQnVmZmVyLmZyb20oY2VsbC5jdXJyZW50QWZ0ZXIuYm9keSwgImJhc2U2NCIpKTsKICAgIGFzc2VydC5kZWVwRXF1YWwoCiAgICAgIGNvbnRleHQucmV0YWluZWRPcHRpb25zQWZ0ZXIoY2VsbC5wYXRoKSwKICAgICAgQnVmZmVyLmZyb20oY2VsbC5vcHRpb25zQWZ0ZXIuYm9keSwgImJhc2U2NCIpLAogICAgKTsKICAgIGFzc2VydC5kZWVwRXF1YWwoYm9ycm93ZWQuZ2V0KGNlbGwucGF0aCksIEJ1ZmZlci5mcm9tKGNlbGwub3B0aW9uc0FmdGVyLmJvZHksICJiYXNlNjQiKSk7CiAgfQogIGJvcnJvd2VkLmdldChkYXRhLmNlbGxzWzBdLnBhdGgpWzBdIF49IDE7CiAgYm9ycm93ZWQuZGVsZXRlKGRhdGEuY2VsbHNbMV0ucGF0aCk7CiAgYm9ycm93ZWQuc2V0KCJ1bmtub3duIiwgQnVmZmVyLmZyb20oImZvcmVpZ24iKSk7CiAgY29uc3QgcmVwZWF0ZWQgPSByZXRhaW5lZEphdmFTY3JpcHRTZmNTdGFyT3B0aW9ucyhib2RpZXMpOwogIGFzc2VydC5lcXVhbChyZXBlYXRlZC5zaXplLCA5Myk7CiAgZm9yIChjb25zdCBjZWxsIG9mIGRhdGEuY2VsbHMpCiAgICBhc3NlcnQuZGVlcEVxdWFsKHJlcGVhdGVkLmdldChjZWxsLnBhdGgpLCBCdWZmZXIuZnJvbShjZWxsLm9wdGlvbnNBZnRlci5ib2R5LCAiYmFzZTY0IikpOwogIGFzc2VydC50aHJvd3MoKCkgPT4gY29udGV4dC5yZXRhaW5lZE9wdGlvbnNBZnRlcigidW5rbm93biIpKTsKICByZWFkZXIuY29uZmlybVNvdXJjZSgpOwp9KTsKCnZvaWQgdGVzdCgibWlzc2luZyBjaGFuZ2VkIGFuZCBib3RoIGNvbXBsZXRlIGhpc3RvcmljYWwgaHlicmlkcyByZWZ1c2UgYmVmb3JlIGEgam9pbmVkIHNvdXJjZSBsb2FuIiwgKCkgPT4gewogIGZvciAoY29uc3QgY2VsbCBvZiBkYXRhLmNlbGxzKSB7CiAgICBjb25zdCBjdXJyZW50ID0gYm9kaWVzLmdldChjZWxsLnBhdGgpOwogICAgZm9yIChjb25zdCBjaGFuZ2VkIG9mIFsKICAgICAgbnVsbCwKICAgICAgQnVmZmVyLmNvbmNhdChbY3VycmVudCwgQnVmZmVyLmZyb20oIlxuIildKSwKICAgICAgLi4uW2NlbGwuY3VycmVudEJlZm9yZSwgY2VsbC5vcHRpb25zQWZ0ZXIsIGNlbGwucmV0YWluZWRCZWZvcmVdLm1hcCgoZW50cnkpID0+CiAgICAgICAgQnVmZmVyLmZyb20oZW50cnkuYm9keSwgImJhc2U2NCIpLAogICAgICApLAogICAgXSkgewogICAgICBhc3NlcnQubm90RGVlcEVxdWFsKGNoYW5nZWQsIGN1cnJlbnQpOwogICAgICBjb25zdCBmb3JlaWduID0gbmV3IE1hcChib2RpZXMpOwogICAgICBmb3JlaWduLnNldChjZWxsLnBhdGgsIGNoYW5nZWQpOwogICAgICBhc3NlcnQudGhyb3dzKCgpID0+IGF1dGhlbnRpY2F0ZUphdmFTY3JpcHRTZmNTb3VyY2UoKGZpbGUpID0+IGZvcmVpZ24uZ2V0KGZpbGUpKSk7CiAgICAgIGFzc2VydC50aHJvd3MoKCkgPT4gcmV0YWluZWRKYXZhU2NyaXB0U2ZjU3Rhck9wdGlvbnMoZm9yZWlnbikpOwogICAgfQogIH0KICBmb3IgKGNvbnN0IHNpZGUgb2YgWyJjdXJyZW50QmVmb3JlIiwgIm9wdGlvbnNBZnRlciJdKSB7CiAgICBjb25zdCBoeWJyaWQgPSBuZXcgTWFwKGJvZGllcyk7CiAgICBmb3IgKGNvbnN0IGNlbGwgb2YgZGF0YS5jZWxscykgaHlicmlkLnNldChjZWxsLnBhdGgsIEJ1ZmZlci5mcm9tKGNlbGxbc2lkZV0uYm9keSwgImJhc2U2NCIpKTsKICAgIGFzc2VydC50aHJvd3MoKCkgPT4gYXV0aGVudGljYXRlSmF2YVNjcmlwdFNmY1NvdXJjZSgoZmlsZSkgPT4gaHlicmlkLmdldChmaWxlKSkpOwogICAgYXNzZXJ0LnRocm93cygoKSA9PiByZXRhaW5lZEphdmFTY3JpcHRTZmNTdGFyT3B0aW9ucyhoeWJyaWQpKTsKICB9CiAgYXNzZXJ0LnRocm93cygoKSA9PgogICAgcmV0YWluZWRKYXZhU2NyaXB0U2ZjU3Rhck9wdGlvbnMoCiAgICAgIG5ldyBNYXAoW1tkYXRhLmNlbGxzWzBdLnBhdGgsIGJvZGllcy5nZXQoZGF0YS5jZWxsc1swXS5wYXRoKV1dKSwKICAgICksCiAgKTsKICBjb25zdCBleHRyYSA9IG5ldyBNYXAoYm9kaWVzKTsKICBleHRyYS5zZXQoInVua25vd24iLCBCdWZmZXIuZnJvbSgiZm9yZWlnbiIpKTsKICBhc3NlcnQudGhyb3dzKCgpID0+IHJldGFpbmVkSmF2YVNjcmlwdFNmY1N0YXJPcHRpb25zKGV4dHJhKSk7Cn0pOwoKdm9pZCB0ZXN0KCJyZWFsIHJhdyBhbmQgcGh5c2ljYWwgam9pbmVkIGNlbGxzIHJlZnVzZSBvbGQgY29tbWl0dGVkIGJvZGllcyBtb2RlcyBzeW1saW5rcyBhbmQgcmVwbGFjZW1lbnRzIiwgKCkgPT4gewogIGNvbnN0IGZpeHR1cmUgPSBmcy5ta2R0ZW1wU3luYyhwYXRoLmpvaW4ob3MudG1wZGlyKCksICJ2aXplLWpzLXN0YXItc291cmNlLSIpKTsKICBjb25zdCBnaXQgPSAoYXJncywgaW5wdXQpID0+CiAgICBleGVjRmlsZVN5bmMoImdpdCIsIFsiLS1uby1yZXBsYWNlLW9iamVjdHMiLCAuLi5hcmdzXSwgewogICAgICBjd2Q6IGZpeHR1cmUsCiAgICAgIGlucHV0LAogICAgICBlbnY6IHsgLi4ucHJvY2Vzcy5lbnYsIEdJVF9OT19MQVpZX0ZFVENIOiAiMSIsIEdJVF9BTExPV19QUk9UT0NPTDogIiIgfSwKICAgIH0pOwogIHRyeSB7CiAgICBnaXQoWyJpbml0IiwgIi0tcXVpZXQiXSk7CiAgICBmb3IgKGNvbnN0IFtmaWxlLCBib2R5XSBvZiBib2RpZXMpIHsKICAgICAgY29uc3QgdGFyZ2V0ID0gcGF0aC5qb2luKGZpeHR1cmUsIGZpbGUpOwogICAgICBmcy5ta2RpclN5bmMocGF0aC5kaXJuYW1lKHRhcmdldCksIHsgcmVjdXJzaXZlOiB0cnVlIH0pOwogICAgICBmcy53cml0ZUZpbGVTeW5jKHRhcmdldCwgYm9keSwgeyBtb2RlOiAwbzY0NCB9KTsKICAgIH0KICAgIGdpdChbImFkZCIsICIuIl0pOwogICAgZ2l0KFsKICAgICAgIi1jIiwKICAgICAgInVzZXIubmFtZT1Tb3VyY2UgbGF3IiwKICAgICAgIi1jIiwKICAgICAgInVzZXIuZW1haWw9bGF3QGludmFsaWQuZXhhbXBsZSIsCiAgICAgICJjb21taXQiLAogICAgICAiLS1xdWlldCIsCiAgICAgICItbSIsCiAgICAgICJjb21wbGV0ZSBhY3R1YWwgam9pbmVkOTMiLAogICAgXSk7CiAgICBjb25zdCBoZWFkID0gZ2l0KFsicmV2LXBhcnNlIiwgIkhFQUQiXSkudG9TdHJpbmcoKS50cmltKCk7CiAgICBhc3NlcnQuZXF1YWwoCiAgICAgIGF1dGhlbnRpY2F0ZUphdmFTY3JpcHRTZmNTb3VyY2UoamF2YXNjcmlwdFNmY1NvdXJjZVJlYWRlcihmaXh0dXJlLCB0cnVlKSkucmVjZWlwdC5ib2R5UGFpcnMsCiAgICAgIDkzLAogICAgKTsKICAgIGZvciAoY29uc3QgY2VsbCBvZiBkYXRhLmNlbGxzKSB7CiAgICAgIGNvbnN0IHRhcmdldCA9IHBhdGguam9pbihmaXh0dXJlLCBjZWxsLnBhdGgpLAogICAgICAgIGN1cnJlbnQgPSBib2RpZXMuZ2V0KGNlbGwucGF0aCk7CiAgICAgIGZzLmNobW9kU3luYyh0YXJnZXQsIDBvNzU1KTsKICAgICAgYXNzZXJ0LnRocm93cygoKSA9PgogICAgICAgIGF1dGhlbnRpY2F0ZUphdmFTY3JpcHRTZmNTb3VyY2UoamF2YXNjcmlwdFNmY1NvdXJjZVJlYWRlcihmaXh0dXJlLCB0cnVlKSksCiAgICAgICk7CiAgICAgIGZzLmNobW9kU3luYyh0YXJnZXQsIDBvNjQ0KTsKICAgICAgZnMudW5saW5rU3luYyh0YXJnZXQpOwogICAgICBhc3NlcnQudGhyb3dzKCgpID0+CiAgICAgICAgYXV0aGVudGljYXRlSmF2YVNjcmlwdFNmY1NvdXJjZShqYXZhc2NyaXB0U2ZjU291cmNlUmVhZGVyKGZpeHR1cmUsIHRydWUpKSwKICAgICAgKTsKICAgICAgZnMuc3ltbGlua1N5bmMocGF0aC5qb2luKHJvb3QsIGNlbGwucGF0aCksIHRhcmdldCk7CiAgICAgIGFzc2VydC50aHJvd3MoKCkgPT4KICAgICAgICBhdXRoZW50aWNhdGVKYXZhU2NyaXB0U2ZjU291cmNlKGphdmFzY3JpcHRTZmNTb3VyY2VSZWFkZXIoZml4dHVyZSwgdHJ1ZSkpLAogICAgICApOwogICAgICBmcy51bmxpbmtTeW5jKHRhcmdldCk7CiAgICAgIGZzLndyaXRlRmlsZVN5bmModGFyZ2V0LCBCdWZmZXIuZnJvbShjZWxsLm9wdGlvbnNBZnRlci5ib2R5LCAiYmFzZTY0IiksIHsgbW9kZTogMG82NDQgfSk7CiAgICAgIGdpdChbImFkZCIsICItLSIsIGNlbGwucGF0aF0pOwogICAgICBjb25zdCB0cmVlID0gZ2l0KFsid3JpdGUtdHJlZSJdKS50b1N0cmluZygpLnRyaW0oKTsKICAgICAgY29uc3Qgb2xkID0gZ2l0KAogICAgICAgIFsiLWMiLCAidXNlci5uYW1lPVNvdXJjZSBsYXciLCAiLWMiLCAidXNlci5lbWFpbD1sYXdAaW52YWxpZC5leGFtcGxlIiwgImNvbW1pdC10cmVlIiwgdHJlZV0sCiAgICAgICAgIm9sZCBjb21taXR0ZWQgY2VsbFxuIiwKICAgICAgKQogICAgICAgIC50b1N0cmluZygpCiAgICAgICAgLnRyaW0oKTsKICAgICAgZ2l0KFsidXBkYXRlLXJlZiIsICJIRUFEIiwgb2xkXSk7CiAgICAgIGFzc2VydC50aHJvd3MoKCkgPT4KICAgICAgICBhdXRoZW50aWNhdGVKYXZhU2NyaXB0U2ZjU291cmNlKGphdmFzY3JpcHRTZmNTb3VyY2VSZWFkZXIoZml4dHVyZSwgdHJ1ZSkpLAogICAgICApOwogICAgICBnaXQoWyJ1cGRhdGUtcmVmIiwgIkhFQUQiLCBoZWFkXSk7CiAgICAgIGdpdChbInJlYWQtdHJlZSIsIGhlYWRdKTsKICAgICAgZnMud3JpdGVGaWxlU3luYyh0YXJnZXQsIGN1cnJlbnQpOwogICAgICBhc3NlcnQuZXF1YWwoc2hhKGZzLnJlYWRGaWxlU3luYyh0YXJnZXQpKSwgY2VsbC5jdXJyZW50QWZ0ZXIuc2hhMjU2KTsKICAgIH0KICAgIGdpdChbInVwZGF0ZS1yZWYiLCAicmVmcy9yZXBsYWNlLyIgKyBoZWFkLCBoZWFkXSk7CiAgICBhc3NlcnQudGhyb3dzKCgpID0+IGphdmFzY3JpcHRTZmNTb3VyY2VSZWFkZXIoZml4dHVyZSwgdHJ1ZSkpOwogICAgZ2l0KFsidXBkYXRlLXJlZiIsICItZCIsICJyZWZzL3JlcGxhY2UvIiArIGhlYWRdKTsKICAgIGFzc2VydC5lcXVhbCgKICAgICAgYXV0aGVudGljYXRlSmF2YVNjcmlwdFNmY1NvdXJjZShqYXZhc2NyaXB0U2ZjU291cmNlUmVhZGVyKGZpeHR1cmUsIHRydWUpKS5yZWNlaXB0LmJvZHlQYWlycywKICAgICAgOTMsCiAgICApOwogIH0gZmluYWxseSB7CiAgICBmcy5ybVN5bmMoZml4dHVyZSwgeyByZWN1cnNpdmU6IHRydWUsIGZvcmNlOiB0cnVlIH0pOwogIH0KfSk7Cg=="
         ]
       ]
+    },
+    {
+      "file": "tests/_fixtures/vue-ecosystem-fixtures.json",
+      "clauses": [
+        [
+          59007,
+          59446,
+          "YmFzZWxpbmUiOiB7CiAgICAgICAgICAidHNjb25maWciOiAicGFja2FnZXMvZnJvbnRlbmQvdHNjb25maWcuanNvbiIsCiAgICAgICAgICAicHJlcGFyZSI6IFsKICAgICAgICAgICAgInBucG0iLAogICAgICAgICAgICAiLS1maWx0ZXIiLAogICAgICAgICAgICAibWlzc2tleS1qcyIsCiAgICAgICAgICAgICJleGVjIiwKICAgICAgICAgICAgInRzZ28iLAogICAgICAgICAgICAiLS1wcm9qZWN0IiwKICAgICAgICAgICAgInRzY29uZmlnLmpzb24iLAogICAgICAgICAgICAiLS1vdXREaXIiLAogICAgICAgICAgICAiYnVpbHQiLAogICAgICAgICAgICAiLS1kZWNsYXJhdGlvbiIsCiAgICAgICAgICAgICJ0cnVlIiwKICAgICAgICAgICAgIi0tZW1pdERlY2xhcmF0aW9uT25seSIsCiAgICAgICAgICAgICJ0cnVlIgogICAgICAgICAgXQogICAgICAgIH0sCiAgICAgICAgIg==",
+          ""
+        ]
+      ]
     }
   ],
   "tests": [
@@ -220,7 +246,8 @@
     [
       "tests/tooling/javascript-sfc-star-source.test.mjs",
       "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38"
-    ]
+    ],
+    ["tests/tooling/misskey-registry-source.test.mjs", "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6"]
   ],
   "javascriptPaths": [
     ".github/workflows/typechecker-native-phases.yml",
@@ -338,5 +365,105 @@
     "d95c151c18d85c8fdd95541291bc614e44790101",
     "5c8f3825fd2eb698c27d3b97d0a47b0671b33e01",
     "43afa9b09ae0f334d7fcba41f721ac52a8d1ab23"
-  ]
+  ],
+  "sdkUnion": {
+    "schema": "vize.literal-sdk-three-source-union",
+    "source": "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6",
+    "actualIncoming": "c4f74b48fb2df6ea20aeb414193d82f531ab059e",
+    "cells": [
+      {
+        "file": "tests/_fixtures/vue-ecosystem-fixtures.json",
+        "before": {
+          "blob": "6d0c0fc4d03706a0e997f61e07aa8533ce80b976",
+          "length": 284228,
+          "sha256": "ec1c45a17a778507adfc3ce41a17a274fed0cf55aadd74f81f75b12f641abfbf",
+          "mode": "100644"
+        },
+        "after": {
+          "blob": "6d0c0fc4d03706a0e997f61e07aa8533ce80b976",
+          "length": 284228,
+          "sha256": "ec1c45a17a778507adfc3ce41a17a274fed0cf55aadd74f81f75b12f641abfbf",
+          "mode": "100644"
+        },
+        "clauses": []
+      },
+      {
+        "file": "tests/tooling/empty-vue-star-javascript-source.test.mjs",
+        "before": {
+          "blob": "d6e4b4d1c409e63eecbdd8c4e563a655d72bf466",
+          "length": 334,
+          "sha256": "9127cd29670d67f930f35b4976d4593de794c517977b51643d7b5ce98ebf9be1",
+          "mode": "100644"
+        },
+        "after": {
+          "blob": "e2df2bd6642e69b9dfdf3004176aa1a166edfcd9",
+          "length": 333,
+          "sha256": "a25de5d1ce7dccbefd7829e30a6c9b7c35746445c1a7864037cf4cb530d27d0d",
+          "mode": "100644"
+        },
+        "clauses": [
+          [
+            12,
+            217,
+            "U3Rhckxpc3RpbmdPcmlnaW5hbFRlc3QgfSBmcm9tICIuLi8uLi90b29scy9zdXBwb3J0L2NvbXBhdC9naXRodWIvZW1wdHktdnVlLXN0YXItbGlzdGluZy1zb3VyY2UubWpzIjsKCi8vIFRoZSBjb21wbGV0ZSBjb21taXR0ZWQgY3VycmVudCBsYXcgcHJlY2VkZXMgdGhpcyB1bmNoYW5nZWQgbGl0ZXJhbCBzb3VyY2UgbGF3Lgphd2FpdCBydW5TdGFyTGlzdGluZw==",
+            "TWlzc2tleVJlZ2lzdHJ5T3JpZ2luYWxUZXN0IH0gZnJvbSAiLi4vLi4vdG9vbHMvc3VwcG9ydC9jb21wYXQvZ2l0aHViL21pc3NrZXktcmVnaXN0cnktc291cmNlLm1qcyI7CgovLyBDb21wbGV0ZSBhY3R1YWwgc291cmNlIGN1c3RvZHkgcHJlY2VkZXMgdGhlIHVuY2hhbmdlZCBsaXRlcmFsIEJEIHNvdXJjZSBsYXdzLgphd2FpdCBydW5NaXNza2V5UmVnaXN0cnk="
+          ]
+        ]
+      },
+      {
+        "file": "tests/tooling/warm-type-backed-empty-vue-star-custody.test.ts",
+        "before": {
+          "blob": "d2629473abc7ef1e18c2638de7aa3f9c550f1471",
+          "length": 340,
+          "sha256": "1a91d046a03fb186ac9df137053963de0bc2db6b00961849fcb203598b2751a7",
+          "mode": "100644"
+        },
+        "after": {
+          "blob": "997c02c4b8540f15de87a6cdabc364df584481e7",
+          "length": 339,
+          "sha256": "0f315e4087578e0081351368d258297561fb2dd7c6f30b79218aa2093d86440f",
+          "mode": "100644"
+        },
+        "clauses": [
+          [
+            12,
+            217,
+            "U3Rhckxpc3RpbmdPcmlnaW5hbFRlc3QgfSBmcm9tICIuLi8uLi90b29scy9zdXBwb3J0L2NvbXBhdC9naXRodWIvZW1wdHktdnVlLXN0YXItbGlzdGluZy1zb3VyY2UubWpzIjsKCi8vIFRoZSBjb21wbGV0ZSBjb21taXR0ZWQgY3VycmVudCBsYXcgcHJlY2VkZXMgdGhpcyB1bmNoYW5nZWQgbGl0ZXJhbCBzb3VyY2UgbGF3Lgphd2FpdCBydW5TdGFyTGlzdGluZw==",
+            "TWlzc2tleVJlZ2lzdHJ5T3JpZ2luYWxUZXN0IH0gZnJvbSAiLi4vLi4vdG9vbHMvc3VwcG9ydC9jb21wYXQvZ2l0aHViL21pc3NrZXktcmVnaXN0cnktc291cmNlLm1qcyI7CgovLyBDb21wbGV0ZSBhY3R1YWwgc291cmNlIGN1c3RvZHkgcHJlY2VkZXMgdGhlIHVuY2hhbmdlZCBsaXRlcmFsIEJEIHNvdXJjZSBsYXdzLgphd2FpdCBydW5NaXNza2V5UmVnaXN0cnk="
+          ]
+        ]
+      }
+    ],
+    "sourceOnly": true,
+    "runtimeCredit": false,
+    "priorListingRows": [
+      [
+        "tests/_fixtures/vue-ecosystem-fixtures.json",
+        "898840ef1aab4fac603c5c183ddc09bc128e8971",
+        283789,
+        "e1fe55bcfebec4c2b1aed73be23fa3a4d362667b919fc0c35b94fbe0283d9a68",
+        "898840ef1aab4fac603c5c183ddc09bc128e8971",
+        283789,
+        "e1fe55bcfebec4c2b1aed73be23fa3a4d362667b919fc0c35b94fbe0283d9a68"
+      ],
+      [
+        "tests/tooling/empty-vue-star-javascript-source.test.mjs",
+        "7968a6e0865aa9c778d80801963f5596bc87cd84",
+        15689,
+        "ea0521537cb2f1daa6967df4b687d08bee547c314516af94264623ab9b51f1b4",
+        "e2df2bd6642e69b9dfdf3004176aa1a166edfcd9",
+        333,
+        "a25de5d1ce7dccbefd7829e30a6c9b7c35746445c1a7864037cf4cb530d27d0d"
+      ],
+      [
+        "tests/tooling/warm-type-backed-empty-vue-star-custody.test.ts",
+        "88cc1aec3bd663f6f54fe2ea7ae4c13c708b3b9f",
+        734,
+        "ba3c87f92097f4e98d8d9d7fefcbaba6017b688fea1ec282dc29985435b504cb",
+        "997c02c4b8540f15de87a6cdabc364df584481e7",
+        339,
+        "0f315e4087578e0081351368d258297561fb2dd7c6f30b79218aa2093d86440f"
+      ]
+    ]
+  }
 }
