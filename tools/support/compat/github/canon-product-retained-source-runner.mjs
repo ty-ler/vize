@@ -158,15 +158,23 @@ export async function importCanonProductTemplateEmitModule(root) {
 }
 
 export async function importCanonProductParentListingModule(root, file) {
-  assert([
-    "tests/tooling/empty-vue-star-listing-source.test.mjs",
-    "tests/tooling/warm-type-backed-empty-vue-star-listing.test.ts",
-    "tests/tooling/warm-type-backed-empty-vue-star-listing-singleton.test.ts",
-  ].includes(file), "whole exact parent listing law only");
+  assert(
+    [
+      "tests/tooling/empty-vue-star-listing-source.test.mjs",
+      "tests/tooling/warm-type-backed-empty-vue-star-listing.test.ts",
+      "tests/tooling/warm-type-backed-empty-vue-star-listing-singleton.test.ts",
+    ].includes(file),
+    "whole exact parent listing law only",
+  );
   const proof = authenticateCanonProductSource(root);
-  const { listStarCounterpartFiles, provisionStarSourceCounterpart } = await import("./source-counterpart-snapshot.mjs");
-  const source = "d7f5bea78aeb96a4f52a06f068be7efa12ed885c";
-  const fixture = provisionStarSourceCounterpart(root, source, listStarCounterpartFiles(root, source, [file]));
+  const { listStarCounterpartFiles, provisionStarSourceCounterpart } =
+    await import("./source-counterpart-snapshot.mjs");
+  const source = "b903b648dd9edc4cd34312b055ece5d5eb6e1ad7";
+  const fixture = provisionStarSourceCounterpart(
+    root,
+    source,
+    listStarCounterpartFiles(root, source, [file]),
+  );
   process.once("exit", () => fixture.cleanup());
   try {
     assert.equal(proof.head, git(root, ["rev-parse", "HEAD"]).toString().trim());
@@ -174,5 +182,8 @@ export async function importCanonProductParentListingModule(root, file) {
     const { after } = await import("node:test");
     after(() => fixture.cleanup());
     return original;
-  } catch (error) { fixture.cleanup(); throw error; }
+  } catch (error) {
+    fixture.cleanup();
+    throw error;
+  }
 }

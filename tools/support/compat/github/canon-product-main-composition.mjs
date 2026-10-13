@@ -15,15 +15,16 @@ const blob = (body) =>
 const packetBytes = fs.readFileSync(
   new URL("canon-product-main-composition.json.gz", import.meta.url),
 );
-assert.equal(sha(packetBytes), "dbf36412602739f0b646ccc841079f9cf50ebd16654154751c883a07bb0c605c");
+assert.equal(sha(packetBytes), "1353b786cffa42495b04b45a48e6610edc50766e2aca4be566915837f261136c");
 const packet = JSON.parse(gunzipSync(packetBytes));
-assert.equal(packet.source, "c4f74b48fb2df6ea20aeb414193d82f531ab059e");
+assert.equal(packet.source, "ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a");
+assert.equal(packet.parent, "b903b648dd9edc4cd34312b055ece5d5eb6e1ad7");
 assert.equal(packet.sourceOnly, true);
 assert.equal(packet.runtimeCredit, false);
 const cells = new Map();
 for (const entry of packet.cells) {
   assert(!cells.has(entry.file));
-  for (const side of ["before", "after"]) {
+  for (const side of ["before", "parentBefore", "after"]) {
     const cell = entry[side];
     if (!cell) continue;
     const body = Buffer.from(cell.rawBase64, "base64");
@@ -44,6 +45,19 @@ for (const entry of packet.cells) {
     ]);
   }
   equalBytes(recovered, before ?? Buffer.alloc(0));
+  let parentRestored = Buffer.from(entry.after.rawBase64, "base64");
+  for (const [start, end, current, original] of entry.parentClauses.toReversed()) {
+    equalBytes(parentRestored.subarray(start, end), Buffer.from(current, "base64"));
+    parentRestored = Buffer.concat([
+      parentRestored.subarray(0, start),
+      Buffer.from(original, "base64"),
+      parentRestored.subarray(end),
+    ]);
+  }
+  equalBytes(
+    parentRestored,
+    entry.parentBefore ? Buffer.from(entry.parentBefore.rawBase64, "base64") : Buffer.alloc(0),
+  );
   cells.set(entry.file, entry);
 }
 export const canonProductCompositionPaths = Object.freeze([...cells.keys()]);
@@ -99,6 +113,7 @@ function raw(root, revision, side) {
 }
 export function authenticateCanonProductComposition(root, head) {
   raw(root, packet.source, "before");
+  raw(root, packet.parent, "parentBefore");
   const current = raw(root, head, "after");
   for (const [file, cell] of current) {
     let target = root;
@@ -116,7 +131,7 @@ export function authenticateCanonProductComposition(root, head) {
   assert.equal(sha(unionBytes), "5be0a4ab0ef4b4bd0902498ed3aee0ecf3239c8d9d240a5f542ff1bf687b27a3");
   const union = JSON.parse(unionBytes);
   assert.equal(union.source, "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6");
-  assert.equal(union.actualIncoming, packet.source);
+  assert.equal(union.actualIncoming, "c4f74b48fb2df6ea20aeb414193d82f531ab059e");
   assert.equal(union.cells.length, 3);
   for (const entry of union.cells) {
     const body = current.get(entry.file).body;

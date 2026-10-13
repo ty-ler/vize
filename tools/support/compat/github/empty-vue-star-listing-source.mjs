@@ -44,7 +44,7 @@ function regular(root, file) {
 }
 const moduleRoot = fs.realpathSync(new URL("../../../../", import.meta.url));
 const metadataBody = regular(moduleRoot, metadataPath);
-assert.equal(sha(metadataBody), "7facae642d762eeb1b708ccdbe82d97e278ac0a7fd5296e4798d43026c5a6931");
+assert.equal(sha(metadataBody), "83a63d33a8b8a6c5317f8fa89283feaa646ed38ab310b2c0798091e7989382d2");
 const metadata = JSON.parse(metadataBody);
 assert.equal(metadata.schema, "vize.empty-vue-star.literal-bd-listing-source");
 assert.equal(metadata.base, base);
@@ -121,10 +121,44 @@ export function authenticateStarListingSource(root) {
       "whole literal source identity",
     );
   }
-  const files = [...named.keys(), ...loaded.keys()];
+  const files = [
+    ...new Set([
+      ...named.keys(),
+      ...loaded.keys(),
+      ...metadata.mainUnion.cells.map(([file]) => file),
+    ]),
+  ];
   assert.equal(new Set(files).size, files.length);
   const before = raw(root, base, files),
     current = raw(root, head, files);
+  const incoming = raw(
+    root,
+    metadata.mainUnion.source,
+    metadata.mainUnion.cells.map(([file]) => file),
+  );
+  for (const [file, oldBlob, oldLength, oldSHA, nextBlob, nextLength, nextSHA] of metadata.mainUnion
+    .cells) {
+    const old = incoming.get(file),
+      next = current.get(file);
+    assert.equal(blob(old), oldBlob);
+    assert.equal(old.length, oldLength);
+    assert.equal(sha(old), oldSHA);
+    assert.equal(blob(next), nextBlob);
+    assert.equal(next.length, nextLength);
+    assert.equal(sha(next), nextSHA);
+  }
+  for (const pair of metadata.mainUnion.inverses) {
+    let body = Buffer.from(current.get(pair.file));
+    for (const [start, end, from, to] of [...pair.clauses].reverse()) {
+      assertBytes(body.subarray(start, end), Buffer.from(from, "base64"));
+      body = Buffer.concat([
+        body.subarray(0, start),
+        Buffer.from(to, "base64"),
+        body.subarray(end),
+      ]);
+    }
+    assertBytes(body, incoming.get(pair.file), "complete actual incoming main counterpart");
+  }
   const sdkCells = metadata.sdkUnion.cells;
   assert.deepEqual(
     sdkCells.map(({ file }) => file),
@@ -273,6 +307,34 @@ export function qualifyStarListingSDK(production, qualified, digest) {
     original400Credit: false,
   };
 }
+/** The new incoming main before-image stays separate from the original SDK law. */
+export function qualifyStarListingMain(production, qualified, digest) {
+  if (production.length !== 1 || production[0] !== execution || qualified.has(execution))
+    return null;
+  const before = new Map(metadata.mainShippingBefore);
+  for (const [file, , , oldSHA, , , nextSHA] of rows)
+    if (
+      digest("before", file) !== (before.get(file) ?? oldSHA) ||
+      digest("after", file) !== nextSHA
+    )
+      return null;
+  for (const [file, body] of loaded)
+    if (
+      digest("before", file) !== (before.get(file) ?? null) ||
+      digest("after", file) !== sha(body)
+    )
+      return null;
+  for (const [file, , , oldSHA, , , nextSHA] of metadata.mainUnion.cells)
+    if (digest("before", file) !== oldSHA || digest("after", file) !== nextSHA) return null;
+  return {
+    authority: "exact-reviewed-incoming-main-star-listing-singleton",
+    files: [execution],
+    sourceOnly: true,
+    runtimeCredit: false,
+    performanceCredit: false,
+    original400Credit: false,
+  };
+}
 const oldTests = new Map(metadata.tests.map(([file, source]) => [file, source]));
 /** The full named current law precedes each unchanged literal historical test body. */
 export async function runStarListingOriginalTest(root, file) {
@@ -282,7 +344,12 @@ export async function runStarListingOriginalTest(root, file) {
     value = owned(packet);
   const source = oldTests.get(file);
   assert(source, "one named original listing/JS source law");
-  const initial = source === base ? [...named.keys()] : [file];
+  const initial =
+    source === base
+      ? [...named.keys()]
+      : source === metadata.mainUnion.source
+        ? metadata.mainUnion.frameInputs
+        : [file];
   const files = listStarCounterpartFiles(value.root, source, initial);
   const fixture = provisionStarSourceCounterpart(value.root, source, files);
   let retained = false;

@@ -4,7 +4,12 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
-import { authenticateCanonProductSource } from "./canon-product-source-context.mjs";
+import {
+  authenticateCanonProductSource,
+  canonProductSourcePaths,
+} from "./canon-product-source-context.mjs";
+import { canonProductCompositionPaths } from "./canon-product-main-composition.mjs";
+
 const equalBytes = (actual, expected, message) => {
   assert(Buffer.isBuffer(actual) && Buffer.isBuffer(expected), "whole byte buffers");
   assert.equal(actual.length, expected.length, message);
@@ -160,12 +165,143 @@ export function qualifyCanonGeneratedHelperPackets(production, alreadyQualified,
   assert.equal(new Set(files).size, 11);
   const selected = production.filter((file) => files.includes(file) && !alreadyQualified.has(file));
   if (!selected.length) return null;
-  assert.equal(new Set(selected).size, selected.length, "duplicate generated packet selection refuses");
+  assert.equal(
+    new Set(selected).size,
+    selected.length,
+    "duplicate generated packet selection refuses",
+  );
   const proof = authenticateReleaseNavigationHelper(root);
   assert.equal(proof.sealedPackets, 11);
   for (const row of metadata.entries) {
-    assert.equal(digest("before", row.path), row.before.sha256, "whole original generated packet: " + row.path);
-    assert.equal(digest("after", row.path), row.after.sha256, "whole current generated packet: " + row.path);
+    assert.equal(
+      digest("before", row.path),
+      row.before.sha256,
+      "whole original generated packet: " + row.path,
+    );
+    assert.equal(
+      digest("after", row.path),
+      row.after.sha256,
+      "whole current generated packet: " + row.path,
+    );
   }
   return Object.freeze({ files: Object.freeze(files), sourceOnly: true, runtimeCredit: false });
+}
+
+const repairedObserverPaths = Object.freeze([
+  "crates/vize/tests/support/event_completion_witness.rs",
+  "crates/vize/tests/support/navigation_helper_successor.rs",
+  "crates/vize_maestro/tests/davinci_ts40_projection.rs",
+  "crates/vize_maestro/tests/davinci_ts40_projection_support/canon.rs",
+  "crates/vize_maestro/tests/davinci_ts40_projection_support/maestro.rs",
+  "crates/vize_maestro/tests/davinci_ts40_projection_support/mod.rs",
+  "crates/vize_maestro/tests/davinci_ts40_projection_support/record.rs",
+  "crates/vize_canon/src/batch/type_checker/tests/recent_issues.rs",
+  "crates/vize_canon/src/batch/type_checker/tests/recent_issues/release_opaque_slot_hosts.rs",
+  "crates/vize_canon/src/batch/virtual_project/project/artifacts.rs",
+  "crates/vize_canon/src/batch/virtual_project/project/artifacts/pragma_projection_tests.rs",
+]);
+
+/** Actual six-file product union; the parent singleton never lends five old production bodies. */
+export function qualifyCanonParentListingSingleton(production, alreadyQualified, digest) {
+  const execution = "crates/vize_canon/tests/empty_vue_star_exports/execution.rs";
+  if (!production.includes(execution) || alreadyQualified.has(execution)) return null;
+  const root = fs.realpathSync(new URL("../../../../", import.meta.url));
+  const proof = authenticateReleaseNavigationHelper(root);
+  const packet = JSON.parse(regular(root, packetPath));
+  const metadata = JSON.parse(regular(root, packet.sealed11.metadataPath));
+  const canon = [
+    "crates/vize_canon/src/batch/source_policy.rs",
+    "crates/vize_canon/src/batch/virtual_project/build.rs",
+    "crates/vize_canon/src/batch/virtual_project/build/context.rs",
+    "crates/vize_canon/src/batch/virtual_project/project.rs",
+    "crates/vize_canon/src/virtual_ts/scope/component_slots.rs",
+  ];
+  const allowed = new Set([
+    ...canon,
+    execution,
+    ...repairedObserverPaths,
+    ...metadata.entries.map(({ path: file }) => file),
+  ]);
+  const incoming = "ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a";
+  const git = (args) =>
+    execFileSync("git", ["--no-replace-objects", "--literal-pathspecs", ...args], {
+      cwd: root,
+      maxBuffer: 64 * 1024 * 1024,
+      env: { ...process.env, GIT_NO_LAZY_FETCH: "1", GIT_ALLOW_PROTOCOL: "" },
+    });
+  assert.equal(new Set(production).size, production.length, "duplicate production path refuses");
+  const knownControls = new Set([...canonProductSourcePaths, ...canonProductCompositionPaths]);
+  for (const file of production) {
+    if (!allowed.has(file))
+      assert(
+        alreadyQualified.has(file) && knownControls.has(file),
+        "foreign unqualified production: " + file,
+      );
+  }
+  for (const file of new Set([...production, ...canon, execution])) {
+    const beforeEntry = git(["ls-tree", "-z", incoming, "--", file]).toString();
+    const afterEntry = git(["ls-tree", "-z", proof.head, "--", file]).toString();
+    const before = beforeEntry ? /^100(?:644|755) blob ([a-f0-9]{40})\t/u.exec(beforeEntry) : null;
+    const after = afterEntry ? /^100(?:644|755) blob ([a-f0-9]{40})\t/u.exec(afterEntry) : null;
+    assert(!beforeEntry || before);
+    assert(!afterEntry || after);
+    assert.equal(
+      digest("before", file),
+      before ? sha(git(["cat-file", "blob", before[1]])) : null,
+      "actual incoming main production: " + file,
+    );
+    assert.equal(
+      digest("after", file),
+      after ? sha(git(["cat-file", "blob", after[1]])) : null,
+      "actual current production: " + file,
+    );
+  }
+  assert.equal(git(["rev-parse", "HEAD"]).toString().trim(), proof.head);
+  return Object.freeze({
+    authority: "canon-current-six-production-parent-listing",
+    files: Object.freeze([...canon, execution]),
+    sourceOnly: true,
+    runtimeCredit: false,
+    nativeCredit: false,
+    performanceCredit: false,
+    original400Credit: false,
+  });
+}
+
+/** Only the exact repaired observer/intake bodies, bound to actual incoming and current source. */
+export function qualifyCanonRepairedObservers(production, alreadyQualified, digest) {
+  const selected = production.filter(
+    (file) => repairedObserverPaths.includes(file) && !alreadyQualified.has(file),
+  );
+  if (!selected.length) return null;
+  assert.equal(new Set(selected).size, selected.length);
+  const root = fs.realpathSync(new URL("../../../../", import.meta.url));
+  const proof = authenticateReleaseNavigationHelper(root);
+  const git = (args) =>
+    execFileSync("git", ["--no-replace-objects", "--literal-pathspecs", ...args], {
+      cwd: root,
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  for (const file of repairedObserverPaths) {
+    for (const [side, source] of [
+      ["before", "ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a"],
+      ["after", proof.head],
+    ]) {
+      const entry = git(["ls-tree", "-z", source, "--", file]).toString();
+      const match = entry ? /^100644 blob ([a-f0-9]{40})\t/u.exec(entry) : null;
+      assert(!entry || match);
+      assert.equal(
+        digest(side, file),
+        match ? sha(git(["cat-file", "blob", match[1]])) : null,
+        "whole named observer: " + file,
+      );
+    }
+  }
+  return Object.freeze({
+    files: repairedObserverPaths,
+    sourceOnly: true,
+    runtimeCredit: false,
+    nativeCredit: false,
+    original400Credit: false,
+  });
 }

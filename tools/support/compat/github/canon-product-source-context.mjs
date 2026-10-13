@@ -227,7 +227,11 @@ export function authenticateCanonProductSource(root) {
   for (const [file, cell] of successorCells) {
     assert.equal(composition.get(file).mode, cell.after.mode);
     assert.equal(composition.get(file).blob, cell.after.blob);
-    equalBytes(composition.get(file).body, cell.after.body, "whole composed caller agrees with its exact predecessor inverse: " + file);
+    equalBytes(
+      composition.get(file).body,
+      cell.after.body,
+      "whole composed caller agrees with its exact predecessor inverse: " + file,
+    );
   }
   const admitted = new Set([
     ...canonProductCompositionPaths,
@@ -256,7 +260,11 @@ export function authenticateCanonProductSource(root) {
       composition.get(file) ?? successorCells.get(file)?.after ?? frames.current.get(file);
     assert.equal(actual.get(file).mode, expected.mode);
     assert.equal(actual.get(file).blob, expected.blob);
-    equalBytes(actual.get(file).body, expected.body, "whole selected child and named caller successor: " + file);
+    equalBytes(
+      actual.get(file).body,
+      expected.body,
+      "whole selected child and named caller successor: " + file,
+    );
     const cell = actual.get(file);
     assert(cell);
     let target = root;

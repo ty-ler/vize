@@ -19,8 +19,13 @@ import { qualifyEmptyVueStarListingSingleton } from "./warm-type-backed-empty-vu
 import {
   qualifyStarListingBD,
   qualifyStarListingSDK,
+  qualifyStarListingMain,
 } from "../../../tools/support/compat/github/empty-vue-star-listing-source.mjs";
-import { qualifyCanonGeneratedHelperPackets } from "../../../tools/support/compat/github/canon-release-navigation-helper.mjs";
+import {
+  qualifyCanonGeneratedHelperPackets,
+  qualifyCanonParentListingSingleton,
+  qualifyCanonRepairedObservers,
+} from "../../../tools/support/compat/github/canon-release-navigation-helper.mjs";
 
 /** Compose finite qualifications without changing existing path/timing authorities. */
 export function qualifyHostMoves(
@@ -95,6 +100,15 @@ export function qualifyHostMoves(
   const canonGeneratedHelperPackets = enabled
     ? qualifyCanonGeneratedHelperPackets(production, alreadyQualified, digest)
     : null;
+  const canonParentListingSingleton = enabled
+    ? qualifyCanonParentListingSingleton(production, alreadyQualified, digest)
+    : null;
+  const canonRepairedObservers = enabled
+    ? qualifyCanonRepairedObservers(production, alreadyQualified, digest)
+    : null;
+  const emptyVueStarListingMain = enabled
+    ? qualifyStarListingMain(production, alreadyQualified, digest)
+    : null;
   return {
     pathHostMove: enabled ? qualifyPathHostMove(production, alreadyQualified, digest) : null,
     timingHostMove: enabled ? qualifyTimingHostMove(production, alreadyQualified, digest) : null,
@@ -110,5 +124,8 @@ export function qualifyHostMoves(
     ...(emptyVueStarListingBD ? { emptyVueStarListingBD } : {}),
     ...(emptyVueStarListingSDK ? { emptyVueStarListingSDK } : {}),
     ...(canonGeneratedHelperPackets ? { canonGeneratedHelperPackets } : {}),
+    ...(canonParentListingSingleton ? { canonParentListingSingleton } : {}),
+    ...(canonRepairedObservers ? { canonRepairedObservers } : {}),
+    ...(emptyVueStarListingMain ? { emptyVueStarListingMain } : {}),
   };
 }

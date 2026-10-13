@@ -117,3 +117,30 @@ Fresh successor Actions, the exact sealed eleven-packet source admission,
 protected delivery and installed public acceptance remain required. Neither
 metadata-edit skipped runs nor the earlier source-only controls grant these
 missing native or original-400 results.
+
+The complete 905 source/full logs expose three related observer failures:
+the event-completion witness's literal 1138-byte helper, the TS-40 generated
+text/map signatures, and the template-emitter receipt's exact producer hash.
+One passive `navigation-helper-successor.json` retains the whole 1138-byte
+declaration, the whole current 1242-byte declaration, both whole producer
+identities and the exact 104-byte inverse. Unknown or partial helper families
+still refuse. The original event counterfactual, all original TS-40 snapshots,
+the four original emitter controls, authored coordinates and diagnostics remain
+literal. Separate source-only current controls authenticate actual output before
+recovering the entire old helper, every generated mapping endpoint and original
+snapshot signature. Actual generated documents and native query positions stay
+raw; these source inverses do not execute a historical backend.
+
+The cold original negative HEAD control also needs its genuine published
+`b401784c472d850a8be08ca1122659a6883dde6e` object before the private fixture.
+The existing strict owned-Actions acquisition supplies that one negative
+fixture input without adding source or runtime authority. Newly owned binary
+comparisons validate Buffer type, length and every byte with a boolean equality
+assertion; original JS93/Star322 bodies and all refusal vectors remain intact.
+
+The existing PR becomes a genuine child of the published CI parent in native
+Stack 8831. Its full actual source union precedes the unchanged complete parent
+listing laws. The shared host qualifier admits only the sealed eleven generated
+packets and separately authenticated finite production footprints. The final
+cumulative full Check and Matrix share one immutable highest head; no additional
+standalone full run supplies cumulative release qualification.
