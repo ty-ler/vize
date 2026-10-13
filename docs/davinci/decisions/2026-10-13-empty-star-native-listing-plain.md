@@ -207,3 +207,31 @@ its production delta. The original incoming 415 component source laws and
 SDK427 replay now execute unchanged on the exact incoming-main private frame,
 after full actual source authentication and the same finite owned history
 admission. No original source table or producer budget is repinned or waived.
+
+The first507 original400 producer stopped before compilation with ENOBUFS in
+warm-type-backed-path-host.ts:93: the new 3,156,121-byte inverse manifest
+exceeded Git's existing 1 MiB captured-output bound. Keep that reader and bound
+unchanged. Store the same six full inverse records in deterministic JSON.gz,
+verify compressed and raw SHA256 plus the complete inverse bytes, and retain
+all 71 original whole current/incoming identities. The one changed foundation
+line has an exact common-prefix/suffix clause with a full350-line round trip,
+so no large character diff or copied unrelated paragraph is generated. The
+capsule is 18,310 bytes and the manifest remains below the original reader
+bound. Actual gitBodyDigest and the same38 source laws require fresh validation;
+this source representation supplies no runtime or performance acceptance.
+
+The same source507 run separately exposed the comparison fetch reintroducing
+a shallow boundary after its complete checkout, and the additive listing test
+exceeding350 lines. Fetch the comparison base with its full history, retaining
+all actual commit/parent/merge-base assertions. Move the three unchanged primer
+lifecycle controls to a focused103-line file; the source test remains below350.
+The existing foundation blob itself exceeds1MiB. Its regular mode, pathname,
+blob length and every byte remain checked; only large blobs hash incrementally
+in the existing Git reader, returning64 hexadecimal bytes through its unchanged
+capture bound and preserving Git failure/signal. The real old capture overflow,
+full current manifest/foundation digests and actual-main host qualification pass.
+An explicitly named child canonical successor checks its complete current
+identity and finite exact clauses, restores the whole parent canonical cell,
+then runs the unchanged full parent-to-main inverse. Only that foundation path
+can use this successor; all other source cells, the original parent cell and
+original BD/SDK singleton laws remain unchanged. Child mode/body drift refuses.

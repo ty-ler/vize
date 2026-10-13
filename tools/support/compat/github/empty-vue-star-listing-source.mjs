@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { after } from "node:test";
 import { pathToFileURL } from "node:url";
+import { gunzipSync } from "node:zlib";
 import {
   listStarCounterpartFiles,
   provisionStarSourceCounterpart,
@@ -44,7 +45,7 @@ function regular(root, file) {
 }
 const moduleRoot = fs.realpathSync(new URL("../../../../", import.meta.url));
 const metadataBody = regular(moduleRoot, metadataPath);
-assert.equal(sha(metadataBody), "83a63d33a8b8a6c5317f8fa89283feaa646ed38ab310b2c0798091e7989382d2");
+assert.equal(sha(metadataBody), "fc03d861ffb4465740f5b1eefdce49af253197d2635a0280ba1b25a645ba6a1b");
 const metadata = JSON.parse(metadataBody);
 assert.equal(metadata.schema, "vize.empty-vue-star.literal-bd-listing-source");
 assert.equal(metadata.base, base);
@@ -64,6 +65,12 @@ const loaded = new Map([
   ...parts.map(({ file, body }) => [file, body]),
   ...metadata.executing.map((file) => [file, regular(moduleRoot, file)]),
 ]);
+const mainInverseBody = regular(moduleRoot, metadata.mainUnion.inverseCapsule.file);
+assert.equal(sha(mainInverseBody), metadata.mainUnion.inverseCapsule.compressedSHA256);
+const mainInverseRaw = gunzipSync(mainInverseBody);
+assert.equal(sha(mainInverseRaw), metadata.mainUnion.inverseCapsule.rawSHA256);
+const mainInverses = JSON.parse(mainInverseRaw);
+assert.equal(mainInverses.length, metadata.mainUnion.inverseCapsule.count);
 const proofs = new WeakMap();
 function raw(root, source, files) {
   const tree = git(root, ["ls-tree", "-z", source, "--", ...files]);
@@ -131,6 +138,25 @@ export function authenticateStarListingSource(root) {
   assert.equal(new Set(files).size, files.length);
   const before = raw(root, base, files),
     current = raw(root, head, files);
+  const projectedCurrent = new Map(current);
+  const canonical = metadata.mainUnion.canonicalSuccessor;
+  if (canonical) {
+    const [file, expectedBlob, length, checksum] = canonical.after;
+    assert.equal(file, "docs/davinci/decisions/2026-09-27-level-restructure.md");
+    let body = current.get(file);
+    assert.equal(blob(body), expectedBlob);
+    assert.equal(body.length, length);
+    assert.equal(sha(body), checksum);
+    for (const [start, end, from, to] of [...canonical.clauses].reverse()) {
+      assertBytes(body.subarray(start, end), Buffer.from(from, "base64"));
+      body = Buffer.concat([
+        body.subarray(0, start),
+        Buffer.from(to, "base64"),
+        body.subarray(end),
+      ]);
+    }
+    projectedCurrent.set(file, body);
+  }
   const incoming = raw(
     root,
     metadata.mainUnion.source,
@@ -139,7 +165,7 @@ export function authenticateStarListingSource(root) {
   for (const [file, oldBlob, oldLength, oldSHA, nextBlob, nextLength, nextSHA] of metadata.mainUnion
     .cells) {
     const old = incoming.get(file),
-      next = current.get(file);
+      next = projectedCurrent.get(file);
     assert.equal(blob(old), oldBlob);
     assert.equal(old.length, oldLength);
     assert.equal(sha(old), oldSHA);
@@ -147,8 +173,8 @@ export function authenticateStarListingSource(root) {
     assert.equal(next.length, nextLength);
     assert.equal(sha(next), nextSHA);
   }
-  for (const pair of metadata.mainUnion.inverses) {
-    let body = Buffer.from(current.get(pair.file));
+  for (const pair of mainInverses) {
+    let body = Buffer.from(projectedCurrent.get(pair.file));
     for (const [start, end, from, to] of [...pair.clauses].reverse()) {
       assertBytes(body.subarray(start, end), Buffer.from(from, "base64"));
       body = Buffer.concat([
@@ -325,7 +351,14 @@ export function qualifyStarListingMain(production, qualified, digest) {
     )
       return null;
   for (const [file, , , oldSHA, , , nextSHA] of metadata.mainUnion.cells)
-    if (digest("before", file) !== oldSHA || digest("after", file) !== nextSHA) return null;
+    if (
+      digest("before", file) !== oldSHA ||
+      digest("after", file) !==
+        (metadata.mainUnion.canonicalSuccessor?.after[0] === file
+          ? metadata.mainUnion.canonicalSuccessor.after[3]
+          : nextSHA)
+    )
+      return null;
   return {
     authority: "exact-reviewed-incoming-main-star-listing-singleton",
     files: [execution],
