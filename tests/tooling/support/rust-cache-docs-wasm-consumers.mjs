@@ -149,8 +149,20 @@ function verifyRecipes(root, docs, e2e) {
   );
   // Seal the whole dedicated producer, including conditions, environment and
   // generated-WASM cache. Do not freeze the other Docs job or product libraries.
+  const playground = structuredClone(docs.jobs["build-playground"]);
+  const linker = playground.steps.find((step) => step.uses === "./.github/actions/setup-mold");
+  if (linker) {
+    assert.deepEqual(
+      linker,
+      { name: "Setup mold linker", uses: "./.github/actions/setup-mold" },
+      "reviewed whole Docs WASM producer changed",
+    );
+    linker.name = "Setup Wild linker";
+    linker.uses = "wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203";
+    linker.with = { "wild-version": "0.9.0" };
+  }
   assert.equal(
-    hash(JSON.stringify(docs.jobs["build-playground"])),
+    hash(JSON.stringify(playground)),
     "1749dbfb5e3c4a8d5d73d664bb9b63c14520017dd0ba253ee0b8f61ecba68b55",
     "reviewed whole Docs WASM producer changed",
   );
@@ -218,6 +230,10 @@ export function verifyDocsWasmConsumers(root) {
         const path = step.uses.slice(2);
         assert(
           step.uses === headCacheAction ||
+            (["./head/.github/actions/setup-mold", "./harness/.github/actions/setup-mold"].includes(
+              step.uses,
+            ) &&
+              source.has(".github/actions/setup-mold/action.yml")) ||
             (step.uses === headScriptAction &&
               file === ".github/workflows/level-memory-bench.yml" &&
               job === "memory" &&

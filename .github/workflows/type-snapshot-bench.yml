@@ -20,6 +20,7 @@ on:
       - "crates/vize_atelier_sfc/examples/type_snapshot_bench.rs"
       - "tools/benchmarks/scripts/type-snapshot-paired.ts"
       - "tools/benchmarks/scripts/type-snapshot-cli-*.mjs"
+      - "tools/benchmarks/scripts/type-snapshot-parser-recovery.ts"
       - "tools/benchmarks/scripts/typecheck-command.mjs"
       - "tools/benchmarks/scripts/benchmark-binary.mjs"
       - "tools/benchmarks/scripts/check-gate-env.mjs"
@@ -67,9 +68,11 @@ jobs:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # stable
         with: { toolchain: stable }
-      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203
-        with:
-          wild-version: "0.9.0"
+      - uses: ./head/.github/actions/setup-mold
+      # The cache action's nested local action resolves from the workspace root,
+      # and this job checks the repository out under head/.
+      - name: Expose the nested target action at the workspace root
+        run: mkdir -p .github/actions && cp -R head/.github/actions/reuse-rust-target .github/actions/
       - uses: ./head/.github/actions/setup-rust-sticky-cache
         with:
           key: type-snapshot-head
@@ -140,9 +143,11 @@ jobs:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # stable
         with: { toolchain: stable }
-      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203
-        with:
-          wild-version: "0.9.0"
+      - uses: ./head/.github/actions/setup-mold
+      # The cache action's nested local action resolves from the workspace root,
+      # and this job checks the repository out under head/.
+      - name: Expose the nested target action at the workspace root
+        run: mkdir -p .github/actions && cp -R head/.github/actions/reuse-rust-target .github/actions/
       - uses: ./head/.github/actions/setup-rust-sticky-cache
         with:
           key: type-snapshot-cli-head

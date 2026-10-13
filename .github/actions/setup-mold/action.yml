@@ -1,0 +1,29 @@
+name: Setup mold linker
+description: Use mold for native Linux Rust builds without overriding target or optimization flags
+runs:
+  using: composite
+  steps:
+    - uses: rui314/setup-mold@339e96b4ff1f3bd865856ba4cbbe8818a7acb038 # v1
+      if: runner.os == 'Linux'
+      with:
+        mold-version: "3.0.0"
+        make-default: false
+    - name: Configure native Linux linker
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        set -euo pipefail
+        case "$RUNNER_ARCH" in
+          X64) target=X86_64_UNKNOWN_LINUX_GNU ;;
+          ARM64) target=AARCH64_UNKNOWN_LINUX_GNU ;;
+          *) echo "Unsupported Linux runner architecture: $RUNNER_ARCH" >&2; exit 1 ;;
+        esac
+        linker_dir="$RUNNER_TEMP/vize-mold"
+        mkdir -p "$linker_dir"
+        cat > "$linker_dir/clang" <<'WRAPPER'
+        #!/usr/bin/env bash
+        exec clang "$@" --ld-path=/usr/local/bin/mold
+        WRAPPER
+        chmod +x "$linker_dir/clang"
+        echo "CARGO_TARGET_${target}_LINKER=$linker_dir/clang" >> "$GITHUB_ENV"
+        /usr/local/bin/mold --version

@@ -1,0 +1,53 @@
+name: mold linker
+on:
+  pull_request:
+    paths:
+      - .github/actions/setup-mold/**
+      - .github/workflows/mold-linker.yml
+  push:
+    branches: [main]
+    paths:
+      - .github/actions/setup-mold/**
+      - .github/workflows/mold-linker.yml
+  workflow_dispatch:
+permissions: { contents: read }
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+concurrency:
+  group: mold-linker-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  smoke:
+    name: Link Rust with mold (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
+        with: { toolchain: stable }
+      - uses: ./.github/actions/setup-mold
+      - name: Verify debug and fat LTO executables use mold
+        shell: bash
+        env:
+          # A caller's code-generation flags must not disable mold selection.
+          RUSTFLAGS: -C debuginfo=1
+          CARGO_PROFILE_RELEASE_LTO: fat
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"
+          CARGO_PROFILE_RELEASE_OPT_LEVEL: "3"
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          cargo new --bin --vcs none mold-smoke
+          cd mold-smoke
+          cargo generate-lockfile
+          cargo build --locked
+          cargo build --locked --release
+          for profile in debug release; do
+            "target/$profile/mold-smoke"
+            readelf --string-dump .comment "target/$profile/mold-smoke" | tee "$profile-linker.txt"
+            grep -F 'mold 3.0.0' "$profile-linker.txt"
+          done

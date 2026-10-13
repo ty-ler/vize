@@ -34,3 +34,7 @@ profile selection, artifact paths, default release behavior and early failure.
 Actions runs the actual native and browser checks. Build-time improvement
 will be reported from completed Actions steps, separately from the expected
 reduction in optimization work.
+
+Deliver this change after the mold migration in the same native Stack. Both
+changes touch the same setup steps; the combined version retains the pinned
+toolchain, mold and the cheaper CI profiles without restoring retired checks.

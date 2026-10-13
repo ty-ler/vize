@@ -207,9 +207,12 @@ fn empty_editor_directory_retains_fresh_defaults_and_strict_cli_checks() {
     );
     assert_eq!(
         super::load_raw_config_checked(Some(project.path())).err(),
-        Some(format!(
-            "no vize config file found under {}",
-            project.path().display()
-        ))
+        Some(
+            crate::cstr!(
+                "no vize config file found under {}",
+                project.path().display()
+            )
+            .into()
+        )
     );
 }

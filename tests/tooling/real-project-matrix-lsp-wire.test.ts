@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { test } from "node:test";
-import { parse } from "yaml";
+import { parse, stringify } from "yaml";
+import { isMoldLinkerMigration } from "../../tools/support/compat/github/mold-linker.ts";
 
 const read = (file: string) => fs.readFileSync(new URL(file, import.meta.url), "utf8");
 const originalBytes = read("./fixtures/real-project-matrix-original-67e3.yml");
@@ -66,5 +67,5 @@ test("passive native LSP capture retains the complete original Matrix workflow",
     /'enforced' \|\|[\s\S]*'release-gated'\) \|\| 'observational' \}\} @ \$\{\{ github\.sha \}\}$/,
   );
   current["run-name"] = original["run-name"];
-  assert.deepEqual(current, original);
+  assert.equal(isMoldLinkerMigration(stringify(original), stringify(current)), true);
 });

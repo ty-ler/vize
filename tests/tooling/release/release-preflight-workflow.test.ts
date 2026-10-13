@@ -75,11 +75,10 @@ test("reusable release preflight verifies evidence and crate plans without regis
   );
   assert.ok(crateCheckout);
   assert.equal(crateCheckout.with?.["persist-credentials"], false);
-  const wildLinker = crateValidation.steps?.find((step) =>
-    step.uses?.startsWith("wild-linker/action@"),
+  const moldLinker = crateValidation.steps?.find(
+    (step) => step.uses === "./.github/actions/setup-mold",
   );
-  assert.ok(wildLinker);
-  assert.equal(wildLinker.with?.["wild-version"], "0.9.0");
+  assert.ok(moldLinker);
   assert.ok(
     crateValidation.steps?.some(
       (step) => step.run === "moon run --target native tools/moon/cmd/publish_crates -- --dry-run",

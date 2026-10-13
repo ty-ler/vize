@@ -48,7 +48,7 @@ await test("full Rust differential checks and shards independently require the s
   const sameTools = [
     "actions/checkout@",
     "dtolnay/rust-toolchain@",
-    "wild-linker/action@",
+    "./.github/actions/setup-mold",
     "voidzero-dev/setup-vp@",
     "./.github/actions/setup-rust-sticky-cache",
     "./.github/actions/setup-rust-script",
