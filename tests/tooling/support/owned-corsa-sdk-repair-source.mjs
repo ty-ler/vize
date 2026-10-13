@@ -6,7 +6,7 @@ const blob = (body) => createHash("sha1").update(`blob ${body.length}\0`).update
 const url = new URL("./owned-corsa-sdk-repair-source.json", import.meta.url), stat = fs.lstatSync(url);
 assert(stat.isFile() && (stat.mode & 0o777) === 0o644);
 const bytes = fs.readFileSync(url);
-assert.equal(sha(bytes), "3afc6d21df47e59e6b480d5c9471c94b0584c438872668cc1b8076c25e1af01b");
+assert.equal(sha(bytes), "1ad6e559978165340eed74a5b5590fe2332f124d54be2f10dd41354b3ba75e4f");
 const data = JSON.parse(bytes);
 assert.equal(data.schema, 1);
 assert.equal(data.sourceOnly, true);
@@ -18,6 +18,7 @@ assert.deepEqual(data.frames.map(({ file }) => file), [
   "crates/vize_canon/src/batch/type_checker/tests/recent_issues.rs",
   "tools/support/compat/github/owned-corsa-lexical-source.mjs",
   "tools/support/compat/github/owned-corsa-clippy-source.mjs",
+  "tools/support/compat/github/owned-corsa-source-reader.mjs",
 ]);
 const frames = new Map();
 for (const row of data.frames) {

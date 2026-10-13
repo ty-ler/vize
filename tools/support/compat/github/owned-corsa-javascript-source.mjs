@@ -14,7 +14,7 @@ const read = (name) => {
   return fs.readFileSync(url);
 };
 const bytes = read("./owned-corsa-javascript-source.json");
-assert.equal(sha(bytes), "cac78d39a70c17cd5e9cf7e9a7ad167dd443599413d6c2805a54263fb08af470");
+assert.equal(sha(bytes), "2d6df4f4d7609bb8082fd69b3d87f604bf313079b2d0011341e528733edc3c46");
 const data = JSON.parse(bytes);
 assert.equal(data.schema, 1);
 assert.equal(data.mainSource, "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38");

@@ -5,6 +5,7 @@ import { javascriptSfcSourcePaths } from "./javascript-sfc-source-context.mjs";
 import { authenticateOwnedJavaScriptSource, ownedJavaScriptLexicalPaths } from "./owned-corsa-javascript-source.mjs";
 import { projectOwnedCorsaNativeMainReader } from "./owned-corsa-native-main-source.mjs";
 import { ownedCorsaNativeGatesMainBaseline } from "./owned-corsa-current-baseline.mjs";
+import { preservedRecipeBody } from "../../../../tests/performance/support/warm-type-backed-owned-corsa-recipe.ts";
 import { ownedCorsaSource, qualifyOwnedCorsaSource } from "./owned-corsa-source-custody.mjs";
 import { verifyOwnedCorsaCallers, ownedCorsaCallerPaths } from "./owned-corsa-caller-custody.mjs";
 
@@ -81,6 +82,7 @@ export const ownedCorsaSupplementPaths = [
   "tests/_fixtures/ci/owned-corsa-package-consumer/src/lib.rs",
   "tests/_fixtures/ci/owned-canon-external-consumer/lib.rs",
   "tests/performance/support/warm-type-backed-owned-corsa-host.ts",
+  "tests/performance/support/warm-type-backed-owned-corsa-recipe.ts",
 ];
 
 export function ownedCorsaLexicalPaths(original) {
@@ -141,7 +143,9 @@ export function projectOwnedCorsaLexicalCopied({
       ? file === "tests/_fixtures/differential/typechecker/manifest.json"
         ? javascript.retainedOwnedAfter(file) : javascript.historicalAfter(file)
       : null;
-    const value = caller?.blob !== reader("after", file)?.blob ? caller
+    const recipeBody = file === "pnpm-lock.yaml" ? preservedRecipeBody(reader, file) : null;
+    const value = recipeBody ? { mode: "100644", blob: createHash("sha1").update(`blob ${recipeBody.length}\0`).update(recipeBody).digest("hex"), body: recipeBody }
+      : caller?.blob !== reader("after", file)?.blob ? caller
       : mainBody?.blob !== reader("after", file)?.blob ? mainBody
       : jsBody ? { mode: "100644", blob: createHash("sha1").update(`blob ${jsBody.length}\0`).update(jsBody).digest("hex"), body: jsBody }
       : graphBody;

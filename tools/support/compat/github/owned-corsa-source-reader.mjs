@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 export function ownedCorsaReader(root, baseline, head) {
+  root = fs.realpathSync(root);
   const git = (args) =>
     execFileSync("git", ["--no-replace-objects", ...args], {
       cwd: root,
@@ -34,6 +35,11 @@ export function ownedCorsaReader(root, baseline, head) {
         value = { mode: "100644", blob: match[1], body: git(["cat-file", "blob", match[1]]) };
         if (side === "after") {
           const target = path.join(root, file);
+          let component = root;
+          for (const part of file.split("/")) {
+            component = path.join(component, part);
+            assert(!fs.lstatSync(component).isSymbolicLink(), "physical source ancestor: " + component);
+          }
           const stat = fs.lstatSync(target);
           assert(
             stat.isFile() && (stat.mode & 0o777) === 0o644,

@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { ensureHostedLiteralSource } from "./warm-type-backed-git-reader-literal-source.ts";
-import { projectOwnedSfcDualCell } from "./owned-corsa-dual-sfc-source.ts";
+import { projectOwnedDualSourceFrame } from "./owned-corsa-dual-source.ts";
 
 export type Cell = { mode: string; blob: string; bytes: number; sha256: string };
 export type Body = Cell & { body: Buffer };
@@ -246,15 +246,17 @@ export function qualifyDualCurrentFrame(root: string) {
   assert.equal(beforeCommit.length, review.beforeCommit.bytes);
   assert.equal(hash(beforeCommit), review.beforeCommit.sha256);
   const before = reader.frame(root, review.beforeSource);
-  const after = reader.frame(root, head);
+  const projection = projectOwnedDualSourceFrame(root, head, review.beforeSource,
+    reader.frame(root, head), (file) => reader.physical(root, file));
+  const after = projection.raw;
   for (const row of review.beforeRows)
     assert(
       matches(before.get(row.file) ?? null, row.cell),
       "complete actual before source: " + row.file,
     );
   for (const row of review.rows) {
-    const { raw, physical } = projectOwnedSfcDualCell(root, head, review.beforeSource, row.file,
-      after.get(row.file) ?? null, reader.physical(root, row.file));
+    const raw = after.get(row.file) ?? null;
+    const physical = projection.physical(row.file);
     assert(matches(raw, row.final), "complete dual current source: " + row.file);
     assert(matches(physical, row.final), "complete dual physical source: " + row.file);
     assert.deepEqual(physical!.body, raw!.body);

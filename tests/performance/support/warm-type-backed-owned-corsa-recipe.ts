@@ -71,3 +71,11 @@ export function preservedRecipeDigest(
       ? pair.retainedHistoricalAfter.sha256
       : originalDigest(side, requested);
 }
+
+/** Whole old source bytes are available only after the exact two real current locks qualify. */
+export function preservedRecipeBody(reader: Reader, file: string) {
+  assert.equal(file, "pnpm-lock.yaml");
+  return qualifyOwnedCorsaPreservedRecipe(reader)
+    ? Buffer.from(pair.retainedHistoricalAfter.body)
+    : Buffer.from(reader("after", file)!.body);
+}

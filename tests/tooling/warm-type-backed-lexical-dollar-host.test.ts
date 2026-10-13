@@ -8,9 +8,10 @@ import { historicalCompositionBody } from "./support/native-lexical-composition-
 import { qualifyHostMoves } from "../performance/support/warm-type-backed-host-qualifications.ts";
 import { qualifyLexicalDollarHost } from "../performance/support/warm-type-backed-lexical-dollar-host.ts";
 import {
-  authenticateJavaScriptSfcSource,
-  javascriptSfcSourceReader,
-} from "../../tools/support/compat/github/javascript-sfc-source-context.mjs";
+  authenticateOwnedJavaScriptSource,
+} from "../../tools/support/compat/github/owned-corsa-javascript-source.mjs";
+import { ownedCorsaReader } from "../../tools/support/compat/github/owned-corsa-source-reader.mjs";
+import { execFileSync } from "node:child_process";
 
 const root = path.resolve(import.meta.dirname, "../..");
 const manifest = JSON.parse(
@@ -43,12 +44,16 @@ assert.equal(
   "c0a6495d43cb5ff1a400cf72e8eae4ac8e4973bf75ca07a6e6a0f94e048be1d8",
 );
 assert.equal(capsule.source, "a6633fb68b110d07abd5ee5a6049bc15f20f9c7f");
-const lexicalContext = authenticateJavaScriptSfcSource(javascriptSfcSourceReader(root));
-const readLexical = (file: string) => lexicalContext.historicalAfter(file);
+const selectedHead = execFileSync("git", ["--no-replace-objects", "rev-parse", "HEAD"], { cwd: root }).toString().trim();
+const lexicalContext = authenticateOwnedJavaScriptSource(ownedCorsaReader(root,
+  "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38", selectedHead));
+const readLexical = (file: string) => ["crates/vize_canon/src/batch/executor/cli.rs",
+  "crates/vize_canon/src/batch/executor/session.rs", "tests/_fixtures/differential/typechecker/manifest.json"].includes(file)
+  ? historicalCompositionBody("lexical", file) : lexicalContext.historicalAfter(file);
 const actual = new Map<string, { before: string | null; after: string | null }>();
 for (const [file, before, after] of [...manifest.files, ...manifest.corpusBodies]) {
   assert.ok(fs.lstatSync(path.join(root, file)).isFile(), file);
-  actual.set(file, { before, after: sha(historicalCompositionBody("lexical", file)) });
+  actual.set(file, { before, after: sha(readLexical(file)) });
   assert.equal(actual.get(file)!.after, after, `retained whole accepted lexical body: ${file}`);
 }
 assert.equal(capsule.entries.length, 9);
@@ -81,7 +86,7 @@ for (const entry of capsule.entries) {
   actual.get(entry.path)!.before = originalDigest;
 }
 for (const [file, original] of manifest.preservedBodies) {
-  const digest = sha(historicalCompositionBody("lexical", file));
+  const digest = sha(readLexical(file));
   assert.equal(digest, original, `complete original400/legacy authority: ${file}`);
   actual.set(file, { before: digest, after: digest });
 }
