@@ -83,7 +83,7 @@ impl<'a> Visit<'a> for Collector<'_> {
 
     fn visit_class(&mut self, class: &Class<'a>) {
         // Heritage is evaluated in the outer scope; fields/methods own class `this`.
-        if let Some(heritage) = &class.super_class {
+        if let Some(heritage) = class.heritage.as_ref().map(|heritage| &heritage.expression) {
             self.visit_expression(heritage);
         }
     }

@@ -902,7 +902,7 @@ fn collect_from_class<'a>(
     if let Some(id) = &class.id {
         inner_bindings.insert(id.name.to_compact_string(), true);
     }
-    if let Some(super_class) = &class.super_class {
+    if let Some(super_class) = class.heritage.as_ref().map(|heritage| &heritage.expression) {
         collect_from_expression(super_class, source, local_to_key, &inner_bindings, rewrites);
     }
     for elem in class.body.body.iter() {

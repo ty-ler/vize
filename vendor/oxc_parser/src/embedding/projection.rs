@@ -1,6 +1,6 @@
 //! Move an authenticated selected header into its original arena, once.
 
-use oxc_ast::ast::{Expression, FormalParameters, FunctionBody, Statement};
+use oxc_ast::ast::{ArrowFunctionBody, Expression, FormalParameters, FunctionBody, Statement};
 use oxc_diagnostics::Diagnostics;
 use oxc_span::{GetSpan, SourceType, Span};
 
@@ -160,8 +160,9 @@ impl<'a> EmbeddingObservation<'a> {
         let root = if self.hole.is_none()
             && let Some(Statement::ExpressionStatement(statement)) = self.parsed.program.body.pop()
             && let Expression::ArrowFunctionExpression(arrow) = statement.unbox().expression
+            && let ArrowFunctionBody::FunctionBody(body) = arrow.unbox().body
         {
-            Some(&*self.allocator.alloc(arrow.unbox().body.unbox()))
+            Some(&*self.allocator.alloc(body.unbox()))
         } else {
             None
         };

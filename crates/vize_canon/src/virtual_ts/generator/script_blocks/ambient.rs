@@ -142,8 +142,9 @@ pub(super) fn extend_module_spans(
                                     Some((ty.span, false))
                                 }
                                 AstKind::Class(class) => class
-                                    .super_class
+                                    .heritage
                                     .as_ref()
+                                    .map(|heritage| &heritage.expression)
                                     .filter(|base| base.span().contains_inclusive(reference))
                                     .map(|base| (base.span(), true)),
                                 _ => None,

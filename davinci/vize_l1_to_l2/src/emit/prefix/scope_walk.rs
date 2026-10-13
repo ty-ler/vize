@@ -167,10 +167,14 @@ pub trait ExpressionScope<'a>: Visit<'a> + Sized {
         if let Some(parameters) = &class.type_parameters {
             self.visit_ts_type_parameter_declaration(parameters);
         }
-        if let Some(super_class) = &class.super_class {
+        if let Some(super_class) = class.heritage.as_ref().map(|heritage| &heritage.expression) {
             self.visit_expression(super_class);
         }
-        if let Some(arguments) = &class.super_type_arguments {
+        if let Some(arguments) = class
+            .heritage
+            .as_ref()
+            .and_then(|heritage| heritage.type_arguments.as_ref())
+        {
             self.visit_ts_type_parameter_instantiation(arguments);
         }
         self.visit_ts_class_implements_list(&class.implements);

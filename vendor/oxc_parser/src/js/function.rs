@@ -183,7 +183,7 @@ impl<'a, C: Config> ParserImpl<'a, C> {
     /// A slot value is an original-source arrow parameter list ending at EOF.
     /// The existing parenthesized grammar selects RParen and remains unchanged.
     pub(crate) fn parse_slot_parameter_items(&mut self) -> FormalParameters<'a> {
-        let span = self.start_span();
+        let span = self.cur_start();
         let opening_span = self.cur_token().span();
         if self.is_ts && self.at(Kind::This) {
             let this_param = self.parse_ts_this_parameter();

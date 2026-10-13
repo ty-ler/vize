@@ -36,7 +36,7 @@ pub(super) fn arrow<'p, 'a>(program: &'p Program<'a>) -> Option<&'p ArrowFunctio
         return None;
     };
     (!arrow.r#async
-        && !arrow.expression
+        && !arrow.is_expression()
         && arrow.type_parameters.is_none()
         && arrow.return_type.is_none())
     .then_some(arrow)
@@ -67,16 +67,20 @@ pub(super) fn shape_hole(
                 && arrow.params.span == Span::new(0, 2)
                 && arrow.params.items.is_empty()
                 && arrow.params.rest.is_none()
-                && arrow.body.span == Span::new(4, content.end + 2)
-                && arrow.body.directives.iter().all(|node| authored(node.span))
-                && arrow.body.statements.iter().all(|node| authored(node.span()))
+                && arrow.body.as_function_body().is_some_and(|body| {
+                    body.span == Span::new(4, content.end + 2)
+                        && body.directives.iter().all(|node| authored(node.span))
+                        && body.statements.iter().all(|node| authored(node.span()))
+                })
         }
         EmbeddingGoal::Parameters => {
             arrow.span == Span::new(0, content.end + 6)
                 && arrow.params.span == Span::new(0, content.end + 2)
-                && arrow.body.span == Span::new(content.end + 4, content.end + 6)
-                && arrow.body.directives.is_empty()
-                && arrow.body.statements.is_empty()
+                && arrow.body.as_function_body().is_some_and(|body| {
+                    body.span == Span::new(content.end + 4, content.end + 6)
+                        && body.directives.is_empty()
+                        && body.statements.is_empty()
+                })
                 && arrow.params.items.iter().all(|node| authored(node.span))
                 && arrow.params.rest.as_deref().is_none_or(|node| authored(node.span))
         }

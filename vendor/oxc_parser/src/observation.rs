@@ -111,7 +111,7 @@ impl<'a> ProgramObservation<'a> {
     /// Recovered, fatal and Flow results never mint this capability.
     #[must_use]
     pub fn admitted(&self) -> Option<AdmittedProgram<'_, 'a>> {
-        (!self.parsed.panicked
+        (!self.parsed.fatal_error
             && !self.parsed.is_flow_language
             && !self.parsed.diagnostics.has_errors())
         .then_some(AdmittedProgram { observation: self })
@@ -129,7 +129,7 @@ impl<'a> ProgramObservation<'a> {
 
     #[must_use]
     pub fn panicked(&self) -> bool {
-        self.parsed.panicked
+        self.parsed.fatal_error
     }
 
     #[must_use]

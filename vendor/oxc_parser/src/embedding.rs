@@ -113,7 +113,7 @@ impl<'a> EmbeddingInput<'a> {
             Parser::new(self.allocator, source, self.source_type).with_options(options).parse();
         let hole = if parsed.is_flow_language {
             Some(EmbeddingHole::UnsupportedFlow)
-        } else if parsed.panicked || parsed.diagnostics.has_errors() {
+        } else if parsed.fatal_error || parsed.diagnostics.has_errors() {
             Some(EmbeddingHole::Syntax)
         } else {
             shapes::shape_hole(&parsed.program, self.goal, self.content_span).or_else(|| {
@@ -189,7 +189,7 @@ impl<'a> EmbeddingObservation<'a> {
     }
     #[must_use]
     pub fn panicked(&self) -> bool {
-        self.parsed.panicked
+        self.parsed.fatal_error
     }
     #[must_use]
     pub fn is_flow_language(&self) -> bool {
@@ -205,7 +205,7 @@ impl<'a> EmbeddingObservation<'a> {
     #[must_use]
     pub fn handler_body(&self) -> Option<&FunctionBody<'a>> {
         (self.hole.is_none() && self.goal == EmbeddingGoal::HandlerBody)
-            .then(|| shapes::arrow(&self.parsed.program).map(|arrow| &*arrow.body))
+            .then(|| shapes::arrow(&self.parsed.program).and_then(|arrow| arrow.body.as_function_body()))
             .flatten()
     }
     #[must_use]
