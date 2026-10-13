@@ -14,6 +14,39 @@ import { readRepoFile } from "./support/github-workflows.ts";
 
 const builder = "tools/support/github/build-vitrine-wasm.ts";
 
+test("native CI installs the named repository toolchain without a second stable download", () => {
+  const channel = /channel = "([^"]+)"/.exec(readRepoFile("rust-toolchain.toml"))?.[1];
+  assert.ok(channel);
+  const files = [
+    ".github/workflows/check.yml",
+    ".github/workflows/pr-js-checks.yml",
+    ".github/workflows/pr-source-checks.yml",
+    ".github/workflows/typechecker-native-phases.yml",
+    ".github/workflows/native-smoke.yml",
+    ".github/actions/setup-js-package-tests/action.yml",
+    ".github/actions/setup-js-check-runtime/action.yml",
+  ];
+  let named = 0;
+  for (const file of files) {
+    const document = parse(readRepoFile(file));
+    // The SemVer comparison intentionally pins both sides via RUSTUP_TOOLCHAIN.
+    const jobs = document.jobs
+      ? Object.entries(document.jobs)
+          .filter(([name]) => name !== "cargo-semver-checks")
+          .map(([, job]) => job)
+      : [document.runs];
+    for (const job of jobs as { steps?: { uses?: string; with?: { toolchain?: string } }[] }[]) {
+      for (const step of job.steps ?? []) {
+        if (!step.uses?.startsWith("dtolnay/rust-toolchain@")) continue;
+        if (step.with?.toolchain === "nightly") continue;
+        assert.equal(step.with?.toolchain, channel, file);
+        named += 1;
+      }
+    }
+  }
+  assert.ok(named > 0);
+});
+
 function workspace(t: TestContext, cargoExit = 0, bindgenExit = 0) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-ci-profile-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

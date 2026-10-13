@@ -9,6 +9,13 @@ LTO explicit, and use it consistently for Clippy, native navigation and
 feature tests so these jobs do not also populate a debug-symbol-heavy
 `target/debug` dependency tree.
 
+Native CI also installs the named `1.99.0` toolchain already required by
+rust-toolchain.toml, instead of the separate `stable` alias. In
+[job 115368234971](https://github.com/ubugeeei-prod/vize/actions/runs/38417890925/job/115368234971),
+setup installed `stable`, then Cargo downloaded `1.99.0` again and timed out
+fetching its manifest. A regression check keeps the native CI setup aligned
+with the repository pin. Nightly instrumentation remains on nightly.
+
 Playground browser checks previously compiled the WASM crate with the same
 fat LTO, optimization level 3 and single codegen unit as published packages.
 They now use `ci-wasm`: optimization level 1, no LTO, 256 codegen units and

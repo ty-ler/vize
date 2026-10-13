@@ -76,7 +76,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable, components: rustfmt }
+        with: { toolchain: "1.99.0", components: rustfmt }
       - name: Format Rust
         run: cargo fmt --all -- --check
   check-js:
@@ -176,7 +176,7 @@ jobs:
           cache: true
           run-install: false
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable }
+        with: { toolchain: "1.99.0" }
       - uses: ./.github/actions/setup-rust-script
       - name: Install JS dependencies
         run: vp install --frozen-lockfile --prefer-offline
@@ -220,7 +220,7 @@ jobs:
           cache: true
           run-install: false
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable }
+        with: { toolchain: "1.99.0" }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
         with:
           wild-version: "0.9.0"
@@ -258,7 +258,7 @@ jobs:
           cache: true
           run-install: false
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable }
+        with: { toolchain: "1.99.0" }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
         with:
           wild-version: "0.9.0"
@@ -329,7 +329,7 @@ jobs:
           run-install: false
       - uses: ./.github/actions/setup-moonbit
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable }
+        with: { toolchain: "1.99.0" }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
         with:
           wild-version: "0.9.0"
@@ -400,7 +400,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable, components: clippy }
+        with: { toolchain: "1.99.0", components: clippy }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
         with: { wild-version: "0.9.0" }
       - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
@@ -439,7 +439,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable }
+        with: { toolchain: "1.99.0" }
       - uses: ./.github/actions/setup-rust-script
       - uses: ./.github/actions/setup-rust-sticky-cache
         with:
@@ -470,7 +470,7 @@ jobs:
           cache: true
           run-install: false
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable, components: llvm-tools-preview }
+        with: { toolchain: "1.99.0", components: llvm-tools-preview }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
         with:
           wild-version: "0.9.0"
@@ -565,7 +565,7 @@ jobs:
       # Rust is always needed for @vizejs/native (used by vite-plugin-vize)
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable, targets: wasm32-unknown-unknown }
+        with: { toolchain: "1.99.0", targets: wasm32-unknown-unknown }
       - uses: ./.github/actions/setup-rust-sticky-cache
         with:
           key: playground-test
