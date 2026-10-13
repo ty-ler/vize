@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { parse } from "yaml";
+import { isMoldLinkerMigration } from "../../tools/support/compat/github/mold-linker.ts";
 
 interface Step {
   uses?: string;
@@ -36,4 +37,20 @@ test("mold setup resolves inside an existing checkout, including paired benchmar
     }
   }
   assert.ok(callers > 0, "no mold workflow callers found");
+});
+
+test("linker migration preserves build commands, flags and job conditions", () => {
+  const oldStep = "wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203";
+  const before = `jobs:\n  build:\n    if: runner.os == 'Linux'\n    steps:\n      - uses: ${oldStep}\n        with: { wild-version: "0.9.0" }\n      - run: cargo build --release\n        env: { RUSTFLAGS: '-C opt-level=3' }\n`;
+  const after = before
+    .replace(oldStep, "./head/.github/actions/setup-mold")
+    .replace('        with: { wild-version: "0.9.0" }\n', "");
+  assert.ok(isMoldLinkerMigration(before, after));
+  for (const changed of [
+    after.replace("setup-mold", "setup-foreign-linker"),
+    after.replace("cargo build --release", "cargo check"),
+    after.replace("opt-level=3", "opt-level=0"),
+    after.replace("'Linux'", "'Windows'"),
+  ])
+    assert.equal(isMoldLinkerMigration(before, changed), false);
 });

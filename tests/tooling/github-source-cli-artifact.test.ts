@@ -14,28 +14,30 @@ import {
   command,
   digest,
   runtimeIdentity,
-  normalizeCargoConfig,
+  normalizeLinkerFlags,
   sharedOracleAuthority,
 } from "../../tools/support/compat/github/source-cli-identity.ts";
 
-void test("only owned job linker paths normalize; complete configuration and GNU driver stay binding", () => {
-  const config = (linker: string) =>
-    `[build]\njobs = 12\n[target.x86_64-unknown-linux-gnu]\nlinker = "clang"\nrustflags = ["-Clink-arg=--ld-path=${linker}"]\n[target.x86_64-unknown-linux-musl]\nlinker = "clang"\nrustflags = ["-Clink-arg=--ld-path=${linker}"]\n`;
-  const first = "/tmp/producer/wild-install/wild";
-  const second = "/tmp/consumer/wild-install/wild";
-  assert.equal(
-    normalizeCargoConfig(config(first), first),
-    normalizeCargoConfig(config(second), second),
+void test("only owned mold wrapper paths normalize; all code-generation flags stay binding", () => {
+  const flags = (linker: string) => ({
+    CARGO_BUILD_JOBS: "12",
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER: linker,
+    RUSTFLAGS: "-C opt-level=2",
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: "rust-lld",
+  });
+  const first = "/tmp/producer/vize-mold/clang";
+  const second = "/tmp/consumer/vize-mold/clang";
+  assert.deepEqual(
+    normalizeLinkerFlags(flags(first), first),
+    normalizeLinkerFlags(flags(second), second),
   );
-  assert.notEqual(
-    normalizeCargoConfig(config(first), first),
-    normalizeCargoConfig(config(second).replace("jobs = 12", "jobs = 1"), second),
+  assert.notDeepEqual(
+    normalizeLinkerFlags(flags(first), first),
+    normalizeLinkerFlags({ ...flags(second), CARGO_BUILD_JOBS: "1" }, second),
   );
-  assert.throws(() => normalizeCargoConfig(config(first), second), /owned Wild/);
-  assert.throws(() => normalizeCargoConfig(config(`${first}-foreign`), first), /owned Wild/);
-  assert.throws(() =>
-    normalizeCargoConfig(config(first).replace('linker = "clang"', 'linker = "foreign"'), first),
-  );
+  assert.throws(() => normalizeLinkerFlags(flags(first), second), /owned mold/);
+  assert.throws(() => normalizeLinkerFlags(flags(`${first}-foreign`), first), /owned mold/);
+  assert.throws(() => normalizeLinkerFlags({}, first), /owned mold/);
 });
 
 // Inert bytes qualify the real tar/receipt transport, never a Rust product build.

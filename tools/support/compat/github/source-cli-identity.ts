@@ -24,16 +24,11 @@ export function command(cwd: string, executable: string, args: string[]): string
   return result.stdout.trim();
 }
 
-export function normalizeCargoConfig(config: string, linker: string): string {
+export function normalizeLinkerFlags(flags: Record<string, string | undefined>, linker: string) {
   assert.equal(path.resolve(linker), linker, "owned linker path must be absolute");
-  const target = config.match(/\[target\.x86_64-unknown-linux-gnu\]\n([\s\S]*?)(?=\n\[|$)/);
-  assert.ok(target, "host GNU linker configuration is required");
-  assert.match(target[1], /^linker = "clang"$/m);
-  assert.ok(
-    target[1].includes(`"-Clink-arg=--ld-path=${linker}"`),
-    "Cargo must select the owned Wild linker",
-  );
-  return config.replaceAll(linker, "$RUNNER_TEMP/wild-install/wild");
+  const key = "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER";
+  assert.equal(flags[key], linker, "Cargo must select the owned mold compiler wrapper");
+  return { ...flags, [key]: "$RUNNER_TEMP/vize-mold/clang" };
 }
 
 export function runtimeIdentity(root: string) {
@@ -45,11 +40,19 @@ export function runtimeIdentity(root: string) {
   assert.equal(process.platform, "linux");
   assert.equal(process.arch, "x64");
   assert.ok(process.env.RUNNER_TEMP, "owned linker installation is required");
-  const linkerRoot = fs.realpathSync(path.join(process.env.RUNNER_TEMP, "wild-install"));
-  const linker = path.join(linkerRoot, "wild");
+  const linker = fs.realpathSync("/usr/local/bin/mold");
+  const linkerRoot = path.dirname(linker);
+  const wrapperRoot = fs.realpathSync(path.join(process.env.RUNNER_TEMP, "vize-mold"));
+  const wrapper = regularMember(wrapperRoot, "clang");
+  assert.equal(wrapper.mode, 0o755);
+  assert.equal(
+    fs.readFileSync(path.join(wrapperRoot, "clang"), "utf8"),
+    '#!/usr/bin/env bash\nexec clang "$@" --ld-path=/usr/local/bin/mold\n',
+  );
   const cargoHome = process.env.CARGO_HOME ?? path.join(os.homedir(), ".cargo");
-  const cargoConfig = fs.readFileSync(path.join(cargoHome, "config.toml"), "utf8");
-  const configuredLinker = path.join(process.env.RUNNER_TEMP, "wild-install", "wild");
+  const configPath = path.join(cargoHome, "config.toml");
+  const cargoConfig = fs.existsSync(configPath) ? fs.readFileSync(configPath, "utf8") : "";
+  const configuredLinker = path.join(process.env.RUNNER_TEMP, "vize-mold", "clang");
   return {
     sourceRevision: source,
     sourceTree: checkout.sourceTree,
@@ -60,17 +63,20 @@ export function runtimeIdentity(root: string) {
     rustc: command(root, "rustc", ["-vV"]),
     cargo: command(root, "cargo", ["--version"]),
     linker: command(root, linker, ["--version"]),
-    linkerSha256: regularMember(linkerRoot, "wild").sha256,
-    driver: command(root, "clang", ["--version"]),
-    cargoConfig: normalizeCargoConfig(cargoConfig, configuredLinker),
-    flags: Object.fromEntries(
-      Object.entries(process.env)
-        .filter(([key]) =>
-          /^(RUSTFLAGS|RUSTC(?:_.*)?|RUSTUP_TOOLCHAIN|CARGO_(ENCODED_RUSTFLAGS|PROFILE_CI_.*|BUILD_.*|TARGET_.*|TARGET_DIR))$/.test(
-            key,
-          ),
-        )
-        .sort(([a], [b]) => a.localeCompare(b)),
+    linkerSha256: regularMember(linkerRoot, path.basename(linker)).sha256,
+    driver: JSON.stringify({ version: command(root, "clang", ["--version"]), wrapper }),
+    cargoConfig,
+    flags: normalizeLinkerFlags(
+      Object.fromEntries(
+        Object.entries(process.env)
+          .filter(([key]) =>
+            /^(RUSTFLAGS|RUSTC(?:_.*)?|RUSTUP_TOOLCHAIN|CARGO_(ENCODED_RUSTFLAGS|PROFILE_CI_.*|BUILD_.*|TARGET_.*|TARGET_DIR))$/.test(
+              key,
+            ),
+          )
+          .sort(([a], [b]) => a.localeCompare(b)),
+      ),
+      configuredLinker,
     ),
   };
 }

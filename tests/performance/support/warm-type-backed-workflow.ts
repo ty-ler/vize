@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { moldLinkerHarness } from "../../../tools/support/compat/github/mold-linker.ts";
 import { aliasHostPaths } from "./warm-type-backed-alias-host.ts";
 import { unqualifiedReceiptPaths } from "./warm-type-backed-build-receipt-extension.ts";
 import { gitReaderHarness } from "./warm-type-backed-git-reader-harness.ts";
@@ -76,6 +77,7 @@ if (process.argv[2] === "prepare") {
     .split("\n")
     .filter(Boolean);
   const allowed = new Set([
+    "crates/vize_carton/src/config/loader/project_settings_tests.rs",
     ...htmlHoverPaths,
     ...aliasHostPaths,
     // Reviewed #3952 workspace-symbol producer and exact helper/test footprint;
@@ -212,6 +214,7 @@ if (process.argv[2] === "prepare") {
       .filter(Boolean);
     assert.ok(changed.length > 0);
     const harness = new Set([
+      ...moldLinkerHarness(changed, driverRoot, baseline, head),
       ".github/workflows/davinci-canon-scaling.yml",
       "tests/tooling/support/lsp/session.ts",
       "tests/tooling/support/lsp/session-process.ts",
