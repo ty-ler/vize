@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
+import { report } from "../../tools/support/compat/github/canonical-corpus-step-outage.mjs";
 import { observers } from "../../tools/support/compat/github/canonical-corpus-identity.mjs";
 import { selectCanonicalWorkers } from "../../tools/support/compat/github/canonical-corpus-workers.mjs";
 
@@ -68,4 +72,15 @@ void test("partial step data, late uploads and failed observers still fail close
   const late = artifacts.map((artifact) => ({ ...artifact, created_at: "2026-10-07T11:06:00Z" }));
   assert.throws(() => select(stepless, late), /upload window/);
   assert.throws(() => select([{ ...stepless[0], conclusion: "failure" }, ...stepless.slice(1)]));
+});
+
+void test("the fallback is written to the job summary, and a normal selection is not", () => {
+  const summary = join(mkdtempSync(join(tmpdir(), "canonical-outage-")), "summary.md");
+  const selected = select();
+  assert.equal(report(selected, { GITHUB_STEP_SUMMARY: summary }), selected);
+  assert.match(readFileSync(summary, "utf8"), /Canonical step evidence unavailable/);
+  const normal = { workers: selected.workers.map(({ stepEvidence: _, ...worker }) => worker) };
+  const quiet = join(mkdtempSync(join(tmpdir(), "canonical-outage-")), "summary.md");
+  report(normal, { GITHUB_STEP_SUMMARY: quiet });
+  assert.throws(() => readFileSync(quiet));
 });

@@ -324,7 +324,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       plan[key],
     ]),
   );
-  const selection = await readSelection(context, process.env);
+  const selection = outage.report(await readSelection(context, process.env));
   mkdirSync(artifactRoot, { recursive: true });
   if (mode === "select") {
     writeFileSync(selectionPath, `${JSON.stringify(selection)}\n`);
