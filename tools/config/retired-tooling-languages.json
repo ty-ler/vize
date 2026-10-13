@@ -26,7 +26,6 @@
       "tests/tooling/support/pty-command.py",
       "tests/tooling/support/public-install/controls.py",
       "tests/tooling/support/public-install/source_controls.py",
-      "tools/commands/ci/github/allow-armature-tokenizer-reexports.py",
       "tools/support/compat/github/allocation_ownership/archive.py",
       "tools/support/compat/github/allocation_ownership/common.py",
       "tools/support/compat/github/allocation_ownership/envelope.py",
