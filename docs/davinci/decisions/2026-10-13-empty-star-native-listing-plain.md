@@ -122,6 +122,13 @@ locking, the original source APIs do not fetch from private frames, and no
 workflow, source law or admission is changed. Snapshot provisioning remains
 fetch-free.
 
+The source-tooling checkout obtains genuine Git history before running the
+unchanged graph law. The ad3 hosted job had no `origin/main` reference in its
+default depth-one checkout; cached objects do not remove a shallow boundary.
+Fetching complete history preserves every source, singleton and ancestry
+assertion. Cumulative CI uses its separately reviewed actual main shipping
+baseline; no historical body or runtime acceptance is borrowed.
+
 The specific priming mutex now records ownership immediately after creation,
 so a token-write/ENOSPC failure still removes that exact inode. A valid dead-PID
 lock is recovered only after its recorded worker group has ended; unknown or
