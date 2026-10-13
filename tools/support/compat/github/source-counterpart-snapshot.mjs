@@ -4,11 +4,84 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { ensureHostedLiteralSource } from "../../../../tests/performance/support/warm-type-backed-git-reader-literal-source.ts";
+
+const history = Object.freeze([
+  "b45d789b317933d48dadbba4841c8e353231547b",
+  "6fb01f335952780d7a6321ca092049753645c83d",
+  "ea1fc59ee6ef61a3509b1ef42a6fa7aacd9f8586",
+  "e02a861cc1c6ad12724036c70bfdd5d48173b189",
+  "f6017bf3a9837136f7ce60d52d67ecc3ee649dd0",
+  "e78d2cb93e278032cd262201b0a444273618ee25",
+  "3a680d0a0b59b720af0d23a70a85cf56c5c4f175",
+  "a93e78147b0990c813e965a7868b32dda341eb77",
+  "f20740ef6b0958ddb0bbbd64fd1b38210ea5e207",
+  "49d95b8e93a9f5bcb73e0c1c307815d4b3a9d570",
+  "5c54b1195fa8c0bf151e0a2862bf4238a3597b4e",
+  "eafe5bed4f602e0787ff9f2f48ec4155d115ab7f",
+  "2489128d5f8fab1b7442a1e5c09b4e1701cbf185",
+  "3dda8f9d71fbd7e701f0805187daff6191865190",
+  "66d2cfab35dd6dc8f730371b3b127543b6cc9505",
+  "f518d884e3a1c70ce147fb966093cd9721e0e81f",
+  "8a5f5b8f3a39e123ad20ad8ccd9ecd3b39276695",
+  "d95c151c18d85c8fdd95541291bc614e44790101",
+  "5c8f3825fd2eb698c27d3b97d0a47b0671b33e01",
+  "43afa9b09ae0f334d7fcba41f721ac52a8d1ab23",
+]);
 
 const sources = new Set([
   "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38",
   "19b451f951137814a8a8d36b57d200a23100344e",
 ]);
+/** One finite public history set; serialize strict hosted fetches across source entrypoints. */
+export function primeStarCounterpartHistory(owner) {
+  const root = fs.realpathSync(owner),
+    required = [...sources, ...history];
+  const present = () => {
+    const records = git(
+      root,
+      ["cat-file", "--batch-check=%(objectname) %(objecttype)"],
+      required.join("\n") + "\n",
+    )
+      .toString()
+      .trim()
+      .split("\n");
+    assert.equal(records.length, required.length);
+    return records.every((record, index) => record === required[index] + " commit");
+  };
+  if (present()) return;
+  const common = git(root, ["rev-parse", "--git-common-dir"]).toString().trim();
+  const directory = fs.realpathSync(path.resolve(root, common, "objects/info"));
+  const lock = path.join(directory, "star-counterpart-prime.lock");
+  const token = process.pid + ":" + Date.now();
+  const deadline = performance.now() + 240_000;
+  let acquired = false;
+  try {
+    while (!acquired) {
+      try {
+        const descriptor = fs.openSync(lock, "wx", 0o600);
+        try {
+          fs.writeFileSync(descriptor, token);
+        } finally {
+          fs.closeSync(descriptor);
+        }
+        acquired = true;
+      } catch (error) {
+        if (error.code !== "EEXIST") throw error;
+        assert(performance.now() < deadline, "bounded owned history priming wait");
+        if (present()) return;
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
+      }
+    }
+    for (const source of required) ensureHostedLiteralSource(root, source);
+    assert(present(), "complete finite source history before counterpart provisioning");
+  } finally {
+    if (acquired) {
+      assert.equal(fs.readFileSync(lock, "utf8"), token, "same owned priming lock");
+      fs.unlinkSync(lock);
+    }
+  }
+}
 const object = (kind, body) =>
   createHash("sha1")
     .update(kind + " " + body.length + "\0")

@@ -8,8 +8,8 @@ import { pathToFileURL } from "node:url";
 import {
   listStarCounterpartFiles,
   provisionStarSourceCounterpart,
+  primeStarCounterpartHistory,
 } from "./source-counterpart-snapshot.mjs";
-import { ensureHostedLiteralSource } from "../../../../tests/performance/support/warm-type-backed-git-reader-literal-source.ts";
 
 const base = "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38";
 const prior = "19b451f951137814a8a8d36b57d200a23100344e";
@@ -106,8 +106,7 @@ export function authenticateStarListingSource(root) {
   const head = git(root, ["rev-parse", "HEAD"]).toString().trim();
   assert.match(head, /^[a-f0-9]{40}$/u);
   assert.equal(git(root, ["for-each-ref", "--format=%(refname)", "refs/replace"]).length, 0);
-  ensureHostedLiteralSource(root, base);
-  ensureHostedLiteralSource(root, prior);
+  primeStarCounterpartHistory(root);
   for (const source of [base, prior]) {
     const body = git(root, ["cat-file", "commit", source]);
     assert.equal(
@@ -206,7 +205,6 @@ export async function runStarListingOriginalTest(root, file) {
     value = owned(packet);
   const source = oldTests.get(file);
   assert(source, "one named original listing/JS source law");
-  for (const historical of metadata.history) ensureHostedLiteralSource(value.root, historical);
   const initial = source === base ? [...named.keys()] : [file];
   const files = listStarCounterpartFiles(value.root, source, initial);
   const fixture = provisionStarSourceCounterpart(value.root, source, files);

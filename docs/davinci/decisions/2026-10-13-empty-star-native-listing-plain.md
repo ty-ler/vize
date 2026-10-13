@@ -113,3 +113,11 @@ and all original assertions remain unchanged. Prime twenty literal historical
 commit objects in the actual owned checkout, including the original f207 frame's
 ten additional owners and BD's exact parent for the retained stale-HEAD test,
 before creating counterparts. Ambient source/index overrides are refused.
+
+The seven entrypoints may run concurrently in a cold source job. A specific
+priming helper serializes the fixed twenty history owners plus the two literal
+frame commits with an owned object-info lock and a bounded wait. Every fetch
+still goes through the unchanged strict hosted helper; cached objects skip
+locking, the original source APIs do not fetch from private frames, and no
+workflow, source law or admission is changed. Snapshot provisioning remains
+fetch-free.
