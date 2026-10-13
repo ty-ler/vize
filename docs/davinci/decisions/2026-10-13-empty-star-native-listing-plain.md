@@ -58,7 +58,6 @@ these unchanged objects and the explicit already-proved ea1 common boundary;
 Git must still return that exact original merge-base. No production/source
 body, caller qualification, historical law or oracle is changed.
 
-
 The fadd native-phase run loaded a newer default workflow that invokes
 `native-javascript-sfc-membership.sh`, while its e78-based source lacked that
 script. Compose literal main bd5702 without changing the workflow protocol.
