@@ -108,7 +108,7 @@ fn check_default(
     else {
         return;
     };
-    let Some(required) = required_member(ty, program, name, 0) else {
+    let Some((declaration, required)) = required_member(ty, program, name, 0) else {
         return;
     };
     let base = offset as u32;
@@ -116,8 +116,8 @@ fn check_default(
         LintDiagnostic::error(
             META.name,
             vize_l0::cstr!("Prop '{name}' is required but also declares a default"),
-            base + required.start,
-            base + required.end,
+            base + declaration.start,
+            base + declaration.end,
         )
         .with_label(
             "marked required here",
@@ -138,7 +138,7 @@ fn required_member(
     program: &Program<'_>,
     name: &str,
     depth: usize,
-) -> Option<Span> {
+) -> Option<(Span, Span)> {
     if depth >= 16 {
         return None;
     }
@@ -172,13 +172,13 @@ fn required_member(
     }
 }
 
-fn required_signature(members: &[TSSignature<'_>], name: &str) -> Option<Span> {
+fn required_signature(members: &[TSSignature<'_>], name: &str) -> Option<(Span, Span)> {
     members.iter().find_map(|member| {
         let TSSignature::TSPropertySignature(property) = member else {
             return None;
         };
         (!property.optional && !property.computed && property_key_name(&property.key) == Some(name))
-            .then(|| property.span())
+            .then(|| (property.span(), property.key.span()))
     })
 }
 
