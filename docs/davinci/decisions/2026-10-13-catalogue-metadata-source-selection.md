@@ -48,3 +48,34 @@ to be repaired before protected delivery; planner success is a bounded result.
 
 Fresh exact-head Actions, native Stack membership and protected delivery remain
 required; this record makes no completed-speed or whole-CI qualification claim.
+
+## Required source-cohort review after the actual guard failure
+
+The [tooling failure at 99a80b](https://github.com/ubugeeei-prod/vize/actions/runs/38347365011/job/115133180375)
+correctly refused the changed physical release-test import cohort. Independently
+review all three excluded roots and their complete 17 / 19 / 11-file closures:
+the union remains exactly 36 physical files. Only `plan-source-checks.ts` changes
+from parent `21d1ecb5c96cdc1088cf01ead2c002899b73430f`; all other 35 body hashes,
+imports, commands and path membership are identical. The roots reach this file
+through `plan-tooling-tests.mjs`, which imports only unchanged `changedPaths`.
+The changed body is the reviewed exact Docs predicate and its comments.
+
+Append one atomic named successor review at source
+`51394751a791b1f66f177712f79456172d4e3829`, with the complete 36-file hash map.
+After the protected parent prefix merged, native restacking retargeted this PR
+to main. The old `99a80b` and fresh `513947` both have tree
+`883019382ff119f29af5c9e02e82b42dcb1ad423`; all 36 physical body hashes were
+independently checked against the fresh remote before reusing the review.
+Fresh Actions must qualify the successor head regardless of identical bytes.
+Preserve all eight historical reviews, all three excluded roots, positive
+trigger paths and every refusal law. Consumer scans across tools, Actions,
+Rust, Davinci, npm, root scripts and workflows pass; injected native commands,
+unresolved/nonliteral/native imports, partial/linked sources and workflow
+injections still refuse. This is a complete body/import review, not a generic
+hash refresh or permission to bypass native consumers.
+
+The same job separately exhausted Cargo network transfer while fetching
+Wasmtime feature dependencies. Keep that real dependency gate unchanged;
+fresh source qualification or a bounded same-head infrastructure retry must
+resolve it independently. The guard successor grants no protected delivery
+or publication credit before its original Actions complete.
