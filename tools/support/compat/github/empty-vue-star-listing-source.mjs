@@ -460,7 +460,7 @@ export async function runStarListingOriginalTest(root, file) {
     if (!retained) fixture.cleanup();
   }
 }
-/** Only the two whole named BD lexical owners follow complete actual source custody. */
+/** The original lexical tables retain their recorded bodies after current source verification. */
 export function starListingLexicalReader(copiedRoot) {
   const packet = authenticateStarListingSource(moduleRoot),
     value = owned(packet);
@@ -468,7 +468,7 @@ export function starListingLexicalReader(copiedRoot) {
     assert(metadata.javascriptPaths.includes(file), "one closed current lexical JS93 source");
     const current = regular(copiedRoot, file);
     assertBytes(current, value.live.get(file), "complete actual copied lexical source");
-    if (lexicalCounterparts.has(file)) {
+    if (lexicalCounterparts.has(file) || setupWorkflows.has(file)) {
       owned(packet);
       return Buffer.from(value.before.get(file));
     }
