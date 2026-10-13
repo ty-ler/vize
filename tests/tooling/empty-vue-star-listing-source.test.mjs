@@ -12,6 +12,7 @@ import {
   authenticateStarListingSource,
   qualifyStarListingBD,
   qualifyStarListingSDK,
+  qualifyStarListingMain,
   starListingLexicalReader,
 } from "../../tools/support/compat/github/empty-vue-star-listing-source.mjs";
 
@@ -50,7 +51,7 @@ function fixture(run) {
     git(owner, ["read-tree", head]);
     git(owner, ["update-ref", "refs/heads/current", head]);
     git(owner, ["symbolic-ref", "HEAD", "refs/heads/current"]);
-    for (const file of files) {
+    for (const file of new Set([...files, ...manifest.mainUnion.cells.map(([file]) => file)])) {
       const target = path.join(owner, file);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.copyFileSync(path.join(root, file), target);
@@ -186,6 +187,37 @@ await test("the actual SDK shipping before-image admits only its complete listin
     const raw = git(root, ["show", manifest.sdkUnion.actualIncoming + ":" + file]);
     assert.equal(sha(raw), checksum, "actual merged SDK before-image");
   }
+});
+
+await test("actual incoming main singleton retains every complete source cell and rejects its neighbors", () => {
+  const overrides = new Map(manifest.mainShippingBefore);
+  const mainCells = new Map(
+    manifest.mainUnion.cells.map(([file, , , before, , , after]) => [file, { before, after }]),
+  );
+  const mainDigest = (side, file) =>
+    side === "before" && overrides.has(file)
+      ? overrides.get(file)
+      : (mainCells.get(file)?.[side] ?? digest(side, file));
+  assert.deepEqual(qualifyStarListingMain([execution], new Set(), mainDigest)?.files, [execution]);
+  for (const cells of [files, [...mainCells.keys()]])
+    for (const file of cells)
+      for (const side of ["before", "after"])
+        assert.equal(
+          qualifyStarListingMain([execution], new Set(), (s, f) =>
+            s === side && f === file ? "f".repeat(64) : mainDigest(s, f),
+          ),
+          null,
+        );
+  for (const production of [
+    [],
+    [execution, execution],
+    [execution, "crates/vize_croquis/src/lib.rs"],
+  ])
+    assert.equal(qualifyStarListingMain(production, new Set(), mainDigest), null);
+  assert.equal(qualifyStarListingMain([execution], new Set([execution]), mainDigest), null);
+  assert.equal(qualifyStarListingMain([execution], new Set(), sdkDigest), null);
+  for (const [file, checksum] of manifest.mainShippingBefore)
+    assert.equal(sha(git(root, ["show", manifest.mainUnion.source + ":" + file])), checksum);
 });
 
 await test("foreign raw bodies, changed entrypoints, hybrid source, modes and replacement refs refuse before replay", () => {

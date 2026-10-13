@@ -283,9 +283,9 @@
     "bb320505af6996fcbbadf1ad68457cbd8fb57785",
     8521,
     "c44a09b42c517e5f5697ca373125a52a1ce390bac781d892c3caf6d3ca91060c",
-    "bb320505af6996fcbbadf1ad68457cbd8fb57785",
-    8521,
-    "c44a09b42c517e5f5697ca373125a52a1ce390bac781d892c3caf6d3ca91060c"
+    "c4142d1f5e8146bc3343b001bb0a89479d2fa249",
+    8558,
+    "05d8026763ba3b12e15e090407ccafb9520e6bd6f208ac088f87cc148702c40a"
   ],
   [
     "crates/vize_croquis/src/drawer/module_exports.rs",

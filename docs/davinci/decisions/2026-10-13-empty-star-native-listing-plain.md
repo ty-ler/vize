@@ -195,3 +195,15 @@ caller, worker, monitor and process-group signals and actual spawn result,
 without changing its environment, streams, strict fetches or 240-second limit.
 The three original cleanup controls pass, including the real timed-out group's
 SIGKILL and retained ETIMEDOUT record. Fresh exact-head Actions remain required.
+
+The real #8803 main merge ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a
+brings 71 files and seven production paths. Preserve every actual incoming
+regular body and the four overlapping test/snapshot owners through whole
+before/after cells and complete inverse bytes. The original 412 BD predecessor
+cells, original C4 SDK eighteen-cell singleton and all unchanged old laws remain
+literal. A separately named incoming-main singleton requires the entire actual
+main before/current after cohort and every incoming cell; only execution.rs is
+its production delta. The original incoming 415 component source laws and
+SDK427 replay now execute unchanged on the exact incoming-main private frame,
+after full actual source authentication and the same finite owned history
+admission. No original source table or producer budget is repinned or waived.
