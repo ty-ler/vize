@@ -4,7 +4,10 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import test from "node:test";
+import test, { mock } from "node:test";
+import childProcess from "node:child_process";
+import { syncBuiltinESMExports } from "node:module";
+import { primeStarCounterpartHistory } from "../../tools/support/compat/github/source-counterpart-snapshot.mjs";
 import {
   authenticateStarListingSource,
   qualifyStarListingBD,
@@ -171,5 +174,72 @@ await test("foreign raw bodies, changed entrypoints, hybrid source, modes and re
     assert.throws(() => authenticateStarListingSource(owner));
     git(owner, ["update-ref", "-d", "refs/replace/" + head]);
     assert(authenticateStarListingSource(owner));
+  });
+});
+
+function coldPrimeFixture(run) {
+  const owner = fs.mkdtempSync(path.join(os.tmpdir(), "vize-star-prime-mutex-"));
+  try {
+    git(owner, ["init", "--quiet"]);
+    run(owner, path.join(owner, ".git/objects/info/star-counterpart-prime.lock"));
+  } finally {
+    mock.restoreAll();
+    syncBuiltinESMExports();
+    fs.rmSync(owner, { recursive: true, force: true });
+  }
+}
+await test("a dead owned priming PID can be recovered without accepting a failed strict worker", () => {
+  coldPrimeFixture((owner, lock) => {
+    const dead = childProcess.spawnSync(process.execPath, ["-e", ""]);
+    fs.writeFileSync(lock, dead.pid + ":1", { mode: 0o600 });
+    let calls = 0;
+    mock.method(childProcess, "spawnSync", (_command, args, options) => {
+      calls++;
+      assert(args[2].includes("ensureHostedLiteralSource"));
+      assert(options.timeout <= 1500);
+      return { status: 1, pid: undefined };
+    });
+    syncBuiltinESMExports();
+    assert.throws(
+      () => primeStarCounterpartHistory(owner, { timeoutMs: 1500 }),
+      /bounded strict literal/u,
+    );
+    assert.equal(calls, 1);
+    assert.equal(fs.existsSync(lock), false);
+  });
+});
+await test("a token ENOSPC failure still removes the lock acquired before its write", () => {
+  coldPrimeFixture((owner, lock) => {
+    const original = fs.writeFileSync;
+    mock.method(fs, "writeFileSync", (target, ...args) => {
+      if (typeof target === "number")
+        throw Object.assign(new Error("controlled ENOSPC"), { code: "ENOSPC" });
+      return original(target, ...args);
+    });
+    assert.throws(() => primeStarCounterpartHistory(owner), { code: "ENOSPC" });
+    assert.equal(fs.existsSync(lock), false);
+  });
+});
+await test("the owner worker deadline kills its real process group and preserves timeout failure", () => {
+  coldPrimeFixture((owner, lock) => {
+    const original = childProcess.spawnSync,
+      mark = path.join(owner, "descendant.pid");
+    const worker = `const {spawn}=require('node:child_process'); const fs=require('node:fs'); const d=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'ignore'}); fs.writeFileSync(${JSON.stringify(mark)},String(d.pid)); setInterval(()=>{},1000);`;
+    mock.method(childProcess, "spawnSync", (command, args, options) => {
+      assert(args[2].includes("ensureHostedLiteralSource"));
+      assert(options.detached);
+      assert(options.timeout <= 1500);
+      return original(command, ["-e", worker], options);
+    });
+    syncBuiltinESMExports();
+    const start = performance.now();
+    assert.throws(() => primeStarCounterpartHistory(owner, { timeoutMs: 1500 }), {
+      code: "ETIMEDOUT",
+    });
+    assert(performance.now() - start < 2500);
+    const pid = Number(fs.readFileSync(mark, "utf8"));
+    const state = original("ps", ["-o", "stat=", "-p", String(pid)], { encoding: "utf8" });
+    assert(state.status !== 0 || state.stdout.trim().startsWith("Z"));
+    assert.equal(fs.existsSync(lock), false);
   });
 });

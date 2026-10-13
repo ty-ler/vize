@@ -121,3 +121,15 @@ still goes through the unchanged strict hosted helper; cached objects skip
 locking, the original source APIs do not fetch from private frames, and no
 workflow, source law or admission is changed. Snapshot provisioning remains
 fetch-free.
+
+The specific priming mutex now records ownership immediately after creation,
+so a token-write/ENOSPC failure still removes that exact inode. A valid dead-PID
+lock is recovered only after its recorded worker group has ended; unknown or
+live ownership remains refused. A nonce-specific worker record and a second
+owner/token check close the startup race. Waiters retry ordinary ENOENT races.
+The unchanged strict hosted helper runs only the same22 fixed literals in an
+owned detached worker with a deadline watchdog; TERM/KILL cleanup includes its
+Git descendants, and timeout remains a failure. Successful workers unref the
+watchdog and are reaped normally. Three controls cover dead PID recovery,
+ENOSPC cleanup and a real hung owner/descendant deadline. No source admission,
+workflow or original historical assertion is relaxed.
