@@ -254,15 +254,6 @@ fn relief_child_has_bound_key(element: &ElementNode<'_>) -> bool {
     })
 }
 
-fn relief_template_has_slot_directive(element: &ElementNode<'_>) -> bool {
-    element.props.iter().any(|prop| {
-        matches!(
-            prop,
-            PropNode::Directive(directive) if directive.name == "slot"
-        )
-    })
-}
-
 /// Markup-IR entry point for `vue/require-v-for-key`.
 ///
 /// Demonstrates the unified rule IR: the same logic runs over a Vue template

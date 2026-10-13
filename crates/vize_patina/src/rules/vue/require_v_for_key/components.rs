@@ -57,3 +57,12 @@ pub(super) fn relief_has_native_child(element: &ElementNode<'_>) -> bool {
         }
     })
 }
+
+pub(super) fn relief_template_has_slot_directive(element: &ElementNode<'_>) -> bool {
+    element.props.iter().any(|prop| {
+        matches!(
+            prop,
+            PropNode::Directive(directive) if directive.name == "slot"
+        )
+    })
+}
