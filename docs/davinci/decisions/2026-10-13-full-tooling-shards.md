@@ -151,4 +151,12 @@ The reviewed shipping cut becomes actual ancestor
 `ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a`; the CI layer's production difference
 remains exactly the original execution file. Keep both earlier fixed cohorts
 and all complete overlap inverses. Format every changed path before publishing,
-then combine the product repair as a native Stack child for one final full run.
+then combine the product repair as a native Stack child. Preserve all five
+formal release-candidate qualification workflows; do not duplicate their heavy
+full Check or Matrix runs on the shipping-before cut.
+
+Inherit the finite parent source repair `1b0333c29f1618b9a0bfaab76356937bf404780d`.
+Authenticate the exact CI child canonical body and restore its complete parent
+body through one finite inverse clause before checking the unchanged incoming
+main cell and its whole inverse. Keep the original parent cell, every original
+source body and all refusal laws. The caller remains 391 lines like its parent.
