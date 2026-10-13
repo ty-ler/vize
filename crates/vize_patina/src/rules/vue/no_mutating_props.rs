@@ -325,6 +325,14 @@ impl Rule for NoMutatingProps {
                 }
             }
 
+            // Options API props belong to the component instance even when
+            // the analysis was not asked to expose Options API bindings.
+            if let Some(options) = analysis.options_descriptor.as_ref() {
+                for prop in options.members_in(vize_croquis::OptionGroup::Props) {
+                    names.insert(prop.name.to_compact_string());
+                }
+            }
+
             let has_props_object_binding =
                 vize_croquis::facts::reactivity_lookup(analysis, "props")
                     .is_some_and(|source| matches!(source.kind, ReactiveKind::Readonly));

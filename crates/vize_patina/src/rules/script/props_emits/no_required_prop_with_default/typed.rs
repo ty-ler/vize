@@ -13,6 +13,11 @@ pub(super) fn check(program: &Program<'_>, offset: usize, result: &mut ScriptLin
         return;
     }
     for statement in &program.body {
+        if let Statement::ExpressionStatement(expression) = statement
+            && let Expression::CallExpression(call) = expression.expression.get_inner_expression()
+        {
+            check_with_defaults(program, call, offset, result);
+        }
         let Statement::VariableDeclaration(declaration) = statement else {
             continue;
         };
@@ -40,33 +45,43 @@ pub(super) fn check(program: &Program<'_>, offset: usize, result: &mut ScriptLin
                         result,
                     );
                 }
-            } else if named(call, "withDefaults") && !shadowed(program, "withDefaults") {
-                let (
-                    Some(Argument::CallExpression(props)),
-                    Some(Argument::ObjectExpression(defaults)),
-                ) = (call.arguments.first(), call.arguments.get(1))
-                else {
-                    continue;
-                };
-                if !named(props, "defineProps") {
-                    continue;
-                }
-                for property in &defaults.properties {
-                    let ObjectPropertyKind::ObjectProperty(property) = property else {
-                        continue;
-                    };
-                    if !property.computed {
-                        check_default(
-                            program,
-                            props,
-                            &property.key,
-                            property.value.span(),
-                            offset,
-                            result,
-                        );
-                    }
-                }
+            } else {
+                check_with_defaults(program, call, offset, result);
             }
+        }
+    }
+}
+
+fn check_with_defaults(
+    program: &Program<'_>,
+    call: &CallExpression<'_>,
+    offset: usize,
+    result: &mut ScriptLintResult,
+) {
+    if !named(call, "withDefaults") || shadowed(program, "withDefaults") {
+        return;
+    }
+    let (Some(Argument::CallExpression(props)), Some(Argument::ObjectExpression(defaults))) =
+        (call.arguments.first(), call.arguments.get(1))
+    else {
+        return;
+    };
+    if !named(props, "defineProps") {
+        return;
+    }
+    for property in &defaults.properties {
+        let ObjectPropertyKind::ObjectProperty(property) = property else {
+            continue;
+        };
+        if !property.computed {
+            check_default(
+                program,
+                props,
+                &property.key,
+                property.value.span(),
+                offset,
+                result,
+            );
         }
     }
 }
@@ -97,13 +112,12 @@ fn check_default(
         return;
     };
     let base = offset as u32;
-    let key = key.span();
     result.add_diagnostic(
         LintDiagnostic::error(
             META.name,
             vize_l0::cstr!("Prop '{name}' is required but also declares a default"),
-            base + key.start,
-            base + key.end,
+            base + required.start,
+            base + required.end,
         )
         .with_label(
             "marked required here",
@@ -164,7 +178,7 @@ fn required_signature(members: &[TSSignature<'_>], name: &str) -> Option<Span> {
             return None;
         };
         (!property.optional && !property.computed && property_key_name(&property.key) == Some(name))
-            .then(|| property.key.span())
+            .then(|| property.span())
     })
 }
 
