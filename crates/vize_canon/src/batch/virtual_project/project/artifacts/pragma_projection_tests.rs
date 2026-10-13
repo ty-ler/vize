@@ -17,6 +17,7 @@ fn original_pragma_projection_survives_omission_and_inherited_policy() {
     )
     .unwrap();
     let mut reference = VirtualProject::new(&root).unwrap();
+    reference.set_tsconfig_path(Some(root.join("tsconfig.json")));
     reference.register_path(&path).unwrap();
     let expected = vize_carton::cstr!("{:#?}", reference.find_by_original(&path).unwrap());
     for (base, inherited, denied) in [
@@ -36,6 +37,7 @@ fn original_pragma_projection_survives_omission_and_inherited_policy() {
         )
         .unwrap();
         let mut project = VirtualProject::new(&root).unwrap();
+        project.set_tsconfig_path(Some(root.join("tsconfig.json")));
         project.register_path(&path).unwrap();
         let file = project.find_by_original(&path).unwrap();
         if denied {

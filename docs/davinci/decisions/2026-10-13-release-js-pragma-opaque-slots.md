@@ -83,11 +83,37 @@ The finite successor retains all eleven complete original generated packets in
 a compressed passive capsule: ten Rust virtual-TypeScript snapshots and the
 whole nine-file ecosystem packet. Exact helper-source custody proves forward
 and inverse whole-byte migration; every ecosystem diagnostic, file identity
-and counter remains literal. Two source-only laws pass locally. Actual Rust
-generation and the original Vue parity oracle remain unqualified.
+and counter remains literal. Two source-only laws pass locally. At the initial
+local checkpoint, actual Rust generation and the original Vue parity oracle
+remained unqualified.
 
 Exact-head source Actions, original complete Vue parity, the five new native
 controls, protected merge delivery and installed public acceptance remain
 required. This independent product pair has release priority. The preserved
 #8675 source/lifecycle prototype, nonempty authored-star export repair and
 five historical #8615 App failures remain separate unfinished work.
+
+## Actual Actions qualification at 905a31f
+
+[Full Vue parity 115232474593](https://github.com/ubugeeei-prod/vize/actions/runs/38378404494/job/115232474593)
+passes on `905a31fadb19fc9ffac0d70fb751428b22b4a3f3`, including the original
+ecosystem diagnostic snapshot, the complete JavaScript checkJs oracle and all
+three ecosystem generated-TypeScript cycles. Both prior release regressions
+are fixed against their original inputs and diagnostic vectors. This is
+product proof; the full cumulative release qualification remains unfinished.
+
+[Native phase 115232405385](https://github.com/ubugeeei-prod/vize/actions/runs/38378387188/job/115232405385)
+passes all six original membership filters (ten tests) and fails the new pure
+pragma law after its configuration refresh. The reference and matrix projects
+initially used constructor defaults, whereas refresh applies the resolved Vue
+compiler configuration, changing `checkUnknownProps` from true to its configured
+default false. Both initial owners now use the same actual `set_tsconfig_path`
+API as the installed source consumer. Every entire file/map comparison,
+inherited or explicit denial case and same-owner refresh assertion remains
+intact. No expected generated body or product diagnostic is replaced.
+
+The opaque native filter and later native phases did not execute at 905.
+Fresh successor Actions, the exact sealed eleven-packet source admission,
+protected delivery and installed public acceptance remain required. Neither
+metadata-edit skipped runs nor the earlier source-only controls grant these
+missing native or original-400 results.

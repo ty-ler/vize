@@ -98,7 +98,7 @@ const successorBytes = fs.readFileSync(
 );
 assert.equal(
   sha(successorBytes),
-  "a72877ff1d9395ae62229838feaab94e32e1255d53be3d0736dbae224607968b",
+  "e1f30e6bd8dbcf6cba4f02ab86cddf294fa8cdee34d9af72661e91bc36ab76f8",
 );
 const successors = JSON.parse(gunzipSync(successorBytes));
 assert.equal(successors.schema, 1);
@@ -213,6 +213,12 @@ export function authenticateCanonProductSource(root) {
   );
   ensureHostedLiteralSource(root, "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6");
   const composition = authenticateCanonProductComposition(root, head);
+  for (const [file, cell] of successorCells)
+    assert.deepEqual(
+      composition.get(file),
+      cell.after,
+      "whole composed caller agrees with its exact predecessor inverse: " + file,
+    );
   const admitted = new Set([
     ...canonProductCompositionPaths,
     "tools/support/compat/github/canon-product-main-composition.mjs",
