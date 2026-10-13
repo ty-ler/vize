@@ -44,3 +44,9 @@ outside the current render-root collector and produced zero diagnostics. The
 supported JSX render-function positive keeps an expected missing-key diagnostic.
 The bare-call collection gap remains unfinished under #6830; this change does
 not broaden the render-root collector or claim that standalone form is covered.
+
+The generated import inventory gains six owned rows. Its existing source-custody
+manifest updates only that one current-body identity, retaining all 322 other
+current bodies and every historical frame, law, family, and credit field. The
+helper and its existing test retain their inverse-checked whole-body pins. This
+bookkeeping grants no native or performance credit and changes no predicate.
