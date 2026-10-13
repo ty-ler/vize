@@ -21,7 +21,9 @@ static property names cannot silently satisfy the key requirement.
 
 The existing #8281 slot/static/object-key exemptions and historical any-keyed-
 child policy remain unchanged. Its original fixtures and captured API packets
-are retained. JSX mapped components still require keys. The new focused corpus
+are retained, including the empty-slot positive. The component-only template
+exception requires at least one actual component leaf. JSX mapped components still require keys, and petite-vue keeps
+its optional-key behavior. The new focused corpus
 covers native positives, custom component negatives, nested loops, SVG,
 literals, dynamic components, and CRLF/Unicode opening-tag ranges.
 
@@ -29,3 +31,12 @@ The comparison map and zero false-positive/false-negative budgets are unchanged.
 Actions source checks, protected queue qualification, actual merge, and the next
 published consumer replay remain required; this source change alone proves
 neither release readiness nor full matrix completion.
+
+The first Actions execution confirms all 22 new template vectors pass. It also
+caught the accidental empty-slot exemption, which is corrected without changing
+its original expected packet. A JSX positive initially used
+`const view = items.map((item) => <Row item={item} />);`; that standalone call is
+outside the current render-root collector and produced zero diagnostics. The
+supported JSX render-function positive keeps an expected missing-key diagnostic.
+The bare-call collection gap remains unfinished under #6830; this change does
+not broaden the render-root collector or claim that standalone form is covered.

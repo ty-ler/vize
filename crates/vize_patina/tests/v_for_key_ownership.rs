@@ -57,9 +57,28 @@ fn jsx_mapped_components_still_need_keys() {
     registry.register(Box::new(RequireVForKey));
     let linter = Linter::with_registry(registry);
     let result = linter.lint_jsx(
-        "const view = items.map((item) => <Row item={item} />);",
+        "const List = () => <ul>{items.map((item) => <Row item={item} />)}</ul>;",
         "iteration.jsx",
         JsxLang::Jsx,
     );
     assert_eq!(result.error_count, 1, "{:?}", result);
+}
+
+#[test]
+fn petite_vue_custom_elements_keep_optional_keys() {
+    let mut registry = RuleRegistry::new();
+    registry.register(Box::new(RequireVForKey));
+    registry.register(Box::new(ValidVFor));
+    let linter = Linter::with_registry(registry);
+    let result = linter.lint_standalone_html(
+        r#"<!DOCTYPE html><html><body>
+          <div v-scope="{ items: [1, 2, 3] }">
+            <custom-row v-for="item in items"></custom-row>
+            <li v-for="item in items"></li>
+          </div>
+          <script src="https://unpkg.com/petite-vue" init></script>
+        </body></html>"#,
+        "iteration.html",
+    );
+    assert_eq!(result.error_count, 0, "{:?}", result);
 }

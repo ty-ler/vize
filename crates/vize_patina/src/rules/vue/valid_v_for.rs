@@ -63,7 +63,9 @@ impl Rule for ValidVFor {
             return;
         }
 
-        check_iteration_keys(ctx, element, directive.exp.as_ref());
+        if !ctx.is_petite_vue() {
+            check_iteration_keys(ctx, element, directive.exp.as_ref());
+        }
 
         // Check for modifiers (v-for should not have modifiers)
         if !directive.modifiers.is_empty() {
