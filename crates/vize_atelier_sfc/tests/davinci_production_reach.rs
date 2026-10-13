@@ -45,6 +45,9 @@ mod davinci_production_reach {
     #[cfg(test)]
     mod inline_parity_regressions;
     pub mod parity;
+    pub mod refusal;
+    #[cfg(test)]
+    mod refusal_tests;
     #[cfg(test)]
     mod selection_tests;
     pub mod shapes;
@@ -433,6 +436,8 @@ fn measure(
     shape: Shape,
     tally: &mut Tally,
 ) {
+    // Drop a stale note so the refusal read below belongs to this compile.
+    let _ = vize_atelier_dom::differential::take_emit_refusal();
     let profiler = global_profiler();
     profiler.clear();
     profiler.enable();
@@ -440,6 +445,7 @@ fn measure(
     let counters = profiler.counter_summary();
     profiler.disable();
     profiler.clear();
+    let refusal = vize_atelier_dom::differential::take_emit_refusal();
 
     let selected = match selected {
         Ok(selected) => selected,
@@ -471,6 +477,7 @@ fn measure(
     }
     let accepted = lane == Lane::Accepted;
     let croquis = lane == Lane::Legacy("croquis".to_owned());
+    tally.note_refusal(shape, name, &lane, refusal);
     tally.note(name, lane);
     if accepted && shape.is_dom() {
         compare_with_legacy(descriptor, name, shape, &selected, tally);
