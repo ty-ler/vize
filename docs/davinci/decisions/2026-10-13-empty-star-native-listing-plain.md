@@ -241,7 +241,8 @@ NoMutating identity: warm-type-backed-path-host.ts must remain the original
 3,700-byte body. Restore it exactly instead of changing its frozen323 source
 law. The narrow large-foundation digest adapter lives in the already owned
 host qualification caller; the actual workflow supplies the same root,
-baseline and head. Every other file continues through the original reader.
+baseline and head. Every small blob continues through the original reader; the same actual Git
+mode/path/length and full-byte hash checks cover large source capsules too.
 Full source byte/mode/digest conditions and the three legacy source APIs remain
 unchanged. Existing NoMutating retained guard controls join the focused replay
 before publication; no native or performance acceptance is borrowed.

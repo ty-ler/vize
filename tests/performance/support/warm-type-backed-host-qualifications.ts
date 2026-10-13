@@ -118,8 +118,6 @@ export function qualifyHostMoves(
 
 /** Hash complete regular Git blobs; preserve absence and reject mode/type changes. */
 export function gitBodyDigest(root: string, revision: string, file: string): string | null {
-  if (file !== "docs/davinci/decisions/2026-09-27-level-restructure.md")
-    return retainedGitBodyDigest(root, revision, file);
   assert.match(revision, /^[a-f0-9]{40}$/u);
   const entry = execFileSync(
     "git",
