@@ -188,6 +188,7 @@ export function qualifyCanonGeneratedHelperPackets(production, alreadyQualified,
 }
 
 const repairedObserverPaths = Object.freeze([
+  "crates/vize/tests/support/event_completion_project.rs",
   "crates/vize/tests/support/event_completion_witness.rs",
   "crates/vize/tests/support/navigation_helper_successor.rs",
   "crates/vize_maestro/tests/davinci_ts40_projection.rs",
@@ -204,11 +205,6 @@ const repairedObserverPaths = Object.freeze([
 /** Actual six-file product union; the parent singleton never lends five old production bodies. */
 export function qualifyCanonParentListingSingleton(production, alreadyQualified, digest) {
   const execution = "crates/vize_canon/tests/empty_vue_star_exports/execution.rs";
-  if (!production.includes(execution) || alreadyQualified.has(execution)) return null;
-  const root = fs.realpathSync(new URL("../../../../", import.meta.url));
-  const proof = authenticateReleaseNavigationHelper(root);
-  const packet = JSON.parse(regular(root, packetPath));
-  const metadata = JSON.parse(regular(root, packet.sealed11.metadataPath));
   const canon = [
     "crates/vize_canon/src/batch/source_policy.rs",
     "crates/vize_canon/src/batch/virtual_project/build.rs",
@@ -216,6 +212,14 @@ export function qualifyCanonParentListingSingleton(production, alreadyQualified,
     "crates/vize_canon/src/batch/virtual_project/project.rs",
     "crates/vize_canon/src/virtual_ts/scope/component_slots.rs",
   ];
+  if (
+    ![...canon, execution].some((file) => production.includes(file) && !alreadyQualified.has(file))
+  )
+    return null;
+  const root = fs.realpathSync(new URL("../../../../", import.meta.url));
+  const proof = authenticateReleaseNavigationHelper(root);
+  const packet = JSON.parse(regular(root, packetPath));
+  const metadata = JSON.parse(regular(root, packet.sealed11.metadataPath));
   const allowed = new Set([
     ...canon,
     execution,
@@ -229,6 +233,12 @@ export function qualifyCanonParentListingSingleton(production, alreadyQualified,
       maxBuffer: 64 * 1024 * 1024,
       env: { ...process.env, GIT_NO_LAZY_FETCH: "1", GIT_ALLOW_PROTOCOL: "" },
     });
+  const currentParent = "83d052f818b2b2ef1029322b6e4df7bf5c0ac84a";
+  const beforeExecution = digest("before", execution);
+  const beforeSource = [incoming, currentParent].find(
+    (revision) => beforeExecution === sha(git(["show", revision + ":" + execution])),
+  );
+  assert(beforeSource, "only the exact shipping-main or inherited-CI before class");
   assert.equal(new Set(production).size, production.length, "duplicate production path refuses");
   const knownControls = new Set([...canonProductSourcePaths, ...canonProductCompositionPaths]);
   for (const file of production) {
@@ -239,7 +249,7 @@ export function qualifyCanonParentListingSingleton(production, alreadyQualified,
       );
   }
   for (const file of new Set([...production, ...canon, execution])) {
-    const beforeEntry = git(["ls-tree", "-z", incoming, "--", file]).toString();
+    const beforeEntry = git(["ls-tree", "-z", beforeSource, "--", file]).toString();
     const afterEntry = git(["ls-tree", "-z", proof.head, "--", file]).toString();
     const before = beforeEntry ? /^100(?:644|755) blob ([a-f0-9]{40})\t/u.exec(beforeEntry) : null;
     const after = afterEntry ? /^100(?:644|755) blob ([a-f0-9]{40})\t/u.exec(afterEntry) : null;
@@ -248,7 +258,7 @@ export function qualifyCanonParentListingSingleton(production, alreadyQualified,
     assert.equal(
       digest("before", file),
       before ? sha(git(["cat-file", "blob", before[1]])) : null,
-      "actual incoming main production: " + file,
+      "actual selected main/CI production: " + file,
     );
     assert.equal(
       digest("after", file),

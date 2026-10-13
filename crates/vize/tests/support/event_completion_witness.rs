@@ -9,6 +9,10 @@ use std::path::{Path, PathBuf};
 use serde_json::{Value, json};
 
 #[path = "navigation_helper_successor.rs"]
+#[expect(
+    dead_code,
+    reason = "this CLI source witness restores text; TS-40 additionally uses the shared mapping inverse"
+)]
 mod navigation_helper_successor;
 
 const MARKER: &str = "vize-event-fixture";
@@ -20,6 +24,7 @@ const SLOT_NAVIGATION_PRELUDE: &str = include_str!(
 pub(super) struct Witness {
     pub app_path: PathBuf,
     pub query_position: usize,
+    pub predecessor_helper_query_position: usize,
     pub historical_query_position: usize,
 }
 
@@ -120,11 +125,17 @@ pub(super) fn observe(root: &Path, mut record: impl FnMut(Value)) -> Witness {
         helper_shift.is_some(),
         "one source-qualified current navigation helper"
     );
+    let predecessor_cursor =
+        predecessor_helper_app.find(construct).unwrap() + "\n  void MySwitch;\n  const { ".len();
+    let predecessor_helper_query_position = predecessor_helper_app[..predecessor_cursor]
+        .encode_utf16()
+        .count();
     receipt["navigationHelperSuccessor"] = json!({
         "sourceOnly": true,
         "runtimeCredit": false,
         "actualWholeAppSHA256": super::hash(app.as_bytes()),
         "predecessorHelperWholeAppSHA256": super::hash(predecessor_helper_app.as_bytes()),
+        "predecessorHelperQueryPosition": predecessor_helper_query_position,
         "generatedBytesAdded": 104
     });
     let (counterfactual, historical_query_position) =
@@ -142,6 +153,7 @@ pub(super) fn observe(root: &Path, mut record: impl FnMut(Value)) -> Witness {
     Witness {
         app_path,
         query_position,
+        predecessor_helper_query_position,
         historical_query_position,
     }
 }

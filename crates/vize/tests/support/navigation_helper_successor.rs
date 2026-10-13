@@ -2,7 +2,6 @@
 #![expect(
     clippy::expect_used,
     clippy::indexing_slicing,
-    clippy::panic,
     clippy::string_slice,
     reason = "closed test-source byte inverses fail at the exact malformed field"
 )]
@@ -17,20 +16,12 @@ pub struct Helper {
 }
 
 #[derive(Clone, Copy)]
-#[allow(
-    dead_code,
-    reason = "CLI witness and TS-40 observers use different parts of this shared source inverse"
-)]
 pub struct Shift {
     start: usize,
     end: usize,
     delta: usize,
 }
 
-#[allow(
-    dead_code,
-    reason = "CLI witness retains the whole source; TS-40 additionally inverts every mapping endpoint"
-)]
 impl Shift {
     pub fn original(self, position: usize) -> usize {
         if position <= self.start {
@@ -150,10 +141,6 @@ pub fn restore(text: &str) -> (String, Option<Shift>) {
 }
 
 /// Change only numeric generated ranges; punctuation and authored coordinates stay literal.
-#[allow(
-    dead_code,
-    reason = "only the TS-40 observer needs serialized mapping inverses"
-)]
 pub fn ranges(text: &str, shift: Option<Shift>, left: bool) -> String {
     let Some(shift) = shift else {
         return text.to_compact_string();

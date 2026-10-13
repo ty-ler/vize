@@ -129,7 +129,7 @@ the four original emitter controls, authored coordinates and diagnostics remain
 literal. Separate source-only current controls authenticate actual output before
 recovering the entire old helper, every generated mapping endpoint and original
 snapshot signature. Actual generated documents and native query positions stay
-raw; these source inverses do not execute a historical backend.
+raw; these source inverses do not execute a historical backend. Both semantic-link endpoints are generated coordinates and receive the exact inverse. CLI requests keep their actual positions; the original position assertion reads the independently restored whole helper counterpart.
 
 The cold original negative HEAD control also needs its genuine published
 `b401784c472d850a8be08ca1122659a6883dde6e` object before the private fixture.
@@ -141,7 +141,7 @@ assertion; original JS93/Star322 bodies and all refusal vectors remain intact.
 The existing PR becomes a genuine child of the published CI parent in native
 Stack 8831. Its full actual source union precedes the unchanged complete parent
 listing laws. The shared host qualifier admits only the sealed eleven generated
-packets and separately authenticated finite production footprints. The final
+packets and separately authenticated finite production footprints. Eligibility follows changed Canon producers even when the inherited execution path is unchanged; each complete main or exact parent before-image must match as one class, with every current after-image still mandatory. The final
 full Check and Matrix qualify the same immutable formal release head, after the
 source-qualified Stack actually merges. The original 905 Vue parity proof is
 retained; no additional standalone full run grants release credit.

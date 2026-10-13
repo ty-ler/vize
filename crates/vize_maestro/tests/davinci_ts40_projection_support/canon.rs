@@ -114,17 +114,15 @@ pub(super) fn capture_canon(
                 let (pre, shift) =
                     super::navigation_helper_successor::restore(&document.pre_rewrite_code);
                 let mappings = super::navigation_helper_successor::ranges(&mappings, shift, true);
-                let links = super::navigation_helper_successor::ranges(&links, shift, false);
+                let links = super::navigation_helper_successor::ranges(
+                    &super::navigation_helper_successor::ranges(&links, shift, true),
+                    shift,
+                    false,
+                );
                 // The frozen original snapshot also requires the entire import map and every probe.
                 let imports =
                     import_source_map_facts(&document.import_source_map, pre.len(), text.len());
-                (
-                    text.into(),
-                    pre.into(),
-                    mappings.into(),
-                    links.into(),
-                    imports,
-                )
+                (text, pre, mappings, links, imports)
             } else {
                 (
                     document.code,

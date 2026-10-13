@@ -155,3 +155,51 @@ void test("actual native copied census preserves the original 100644 ABI and who
   for (const file of selected)
     assert.equal(fs.lstatSync(path.join(root, file)).mode & 0o777, 0o644);
 });
+
+void test("actual shipping and inherited CI comparisons qualify all current producers without an execution delta", async () => {
+  const { qualifyCanonParentListingSingleton } =
+    await import("../../tools/support/compat/github/canon-release-navigation-helper.mjs");
+  const { createHash } = await import("node:crypto");
+  const sha = (body) => createHash("sha256").update(body).digest("hex");
+  const execution = "crates/vize_canon/tests/empty_vue_star_exports/execution.rs";
+  const policy = "crates/vize_canon/src/batch/source_policy.rs";
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root }).toString().trim();
+  for (const before of [
+    "ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a",
+    "83d052f818b2b2ef1029322b6e4df7bf5c0ac84a",
+  ]) {
+    const cached = new Map();
+    const digest = (side, file) => {
+      const key = side + ":" + file;
+      if (!cached.has(key)) {
+        const body = execFileSync(
+          "git",
+          ["--no-replace-objects", "show", (side === "before" ? before : head) + ":" + file],
+          { cwd: root },
+        );
+        cached.set(key, sha(body));
+      }
+      return cached.get(key);
+    };
+    const packet = qualifyCanonParentListingSingleton([policy], new Set(), digest);
+    assert(packet.files.includes(policy) && packet.files.includes(execution));
+    assert.equal(packet.files.length, 6);
+    assert.equal(packet.sourceOnly, true);
+    assert.equal(packet.runtimeCredit, false);
+    for (const [side, selected] of [
+      ["before", policy],
+      ["after", policy],
+      ["before", execution],
+    ])
+      assert.throws(() =>
+        qualifyCanonParentListingSingleton([policy], new Set(), (s, file) =>
+          s === side && file === selected ? "f".repeat(64) : digest(s, file),
+        ),
+      );
+    assert.throws(() => qualifyCanonParentListingSingleton([policy, policy], new Set(), digest));
+    assert.throws(() =>
+      qualifyCanonParentListingSingleton([policy, "unknown/source.rs"], new Set(), digest),
+    );
+    assert.equal(qualifyCanonParentListingSingleton([], new Set(), digest), null);
+  }
+});
