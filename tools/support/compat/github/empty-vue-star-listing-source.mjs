@@ -45,7 +45,7 @@ function regular(root, file) {
 }
 const moduleRoot = fs.realpathSync(new URL("../../../../", import.meta.url));
 const metadataBody = regular(moduleRoot, metadataPath);
-assert.equal(sha(metadataBody), "c2adbc0d734a2c4e45803ccd2c209688152d85cb118f8f9aa0710a8ac9873d33");
+assert.equal(sha(metadataBody), "ac2c8d9d23fdd28077e7eeaeba8413ed1f6d35f19922abbcbe75521f544b1d64");
 const metadata = JSON.parse(metadataBody);
 assert.equal(metadata.schema, "vize.empty-vue-star.literal-bd-listing-source");
 assert.equal(metadata.base, base);
