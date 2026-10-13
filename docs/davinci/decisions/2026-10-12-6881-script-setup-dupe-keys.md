@@ -190,3 +190,16 @@ complete original parent packet passed all five cases with status 0 and
 validationFailure null. These are source-only results: compiled, native and
 performance remain false. Actual #8777 merge composition, fresh exact-head
 Actions and protected delivery are still required.
+
+The source repair now composes prepared `c34255f1` once with actual main
+`bd5702c0`, including the actual #8777 merge `696b91cc` and #8807/#8816.
+The merge is conflict-free. Exactly one of the 837 closed current bodies
+changes: the incoming whole host qualifier adds the actual JavaScript SFC
+qualification. Its complete source identity and both directions of the
+existing parent inverse are resealed; all other original current cells,
+whole historical frames, original assertions, native inputs and budgets
+remain byte-exact. The current physical helper remains the original uncached
+body; the independently prepared digest-cache experiment is unshipped and
+not included. Local whole-cohort/raw-source comparison and fresh exact-head
+Actions are required. Previously observed source, native and queue results
+remain separately bound; no queued or merged delivery is claimed here.

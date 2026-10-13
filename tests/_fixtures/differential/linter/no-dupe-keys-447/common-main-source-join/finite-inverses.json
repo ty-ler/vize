@@ -348,12 +348,22 @@
         {
           "at": 572,
           "removeBase64": "",
-          "insertBase64": "CmltcG9ydCB7IHF1YWxpZnlFbXB0eVZ1ZVN0YXJIb3N0IH0gZnJvbSAiLi93YXJtLXR5cGUtYmFja2VkLWVtcHR5LXZ1ZS1zdGFyLWhvc3QudHMiOwo="
+          "insertBase64": "aW1wb3J0IHsgcXVhbGlmeUphdmFTY3JpcHRTZmNIb3N0IH0gZnJvbSAiLi93YXJtLXR5cGUtYmFja2VkLWphdmFzY3JpcHQtc2ZjLWhvc3QudHMiOwoKaW1wb3J0IHsgcXVhbGlmeUVtcHR5VnVlU3Rhckhvc3QgfSBmcm9tICIuL3dhcm0tdHlwZS1iYWNrZWQtZW1wdHktdnVlLXN0YXItaG9zdC50cyI7Cg=="
+        },
+        {
+          "at": 853,
+          "removeBase64": "",
+          "insertBase64": "ICBjb25zdCBqYXZhc2NyaXB0U2ZjSG9zdCA9IGVuYWJsZWQKICAgID8gcXVhbGlmeUphdmFTY3JpcHRTZmNIb3N0KHByb2R1Y3Rpb24sIGFscmVhZHlRdWFsaWZpZWQsIGRpZ2VzdCkKICAgIDogbnVsbDsK"
         },
         {
           "at": 1906,
           "removeBase64": "",
           "insertBase64": "ICBjb25zdCBlbXB0eVZ1ZVN0YXJIb3N0ID0KICAgIGVuYWJsZWQgJiYKICAgIGRpZ2VzdCgiYmVmb3JlIiwgInRlc3RzL3BlcmZvcm1hbmNlL3N1cHBvcnQvd2FybS10eXBlLWJhY2tlZC1lbXB0eS12dWUtc3Rhci1ob3N0LnRzIikgPT09CiAgICAgIG51bGwgJiYKICAgIGRpZ2VzdCgiYWZ0ZXIiLCAidGVzdHMvcGVyZm9ybWFuY2Uvc3VwcG9ydC93YXJtLXR5cGUtYmFja2VkLWVtcHR5LXZ1ZS1zdGFyLWhvc3QudHMiKSA9PT0KICAgICAgIjQ2NjhhNDhkODE2Mjc5MzA4YzM0MWZmM2E3YzgzOWRjMzllYTEyOWEyOTAxYjA0ODRiNjVmNDkwNWUwMDM4NmIiICYmCiAgICBkaWdlc3QoImJlZm9yZSIsICJ0ZXN0cy90b29saW5nL3dhcm0tdHlwZS1iYWNrZWQtZW1wdHktdnVlLXN0YXItaG9zdC50ZXN0LnRzIikgPT09IG51bGwgJiYKICAgIGRpZ2VzdCgiYWZ0ZXIiLCAidGVzdHMvdG9vbGluZy93YXJtLXR5cGUtYmFja2VkLWVtcHR5LXZ1ZS1zdGFyLWhvc3QudGVzdC50cyIpID09PQogICAgICAiM2RjNmExNmM2ZTk4NjkzMDI4NThkZjI1N2QyMWUyZTJiMDNhY2RjMTM2MDY0NjBiZDc4NDlkOWQ5Y2UyOGZjMiIKICAgICAgPyBxdWFsaWZ5RW1wdHlWdWVTdGFySG9zdChwcm9kdWN0aW9uLCBhbHJlYWR5UXVhbGlmaWVkLCBkaWdlc3QpCiAgICAgIDogbnVsbDsK"
+        },
+        {
+          "at": 2288,
+          "removeBase64": "",
+          "insertBase64": "ICAgIC4uLihqYXZhc2NyaXB0U2ZjSG9zdCA/IHsgamF2YXNjcmlwdFNmY0hvc3QgfSA6IHt9KSwK"
         },
         {
           "at": 2400,
@@ -364,16 +374,26 @@
       "inverse": [
         {
           "at": 572,
-          "removeBase64": "CmltcG9ydCB7IHF1YWxpZnlFbXB0eVZ1ZVN0YXJIb3N0IH0gZnJvbSAiLi93YXJtLXR5cGUtYmFja2VkLWVtcHR5LXZ1ZS1zdGFyLWhvc3QudHMiOwo=",
+          "removeBase64": "aW1wb3J0IHsgcXVhbGlmeUphdmFTY3JpcHRTZmNIb3N0IH0gZnJvbSAiLi93YXJtLXR5cGUtYmFja2VkLWphdmFzY3JpcHQtc2ZjLWhvc3QudHMiOwoKaW1wb3J0IHsgcXVhbGlmeUVtcHR5VnVlU3Rhckhvc3QgfSBmcm9tICIuL3dhcm0tdHlwZS1iYWNrZWQtZW1wdHktdnVlLXN0YXItaG9zdC50cyI7Cg==",
           "insertBase64": ""
         },
         {
-          "at": 1992,
+          "at": 1025,
+          "removeBase64": "ICBjb25zdCBqYXZhc2NyaXB0U2ZjSG9zdCA9IGVuYWJsZWQKICAgID8gcXVhbGlmeUphdmFTY3JpcHRTZmNIb3N0KHByb2R1Y3Rpb24sIGFscmVhZHlRdWFsaWZpZWQsIGRpZ2VzdCkKICAgIDogbnVsbDsK",
+          "insertBase64": ""
+        },
+        {
+          "at": 2195,
           "removeBase64": "ICBjb25zdCBlbXB0eVZ1ZVN0YXJIb3N0ID0KICAgIGVuYWJsZWQgJiYKICAgIGRpZ2VzdCgiYmVmb3JlIiwgInRlc3RzL3BlcmZvcm1hbmNlL3N1cHBvcnQvd2FybS10eXBlLWJhY2tlZC1lbXB0eS12dWUtc3Rhci1ob3N0LnRzIikgPT09CiAgICAgIG51bGwgJiYKICAgIGRpZ2VzdCgiYWZ0ZXIiLCAidGVzdHMvcGVyZm9ybWFuY2Uvc3VwcG9ydC93YXJtLXR5cGUtYmFja2VkLWVtcHR5LXZ1ZS1zdGFyLWhvc3QudHMiKSA9PT0KICAgICAgIjQ2NjhhNDhkODE2Mjc5MzA4YzM0MWZmM2E3YzgzOWRjMzllYTEyOWEyOTAxYjA0ODRiNjVmNDkwNWUwMDM4NmIiICYmCiAgICBkaWdlc3QoImJlZm9yZSIsICJ0ZXN0cy90b29saW5nL3dhcm0tdHlwZS1iYWNrZWQtZW1wdHktdnVlLXN0YXItaG9zdC50ZXN0LnRzIikgPT09IG51bGwgJiYKICAgIGRpZ2VzdCgiYWZ0ZXIiLCAidGVzdHMvdG9vbGluZy93YXJtLXR5cGUtYmFja2VkLWVtcHR5LXZ1ZS1zdGFyLWhvc3QudGVzdC50cyIpID09PQogICAgICAiM2RjNmExNmM2ZTk4NjkzMDI4NThkZjI1N2QyMWUyZTJiMDNhY2RjMTM2MDY0NjBiZDc4NDlkOWQ5Y2UyOGZjMiIKICAgICAgPyBxdWFsaWZ5RW1wdHlWdWVTdGFySG9zdChwcm9kdWN0aW9uLCBhbHJlYWR5UXVhbGlmaWVkLCBkaWdlc3QpCiAgICAgIDogbnVsbDsK",
           "insertBase64": ""
         },
         {
-          "at": 3143,
+          "at": 3234,
+          "removeBase64": "ICAgIC4uLihqYXZhc2NyaXB0U2ZjSG9zdCA/IHsgamF2YXNjcmlwdFNmY0hvc3QgfSA6IHt9KSwK",
+          "insertBase64": ""
+        },
+        {
+          "at": 3403,
           "removeBase64": "ICAgIC4uLihlbXB0eVZ1ZVN0YXJIb3N0ID8geyBlbXB0eVZ1ZVN0YXJIb3N0IH0gOiB7fSksCg==",
           "insertBase64": ""
         }
