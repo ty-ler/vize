@@ -18,8 +18,10 @@ export function normalizeParserRecovery<T extends ProcessResult>(
     (step) => `warning: corsa: ${step} (check failure). Type checking continues on a slower path.`,
   );
   if (
-    !notices.some(
-      (notice) => stderr === notice || stderr === `${notice}\nerror handling method 'exit': EOF`,
+    !notices.some((notice) =>
+      ["", "\nerror handling method 'exit': EOF", "\ncontext canceled"].some(
+        (shutdown) => stderr === `${notice}${shutdown}`,
+      ),
     )
   )
     return result;

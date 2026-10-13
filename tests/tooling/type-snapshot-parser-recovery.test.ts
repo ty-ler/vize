@@ -43,6 +43,15 @@ test("successful session shutdown does not require the optional EOF notice", () 
   );
 });
 
+test("a completed syntax-error report accepts the native context-cancelled shutdown variant", () => {
+  const raw = { ...recovered, stderr: `${warning}\ncontext canceled\n` };
+  const result = normalizeParserRecovery(raw, true, "parity");
+  assert.equal(result.stderr, "");
+  assert.equal(result.stdout, raw.stdout);
+  assert.equal(normalizeTypecheckResult(result, process.cwd(), "json").diagnostics.length, 2);
+  assert.equal(normalizeParserRecovery(raw, true, "timed-0"), raw);
+});
+
 test("two-server parser recovery retains the first sharded fallback notice", () => {
   const stderr = recovered.stderr.replace(
     "Corsa CLI fast path unavailable; degraded to the slower project-session API",
@@ -76,6 +85,8 @@ test("unknown, duplicated, missing or different-cause notices remain errors", ()
     `${recovered.stderr}unexpected failure\n`,
     `${warning}\n${warning}\n`,
     "error handling method 'exit': EOF\n",
+    "context canceled\n",
+    `${recovered.stderr}context canceled\n`,
     warning.replace("check failure", "spawn failure"),
     warning.replace("check failure", "parse failure"),
   ]) {
