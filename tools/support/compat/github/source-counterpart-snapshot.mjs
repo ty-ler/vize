@@ -32,6 +32,7 @@ const sources = new Set([
   "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38",
   "19b451f951137814a8a8d36b57d200a23100344e",
   "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6",
+  "ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a",
 ]);
 function observePrime(event) {
   const directory = process.env.VIZE_TOOLING_LISTING_OBSERVATION_DIR;
@@ -231,7 +232,7 @@ function git(root, args, input) {
 }
 
 function context(owner, source) {
-  assert(sources.has(source), "only the three literal Star/SDK source counterparts");
+  assert(sources.has(source), "only the four literal Star/SDK source counterparts");
   const root = fs.realpathSync(owner);
   assert.equal(
     fs.realpathSync(git(root, ["rev-parse", "--show-toplevel"]).toString().trim()),
