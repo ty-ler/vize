@@ -1715,9 +1715,9 @@
       "parent": "32c4a0ab076e888ec3d3665d96042735c99c2729",
       "after": [
         "docs/davinci/decisions/2026-09-27-level-restructure.md",
-        "14f2a9e3a0eb935f9744c8728345da8a5fecb07d",
-        1067513,
-        "b73595baa87f589e690f7ba60c6e30dd32b3e07153b982e4ff76bb4d008959bf"
+        "56908e0d8c207fa21e9c2e0c3dceff5c00b43a91",
+        1067777,
+        "d5a147076194c5eacf505af5ff869e6b95072a9df59dd14e66e16ac545233a47"
       ],
       "clauses": [
         [
@@ -1728,8 +1728,8 @@
         ],
         [
           969679,
-          970141,
-          "IFtUaGUgaW5kZXBlbmRlbnQgSmF2YVNjcmlwdCBwcmFnbWEgYW5kIG9wYXF1ZS1zbG90IHJlcGFpcl0oMjAyNi0xMC0xMy1yZWxlYXNlLWpzLXByYWdtYS1vcGFxdWUtc2xvdHMubWQpIHJldGFpbnMgZXZlcnkgb3JpZ2luYWwgcmVsZWFzZSBkaWFnbm9zdGljIGFuZCBhbGwgZWxldmVuIHJldmVyc2libGUgaGVscGVyLW9ubHkgZ2VuZXJhdGVkIHBhY2tldHMuIEV4YWN0OTA1IGZ1bGwgVnVlIHBhcml0eSBwYXNzZXMgYm90aCBvcmlnaW5hbCByZWdyZXNzaW9uczsgdGhlIG5ldyBwdXJlIGxhdyByZXRhaW5zIGFsbCB3aG9sZS1maWxlL21hcCBjb21wYXJpc29ucyB3aGlsZSBhbGlnbmluZyBib3RoIGluaXRpYWwgb3duZXJzIHdpdGggdGhlIGluc3RhbGxlZCBjb25maWd1cmF0aW9uIEFQSSwgYW5kIGZyZXNoIG5hdGl2ZS80MDAvcHJvdGVjdGVkL3B1YmxpYyBxdWFsaWZpY2F0aW9uIHJlbWFpbnMgcmVxdWlyZWQu",
+          970405,
+          "IFtUaGUgaW5kZXBlbmRlbnQgSmF2YVNjcmlwdCBwcmFnbWEgYW5kIG9wYXF1ZS1zbG90IHJlcGFpcl0oMjAyNi0xMC0xMy1yZWxlYXNlLWpzLXByYWdtYS1vcGFxdWUtc2xvdHMubWQpIHJldGFpbnMgZXZlcnkgb3JpZ2luYWwgcmVsZWFzZSBkaWFnbm9zdGljIGFuZCBhbGwgZWxldmVuIHJldmVyc2libGUgaGVscGVyLW9ubHkgZ2VuZXJhdGVkIHBhY2tldHMuIEV4YWN0OTA1IGZ1bGwgVnVlIHBhcml0eSBwYXNzZXMgYm90aCBvcmlnaW5hbCByZWdyZXNzaW9uczsgdGhlIG5ldyBwdXJlIGxhdyByZXRhaW5zIGFsbCB3aG9sZS1maWxlL21hcCBjb21wYXJpc29ucyB3aGlsZSBhbGlnbmluZyBib3RoIGluaXRpYWwgb3duZXJzIHdpdGggdGhlIGluc3RhbGxlZCBjb25maWd1cmF0aW9uIEFQSSwgYW5kIGZyZXNoIG5hdGl2ZS80MDAvcHJvdGVjdGVkL3B1YmxpYyBxdWFsaWZpY2F0aW9uIHJlbWFpbnMgcmVxdWlyZWQuIEN1cnJlbnQtc291cmNlIGFkbWlzc2lvbiByZXF1aXJlcyBvbmUgY29tcGxldGUgYXV0aGVudGljYXRlZCBtYWluIG9yIHBhcmVudCBiZWZvcmUtaW1hZ2U7IFRTLTQwIHNlbWFudGljIGxpbmtzIGludmVyc2UgYm90aCBnZW5lcmF0ZWQgZW5kcG9pbnRzLCB3aGlsZSBDTEkgcmVxdWVzdHMgcmV0YWluIGFjdHVhbCBwb3NpdGlvbnMgYW5kIGNvbXBhcmUgb2xkIHBvc2l0aW9ucyBvbmx5IHRocm91Z2ggdGhlIHdob2xlIGhlbHBlciBzb3VyY2UgY291bnRlcnBhcnQu",
           ""
         ]
       ]

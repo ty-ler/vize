@@ -166,7 +166,7 @@ void test("actual shipping and inherited CI comparisons qualify all current prod
   const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root }).toString().trim();
   for (const before of [
     "ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a",
-    "83d052f818b2b2ef1029322b6e4df7bf5c0ac84a",
+    "484220cbbec1cc4516811458ba334b4c3ab1382b",
   ]) {
     const cached = new Map();
     const digest = (side, file) => {
