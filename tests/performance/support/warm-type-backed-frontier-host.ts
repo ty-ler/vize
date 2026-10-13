@@ -12,17 +12,19 @@ const manifest = JSON.parse(
   files: string[];
   preservedBodies: string[];
   harnessBodies: string[];
+  ciBodies: string[];
 };
 const predecessor = JSON.parse(
   fs.readFileSync(new URL("./allocation-diagnostic/source-manifest.json", import.meta.url), "utf8"),
 ) as { files: string[]; preservedBodies: string[] };
 const manifestSHA256 = createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
-assert.equal(manifestSHA256, "18b3c44b35648f7918e2762b5f9f802088eeb2f75967a4693d173932316aa6e1");
+assert.equal(manifestSHA256, "2161b814f41ba7e721f3af6680c5771017b8d45af53b901dd1d39498312ad3b2");
 assert.equal(manifest.originalSource, "3dd6ae0707dc42302638257b86967d6a6ffe902f");
-assert.equal(manifest.reviewedSource, "a6031f46f80d88b596b16dfb0aa79e4090af844b");
+assert.equal(manifest.reviewedSource, "7a4a0b907ada40cd997e6b25865d5ea7c07ee791");
 assert.equal(manifest.version, 1);
 assert.equal(manifest.files.length, 210);
 assert.equal(manifest.harnessBodies.length, 31);
+assert.equal(manifest.ciBodies.length, 21);
 assert.deepEqual(
   manifest.preservedBodies,
   predecessor.preservedBodies.map((row) => [row.split("\t")[0], row.split("\t")[2]].join("\t")),
@@ -61,6 +63,14 @@ export function qualifyFrontierHost(
       digest("after", file) !== after
     )
       return null;
+  for (const row of manifest.ciBodies) {
+    const [file, before, after] = row.split("\t");
+    if (
+      digest("before", file) !== (before === "-" ? null : before) ||
+      digest("after", file) !== after
+    )
+      return null;
+  }
   for (const row of manifest.harnessBodies) {
     const [file, before, after] = row.split("\t");
     if (digest("before", file) !== before || digest("after", file) !== after) return null;
@@ -77,6 +87,7 @@ export function qualifyFrontierHost(
     completeBodyPairs: files.length,
     preservedBodyPairs: manifest.preservedBodies.length,
     preservedHarnessPairs: manifest.harnessBodies.length,
+    completeCiPairs: manifest.ciBodies.length,
     files: changed,
     acceptanceCredit: "none",
   };

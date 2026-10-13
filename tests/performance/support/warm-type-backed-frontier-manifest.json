@@ -1,7 +1,7 @@
 {
   "version": 1,
   "originalSource": "3dd6ae0707dc42302638257b86967d6a6ffe902f",
-  "reviewedSource": "a6031f46f80d88b596b16dfb0aa79e4090af844b",
+  "reviewedSource": "7a4a0b907ada40cd997e6b25865d5ea7c07ee791",
   "files": [
     "crates/vize/Cargo.toml\tddaeda1fc23dcc1cd068f443aa1d82f9a3c2f7fac98b95a71133d89d196e1654\tddaeda1fc23dcc1cd068f443aa1d82f9a3c2f7fac98b95a71133d89d196e1654",
     "crates/vize/src/commands/lsp.rs\t6ef7dfc7e73667e8578df046bd476c7e6b26aa54fef90142e9824a7e53daa0de\t6ef7dfc7e73667e8578df046bd476c7e6b26aa54fef90142e9824a7e53daa0de",
@@ -293,5 +293,28 @@
     "tests/tooling/lsp-allocation-packets.test.ts\teef4e1ee92e61b46a7dc052c864b57edaa1defc43fe46685c4b2c203c3738953\teef4e1ee92e61b46a7dc052c864b57edaa1defc43fe46685c4b2c203c3738953",
     "tests/tooling/lsp-allocation-source.test.ts\tb9a53c3a7c3a9ccdef27c61a034eb263dd89685daef9b00090570c5fffb33abc\t214f20dd467de5e2299145e8a3935c3d46ec5b4fb67760453201cbe925e9a48d",
     "tests/tooling/warm-type-backed-inline-bucket-authority.test.ts\tdedff50bd03b4ef333cfcaf8e40d062f2561ed749da6bb7c2503dfb0c9d08aa6\t90d774ad29cbe82cb0eedfceabc6b5a1e5b2bd6b0d60f140d6c78bb1a25c9423"
+  ],
+  "ciBodies": [
+    ".github/actions/setup-moonbit/action.yml\t35f564c4a249f0715907d02daea7c0884aea8dae9d3c9380d52494ca373cbbf5\t30582d1d72f6fb1759f2df117fe30b388ff0312c448b4b984d53e714acf2403a",
+    ".github/actions/setup-moonbit/assets/README.md\t-\tbbeac7b339dc3eeaf04b43a3a8a5e08042b4c70044b303ad1f2029809c1580be",
+    ".github/actions/setup-moonbit/assets/core-0.10.7+bc794d341.tar.gz\t-\t06922d35dd94dc0baea7682295fe6084f0d854eed3b497cd6b527f77d899a7f5",
+    ".github/actions/setup-moonbit/install-moonbit.mjs\ta796d967237d1aee46223620d094fa4c6db6b07b568896e58de4aedec11ecc38\tae605eee7607a921fe24657a546e7c01a5e4dfb5ff8942eb95748542785c3d7f",
+    ".github/actions/setup-moonbit/pinned-artifacts.mjs\t-\t335fb2abab64e902b7d5cc2c9b4043a592c9b71be124211895fbb1d8a64ffc69",
+    "docs/davinci/decisions/2026-10-12-6830-moonbit-fixed-artifact-transport.md\t-\td62b1fb1b80f71f556bbeebd5174994c49dc452d4d957fbe209c4ca09165347a",
+    "docs/davinci/decisions/2026-10-13-6830-nix-moonbit-fixed-inputs.md\t-\t56bfd0e33d724d6f1b757ff4261db86494de3572bd353bab02e572647d59d505",
+    "tests/_fixtures/tooling/moonbit-pinned-transport/action.before.yml.txt\t-\t35f564c4a249f0715907d02daea7c0884aea8dae9d3c9380d52494ca373cbbf5",
+    "tests/_fixtures/tooling/moonbit-pinned-transport/install-moonbit.before.mjs.txt\t-\ta796d967237d1aee46223620d094fa4c6db6b07b568896e58de4aedec11ecc38",
+    "tests/_fixtures/tooling/moonbit-pinned-transport/moonbit-helper.test.ts.before.txt\t-\t9792139914f9e801b34eed910e3423ec069e774ca911216e4827303ae1b8e2e1",
+    "tests/_fixtures/tooling/moonbit-pinned-transport/moonbit-registry-update-installer.test.mjs.before.txt\t-\t7ae8c525eede44ab3a56d07e4a2f948a47df8fecfb61dbbc9a15332b537ef550",
+    "tests/_fixtures/tooling/moonbit-pinned-transport/original-moon403.log\t-\t7d880746a5ebcbdb8135d90b042ad300c89437f4f2c0d971edeb0aadc30f407c",
+    "tests/_fixtures/tooling/moonbit-pinned-transport/provenance.json\t-\tf020bfe5a9eef4f463d95b1a1f2e6e2529bed910a1c1941097106e1dc11f0b14",
+    "tests/_fixtures/tooling/moonbit-pinned-transport/unix.sh.txt\t-\t46495f8cdc0050f79b6cb195d66478d101cb3601d68506568fbe377fcdf2a9fe",
+    "tests/_fixtures/tooling/moonbit-pinned-transport/windows.ps1.txt\t-\ta5101e91ffa9905fb25cd009b9a4aa942971a294bd055c89836e3af89b710c64",
+    "tests/_fixtures/tooling/moonbit-pinned-transport/windows.zip.sha256.txt\t-\te53336b963ee01f89c8824168872e7bb8484214df253e2224df6b0148c6232ba",
+    "tests/tooling/moonbit-helper.test.ts\t9792139914f9e801b34eed910e3423ec069e774ca911216e4827303ae1b8e2e1\t97fe5435f7bb144db356e3def8cf7396631e98bc6f6c1daf73696d081164c10c",
+    "tests/tooling/moonbit-pinned-artifacts.test.mjs\t-\tcf5d007b05c328931fee1d480a2494a2fd61c095724b65f9c8f1529523546432",
+    "tests/tooling/moonbit-pinned-transport-shell.test.mjs\t-\t0076835a39a08807b27df166125501f2259929bdbedde7449137e6c4bf5d6cb0",
+    "tests/tooling/moonbit-registry-update-installer.test.mjs\t7ae8c525eede44ab3a56d07e4a2f948a47df8fecfb61dbbc9a15332b537ef550\t20c0e209ceb9fa0788312a06b42c23b268058d03e4184bbae655f134076de1eb",
+    "tools/nix/moonbit.nix\t1d95b3fd4545ca310b69d33419294a4b6b14e19398c176111b193c1abedf9772\tacddadf57589c8d9bf05f234ab26ed5eb033c3ed93efa41612a61e5bac43f5a6"
   ]
 }

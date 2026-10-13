@@ -21,6 +21,7 @@ const manifest = JSON.parse(
   files: string[];
   preservedBodies: string[];
   harnessBodies: string[];
+  ciBodies: string[];
 };
 const production = execFileSync(
   "git",
@@ -45,7 +46,12 @@ const production = execFileSync(
   .trim()
   .split("\n");
 const bodies = new Map<string, string | null>();
-for (const row of [...manifest.files, ...manifest.preservedBodies, ...manifest.harnessBodies]) {
+for (const row of [
+  ...manifest.files,
+  ...manifest.preservedBodies,
+  ...manifest.harnessBodies,
+  ...manifest.ciBodies,
+]) {
   const [file] = row.split("\t");
   for (const [side, source] of [
     ["before", manifest.originalSource],
@@ -74,6 +80,7 @@ await test("the seven-path frontier successor retains all 208 native predecessor
   assert.equal(receipt.completeBodyPairs, 210);
   assert.equal(receipt.preservedBodyPairs, 45);
   assert.equal(receipt.files.length, 7);
+  assert.equal(receipt.completeCiPairs, 21);
   const current = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
   const actualProduction = execFileSync(
     "git",
@@ -110,7 +117,12 @@ await test("missing, extra and duplicate producers and every whole body mutation
   ]) {
     assert.equal(qualifyFrontierHost(changed, digest), null);
   }
-  for (const row of [...manifest.files, ...manifest.preservedBodies, ...manifest.harnessBodies]) {
+  for (const row of [
+    ...manifest.files,
+    ...manifest.preservedBodies,
+    ...manifest.harnessBodies,
+    ...manifest.ciBodies,
+  ]) {
     const [file] = row.split("\t");
     for (const side of ["before", "after"] as const) {
       assert.equal(
