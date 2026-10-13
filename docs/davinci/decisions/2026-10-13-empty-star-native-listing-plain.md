@@ -216,6 +216,6 @@ verify compressed and raw SHA256 plus the complete inverse bytes, and retain
 all 71 original whole current/incoming identities. The one changed foundation
 line has an exact common-prefix/suffix clause with a full350-line round trip,
 so no large character diff or copied unrelated paragraph is generated. The
-capsule is 18,264 bytes and the manifest remains below the original reader
+capsule is 18,310 bytes and the manifest remains below the original reader
 bound. Actual gitBodyDigest and the same38 source laws require fresh validation;
 this source representation supplies no runtime or performance acceptance.
