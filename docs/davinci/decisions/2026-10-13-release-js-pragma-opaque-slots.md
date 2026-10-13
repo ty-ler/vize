@@ -56,7 +56,15 @@ missing-shim and unknown-constructor laws stay intact.
 ## Qualification boundaries
 
 The selected development base is actual main
-`b2f56c584c82f0da96db88c1faee565dd838ead8`. The production pair is
+`b2f56c584c82f0da96db88c1faee565dd838ead8`, composed with exact current main
+`c4f74b48fb2df6ea20aeb414193d82f531ab059e`. All five production bodies and
+the eleven generated-packet successors remain unchanged by composition.
+The two overlapping Misskey source callers retain both complete authorities:
+a named actual-source union precedes the unchanged literal SDK427 laws and
+the original JS93/Star322 source laws. The existing source-counterpart
+primitive provisions only the reviewed literal SDK source; its full three-row
+registry/caller inverses remain separate from actual native copied metadata.
+The production pair is
 independent of #8675 executor/lifecycle APIs and is delivered separately to
 unblock the actual full-release Vue parity regressions. Existing JavaScript source93,
 Star322 and auxiliary source authorities remain immutable. A separately

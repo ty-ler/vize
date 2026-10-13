@@ -14,6 +14,8 @@ import {
   canonProductRetainedLaws,
 } from "../../tools/support/compat/github/canon-product-retained-source-runner.mjs";
 
+import { canonProductCompositionPaths } from "../../tools/support/compat/github/canon-product-main-composition.mjs";
+
 const root = path.resolve(import.meta.dirname, "../..");
 void test("whole current release source binds every unchanged original JS and Star module", async () => {
   const fixture = await canonProductOriginalFixture(root);
@@ -60,7 +62,7 @@ void test("private physical mutation missing mode and ancestor symlink refuse be
     const actualHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root }).toString().trim();
     fs.writeFileSync(path.join(directory, ".git/HEAD"), actualHead + "\n");
     fs.writeFileSync(path.join(directory, ".git/objects/info/alternates"), pool + "\n");
-    for (const file of canonProductSourcePaths) {
+    for (const file of new Set([...canonProductSourcePaths, ...canonProductCompositionPaths])) {
       const target = path.join(directory, file);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.copyFileSync(path.join(root, file), target);

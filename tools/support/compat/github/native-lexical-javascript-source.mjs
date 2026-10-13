@@ -14,6 +14,8 @@ import {
   javascriptSfcContextPaths,
 } from "./javascript-sfc-source-context.mjs";
 
+import { canonProductCompositionPaths } from "./canon-product-main-composition.mjs";
+
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const supplementalHelpers = [
   ...javascriptSfcContextPaths,
@@ -33,6 +35,7 @@ export const nativeLexicalSourcePaths = (manifest, helpers) => [
     "crates/vize_canon/src/lib.rs",
     ...javascriptSfcSourcePaths,
     ...canonProductSourcePaths,
+    ...canonProductCompositionPaths,
     ...supplementalHelpers,
   ]),
 ];

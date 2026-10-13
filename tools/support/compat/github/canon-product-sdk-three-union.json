@@ -1,0 +1,71 @@
+{
+  "schema": "vize.literal-sdk-three-source-union",
+  "source": "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6",
+  "actualIncoming": "c4f74b48fb2df6ea20aeb414193d82f531ab059e",
+  "cells": [
+    {
+      "file": "tests/_fixtures/vue-ecosystem-fixtures.json",
+      "before": {
+        "blob": "6d0c0fc4d03706a0e997f61e07aa8533ce80b976",
+        "length": 284228,
+        "sha256": "ec1c45a17a778507adfc3ce41a17a274fed0cf55aadd74f81f75b12f641abfbf",
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "6d0c0fc4d03706a0e997f61e07aa8533ce80b976",
+        "length": 284228,
+        "sha256": "ec1c45a17a778507adfc3ce41a17a274fed0cf55aadd74f81f75b12f641abfbf",
+        "mode": "100644"
+      },
+      "clauses": []
+    },
+    {
+      "file": "tests/tooling/empty-vue-star-javascript-source.test.mjs",
+      "before": {
+        "blob": "d6e4b4d1c409e63eecbdd8c4e563a655d72bf466",
+        "length": 334,
+        "sha256": "9127cd29670d67f930f35b4976d4593de794c517977b51643d7b5ce98ebf9be1",
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "7b1a25bbcdefb7db2603f0fb02ba6dd3094878c0",
+        "length": 308,
+        "sha256": "850dbea1a0e3d03db77cef69206e7f3c4f8d298f036e999ca424e6c860d97557",
+        "mode": "100644"
+      },
+      "clauses": [
+        [
+          7,
+          241,
+          "cGF0aCBmcm9tICJub2RlOnBhdGgiOwppbXBvcnQgeyBpbXBvcnRDYW5vblByb2R1Y3RSZXRhaW5lZE1vZHVsZSB9IGZyb20gIi4uLy4uL3Rvb2xzL3N1cHBvcnQvY29tcGF0L2dpdGh1Yi9jYW5vbi1wcm9kdWN0LXJldGFpbmVkLXNvdXJjZS1ydW5uZXIubWpzIjsKCmF3YWl0IGltcG9ydENhbm9uUHJvZHVjdFJldGFpbmVkTW9kdWxlKAogIHBhdGgucmVzb2x2ZShpbXBvcnQubWV0YS5kaXJuYW1lLCAiLi4vLi4i",
+          "eyBydW5NaXNza2V5UmVnaXN0cnlPcmlnaW5hbFRlc3QgfSBmcm9tICIuLi8uLi90b29scy9zdXBwb3J0L2NvbXBhdC9naXRodWIvbWlzc2tleS1yZWdpc3RyeS1zb3VyY2UubWpzIjsKCi8vIENvbXBsZXRlIGFjdHVhbCBzb3VyY2UgY3VzdG9keSBwcmVjZWRlcyB0aGUgdW5jaGFuZ2VkIGxpdGVyYWwgQkQgc291cmNlIGxhd3MuCmF3YWl0IHJ1bk1pc3NrZXlSZWdpc3RyeU9yaWdpbmFsVGVzdCgKICBuZXcgVVJMKCIuLi8uLi8iLCBpbXBvcnQubWV0YS51cmw="
+        ]
+      ]
+    },
+    {
+      "file": "tests/tooling/warm-type-backed-empty-vue-star-custody.test.ts",
+      "before": {
+        "blob": "d2629473abc7ef1e18c2638de7aa3f9c550f1471",
+        "length": 340,
+        "sha256": "1a91d046a03fb186ac9df137053963de0bc2db6b00961849fcb203598b2751a7",
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "87e50577639649b81aff36b9f70c5357e8af0940",
+        "length": 314,
+        "sha256": "9e8ccb2cac32f276643841be681cd67a7e67475ccc73bafb15d1c2b35d21cf89",
+        "mode": "100644"
+      },
+      "clauses": [
+        [
+          7,
+          241,
+          "cGF0aCBmcm9tICJub2RlOnBhdGgiOwppbXBvcnQgeyBpbXBvcnRDYW5vblByb2R1Y3RSZXRhaW5lZE1vZHVsZSB9IGZyb20gIi4uLy4uL3Rvb2xzL3N1cHBvcnQvY29tcGF0L2dpdGh1Yi9jYW5vbi1wcm9kdWN0LXJldGFpbmVkLXNvdXJjZS1ydW5uZXIubWpzIjsKCmF3YWl0IGltcG9ydENhbm9uUHJvZHVjdFJldGFpbmVkTW9kdWxlKAogIHBhdGgucmVzb2x2ZShpbXBvcnQubWV0YS5kaXJuYW1lLCAiLi4vLi4i",
+          "eyBydW5NaXNza2V5UmVnaXN0cnlPcmlnaW5hbFRlc3QgfSBmcm9tICIuLi8uLi90b29scy9zdXBwb3J0L2NvbXBhdC9naXRodWIvbWlzc2tleS1yZWdpc3RyeS1zb3VyY2UubWpzIjsKCi8vIENvbXBsZXRlIGFjdHVhbCBzb3VyY2UgY3VzdG9keSBwcmVjZWRlcyB0aGUgdW5jaGFuZ2VkIGxpdGVyYWwgQkQgc291cmNlIGxhd3MuCmF3YWl0IHJ1bk1pc3NrZXlSZWdpc3RyeU9yaWdpbmFsVGVzdCgKICBuZXcgVVJMKCIuLi8uLi8iLCBpbXBvcnQubWV0YS51cmw="
+        ]
+      ]
+    }
+  ],
+  "sourceOnly": true,
+  "runtimeCredit": false
+}

@@ -107,3 +107,24 @@ export async function importCanonProductRetainedModule(root, file) {
   assert.deepEqual(fs.readFileSync(target), original.body);
   return import(pathToFileURL(target).href);
 }
+
+export async function importCanonProductMisskeyModule(root) {
+  const receipt = authenticateCanonProductSource(root);
+  const { canonProductSdkPaths } = await import("./canon-product-main-composition.mjs");
+  const { listStarCounterpartFiles, provisionStarSourceCounterpart } =
+    await import("./source-counterpart-snapshot.mjs");
+  const source = "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6";
+  const names = listStarCounterpartFiles(root, source, canonProductSdkPaths);
+  const fixture = provisionStarSourceCounterpart(root, source, names);
+  try {
+    assert.equal(receipt.head, git(root, ["rev-parse", "HEAD"]).toString().trim());
+    const { after } = await import("node:test");
+    after(() => fixture.cleanup());
+    return await import(
+      pathToFileURL(path.join(fixture.root, "tests/tooling/misskey-registry-source.test.mjs")).href
+    );
+  } catch (error) {
+    fixture.cleanup();
+    throw error;
+  }
+}

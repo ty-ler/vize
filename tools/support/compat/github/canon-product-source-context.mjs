@@ -7,6 +7,11 @@ import { gunzipSync } from "node:zlib";
 import { authenticateJavaScriptSfcSource } from "./javascript-sfc-source-context.mjs";
 import { ensureHostedLiteralSource } from "../../../../tests/performance/support/warm-type-backed-git-reader-literal-source.ts";
 
+import {
+  authenticateCanonProductComposition,
+  canonProductCompositionPaths,
+} from "./canon-product-main-composition.mjs";
+
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const blob = (body) =>
   createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
@@ -66,7 +71,10 @@ assert.equal(new Set(rows.map(({ file }) => file)).size, 426);
 const successorBytes = fs.readFileSync(
   new URL("canon-product-caller-successors.json.gz", import.meta.url),
 );
-assert.equal(sha(successorBytes), "1d5c97d7afe6f4571d1b7641f5be7e93976153cdc628904bca5424ec2597370a");
+assert.equal(
+  sha(successorBytes),
+  "23208fae7b3b049a9e251fc118fe5fc0f51e5d1d72cd5a036d8ddd241eedc3c5",
+);
 const successors = JSON.parse(gunzipSync(successorBytes));
 assert.equal(successors.schema, 1);
 assert.equal(successors.sourceOnly, true);
@@ -115,7 +123,7 @@ const git = (root, args, input) =>
     maxBuffer: 128 * 1024 * 1024,
     env: { ...process.env, GIT_NO_LAZY_FETCH: "1", GIT_ALLOW_PROTOCOL: "" },
   });
-function frame(root, revision, side, useSuccessors = false) {
+function frame(root, revision, side, useSuccessors = false, composition = new Map()) {
   const tree = git(root, ["ls-tree", "-rz", revision, "--", ...canonProductSourcePaths]);
   assert.deepEqual(Buffer.from(tree.toString()), tree);
   const entries = new Map(
@@ -140,9 +148,15 @@ function frame(root, revision, side, useSuccessors = false) {
   let cursor = 0;
   for (const row of rows) {
     const cell =
-      useSuccessors && successorCells.has(row.file)
-        ? { ...successors.entries.find((entry) => entry.file === row.file).after }
-        : row[side];
+      useSuccessors && composition.has(row.file)
+        ? {
+            ...composition.get(row.file),
+            bytes: composition.get(row.file).body.length,
+            sha256: sha(composition.get(row.file).body),
+          }
+        : useSuccessors && successorCells.has(row.file)
+          ? { ...successors.entries.find((entry) => entry.file === row.file).after }
+          : row[side];
     if (!cell) {
       assert(!entries.has(row.file));
       bodies.set(row.file, null);
@@ -171,7 +185,13 @@ export function authenticateCanonProductSource(root) {
   const frames = Object.fromEntries(
     Object.entries(revisions).map(([side, revision]) => [side, frame(root, revision, side)]),
   );
+  ensureHostedLiteralSource(root, "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6");
+  const composition = authenticateCanonProductComposition(root, head);
   const admitted = new Set([
+    ...canonProductCompositionPaths,
+    "tools/support/compat/github/canon-product-main-composition.mjs",
+    "tools/support/compat/github/canon-product-main-composition.json.gz",
+    "tools/support/compat/github/canon-product-sdk-three-union.json",
     "tools/support/compat/github/canon-product-source-context.mjs",
     "tools/support/compat/github/canon-product-retained-source-runner.mjs",
     "tests/tooling/canon-product-current-source.test.mjs",
@@ -185,9 +205,10 @@ export function authenticateCanonProductSource(root) {
     .split("\n")
     .filter(Boolean))
     assert(admitted.has(file), "foreign source outside the closed selected child: " + file);
-  const actual = frame(root, head, "current", true);
+  const actual = frame(root, head, "current", true, composition);
   for (const { file } of rows) {
-    const expected = successorCells.get(file)?.after ?? frames.current.get(file);
+    const expected =
+      composition.get(file) ?? successorCells.get(file)?.after ?? frames.current.get(file);
     assert.deepEqual(
       actual.get(file),
       expected,
@@ -237,6 +258,9 @@ export function retainedCanonProductSource(receipt, side, file) {
 }
 
 export const canonProductSourceMetadataPaths = Object.freeze([
+  "tools/support/compat/github/canon-product-main-composition.mjs",
+  "tools/support/compat/github/canon-product-main-composition.json.gz",
+  "tools/support/compat/github/canon-product-sdk-three-union.json",
   "tools/support/compat/github/canon-product-source-context.mjs",
   "tools/support/compat/github/canon-product-retained-source-runner.mjs",
   "tools/support/compat/github/canon-product-caller-successors.json.gz",
