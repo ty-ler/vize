@@ -81,19 +81,40 @@ const originalSetup =
   "      # darwin-x64 covered without installing MoonBit.\n" +
   "      - uses: ./.github/actions/setup-moonbit\n" +
   "        if: matrix.target != 'darwin-x64'\n";
+const moldSetup = "      - uses: ./.github/actions/setup-mold\n        if: runner.os == 'Linux'\n";
+const wildSetup =
+  "      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0\n" +
+  "        if: runner.os == 'Linux'\n        with:\n          wild-version: \"0.9.0\"\n";
+const stableToolchain = "        with: { toolchain: stable }\n";
+const pinnedToolchain = '        with: { toolchain: "1.99.0" }\n';
 
 function authenticateWorkflow(source: string) {
   for (const anchor of [nodeLaws, msvcArch]) assert.equal(source.split(anchor).length, 2);
   assert.doesNotMatch(source, /setup-moonbit|moon (?:run|test)/u);
-  const reversed = source.replace(nodeLaws, moonLaws).replace(msvcArch, msvcArch + originalSetup);
+  const reversed = source
+    .replace(nodeLaws, moonLaws)
+    .replace(msvcArch, msvcArch + originalSetup)
+    .replaceAll(moldSetup, wildSetup)
+    .replaceAll(pinnedToolchain, stableToolchain);
   // Authenticated whole d3b2f527 workflow; all inputs, commands, pins, outputs and other conditions stay exact.
   const originalDigest = "25d6dfff5052a85bdbd673af0872ee65ed5f72d5dc3dccb5d792dc78ab138ce5";
   assert.equal(createHash("sha256").update(reversed).digest("hex"), originalDigest);
 }
 
-void test("the complete original workflow changes only the setup predicate and ported token laws", () => {
+void test("the original native workload survives the approved setup and token law changes", () => {
   const source = workflowFile();
   authenticateWorkflow(source);
+  const approved = source
+    .replaceAll(wildSetup, moldSetup)
+    .replaceAll(stableToolchain, pinnedToolchain);
+  authenticateWorkflow(approved);
+  for (const [from, to] of [
+    ["setup-mold", "setup-other"],
+    ["1.99.0", "1.98.0"],
+  ])
+    assert.throws(() => authenticateWorkflow(approved.replace(from, to)), {
+      code: "ERR_ASSERTION",
+    });
   for (const removed of [
     "cargo build --profile ci -p vize",
     "--max 2.36",
