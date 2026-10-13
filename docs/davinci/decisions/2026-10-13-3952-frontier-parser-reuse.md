@@ -94,10 +94,10 @@ The narrow slice is composed once onto unchanged actual Stack #8607 top
 move commit. Production has exactly the same seven-path footprint; the
 existing default and allocation diagnostic feature shapes remain unchanged.
 The named exact-parent counterpart now binds producer
-`a4d533751a594bfd4566f8756ccc3dff2b6f7c89` with 210 native whole-body pairs,
+`a6031f46f80d88b596b16dfb0aa79e4090af844b` with 210 native whole-body pairs,
 the same 45 original workload bodies and every 31 predecessor helper pair.
 Semantic SHA-256 is
-`68e5a6671e181ba11fea019c306e557aa47ae82782d6eadbc855cf6ea8e26e1c`.
+`18b3c44b35648f7918e2762b5f9f802088eeb2f75967a4693d173932316aa6e1`.
 The earlier 198-pair e7-only record remains a distinct local proposal.
 
 Both immutable original inline/allocation manifests and every old negative,
@@ -115,3 +115,15 @@ complete actual-top after body on both frontier sides, while retaining their
 original before/after pairs in the immutable allocation authority. Neither
 carrier changes in this slice; every original workload input/oracle/cap remains
 required. Original e7 body hashes cannot be mislabeled as actual #8724 bodies.
+
+The first exact child `6ac0556` has preserved actual Actions failures. Native
+compilation refuses the new test's nonexistent OXC `SourceType::js()`; use its
+actual JavaScript-module `SourceType::mjs()` without changing any input or
+expected vector. The zero-warning JS gate also refuses unused
+`actualProduction`; assert that complete actual footprint equals the frozen
+receipt rather than suppressing the warning. Original n8n run 38354940240
+fails during this prerequisite compilation, so there is no authored campaign,
+new cold-build timing or parser-hit observation. Its existing compiler corpus
+passes separately. Shared JS/tooling/playground setup additionally refuses the
+original MoonBit archive with HTTP 403; that is a distinct infrastructure
+failure, not a waived source gate. Fresh exact successor Actions are required.

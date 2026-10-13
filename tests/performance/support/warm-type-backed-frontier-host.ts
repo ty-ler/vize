@@ -17,9 +17,9 @@ const predecessor = JSON.parse(
   fs.readFileSync(new URL("./allocation-diagnostic/source-manifest.json", import.meta.url), "utf8"),
 ) as { files: string[]; preservedBodies: string[] };
 const manifestSHA256 = createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
-assert.equal(manifestSHA256, "68e5a6671e181ba11fea019c306e557aa47ae82782d6eadbc855cf6ea8e26e1c");
+assert.equal(manifestSHA256, "18b3c44b35648f7918e2762b5f9f802088eeb2f75967a4693d173932316aa6e1");
 assert.equal(manifest.originalSource, "3dd6ae0707dc42302638257b86967d6a6ffe902f");
-assert.equal(manifest.reviewedSource, "a4d533751a594bfd4566f8756ccc3dff2b6f7c89");
+assert.equal(manifest.reviewedSource, "a6031f46f80d88b596b16dfb0aa79e4090af844b");
 assert.equal(manifest.version, 1);
 assert.equal(manifest.files.length, 210);
 assert.equal(manifest.harnessBodies.length, 31);
