@@ -11,6 +11,8 @@ import { qualifyAsciiSymbolHost } from "./warm-type-backed-ascii-symbol-host.ts"
 
 import { qualifyEmptyVueStarHost } from "./warm-type-backed-empty-vue-star-host.ts";
 
+import { qualifyEmptyVueStarListingHost } from "./warm-type-backed-empty-vue-star-listing.ts";
+
 /** Compose finite qualifications without changing existing path/timing authorities. */
 export function qualifyHostMoves(
   production: string[],
@@ -48,8 +50,17 @@ export function qualifyHostMoves(
       "4668a48d816279308c341ff3a7c839dc39ea129a2901b0484b65f4905e00386b" &&
     digest("before", "tests/tooling/warm-type-backed-empty-vue-star-host.test.ts") === null &&
     digest("after", "tests/tooling/warm-type-backed-empty-vue-star-host.test.ts") ===
-      "3dc6a16c6e9869302858df257d21e2e2b03acdc13606460bd7849d9d9ce28fc2"
-      ? qualifyEmptyVueStarHost(production, alreadyQualified, digest)
+      "3dc6a16c6e9869302858df257d21e2e2b03acdc13606460bd7849d9d9ce28fc2" &&
+    digest("before", "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts") ===
+      null &&
+    digest("after", "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts") ===
+      "afb60ff75a9d20b779432ccae8d59123b3ab759b49a09f28735f5293b0b44c86"
+      ? qualifyEmptyVueStarListingHost(
+          production,
+          alreadyQualified,
+          digest,
+          qualifyEmptyVueStarHost,
+        )
       : null;
   return {
     pathHostMove: enabled ? qualifyPathHostMove(production, alreadyQualified, digest) : null,
