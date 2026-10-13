@@ -1127,7 +1127,12 @@ linter	Linter	source	crates/vize_patina/src/rules/vue/valid_template_root.rs	68	
 linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_bind.rs	28	old_ast	old AST/parser	old	vize_relief	legacy	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_cloak.rs	25	old_ast	old AST/parser	old	vize_relief	legacy	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_else.rs	28	old_ast	old AST/parser	old	vize_relief	legacy	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_for.rs	29	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_for.rs	29	old_ast	old AST/parser	old	vize_relief	legacy	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_for.rs	29	raw_oxc	raw OXC	raw	oxc_allocator	raw	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_for.rs	29	raw_oxc	raw OXC	raw	oxc_ast	raw	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_for.rs	29	raw_oxc	raw OXC	raw	oxc_ast_visit	raw	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_for.rs	29	raw_oxc	raw OXC	raw	oxc_parser	raw	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_html.rs	26	old_ast	old AST/parser	old	vize_relief	legacy	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_if.rs	27	old_ast	old AST/parser	old	vize_relief	legacy	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/valid_v_memo.rs	25	old_ast	old AST/parser	old	vize_relief	legacy	1
@@ -1323,3 +1328,4 @@ linter	Linter	test/dev	crates/vize_patina/tests/script_frame_spans.rs	17	l0	L0	s
 linter	Linter	test/dev	crates/vize_patina/tests/slot_style_fix_history.rs	4	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	test/dev	crates/vize_patina/tests/static_class_fix.rs	4	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	test/dev	crates/vize_patina/tests/unified_channel.rs	8	l0	L0	stage	vize_l0	preferred	3
+linter	Linter	test/dev	crates/vize_patina/tests/v_for_key_ownership.rs	4	l0	L0	stage	vize_l0	preferred	1
