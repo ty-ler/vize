@@ -19,6 +19,7 @@ import {
 } from "./canonical-corpus-identity.mjs";
 import { validateObserverArtifact } from "./canonical-corpus-observer.mjs";
 import { validateArtifactsConcurrently } from "./canonical-corpus-artifact-batch.ts";
+import * as outage from "./canonical-corpus-step-outage.mjs";
 
 const commands = {
   dom: "Run L2 DOM differential corpus",
@@ -64,12 +65,13 @@ function execution(job) {
     ),
   );
 }
-function completedWorker(job, observer) {
+function completedWorker(job, observer, stepless = false) {
   assert.equal(job.status, "completed", "Latest canonical observer is incomplete");
   assert.equal(job.conclusion, "success", "Latest canonical observer did not succeed");
   const start = timestamp(job.started_at);
   const end = timestamp(job.completed_at);
   assert(end >= start && Array.isArray(job.steps), "Invalid canonical execution window");
+  if (stepless) return outage.uploadWindow(job);
   const numbers = job.steps.map((step) => step.number);
   numbers.forEach((number) => positive(number, "Invalid canonical step number"));
   assert.equal(new Set(numbers).size, numbers.length, "Duplicate canonical step");
@@ -164,10 +166,10 @@ export function selectCanonicalWorkers(context, run, jobs, artifacts) {
     const group = groups[observer].sort((left, right) => right.run_attempt - left.run_attempt);
     assert(group.length, `Missing canonical worker ${observer}`);
     const latest = group[0];
-    completedWorker(latest, observer); // Never borrow green behind a newer failure or pending job.
+    completedWorker(latest, observer, outage.stepless(jobs)); // Never borrow green behind a newer failure or pending job.
     const signature = execution(latest);
     const original = group.filter((job) => execution(job) === signature).at(-1);
-    const upload = completedWorker(original, observer);
+    const upload = completedWorker(original, observer, outage.stepless(jobs));
     const artifactName = `canonical-corpus-${observer}-${runId}-${original.run_attempt}-${sha}`;
     const matches = artifacts.filter((artifact) => artifact.name === artifactName);
     assert.equal(matches.length, 1, "Missing or duplicate canonical artifact");
@@ -207,6 +209,7 @@ export function selectCanonicalWorkers(context, run, jobs, artifacts) {
       artifactName,
       artifactDigest: artifact.digest,
       artifactCreatedAt: artifact.created_at,
+      ...outage.evidence(jobs),
     };
   });
   assert.equal(
