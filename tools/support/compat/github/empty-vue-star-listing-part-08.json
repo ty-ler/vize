@@ -229,9 +229,9 @@
     "6ec974bcbc6c28ed5536084c3f09044430ca00d4",
     3465,
     "9d22006fc19d80e1ebb8051cba2dc753a5bbf7756d87e4e5216bdf4fa2a46be4",
-    "1a75264746e26f7654bb0f98b17c43932983ab81",
-    5317,
-    "b67a4c414d4d4821314a0dc4f40db6ed5dffa7a5bd783b2ff039926a42be1c19"
+    "f7e7b100f19a9980d5ec2b3a91c9c4d833cc8006",
+    7484,
+    "bb15bae943d6d16b044879c22b9d60c2228fc827434a746a07fcfe0f0cee60b1"
   ],
   [
     "tests/performance/support/warm-type-backed-html-hover-host.ts",
@@ -301,9 +301,9 @@
     "06750c7b925004bc039e61e8f5530d674405fd90",
     3700,
     "99f84b671f904a819b5e6e1e319fd97db2ae537b7ba1c773013b1e0e87cd7940",
-    "efe8ea9ad4d4aba378cbc8816f549e8c147bc3b2",
-    4724,
-    "c587a323b0766e010a665ebfa222661943267d81cc6464a9da2f9d7bf3a7d5aa"
+    "06750c7b925004bc039e61e8f5530d674405fd90",
+    3700,
+    "99f84b671f904a819b5e6e1e319fd97db2ae537b7ba1c773013b1e0e87cd7940"
   ],
   [
     "tests/performance/support/warm-type-backed-processes.ts",

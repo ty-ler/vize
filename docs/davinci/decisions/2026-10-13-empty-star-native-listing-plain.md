@@ -235,3 +235,13 @@ identity and finite exact clauses, restores the whole parent canonical cell,
 then runs the unchanged full parent-to-main inverse. Only that foundation path
 can use this successor; all other source cells, the original parent cell and
 original BD/SDK singleton laws remain unchanged. Child mode/body drift refuses.
+
+Actual1b original400 passed. Its source workers exposed a separate preserved
+NoMutating identity: warm-type-backed-path-host.ts must remain the original
+3,700-byte body. Restore it exactly instead of changing its frozen323 source
+law. The narrow large-foundation digest adapter lives in the already owned
+host qualification caller; the actual workflow supplies the same root,
+baseline and head. Every other file continues through the original reader.
+Full source byte/mode/digest conditions and the three legacy source APIs remain
+unchanged. Existing NoMutating retained guard controls join the focused replay
+before publication; no native or performance acceptance is borrowed.
