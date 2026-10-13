@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import test from "node:test";
 import {
   emptyVueStarBodyPairs,
@@ -37,9 +38,55 @@ const git = (args: string[], input?: Buffer) =>
     maxBuffer: 64 * 1024 * 1024,
   });
 const sha = (body: Buffer) => createHash("sha256").update(body).digest("hex");
-for (const source of [baseInput, before, failedAfter, integratedBase])
-  ensureHostedLiteralSource(root, source);
-assert.equal(git(["merge-base", baseInput, failedAfter]).toString().trim(), before);
+const originalParentEdges = [
+  [baseInput, "6fb01f335952780d7a6321ca092049753645c83d"],
+  ["6fb01f335952780d7a6321ca092049753645c83d", before],
+  [failedAfter, "f6017bf3a9837136f7ce60d52d67ecc3ee649dd0"],
+  ["f6017bf3a9837136f7ce60d52d67ecc3ee649dd0", before],
+] as const;
+const originalCommits = [...new Set([...originalParentEdges.flat(), integratedBase])];
+for (const source of originalCommits) ensureHostedLiteralSource(root, source);
+
+// A depth-one hosted checkout deliberately lacks traversal ancestry. Preserve
+// the real merge-base assertion using only these authenticated complete commits,
+// with the already-proved common predecessor as the explicit finite boundary.
+const originalGraph = fs.mkdtempSync(path.join(os.tmpdir(), "vize-star-original-graph-"));
+try {
+  const graphGit = (args: string[], input?: Buffer) =>
+    execFileSync("git", ["--no-replace-objects", ...args], {
+      cwd: originalGraph,
+      input,
+      env: { ...process.env, GIT_NO_LAZY_FETCH: "1" },
+    });
+  graphGit(["init", "--quiet"]);
+  for (const source of new Set(originalParentEdges.flat())) {
+    const body = git(["cat-file", "commit", source]);
+    assert.equal(
+      createHash("sha1").update(`commit ${body.length}\0`).update(body).digest("hex"),
+      source,
+      "complete original commit identity",
+    );
+    const edge = originalParentEdges.find(([commit]) => commit === source);
+    if (edge)
+      assert.deepEqual(
+        body
+          .toString()
+          .split("\n\n", 1)[0]
+          .split("\n")
+          .filter((line) => /^parent /u.test(line)),
+        ["parent " + edge[1]],
+        "complete original single-parent edge",
+      );
+    assert.equal(
+      graphGit(["hash-object", "-t", "commit", "-w", "--stdin"], body).toString().trim(),
+      source,
+    );
+  }
+  fs.writeFileSync(path.join(originalGraph, ".git", "shallow"), before + "\n");
+  assert.equal(graphGit(["merge-base", baseInput, failedAfter]).toString().trim(), before);
+} finally {
+  fs.rmSync(originalGraph, { recursive: true, force: true });
+}
 const production = git([
   "diff",
   "--name-only",

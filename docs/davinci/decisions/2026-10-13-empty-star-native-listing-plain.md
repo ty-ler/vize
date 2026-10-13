@@ -48,3 +48,12 @@ cohort drift while retaining the original ea1/e02 failed-pair law. Preserve all
 incoming foundation bytes and both CI clauses at350lines. Old9eb observations
 stay historical; only fresh composed-head source/native/original400 Actions
 can qualify the successor. No observed speed or runtime credit transfers.
+
+The old9eb source-tooling run38351836380 exposed a genuine depth-one hosted
+checkout failure: fetching exact commit objects does not restore ancestry for
+`git merge-base`. Preserve that assertion on the complete five original commit
+objects, each authenticated by its actual Git identity, with all four actual
+single-parent edges checked. A separate owned temporary repository has only
+these unchanged objects and the explicit already-proved ea1 common boundary;
+Git must still return that exact original merge-base. No production/source
+body, caller qualification, historical law or oracle is changed.
