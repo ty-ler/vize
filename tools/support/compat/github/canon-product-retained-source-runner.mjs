@@ -169,7 +169,7 @@ export async function importCanonProductParentListingModule(root, file) {
   const proof = authenticateCanonProductSource(root);
   const { listStarCounterpartFiles, provisionStarSourceCounterpart } =
     await import("./source-counterpart-snapshot.mjs");
-  const source = "b903b648dd9edc4cd34312b055ece5d5eb6e1ad7";
+  const source = "a0771cc8a597e0b8c411a59028f50bbdc28ec761";
   const fixture = provisionStarSourceCounterpart(
     root,
     source,

@@ -29,6 +29,7 @@ const history = Object.freeze([
 ]);
 
 const sources = new Set([
+  "a0771cc8a597e0b8c411a59028f50bbdc28ec761",
   "b903b648dd9edc4cd34312b055ece5d5eb6e1ad7",
   "d7f5bea78aeb96a4f52a06f068be7efa12ed885c",
   "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38",
@@ -234,7 +235,7 @@ function git(root, args, input) {
 }
 
 function context(owner, source) {
-  assert(sources.has(source), "only the six literal Star/SDK source counterparts");
+  assert(sources.has(source), "only the seven literal Star/SDK source counterparts");
   const root = fs.realpathSync(owner);
   assert.equal(
     fs.realpathSync(git(root, ["rev-parse", "--show-toplevel"]).toString().trim()),

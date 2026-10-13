@@ -15,10 +15,10 @@ const blob = (body) =>
 const packetBytes = fs.readFileSync(
   new URL("canon-product-main-composition.json.gz", import.meta.url),
 );
-assert.equal(sha(packetBytes), "1353b786cffa42495b04b45a48e6610edc50766e2aca4be566915837f261136c");
+assert.equal(sha(packetBytes), "3eacb02d15167ae68b72deee651da36d69b218c0ae8ca1ccf7bae4e69f350e5b");
 const packet = JSON.parse(gunzipSync(packetBytes));
 assert.equal(packet.source, "ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a");
-assert.equal(packet.parent, "b903b648dd9edc4cd34312b055ece5d5eb6e1ad7");
+assert.equal(packet.parent, "a0771cc8a597e0b8c411a59028f50bbdc28ec761");
 assert.equal(packet.sourceOnly, true);
 assert.equal(packet.runtimeCredit, false);
 const cells = new Map();
