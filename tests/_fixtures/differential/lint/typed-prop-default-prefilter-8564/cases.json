@@ -30,8 +30,8 @@
           "rule_name": "script/no-required-prop-with-default",
           "severity": "error",
           "message": "Prop 'direction' is required but also declares a default",
-          "start": 132,
-          "end": 158,
+          "start": 169,
+          "end": 178,
           "help": "Make the typed prop optional with `?` or remove the default.",
           "fix": null,
           "labels": [
@@ -59,8 +59,8 @@
           "rule_name": "script/no-required-prop-with-default",
           "severity": "error",
           "message": "Prop 'direction' is required but also declares a default",
-          "start": 66,
-          "end": 83,
+          "start": 92,
+          "end": 101,
           "help": "Make the typed prop optional with `?` or remove the default.",
           "fix": null,
           "labels": [
@@ -88,8 +88,8 @@
           "rule_name": "script/no-required-prop-with-default",
           "severity": "error",
           "message": "Prop 'label' is required but also declares a default",
-          "start": 72,
-          "end": 85,
+          "start": 33,
+          "end": 38,
           "help": "Make the typed prop optional with `?` or remove the default.",
           "fix": null,
           "labels": [
@@ -117,8 +117,8 @@
           "rule_name": "script/no-required-prop-with-default",
           "severity": "error",
           "message": "Prop 'café' is required but also declares a default",
-          "start": 85,
-          "end": 98,
+          "start": 57,
+          "end": 62,
           "help": "Make the typed prop optional with `?` or remove the default.",
           "fix": null,
           "labels": [
