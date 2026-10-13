@@ -234,7 +234,8 @@ for (const [filename, checksum] of [
     );
     const { authenticateCssProducerContext } = await import(pathToFileURL(helper).href);
     assert.equal(authenticateCssProducerContext(root).originalSha256, checksum, filename);
-  } else authenticateCssReleaseDriver(filename, fs.readFileSync(path.join(root, filename)), checksum);
+  } else
+    authenticateCssReleaseDriver(filename, fs.readFileSync(path.join(root, filename)), checksum);
 }
 const bundledSource = fs.readFileSync(path.join(root, "vendor/lightningcss/src/bundler.rs"));
 const bundledTests = fs.readFileSync(

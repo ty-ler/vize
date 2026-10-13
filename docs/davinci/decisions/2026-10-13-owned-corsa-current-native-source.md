@@ -62,3 +62,11 @@ Required delivery evidence remains fresh exact-head Check/Clippy and native
 phases, the original semantic completion and owned-image lifecycle laws,
 independent default/distributed package consumers, normalized package archives,
 original400, full protected suites, actual merge and installed release acceptance.
+
+Check `38361921288` at `6d40615a248706209d8737a128b79fcb69cdbf7c`
+rejects the incoming CSS guard formatting in job `115177890419`. The
+configured formatter successor changes one line break only; contextual
+TypeScript token identities stay exact, and configured formatting and typed
+lint pass. [The paired decision](https://github.com/ubugeeei-prod/vize/issues/6879#issuecomment-6140629770)
+retains the separate producer custody failure on `tools/commands/release/pr.rs`
+(`4457` versus captured `4379` bytes). No native or release credit follows.
