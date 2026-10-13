@@ -20,6 +20,7 @@ import {
   cacheKey,
   cachePaths,
   verifyCustody,
+  defaultBootstrapEnvironment,
 } from "./vp-bootstrap-diagnostic-contract.mjs";
 export {
   versions,
@@ -30,6 +31,7 @@ export {
   cachePaths,
   verifyCustody,
   ownedRef,
+  defaultBootstrapEnvironment,
 } from "./vp-bootstrap-diagnostic-contract.mjs";
 
 const sourceFiles = [
@@ -101,20 +103,7 @@ async function plan(lane) {
   const workspace = json(join(root, "package.json"));
   assert.equal(workspace.devEngines.runtime.version, versions.node);
   assert.equal(workspace.packageManager, `pnpm@${versions.projectPnpm}`);
-  for (const variable of [
-    "VP_HOME",
-    "VP_BIN_DIR",
-    "VP_DATA_DIR",
-    "VP_CACHE_DIR",
-    "VP_NODE_DIST_MIRROR",
-    "VP_NODE_SKIP_SIGNATURE_VERIFY",
-    "VP_NODE_VERSION",
-    "VP_NODE_MANAGER",
-    "VP_PM_MANAGER",
-    "VP_PR_VERSION",
-  ]) {
-    assert(!process.env[variable], `unexpected existing environment override: ${variable}`);
-  }
+  defaultBootstrapEnvironment(process.env);
   // Fail rather than removing an existing installation or measuring a hidden warm cache.
   assert(
     !existsSync(join(homedir(), ".vite-plus")),

@@ -2,10 +2,11 @@
 
 Issue: [#6830](https://github.com/ubugeeei-prod/vize/issues/6830).
 
-Status: approved for a narrow child PR and exact-head source qualification.
-The coordinator owns one manual full Check cold/warm dispatch after source
-qualification. No diagnostic execution, cache seeding or measured gain has
-occurred. Every original Check event, job, condition,
+Status: first controlled run aborted; local source repair awaits qualification.
+The coordinator cancelled the known-red full run after retaining partial
+evidence. No valid cold/warm comparison or cache seeding occurred. Another
+pair remains deferred until full Check timeout repairs are integrated.
+Every original Check event, job, condition,
 dependency, command and cache configuration is preserved exactly. Only
 standalone YAML comments are reduced to retain the existing line budget. Optional diagnostics add jobs
 alongside the full Check, never replace it.
@@ -73,9 +74,34 @@ Source hashes are recorded before/after preparation and controls. The actual
 installed native TypeScript 7.0.2 compiler accepts a valid project and produces
 exactly TS2322 for a string assigned to a number. Existing Vue 3.5.35 whole
 compile/parser/runtime tests must pass all 45 controls without skips. Complete
-control outputs, installed identities/binary hashes, raw SDK job logs, actual
-request URLs and phase timestamps are retained seven days. Runtime preparation
+control outputs, installed identities/binary hashes, raw SDK job logs, official
+index request records, SDK-derived URLs and phase timestamps are retained seven days. Runtime preparation
 evidence does not replace full Check or installed-consumer acceptance.
+
+## Aborted first run and machine protocol repair
+
+[Run 38356181245](https://github.com/ubugeeei-prod/vize/actions/runs/38356181245)
+on `8db2f83ec054502597890db68109efd929fd2d35` retained the pristine cold
+manifest and exact cache miss. Cold failed during SDK installation; warm was
+skipped, controls and cache writer never ran. The full run was cancelled after
+also exposing an independent Vue parity failure. Its first 0.853-second
+preparation phase is an incomplete attempt, not a valid comparison or speedup.
+
+The diagnostic's `VP_LOG=debug` activated the SDK's
+[default stdout tracing layer](https://github.com/voidzero-dev/vite-plus/blob/3aa366ee03ac162f5acfd8ee7c752a8245d904c6/crates/vp_shared/src/tracing.rs#L25-L38).
+The installer [captures Rust stdout and evaluates it as shell code](https://github.com/voidzero-dev/vite-plus/blob/3aa366ee03ac162f5acfd8ee7c752a8245d904c6/packages/cli/install.sh#L644-L647).
+Although self-setup routes its user output helpers to stderr, the separate
+tracing subscriber still pollutes this machine protocol. This source chain
+matches the observed `eval` syntax errors after setup completed in all four
+internal attempts. Remove the diagnostic override and reject inherited
+`VP_LOG`, including an empty value, rather than altering default SDK logging.
+Also reject `VP_SKIP_DEPS_INSTALL`, which can bypass bootstrap preparation.
+
+Bootstrap directly downloads managed latest LTS and executes its binary with
+pnpm 10.33.0; it does not choose a preinstalled system Node. Explicit `VP_HOME`
+keeps the recorded runtime paths valid. Installed-state assertions remain
+mandatory after successful setup. Raw output and phase markers remain retained;
+derived archive URLs must not be described as observed download requests.
 
 ## Retained Check rationale
 
@@ -91,15 +117,15 @@ and condition remains identical.
 
 ## Follow-up boundary
 
-Exact-head source Actions precede the coordinator's single authorized full
-Check cold/warm dispatch. Do not displace the active runner wave. Inspect actual
+Fresh exact-head source Actions precede any coordinator-owned new full
+Check cold/warm dispatch, which remains deferred for the timeout repairs. Inspect actual
 resolved versions, every full Check gate and exact preparation phases before
 considering any production caching change. No local installation or Rust build is necessary for this proposal.
 
-Paired issue-comment text for source qualification:
+Paired issue-comment text for the source repair:
 
-> The #6830 change adds an owned manual Vite+ cold/warm bootstrap diagnostic
-> while preserving full Check. Run-scoped Node/pnpm snapshots retain normal
-> cold checks and distinguish warm installed-state reuse. The 633-second
-> Node+pnpm phase remains unattributed. Source qualification precedes the
-> coordinator's single authorized dispatch; no measured gain is claimed.
+> The first #6830 diagnostic aborted: `VP_LOG=debug` polluted the SDK's shell
+> protocol, so warm, controls and cache save never ran. The repair removes that
+> override and rejects inherited logging/skip settings while retaining all
+> Check gates. Partial evidence is retained; no speedup is claimed. A new pair
+> remains deferred until the full Check timeout repairs are integrated.

@@ -14,6 +14,25 @@ export const versions = Object.freeze({
 });
 export const hash = (value) => createHash("sha256").update(value).digest("hex");
 
+export function defaultBootstrapEnvironment(env) {
+  for (const variable of [
+    "VP_LOG",
+    "VP_SKIP_DEPS_INSTALL",
+    "VP_HOME",
+    "VP_BIN_DIR",
+    "VP_DATA_DIR",
+    "VP_CACHE_DIR",
+    "VP_NODE_DIST_MIRROR",
+    "VP_NODE_SKIP_SIGNATURE_VERIFY",
+    "VP_NODE_VERSION",
+    "VP_NODE_MANAGER",
+    "VP_PM_MANAGER",
+    "VP_PR_VERSION",
+  ]) {
+    assert.equal(env[variable], undefined, `unexpected existing environment override: ${variable}`);
+  }
+}
+
 export function context(env, arch = process.arch) {
   assert.equal(env.GITHUB_EVENT_NAME, "workflow_dispatch", "manual diagnostic only");
   assert.equal(env.VIZE_DIAG_REQUESTED, "true", "diagnostic input must be explicitly enabled");

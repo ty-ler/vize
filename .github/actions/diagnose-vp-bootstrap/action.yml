@@ -54,7 +54,6 @@ runs:
       uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
       env:
         VP_HOME: ${{ steps.plan.outputs.vp-home }}
-        VP_LOG: debug
       with:
         version: "1.1.0"
         node-version-file: package.json

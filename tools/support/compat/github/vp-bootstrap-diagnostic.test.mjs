@@ -9,6 +9,7 @@ const yaml = createRequire(import.meta.url)("yaml");
 import {
   cacheKey,
   cachePaths,
+  defaultBootstrapEnvironment,
   context,
   hash,
   latestLts,
@@ -181,7 +182,10 @@ void test("diagnostic graph requires ownership, cold custody and completed raw S
 void test("real SDK install uses no production stores, fallbacks or mutable mounts", () => {
   assert.match(action, /version: "1\.1\.0"\n        node-version-file: package\.json/);
   assert.match(action, /cache: false\n        run-install: true/);
-  assert.match(action, /VP_LOG: debug/);
+  const setup = yaml
+    .parse(action)
+    .runs.steps.find((step) => step.uses?.startsWith("voidzero-dev/setup-vp@"));
+  assert.deepEqual(setup.env, { VP_HOME: "${{ steps.plan.outputs.vp-home }}" });
   assert.match(action, /digest-mismatch: error/);
   assert.match(action, /lookup-only: \$\{\{ inputs\.lane == 'cold' \}\}/);
   assert.match(
@@ -196,6 +200,15 @@ void test("real SDK install uses no production stores, fallbacks or mutable moun
     "VP_NODE_SKIP_SIGNATURE_VERIFY",
   ]) {
     assert(!action.includes(forbidden));
+  }
+});
+
+void test("bootstrap keeps default logging and dependency preparation in both lanes", () => {
+  defaultBootstrapEnvironment({});
+  for (const name of ["VP_LOG", "VP_SKIP_DEPS_INSTALL", "VP_NODE_MANAGER", "VP_PM_MANAGER"]) {
+    for (const value of ["debug", "yes", "no", ""]) {
+      assert.throws(() => defaultBootstrapEnvironment({ [name]: value }), new RegExp(name));
+    }
   }
 });
 
