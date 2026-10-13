@@ -19,7 +19,7 @@ type Read = (file: string) => Buffer | null;
 const root = path.resolve(import.meta.dirname, "../../..");
 const host = "tests/performance/support/warm-type-backed-host-qualifications.ts";
 const originalSHA = "b19f6783e50429d2779efeb7d2d21c64dcd98a67810fc4f6a1ccc698febae337";
-const currentSHA = "d6e2f7ff409137866d2d0b0b6ba545a3602cc5ce6a467b992309f1cd9101f5ec";
+const currentSHA = "c9e5b59b344bfe40d08d7b365214bf1e5eb29b260e871721df0808645a1b6e17";
 const beforeSource = "a93e78147b0990c813e965a7868b32dda341eb77";
 const helperPairs = [
   [
@@ -33,6 +33,10 @@ const helperPairs = [
   [
     "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts",
     "6e7941072788c2fad4e678d5edd6d4abb5b8e3b87ad53b85c198a6e78d8af801",
+  ],
+  [
+    "tests/performance/support/warm-type-backed-empty-vue-star-listing-singleton.ts",
+    "ec0fc623eb66eab0df4015d6bfe70cf106d53d427f395c0c1e7d39d060f899f6",
   ],
 ] as const;
 const clauses = [
@@ -135,6 +139,20 @@ export function retainedHostBeforeEmptyVueStars(read: Read): Buffer {
   );
   let inverse = actual.toString("utf8");
   assert.deepEqual(Buffer.from(inverse), actual);
+  const singletonClauses = [
+    'import { qualifyEmptyVueStarListingSingleton } from "./warm-type-backed-empty-vue-star-listing-singleton.ts";\n\n',
+    '  const emptyVueStarListingSingleton =\n    enabled &&\n    digest(\n      "before",\n      "tests/performance/support/warm-type-backed-empty-vue-star-listing-singleton.ts",\n    ) === null &&\n    digest(\n      "after",\n      "tests/performance/support/warm-type-backed-empty-vue-star-listing-singleton.ts",\n    ) === "ec0fc623eb66eab0df4015d6bfe70cf106d53d427f395c0c1e7d39d060f899f6"\n      ? qualifyEmptyVueStarListingSingleton(production, alreadyQualified, digest)\n      : null;\n',
+    "    ...(emptyVueStarListingSingleton ? { emptyVueStarListingSingleton } : {}),\n",
+  ];
+  for (const clause of singletonClauses) {
+    assert.equal(inverse.split(clause).length, 2, "one exact singleton caller clause");
+    inverse = inverse.replace(clause, "");
+  }
+  assert.equal(
+    sha(Buffer.from(inverse)),
+    "d6e2f7ff409137866d2d0b0b6ba545a3602cc5ce6a467b992309f1cd9101f5ec",
+    "complete formatted listing caller before singleton admission",
+  );
   const listingImport =
     'import { qualifyEmptyVueStarListingHost } from "./warm-type-backed-empty-vue-star-listing.ts";\n\n';
   const listingGuard =

@@ -11,3 +11,29 @@ The original six-correction JSON, seven table parts, 281 source bodies, 290-cell
 The first source `f6017bf3` preserved a real formatting failure in Check job 115118739428. Rustfmt 1.99 with the workspace's 2024 edition wraps only the listing-argument assertion; its complete execution body moves from `1d49e08a` to `8036d7f9`. Update only that literal inverse clause and the helper/caller checksum chain. No native result from the first source qualifies this formatted successor; fresh exact-head Actions remain required.
 
 This decision is paired with [#6879](https://github.com/ubugeeei-prod/vize/issues/6879). Fresh exact-head full Check, native phases, original400 and protected merge remain required. The separate #8803 source occurrence correction and later JS/SDK source compositions retain their own finite before/after boundaries.
+
+The genuine formatted e02 source still fails original400 prepare in run
+38349820136, before any compiler build or measurement. The old migration
+qualification requires its complete44-file delta and historical helper absence;
+that migration is already present in the PR baseline. BASE=b45 is the workflow
+input, but its actual merge-base with e02 is ea1fc59, f601's genuine parent.
+The actual production delta is execution.rs only. Direct b45→e02 comparison also
+contains the later JSX-source reversions and cannot be called a singleton.
+
+A separate named listing qualification checks this exact one-path production
+footprint, complete before execution dea4749 and after8036d7, and all other289
+CURRENT source/metadata bodies unchanged on both sides. The original star
+helper4668a48 and test3dc6a16 are genuinely present and unchanged on both sides;
+only the new listing and singleton helpers require genuine predecessor absence.
+Their complete after bodies are bound by the actual warm caller. Unknown,
+extra, duplicate, already-qualified and hybrid production inputs refuse.
+The original44-file migration and all290 historical/current laws are unchanged.
+The physical caller adapter authenticates every complete helper and removes
+only three exact new clauses to recover the complete e02 caller d6e2f7ff, then
+the unchanged prior inverses recover the genuine historical hook.
+
+The three new controls read the original failed pair's real Git objects and
+regular modes, reproduce the old migration refusal, exercise the actual warm
+caller, and reject drift/absence in every closed body plus disallowed neighbors.
+They grant no runtime, native, memory or performance acceptance. Fresh exact-head
+source, original400, full Check and protected delivery remain required.

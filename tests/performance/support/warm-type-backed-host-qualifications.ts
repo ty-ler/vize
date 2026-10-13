@@ -13,6 +13,8 @@ import { qualifyEmptyVueStarHost } from "./warm-type-backed-empty-vue-star-host.
 
 import { qualifyEmptyVueStarListingHost } from "./warm-type-backed-empty-vue-star-listing.ts";
 
+import { qualifyEmptyVueStarListingSingleton } from "./warm-type-backed-empty-vue-star-listing-singleton.ts";
+
 /** Compose finite qualifications without changing existing path/timing authorities. */
 export function qualifyHostMoves(
   production: string[],
@@ -62,6 +64,18 @@ export function qualifyHostMoves(
           qualifyEmptyVueStarHost,
         )
       : null;
+  const emptyVueStarListingSingleton =
+    enabled &&
+    digest(
+      "before",
+      "tests/performance/support/warm-type-backed-empty-vue-star-listing-singleton.ts",
+    ) === null &&
+    digest(
+      "after",
+      "tests/performance/support/warm-type-backed-empty-vue-star-listing-singleton.ts",
+    ) === "ec0fc623eb66eab0df4015d6bfe70cf106d53d427f395c0c1e7d39d060f899f6"
+      ? qualifyEmptyVueStarListingSingleton(production, alreadyQualified, digest)
+      : null;
   return {
     pathHostMove: enabled ? qualifyPathHostMove(production, alreadyQualified, digest) : null,
     timingHostMove: enabled ? qualifyTimingHostMove(production, alreadyQualified, digest) : null,
@@ -72,5 +86,6 @@ export function qualifyHostMoves(
     ...(asciiSymbolHost ? { asciiSymbolHost } : {}),
     ...(componentValueHost ? { componentValueHost } : {}),
     ...(emptyVueStarHost ? { emptyVueStarHost } : {}),
+    ...(emptyVueStarListingSingleton ? { emptyVueStarListingSingleton } : {}),
   };
 }
