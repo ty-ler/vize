@@ -14,6 +14,12 @@ or the first sharded CLI to single CLI step on two-server runs), optionally foll
 by the known native session EOF shutdown notice, only with exit status 1 and a
 syntax diagnostic. Retain original raw stderr before adapting the result.
 
+Run 38426550040 then reached sample 286, the existing `loader.js` JSX error
+fixture. It uses the same recovery path but reports TS7026 in `loader.js`
+and the independent shared-file TS2304, rather than a syntax diagnostic.
+Mark this one fixture separately and require its `loader.js` TS7026 before
+normalizing the known warning. Other semantic errors do not qualify.
+
 Every complete diagnostic/program vector, base/head comparison, one/two-server
 comparison, and partition assertion still runs. Timing, cold, warmup, ordinary
 plants and other fixtures retain strict stderr rejection. Unknown or repeated

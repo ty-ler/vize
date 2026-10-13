@@ -94,6 +94,27 @@ test("syntax recovery requires an error exit and a syntax diagnostic", () => {
   }
 });
 
+test("the explicit JS JSX fixture requires its loader.js TS7026 diagnostic", () => {
+  const jsx = {
+    ...recovered,
+    stdout: recovered.stdout.replace("Comp0.vue", "loader.js").replace("TS1260", "TS7026"),
+  };
+  const normalized = normalizeParserRecovery(jsx, "js-jsx", "parity");
+  assert.equal(normalized.stderr, "");
+  assert.equal(normalized.stdout, jsx.stdout);
+  assert.equal(normalizeTypecheckResult(normalized, process.cwd(), "json").diagnostics.length, 2);
+  assert.equal(normalizeParserRecovery(jsx, true, "parity"), jsx);
+  assert.equal(normalizeParserRecovery(jsx, false, "parity"), jsx);
+  assert.equal(normalizeParserRecovery(jsx, "js-jsx", "timed-0"), jsx);
+  for (const stdout of [
+    jsx.stdout.replace("loader.js", "other.js"),
+    jsx.stdout.replace("TS7026", "TS2322"),
+  ]) {
+    const other = { ...jsx, stdout };
+    assert.equal(normalizeParserRecovery(other, "js-jsx", "parity"), other);
+  }
+});
+
 test("recovery does not relax report consistency checks", () => {
   const result = normalizeParserRecovery(
     { ...recovered, stdout: recovered.stdout.replace('"errorCount":2', '"errorCount":1') },
