@@ -20,6 +20,7 @@ on:
       - "crates/vize_atelier_sfc/examples/type_snapshot_bench.rs"
       - "tools/benchmarks/scripts/type-snapshot-paired.ts"
       - "tools/benchmarks/scripts/type-snapshot-cli-*.mjs"
+      - "tools/benchmarks/scripts/type-snapshot-parser-recovery.ts"
       - "tools/benchmarks/scripts/typecheck-command.mjs"
       - "tools/benchmarks/scripts/benchmark-binary.mjs"
       - "tools/benchmarks/scripts/check-gate-env.mjs"

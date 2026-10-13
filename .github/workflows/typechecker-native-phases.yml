@@ -20,6 +20,7 @@ on:
       "tools/benchmarks/scripts/generate.mjs",
       "tools/benchmarks/scripts/check-gate-*.mjs",
       "tools/benchmarks/scripts/typecheck-command.mjs",
+      "tools/benchmarks/scripts/type-snapshot-parser-recovery.ts",
       "tools/benchmarks/scripts/benchmark-binary.mjs",
       "tests/_fixtures/differential/typechecker/**",
       "crates/vize_canon/**",
