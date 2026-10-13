@@ -19,11 +19,14 @@ export function isCensusToolingInput(path: string) {
   );
 }
 
-// This exact authored coverage ledger is consumed by Node Docs quality and
-// rendering checks, with no workspace Rust or product-package consumer.
+// These exact Docs metadata inputs feed Node quality and rendering checks,
+// with no workspace Rust or product-package consumer.
 // Nearby contracts and scripts remain unknown until separately reviewed.
 export function isDocsQualityToolingInput(path: string) {
-  return path === "docs/quality/more-guides-coverage.json";
+  return (
+    path === "docs/quality/more-guides-coverage.json" ||
+    path === "docs/scripts/rules/catalogue-subgroups.ts"
+  );
 }
 
 // These authored plans are compiled or read by Rust tests and compiler gates.
