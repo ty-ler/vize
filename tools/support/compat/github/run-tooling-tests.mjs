@@ -48,6 +48,24 @@ export function toolingTestObservation(args, env = process.env) {
   };
 }
 
+export function toolingMemoryObservation(read = (file) => readFileSync(file, "utf8")) {
+  return Object.fromEntries(
+    [
+      "/proc/self/cgroup",
+      "/sys/fs/cgroup/memory.events",
+      "/sys/fs/cgroup/memory.events.local",
+      "/sys/fs/cgroup/memory.current",
+      "/sys/fs/cgroup/memory.max",
+    ].map((file) => {
+      try {
+        return [file, { wholeUtf8: read(file) }];
+      } catch (error) {
+        return [file, { error: { code: error.code, message: error.message } }];
+      }
+    }),
+  );
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const planPath =
     process.argv[2] ?? process.env.VIZE_TOOLING_TEST_PLAN ?? "target/tooling-test-plan.json";
@@ -67,6 +85,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       env.VIZE_TOOLING_LISTING_OBSERVATION_DIR = observation.directory;
     }
     const startedAt = new Date().toISOString();
+    const memoryBefore = observation ? toolingMemoryObservation() : null;
     const result = spawnSync(process.execPath, observation?.args ?? args, {
       cwd: root,
       env,
@@ -90,6 +109,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
             cwd: root,
             startedAt,
             completedAt: new Date().toISOString(),
+            memoryBefore,
+            memoryAfter: toolingMemoryObservation(),
             status: result.status,
             signal: result.signal,
             error: result.error

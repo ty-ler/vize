@@ -5,7 +5,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { parse } from "yaml";
-import { toolingTestObservation } from "../../tools/support/compat/github/run-tooling-tests.mjs";
+import {
+  toolingMemoryObservation,
+  toolingTestObservation,
+} from "../../tools/support/compat/github/run-tooling-tests.mjs";
 
 const listing = "tests/tooling/empty-vue-star-listing-source.test.mjs";
 const command = ["--test", "--test-concurrency=1", listing, "tests/tooling/other.test.mjs"];
@@ -89,4 +92,17 @@ void test("always-retained observations use their own run/head/attempt/job/shard
   assert.equal(observation.with.path, "${{ runner.temp }}/tooling-listing-diagnostics/");
   assert.equal(observation.with["if-no-files-found"], "warn");
   assert.equal(observation.run, undefined);
+});
+
+void test("memory observation retains whole kernel counters and missing-path errors without a verdict", () => {
+  const observed = toolingMemoryObservation((file) => {
+    if (file.endsWith("memory.events")) return "low 0\nhigh 0\nmax 7\noom 2\noom_kill 1\n";
+    throw Object.assign(new Error("controlled missing cgroup"), { code: "ENOENT" });
+  });
+  assert.equal(
+    observed["/sys/fs/cgroup/memory.events"].wholeUtf8,
+    "low 0\nhigh 0\nmax 7\noom 2\noom_kill 1\n",
+  );
+  assert.equal(observed["/sys/fs/cgroup/memory.events.local"].error.code, "ENOENT");
+  assert.equal(observed.oomVerdict, undefined, "job counters alone do not attribute a file kill");
 });

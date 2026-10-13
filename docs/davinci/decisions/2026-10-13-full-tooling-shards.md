@@ -100,12 +100,12 @@ its original CLI/SFC command took 65s. All workers planned 1,229/1,229 files,
 deferred no T1 tests and consumed the same original receipt
 `e7397c13dfd13860ec0fc019b0edffd475bf31a9efbc2f5a63ed693aa7db097a`.
 
-| Worker | Preparation | Planned wrapper | Post-job | Total | Actual result |
-| ------ | ----------- | --------------- | -------- | ----- | ------------- |
-| 1 | 258.104s | 593.326s | 6.569s | 858s | Passed |
-| 2 | 68.571s | 524.032s | 4.396s | 597s | Passed |
-| 3 | 76.896s | 776.986s | 3.117s | 857s | Listing source test failed |
-| 4 | 71.452s | 510.379s | 3.168s | 585s | Old LSP guard location failed |
+| Worker | Preparation | Planned wrapper | Post-job | Total | Actual result                 |
+| ------ | ----------- | --------------- | -------- | ----- | ----------------------------- |
+| 1      | 258.104s    | 593.326s        | 6.569s   | 858s  | Passed                        |
+| 2      | 68.571s     | 524.032s        | 4.396s   | 597s  | Passed                        |
+| 3      | 76.896s     | 776.986s        | 3.117s   | 857s  | Listing source test failed    |
+| 4      | 71.452s     | 510.379s        | 3.168s   | 585s  | Old LSP guard location failed |
 
 The existing full JS quorum failed on the aggregated worker failure as required.
 The listing test also failed in source CI with only a file-level failure; its
@@ -136,3 +136,11 @@ preserve every incoming main byte and all observer/LSP changes, and use reviewed
 shipping cut `c4f74b48fb2df6ea20aeb414193d82f531ab059e` as the actual ancestor.
 Its production difference remains exactly the original execution file; the
 literal BD cohort and complete graph/refusal checks retain their original scope.
+
+The actual `97848d95a6` source TAP packet reports the listing file child killed
+by SIGKILL with no exit code, while the outer runner returns status 1 and no
+signal. Its whole artifact digest matches GitHub. This rules out an ordinary
+assertion exit; it identifies neither OOM nor a kill actor. Observe complete
+cgroup memory counters before and after the unchanged command, retaining missing
+path errors without a verdict, and correlate the separately owned primer kill
+trace before any fix. Do not increase heap, budgets or deadlines without cause.
