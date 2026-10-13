@@ -52,7 +52,7 @@ for (const row of data.frames) {
   assert.deepEqual(Buffer.from(restored.join("")), pair.before.body);
   frames.set(row.file, { row, pair });
 }
-/** Only an atomic complete5 successor can replace cells in the complete original126 frame. */
+/** Only an atomic complete6 successor can replace cells in the complete original126 frame. */
 export function ownedCorsaSdkRepairFrames(originalFrames, reader) {
   const old = [...frames].every(([file, { pair }]) =>
     reader("after", file)?.body.equals(pair.before.body),
