@@ -43,4 +43,6 @@ The paired 400-provider benchmark retains raw manifests and hashes for both
 sources. Its comparison permits differences in CI profiles only when the
 selected benchmark profile does not inherit them. Dependencies, lockfiles,
 toolchains and all selected release settings must still match; tests reject
-changes to each and to indirectly inherited CI settings.
+changes to each and to indirectly inherited CI settings. Both preparation and
+the final packet comparison use this check. Each side must also retain its
+complete raw source identity from the attested build through execution.

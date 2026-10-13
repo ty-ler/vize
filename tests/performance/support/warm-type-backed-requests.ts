@@ -24,6 +24,7 @@ import {
   waitForInitialTypes,
 } from "./warm-type-backed-packets.ts";
 import {
+  assertWarmSourceLocks,
   driverRoot,
   generateWorkspace,
   inputAuthority,
@@ -268,7 +269,9 @@ export async function pairedWarmRequests(beforeRoot: string, outputRoot: string)
   assert.deepEqual(before.inputs.source, after.inputs.source);
   assert.equal(before.inputs.sourceSha256, after.inputs.sourceSha256);
   if (!releaseCut) {
-    assert.deepEqual(before.source.locks, after.source.locks);
+    const profile = process.env.WARM_REQUEST_BUILD_PROFILE ?? "ci";
+    assert.ok(profile === "ci" || profile === "release");
+    assertWarmSourceLocks(beforeRoot, afterRoot, profile);
     assert.deepEqual(before.initialization, after.initialization);
   } else {
     const expected = structuredClone(before.initialization);
@@ -287,6 +290,7 @@ export async function pairedWarmRequests(beforeRoot: string, outputRoot: string)
   assert.equal(before.source.dirty, "");
   assert.equal(after.source.dirty, "");
   for (const [index, side] of [before, after].entries()) {
+    assert.deepEqual(side.source, buildCustody[index].source, "source identity survived execution");
     const observed = (
       side.wire as { observation: { binary: { binarySha256: string; sourceRevision: string } } }
     ).observation.binary;
