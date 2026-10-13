@@ -72,7 +72,7 @@ jobs:
           toolchain: stable
           components: clippy
           targets: wasm32-unknown-unknown
-      - uses: ./.github/actions/setup-mold
+      - uses: ./head/.github/actions/setup-mold
       - uses: ./head/.github/actions/setup-rust-sticky-cache
         with:
           key: compact-collections

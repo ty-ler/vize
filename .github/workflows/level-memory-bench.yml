@@ -55,7 +55,7 @@ jobs:
           rustup toolchain install 1.99.0 --profile minimal
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends valgrind
-      - uses: ./.github/actions/setup-mold
+      - uses: ./head/.github/actions/setup-mold
       - uses: ./head/.github/actions/setup-rust-sticky-cache
         with:
           key: level-memory-v1

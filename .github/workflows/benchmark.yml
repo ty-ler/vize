@@ -110,7 +110,7 @@ jobs:
         uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
         with: { toolchain: stable }
 
-      - uses: ./.github/actions/setup-mold
+      - uses: ./head/.github/actions/setup-mold
 
       - uses: ./head/.github/actions/setup-rust-sticky-cache
         with:

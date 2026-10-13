@@ -271,7 +271,7 @@ test("Linux Rust CI installs mold before cargo builds", () => {
     const file = readRepoFile(...relativePath.split("/"));
     assert.match(
       file,
-      /uses:\s*\.\/\.github\/actions\/setup-mold/,
+      /uses:\s*\.\/(?:head\/)?\.github\/actions\/setup-mold/,
       `${relativePath} should use the shared mold linker action`,
     );
   }

@@ -52,7 +52,7 @@ jobs:
         with:
           toolchain: stable
           components: clippy
-      - uses: ./.github/actions/setup-mold
+      - uses: ./head/.github/actions/setup-mold
       - uses: ./head/.github/actions/setup-rust-sticky-cache
         with:
           key: string-storage
