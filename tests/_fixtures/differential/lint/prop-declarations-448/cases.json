@@ -207,30 +207,30 @@
     },
     {
       "id": "setup-local-shadows-options-prop",
-      "source": "<script>export default { props: { value: String } }</script>\n<script setup>let value = \"local\"</script>\n<template><input v-model=\"value\" /></template>",
+      "source": "<script>export default { props: { value: { type: String, required: true } } }</script>\n<script setup>let value = \"local\"</script>\n<template><input v-model=\"value\" /></template>",
       "diagnostics": []
     },
     {
       "id": "jsx-options-prop-casing",
-      "source": "<script lang=\"jsx\">export default { props: { \"bad-name\": String }, render() { return <div /> } }</script>\n<template><div /></template>",
+      "source": "<script lang=\"jsx\">export default { props: { \"bad-name\": { type: String, required: true } }, render() { return <div /> } }</script>\n<template><div /></template>",
       "diagnostics": [
         {
           "rule": "vue/prop-name-casing",
           "severity": "warning",
           "start": 45,
-          "end": 63
+          "end": 89
         }
       ]
     },
     {
       "id": "tsx-options-prop-casing",
-      "source": "<script lang=\"tsx\">export default { props: { \"bad-name\": String }, render() { return <div /> } }</script>\n<template><div /></template>",
+      "source": "<script lang=\"tsx\">export default { props: { \"bad-name\": { type: String, required: true } }, render() { return <div /> } }</script>\n<template><div /></template>",
       "diagnostics": [
         {
           "rule": "vue/prop-name-casing",
           "severity": "warning",
           "start": 45,
-          "end": 63
+          "end": 89
         }
       ]
     }
