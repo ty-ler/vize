@@ -50,7 +50,20 @@ function authenticateDefaultJob(name: string, configured: Job) {
     condition,
     "github.event_name != 'workflow_dispatch' || !inputs.host_only || inputs.target != 'darwin-arm64'",
   );
-  const steps = job.steps.filter((step) => !extraNames.includes(step.name ?? ""));
+  const steps = structuredClone(job.steps.filter((step) => !extraNames.includes(step.name ?? "")));
+  for (const step of steps) {
+    // Keep the historical fixture; permit only the approved linker/toolchain setup changes.
+    if (step.uses === "./.github/actions/setup-mold") {
+      assert.deepEqual(step, { uses: "./.github/actions/setup-mold", if: "runner.os == 'Linux'" });
+      step.uses = "wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203";
+      step.with = { "wild-version": "0.9.0" };
+    }
+    if (
+      step.uses === "dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0" &&
+      step.with?.toolchain === "1.99.0"
+    )
+      step.with.toolchain = "stable";
+  }
   assert.equal(
     steps.some((step) => step.uses === "./.github/actions/setup-moonbit"),
     false,
@@ -105,7 +118,13 @@ test("the full original six-host and twelve-fresh native smoke contract stays in
   assert.equal(after.on.workflow_dispatch.inputs.host_only.default, false);
   for (const name of ["host-native-smoke", "fresh-install-smoke"])
     authenticateDefaultJob(name, after.jobs[name]);
-  for (const changed of ["reinstalled-moon", "unknown-msvc-field", "removed-cli-command"]) {
+  for (const changed of [
+    "reinstalled-moon",
+    "unknown-msvc-field",
+    "wrong-linker",
+    "wrong-toolchain",
+    "removed-cli-command",
+  ]) {
     const altered = structuredClone(after.jobs["host-native-smoke"]);
     if (changed === "reinstalled-moon")
       altered.steps.splice(1, 0, { uses: "./.github/actions/setup-moonbit" });
@@ -114,6 +133,14 @@ test("the full original six-host and twelve-fresh native smoke contract stays in
         altered.steps.find((step) => step.name === "Setup MSVC toolchain (Windows)")!,
         { unreviewedField: true },
       );
+    else if (changed === "wrong-linker")
+      altered.steps.find(
+        (step) => step.uses?.includes("mold") || step.uses?.includes("wild-linker"),
+      )!.uses = "other/linker@v1";
+    else if (changed === "wrong-toolchain")
+      altered.steps.find((step) =>
+        step.uses?.startsWith("dtolnay/rust-toolchain@"),
+      )!.with!.toolchain = "1.98.0";
     else altered.steps.find((step) => step.name === "Build CLI")!.run = "removed-command";
     assert.throws(() => authenticateDefaultJob("host-native-smoke", altered), {
       code: "ERR_ASSERTION",
