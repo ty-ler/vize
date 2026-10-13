@@ -108,6 +108,14 @@ export function authenticateStarListingSource(root) {
   assert.equal(git(root, ["for-each-ref", "--format=%(refname)", "refs/replace"]).length, 0);
   ensureHostedLiteralSource(root, base);
   ensureHostedLiteralSource(root, prior);
+  for (const source of [base, prior]) {
+    const body = git(root, ["cat-file", "commit", source]);
+    assert.equal(
+      createHash("sha1").update(`commit ${body.length}\0`).update(body).digest("hex"),
+      source,
+      "whole literal source identity",
+    );
+  }
   const files = [...named.keys(), ...loaded.keys()];
   assert.equal(new Set(files).size, files.length);
   const before = raw(root, base, files),
@@ -192,6 +200,8 @@ export function qualifyStarListingBD(production, qualified, digest) {
 const oldTests = new Map(metadata.tests.map(([file, source]) => [file, source]));
 /** The full named current law precedes each unchanged literal historical test body. */
 export async function runStarListingOriginalTest(root, file) {
+  assert.equal(process.env.STAR_JS_SOURCE_ROOT, undefined, "no ambient historical source owner");
+  assert.equal(process.env.JS_STAR_SOURCE_INDEX, undefined, "no private current-source override");
   const packet = authenticateStarListingSource(root),
     value = owned(packet);
   const source = oldTests.get(file);

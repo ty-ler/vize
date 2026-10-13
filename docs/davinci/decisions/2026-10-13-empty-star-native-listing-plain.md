@@ -72,8 +72,8 @@ A separate named listing counterpart pins412 complete original BD source and
 entrypoint pairs, including the entire322 Star and93 JavaScript cohorts. It
 also binds its eleven table parts, manifest, executing module, fixed-source
 snapshot utility, negative test and two new listing entrypoints to committed
-raw regular bodies. Seven whole inverses recover exactly BD execution, union
-caller, four existing test entrypoints and the lexical source callsite. Their
+raw regular bodies. Eight whole inverses recover exactly BD execution, union
+caller, five existing test entrypoints and the lexical source callsite. Their
 complete original Git bodies, lengths, SHA256 and blob identities are fixed;
 there is no partial-text source admission. Only the exact singleton production
 footprint may use the new qualification, and every closed cell is checked on
@@ -104,3 +104,12 @@ Fresh exact-head source, native, original400, full Check and protected delivery
 remain required. Independent component-read and fixture-registry counterparts
 are not admitted by this listing-only footprint and require separate reviewed
 composition.
+
+The first owned replay exposed premature frame deletion before the original
+runner's after hook and missing dynamically selected caller/lexical fixture
+files. Keep frames until all original hooks finish and select the complete
+known cohort plus the fixed lexical predecessor directory. The source corpus
+and all original assertions remain unchanged. Prime twenty literal historical
+commit objects in the actual owned checkout, including the original f207 frame's
+ten additional owners and BD's exact parent for the retained stale-HEAD test,
+before creating counterparts. Ambient source/index overrides are refused.
