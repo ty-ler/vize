@@ -7,6 +7,10 @@ import { historicalCompositionBody } from "./support/native-lexical-composition-
 
 import { qualifyHostMoves } from "../performance/support/warm-type-backed-host-qualifications.ts";
 import { qualifyLexicalDollarHost } from "../performance/support/warm-type-backed-lexical-dollar-host.ts";
+import {
+  authenticateJavaScriptSfcSource,
+  javascriptSfcSourceReader,
+} from "../../tools/support/compat/github/javascript-sfc-source-context.mjs";
 
 const root = path.resolve(import.meta.dirname, "../..");
 const manifest = JSON.parse(
@@ -39,6 +43,8 @@ assert.equal(
   "c0a6495d43cb5ff1a400cf72e8eae4ac8e4973bf75ca07a6e6a0f94e048be1d8",
 );
 assert.equal(capsule.source, "a6633fb68b110d07abd5ee5a6049bc15f20f9c7f");
+const lexicalContext = authenticateJavaScriptSfcSource(javascriptSfcSourceReader(root));
+const readLexical = (file: string) => lexicalContext.historicalAfter(file);
 const actual = new Map<string, { before: string | null; after: string | null }>();
 for (const [file, before, after] of [...manifest.files, ...manifest.corpusBodies]) {
   assert.ok(fs.lstatSync(path.join(root, file)).isFile(), file);
