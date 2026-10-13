@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import test from "node:test";
 import { qualifyAllocationSource } from "../performance/support/allocation-diagnostic/source.ts";
-import { qualifyFrontierHost } from "../performance/support/warm-type-backed-frontier-host.ts";
+import { qualifyFrontierSource } from "../performance/support/warm-type-backed-frontier-host.ts";
 import { qualifyInlineBucketHost } from "../performance/support/warm-type-backed-inline-bucket-host.ts";
 import { gitBodyDigest } from "../performance/support/warm-type-backed-path-host.ts";
 
@@ -89,32 +89,7 @@ await test("the four-path inline storage successor preserves every original 195 
   )
     .trim()
     .split("\n");
-  const frontierBase = "3dd6ae0707dc42302638257b86967d6a6ffe902f";
-  const frontierProduction = execFileSync(
-    "git",
-    [
-      "diff",
-      "--name-only",
-      frontierBase,
-      current,
-      "--",
-      "crates",
-      "davinci",
-      "vendor",
-      "npm",
-      "Cargo.toml",
-      "Cargo.lock",
-      ".cargo",
-      ".config",
-      "rust-toolchain.toml",
-    ],
-    { encoding: "utf8" },
-  )
-    .trim()
-    .split("\n");
-  const frontier = qualifyFrontierHost(frontierProduction, (side, file) =>
-    gitBodyDigest(process.cwd(), side === "before" ? frontierBase : current, file),
-  );
+  const frontier = qualifyFrontierSource(process.cwd(), current);
   if (frontier) {
     assert.equal(frontier.acceptanceCredit, "none");
     assert.equal(frontier.completeBodyPairs, 210);
