@@ -70,3 +70,13 @@ the existing suppression of mounted-target archives for this role.
 TODO: record fresh source Actions, complete full-suite results, protected
 delivery and actual merge. Runtime improvement remains unmeasured until the
 original workload completes on the same repaired source.
+
+Qualify the complete suite together with #8809's native listing-output fix.
+The child preserves both the exact parent and shipping main
+`b2f56c584c82f0da96db88c1faee565dd838ead8` as genuine merge ancestry, then carries
+the original tooling and fixture commits. The listing control uses that reviewed
+shipping cut and proves it is the actual ancestor; the immediate Stack parent
+already contains the listing fix and cannot serve as its before image. All 429
+literal BD source cells, complete parent-edge checks, production singleton and
+refusal laws remain mandatory. Preserve qualified predecessor evidence, then run
+one plain full Check on the source-qualified cumulative head.
