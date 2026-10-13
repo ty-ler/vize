@@ -3,10 +3,12 @@
 Issue: [#6830](https://github.com/ubugeeei-prod/vize/issues/6830).
 
 At **2026-10-13 16:59:04.756 UTC**, ruleset `24013395` changed
-`max_entries_to_build` from **8 to 12** for a monitored trial. This record
-supersedes only the eight-build setting recorded in the
+`max_entries_to_build` from **8 to 12** for a monitored trial of the setting
+recorded in the
 [artifact baseline](./2026-10-12-ci-artifact-payload-baseline.md).
-It does not establish a measured throughput improvement yet.
+The trial ended at **17:07:29.108 UTC**, after 8 minutes 24 seconds, when
+the setting returned to **8** because dispatch delays and waiting jobs grew.
+Twelve builds are not accepted as the steady-state setting.
 
 The complete before/after ruleset comparison found no other changes. Squash,
 `ALLGREEN`, minimum/maximum one merge, zero batching wait and the 60-minute
@@ -58,18 +60,18 @@ prefix or reordered queue can discard more speculative work.
 
 ## Observation and rollback
 
-Observe the first 20–30 minutes from the exact application timestamp. Compare
-jobs created after that timestamp, recent dispatch percentiles, queued-job
-age, runner communication failures, candidate admission and actual merges.
-Match candidate SHAs rather than queue positions. Preserve run/job identifiers
-and the ruleset snapshots so the comparison remains reproducible through the
-Actions jobs API and the GraphQL merge queue API.
+The planned observation window was 20–30 minutes, with early rollback for
+material degradation. Observations compared jobs created after application,
+dispatch percentiles, queued-job age, runner communication failures, candidate
+admission and actual merges. Candidate SHAs were tracked independently of queue
+positions, with run/job identifiers and complete ruleset snapshots retained.
 
-Return only `max_entries_to_build` to eight if dispatch degradation persists
-across consecutive observations, waiting jobs accumulate, or repeated runner
-communication losses appear under the additional load. A single slow job or
-ordinary test failure does not by itself prove capacity exhaustion. Keep all
-other gates unchanged during either continuation or rollback.
+The rollback conditions were persistent dispatch degradation, accumulating
+waiting jobs, or repeated runner communication loss under additional load.
+A single slow job or ordinary test failure would not establish capacity
+exhaustion. The coordinator returned only `max_entries_to_build` to eight;
+the complete before/after rollback comparison verified all other fields stayed
+unchanged.
 
 The first observation already has a material confounder: four existing PRs
 were inserted with `jump: true` at 16:59:09, 16:59:13, 16:59:19 and 16:59:24
@@ -82,6 +84,48 @@ were outside the concurrency-setting change; no human or agent attribution
 is inferred from the shared account. Their additional work prevents a clean
 causal throughput comparison for this interval.
 
-The trial remains in progress. Add the measured dispatch, failure and merge
-results here before treating twelve builds as an accepted steady-state
-setting. Do not turn the configured 50% increase into a claimed 50% speedup.
+## Results and recovery
+
+| Observation (UTC)              | Assigned jobs | Median dispatch | p95 dispatch | Queued jobs | Oldest queued job |
+| ------------------------------ | ------------: | --------------: | -----------: | ----------: | ----------------: |
+| 16:53:43, eight-build baseline |           421 |             7 s |         50 s |           0 |                 — |
+| 17:05:43, twelve-build trial   |           136 |           155 s |        290 s |         129 |             343 s |
+| 17:07:55, just after rollback  |           195 |           188 s |        293 s |         119 |             326 s |
+| 17:18:01, recovery observation |           105 |           273 s |        377 s |          53 |             327 s |
+
+Each row covers the candidate heads present at that snapshot, not an identical
+job cohort. The trial sample includes jobs from the newly regenerated heads;
+the pre-trial ten-minute dispatch p95 was 7 seconds. The recovery snapshot
+contained eight candidates, but the 70 assigned jobs created after rollback
+still had a 273-second median and 311-second p95. Waiting work decreased while
+dispatch remained slow: recovery was incomplete at the final observation.
+Returning the setting to eight did not cancel already dispatched candidates.
+Twelve active candidates were observed during the trial, but no PR merged
+within its eight-minute window or by the 17:18 recovery observation. Initial
+admission of #8904 preceded the setting change. Neither admission nor merge
+latency improved in a way this experiment could establish.
+
+The [front candidate](https://github.com/ubugeeei-prod/vize/actions/runs/38434971830)
+shows the effect on its critical path: the Rust archive producer finished at
+17:09:56 UTC, while dependent shards started at 17:14:30–17:15:16, a further
+274–320 seconds later. Their archive downloads took 43–47 seconds and tests
+109–122 seconds. Dispatch delay therefore exceeded those download and test
+durations for these shards; it was not merely background queue noise.
+
+The first trial snapshot had no failed Check jobs. An independent source-plan
+defect then failed the complete-Rust gate for docs-only candidate
+[#8898](https://github.com/ubugeeei-prod/vize/actions/runs/38435064811/job/115430252462).
+It selected `rust=false`; this was not a runner communication failure.
+The coordinator removed that failed candidate and the owning
+[#8947](https://github.com/ubugeeei-prod/vize/pull/8947). Its repair restores
+unconditional full merge-group planning, with exact-head Actions required
+before readmission. Those removals regenerated further heads.
+No runner communication failure was observed in these sampled Check jobs.
+
+The same interval also required cancellation of superseded runs after checking
+both their absence from the live queue and a deleted or changed temporary ref.
+These cancellations, prefix changes and queue jumps affect the recovery
+observations. They prevent attributing either the regression or recovery
+solely to the build-concurrency setting. Retain eight builds, address avoidable
+candidate regeneration and obsolete work, and require a stable queue cohort
+before another concurrency experiment. No throughput speedup is claimed.
