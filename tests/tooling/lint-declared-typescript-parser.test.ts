@@ -173,8 +173,12 @@ test("JSX, TSX, ordinary scripts, templates and unknown language fallback retain
       '<script setup lang="jsx">\nconst render = () => <div />\n</script>\n<template><div v-html="render" /></template>\n',
     "Plain.vue":
       '<script setup>\nconst render = () => <div />\n</script>\n<template><div v-html="render" /></template>\n',
+    "DeclaredJs.vue":
+      '<script setup lang="js">\nconst render = () => <div />\n</script>\n<template><div v-html="render" /></template>\n',
     "Template.vue":
       '<script setup lang="ts">\nconst value = 1 as number\n</script>\n<template><div v-html="value" /></template>\n',
+    "TemplateJsx.vue":
+      '<script setup lang="ts">\nconst value = 1 as number\n</script>\n<template><div v-html="(() => <span />)()" /></template>\n',
     "Unknown.vue":
       '<script lang="uts">\nsetTitle(value, for = State.normal)\n</script>\n<template><div /></template>\n',
   };
