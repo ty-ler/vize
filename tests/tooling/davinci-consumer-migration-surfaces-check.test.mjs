@@ -32,7 +32,8 @@ const scannedCrates = [
   "vize_maestro",
 ];
 const shardDir = "docs/davinci/plan/consumer-migration-surfaces";
-const runShard = "artifacts/davinci-ledgers/consumer-migration-surfaces/compiler/vize_atelier_core.tsv";
+const runShard =
+  "artifacts/davinci-ledgers/consumer-migration-surfaces/compiler/vize_atelier_core.tsv";
 const committedShard = `${shardDir}/compiler/vize_atelier_core.tsv`;
 
 function writeFile(root, relPath, content) {
@@ -92,7 +93,10 @@ void test("consumer migration surfaces are run artifacts and a committed shard i
     fs.appendFileSync(indexPath, "injected edit\n");
     const stale = runSurfaceCommand(scratch, "--check");
     assert.equal(stale.status, 1, `--check accepted a stale index:\n${stale.stdout}`);
-    assert.match(stale.stderr, /stale: docs\/davinci\/plan\/consumer-migration-surfaces\.md drifted/);
+    assert.match(
+      stale.stderr,
+      /stale: docs\/davinci\/plan\/consumer-migration-surfaces\.md drifted/,
+    );
     assert.match(
       stale.stderr,
       /Regenerate with: rust-script tools\/commands\/davinci\/consumer-migration-surfaces\.rs --write/,

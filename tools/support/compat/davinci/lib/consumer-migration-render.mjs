@@ -87,11 +87,7 @@ function renderShardTable(consumers) {
     ["left", "left", "left"],
     shardLayout(consumers).map((shard) => {
       const rel = shard.relPath.slice(SHARD_DIR_REL.length + 1);
-      return [
-        shard.consumer.label,
-        `\`${rel}\``,
-        shard.entries.map(entryLabel).join("<br>"),
-      ];
+      return [shard.consumer.label, `\`${rel}\``, shard.entries.map(entryLabel).join("<br>")];
     }),
   );
 }
