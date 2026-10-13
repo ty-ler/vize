@@ -4,8 +4,9 @@
 
 The pinned v0.448.0 real-project matrix exposed 40 extra
 `vue/require-v-for-key` diagnostics and 25 missing `vue/valid-v-for`
-diagnostics across seven projects. Twenty-six extra findings come from custom
-components or component-only transparent templates. The remaining fourteen are
+diagnostics across seven projects. Twenty-four extra findings come from custom
+components or component-only transparent templates. Two extra findings come
+from transparent template loops around empty slot outlets. The remaining fourteen are
 in a file whose original `eslint-disable` comment requires separate suppression
 handling; valid unkeyed native elements must continue to be reported.
 
@@ -20,10 +21,12 @@ Iteration references use parsed identifier references, so string literals and
 static property names cannot silently satisfy the key requirement.
 
 The existing #8281 slot/static/object-key exemptions and historical any-keyed-
-child policy remain unchanged. Its original fixtures and captured API packets
-are retained, including the empty-slot positive. The component-only template
-exception requires at least one actual component leaf. JSX mapped components still require keys, and petite-vue keeps
-its optional-key behavior. The new focused corpus
+child policy remain unchanged. Its original fixtures and all 21 captured before
+API packets remain intact. A separate complete 21-packet after oracle changes
+only the empty-slot expectation to zero: there is no native repeated leaf that
+requires a key. Unkeyed native fallback leaves still produce their original
+positive diagnostic, and custom leaves remain owned by `valid-v-for`. JSX mapped components still require keys, and petite-vue keeps
+its optional-key behavior. The new 24-case focused corpus
 covers native positives, custom component negatives, nested loops, SVG,
 literals, dynamic components, and CRLF/Unicode opening-tag ranges.
 
@@ -32,9 +35,10 @@ Actions source checks, protected queue qualification, actual merge, and the next
 published consumer replay remain required; this source change alone proves
 neither release readiness nor full matrix completion.
 
-The first Actions execution confirms all 22 new template vectors pass. It also
-caught the accidental empty-slot exemption, which is corrected without changing
-its original expected packet. A JSX positive initially used
+[Actions at 8524a9a](https://github.com/ubugeeei-prod/vize/actions/runs/38335119019)
+confirms the first 22 template vectors pass. The two actual Habitica empty-slot
+false positives require correcting the old current expectation. Its original
+before packet remains preserved, with the new after packet checked separately. A JSX positive initially used
 `const view = items.map((item) => <Row item={item} />);`; that standalone call is
 outside the current render-root collector and produced zero diagnostics. The
 supported JSX render-function positive keeps an expected missing-key diagnostic.

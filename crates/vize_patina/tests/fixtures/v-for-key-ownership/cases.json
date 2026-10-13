@@ -145,5 +145,17 @@
     "require_key": 0,
     "valid_for": 1,
     "valid_range": "<Row\r\n    v-for=\"item in items\"\r\n    :value=\"item.value > 0\"\r\n  />"
+  },
+  {
+    "id": "template-empty-slot-iteration",
+    "source": "<template v-for=\"item in items\"><slot name=\"item\" :item=\"item\"></slot></template>",
+    "require_key": 0,
+    "valid_for": 0
+  },
+  {
+    "id": "template-multiline-empty-slot-iteration",
+    "source": "<template\n  v-for=\"item in items\"\n>\n  <slot\n    name=\"item\"\n    :item=\"item\"\n  ></slot>\n</template>",
+    "require_key": 0,
+    "valid_for": 0
   }
 ]

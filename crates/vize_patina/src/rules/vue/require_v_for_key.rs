@@ -61,7 +61,7 @@ impl RequireVForKey {
         }
         if element.tag() == "template" || (!exact && element.is_tag("template")) {
             if has_markup_template_v_for_key(element, exact)
-                || (template_directive && markup_child_key_owners(element, exact) == (false, true))
+                || (template_directive && !has_markup_native_child(element, exact))
             {
                 return;
             }
@@ -94,27 +94,20 @@ fn markup_element_is_custom_component(element: &MarkupElement<'_>) -> bool {
     dynamic
 }
 
-/// Whether transparent children contain (native, component) leaves.
-fn markup_child_key_owners(element: &MarkupElement<'_>, exact: bool) -> (bool, bool) {
-    let mut owners = (false, false);
+fn has_markup_native_child(element: &MarkupElement<'_>, exact: bool) -> bool {
+    let mut found = false;
     element.walk_children(&mut |child| {
-        if !owners.0
-            && let MarkupNode::Element(child) = child
-        {
-            let child_owners = if matches!(child.tag(), "template" | "slot")
+        if !found && let MarkupNode::Element(child) = child {
+            found = if matches!(child.tag(), "template" | "slot")
                 || (!exact && (child.is_tag("template") || child.is_tag("slot")))
             {
-                ensure_sufficient_stack(|| markup_child_key_owners(&child, exact))
-            } else if markup_element_is_custom_component(&child) {
-                (false, true)
+                ensure_sufficient_stack(|| has_markup_native_child(&child, exact))
             } else {
-                (true, false)
+                !markup_element_is_custom_component(&child)
             };
-            owners.0 |= child_owners.0;
-            owners.1 |= child_owners.1;
         }
     });
-    owners
+    found
 }
 
 pub(super) fn relief_element_is_custom_component(element: &ElementNode<'_>) -> bool {
@@ -127,25 +120,18 @@ pub(super) fn relief_element_is_custom_component(element: &ElementNode<'_>) -> b
         })
 }
 
-fn relief_child_key_owners(element: &ElementNode<'_>) -> (bool, bool) {
-    let mut owners = (false, false);
-    for child in &element.children {
+fn relief_has_native_child(element: &ElementNode<'_>) -> bool {
+    element.children.iter().any(|child| {
         if let TemplateChildNode::Element(child) = child {
-            let child_owners = if matches!(child.tag, "template" | "slot") {
-                ensure_sufficient_stack(|| relief_child_key_owners(child))
-            } else if relief_element_is_custom_component(child) {
-                (false, true)
+            if matches!(child.tag, "template" | "slot") {
+                ensure_sufficient_stack(|| relief_has_native_child(child))
             } else {
-                (true, false)
-            };
-            owners.0 |= child_owners.0;
-            owners.1 |= child_owners.1;
-            if owners.0 {
-                break;
+                !relief_element_is_custom_component(child)
             }
+        } else {
+            false
         }
-    }
-    owners
+    })
 }
 
 fn has_markup_key(element: &MarkupElement<'_>, exact: bool) -> bool {
@@ -394,9 +380,7 @@ impl Rule for RequireVForKey {
         }
 
         if element.tag == "template" {
-            if relief_template_v_for_has_key(element)
-                || relief_child_key_owners(element) == (false, true)
-            {
+            if relief_template_v_for_has_key(element) || !relief_has_native_child(element) {
                 return;
             }
         } else if element.tag == "slot"
