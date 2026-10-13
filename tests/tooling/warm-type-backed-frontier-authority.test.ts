@@ -97,6 +97,7 @@ await test("the seven-path frontier successor retains all 208 native predecessor
   )
     .trim()
     .split("\n");
+  assert.deepEqual(actualProduction.toSorted(), receipt.files);
   assert.deepEqual(qualifyFrontierSource(process.cwd(), current), receipt);
 });
 

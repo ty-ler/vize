@@ -22,7 +22,7 @@ fn exact_packets_preserve_complete_first_seen_order_across_occurrence_modes() {
     for syntax in [
         SourceType::ts(),
         SourceType::tsx(),
-        SourceType::js(),
+        SourceType::mjs(),
         SourceType::jsx(),
     ] {
         for source in sources {
