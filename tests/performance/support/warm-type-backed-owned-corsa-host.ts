@@ -1,5 +1,6 @@
 import { ownedCorsaReader } from "../../../tools/support/compat/github/owned-corsa-source-reader.mjs";
 import { retainedOwnedCorsaBaseline } from "../../../tools/support/compat/github/owned-corsa-current-baseline.mjs";
+import { projectOwnedCorsaNativeMainReader } from "../../../tools/support/compat/github/owned-corsa-native-main-source.mjs";
 import {
   verifyOwnedCorsaCallers,
   ownedCorsaCallerMetadataSHA256,
@@ -61,10 +62,13 @@ export function qualifyOwnedCorsaHost(
     };
   }
   const projectedCallers = verifyOwnedCorsaCallers(reader).reader;
+  const mainSource = projectOwnedCorsaNativeMainReader(baseline, reader);
   const source = (side: Side, file: string) =>
     ownedCorsaCallerPaths.includes(file)
       ? projectedCallers(side, file)
-      : graph.historicalReader(side, file);
+      : mainSource(side, file)?.blob !== reader(side, file)?.blob
+        ? mainSource(side, file)
+        : graph.historicalReader(side, file);
   const digest = (side: Side, file: string) => {
     const value = source(side, file);
     return value ? sha(value.body) : null;
