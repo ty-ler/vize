@@ -29,10 +29,8 @@ test("current Star workflow setup retains commands, conditions, matrix and path 
   };
   const current = structuredClone(original);
   current.jobs.benchmark.steps[0].with = { toolchain: "1.99.0" };
-  current.jobs.benchmark.steps[1] = {
-    uses: "./.github/actions/setup-mold",
-    if: "runner.os == 'Linux'",
-  };
+  current.jobs.benchmark.steps[1].uses = "./.github/actions/setup-mold";
+  delete current.jobs.benchmark.steps[1].with;
   current.on.pull_request.paths.splice(
     1,
     0,
