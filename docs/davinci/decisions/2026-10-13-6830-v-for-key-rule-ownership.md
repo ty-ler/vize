@@ -45,8 +45,16 @@ supported JSX render-function positive keeps an expected missing-key diagnostic.
 The bare-call collection gap remains unfinished under #6830; this change does
 not broaden the render-root collector or claim that standalone form is covered.
 
-The generated import inventory gains six owned rows. Its existing source-custody
+The generated import inventory gains eight owned rows after normal helper
+module extraction. Its existing source-custody
 manifest updates only that one current-body identity, retaining all 322 other
 current bodies and every historical frame, law, family, and credit field. The
 helper and its existing test retain their inverse-checked whole-body pins. This
 bookkeeping grants no native or performance credit and changes no predicate.
+
+Helpers and syntax tests move into ordinary Rust modules without changing their
+behavior, keeping each source below the unchanged 350-line ratchet. Generated
+rule references and their materialized catalogue dependencies receive the
+canonical implementation-link updates. The 24-vector and 21-slot tests retain
+complete actual API packets in the existing Rust shard artifact directory
+before assertions, including failure packets; no workflow stage is added.

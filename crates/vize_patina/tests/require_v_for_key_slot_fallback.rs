@@ -1,52 +1,13 @@
 use serde_json::{Value, json};
 use vize_patina::rules::vue::RequireVForKey;
-use vize_patina::{HelpLevel, LintDiagnostic, LintResult, Linter, RuleRegistry};
+use vize_patina::{HelpLevel, Linter, RuleRegistry};
+
+mod v_for_key_capture;
+use v_for_key_capture::{whole_packet, write_capture};
 
 // The original 21 before packets remain intact in CASES.
 const CASES: &str = include_str!("fixtures/slot-fallback-key/cases.json");
 const AFTER: &str = include_str!("fixtures/v-for-key-ownership/slot-fallback-after.json");
-
-fn diagnostic_packet(diagnostic: &LintDiagnostic) -> Value {
-    let LintDiagnostic {
-        rule_name,
-        severity,
-        message,
-        start,
-        end,
-        help,
-        labels,
-        fix,
-    } = diagnostic;
-    json!({
-        "rule_name": rule_name,
-        "severity": severity,
-        "message": message,
-        "start": start,
-        "end": end,
-        "help": help,
-        "labels": labels.iter().map(|label| json!({
-            "message": label.message,
-            "start": label.start,
-            "end": label.end,
-        })).collect::<Vec<_>>(),
-        "fix": fix,
-    })
-}
-
-fn whole_packet(result: &LintResult) -> Value {
-    let LintResult {
-        filename,
-        diagnostics,
-        error_count,
-        warning_count,
-    } = result;
-    json!({
-        "filename": filename,
-        "diagnostics": diagnostics.iter().map(diagnostic_packet).collect::<Vec<_>>(),
-        "error_count": error_count,
-        "warning_count": warning_count,
-    })
-}
 
 #[test]
 fn slot_fallback_key_owned_source_api_packets() {
@@ -67,6 +28,7 @@ fn slot_fallback_key_owned_source_api_packets() {
         .collect::<Vec<_>>();
 
     // Retain every public API field before assertions, including failing cases.
+    write_capture("v-for-slot-current-packets.json", &packets);
     if let Ok(path) = std::env::var("VIZE_SLOT_KEY_CAPTURE_PATH") {
         std::fs::write(path, serde_json::to_vec_pretty(&packets).unwrap()).unwrap();
     }

@@ -5,6 +5,9 @@ use vize_l0::String;
 use vize_patina::rules::vue::{RequireVForKey, ValidVFor};
 use vize_patina::{HelpLevel, JsxLang, Linter, RuleRegistry};
 
+mod v_for_key_capture;
+use v_for_key_capture::{whole_packet, write_capture};
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Case {
@@ -23,8 +26,15 @@ fn native_and_component_iteration_keys_have_separate_rule_owners() {
     registry.register(Box::new(RequireVForKey));
     registry.register(Box::new(ValidVFor));
     let linter = Linter::with_registry(registry).with_help_level(HelpLevel::None);
-    for case in cases {
-        let result = linter.lint_template(&case.source, "iteration.vue");
+    let results = cases
+        .iter()
+        .map(|case| linter.lint_template(&case.source, "iteration.vue"))
+        .collect::<Vec<_>>();
+    let packets = cases.iter().zip(&results).map(|(case, result)| {
+        serde_json::json!({"caseId": case.id, "source": case.source, "packet": whole_packet(result)})
+    }).collect::<Vec<_>>();
+    write_capture("v-for-ownership-current-packets.json", &packets);
+    for (case, result) in cases.iter().zip(results) {
         let require = result
             .diagnostics
             .iter()
