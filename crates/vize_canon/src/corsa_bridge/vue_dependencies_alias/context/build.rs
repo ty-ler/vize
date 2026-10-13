@@ -179,7 +179,11 @@ fn build_consumed(
                 .map_err(bridge_error)?;
             None
         };
-        let specifiers = package_specifiers_from_frontier(&project, &mut scanned_package_sources);
+        let specifiers = package_specifiers_from_frontier(
+            &project,
+            &mut scanned_package_sources,
+            observe.then_some(&parsed_sources),
+        );
         if specifiers.is_empty() {
             if let Some(registration) = registration {
                 facts.record_owned(registration);

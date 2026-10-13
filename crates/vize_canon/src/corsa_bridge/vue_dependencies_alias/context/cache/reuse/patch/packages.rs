@@ -50,7 +50,7 @@ pub(super) fn reconcile(
             .ok()
     })?;
     loop {
-        let specifiers = package_specifiers_from_frontier(mirror, &mut scanned);
+        let specifiers = package_specifiers_from_frontier(mirror, &mut scanned, None);
         let phase =
             crate::corsa_bridge::preparation_trace::Phase::start("alias_reachable_dependencies", 1);
         let mut discovered = Vec::new();

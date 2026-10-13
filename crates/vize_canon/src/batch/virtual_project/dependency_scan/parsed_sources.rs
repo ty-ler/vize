@@ -24,6 +24,19 @@ pub(crate) struct ParsedDependencySources {
 }
 
 impl ParsedDependencySources {
+    /// Borrow only the packet for the exact projection and syntax supplied now.
+    /// A miss neither parses nor retains another source and grants no authority.
+    pub(crate) fn current_occurrences(
+        &self,
+        path: &Path,
+        source: &str,
+        source_type: SourceType,
+    ) -> Option<&[(String, PackageResolutionMode)]> {
+        let entry = self.sources.get(path)?;
+        (entry.source_type == source_type && entry.source.as_str() == source)
+            .then_some(entry.occurrences.as_slice())
+    }
+
     pub(crate) fn occurrences(
         &mut self,
         rewriter: &ImportRewriter,
