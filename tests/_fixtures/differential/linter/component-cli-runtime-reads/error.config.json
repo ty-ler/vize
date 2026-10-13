@@ -1,8 +1,0 @@
-{
-  "linter": {
-    "preset": "ecosystem",
-    "rules": {
-      "vue/no-unused-components": "error"
-    }
-  }
-}

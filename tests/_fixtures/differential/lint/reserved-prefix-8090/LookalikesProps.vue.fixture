@@ -1,3 +1,0 @@
-<script lang="ts">
-export default { props: { $custom: Number, $dataExtra: Number, $Emit: Number, $host: Number, $: Number, $$data: Number, _private: Number, _$data: Number } }
-</script>

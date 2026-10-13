@@ -1,3 +1,0 @@
-<script setup lang="ts">
-import declarations from "foreign"; const props = defineProps(declarations);
-</script>

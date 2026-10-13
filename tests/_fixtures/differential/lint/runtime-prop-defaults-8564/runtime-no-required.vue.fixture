@@ -1,3 +1,0 @@
-<script setup>
-const props = defineProps({ value: { default: 1 } });
-</script>
