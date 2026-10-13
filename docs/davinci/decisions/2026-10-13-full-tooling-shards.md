@@ -80,3 +80,7 @@ already contains the listing fix and cannot serve as its before image. All 429
 literal BD source cells, complete parent-edge checks, production singleton and
 refusal laws remain mandatory. Preserve qualified predecessor evidence, then run
 one plain full Check on the source-qualified cumulative head.
+Tooling checkouts fetch complete actual history: a depth-one HEAD refuses the
+reviewed shipping-cut merge base even when all raw objects are present. The
+existing checkout hydrates that graph; strict shallow and parent-edge refusals
+remain unchanged.

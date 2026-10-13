@@ -44,6 +44,9 @@ void test("full events require the original producer, four isolated workers and 
   });
   assert.equal(worker.steps.length, 2);
   assert.ok(worker.steps[0].uses.startsWith("actions/checkout@"));
+  assert.equal(worker.steps[0].with["fetch-depth"], 0, "complete actual shipping-cut ancestry");
+  const prTooling = yaml(".github/workflows/pr-source-checks.yml").jobs["pr-tooling-scripts"];
+  assert.equal(uses(prTooling.steps, "actions/checkout@")[0].with["fetch-depth"], 0);
   assert.equal(worker.steps[1].uses, "./.github/actions/test-full-tooling");
   assert.deepEqual(worker.steps[1].with, {
     producer: "${{ toJSON(needs.full-source-cli.outputs) }}",
