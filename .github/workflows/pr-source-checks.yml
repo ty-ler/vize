@@ -1,9 +1,7 @@
 name: PR source checks
 on: { workflow_call: null }
 permissions: { contents: read }
-env:
-  CARGO_TERM_COLOR: always
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+env: { CARGO_TERM_COLOR: always, FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true }
 jobs:
   wit-contracts:
     name: Guest contracts
@@ -155,6 +153,7 @@ jobs:
         run: echo 'Tooling scripts skipped because this PR changes no release scripts, tooling tests, or unknown source paths.' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         if: ${{ needs.pr-source-plan.outputs.tooling == 'true' }}
+        with: { fetch-depth: 0 }
       - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
         if: ${{ needs.pr-source-plan.outputs.tooling == 'true' }}
         with: { node-version-file: "package.json", cache: true, run-install: false }
