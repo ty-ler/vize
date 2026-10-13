@@ -267,49 +267,24 @@ jobs:
           key: vue-parity
           cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
       - uses: ./.github/actions/check-vue-parity
+  full-source-cli:
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    uses: ./.github/workflows/full-source-cli.yml
   test-scripts:
     runs-on: blacksmith-32vcpu-ubuntu-2404
-    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }} # CLI, MoonBit and native artifact fixtures require the full bootstrap.
+    if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) }} # Preserve native evidence after producer failure.
     timeout-minutes: 30
-    env: { NODE_OPTIONS: "--disable-warning=DEP0040 --disable-warning=DEP0169" }
+    needs: full-source-cli
+    strategy: { fail-fast: false, matrix: { index: [1, 2, 3, 4] } }
+    env:
+      NODE_OPTIONS: "--disable-warning=DEP0040 --disable-warning=DEP0169"
+      VIZE_SOURCE_CLI_RECEIPT_SHA256: ${{ needs.full-source-cli.outputs.receipt-sha256 }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+      - uses: ./.github/actions/test-full-tooling
         with:
-          node-version-file: "package.json"
-          cache: true
-          run-install: false
-      - uses: ./.github/actions/setup-moonbit
-      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        with: { toolchain: stable }
-      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
-        with: { wild-version: "0.9.0" }
-      - uses: ./.github/actions/setup-rust-sticky-cache
-        with: { key: test-scripts, cache-key-suffix: "${{ runner.os }}-${{ runner.arch }}" }
-      - uses: ./.github/actions/setup-rust-script
-      - name: Hydrate CLI diagnostic fixture and install JS dependencies
-        run: git submodule update --init --force --depth 1 -- tests/_fixtures/_git/ant-design-vue tests/_fixtures/_git/create-vue tests/_fixtures/_git/vue-select tests/_fixtures/_git/vue-router && vp install --frozen-lockfile --prefer-offline && node tools/support/compat/github/prepare-vue-benchmarks.mjs
-      - name: Build vize CLI
-        run: cargo build --profile ci -p vize && vp exec node tests/differential/build-receipt.ts && cat target/ci/vize.differential-build.json && cargo build --profile ci -p vize_atelier_sfc --example cli_build_result_oracle
-      - name: Install vize CLI
-        run: sudo install -m 0755 target/ci/vize /usr/local/bin/vize
-      - name: Check configured Router page CLI and editor types
-        uses: ./.github/actions/check-router-page-types
-      - name: Prepare plugin runtime and test native JS setup
-        if: ${{ always() }}
-        uses: ./.github/actions/test-native-js-setup
-      - name: Capture original native attribute values and fixed fresh mounts
-        if: ${{ always() }}
-        uses: ./.github/actions/test-native-attribute-values-7502
-      - name: Install CSS formatter reference browser
-        uses: ./.github/actions/install-formatter-css-browser
-      - name: Test release scripts
-        env:
-          VIZE_LSP_BIN: ${{ github.workspace }}/target/ci/vize
-          VIZE_LSP_REQUIRE_SOURCE_BUILD: "1"
-        run: vp run --workspace-root test:scripts
-      - uses: ./.github/actions/upload-formatter-api-corpus-evidence
-        if: ${{ always() }}
+          producer: ${{ toJSON(needs.full-source-cli.outputs) }}
+          shard: ${{ matrix.index }}
   editor-extensions:
     runs-on: blacksmith-32vcpu-ubuntu-2404
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
@@ -396,6 +371,7 @@ jobs:
       - test-js-packages
       - build-js-packages
       - test-scripts
+      - full-source-cli
       - check-js
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
