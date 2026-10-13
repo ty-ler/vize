@@ -11,6 +11,7 @@ import { primeStarCounterpartHistory } from "../../tools/support/compat/github/s
 import {
   authenticateStarListingSource,
   qualifyStarListingBD,
+  qualifyStarListingSDK,
   starListingLexicalReader,
 } from "../../tools/support/compat/github/empty-vue-star-listing-source.mjs";
 
@@ -26,6 +27,9 @@ const pairs = new Map(rows.map(([file, , , before, , , after]) => [file, { befor
 for (const file of executing)
   pairs.set(file, { before: null, after: sha(fs.readFileSync(path.join(root, file))) });
 const digest = (side, file) => pairs.get(file)?.[side] ?? null;
+const sdkBefore = new Map(manifest.sdkShippingBefore);
+const sdkDigest = (side, file) =>
+  side === "before" && sdkBefore.has(file) ? sdkBefore.get(file) : digest(side, file);
 const git = (owner, args, input) =>
   execFileSync("git", ["--no-replace-objects", ...args], {
     cwd: owner,
@@ -157,6 +161,32 @@ await test("every complete BD counterpart and executing body on both sides refus
     ])
       assert.equal(qualifyStarListingBD(footprint, qualified, digest), null);
   assert.equal(qualifyStarListingBD([execution], new Set([execution]), digest), null);
+});
+
+await test("the actual SDK shipping before-image admits only its complete listing singleton", () => {
+  assert.equal(qualifyStarListingSDK([execution], new Set(), sdkDigest)?.files[0], execution);
+  assert.equal(qualifyStarListingSDK([execution], new Set(), digest), null);
+  assert.equal(qualifyStarListingBD([execution], new Set(), sdkDigest), null);
+  for (const production of [
+    [],
+    [execution, execution],
+    [execution, "crates/vize_canon/src/lib.rs"],
+  ])
+    assert.equal(qualifyStarListingSDK(production, new Set(), sdkDigest), null);
+  assert.equal(qualifyStarListingSDK([execution], new Set([execution]), sdkDigest), null);
+  for (const file of files)
+    for (const side of ["before", "after"])
+      assert.equal(
+        qualifyStarListingSDK([execution], new Set(), (selected, path) =>
+          selected === side && path === file ? "f".repeat(64) : sdkDigest(selected, path),
+        ),
+        null,
+        "every complete SDK singleton source cell remains mandatory",
+      );
+  for (const [file, checksum] of manifest.sdkShippingBefore) {
+    const raw = git(root, ["show", manifest.sdkUnion.actualIncoming + ":" + file]);
+    assert.equal(sha(raw), checksum, "actual merged SDK before-image");
+  }
 });
 
 await test("foreign raw bodies, changed entrypoints, hybrid source, modes and replacement refs refuse before replay", () => {

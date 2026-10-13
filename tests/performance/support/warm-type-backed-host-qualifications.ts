@@ -16,7 +16,10 @@ import { qualifyEmptyVueStarListingHost } from "./warm-type-backed-empty-vue-sta
 
 import { qualifyEmptyVueStarListingSingleton } from "./warm-type-backed-empty-vue-star-listing-singleton.ts";
 
-import { qualifyStarListingBD } from "../../../tools/support/compat/github/empty-vue-star-listing-source.mjs";
+import {
+  qualifyStarListingBD,
+  qualifyStarListingSDK,
+} from "../../../tools/support/compat/github/empty-vue-star-listing-source.mjs";
 
 /** Compose finite qualifications without changing existing path/timing authorities. */
 export function qualifyHostMoves(
@@ -85,6 +88,9 @@ export function qualifyHostMoves(
   const emptyVueStarListingBD = enabled
     ? qualifyStarListingBD(production, alreadyQualified, digest)
     : null;
+  const emptyVueStarListingSDK = enabled
+    ? qualifyStarListingSDK(production, alreadyQualified, digest)
+    : null;
   return {
     pathHostMove: enabled ? qualifyPathHostMove(production, alreadyQualified, digest) : null,
     timingHostMove: enabled ? qualifyTimingHostMove(production, alreadyQualified, digest) : null,
@@ -98,5 +104,6 @@ export function qualifyHostMoves(
     ...(emptyVueStarHost ? { emptyVueStarHost } : {}),
     ...(emptyVueStarListingSingleton ? { emptyVueStarListingSingleton } : {}),
     ...(emptyVueStarListingBD ? { emptyVueStarListingBD } : {}),
+    ...(emptyVueStarListingSDK ? { emptyVueStarListingSDK } : {}),
   };
 }

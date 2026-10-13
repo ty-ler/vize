@@ -170,3 +170,12 @@ SDK427 source test, metadata, table and helper execute unchanged at literal
 2da only after the complete actual listing/SDK union has been authenticated.
 This reuses the existing three-literal snapshot primitive and grants no
 runtime, performance, public or protected acceptance.
+
+The first 787 paired400 producer refused execution.rs before compilation: its
+existing BD-only singleton intentionally did not admit the actual C4 SDK
+before-image. A separately named singleton in the same authority retains the
+original BD law and pins only the eighteen genuinely different SDK before
+source cells, including existing metadata/helper bodies. All other before
+cells and the complete current after cohort remain mandatory. Whole original
+400 vectors, extra/hybrid/unknown refusals, execution bytes and budgets stay
+unchanged; positive actual C4 digest and every-cell refusal controls are added.
