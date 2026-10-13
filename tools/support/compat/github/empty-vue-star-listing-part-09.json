@@ -139,9 +139,9 @@
     "7e20c40620dfedf369dcedbf7eb4efdd80fa4151",
     6890,
     "d74fe92acad08d0f6f71af9bc727f99791d959bf24da0143161f68637c681df2",
-    "7e20c40620dfedf369dcedbf7eb4efdd80fa4151",
-    6890,
-    "d74fe92acad08d0f6f71af9bc727f99791d959bf24da0143161f68637c681df2"
+    "4e5def77be0250ff50af21cde847aad1609db2c0",
+    334,
+    "f41b23118dcba238b4b43bf085b8b10baedcf3151e6e6e85648b3c4cb5e0ef50"
   ],
   [
     "tools/benchmarks/scripts/typechecker-native-phase-membership.mjs",

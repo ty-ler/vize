@@ -38,7 +38,7 @@ function regular(root, file) {
 }
 const moduleRoot = fs.realpathSync(new URL("../../../../", import.meta.url));
 const metadataBody = regular(moduleRoot, metadataPath);
-assert.equal(sha(metadataBody), "4d2952c0bab8d5e741ca30cc5f3570490f119f262ec04a2862d4209fa07dd372");
+assert.equal(sha(metadataBody), "c661edd1b8a9bc120a4edebaa313ec89000b717622b1314eb54c7244292992fb");
 const metadata = JSON.parse(metadataBody);
 assert.equal(metadata.schema, "vize.empty-vue-star.literal-bd-listing-source");
 assert.equal(metadata.base, base);
@@ -197,10 +197,12 @@ export async function runStarListingOriginalTest(root, file) {
   const source = oldTests.get(file);
   assert(source, "one named original listing/JS source law");
   for (const historical of metadata.history) ensureHostedLiteralSource(value.root, historical);
-  const files = listStarCounterpartFiles(value.root, source, [file]);
+  const initial = source === base ? [...named.keys()] : [file];
+  const files = listStarCounterpartFiles(value.root, source, initial);
   const fixture = provisionStarSourceCounterpart(value.root, source, files);
   let retained = false;
   try {
+    await import(pathToFileURL(path.join(fixture.root, file)).href);
     after(() => {
       try {
         owned(packet);
@@ -209,7 +211,6 @@ export async function runStarListingOriginalTest(root, file) {
       }
     });
     retained = true;
-    await import(pathToFileURL(path.join(fixture.root, file)).href);
     return packet;
   } finally {
     if (!retained) fixture.cleanup();
