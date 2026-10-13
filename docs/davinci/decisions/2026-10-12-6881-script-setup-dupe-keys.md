@@ -206,3 +206,31 @@ current/raw, declaration-refusal and changed-commit controls pass 3/3 with
 zero skips. The remaining original tests are not locally re-executed; fresh
 exact-head Actions must qualify the full source/native/workload suites. Previously observed source, native and queue results
 remain separately bound; no queued or merged delivery is claimed here.
+
+At exact published `6448d112`, native backend phases Actions
+[38354348650](https://github.com/ubugeeei-prod/vize/actions/runs/38354348650)
+succeed, while Check [38354348695](https://github.com/ubugeeei-prod/vize/actions/runs/38354348695)
+fails tooling shard 1. The incoming JS source-view law demands the original
+8,132-byte maintenance law, while the actual common source contains its
+508-byte authenticated whole-law dispatch. Its original 323-body declaration
+also differs at six actual current source bodies. Preserve the complete
+1,055,236-byte job 115154347579 log as
+[evidence/8763-6448-tooling1.log.gz](./evidence/8763-6448-tooling1.log.gz);
+the raw SHA-256 is `406402886eeeaeaa4d19ee5bab8611f162b8b8e46faa6e583f1e5a2439715617`
+and compressed SHA-256 is `44d74a92222f7b092303ed33483e8518d24ee711d10a2a64fb0f3ec7d14110f9`.
+The failure grants no source or runtime success.
+
+The bounded successor `2aa077ad` qualifies the entire actual common 841-body
+physical/raw cohort first. It then verifies the fixed complete retained
+parent `3783850e` source model, including its whole original maintenance law
+and all original raw identities. The current 323 counterparts come from the
+authenticated actual body map, with every prior changed whole body checked
+by the existing exact forward/inverse declaration. The current source
+declaration stays pinned separately from the retained parent declaration.
+Both full historical frames and the entire incoming JS source-view test
+remain byte-exact; no old native, original400 or timing credit is transferred.
+The seven unchanged JS laws pass locally with zero skips in 19.086 seconds,
+including all93 source mutations, raw Git batch framing, replacement/HEAD,
+mode, missing-owner and symlink refusals. Fresh exact-head Actions and
+protected delivery remain required. Paired decision:
+[#6881 source-view composition](https://github.com/ubugeeei-prod/vize/issues/6881#issuecomment-6139675680).
