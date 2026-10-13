@@ -200,6 +200,9 @@ existing parent inverse are resealed; all other original current cells,
 whole historical frames, original assertions, native inputs and budgets
 remain byte-exact. The current physical helper remains the original uncached
 body; the independently prepared digest-cache experiment is unshipped and
-not included. Local whole-cohort/raw-source comparison and fresh exact-head
-Actions are required. Previously observed source, native and queue results
+not included. At `5110caf559`, all 841 actual physical/raw bodies and both complete
+2,360/1,375-body historical contexts authenticate. The existing selected
+current/raw, declaration-refusal and changed-commit controls pass 3/3 with
+zero skips. The remaining original tests are not locally re-executed; fresh
+exact-head Actions must qualify the full source/native/workload suites. Previously observed source, native and queue results
 remain separately bound; no queued or merged delivery is claimed here.
