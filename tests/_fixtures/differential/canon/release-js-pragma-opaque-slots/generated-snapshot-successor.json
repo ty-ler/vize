@@ -1,0 +1,254 @@
+{
+  "schema": 1,
+  "sourceOnly": true,
+  "runtimeCredit": false,
+  "nativeProducerCredit": false,
+  "base": "6401289e3091def8f6bdfd271ab31837e5f36855",
+  "source": {
+    "path": "crates/vize_canon/src/virtual_ts/scope/component_slots.rs",
+    "sha256": "9b6fc0fecefdcfea5863f229965372eacd3ac3dbc50e8a8489215d5db57ee9ca"
+  },
+  "originalCapsule": {
+    "compressedSHA256": "71eb9f44ec6aab61b9ac8345dc6bf578e96175b8d600585f681a218a5eb68673",
+    "rawSHA256": "b4561273dc1da1462edede077a41e795d239971a9b050b84e6b69f9e59ec4686",
+    "completePackets": 11
+  },
+  "entries": [
+    {
+      "path": "crates/vize_canon/snapshots/vize_canon__virtual_ts__tests__virtual_ts_component_prop_checks_respect_same_element_vif_guard.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 25881,
+        "blob": "00b7559ebd68c2aa93e8c8733a02e1649460537f",
+        "sha256": "381cb098147ab5031dcc65653f2964b15b2aaa38d570f08d6110f9aafd825f82"
+      },
+      "after": {
+        "bytes": 25985,
+        "blob": "364eb63445060697aec29dfd911e9b2002e0862e",
+        "sha256": "baddf970d83f363ce4acb7923b41019a312907ceb469ecd9824cd5ecaea2c76d"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? {} : any : any : any : any;\n",
+          "after": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "crates/vize_canon/snapshots/vize_canon__virtual_ts__tests__virtual_ts_reserved_prop_and_hyphenated_slot_names.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 27681,
+        "blob": "d6c27a6eaa7f1ddf2c359399b07fa0e97f036699",
+        "sha256": "84feeafae13506af116d862fb5f64024cc045857e04e06540e6c294db21e7f2a"
+      },
+      "after": {
+        "bytes": 27785,
+        "blob": "96a389133c326a09291a77bb2e62d8e2c3148d83",
+        "sha256": "76f0e25587f188ef16d6ce664193c29db81cbbd81b566246bee7f92a84617bf2"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? {} : any : any : any : any;\n",
+          "after": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "crates/vize_canon/snapshots/vize_canon__virtual_ts__tests__virtual_ts_scoped_slot_expressions.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 27133,
+        "blob": "1754c90f33434fb77b6716432758d789b64975f9",
+        "sha256": "3019849a0e1b37b64214250fe65afb576339906c18ac68a3c3a922a800db8db5"
+      },
+      "after": {
+        "bytes": 27237,
+        "blob": "8b3c2197e3839bcdb211d59fd548398452be48e1",
+        "sha256": "b995bf8385aa9100e6f69989a6a61012fbd6ec93ea6a3e08e81243604ec77539"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? {} : any : any : any : any;\n",
+          "after": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "crates/vize_canon/snapshots/vize_canon__virtual_ts__tests__virtual_ts_vfor_component_props_in_scope.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 25860,
+        "blob": "b06152ad1eae2693bb5704cdcc6efc15f915a43f",
+        "sha256": "369730d7d2d6f5d3a66336df56497670c76c9b3bf8555fd6b39fac1717e92d2d"
+      },
+      "after": {
+        "bytes": 25964,
+        "blob": "112050ece90f6ba8c6208202fa9f5e2833bb01bb",
+        "sha256": "9aded57a3bcbc9173700689205bab8ef6e76b324fc131f7abafc14db96d9d865"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? {} : any : any : any : any;\n",
+          "after": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "crates/vize_canon/snapshots/vize_canon__virtual_ts__tests__virtual_ts_vfor_component_props_source_nested_in_vif_is_wrapped_for_narrowing.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 26078,
+        "blob": "c27350f2db4602121e6ab2af4b33ca7bd7ec55a2",
+        "sha256": "0d52e78f8f1edec11a519d1b6f4a9c24f0f6204cf6ff105d0de367f8a5a139fa"
+      },
+      "after": {
+        "bytes": 26182,
+        "blob": "b212a917b3de8925c24b3d2c69e2cb1ebdb39eee",
+        "sha256": "6d54350b99a9807789132ff9ace5a0cf213b5c93380f855d0f40fb8f4ae12765"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? {} : any : any : any : any;\n",
+          "after": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "crates/vize_canon/src/batch/virtual_project/snapshots/vize_canon__batch__virtual_project__tests__reexported_vue_interface_props_virtual_ts.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 12357,
+        "blob": "335411c7318c40bdbe21046bc3e009299154c9ca",
+        "sha256": "b591f369b67d4fefadc26fb7703585ddb1c3422217ac60b5a2c5bf6fb3ed0b3a"
+      },
+      "after": {
+        "bytes": 12461,
+        "blob": "d0176f50c33e2092305834191f78b06770f762a5",
+        "sha256": "0911427ea054a6710ef50022fb53eb277782520b2cc253090e381c8b6f0c6a60"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? {} : any : any : any : any;\n",
+          "after": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "crates/vize_canon/src/batch/virtual_project/snapshots/vize_canon__batch__virtual_project__tests__register_vue_file_rewrites_child_imports.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 11353,
+        "blob": "fb9975c870076a40fd1c32e5ccbfd186ae6e9273",
+        "sha256": "f09e5968bf60d9d5164a67b4e2b5989ac6a71b361e62e8e8470de9fcef74b547"
+      },
+      "after": {
+        "bytes": 11457,
+        "blob": "7d1c8275d2c8776d60fbe824fb12f77f1242cc58",
+        "sha256": "2798c498af2a66bff7afba3358046becb900da9668dd10f3364aadb7533ff059"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? {} : any : any : any : any;\n",
+          "after": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "crates/vize_canon/src/snapshots/vize_canon__tests__virtual_ts_tests__virtual_ts_dynamic_component.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 25631,
+        "blob": "56bd79f0d7b746d211b377479c5865d6fbfcfcb1",
+        "sha256": "ae5901a6c993e163b341a702512abe938b8585578ffe4818991e447bcc26a089"
+      },
+      "after": {
+        "bytes": 25735,
+        "blob": "118c6aa2a35a3bf0c4a94c9650687ec1b4e93700",
+        "sha256": "7ca09b0a6f9e4b1a368a88645ba323f578573e8802abe62d48e5cfa6daa474ff"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? {} : any : any : any : any;\n",
+          "after": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "crates/vize_canon/src/snapshots/vize_canon__tests__virtual_ts_tests__virtual_ts_scoped_slots.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 28812,
+        "blob": "e5fb08e5d7d5273dec4f06620674437648f00bfc",
+        "sha256": "7a980aa1e09031b5bc2db14a3c747341603f4012e1a573b082819a69b1173d9a"
+      },
+      "after": {
+        "bytes": 28916,
+        "blob": "8028416ae8069240dd98245e18b9d0e2948de485",
+        "sha256": "aa949385a2b32dcc7b4f4f51b51945d7252556e687cffa6204d69441c7150ff7"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? {} : any : any : any : any;\n",
+          "after": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "crates/vize_canon/tests/snapshots/patterned_typechecking__patterned_root_virtual_ts.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 40369,
+        "blob": "5630c0059f4359a582acd278ebc10d35ea9a6130",
+        "sha256": "d7617b251473bdf260976f0aa01868ddb35d2ed8fd04f6a0ef877eb33293e534"
+      },
+      "after": {
+        "bytes": 40473,
+        "blob": "7276786a4945caf241cfd30cf59e1f10c74cd0d9",
+        "sha256": "3c1d24c87fbcf55f0223bd61155fc7e216a6f8bad1679aca765e3c3b3098ba67"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? {} : any : any : any : any;\n",
+          "after": "  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\n",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "tests/snapshots/check/__snapshots__/ecosystem-products-check.snap",
+      "mode": "100644",
+      "before": {
+        "bytes": 251803,
+        "blob": "a4c57344c8bd72ffbef7458577424df983ef466b",
+        "sha256": "013c470591e0295c682068fa7e09ee0ed4d291718ae317f35c9b3b6b5493635a"
+      },
+      "after": {
+        "bytes": 259273,
+        "blob": "aea9602b47922701b5e499c22d8799138128872c",
+        "sha256": "e34cb0e58dd58efbbd8916e292629bf5105ec0618cd683078b68e8ed4b959b5e"
+      },
+      "clauses": [
+        {
+          "before": "  type __VizeStructuralSlots<C> = C extends { readonly __vizeSlots?: infer __S } ? NonNullable<__S> : any;\\n",
+          "after": "  type __VizeStructuralSlots<C> = C extends { readonly __vizeSlots?: infer __S } ? NonNullable<__S> : any;\\n  type __VizeEmptyVueNavigationSlots<C> = ('__isFragment' | '__isTeleport' | '__isSuspense' | 'slots') extends keyof C ? __VizeIsAny<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]> extends true ? any : [NonNullable<C[Extract<'__isFragment' | '__isTeleport' | '__isSuspense', keyof C>]>] extends [never] ? C extends { slots?: infer __S } ? __VizeIsAny<__S> extends true ? any : unknown extends __S ? any : [keyof NonNullable<__S>] extends [never] ? C extends { setup?: (props: infer __P, ...args: any[]) => any } ? string extends keyof __P ? any : {} : {} : any : any : any : any;\\n  type __VizeNativeNavigationSlots<C> = C extends new (...args: any[]) => { $slots: any } ? __VizeIsAny<InstanceType<C>> extends true ? __VizeEmptyVueNavigationSlots<C> : __VizeIsAny<InstanceType<C>['$slots']> extends true ? any : unknown extends InstanceType<C>['$slots'] ? any : InstanceType<C>['$slots'] : any;\\n  type __VizeNavigationSlots<C> = __VizeIsAny<C> extends true ? any : C extends { readonly __vizeSlots?: infer __S } ? __VizeIsAny<__S> extends true ? __S : unknown extends __S ? [keyof NonNullable<__S>] extends [never] ? __VizeNativeNavigationSlots<C> : NonNullable<__S> : NonNullable<__S> : __VizeNativeNavigationSlots<C>;\\n",
+          "count": 6
+        },
+        {
+          "before": "const __vize_slots_nav_15 = undefined as unknown as __VizeStructuralSlots<typeof UCard>;",
+          "after": "const __vize_slots_nav_15 = undefined as unknown as __VizeNavigationSlots<typeof UCard>;",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
