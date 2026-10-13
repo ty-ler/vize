@@ -314,6 +314,8 @@ await test("a token ENOSPC failure still removes the lock acquired before its wr
 });
 await test("the owner worker deadline kills its real process group and preserves timeout failure", () => {
   coldPrimeFixture((owner, lock) => {
+    const previousObservation = process.env.VIZE_TOOLING_LISTING_OBSERVATION_DIR;
+    process.env.VIZE_TOOLING_LISTING_OBSERVATION_DIR = path.join(owner, "observation");
     const original = childProcess.spawnSync,
       mark = path.join(owner, "descendant.pid");
     const worker = `const {spawn}=require('node:child_process'); const fs=require('node:fs'); const d=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'ignore'}); fs.writeFileSync(${JSON.stringify(mark)},String(d.pid)); setInterval(()=>{},1000);`;
@@ -324,9 +326,31 @@ await test("the owner worker deadline kills its real process group and preserves
       return original(command, ["-e", worker], options);
     });
     syncBuiltinESMExports();
-    assert.throws(() => primeStarCounterpartHistory(owner, { timeoutMs: 1500 }), {
-      code: "ETIMEDOUT",
-    });
+    try {
+      assert.throws(() => primeStarCounterpartHistory(owner, { timeoutMs: 1500 }), {
+        code: "ETIMEDOUT",
+      });
+      const events = fs
+        .readFileSync(
+          path.join(owner, "observation", "history-prime-" + process.pid + ".jsonl"),
+          "utf8",
+        )
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line));
+      assert.equal(events[0].event, "missing-history");
+      const result = events.find((event) => event.event === "worker-result");
+      assert.equal(result.status, null);
+      assert.equal(result.signal, "SIGKILL");
+      assert.equal(result.error.code, "ETIMEDOUT");
+      assert(
+        events.some((event) => event.event === "cleanup-signal" && event.group === result.group),
+      );
+    } finally {
+      if (previousObservation === undefined)
+        delete process.env.VIZE_TOOLING_LISTING_OBSERVATION_DIR;
+      else process.env.VIZE_TOOLING_LISTING_OBSERVATION_DIR = previousObservation;
+    }
     const pid = Number(fs.readFileSync(mark, "utf8"));
     const state = original("ps", ["-o", "stat=", "-p", String(pid)], { encoding: "utf8" });
     assert(state.status !== 0 || state.stdout.trim().startsWith("Z"));

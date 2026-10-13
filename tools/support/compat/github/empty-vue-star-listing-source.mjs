@@ -20,6 +20,9 @@ const lexicalCounterparts = new Set([
 ]);
 const metadataPath = "tools/support/compat/github/empty-vue-star-listing-source.json";
 const sha = (body) => createHash("sha256").update(body).digest("hex");
+function assertBytes(actual, expected, message) {
+  assert(Buffer.isBuffer(actual) && Buffer.isBuffer(expected) && actual.equals(expected), message);
+}
 const blob = (body) =>
   createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
 const git = (root, args, input) =>
@@ -64,7 +67,7 @@ const loaded = new Map([
 const proofs = new WeakMap();
 function raw(root, source, files) {
   const tree = git(root, ["ls-tree", "-z", source, "--", ...files]);
-  assert.deepEqual(Buffer.from(tree.toString()), tree);
+  assertBytes(Buffer.from(tree.toString()), tree);
   const entries = tree
     .toString()
     .split("\0")
@@ -100,7 +103,7 @@ function confirm(owned) {
   assert.equal(git(owned.root, ["rev-parse", "HEAD"]).toString().trim(), owned.head);
   assert.equal(git(owned.root, ["for-each-ref", "--format=%(refname)", "refs/replace"]).length, 0);
   for (const [file, body] of owned.current)
-    assert.deepEqual(regular(owned.root, file), body, "same complete current source: " + file);
+    assertBytes(regular(owned.root, file), body, "same complete current source: " + file);
 }
 
 /** Authenticate the whole actual BD cohort and named entrypoints before any source counterpart. */
@@ -145,7 +148,7 @@ export function authenticateStarListingSource(root) {
   for (const cell of sdkCells) {
     const old = sdkBefore.get(cell.file),
       body = current.get(cell.file);
-    assert.deepEqual(sdkIncoming.get(cell.file), old, "actual merged SDK whole preimage");
+    assertBytes(sdkIncoming.get(cell.file), old, "actual merged SDK whole preimage");
     for (const [actual, expected] of [
       [old, cell.before],
       [body, cell.after],
@@ -157,14 +160,14 @@ export function authenticateStarListingSource(root) {
     }
     let restored = Buffer.from(body);
     for (const [start, end, from, to] of [...cell.clauses].reverse()) {
-      assert.deepEqual(restored.subarray(start, end), Buffer.from(from, "base64"));
+      assertBytes(restored.subarray(start, end), Buffer.from(from, "base64"));
       restored = Buffer.concat([
         restored.subarray(0, start),
         Buffer.from(to, "base64"),
         restored.subarray(end),
       ]);
     }
-    assert.deepEqual(restored, old, "complete original SDK overlap inverse");
+    assertBytes(restored, old, "complete original SDK overlap inverse");
   }
   for (const [
     file,
@@ -187,17 +190,17 @@ export function authenticateStarListingSource(root) {
   }
   for (const [file, expected] of loaded) {
     assert.equal(before.get(file), undefined, "genuine named source predecessor absence: " + file);
-    assert.deepEqual(current.get(file), expected, "complete committed executing source: " + file);
+    assertBytes(current.get(file), expected, "complete committed executing source: " + file);
   }
   for (const pair of metadata.inverses) {
     let body = Buffer.from(current.get(pair.file));
     for (const [start, end, from, to] of [...pair.clauses].reverse()) {
       const next = Buffer.from(from, "base64"),
         old = Buffer.from(to, "base64");
-      assert.deepEqual(body.subarray(start, end), next, "one exact named counterpart clause");
+      assertBytes(body.subarray(start, end), next, "one exact named counterpart clause");
       body = Buffer.concat([body.subarray(0, start), old, body.subarray(end)]);
     }
-    assert.deepEqual(body, before.get(pair.file), "complete literal BD counterpart: " + pair.file);
+    assertBytes(body, before.get(pair.file), "complete literal BD counterpart: " + pair.file);
   }
   assert.deepEqual(
     metadata.inverses.map(({ file }) => file),
@@ -305,7 +308,7 @@ export function starListingLexicalReader(copiedRoot) {
   const read = (file) => {
     assert(metadata.javascriptPaths.includes(file), "one closed current lexical JS93 source");
     const current = regular(copiedRoot, file);
-    assert.deepEqual(current, value.current.get(file), "complete actual copied lexical source");
+    assertBytes(current, value.current.get(file), "complete actual copied lexical source");
     if (lexicalCounterparts.has(file)) {
       owned(packet);
       return Buffer.from(value.before.get(file));
