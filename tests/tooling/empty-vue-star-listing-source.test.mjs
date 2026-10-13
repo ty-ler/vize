@@ -11,6 +11,7 @@ import { primeStarCounterpartHistory } from "../../tools/support/compat/github/s
 import {
   authenticateStarListingSource,
   qualifyStarListingBD,
+  starListingLexicalReader,
 } from "../../tools/support/compat/github/empty-vue-star-listing-source.mjs";
 
 const root = fs.realpathSync(new URL("../../", import.meta.url));
@@ -63,11 +64,54 @@ await test("the actual BD union admits only one production path after complete c
   assert.equal(packet.originalJSBodies, 93);
   assert.equal(packet.runtimeCredit, false);
   assert.equal(packet.original400Credit, false);
+  const requestedBase = process.env.BASE_REF ?? process.env.BASE_SHA ?? "origin/main";
+  const head = git(root, ["rev-parse", "HEAD"]).toString().trim();
+  const baseline = git(root, ["merge-base", requestedBase, head]).toString().trim();
+  assert.match(baseline, /^[a-f0-9]{40}$/u);
+  assert.equal(git(root, ["merge-base", manifest.base, baseline]).toString().trim(), manifest.base);
+  assert.equal(git(root, ["merge-base", manifest.base, head]).toString().trim(), manifest.base);
+  // Authenticate the real owner graph independently of the fixed BD source cohort.
+  const graph = git(root, ["rev-list", "--parents", baseline, head, "^" + manifest.base])
+    .toString()
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => line.split(" "));
+  graph.push([
+    manifest.base,
+    ...git(root, ["cat-file", "commit", manifest.base])
+      .toString()
+      .split("\n\n", 1)[0]
+      .split("\n")
+      .filter((line) => line.startsWith("parent "))
+      .map((line) => line.slice(7)),
+  ]);
+  const shallowPath = git(root, ["rev-parse", "--git-path", "shallow"]).toString().trim();
+  const shallow = new Set(
+    fs.existsSync(path.resolve(root, shallowPath))
+      ? fs.readFileSync(path.resolve(root, shallowPath), "utf8").trim().split("\n")
+      : [],
+  );
+  for (const [id, ...parents] of graph) {
+    assert.equal(shallow.has(id), false, "complete actual comparison ancestry");
+    const body = git(root, ["cat-file", "commit", id]);
+    assert.equal(
+      createHash("sha1").update(`commit ${body.length}\0`).update(body).digest("hex"),
+      id,
+    );
+    const actualParents = body
+      .toString()
+      .split("\n\n", 1)[0]
+      .split("\n")
+      .filter((line) => line.startsWith("parent "))
+      .map((line) => line.slice(7));
+    assert.deepEqual(actualParents, parents, "genuine complete actual parent edges");
+  }
   const production = git(root, [
     "diff",
     "--name-only",
-    manifest.base,
-    "HEAD",
+    baseline,
+    head,
     "--",
     "crates",
     "davinci",
@@ -117,10 +161,28 @@ await test("every complete BD counterpart and executing body on both sides refus
 await test("foreign raw bodies, changed entrypoints, hybrid source, modes and replacement refs refuse before replay", () => {
   fixture((owner, head) => {
     assert(authenticateStarListingSource(owner));
+    const readLexical = starListingLexicalReader(owner);
+    for (const file of [
+      "tests/performance/support/warm-type-backed-host-qualifications.ts",
+      "tests/tooling/warm-type-backed-lexical-dollar-host.test.ts",
+    ]) {
+      assert.deepEqual(readLexical(file), git(root, ["show", manifest.base + ":" + file]));
+      const target = path.join(owner, file),
+        original = fs.readFileSync(target);
+      fs.writeFileSync(target, Buffer.concat([original, Buffer.from("foreign copied source\n")]));
+      assert.throws(() => readLexical(file));
+      fs.writeFileSync(target, original);
+    }
+    assert.throws(() => readLexical("unknown.ts"));
+    assert.throws(() => readLexical(execution));
+    readLexical.confirmSource();
     for (const file of [
       execution,
       "tests/performance/support/warm-type-backed-host-qualifications.ts",
       manifest.tests[0][0],
+      "tests/tooling/javascript-sfc-star-source.test.mjs",
+      "tests/tooling/javascript-sfc-options-source.test.mjs",
+      "tests/tooling/warm-type-backed-lexical-dollar-host.test.ts",
       manifest.executing[0],
       manifestPath,
     ]) {
@@ -232,11 +294,9 @@ await test("the owner worker deadline kills its real process group and preserves
       return original(command, ["-e", worker], options);
     });
     syncBuiltinESMExports();
-    const start = performance.now();
     assert.throws(() => primeStarCounterpartHistory(owner, { timeoutMs: 1500 }), {
       code: "ETIMEDOUT",
     });
-    assert(performance.now() - start < 2500);
     const pid = Number(fs.readFileSync(mark, "utf8"));
     const state = original("ps", ["-o", "stat=", "-p", String(pid)], { encoding: "utf8" });
     assert(state.status !== 0 || state.stdout.trim().startsWith("Z"));

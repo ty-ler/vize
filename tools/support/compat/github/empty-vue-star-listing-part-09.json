@@ -49,9 +49,9 @@
     "fcd8484bb9f231b74ae2358d5b2dcbc411c0077f",
     11669,
     "2ee5be08efdaedc69c98d2c78ab12547054033c26891c598c8ab4d29ccc5ec8a",
-    "fcd8484bb9f231b74ae2358d5b2dcbc411c0077f",
-    11669,
-    "2ee5be08efdaedc69c98d2c78ab12547054033c26891c598c8ab4d29ccc5ec8a"
+    "e7f4c70e3797df82ceea7db534ea3f7d8b92c4c4",
+    330,
+    "5efd5cfafbda9def95480933d6d66abc022b0572fc0168efe46942279249da8b"
   ],
   [
     "tests/tooling/javascript-sfc-retained-source-views.test.ts",
@@ -76,9 +76,9 @@
     "066b022644780ce5a7c939cb0017eff898db639f",
     6715,
     "e6f4a05080b14b6a457e05dc32f591b843f20a62f20132f4ca74129b2d15ba14",
-    "066b022644780ce5a7c939cb0017eff898db639f",
-    6715,
-    "e6f4a05080b14b6a457e05dc32f591b843f20a62f20132f4ca74129b2d15ba14"
+    "2c6cb1f5757c02ff3c96d68aba01368e2eb8591e",
+    327,
+    "1ffec70615c8499d6b9f75792bdbf4e727e0bb11782eb14e2adc21a689487bce"
   ],
   [
     "tests/tooling/support/lsp/assertions.ts",

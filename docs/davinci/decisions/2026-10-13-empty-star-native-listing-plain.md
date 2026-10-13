@@ -89,8 +89,9 @@ hosted helper in the actual Actions checkout before creating private frames.
 Frames select authenticated regular blobs from the literal source tree, keep
 its genuine commit/tree identity and an owned read-only object-pool alternate,
 and are removed after tests. The lexical source read is restricted to93
-known JS paths and lends only the complete BD caller after checking all actual
-current source and all copied current bytes. It preserves actual compiler,
+known JS paths and lends only the complete BD caller and lexical test owner
+after checking all actual current source and all copied current bytes. The
+owned current proof is confirmed again before either whole historical body. It preserves actual compiler,
 source, metadata and receipt ownership.
 
 New controls reject every source/metadata/entrypoint cell's absence or drift
@@ -132,3 +133,23 @@ Git descendants, and timeout remains a failure. Successful workers unref the
 watchdog and are reaped normally. Three controls cover dead PID recovery,
 ENOSPC cleanup and a real hung owner/descendant deadline. No source admission,
 workflow or original historical assertion is relaxed.
+
+The published29aa run exposed two further original JS93 readers: the exact
+Star and Options source test entrypoints. They now use the same named current
+source-gated entrypoint as the existing seven owners; their two complete BD
+bodies are preserved as exact inverses and execute unchanged on the literal
+BD frame. The closed source footprint remains429 and every existing API,
+corpus row and assertion remains unchanged. Copied lexical controls reject
+wrong or unknown cells and both changed owner bodies before lending bytes.
+
+Actions tests the genuine PR merge commit against a newer base. Authenticate
+the actual comparison commit graph and the actual merge-base separately from
+the literal BD source cohort, proving BD ancestry and complete raw commit
+identities/parent edges before checking the singleton production delta. The
+source cohort continues to compare the fixed literal BD to the actual owner.
+The 1500ms worker deadline control still requires ETIMEDOUT, the real detached
+worker's configured budget, descendant termination and exact lock cleanup;
+unrelated setup time no longer supplies a CPU wall-clock assertion. Production
+240s priming and original400 budgets remain unchanged. The configured formatter
+and type-aware lint also require the default UTF16-preserving explicit sort
+comparator and the companion document's regular paragraph spacing.

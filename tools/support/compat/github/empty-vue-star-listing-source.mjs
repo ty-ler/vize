@@ -14,7 +14,10 @@ import {
 const base = "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38";
 const prior = "19b451f951137814a8a8d36b57d200a23100344e";
 const execution = "crates/vize_canon/tests/empty_vue_star_exports/execution.rs";
-const caller = "tests/performance/support/warm-type-backed-host-qualifications.ts";
+const lexicalCounterparts = new Set([
+  "tests/performance/support/warm-type-backed-host-qualifications.ts",
+  "tests/tooling/warm-type-backed-lexical-dollar-host.test.ts",
+]);
 const metadataPath = "tools/support/compat/github/empty-vue-star-listing-source.json";
 const sha = (body) => createHash("sha256").update(body).digest("hex");
 const blob = (body) =>
@@ -38,7 +41,7 @@ function regular(root, file) {
 }
 const moduleRoot = fs.realpathSync(new URL("../../../../", import.meta.url));
 const metadataBody = regular(moduleRoot, metadataPath);
-assert.equal(sha(metadataBody), "c661edd1b8a9bc120a4edebaa313ec89000b717622b1314eb54c7244292992fb");
+assert.equal(sha(metadataBody), "48ae31503821b74c41600e6c9fd0c810ae35d52b81e4558ed377565ba5fb3c01");
 const metadata = JSON.parse(metadataBody);
 assert.equal(metadata.schema, "vize.empty-vue-star.literal-bd-listing-source");
 assert.equal(metadata.base, base);
@@ -224,7 +227,7 @@ export async function runStarListingOriginalTest(root, file) {
     if (!retained) fixture.cleanup();
   }
 }
-/** A copied lexical JS93 view may borrow only the exact BD caller after full actual custody. */
+/** Only the two whole named BD lexical owners follow complete actual source custody. */
 export function starListingLexicalReader(copiedRoot) {
   const packet = authenticateStarListingSource(moduleRoot),
     value = owned(packet);
@@ -232,7 +235,11 @@ export function starListingLexicalReader(copiedRoot) {
     assert(metadata.javascriptPaths.includes(file), "one closed current lexical JS93 source");
     const current = regular(copiedRoot, file);
     assert.deepEqual(current, value.current.get(file), "complete actual copied lexical source");
-    return Buffer.from(file === caller ? value.before.get(file) : current);
+    if (lexicalCounterparts.has(file)) {
+      owned(packet);
+      return Buffer.from(value.before.get(file));
+    }
+    return Buffer.from(current);
   };
   return Object.assign(read, { confirmSource: () => owned(packet) });
 }
