@@ -45,7 +45,7 @@ function regular(root, file) {
 }
 const moduleRoot = fs.realpathSync(new URL("../../../../", import.meta.url));
 const metadataBody = regular(moduleRoot, metadataPath);
-assert.equal(sha(metadataBody), "bf1b8db058151bc55697d8bf3d953ff6b8b51840222eb6a4514b1cb48dcae58c");
+assert.equal(sha(metadataBody), "fc03d861ffb4465740f5b1eefdce49af253197d2635a0280ba1b25a645ba6a1b");
 const metadata = JSON.parse(metadataBody);
 assert.equal(metadata.schema, "vize.empty-vue-star.literal-bd-listing-source");
 assert.equal(metadata.base, base);
@@ -138,6 +138,25 @@ export function authenticateStarListingSource(root) {
   assert.equal(new Set(files).size, files.length);
   const before = raw(root, base, files),
     current = raw(root, head, files);
+  const projectedCurrent = new Map(current);
+  const canonical = metadata.mainUnion.canonicalSuccessor;
+  if (canonical) {
+    const [file, expectedBlob, length, checksum] = canonical.after;
+    assert.equal(file, "docs/davinci/decisions/2026-09-27-level-restructure.md");
+    let body = current.get(file);
+    assert.equal(blob(body), expectedBlob);
+    assert.equal(body.length, length);
+    assert.equal(sha(body), checksum);
+    for (const [start, end, from, to] of [...canonical.clauses].reverse()) {
+      assertBytes(body.subarray(start, end), Buffer.from(from, "base64"));
+      body = Buffer.concat([
+        body.subarray(0, start),
+        Buffer.from(to, "base64"),
+        body.subarray(end),
+      ]);
+    }
+    projectedCurrent.set(file, body);
+  }
   const incoming = raw(
     root,
     metadata.mainUnion.source,
@@ -146,7 +165,7 @@ export function authenticateStarListingSource(root) {
   for (const [file, oldBlob, oldLength, oldSHA, nextBlob, nextLength, nextSHA] of metadata.mainUnion
     .cells) {
     const old = incoming.get(file),
-      next = current.get(file);
+      next = projectedCurrent.get(file);
     assert.equal(blob(old), oldBlob);
     assert.equal(old.length, oldLength);
     assert.equal(sha(old), oldSHA);
@@ -155,7 +174,7 @@ export function authenticateStarListingSource(root) {
     assert.equal(sha(next), nextSHA);
   }
   for (const pair of mainInverses) {
-    let body = Buffer.from(current.get(pair.file));
+    let body = Buffer.from(projectedCurrent.get(pair.file));
     for (const [start, end, from, to] of [...pair.clauses].reverse()) {
       assertBytes(body.subarray(start, end), Buffer.from(from, "base64"));
       body = Buffer.concat([
@@ -332,7 +351,14 @@ export function qualifyStarListingMain(production, qualified, digest) {
     )
       return null;
   for (const [file, , , oldSHA, , , nextSHA] of metadata.mainUnion.cells)
-    if (digest("before", file) !== oldSHA || digest("after", file) !== nextSHA) return null;
+    if (
+      digest("before", file) !== oldSHA ||
+      digest("after", file) !==
+        (metadata.mainUnion.canonicalSuccessor?.after[0] === file
+          ? metadata.mainUnion.canonicalSuccessor.after[3]
+          : nextSHA)
+    )
+      return null;
   return {
     authority: "exact-reviewed-incoming-main-star-listing-singleton",
     files: [execution],
