@@ -247,10 +247,7 @@
       "tests/tooling/javascript-sfc-star-source.test.mjs",
       "bd5702c0a4d5fb3bb64487794fc45f6f876e6e38"
     ],
-    [
-      "tests/tooling/misskey-registry-source.test.mjs",
-      "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6"
-    ]
+    ["tests/tooling/misskey-registry-source.test.mjs", "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6"]
   ],
   "javascriptPaths": [
     ".github/workflows/typechecker-native-phases.yml",
