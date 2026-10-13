@@ -1,3 +1,4 @@
+import { qualifyConfigIncomingCustodyHost } from "./warm-type-backed-config-incoming-custody.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import raw from "./warm-type-backed-config-repair-host.json" with { type: "json" };
@@ -76,33 +77,40 @@ export function qualifyConfigRepairedReviewHost<T extends { files: readonly stri
   ) => T | null,
   scope: ConfigReviewScope = "parent-pair",
 ) {
-  return qualifyOwnedCompletionHost(
+  return qualifyConfigIncomingCustodyHost(
     production,
     alreadyQualified,
     digest,
-    (files, owned, actual) =>
-      qualifyProjectConfigRuntimeRepairHost(files, owned, actual, (files, owned, current) =>
-        qualifyConfigFixtureHost(
-          files,
-          owned,
-          current,
-          (fixtureFiles, fixtureOwned, fixtureDigest) =>
-            qualifyConfigCanonBatchHost(
-              fixtureFiles,
-              fixtureOwned,
-              fixtureDigest,
-              (selected, qualified, actual) =>
-                qualifyConfigRepairedReviewContext(
-                  selected,
-                  qualified,
-                  actual,
-                  qualifyOriginal,
+    (production, alreadyQualified, digest) =>
+      qualifyOwnedCompletionHost(
+        production,
+        alreadyQualified,
+        digest,
+        (files, owned, actual) =>
+          qualifyProjectConfigRuntimeRepairHost(files, owned, actual, (files, owned, current) =>
+            qualifyConfigFixtureHost(
+              files,
+              owned,
+              current,
+              (fixtureFiles, fixtureOwned, fixtureDigest) =>
+                qualifyConfigCanonBatchHost(
+                  fixtureFiles,
+                  fixtureOwned,
+                  fixtureDigest,
+                  (selected, qualified, actual) =>
+                    qualifyConfigRepairedReviewContext(
+                      selected,
+                      qualified,
+                      actual,
+                      qualifyOriginal,
+                      scope,
+                    ),
                   scope,
                 ),
               scope,
             ),
-          scope,
-        ),
+          ),
+        scope,
       ),
     scope,
   );

@@ -10,6 +10,8 @@ use std::{
     thread::sleep,
     time::{Duration, Instant},
 };
+#[path = "pr_pin_body.rs"]
+mod body;
 #[cfg(test)]
 #[path = "pr_pin_budget_tests.rs"]
 mod budget_tests;
@@ -35,6 +37,9 @@ pub(super) mod lock;
 #[path = "pr_pin_metadata.rs"]
 mod metadata;
 pub use metadata::rewrite_guest_lock;
+#[path = "pr_pin_producer_metadata.rs"]
+mod producer_metadata;
+pub use producer_metadata::verify_producer_metadata;
 #[path = "pr_pin_retire.rs"]
 mod retire;
 #[path = "pr_pin_retire_absence.rs"]
@@ -65,6 +70,8 @@ pub use retire::{retire, validate_preparation_target};
 mod recovery_tests;
 #[path = "pr_pin_runs.rs"]
 mod runs;
+#[path = "pr_pin_stable.rs"]
+mod stable;
 #[path = "pr_pin_start.rs"]
 mod start;
 #[path = "pr_pin_tags.rs"]
@@ -75,7 +82,7 @@ mod target_tests;
 #[cfg(test)]
 #[path = "pr_pin_tests.rs"]
 mod tests;
-pub use start::{resume, start};
+pub use start::{resume, start, start_stable};
 #[path = "pr_pin_watch.rs"]
 mod watcher;
 use watcher::watch;
@@ -87,6 +94,7 @@ pub(super) struct Source {
     base_version: String,
     integration: u64,
     closed: bool,
+    stable: Option<stable::Stable>,
 }
 
 pub(super) fn marker(body: &str, key: &str) -> Result<String, String> {
@@ -187,11 +195,17 @@ pub(super) fn source(
             tag: tag.into(),
             merged: false,
         },
-        cut,
+        cut: cut.clone(),
         base_version,
         integration,
         closed,
+        stable: stable::from_body(body, &cut, repository, root)?,
     };
+    if let Some(context) = &source.stable {
+        if marker(body, "vize-release-bump")? != "patch" || stable::target(context, root)? != tag {
+            return Err("Stable source receipt is not the reviewed exact PATCH target".into());
+        }
+    }
     lock::verify_pin(&source, root)?;
     Ok(source)
 }
@@ -244,7 +258,7 @@ pub fn validate(number: u64, head: &str, tag: &str, root: &Path) -> Result<(), S
         return Err("The pinned workflow checkout/tag must be the exact immutable H.".into());
     }
     let main = github::fetch_main(root)?;
-    first_parent(&source.cut, &main, root)?;
+    stable::main_anchor(&source, &main, root)?;
     let main_version = github::version_text(
         &String::from_utf8(metadata::bytes(
             &["show", &format!("{main}:Cargo.toml")],
@@ -306,7 +320,7 @@ pub fn wait_for_promotion(number: u64, head: &str, tag: &str, root: &Path) -> Re
     loop {
         let source = source(&repository, number, head, tag, false, root)?;
         let main = github::fetch_main(root)?;
-        first_parent(&source.cut, &main, root)?;
+        stable::main_anchor(&source, &main, root)?;
         if github::tag_target(tag, root)?.is_some() {
             delivery::published_identity(&source, run_id, root)?;
             println!(
