@@ -179,3 +179,19 @@ source cells, including existing metadata/helper bodies. All other before
 cells and the complete current after cohort remain mandatory. Whole original
 400 vectors, extra/hybrid/unknown refusals, execution bytes and budgets stay
 unchanged; positive actual C4 digest and every-cell refusal controls are added.
+
+The exact existing negative source control exposed excessive assertion diagnostics.
+On Node 24.12, its unchanged whole-file refusal case passed in 161.45 seconds
+but reached 76,389,482,496 bytes maximum RSS. A single comparison of the original
+execution buffer against the metadata buffer reproduced 71,042,203,648 bytes
+before the owned probe was terminated; its process sample shows backing-store
+allocation. Whole Buffer.equals assertions preserve exact bytes, modes, source
+identity and every refusal, while avoiding construction of a large byte diff.
+The same negative case now passes in 8.87 seconds with 207,585,280 bytes maximum
+RSS. These are local measurements; the hosted SIGKILL actor and cgroup OOM
+attribution remain unproved. All original source laws and budgets are unchanged.
+An existing opt-in diagnostic directory additionally records the owned primer's
+caller, worker, monitor and process-group signals and actual spawn result,
+without changing its environment, streams, strict fetches or 240-second limit.
+The three original cleanup controls pass, including the real timed-out group's
+SIGKILL and retained ETIMEDOUT record. Fresh exact-head Actions remain required.

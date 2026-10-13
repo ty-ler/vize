@@ -33,6 +33,15 @@ const sources = new Set([
   "19b451f951137814a8a8d36b57d200a23100344e",
   "2da71113a3f8ab528b1a9cda20fc6a4c2bd273f6",
 ]);
+function observePrime(event) {
+  const directory = process.env.VIZE_TOOLING_LISTING_OBSERVATION_DIR;
+  if (!directory) return;
+  fs.mkdirSync(directory, { recursive: true });
+  fs.appendFileSync(
+    path.join(directory, "history-prime-" + process.pid + ".jsonl"),
+    JSON.stringify({ time: new Date().toISOString(), pid: process.pid, ...event }) + "\n",
+  );
+}
 function alive(pid) {
   try {
     process.kill(pid, 0);
@@ -44,6 +53,7 @@ function alive(pid) {
 }
 function stopGroup(pid) {
   if (!pid) return;
+  observePrime({ event: "cleanup-signal", group: pid, signal: "SIGKILL" });
   try {
     process.kill(process.platform === "win32" ? pid : -pid, "SIGKILL");
   } catch (error) {
@@ -68,6 +78,7 @@ export function primeStarCounterpartHistory(owner, { timeoutMs = 240_000 } = {})
     return records.every((record, index) => record === required[index] + " commit");
   };
   if (present()) return;
+  observePrime({ event: "missing-history", root, required, timeoutMs });
   const common = git(root, ["rev-parse", "--git-common-dir"]).toString().trim();
   const directory = fs.realpathSync(path.resolve(root, common, "objects/info"));
   const lock = path.join(directory, "star-counterpart-prime.lock");
@@ -129,8 +140,9 @@ export function primeStarCounterpartHistory(owner, { timeoutMs = 240_000 } = {})
       "../../../../tests/performance/support/warm-type-backed-git-reader-literal-source.ts",
       import.meta.url,
     ).href;
-    const monitor = `const {spawn}=require('node:child_process'); const owner=${process.pid}; const group=Number(process.argv[1]); const end=Date.now()+Number(process.argv[2]); const alive=p=>{try{process.kill(p,0);return true}catch(e){if(e.code==='ESRCH')return false;throw e}}; process.on('SIGTERM',()=>{}); const timer=setInterval(()=>{if(!alive(owner)||!alive(group)||Date.now()>=end){clearInterval(timer);try{process.kill(-group,'SIGTERM')}catch(e){if(e.code!=='ESRCH')throw e}setTimeout(()=>{try{process.kill(-group,'SIGKILL')}catch(e){if(e.code!=='ESRCH')throw e}},200)}},50);`;
-    const script = `import fs from 'node:fs'; import {spawn} from 'node:child_process'; import {ensureHostedLiteralSource} from ${JSON.stringify(helper)}; const lock=${JSON.stringify(lock)}, token=${JSON.stringify(token)}; if(fs.readFileSync(lock,'utf8')!==token) throw Error('same owned lock required'); fs.writeFileSync(${JSON.stringify(workerFile)},token+':'+process.pid,{flag:'wx',mode:0o600}); if(fs.readFileSync(lock,'utf8')!==token) throw Error('same live owner lock required'); try{process.kill(${process.pid},0)}catch(e){throw Error('live owner required')} spawn(process.execPath,['-e',${JSON.stringify(monitor)},String(process.pid),${JSON.stringify(String(remaining))}],{stdio:'ignore'}).unref(); for(const source of ${JSON.stringify(required)}) ensureHostedLiteralSource(${JSON.stringify(root)},source);`;
+    const observation = `const observe=${observePrime.toString()};`;
+    const monitor = `const fs=require('node:fs'), path=require('node:path'); ${observation} const owner=${process.pid}; const group=Number(process.argv[1]); const end=Date.now()+Number(process.argv[2]); observe({event:'monitor-start',owner,group,end}); const alive=p=>{try{process.kill(p,0);return true}catch(e){if(e.code==='ESRCH')return false;throw e}}; process.on('SIGTERM',()=>{}); const timer=setInterval(()=>{const ownerAlive=alive(owner),groupAlive=alive(group),expired=Date.now()>=end;if(!ownerAlive||!groupAlive||expired){clearInterval(timer);observe({event:'monitor-signal',owner,group,ownerAlive,groupAlive,expired,signal:'SIGTERM'});try{process.kill(-group,'SIGTERM')}catch(e){if(e.code!=='ESRCH')throw e}setTimeout(()=>{observe({event:'monitor-signal',owner,group,signal:'SIGKILL'});try{process.kill(-group,'SIGKILL')}catch(e){if(e.code!=='ESRCH')throw e}},200)}},50);`;
+    const script = `import fs from 'node:fs'; import path from 'node:path'; import {spawn} from 'node:child_process'; import {ensureHostedLiteralSource} from ${JSON.stringify(helper)}; ${observation} const lock=${JSON.stringify(lock)}, token=${JSON.stringify(token)}; observe({event:'worker-start',owner:${process.pid},group:process.pid}); if(fs.readFileSync(lock,'utf8')!==token) throw Error('same owned lock required'); fs.writeFileSync(${JSON.stringify(workerFile)},token+':'+process.pid,{flag:'wx',mode:0o600}); if(fs.readFileSync(lock,'utf8')!==token) throw Error('same live owner lock required'); try{process.kill(${process.pid},0)}catch(e){throw Error('live owner required')} const monitor=spawn(process.execPath,['-e',${JSON.stringify(monitor)},String(process.pid),${JSON.stringify(String(remaining))}],{stdio:'ignore'}); observe({event:'monitor-launched',monitor:monitor.pid,owner:${process.pid},group:process.pid}); monitor.unref(); for(const source of ${JSON.stringify(required)}) ensureHostedLiteralSource(${JSON.stringify(root)},source); observe({event:'worker-complete',owner:${process.pid},group:process.pid});`;
     let result;
     try {
       result = spawnSync(process.execPath, ["--input-type=module", "-e", script], {
@@ -140,6 +152,13 @@ export function primeStarCounterpartHistory(owner, { timeoutMs = 240_000 } = {})
         detached: process.platform !== "win32",
         timeout: remaining + 500,
         killSignal: "SIGKILL",
+      });
+      observePrime({
+        event: "worker-result",
+        group: result.pid,
+        status: result.status,
+        signal: result.signal,
+        error: result.error ? { code: result.error.code, message: result.error.message } : null,
       });
       if (result.error) throw result.error;
       assert.equal(result.status, 0, "bounded strict literal history worker");
