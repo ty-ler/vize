@@ -54,7 +54,7 @@ export function qualifyHostMoves(
     digest("before", "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts") ===
       null &&
     digest("after", "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts") ===
-      "afb60ff75a9d20b779432ccae8d59123b3ab759b49a09f28735f5293b0b44c86"
+      "6e7941072788c2fad4e678d5edd6d4abb5b8e3b87ad53b85c198a6e78d8af801"
       ? qualifyEmptyVueStarListingHost(
           production,
           alreadyQualified,

@@ -7,7 +7,7 @@ export const emptyVueStarListingPath =
 export const emptyVueStarListingBeforeSHA256 =
   "dea4749d405c1d43c9d42de9dc38f949dc454981d933f73d6bd2eb442837e904";
 export const emptyVueStarListingAfterSHA256 =
-  "1d49e08a795cade66d36cc4a0edeb4f4a74451cd05570ff7eed41a939935b194";
+  "8036d7f9eace7c439afcf23b785680f6e833ccfd673f2a9c6814735ca3ee3581";
 const sha = (body: Buffer) => createHash("sha256").update(body).digest("hex");
 const blob = (body: Buffer) =>
   createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
@@ -18,16 +18,16 @@ const clauses = [
   ],
   [
     'assert_eq!(listing["arguments"], json!(["--listFilesOnly"]));',
-    'assert_eq!(listing["arguments"], json!(["--listFilesOnly", "--pretty", "false"]));',
+    'assert_eq!(\n        listing["arguments"],\n        json!(["--listFilesOnly", "--pretty", "false"])\n    );',
   ],
 ] as const;
 
 /** Only the complete current execution body can lend its exact two-clause predecessor. */
 export function retainedEmptyVueStarListingExecution(body: Buffer): Buffer {
   assert(Buffer.isBuffer(body), "complete current listing execution required");
-  assert.equal(body.length, 10821);
+  assert.equal(body.length, 10843);
   assert.equal(sha(body), emptyVueStarListingAfterSHA256);
-  assert.equal(blob(body), "099d17ffdc7dd644fbae22e7867ef35be6319038");
+  assert.equal(blob(body), "dc0f5bf729911f9b457cb5f677f0fc7db116f807");
   let text = body.toString("utf8");
   assert.deepEqual(Buffer.from(text), body);
   for (const [before, after] of clauses) {

@@ -19,7 +19,7 @@ type Read = (file: string) => Buffer | null;
 const root = path.resolve(import.meta.dirname, "../../..");
 const host = "tests/performance/support/warm-type-backed-host-qualifications.ts";
 const originalSHA = "b19f6783e50429d2779efeb7d2d21c64dcd98a67810fc4f6a1ccc698febae337";
-const currentSHA = "25e3b9b67d07df9ddf74701d1821b3644b747b860b06b4a377cc7d9ed4df2f29";
+const currentSHA = "d6e2f7ff409137866d2d0b0b6ba545a3602cc5ce6a467b992309f1cd9101f5ec";
 const beforeSource = "a93e78147b0990c813e965a7868b32dda341eb77";
 const helperPairs = [
   [
@@ -32,7 +32,7 @@ const helperPairs = [
   ],
   [
     "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts",
-    "afb60ff75a9d20b779432ccae8d59123b3ab759b49a09f28735f5293b0b44c86",
+    "6e7941072788c2fad4e678d5edd6d4abb5b8e3b87ad53b85c198a6e78d8af801",
   ],
 ] as const;
 const clauses = [
@@ -138,7 +138,7 @@ export function retainedHostBeforeEmptyVueStars(read: Read): Buffer {
   const listingImport =
     'import { qualifyEmptyVueStarListingHost } from "./warm-type-backed-empty-vue-star-listing.ts";\n\n';
   const listingGuard =
-    ' &&\n    digest("before", "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts") ===\n      null &&\n    digest("after", "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts") ===\n      "afb60ff75a9d20b779432ccae8d59123b3ab759b49a09f28735f5293b0b44c86"';
+    ' &&\n    digest("before", "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts") ===\n      null &&\n    digest("after", "tests/performance/support/warm-type-backed-empty-vue-star-listing.ts") ===\n      "6e7941072788c2fad4e678d5edd6d4abb5b8e3b87ad53b85c198a6e78d8af801"';
   const listingCall =
     "qualifyEmptyVueStarListingHost(\n          production,\n          alreadyQualified,\n          digest,\n          qualifyEmptyVueStarHost,\n        )";
   for (const [after, before] of [
