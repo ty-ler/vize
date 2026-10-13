@@ -91,3 +91,13 @@ Japanese guide byte and all 18 complete code fences remain unchanged. Retain
 the original RED packet and require the unchanged complete rendered-link law
 to pass with `_blank` and `noopener noreferrer`; no parser qualification or
 installed release behavior is inferred.
+
+The configuration introduction retained a Vite-only React opt-out instruction
+after the JSX guides had named the selected configuration. Align both English
+and Japanese introductions: disable `typeChecker.jsxTypecheck` in a dedicated
+configuration when present, because it takes precedence; use the nested
+`vize.typeChecker.jsxTypecheck` key for Vite configuration. Preserve all complete
+examples and original editorial bodies by updating only the exact Japanese
+successor patch, its later offsets and whole-successor digest. Existing inverse
+oracles remain unchanged; source, native Stack and public qualification remain
+required on the final composed head.

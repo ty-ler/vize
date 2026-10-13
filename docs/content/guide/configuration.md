@@ -20,7 +20,7 @@ These defaults are planned for the next release for projects without a dedicated
 | LSP document, range, and on-type formatting | Enabled unless a project or editor switch disables it | Existing opt-in behavior |
 | Formatter style options | Existing defaults and authored overrides | Existing defaults and authored overrides |
 
-For React-owned or mixed React/Vue JSX, set `vize.typeChecker.jsxTypecheck: false` in Vite config. Vize does not infer the owning framework from JSX syntax; Vue SFC checking remains available. See [JSX type checking](./jsx.md#type-checking).
+For React-owned or mixed React/Vue JSX, set `typeChecker.jsxTypecheck: false` in the configuration you use. An existing dedicated `vize.config.*` takes precedence over Vite config, so change that dedicated configuration when present. Vite configuration uses `vize.typeChecker.jsxTypecheck`. Vize does not infer the owning framework from JSX syntax; Vue SFC checking remains available. See [JSX type checking](./jsx.md#type-checking).
 
 Project defaults do not override explicit editor switches. The VS Code lint-only profile still disables formatting; `vp run editor:setup` explicitly enables it while preserving existing choices. [Editor setup](./vite-plus-editor.md) explains formatter ownership.
 

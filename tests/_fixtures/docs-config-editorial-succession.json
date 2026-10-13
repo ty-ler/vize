@@ -66,7 +66,7 @@
     {
       "path": "docs/content/ja/guide/configuration.md",
       "originalSha256": "d5d5f84f6a8441fac34aa8806bcf1d15a1eb683d450f5d3cb4fb3e9545ebd51e",
-      "successorSha256": "2e0baa315999faf3e9214bd278d5ba1ad1a3257a8a6b6bc22448a1a17dfb1187",
+      "successorSha256": "5f8d9e1a786e62ef9a897b43273bccbe3ad8d3015e358b25c62087d21b0ba706",
       "patches": [
         {
           "offset": 14,
@@ -81,90 +81,90 @@
         {
           "offset": 145,
           "before": "Vite+ プロジェクトでは、統合 helper を使って **`vite.config.ts`** に Vize の設定をまとめます。\n必要な項目だけ追加してください。デフォルトで利用する場合、別の設定ファイルは不要です。\n",
-          "after": "Vize の設定は `vite.config.ts` に、TypeScript のプロジェクト設定は `tsconfig.json` にまとめます。既定の設定で使う場合、専用の Vize 設定ファイルは不要です。\n\n> [!NOTE]\n> ネイティブ CLI・エディターの Vite 設定の読み込みと、専用設定を作らない init は、次のリリースに向けて準備中です。それまでは、公開済みのネイティブツールで共通設定を変更するには既存の専用形式を使います。[リファレンス](./configuration-reference.md)にその形式をまとめています。\n\n## プロジェクトとエディターの既定値\n\n次回リリースでは、専用の `vize.config.*` がないプロジェクトに以下の既定値を適用する予定です。公開済みリリースは従来の動作を維持します。\n\n| 機能 | 専用設定なし（`vite.config.*` を含む） | 既存の専用設定あり |\n| --- | --- | --- |\n| `vize check`・`vize lsp` の Vue JSX 型チェック | 明示的に無効化しなければ有効 | `typeChecker.jsxTypecheck: true` で有効化 |\n| LSP の文書・範囲・入力時フォーマット | プロジェクトやエディターで無効化しなければ有効 | 既存のオプトイン動作を維持 |\n| フォーマットの書式設定 | 既存の既定値と明示的な設定を維持 | 既存の既定値と明示的な設定を維持 |\n\nReact 用、または React と Vue JSX が混在するプロジェクトでは、Vite 設定の `vize.typeChecker.jsxTypecheck` を `false` にします。JSX の構文からフレームワークは判別しません。Vue SFC の型チェックは引き続き利用できます。[JSX の型チェック](./jsx.md#型チェック)を参照してください。\n\n明示的なエディター設定は、プロジェクトの既定値より優先されます。VS Code の lint 専用プロファイルはフォーマットを無効にし、`vp run editor:setup` は既存の選択を維持しながら明示的に有効化します。[エディター設定（英語）](../../guide/vite-plus-editor.md)に担当範囲をまとめています。\n"
+          "after": "Vize の設定は `vite.config.ts` に、TypeScript のプロジェクト設定は `tsconfig.json` にまとめます。既定の設定で使う場合、専用の Vize 設定ファイルは不要です。\n\n> [!NOTE]\n> ネイティブ CLI・エディターの Vite 設定の読み込みと、専用設定を作らない init は、次のリリースに向けて準備中です。それまでは、公開済みのネイティブツールで共通設定を変更するには既存の専用形式を使います。[リファレンス](./configuration-reference.md)にその形式をまとめています。\n\n## プロジェクトとエディターの既定値\n\n次回リリースでは、専用の `vize.config.*` がないプロジェクトに以下の既定値を適用する予定です。公開済みリリースは従来の動作を維持します。\n\n| 機能 | 専用設定なし（`vite.config.*` を含む） | 既存の専用設定あり |\n| --- | --- | --- |\n| `vize check`・`vize lsp` の Vue JSX 型チェック | 明示的に無効化しなければ有効 | `typeChecker.jsxTypecheck: true` で有効化 |\n| LSP の文書・範囲・入力時フォーマット | プロジェクトやエディターで無効化しなければ有効 | 既存のオプトイン動作を維持 |\n| フォーマットの書式設定 | 既存の既定値と明示的な設定を維持 | 既存の既定値と明示的な設定を維持 |\n\nReact 用、または React と Vue JSX が混在するプロジェクトでは、利用する設定の `typeChecker.jsxTypecheck` を明示的に `false` にします。専用の `vize.config.*` は Vite 設定より優先されるため、存在する場合はそちらを変更してください。Vite 設定では `vize.typeChecker.jsxTypecheck` を指定します。JSX の構文からフレームワークは判別しません。Vue SFC の型チェックは引き続き利用できます。[JSX の型チェック](./jsx.md#型チェック)を参照してください。\n\n明示的なエディター設定は、プロジェクトの既定値より優先されます。VS Code の lint 専用プロファイルはフォーマットを無効にし、`vp run editor:setup` は既存の選択を維持しながら明示的に有効化します。[エディター設定（英語）](../../guide/vite-plus-editor.md)に担当範囲をまとめています。\n"
         },
         {
-          "offset": 1449,
+          "offset": 1555,
           "before": "設定は、その設定を使うツールごとに分けます。\n\n",
           "after": ""
         },
         {
-          "offset": 1539,
+          "offset": 1645,
           "before": "| `lint.vize` | Vize の Vue ルール | `vp run lint` |\n| その他の `lint` | Oxlint | `vp run lint` |\n| `fmt.vize` | Vize の Vue フォーマット | `vp run fmt:check` |\n| その他の `fmt` | Oxfmt | `vp run fmt:check` |\n| `typecheck` | ネイティブ Vue 型チェック | `vp run typecheck` |\n| `pack.vize` | Vue ライブラリの型宣言 | `vp run pack` |\n",
           "after": "| `lint.vize` | Vue の lint ルール | `vp run lint` |\n| `fmt.vize` | Vue のフォーマット | `vp run fmt:check` |\n| `typecheck` | Vue の型チェック | `vp run typecheck` |\n| `pack.vize` | ライブラリの型宣言 | `vp run pack` |\n"
         },
         {
-          "offset": 1733,
+          "offset": 1839,
           "before": "`vp run check` でまとめて検査できます。組み込みの `vp check`・`vp lint`・`vp fmt` は\nVite+ 自身の動作を維持するため、Vize には生成されたタスクを使います。\n既存スクリプトがある場合、生成タスクは `vize:<名前>` になります。\n[タスク名と統合オプション](./vite-plus.md#tasks)を参照してください。\n",
           "after": "まとめて検査するには `vp run check` を使います。組み込みの `vp check`・`vp lint`・`vp fmt` は Vite+ 自身の動作を維持します。既存スクリプトがある場合、生成タスクは `vize:<名前>` になります。[タスク名と上書き](./vite-plus.md#tasks)を参照してください。\n"
         },
         {
-          "offset": 1918,
+          "offset": 2024,
           "before": "Vize のルールは `lint.vize.rules`、Oxlint のルールは `lint.rules` に設定します。\n",
           "after": "Vue のルールは `lint.vize.rules`、Oxlint のルールは `lint.rules` に指定します。[ルールのオプション](../rules/options.md)で設定値を、[ルール一覧](../rules/all.md)で具体例を確認できます。\n"
         },
         {
-          "offset": 2205,
+          "offset": 2311,
           "before": "[ルールと具体例](../rules/all.md)から選べます。この統合では Vize と Oxlint が一緒に動作するため、\n`oxlint-plugin-vize` を別途登録する必要はありません。\n",
           "after": "<span id=\"lint-rule-options\"></span>\n"
         },
         {
-          "offset": 2243,
+          "offset": 2349,
           "before": "### Lint Rule Options\n",
           "after": "### ルールのオプション\n"
         },
         {
-          "offset": 2258,
+          "offset": 2364,
           "before": "ルールごとの設定値と具体例は [ルール オプション](../rules/options.md)を参照してください。\n",
           "after": "[ルールのオプション](../rules/options.md)に、設定オブジェクトの型と悪い例・良い例をまとめています。未対応のオプション名は拒否されます。\n"
         },
         {
-          "offset": 2353,
+          "offset": 2459,
           "before": "`compiler`・`typecheck`・`lint.vize`・`fmt.vize` を `false` にすると、その機能を無効化できます。\n例えば `compiler: false` なら既存の Vue コンパイラプラグインを使い続けます。\nその他の Vite+ 設定も、同じ `vite.config.ts` に残してください。\n\nVue ファイルは Vize、その他は Oxfmt がフォーマットします。\n`fmt.ignorePatterns` は両方に適用されます。\n[担当範囲と重複の扱い](./vite-plus.md#lint-and-formatter-ownership)を参照してください。\n",
           "after": "`compiler`・`typecheck`・`lint.vize`・`fmt.vize` を `false` にすると、その機能を無効にできます。Vue は Vize、その他のファイルは Oxfmt がフォーマットします。[担当範囲と重複の扱い](./vite-plus.md#lint-and-formatter-ownership)も確認してください。\n"
         },
         {
-          "offset": 2547,
+          "offset": 2653,
           "before": "`vite.config.ts` の plugin オプションで設定します。\n",
           "after": "コンパイルにはプラグインを使い、CLI やエディターと共有する設定はトップレベルの `vize` に置きます。プラグインの import で Vite の設定の型も追加されます。\n"
         },
         {
-          "offset": 2752,
+          "offset": 2858,
           "before": "  plugins: [vize({ sourceMap: true })],\n",
           "after": "  plugins: [vize()],\n  vize: {\n    linter: { preset: \"essential\" },\n    formatter: { printWidth: 100 },\n    typeChecker: { strict: true },\n  },\n"
         },
         {
-          "offset": 2904,
+          "offset": 3010,
           "before": "\n[Vite プラグインのオプション](./vite-plugin.md#compiler-options)を参照してください。\nCLI や LSP と設定を共有する場合に限り、単独の共有設定も利用できます。\n",
           "after": ""
         },
         {
-          "offset": 2951,
+          "offset": 3057,
           "before": "単独コマンドや設定 helper を使う場合は `vize` をインストールします。\n",
           "after": "`vize` をインストールし、対象パッケージのルートから実行します。CLI も `vite.config.*` と TypeScript プロジェクトを読み込みます。Vite+ の `compiler`・`typecheck`・`lint.vize`・`fmt.vize` もネイティブコマンド用に変換されます。トップレベルの `vize` に明示した設定は、この変換より優先されます。\n"
         },
         {
-          "offset": 3198,
+          "offset": 3304,
           "before": "設定場所は **`vize.config.ts`** です。\n",
           "after": "CLI の設定の検索は、最も近い `package.json`・`tsconfig.json`・`jsconfig.json` のあるディレクトリで止まります。モノリポジトリでは対象パッケージから実行するか `vize.entries` を使い、エディターのワークスペースフォルダーも明示してください。\n"
         },
         {
-          "offset": 3351,
+          "offset": 3457,
           "before": "```ts\nimport { defineConfig } from \"vize\";\n",
           "after": "次回リリースのエディターは、選択したワークスペースの範囲内で、ファイルごとに最も近いプロジェクトのルートを選びます。`package.json`・`tsconfig*.json`・`jsconfig.json`・`vite.config.*`・`vize.config.*` のあるディレクトリがルートになります。そこに Vite・Vize の設定がなければ、新規プロジェクトの既定値を使います。たとえば `package/src/tsconfig.json` があれば、`package/src` を独立したプロジェクトとして扱います。設定を読み込めなければ、従来のエディターの既定値を維持します。CLI で `--config` を明示した場合、指定したファイルがない、または読み込めないときはエラーになります。\n"
         },
         {
-          "offset": 3711,
+          "offset": 3817,
           "before": "export default defineConfig({\n  linter: { preset: \"essential\" },\n  formatter: { printWidth: 100 },\n  typeChecker: { strict: true },\n});\n```\n",
           "after": "Vite 設定を使い、入力引数なしで `build`・`lint`・`fmt`・`check` を実行すると、選択した Vite の `root` が対象になります。相対指定の `root` は設定ファイルのディレクトリを基準に解決します。Vite の `typeChecker` 内のパスとスコープの `basePath` はその root を基準にし、専用設定内のパスは従来どおり設定ファイルのディレクトリを基準にします。CLI へ明示するファイル・glob・`--tsconfig` は、コマンドを実行したディレクトリが基準です。\n"
         },
         {
-          "offset": 3981,
+          "offset": 4087,
           "before": "単独設定の `linter`・`formatter`・`typeChecker` は、Vite+ の `lint.vize`・`fmt.vize`・`typecheck`\nとは名前が異なります。[CLI ガイド](./cli.md)で実行方法を確認してください。\n",
           "after": "共有の全体 ignore は、CLI のファイル検索とエディターの lint 対象からファイルを除外します。除外したファイルでも、エディターで開けば構文・型・ナビゲーションの診断を利用できます。`!` による再指定を含め、ignore の順序とパターンの意味を保持します。\n\n## 専用設定ファイルを使う場合\n\n既存の `vize.config.*` も使えます。同じディレクトリでは Vite の設定より優先されます。CLI の `--config` でファイルを明示できます。プラグインに直接渡したオプションやエディターで明示した機能の設定は、共通設定より優先されます。`config: false` でプラグインの自動読み込みを無効にできます。\n"
         },
         {
-          "offset": 4321,
+          "offset": 4427,
           "before": "[単独 CLI の設定リファレンス](./configuration-reference.md)に設定ファイルの検索・優先順位、\nJSON/PKL、スコープ別の設定、全コンパイラオプション、テンプレート構文、Vue の型解決、\nLSP・Musea の設定を残しています。型宣言やエディター設定は [Vite+ 統合](./vite-plus.md)を参照してください。\n\n実験的なコンパイラ機能は明示的に有効化します。[Experimentals](./experimentals.md)で\n対応する項目と現在の範囲を確認してください。\n",
           "after": "[共通設定のリファレンス](./configuration-reference.md)に、検索規則、専用の TypeScript・JSON・PKL 設定、スコープ別の設定、Vue の型解決、LSP・Musea の設定をまとめています。コンパイラの設定と構文は[コンパイラのリファレンス](./compiler-configuration-reference.md)、実験的な機能は [Experimentals](./experimentals.md)を参照してください。\n"
         }

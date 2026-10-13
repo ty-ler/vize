@@ -18,6 +18,22 @@ const fences = (source: string): string[] =>
   Array.from(source.matchAll(/```[^\n]*\n([\s\S]*?)\n```/g), (match) => match[1] ?? "");
 let generated: Map<string, string> | undefined;
 
+void test("React opt-out changes the selected config when dedicated settings override Vite", () => {
+  const english = readFileSync(resolve(root, "docs/content/guide/configuration.md"), "utf8");
+  const japanese = readFileSync(resolve(root, "docs/content/ja/guide/configuration.md"), "utf8");
+  assert.match(english, /set `typeChecker\.jsxTypecheck: false` in the configuration you use/);
+  assert.match(english, /dedicated `vize\.config\.\*` takes precedence over Vite config/);
+  assert.match(english, /Vite configuration uses `vize\.typeChecker\.jsxTypecheck`/);
+  assert.match(japanese, /利用する設定の `typeChecker\.jsxTypecheck` を明示的に `false`/);
+  assert.match(japanese, /専用の `vize\.config\.\*` は Vite 設定より優先/);
+  assert.match(japanese, /Vite 設定では `vize\.typeChecker\.jsxTypecheck` を指定/);
+  assert.doesNotMatch(english, /set `vize\.typeChecker\.jsxTypecheck: false` in Vite config/);
+  assert.doesNotMatch(
+    japanese,
+    /Vite 設定の `vize\.typeChecker\.jsxTypecheck` を `false` にします/,
+  );
+});
+
 function sourceFor(file: string): string | undefined {
   const absolute = resolve(root, file);
   if (existsSync(absolute)) return readFileSync(absolute, "utf8");

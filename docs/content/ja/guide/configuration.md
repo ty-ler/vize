@@ -22,7 +22,7 @@ Vize の設定は `vite.config.ts` に、TypeScript のプロジェクト設定�
 | LSP の文書・範囲・入力時フォーマット | プロジェクトやエディターで無効化しなければ有効 | 既存のオプトイン動作を維持 |
 | フォーマットの書式設定 | 既存の既定値と明示的な設定を維持 | 既存の既定値と明示的な設定を維持 |
 
-React 用、または React と Vue JSX が混在するプロジェクトでは、Vite 設定の `vize.typeChecker.jsxTypecheck` を `false` にします。JSX の構文からフレームワークは判別しません。Vue SFC の型チェックは引き続き利用できます。[JSX の型チェック](./jsx.md#型チェック)を参照してください。
+React 用、または React と Vue JSX が混在するプロジェクトでは、利用する設定の `typeChecker.jsxTypecheck` を明示的に `false` にします。専用の `vize.config.*` は Vite 設定より優先されるため、存在する場合はそちらを変更してください。Vite 設定では `vize.typeChecker.jsxTypecheck` を指定します。JSX の構文からフレームワークは判別しません。Vue SFC の型チェックは引き続き利用できます。[JSX の型チェック](./jsx.md#型チェック)を参照してください。
 
 明示的なエディター設定は、プロジェクトの既定値より優先されます。VS Code の lint 専用プロファイルはフォーマットを無効にし、`vp run editor:setup` は既存の選択を維持しながら明示的に有効化します。[エディター設定（英語）](../../guide/vite-plus-editor.md)に担当範囲をまとめています。
 
