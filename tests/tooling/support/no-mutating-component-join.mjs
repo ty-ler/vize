@@ -1,4 +1,7 @@
-import { runNoDupeCommonJoinSourceLaw } from "./no-dupe-keys-common-main-source-custody.mjs";
+import {
+  authenticateNoDupeCommonJoinCommitted,
+  runNoDupeCommonJoinSourceLaw,
+} from "./no-dupe-keys-common-main-source-custody.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -63,8 +66,8 @@ export function composeNoMutatingComponentJoinCaller(law) {
   );
 }
 
-/** Every actual merged field is authenticated before either literal historical context. */
-export function authenticateNoMutatingComponentJoinPhysical(root) {
+/** The complete original model remains separate from its current common-join counterparts. */
+function authenticateRetainedNoMutatingComponentJoinPhysical(root) {
   const filename = componentJoinDirectory + "/successor.json";
   const stat = fs.lstatSync(path.join(root, filename));
   assert(stat.isFile() && !stat.isSymbolicLink() && (stat.mode & 0o777) === 0o644);
@@ -73,7 +76,11 @@ export function authenticateNoMutatingComponentJoinPhysical(root) {
     path.join(fs.realpathSync(root), filename),
   );
   const bytes = fs.readFileSync(path.join(root, filename));
-  assert.equal(joinSHA(bytes), componentJoinManifestSHA256, "whole finite source join");
+  assert.equal(
+    joinSHA(bytes),
+    "d243b3673a299d099203118cfc5909051d948243f422a6e223cf5f8c4bee006a",
+    "whole retained parent source join",
+  );
   const manifest = JSON.parse(bytes);
   assert.equal(manifest.schema, "vize.no-mutating-component.complete-source-join");
   assert.equal(manifest.version, 1);
@@ -154,6 +161,47 @@ export function authenticateNoMutatingComponentJoinPhysical(root) {
   };
 }
 
+/** Authenticate every actual common body before lending the complete original source model. */
+export function authenticateNoMutatingComponentJoinPhysical(root) {
+  const common = authenticateNoDupeCommonJoinCommitted(root);
+  const parent = common.contexts.find(
+    (context) => context.frame.source === "3783850eeb9d12f52c76108853f514a3999dfb76",
+  );
+  assert(parent, "one complete declared parent source context");
+  const retained = authenticateRetainedNoMutatingComponentJoinPhysical(parent.root);
+  assert.equal(
+    authenticateRetainedNoMutatingComponentJoinCommitted(parent.root),
+    parent.frame.source,
+  );
+  const filename = componentJoinDirectory + "/successor.json";
+  const bytes = common.currentBodies.get(filename);
+  assert(bytes);
+  assert.equal(joinSHA(bytes), componentJoinManifestSHA256, "whole current source declaration");
+  const manifest = JSON.parse(bytes);
+  assert.deepEqual(
+    manifest.current.map((row) => row.path),
+    retained.manifest.current.map((row) => row.path),
+    "all323 current counterparts belong to the complete retained source model",
+  );
+  assert.deepEqual(manifest.literalFrames, retained.manifest.literalFrames);
+  assert.deepEqual(manifest.externalMaintenanceLaw, retained.manifest.externalMaintenanceLaw);
+  const bodies = new Map(
+    manifest.current.map((row) => {
+      assert(common.currentBodies.has(row.path), "whole current counterpart: " + row.path);
+      return [row.path, common.currentBodies.get(row.path)];
+    }),
+  );
+  assert(common.currentBodies.has(manifest.externalMaintenanceLaw.path));
+  return {
+    ...retained,
+    manifest,
+    bodies,
+    currentHead: common.currentHead,
+    retainedParentHead: parent.frame.source,
+    completeCommonCurrentBodies: common.currentBodies.size,
+  };
+}
+
 /** The current join is new source-only authority, separately from both preserved old models. */
 export function authenticateNoMutatingComponentJoin(root) {
   const current = authenticateNoMutatingComponentJoinPhysical(root);
@@ -201,8 +249,8 @@ export function authenticateNoMutatingComponentJoin(root) {
   return { ...current, frames };
 }
 
-export function authenticateNoMutatingComponentJoinCommitted(root) {
-  const current = authenticateNoMutatingComponentJoinPhysical(root);
+function authenticateRetainedNoMutatingComponentJoinCommitted(root) {
+  const current = authenticateRetainedNoMutatingComponentJoinPhysical(root);
   const committedRows = [
     ...current.manifest.current,
     ...current.manifest.literalFrames,
@@ -228,6 +276,10 @@ export function authenticateNoMutatingComponentJoinCommitted(root) {
     left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
   );
   return assertJoinCommitted(root, committedRows);
+}
+
+export function authenticateNoMutatingComponentJoinCommitted(root) {
+  return authenticateNoDupeCommonJoinCommitted(root).currentHead;
 }
 
 export async function runNoMutatingComponentJoinCaller(root, law) {
