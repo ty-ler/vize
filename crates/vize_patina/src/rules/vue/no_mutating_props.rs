@@ -325,13 +325,14 @@ impl Rule for NoMutatingProps {
                 }
             }
 
-            scope::add_options_prop_names(analysis, &mut names);
-
             let has_props_object_binding =
                 vize_croquis::facts::reactivity_lookup(analysis, "props")
                     .is_some_and(|source| matches!(source.kind, ReactiveKind::Readonly));
 
-            (names, has_props_object_binding)
+            (
+                scope::with_options_prop_names(analysis, names),
+                has_props_object_binding,
+            )
         };
 
         // If no props binding is visible, nothing to check.

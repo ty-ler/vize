@@ -104,13 +104,14 @@ fn is_identifier_byte(byte: u8) -> bool {
 
 /// Component Options props remain instance-owned even when binding analysis
 /// deliberately excludes the wider Options API binding surface.
-pub(super) fn add_options_prop_names(
+pub(super) fn with_options_prop_names(
     analysis: &vize_croquis::Croquis,
-    names: &mut FxHashSet<String>,
-) {
+    mut names: FxHashSet<String>,
+) -> FxHashSet<String> {
     if let Some(options) = analysis.options_descriptor.as_ref() {
         for prop in options.members_in(vize_croquis::OptionGroup::Props) {
             names.insert(prop.name.to_compact_string());
         }
     }
+    names
 }
