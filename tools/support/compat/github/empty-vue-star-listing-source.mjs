@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { after } from "node:test";
 import { pathToFileURL } from "node:url";
+import { gunzipSync } from "node:zlib";
 import {
   listStarCounterpartFiles,
   provisionStarSourceCounterpart,
@@ -44,7 +45,7 @@ function regular(root, file) {
 }
 const moduleRoot = fs.realpathSync(new URL("../../../../", import.meta.url));
 const metadataBody = regular(moduleRoot, metadataPath);
-assert.equal(sha(metadataBody), "83a63d33a8b8a6c5317f8fa89283feaa646ed38ab310b2c0798091e7989382d2");
+assert.equal(sha(metadataBody), "bf1b8db058151bc55697d8bf3d953ff6b8b51840222eb6a4514b1cb48dcae58c");
 const metadata = JSON.parse(metadataBody);
 assert.equal(metadata.schema, "vize.empty-vue-star.literal-bd-listing-source");
 assert.equal(metadata.base, base);
@@ -64,6 +65,12 @@ const loaded = new Map([
   ...parts.map(({ file, body }) => [file, body]),
   ...metadata.executing.map((file) => [file, regular(moduleRoot, file)]),
 ]);
+const mainInverseBody = regular(moduleRoot, metadata.mainUnion.inverseCapsule.file);
+assert.equal(sha(mainInverseBody), metadata.mainUnion.inverseCapsule.compressedSHA256);
+const mainInverseRaw = gunzipSync(mainInverseBody);
+assert.equal(sha(mainInverseRaw), metadata.mainUnion.inverseCapsule.rawSHA256);
+const mainInverses = JSON.parse(mainInverseRaw);
+assert.equal(mainInverses.length, metadata.mainUnion.inverseCapsule.count);
 const proofs = new WeakMap();
 function raw(root, source, files) {
   const tree = git(root, ["ls-tree", "-z", source, "--", ...files]);
@@ -147,7 +154,7 @@ export function authenticateStarListingSource(root) {
     assert.equal(next.length, nextLength);
     assert.equal(sha(next), nextSHA);
   }
-  for (const pair of metadata.mainUnion.inverses) {
+  for (const pair of mainInverses) {
     let body = Buffer.from(current.get(pair.file));
     for (const [start, end, from, to] of [...pair.clauses].reverse()) {
       assertBytes(body.subarray(start, end), Buffer.from(from, "base64"));
