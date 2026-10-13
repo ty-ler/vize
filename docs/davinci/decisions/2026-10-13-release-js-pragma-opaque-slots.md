@@ -142,5 +142,6 @@ The existing PR becomes a genuine child of the published CI parent in native
 Stack 8831. Its full actual source union precedes the unchanged complete parent
 listing laws. The shared host qualifier admits only the sealed eleven generated
 packets and separately authenticated finite production footprints. The final
-cumulative full Check and Matrix share one immutable highest head; no additional
-standalone full run supplies cumulative release qualification.
+full Check and Matrix qualify the same immutable formal release head, after the
+source-qualified Stack actually merges. The original 905 Vue parity proof is
+retained; no additional standalone full run grants release credit.
