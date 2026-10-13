@@ -110,7 +110,7 @@ pub fn extract(source: &str, tsx: bool) -> Result<Vec<Decl>, &'static str> {
     let path = if tsx { "script.tsx" } else { "script.ts" };
     let source_type = SourceType::from_path(path).unwrap_or_default();
     let parsed = Parser::new(&allocator, source, source_type).parse();
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
+    if parsed.fatal_error || !parsed.diagnostics.is_empty() {
         return Err(SKIP_PARSE);
     }
     let mut decls = Vec::new();

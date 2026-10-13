@@ -21,7 +21,7 @@ pub fn parse_program_for_analysis<'a>(
     source_type: SourceType,
 ) -> ParserReturn<'a> {
     let original = Parser::new(allocator, source, source_type).parse();
-    if !original.panicked {
+    if !original.fatal_error {
         return original;
     }
 
@@ -29,7 +29,7 @@ pub fn parse_program_for_analysis<'a>(
     for _ in 0..4 {
         let view = allocator.alloc_str(&analysis);
         let mut parsed = Parser::new(allocator, view, source_type).parse();
-        if !parsed.panicked {
+        if !parsed.fatal_error {
             parsed.diagnostics = original.diagnostics;
             return parsed;
         }

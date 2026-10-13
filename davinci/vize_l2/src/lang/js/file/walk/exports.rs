@@ -5,7 +5,8 @@ use crate::file::{Export, Namespace};
 use crate::lang::js::file::observer::FileObserver;
 use crate::resolution::BindingId;
 use oxc_ast::ast::{
-    ExportAllDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration, Expression,
+    ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration, ExportFromDeclaration,
+    ExportNamedDeclaration, ExportSpecifier, Expression, ImportOrExportKind, StringLiteral,
 };
 use oxc_span::GetSpan;
 use vize_l0::{Span, String};
@@ -33,13 +34,42 @@ impl<'a, O: FileObserver<'a>> Walk<'_, '_, 'a, O> {
         index
     }
 
+    pub(super) fn export_declaration(&mut self, export: &ExportDeclaration<'a>) {
+        self.declaration(&export.declaration, true);
+    }
+
     pub(super) fn export_named(&mut self, export: &ExportNamedDeclaration<'a>) {
-        let source_site = export
-            .source
-            .as_ref()
-            .and_then(|source| self.source_site(source));
-        if export.source.is_some()
-            && export.specifiers.is_empty()
+        self.export_specifiers(
+            export.span,
+            &export.specifiers,
+            export.export_kind,
+            None,
+            false,
+        );
+    }
+
+    pub(super) fn export_from(&mut self, export: &ExportFromDeclaration<'a>) {
+        self.export_specifiers(
+            export.span,
+            &export.specifiers,
+            export.export_kind,
+            Some(&export.source),
+            export.with_clause.is_some(),
+        );
+    }
+
+    /// Specifier exports, with `source` for `export { … } from` re-exports.
+    fn export_specifiers(
+        &mut self,
+        span: oxc_span::Span,
+        specifiers: &[ExportSpecifier<'a>],
+        export_kind: ImportOrExportKind,
+        source: Option<&StringLiteral<'a>>,
+        has_with_clause: bool,
+    ) {
+        let source_site = source.and_then(|source| self.source_site(source));
+        if source.is_some()
+            && specifiers.is_empty()
             && let Some(unit) = self
                 .facts
                 .units
@@ -48,17 +78,14 @@ impl<'a, O: FileObserver<'a>> Walk<'_, '_, 'a, O> {
         {
             unit.origin.module_source_gaps |= crate::file::EMPTY_SOURCE_EXPORT;
         }
-        if let Some(declaration) = &export.declaration {
-            self.declaration(declaration, true);
+        if has_with_clause {
+            self.unsupported(span);
         }
-        if export.with_clause.is_some() {
-            self.unsupported(export.span);
-        }
-        for specifier in &export.specifiers {
-            let Some(span) = self.span(specifier.span) else {
+        for specifier in specifiers {
+            let Some(specifier_span) = self.span(specifier.span) else {
                 continue;
             };
-            let namespace = if export.export_kind == oxc_ast::ast::ImportOrExportKind::Type {
+            let namespace = if export_kind == ImportOrExportKind::Type {
                 Namespace::Type
             } else {
                 namespace(specifier.export_kind)
@@ -66,17 +93,14 @@ impl<'a, O: FileObserver<'a>> Walk<'_, '_, 'a, O> {
             let index = self.push_export(
                 specifier.exported.name().as_str(),
                 None,
-                export
-                    .source
-                    .as_ref()
-                    .map(|value| String::from(value.value.as_str())),
+                source.map(|value| String::from(value.value.as_str())),
                 namespace,
-                span,
+                specifier_span,
             );
             if let Some(row) = self.facts.exports.get_mut(index) {
                 row.source_site = source_site;
             }
-            if export.source.is_none() {
+            if source.is_none() {
                 let reference = self.export_reference(&specifier.local, namespace);
                 if let Some(export) = self.facts.exports.get_mut(index) {
                     export.local_reference = reference;

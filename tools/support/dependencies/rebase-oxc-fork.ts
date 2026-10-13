@@ -78,10 +78,20 @@ try {
   commit("vize fork");
   run(repo, "git", ["merge", "-q", "--no-edit", "upstream"], true);
 
-  // Keep the fork's omissions: upstream changes to files the fork deleted stay out.
+  // Keep the fork's omissions: upstream changes to files the fork deleted stay out,
+  // and so do files upstream added under a top-level path the fork does not carry.
   const status = run(repo, "git", ["status", "--porcelain"]).split("\n").filter(Boolean);
   const omitted = status.filter((line) => line.startsWith("DU ")).map((line) => line.slice(3));
   if (omitted.length > 0) run(repo, "git", ["rm", "-q", "--", ...omitted]);
+  const forkRoots = new Set(readdirSync(vendor));
+  const baseRoots = readdirSync(path.join(work, fromRev, "crates", crate));
+  const omittedRoots = baseRoots.filter((entry) => !forkRoots.has(entry));
+  const added = run(repo, "git", ["diff", "--cached", "--name-only", "--diff-filter=A", "HEAD"])
+    .split("\n")
+    .filter((file) => file && omittedRoots.includes(file.split("/")[0]));
+  if (added.length > 0) run(repo, "git", ["rm", "-q", "--cached", "--", ...added]);
+  for (const file of added) rmSync(path.join(repo, file), { force: true });
+  omitted.push(...added);
   const conflicted = run(repo, "git", ["diff", "--name-only", "--diff-filter=U"])
     .split("\n")
     .filter(Boolean);

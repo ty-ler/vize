@@ -43,10 +43,10 @@ fn ordinary_js_program_exceeds_scaffold_and_retains_real_statement_children() {
     let body = function.body.as_ref().unwrap();
     assert_eq!(body.statements.len(), 3);
     assert!(matches!(body.statements[1], Statement::ForOfStatement(_)));
-    let Statement::ExportNamedDeclaration(export) = &program.body[3] else {
+    let Statement::ExportDeclaration(export) = &program.body[3] else {
         panic!("export")
     };
-    let Some(Declaration::VariableDeclaration(variable)) = &export.declaration else {
+    let Declaration::VariableDeclaration(variable) = &export.declaration else {
         panic!("variable")
     };
     assert!(matches!(
@@ -77,7 +77,7 @@ fn ts_program_retains_types_generics_and_return_annotations() {
         program.body[1],
         Statement::TSTypeAliasDeclaration(_)
     ));
-    let Statement::ExportNamedDeclaration(export) = &program.body[2] else {
+    let Statement::ExportDeclaration(export) = &program.body[2] else {
         panic!("export")
     };
     let Some(Declaration::FunctionDeclaration(function)) = &export.declaration else {
@@ -102,10 +102,10 @@ fn jsx_program_has_actual_element_and_expression_container_children() {
     assert_eq!(tree.hole(), None);
     let program = tree.program().unwrap();
     assert_eq!(program.body.len(), 3);
-    let Statement::ExportNamedDeclaration(export) = &program.body[2] else {
+    let Statement::ExportDeclaration(export) = &program.body[2] else {
         panic!("export")
     };
-    let Some(Declaration::VariableDeclaration(variable)) = &export.declaration else {
+    let Declaration::VariableDeclaration(variable) = &export.declaration else {
         panic!("variable")
     };
     let Some(Expression::JSXElement(element)) = &variable.declarations[0].init else {
@@ -143,17 +143,21 @@ fn tsx_program_retains_typed_arrow_and_nested_jsx() {
         program.body[0],
         Statement::TSTypeAliasDeclaration(_)
     ));
-    let Statement::ExportNamedDeclaration(export) = &program.body[1] else {
+    let Statement::ExportDeclaration(export) = &program.body[1] else {
         panic!("export")
     };
-    let Some(Declaration::VariableDeclaration(variable)) = &export.declaration else {
+    let Declaration::VariableDeclaration(variable) = &export.declaration else {
         panic!("variable")
     };
     let Some(Expression::ArrowFunctionExpression(arrow)) = &variable.declarations[0].init else {
         panic!("arrow")
     };
     assert!(arrow.params.items[0].type_annotation.is_some());
-    let Statement::ExpressionStatement(statement) = &arrow.body.statements[0] else {
+    let Some(Statement::ExpressionStatement(statement)) = arrow
+        .body
+        .as_function_body()
+        .and_then(|body| body.statements.first())
+    else {
         panic!("body")
     };
     let Expression::ParenthesizedExpression(parentheses) = &statement.expression else {

@@ -24,12 +24,12 @@ pub fn classify_event_handler(source: &str) -> EventHandlerExpression {
     // followed by statements, which must retain their implicit event scope.
     let wrapped = cstr!("({source}\n)");
     let parsed = Parser::new(&allocator, &wrapped, SourceType::ts()).parse();
-    let parsed = if parsed.panicked || !parsed.diagnostics.is_empty() {
+    let parsed = if parsed.fatal_error || !parsed.diagnostics.is_empty() {
         Parser::new(&allocator, &wrapped, SourceType::tsx()).parse()
     } else {
         parsed
     };
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
+    if parsed.fatal_error || !parsed.diagnostics.is_empty() {
         return EventHandlerExpression::Inline;
     }
     let [Statement::ExpressionStatement(statement)] = parsed.program.body.as_slice() else {

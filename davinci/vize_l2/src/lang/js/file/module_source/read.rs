@@ -68,11 +68,8 @@ impl<'f, 'p, 'a> OriginalModuleSources<'f, 'p, 'a> {
                 ModuleSourceKind::Import,
                 original.import_kind,
             ),
-            (Statement::ExportNamedDeclaration(original), Row::Export(_)) => (
-                original
-                    .source
-                    .as_ref()
-                    .ok_or_else(|| reject(ModuleSourceErrorKind::OriginalSite))?,
+            (Statement::ExportFromDeclaration(original), Row::Export(_)) => (
+                &original.source,
                 ModuleSourceKind::NamedReexport,
                 original.export_kind,
             ),

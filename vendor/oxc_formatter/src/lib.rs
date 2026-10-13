@@ -301,14 +301,15 @@ pub fn format_unary_call_argument<'a>(
         AstNodes::ExpressionStatement(statement_node),
         allocator,
     ));
+    // A parsed single-statement program is a physical file without host services.
+    let session = FormatSession::new(allocator, InputKind::PhysicalFile);
     Some(format_node(
-        allocator,
+        &session,
         options,
         unary_node.argument(),
         program.source_text,
         program.source_type,
         &program.comments,
-        None,
     ))
 }
 

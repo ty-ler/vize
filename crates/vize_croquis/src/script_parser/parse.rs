@@ -51,7 +51,7 @@ pub(crate) fn parse_script_setup_with_exports<const BUILTIN_TYPES: bool>(
         parse_program_for_analysis(&allocator, source, source_type)
     );
     ModuleExportCapture::observe_if(exports.as_deref_mut(), &ret);
-    if ret.panicked {
+    if ret.fatal_error {
         return ScriptParseResult::default();
     }
 
@@ -241,7 +241,7 @@ pub(crate) fn parse_script_with_options_source_type(
         parse_program_for_analysis(&allocator, source, source_type)
     );
     ModuleExportCapture::observe_if(exports.as_deref_mut(), &ret);
-    if ret.panicked {
+    if ret.fatal_error {
         return ScriptParseResult::default();
     }
 

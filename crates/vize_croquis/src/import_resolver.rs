@@ -398,7 +398,7 @@ impl ImportResolver {
             "croquis.import_resolver.oxc_parse",
             Parser::new(&allocator, content, source_type).parse()
         );
-        if ret.panicked {
+        if ret.fatal_error {
             return definitions;
         }
 

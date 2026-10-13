@@ -30,7 +30,7 @@ pub fn parse_define_art(source: &str) -> Option<ArtDefinition> {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path("script.ts").unwrap_or_default();
     let ret = parse_program_for_analysis(&allocator, source, source_type);
-    if ret.panicked {
+    if ret.fatal_error {
         return None;
     }
     let mut reader = Reader::default();

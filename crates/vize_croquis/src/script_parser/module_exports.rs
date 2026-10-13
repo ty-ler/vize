@@ -44,7 +44,7 @@ impl ModuleExportCapture {
 
     pub(crate) fn observe(&mut self, parsed: &ParserReturn<'_>) {
         self.observed = true;
-        self.unknown |= parsed.panicked
+        self.unknown |= parsed.fatal_error
             || !parsed.diagnostics.is_empty()
             || !parsed.module_record.indirect_export_entries.is_empty()
             || !parsed.module_record.star_export_entries.is_empty()

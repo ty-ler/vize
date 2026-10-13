@@ -50,7 +50,7 @@ impl ResolvedTypeWorld {
         let source = cstr!("type __VizeProps = {expression}");
         let allocator = Allocator::default();
         let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-        if parsed.panicked || !parsed.diagnostics.is_empty() {
+        if parsed.fatal_error || !parsed.diagnostics.is_empty() {
             return ScopedTypeProperties::default();
         }
         let Some(Statement::TSTypeAliasDeclaration(alias)) = parsed.program.body.first() else {

@@ -37,14 +37,14 @@ fn checked_semantic_references(source: &str) -> Option<Vec<IdentifierRef>> {
     let allocator = Allocator::default();
     let wrapped = cstr!("({source})");
     let expression = Parser::new(&allocator, &wrapped, SourceType::tsx()).parse();
-    let wrapped_view = !expression.panicked && expression.diagnostics.is_empty();
+    let wrapped_view = !expression.fatal_error && expression.diagnostics.is_empty();
     let parsed = if !wrapped_view {
         // Inline event handlers may be statement bodies.
         Parser::new(&allocator, source, SourceType::tsx()).parse()
     } else {
         expression
     };
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
+    if parsed.fatal_error || !parsed.diagnostics.is_empty() {
         return None;
     }
     let built = SemanticBuilder::new()

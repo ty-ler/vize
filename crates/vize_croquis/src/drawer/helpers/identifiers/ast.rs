@@ -148,7 +148,7 @@ fn extract_identifier_refs_oxc_program(
         "croquis.helpers.identifiers.oxc_parse_program",
         crate::script_parser::parse_program_for_analysis(&allocator, expr, source_type)
     );
-    if ret.panicked {
+    if ret.fatal_error {
         return None;
     }
     let syntax_complete = ret.diagnostics.is_empty();

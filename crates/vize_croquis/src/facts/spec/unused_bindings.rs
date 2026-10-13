@@ -76,7 +76,7 @@ pub fn evaluate(
         },
     )
     .parse();
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
+    if parsed.fatal_error || !parsed.diagnostics.is_empty() {
         return Err("script-parse-error");
     }
     let built = SemanticBuilder::new()

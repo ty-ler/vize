@@ -298,7 +298,7 @@ fn is_const_assertion_marker(annotation: &str) -> bool {
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
     // The producer preserves the exact authored marker in the public contract.
     // A bare const assertion is literal preservation, not a lexical type name.
-    !parsed.panicked
+    !parsed.fatal_error
         && parsed.diagnostics.is_empty()
         && matches!(parsed.program.body.as_slice(),
             [Statement::TSTypeAliasDeclaration(alias)]

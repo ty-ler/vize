@@ -30,7 +30,7 @@ pub(super) fn is_object_type(source: &str) -> bool {
     let input = cstr!("type __Vize = {source};");
     let parsed = Parser::new(&allocator, &input, SourceType::ts()).parse();
     parsed.diagnostics.is_empty()
-        && !parsed.panicked
+        && !parsed.fatal_error
         && matches!(parsed.program.body.as_slice(),
             [Statement::TSTypeAliasDeclaration(alias)]
                 if matches!(alias.type_annotation, TSType::TSTypeLiteral(_)))
@@ -74,7 +74,7 @@ pub(super) fn collect_declaration(source: &str, generic: Option<&str>) -> Refere
     parse_source(
         source,
         names,
-        parsed.diagnostics.is_empty() && !parsed.panicked,
+        parsed.diagnostics.is_empty() && !parsed.fatal_error,
     )
 }
 
@@ -84,7 +84,7 @@ fn parse_source(source: &str, outer_names: BTreeSet<CompactString>, complete: bo
     let mut visitor = ReferencesVisitor {
         refs: BTreeSet::new(),
         scopes: vec![(outer_names, false)],
-        complete: complete && parsed.diagnostics.is_empty() && !parsed.panicked,
+        complete: complete && parsed.diagnostics.is_empty() && !parsed.fatal_error,
     };
     visitor.visit_program(&parsed.program);
     References {

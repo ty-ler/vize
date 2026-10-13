@@ -135,7 +135,9 @@ impl<'a, O: FileObserver<'a>> Walk<'_, '_, 'a, O> {
         });
         if matches!(
             statement,
-            Statement::ExportNamedDeclaration(_)
+            Statement::ExportDeclaration(_)
+                | Statement::ExportNamedDeclaration(_)
+                | Statement::ExportFromDeclaration(_)
                 | Statement::ExportDefaultDeclaration(_)
                 | Statement::ExportAllDeclaration(_)
         ) && let Some(unit) = self
@@ -161,7 +163,9 @@ impl<'a, O: FileObserver<'a>> Walk<'_, '_, 'a, O> {
         match statement {
             Statement::VariableDeclaration(value) => self.variable(value, false),
             Statement::ImportDeclaration(value) => self.import(value),
+            Statement::ExportDeclaration(value) => self.export_declaration(value),
             Statement::ExportNamedDeclaration(value) => self.export_named(value),
+            Statement::ExportFromDeclaration(value) => self.export_from(value),
             Statement::ExportDefaultDeclaration(value) => self.export_default(value),
             Statement::ExportAllDeclaration(value) => self.export_all(value),
             Statement::FunctionDeclaration(value) => self.function(value, false),

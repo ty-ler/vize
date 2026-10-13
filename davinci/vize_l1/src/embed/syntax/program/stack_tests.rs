@@ -67,11 +67,11 @@ fn reference(text: &str, options: ProgramOptions) -> Observation {
     let parsed = Parser::new(allocator.as_oxc(), text, options.source_type()).parse();
     assert_eq!(parsed.program.source_text, text);
     assert_eq!(parsed.program.source_type, options.source_type());
-    let admitted = !parsed.panicked && !parsed.is_flow_language && !parsed.diagnostics.has_errors();
+    let admitted = !parsed.fatal_error && !parsed.is_flow_language && !parsed.diagnostics.has_errors();
     Observation {
         source: String::from(parsed.program.source_text),
         profile: parsed.program.source_type,
-        panicked: parsed.panicked,
+        panicked: parsed.fatal_error,
         flow: parsed.is_flow_language,
         diagnostics: parsed.diagnostics.clone(),
         comments: parsed.program.comments.to_vec(),

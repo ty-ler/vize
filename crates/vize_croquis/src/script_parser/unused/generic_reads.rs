@@ -15,7 +15,7 @@ pub(super) fn free_reads(generic: &str) -> Option<Vec<CompactString>> {
     let source = cstr!("(function<{generic}>() {{}});");
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
+    if parsed.fatal_error || !parsed.diagnostics.is_empty() {
         return None;
     }
     let [Statement::ExpressionStatement(statement)] = parsed.program.body.as_slice() else {
