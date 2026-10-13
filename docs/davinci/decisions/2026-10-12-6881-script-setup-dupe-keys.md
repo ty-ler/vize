@@ -168,3 +168,22 @@ before copying them into absent owned metadata; hydrate exact actual-main
 objects privately and refuse missing declared objects without lazy fetch.
 All shared Git stores remain read-only. Fresh coherent source tests, child
 Actions, protected child merge, release and installed acceptance remain pending.
+
+The isolated current-main repair composes exact published child `436999a2`
+with actual main `b45d789b`. Its sole textual conflict is the source-law
+dispatch wrapper. The incoming whole 350-line law is byte-exact to the retained
+parent law after changing only its expected helper checksum from `c84f9185`
+to `e7a90742`; its complete SHA-256 is
+`8ae328e74ca92dd4c2204923a13b09595b7109c297e6ee1e95b5cdc03d563e42`.
+Keep that existing dispatch so every original assertion still executes in its
+authenticated whole parent frame. The actual current physical/raw qualification
+retains main's script-setup language selection, its sole corresponding
+component-main declaration row, empty-star host qualification and the composed
+helper. Four exact before/after inverse rows qualify those complete changed
+bodies; both whole historical source frames, original assertions, corpus,
+36 native vectors and budgets remain unchanged. The old current-source seal
+reproduced a real refusal (`4930 !== 4726` for `script_setup_refs.rs`); preserve
+that failure as source-only evidence. No compiler/LSP correction or native
+acceptance is borrowed from these source checks. Fresh committed-source tests,
+actual #8777 merge composition, exact-head Actions and protected delivery are
+still required.

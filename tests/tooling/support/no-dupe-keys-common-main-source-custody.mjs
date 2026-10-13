@@ -13,7 +13,7 @@ import { authenticateCommonLiteralFrame } from "./no-dupe-keys-common-main-sourc
 import { executeCommonWholeLaw } from "./no-dupe-keys-common-main-source-runner.mjs";
 
 const seal = Object.freeze({
-  manifestSHA: "14007a0b5d1d9620580ee2ae8748c01c5c39675443daf60a30e8dee3252a2ac8",
+  manifestSHA: "ba0fcfbad9d1676de34014d66eed64d12081bfdb19ea63cb285009f8b09283ad",
   parent: "3783850eeb9d12f52c76108853f514a3999dfb76",
   entry: fs.readFileSync(fileURLToPath(import.meta.url)),
 });
