@@ -107,6 +107,7 @@ void test("unknown dynamic roles cannot inherit a fixed-prefix or delegated appr
 void test("unreviewed nearby aliases and dynamic action references require review", (t) => {
   for (const uses of [
     "./other/.github/actions/setup-rust-sticky-cache",
+    "./other/.github/actions/setup-mold",
     "ubugeeei-prod/vize/.github/actions/setup-rust-sticky-cache@main",
     "${{ inputs.action }}",
   ]) {

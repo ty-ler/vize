@@ -278,7 +278,7 @@ test("criterion bench workflow runs an A/B micro-benchmark and a dialect guard",
   assert.match(impactStep, /--head-sha "\$PR_HEAD_SHA"/);
 
   for (const stepName of [
-    "Setup Wild linker",
+    "Setup mold linker",
     "Mount Criterion cache",
     "Cache critcmp",
     "Install critcmp",
