@@ -187,6 +187,23 @@
       "id": "typed-default-foreign-macro-control",
       "source": "<script setup lang=\"ts\">import { defineProps, withDefaults } from \"foreign\"; const props = withDefaults(defineProps<{ value: number }>(), { value: 1 })</script>\n<template><div/></template>",
       "diagnostics": []
+    },
+    {
+      "id": "options-sync-prop",
+      "source": "<script>export default { props: [\"task\"] }</script>\n<template><Child :items.sync=\"task.checklist\"/></template>",
+      "diagnostics": [
+        {
+          "rule": "vue/no-mutating-props",
+          "severity": "error",
+          "start": 82,
+          "end": 96
+        }
+      ]
+    },
+    {
+      "id": "options-one-way-binding-control",
+      "source": "<script>export default { props: [\"task\"] }</script>\n<template><Child :items=\"task.checklist\"/></template>",
+      "diagnostics": []
     }
   ]
 }

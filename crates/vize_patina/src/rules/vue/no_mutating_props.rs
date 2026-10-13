@@ -59,16 +59,25 @@ impl NoMutatingProps {
         }
     }
 
-    /// Check if a `v-model` expression mutates a prop.
-    fn check_v_model_mutation<'a>(
+    /// Two-way bindings (`v-model` and Vue 2 `v-bind.sync`) write their target.
+    fn check_two_way_mutation<'a>(
         &self,
         ctx: &mut LintContext<'a>,
         directive: &DirectiveNode<'a>,
         scope: &PropScope<'_>,
     ) {
-        if directive.name != "model" {
+        let binding = if directive.name == "model" {
+            "v-model"
+        } else if directive.name == "bind"
+            && directive
+                .modifiers
+                .iter()
+                .any(|modifier| modifier.content == "sync")
+        {
+            "v-bind.sync"
+        } else {
             return;
-        }
+        };
 
         let Some(exp) = directive.exp.as_ref() else {
             return;
@@ -81,7 +90,7 @@ impl NoMutatingProps {
         ctx.report(
             crate::diagnostic::LintDiagnostic::error(
                 ctx.current_rule,
-                cstr!("Unexpected mutation of prop '{}' via v-model", content),
+                cstr!("Unexpected mutation of prop '{}' via {}", content, binding),
                 span.start,
                 span.end,
             )
@@ -208,7 +217,7 @@ impl NoMutatingProps {
 
         for prop in element.props.iter() {
             if let PropNode::Directive(dir) = prop {
-                self.check_v_model_mutation(ctx, dir, scope);
+                self.check_two_way_mutation(ctx, dir, scope);
                 self.check_handler_mutation(ctx, dir, scope);
             }
         }
