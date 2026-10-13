@@ -123,3 +123,16 @@ SIGTERM while the outer process reports status 1. It explains neither hosted
 failure and grants no repaired-source credit. A separate always-run artifact
 keeps these observations without changing the original formatter evidence.
 Capture the existing inherited NODE_TEST_CONTEXT; do not change it on a theory.
+
+The actual source task boundary stripped the coverage capture variable. A real
+local SDK 0.1.24 task control confirms the original allowlist omits that value;
+adding only `VIZE_NATIVE_SYNTAX_CAPTURE_DIR` passes it to the child while retaining
+the Nuxt value and rejecting an unrelated hidden variable. Preserve the coverage
+command and deadlines. The first full run's three named native tests passed,
+but its missing packet remains a proof gap until fresh hosted capture exists.
+
+Inherit the parent's genuine main/SDK composition `78778488b47f14f584acc8160886c297dfb18075`,
+preserve every incoming main byte and all observer/LSP changes, and use reviewed
+shipping cut `c4f74b48fb2df6ea20aeb414193d82f531ab059e` as the actual ancestor.
+Its production difference remains exactly the original execution file; the
+literal BD cohort and complete graph/refusal checks retain their original scope.
