@@ -103,7 +103,7 @@ export function releaseRegistryFixture(
     process.exit(${authenticate} && args[1] === 'validate-preparation-target' ? 0 : 83);
   `,
   );
-  const realMoon = resolveMoonCommand(process.env);
+  const realMoon = absoluteCommand(resolveMoonCommand(process.env), process.env.PATH ?? "");
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     PATH: `${bin}${path.delimiter}${process.env.PATH ?? ""}`,
@@ -179,4 +179,25 @@ export function releaseRegistryFixture(
       fs.rmSync(dir, { recursive: true, force: true });
     },
   };
+}
+
+// The fake `moon` delegates every non-update call to REAL_MOON_BIN. A bare
+// command name would resolve through PATH, whose first entry is the fake
+// itself, and recurse until the machine runs out of processes. Resolve it to
+// an absolute path against the caller's PATH, or fail before spawning.
+function absoluteCommand(command: string, searchPath: string): string {
+  if (path.isAbsolute(command)) return command;
+  const names = process.platform === "win32" ? [`${command}.cmd`, `${command}.exe`, command] : [command];
+  for (const dir of searchPath.split(path.delimiter).filter(Boolean)) {
+    for (const name of names) {
+      const candidate = path.join(dir, name);
+      try {
+        fs.accessSync(candidate, fs.constants.X_OK);
+        return candidate;
+      } catch {
+        // Not here; keep searching.
+      }
+    }
+  }
+  throw new Error(`release registry fixture: \`${command}\` is not on PATH, so the fake moon has no real compiler to delegate to`);
 }
