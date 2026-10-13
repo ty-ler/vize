@@ -41,6 +41,8 @@
     "tests/tooling/command-runtime.test.ts",
     "tests/tooling/retired-tooling-languages.test.ts",
     "tools/commands/ci/github/allow-armature-tokenizer-reexports.ts",
-    "tests/tooling/allow-armature-tokenizer-reexports.test.ts"
+    "tests/tooling/allow-armature-tokenizer-reexports.test.ts",
+    "tests/fixtures/typechecker/page-route-types/provider-archive.ts",
+    "tests/fixtures/typechecker/page-route-types/provider-archive.test.ts"
   ]
 }
