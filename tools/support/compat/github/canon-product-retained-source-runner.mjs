@@ -10,7 +10,6 @@ import {
   canonProductSourcePaths,
   retainedCanonProductSource,
 } from "./canon-product-source-context.mjs";
-import { authenticateEmptyVueStarJoinedSource } from "./empty-vue-star-javascript-source.mjs";
 
 export const canonProductRetainedLaws = Object.freeze([
   "tests/tooling/javascript-sfc-source-context.test.mjs",
@@ -38,7 +37,7 @@ const git = (root, args) =>
     },
   );
 /** Full current source precedes the complete unchanged original source fixture and Star qualifier. */
-export function canonProductOriginalFixture(root) {
+export async function canonProductOriginalFixture(root) {
   root = fs.realpathSync(root);
   const receipt = authenticateCanonProductSource(root),
     key = root + "\0" + receipt.head;
@@ -84,6 +83,11 @@ export function canonProductOriginalFixture(root) {
       assert(fs.statSync(target).isDirectory());
       fs.symlinkSync(target, path.join(directory, "node_modules"), "dir");
     }
+    const { authenticateEmptyVueStarJoinedSource } = await import(
+      pathToFileURL(
+        path.join(directory, "tools/support/compat/github/empty-vue-star-javascript-source.mjs"),
+      ).href
+    );
     const star = authenticateEmptyVueStarJoinedSource(directory);
     assert.equal(star.completeCurrentBodies, 322);
     const fixture = Object.freeze({ root: directory, head: canonProductSourceRevisions.original });
@@ -96,7 +100,7 @@ export function canonProductOriginalFixture(root) {
 }
 export async function importCanonProductRetainedModule(root, file) {
   assert(canonProductRetainedLaws.includes(file), "closed whole original module selection");
-  const fixture = canonProductOriginalFixture(root);
+  const fixture = await canonProductOriginalFixture(root);
   const original = retainedCanonProductSource(fixture.receipt, "original", file);
   assert(original);
   const target = path.join(fixture.root, file);

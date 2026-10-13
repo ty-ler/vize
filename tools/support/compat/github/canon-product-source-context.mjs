@@ -66,10 +66,7 @@ assert.equal(new Set(rows.map(({ file }) => file)).size, 426);
 const successorBytes = fs.readFileSync(
   new URL("canon-product-caller-successors.json.gz", import.meta.url),
 );
-assert.equal(
-  sha(successorBytes),
-  "1d5c97d7afe6f4571d1b7641f5be7e93976153cdc628904bca5424ec2597370a",
-);
+assert.equal(sha(successorBytes), "1d5c97d7afe6f4571d1b7641f5be7e93976153cdc628904bca5424ec2597370a");
 const successors = JSON.parse(gunzipSync(successorBytes));
 assert.equal(successors.schema, 1);
 assert.equal(successors.sourceOnly, true);

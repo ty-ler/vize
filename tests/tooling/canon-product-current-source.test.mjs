@@ -15,8 +15,8 @@ import {
 } from "../../tools/support/compat/github/canon-product-retained-source-runner.mjs";
 
 const root = path.resolve(import.meta.dirname, "../..");
-void test("whole current release source binds every unchanged original JS and Star module", () => {
-  const fixture = canonProductOriginalFixture(root);
+void test("whole current release source binds every unchanged original JS and Star module", async () => {
+  const fixture = await canonProductOriginalFixture(root);
   assert.equal(fixture.receipt.completeBodies, 426);
   assert.equal(canonProductRetainedLaws.length, 8);
   for (const file of canonProductRetainedLaws) {
