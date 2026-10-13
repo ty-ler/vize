@@ -155,8 +155,12 @@ then combine the product repair as a native Stack child. Preserve all five
 formal release-candidate qualification workflows; do not duplicate their heavy
 full Check or Matrix runs on the shipping-before cut.
 
-Inherit the finite parent source repair `1b0333c29f1618b9a0bfaab76356937bf404780d`.
+Inherit the finite parent source repair `32c4a0ab076e888ec3d3665d96042735c99c2729`.
 Authenticate the exact CI child canonical body and restore its complete parent
 body through one finite inverse clause before checking the unchanged incoming
 main cell and its whole inverse. Keep the original parent cell, every original
 source body and all refusal laws. The caller remains 391 lines like its parent.
+
+The source-selection guard checks the exact zero-base refusal and quoted
+full-history comparison fetch. It keeps all original tier, selection, browser
+and producer/quorum assertions. No execution deadline or budget changes.

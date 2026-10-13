@@ -18,7 +18,7 @@ const packetBytes = fs.readFileSync(
 assert.equal(sha(packetBytes), "3eacb02d15167ae68b72deee651da36d69b218c0ae8ca1ccf7bae4e69f350e5b");
 const packet = JSON.parse(gunzipSync(packetBytes));
 assert.equal(packet.source, "ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a");
-assert.equal(packet.parent, "a0771cc8a597e0b8c411a59028f50bbdc28ec761");
+assert.equal(packet.parent, "83d052f818b2b2ef1029322b6e4df7bf5c0ac84a");
 assert.equal(packet.sourceOnly, true);
 assert.equal(packet.runtimeCredit, false);
 const cells = new Map();
