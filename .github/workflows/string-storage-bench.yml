@@ -83,14 +83,15 @@ jobs:
           printf '%s\n' "$BASE_SHA" > reports/base-sha.txt
           printf '%s\n' "$HEAD_SHA" > reports/head-sha.txt
           cp head/crates/vize_croquis_cf/benches/{cross_file,string_storage}.rs base/crates/vize_croquis_cf/benches/
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('base/crates/vize_croquis_cf/Cargo.toml')
-          text = path.read_text()
-          if 'davinci_harness.workspace = true' not in text:
-              text = text.replace('[dev-dependencies]', '[dev-dependencies]\ndavinci_harness.workspace = true')
-              path.write_text(text)
-          PY
+          node - <<'JS'
+          const { readFileSync, writeFileSync } = require("node:fs");
+          const path = "base/crates/vize_croquis_cf/Cargo.toml";
+          const text = readFileSync(path, "utf8");
+          if (!text.includes("davinci_harness.workspace = true")) {
+            const table = "[dev-dependencies]";
+            writeFileSync(path, text.replaceAll(table, `${table}\ndavinci_harness.workspace = true`));
+          }
+          JS
       - name: Check candidate CF semantics and lints
         working-directory: head
         run: |
@@ -103,19 +104,30 @@ jobs:
             rm -rf "$GITHUB_WORKSPACE/head/target/$side/criterion"
             (cd "$side" && CRITERION_HOME="$GITHUB_WORKSPACE/head/target/$side/criterion" STRING_STORAGE_REPORT_DIR="$GITHUB_WORKSPACE/reports/$side" cargo bench -p vize_croquis_cf --bench cross_file --target-dir "$GITHUB_WORKSPACE/head/target/$side" -- string_storage --warm-up-time 0.5 --measurement-time 1 --sample-size 30 --save-baseline "$side")
           done
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          for before in Path('reports/base').glob('tree_*.json'):
-              after = Path('reports/head') / before.name
-              assert json.loads(before.read_text())['semantic'] == json.loads(after.read_text())['semantic'], before.name
-          for side in ('base', 'head'):
-              estimates = list(Path(f'head/target/{side}/criterion').glob(f'**/{side}/estimates.json'))
-              assert len(estimates) == 8, (side, len(estimates))
-              for estimate in estimates:
-                  assert json.loads(estimate.read_text())['median']['point_estimate'] > 0, estimate
-                  assert (estimate.parent / 'sample.json').is_file(), estimate
-          PY
+          node - <<'JS'
+          const assert = require("node:assert/strict");
+          const { readFileSync, readdirSync, statSync } = require("node:fs");
+          const { dirname, join, sep } = require("node:path");
+          const json = (file) => JSON.parse(readFileSync(file, "utf8"));
+          for (const name of readdirSync("reports/base")) {
+            if (!name.startsWith("tree_") || !name.endsWith(".json")) continue;
+            const before = json(join("reports/base", name)).semantic;
+            assert.notEqual(before, undefined, `${name} lacks semantic`);
+            assert.deepEqual(json(join("reports/head", name)).semantic, before, name);
+          }
+          for (const side of ["base", "head"]) {
+            const root = `head/target/${side}/criterion`;
+            const suffix = join(side, "estimates.json");
+            const estimates = readdirSync(root, { recursive: true })
+              .filter((file) => file === suffix || file.endsWith(`${sep}${suffix}`))
+              .map((file) => join(root, file));
+            assert.equal(estimates.length, 8, `${side}: ${estimates.length} estimates`);
+            for (const estimate of estimates) {
+              assert.ok(json(estimate).median.point_estimate > 0, estimate);
+              assert.ok(statSync(join(dirname(estimate), "sample.json")).isFile(), estimate);
+            }
+          }
+          JS
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
