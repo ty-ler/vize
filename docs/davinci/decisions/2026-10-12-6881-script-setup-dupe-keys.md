@@ -184,6 +184,9 @@ bodies; both whole historical source frames, original assertions, corpus,
 36 native vectors and budgets remain unchanged. The old current-source seal
 reproduced a real refusal (`4930 !== 4726` for `script_setup_refs.rs`); preserve
 that failure as source-only evidence. No compiler/LSP correction or native
-acceptance is borrowed from these source checks. Fresh committed-source tests,
-actual #8777 merge composition, exact-head Actions and protected delivery are
-still required.
+acceptance is borrowed from these source checks. At local merged source `77861ec4bb`, the existing current/refusal suite and
+whole original-law wrapper passed 7/7 with zero skips in 133.022 seconds; its
+complete original parent packet passed all five cases with status 0 and
+validationFailure null. These are source-only results: compiled, native and
+performance remain false. Actual #8777 merge composition, fresh exact-head
+Actions and protected delivery are still required.
