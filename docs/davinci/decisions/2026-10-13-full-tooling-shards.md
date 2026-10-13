@@ -144,3 +144,11 @@ assertion exit; it identifies neither OOM nor a kill actor. Observe complete
 cgroup memory counters before and after the unchanged command, retaining missing
 path errors without a verdict, and correlate the separately owned primer kill
 trace before any fix. Do not increase heap, budgets or deadlines without cause.
+
+Inherit the final parent `5074574a0e4587860234e571620533e603d6119c` once, retaining
+all 71 incoming main files and its complete 508-body shipping-before admission.
+The reviewed shipping cut becomes actual ancestor
+`ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a`; the CI layer's production difference
+remains exactly the original execution file. Keep both earlier fixed cohorts
+and all complete overlap inverses. Format every changed path before publishing,
+then combine the product repair as a native Stack child for one final full run.

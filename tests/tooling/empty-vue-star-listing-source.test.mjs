@@ -69,7 +69,7 @@ await test("the actual BD union admits only one production path after complete c
   assert.equal(packet.originalJSBodies, 93);
   assert.equal(packet.runtimeCredit, false);
   assert.equal(packet.original400Credit, false);
-  const requestedBase = "c4f74b48fb2df6ea20aeb414193d82f531ab059e";
+  const requestedBase = "ebbdc1b1e1559d7f4efd55978bd8b52f127acb3a";
   const head = git(root, ["rev-parse", "HEAD"]).toString().trim();
   const baseline = git(root, ["merge-base", requestedBase, head]).toString().trim();
   assert.equal(baseline, requestedBase, "reviewed shipping cut is actual ancestor");
