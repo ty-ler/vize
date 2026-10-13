@@ -118,6 +118,7 @@ if (process.argv[2] === "prepare") {
     graphHost,
     diagnosticHost,
     inlineBucketHost,
+    frontierHost,
   } = qualifyHostMoves(production, allowed, !cut, (side, file) =>
     gitBodyDigest(driverRoot, side === "before" ? baseline : head, file),
   );
@@ -130,7 +131,8 @@ if (process.argv[2] === "prepare") {
           defaultMigrationHost?.files.includes(file) ||
           graphHost?.files.includes(file) ||
           diagnosticHost?.files.includes(file) ||
-          inlineBucketHost?.files.includes(file),
+          inlineBucketHost?.files.includes(file) ||
+          frontierHost?.files.includes(file),
         `unqualified production delta: ${file}`,
       );
   }
@@ -177,6 +179,7 @@ if (process.argv[2] === "prepare") {
         graphHost,
         diagnosticHost,
         inlineBucketHost,
+        frontierHost,
         afterRoot,
         driverSource: driver,
         authority: cut

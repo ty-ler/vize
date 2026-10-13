@@ -66,6 +66,21 @@ packet; and compare whole mixed-frontier package vectors and scanned identities.
 These laws require source-built Actions execution. Local formatting and source
 inventories do not constitute Rust or n8n runtime qualification.
 
+The finite source counterpart binds reviewed production
+`4c1f514a24bd47fe30124b5692866150032850fd` to e7 with 198 complete
+before/after native bodies and the same 45 whole original workload bodies.
+Semantic manifest SHA-256 is
+`0844ba65e65048385bc779772f12d06a8b3e5012c396bd041545cc05a8df288e`.
+It admits exactly seven production paths and authenticates both new files'
+original absence. Complete regular Git blobs, all 486 before/after mutation
+refusals and four missing/extra/duplicate footprint refusals pass locally.
+The original inline manifest and its negative law bodies remain byte-exact;
+its current-head guard accepts only the separate complete frontier receipt,
+explicitly with no acceptance credit. Finite missing-only Git preparation
+includes the new source pins for each actually selected authority law. All
+four process/hydration controls pass with zero skips. Native and original
+workload runtime execution remain pending on Actions.
+
 TODO: run the unchanged original authored n8n workload on exact successor source,
 retain complete raw input/buffer/oracle equality and every original failure, then
 read actual parser call counts. Compare exact-head wall time under the original

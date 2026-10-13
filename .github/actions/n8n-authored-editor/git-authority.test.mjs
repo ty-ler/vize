@@ -136,3 +136,32 @@ void test("only selected inline or allocation source laws request their two expl
     [graph, parent].sort(),
   );
 });
+
+void test("frontier authority and inline successor guard prepare only their complete pinned source commits", (t) => {
+  const root = workspace(t);
+  const before = "e7ec9790a0ec5586588f97d21b8e5913ad01861c";
+  const after = "777ce9c".padEnd(40, "1");
+  const frontier = "tests/tooling/warm-type-backed-frontier-authority.test.ts";
+  fs.writeFileSync(
+    path.join(root, "tests/performance/support/warm-type-backed-frontier-manifest.json"),
+    JSON.stringify({ originalSource: before, reviewedSource: after }),
+  );
+  fs.writeFileSync(
+    path.join(root, "tests/performance/support/warm-type-backed-inline-bucket-manifest.json"),
+    JSON.stringify({ originalSource: parent, reviewedSource: graph }),
+  );
+  assert.deepEqual(
+    references({ version: 1, tier: "pr", tests: [frontier] }, "1/1", root),
+    [before, after].sort(),
+  );
+  assert.deepEqual(
+    references({ version: 1, tier: "pr", tests: [inline] }, "1/1", root),
+    [before, after, parent, graph].sort(),
+  );
+  fs.writeFileSync(
+    path.join(root, "tests/performance/support/warm-type-backed-frontier-manifest.json"),
+    JSON.stringify({ originalSource: "main", reviewedSource: after }),
+  );
+  assert.throws(() => references({ version: 1, tier: "pr", tests: [frontier] }, "1/1", root));
+  assert.throws(() => references({ version: 1, tier: "pr", tests: [inline] }, "1/1", root));
+});

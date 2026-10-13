@@ -4,6 +4,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { qualifyFrontierHost } from "../performance/support/warm-type-backed-frontier-host.ts";
+import { gitBodyDigest } from "../performance/support/warm-type-backed-path-host.ts";
 import { sha256 } from "../differential/sha256.ts";
 import { rawGit } from "../performance/support/allocation-diagnostic/build.ts";
 import { prepareAllocationObjects } from "../performance/support/allocation-diagnostic/prepare.ts";
@@ -37,7 +39,39 @@ test("the exact optional source successor requires all208 native, original45 and
   assert.equal(receipt.nativeDelta.length, 9);
   assert.equal(receipt.acceptanceCredit, "none");
   const actual = rawGit(root, "rev-parse", "HEAD").toString().trim();
-  assert.deepEqual(qualifyAllocationSource(root, actual), receipt);
+  const original = qualifyAllocationSource(root, actual);
+  if (original) assert.deepEqual(original, receipt);
+  else {
+    const base = "3dd6ae0707dc42302638257b86967d6a6ffe902f";
+    const production = rawGit(
+      root,
+      "diff",
+      "--name-only",
+      base,
+      actual,
+      "--",
+      "crates",
+      "davinci",
+      "vendor",
+      "npm",
+      "Cargo.toml",
+      "Cargo.lock",
+      ".cargo",
+      ".config",
+      "rust-toolchain.toml",
+    )
+      .toString()
+      .trim()
+      .split("\n");
+    const frontier = qualifyFrontierHost(production, (side, file) =>
+      gitBodyDigest(root, side === "before" ? base : actual, file),
+    );
+    assert(frontier, "the separate complete exact-parent frontier source must qualify");
+    assert.equal(frontier.completeBodyPairs, 210);
+    assert.equal(frontier.preservedBodyPairs, 45);
+    assert.equal(frontier.preservedHarnessPairs, 31);
+    assert.equal(frontier.acceptanceCredit, "none");
+  }
 });
 
 test("missing, extra or duplicate native producers and every old/new complete body remain refusals", () => {

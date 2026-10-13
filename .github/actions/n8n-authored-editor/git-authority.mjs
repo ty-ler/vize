@@ -6,6 +6,10 @@ import { fileURLToPath } from "node:url";
 import { selectToolingShard } from "../../../tools/support/compat/github/tooling-test-shards.ts";
 
 const authorities = new Map([
+  [
+    "tests/tooling/warm-type-backed-frontier-authority.test.ts",
+    ["warm-type-backed-frontier-manifest.json", ["originalSource", "reviewedSource"]],
+  ],
   ["tests/tooling/n8n-authored-editor-layout.test.mjs", [null, []]],
   [
     "tests/tooling/warm-type-backed-graph-authority.test.ts",
@@ -61,6 +65,22 @@ export function references(plan, shard, cwd) {
           assert.match(ref, /^(?!0{40}$)[a-f0-9]{40}$/u);
           refs.add(ref);
         }
+      const frontierPath = path.join(
+        cwd,
+        "tests/performance/support/warm-type-backed-frontier-manifest.json",
+      );
+      if (fs.existsSync(frontierPath)) {
+        const frontier = JSON.parse(
+          fs.readFileSync(
+            path.join(cwd, "tests/performance/support/warm-type-backed-frontier-manifest.json"),
+            "utf8",
+          ),
+        );
+        for (const key of ["originalSource", "reviewedSource"]) {
+          assert.match(frontier[key], /^(?!0{40}$)[a-f0-9]{40}$/u);
+          refs.add(frontier[key]);
+        }
+      }
     }
   }
   return [...refs].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
