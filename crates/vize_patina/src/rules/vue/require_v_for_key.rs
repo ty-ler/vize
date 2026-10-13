@@ -37,6 +37,7 @@ mod components;
 pub(super) use components::relief_element_is_custom_component;
 use components::{
     has_markup_native_child, markup_element_is_custom_component, relief_has_native_child,
+    relief_template_has_slot_directive,
 };
 
 static META: RuleMeta = RuleMeta {
