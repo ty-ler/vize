@@ -49,6 +49,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0
         with: { toolchain: stable }
       - uses: ./head/.github/actions/setup-mold
+      # The cache action's nested local action resolves from the workspace root,
+      # and this job checks the repository out under head/.
+      - name: Expose the nested target action at the workspace root
+        run: mkdir -p .github/actions && cp -R head/.github/actions/reuse-rust-target .github/actions/
       - uses: ./head/.github/actions/setup-rust-sticky-cache
         with:
           key: doctor-filter-head

@@ -68,6 +68,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # stable
         with: { toolchain: stable }
       - uses: ./head/.github/actions/setup-mold
+      # The cache action's nested local action resolves from the workspace root,
+      # and this job checks the repository out under head/.
+      - name: Expose the nested target action at the workspace root
+        run: mkdir -p .github/actions && cp -R head/.github/actions/reuse-rust-target .github/actions/
       - uses: ./head/.github/actions/setup-rust-sticky-cache
         with:
           key: type-snapshot-head
@@ -139,6 +143,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # stable
         with: { toolchain: stable }
       - uses: ./head/.github/actions/setup-mold
+      # The cache action's nested local action resolves from the workspace root,
+      # and this job checks the repository out under head/.
+      - name: Expose the nested target action at the workspace root
+        run: mkdir -p .github/actions && cp -R head/.github/actions/reuse-rust-target .github/actions/
       - uses: ./head/.github/actions/setup-rust-sticky-cache
         with:
           key: type-snapshot-cli-head
