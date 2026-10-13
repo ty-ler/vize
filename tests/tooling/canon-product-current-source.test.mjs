@@ -16,6 +16,8 @@ import {
 
 import { canonProductCompositionPaths } from "../../tools/support/compat/github/canon-product-main-composition.mjs";
 
+import { sourcePaths as nativeCopiedSourcePaths } from "../../tools/support/compat/github/native-lexical-dollar-metadata.mjs";
+
 const root = path.resolve(import.meta.dirname, "../..");
 void test("whole current release source binds every unchanged original JS and Star module", async () => {
   const fixture = await canonProductOriginalFixture(root);
@@ -69,6 +71,17 @@ void test("private physical mutation missing mode and ancestor symlink refuse be
       fs.chmodSync(target, fs.statSync(path.join(root, file)).mode & 0o777);
     }
     assert.equal(authenticateCanonProductSource(directory).completeBodies, 426);
+    const executable = path.join(
+      directory,
+      "tools/commands/fixtures/typecheck-dependency-prepare.rs",
+    );
+    const executableBody = fs.readFileSync(executable);
+    fs.chmodSync(executable, 0o644);
+    assert.throws(() => authenticateCanonProductSource(directory));
+    fs.chmodSync(executable, 0o755);
+    fs.writeFileSync(executable, Buffer.concat([executableBody, Buffer.from("\n")]));
+    assert.throws(() => authenticateCanonProductSource(directory));
+    fs.writeFileSync(executable, executableBody);
     const name = "crates/vize_canon/src/batch/source_policy.rs",
       file = path.join(directory, name),
       body = fs.readFileSync(file);
@@ -116,4 +129,29 @@ void test("private physical mutation missing mode and ancestor symlink refuse be
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }
+});
+
+void test("actual native copied census preserves the original 100644 ABI and whole executable custody", () => {
+  const receipt = authenticateCanonProductSource(root);
+  const manifest = JSON.parse(
+    fs.readFileSync(
+      path.join(root, "tests/performance/support/warm-type-backed-lexical-dollar-manifest.json"),
+    ),
+  );
+  const selected = nativeCopiedSourcePaths(manifest);
+  const executable = "tools/commands/fixtures/typecheck-dependency-prepare.rs";
+  assert(canonProductCompositionPaths.includes(executable));
+  assert(!selected.includes(executable));
+  assert.equal(receipt.completeBodies, 426);
+  const tree = execFileSync(
+    "git",
+    ["--no-replace-objects", "ls-tree", "-rz", receipt.head, "--", ...selected],
+    { cwd: root, maxBuffer: 16 * 1024 * 1024 },
+  );
+  const entries = tree.toString().split("\0");
+  assert.equal(entries.pop(), "");
+  assert.equal(entries.length, selected.length);
+  for (const entry of entries) assert.match(entry, /^100644 blob [a-f0-9]{40}\t/u);
+  for (const file of selected)
+    assert.equal(fs.lstatSync(path.join(root, file)).mode & 0o777, 0o644);
 });

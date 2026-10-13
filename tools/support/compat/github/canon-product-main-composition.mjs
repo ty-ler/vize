@@ -10,7 +10,7 @@ const blob = (body) =>
 const packetBytes = fs.readFileSync(
   new URL("canon-product-main-composition.json.gz", import.meta.url),
 );
-assert.equal(sha(packetBytes), "751dd584706590dd40ffdaeaa49238a3fbe3cb601e482c86b8e450ee3bcc8ffe");
+assert.equal(sha(packetBytes), "70ff8cffe89e36469d74c8e58fcef1b62295b0c0d90b66b170c43f520bff446c");
 const packet = JSON.parse(gunzipSync(packetBytes));
 assert.equal(packet.source, "c4f74b48fb2df6ea20aeb414193d82f531ab059e");
 assert.equal(packet.sourceOnly, true);

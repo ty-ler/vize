@@ -35,7 +35,10 @@ export const nativeLexicalSourcePaths = (manifest, helpers) => [
     "crates/vize_canon/src/lib.rs",
     ...javascriptSfcSourcePaths,
     ...canonProductSourcePaths,
-    ...canonProductCompositionPaths,
+    // The executable preparation script stays in whole physical custody, outside this 100644-only packet.
+    ...canonProductCompositionPaths.filter(
+      (file) => file !== "tools/commands/fixtures/typecheck-dependency-prepare.rs",
+    ),
     ...supplementalHelpers,
   ]),
 ];

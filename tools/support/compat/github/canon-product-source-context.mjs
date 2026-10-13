@@ -98,7 +98,7 @@ const successorBytes = fs.readFileSync(
 );
 assert.equal(
   sha(successorBytes),
-  "23208fae7b3b049a9e251fc118fe5fc0f51e5d1d72cd5a036d8ddd241eedc3c5",
+  "a72877ff1d9395ae62229838feaab94e32e1255d53be3d0736dbae224607968b",
 );
 const successors = JSON.parse(gunzipSync(successorBytes));
 assert.equal(successors.schema, 1);
