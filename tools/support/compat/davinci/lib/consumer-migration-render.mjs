@@ -89,7 +89,7 @@ function renderShardTable(consumers) {
       const rel = shard.relPath.slice(SHARD_DIR_REL.length + 1);
       return [
         shard.consumer.label,
-        `[\`${rel}\`](./consumer-migration-surfaces/${rel})`,
+        `\`${rel}\``,
         shard.entries.map(entryLabel).join("<br>"),
       ];
     }),
@@ -190,8 +190,10 @@ ${renderScopes(scan.consumers)}
 
 ## Shards
 
-Every row lives in exactly one TSV shard per (consumer, crate) under
-\`${SHARD_DIR_REL}/\`: one row per file x class x surface x matched name,
+Every row lives in exactly one TSV shard per (consumer, crate). Shards record
+file paths and line numbers, so they are not committed: each run writes them
+under \`artifacts/davinci-ledgers/consumer-migration-surfaces/\`, and CI uploads
+them in the \`davinci-generated-ledgers\` artifact. One row per file x class x surface x matched name,
 columns \`consumer_id\`, \`consumer\`, \`class\` (\`source\`, \`manifest\`,
 \`test/dev\`), \`file\`, \`first_line\`, \`surface_id\`, \`surface\`,
 \`surface_group\`, \`matched_name\`, \`name_kind\`, \`sites\`. The shard set is
@@ -201,7 +203,8 @@ Cross-file aggregates — per-consumer and per-surface totals and the top files
 by site count — are deliberately **not committed**: they changed with every PR
 and made every open PR conflict. They are pure sums over the shards; print
 them with \`${options.summaryCommand}\`. The staleness check (TS-12)
-byte-compares this page, every shard, and the shard set itself.
+byte-compares this page and refuses shards committed under
+\`${SHARD_DIR_REL}/\`.
 
 ${renderShardTable(scan.consumers)}
 ${renderSlices()}
