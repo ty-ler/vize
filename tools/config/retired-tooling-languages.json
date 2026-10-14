@@ -90,6 +90,6 @@
       "tests/formal/impeto/lakefile.lean",
       "tests/formal/impeto/lean-toolchain"
     ],
-    "mbt": ["tools/moon/lib/main.mbt"]
+    "mbt": []
   }
 }
