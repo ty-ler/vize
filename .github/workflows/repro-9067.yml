@@ -25,9 +25,14 @@ jobs:
           node-version-file: "package.json"
           cache: true
           run-install: true
+      - name: Saturate the runner like the full workspace test
+        if: matrix.load == 'saturated'
+        run: |
+          for i in $(seq 1 48); do (while :; do :; done) & done
+          node -e "const a=[];setInterval(()=>{a.push(Buffer.alloc(64<<20,1));if(a.length>40)a.splice(0,20)},200)" &
       - name: Spawn the runtime child per variant
         env:
           REPRO_ROUNDS: "12"
-          REPRO_CONCURRENCY: "32"
+          REPRO_CONCURRENCY: "64"
           REPRO_VARIANTS: ${{ matrix.shard == 1 && 'baseline,prebundled' || 'prebundled,baseline' }}
         run: node tests/tooling/support/repro-9067/driver.mjs
