@@ -153,6 +153,7 @@ formatter	Formatter	test/dev	crates/vize_glyph/tests/css_continuation_indent.rs	
 formatter	Formatter	test/dev	crates/vize_glyph/tests/css_engine_boundary.rs	8	l0	L0	stage	vize_l0	preferred	1
 formatter	Formatter	test/dev	crates/vize_glyph/tests/css_rule_layout.rs	6	l0	L0	stage	vize_l0	preferred	1
 formatter	Formatter	test/dev	crates/vize_glyph/tests/document_layout.rs	4	l0	L0	stage	vize_l0	preferred	1
+formatter	Formatter	test/dev	crates/vize_glyph/tests/empty_blocks.rs	6	l0	L0	stage	vize_l0	preferred	1
 formatter	Formatter	test/dev	crates/vize_glyph/tests/fix_history_directive_layout.rs	7	l0	L0	stage	vize_l0	preferred	1
 formatter	Formatter	test/dev	crates/vize_glyph/tests/fix_history_template_gaps.rs	6	l0	L0	stage	vize_l0	preferred	1
 formatter	Formatter	test/dev	crates/vize_glyph/tests/formatter_parser_allocation.rs	3	raw_oxc	raw OXC	raw	oxc_allocator	raw	1
