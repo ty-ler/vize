@@ -21,6 +21,11 @@ on:
         description: Record general navigation capture operation timings
         type: boolean
         default: false
+  # The merge queue builds the same site and checks the reviewed routes' links
+  # and anchors without the browser captures (Check / docs-build).
+  workflow_call:
+    inputs:
+      links-only: { type: boolean, default: false }
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -37,6 +42,8 @@ concurrency:
 jobs:
   build-docs:
     runs-on: blacksmith-32vcpu-ubuntu-2404
+    env:
+      VIZE_DOCS_LINKS_ONLY: ${{ inputs.links-only && '1' || '0' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
@@ -177,7 +184,7 @@ jobs:
         if: steps.cache-wasm.outputs.cache-hit != 'true'
         uses: taiki-e/install-action@184183c2401be73c3bf42c2e61268aa5855379c1 # v2
         with:
-          tool: wasm-bindgen-cli@0.2.127
+          tool: wasm-bindgen-cli@0.2.129
 
       - name: Setup Vite+ and Node.js
         uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1

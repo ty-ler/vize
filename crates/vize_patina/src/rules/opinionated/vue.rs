@@ -61,7 +61,7 @@ pub use no_useless_v_bind::NoUselessVBind;
 pub use no_v_text::NoVText;
 pub use prefer_props_shorthand::PreferPropsShorthand;
 pub use prefer_true_attribute_shorthand::PreferTrueAttributeShorthand;
-pub use require_component_registration::RequireComponentRegistration;
+pub use require_component_registration::{RequireComponentRegistration, VUE_ROUTER_COMPONENTS};
 pub use scoped_event_names::ScopedEventNames;
 pub use slot_name_casing::SlotNameCasing;
 pub use this_in_template::ThisInTemplate;
@@ -90,9 +90,6 @@ enum PresetFlavor {
 
 fn register_shared(registry: &mut RuleRegistry, flavor: PresetFlavor) {
     registry.register(Box::new(MultiWordComponentNames::default()));
-    registry.register(Box::new(UseVOnExact));
-
-    registry.register(Box::new(NoTemplateShadow));
     registry.register(Box::new(VBindStyle::default()));
     registry.register(Box::new(VOnHandlerStyle));
     match flavor {
@@ -132,6 +129,6 @@ fn register_shared(registry: &mut RuleRegistry, flavor: PresetFlavor) {
     registry.register(Box::new(NoUnusedRefs));
     registry.register(Box::new(PreferTrueAttributeShorthand));
     registry.register(Box::new(VOnEventHyphenation::default()));
-    registry.register(Box::new(ThisInTemplate));
     registry.register(Box::new(NoArrayIndexKey));
+    registry.register(Box::new(crate::rules::vue::NoUseVElseWithVFor));
 }

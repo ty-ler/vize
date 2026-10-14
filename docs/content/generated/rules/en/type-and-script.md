@@ -767,7 +767,7 @@ Disallow an object literal as the component data option (Vue 3 requires a functi
 [Bad](#script-no-deprecated-data-object-declaration-bad) · [Good](#script-no-deprecated-data-object-declaration-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -837,7 +837,7 @@ Disallow deprecated destroyed and beforeDestroy lifecycle hooks
 [Bad](#script-no-deprecated-destroyed-lifecycle-bad) · [Good](#script-no-deprecated-destroyed-lifecycle-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Automatic fix: Available for supported findings  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -898,7 +898,7 @@ Disallow the $listeners instance property removed in Vue 3 (merged into $attrs)
 [Bad](#script-no-deprecated-dollar-listeners-api-bad) · [Good](#script-no-deprecated-dollar-listeners-api-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -962,7 +962,7 @@ Disallow the $scopedSlots instance property removed in Vue 3 (use $slots)
 [Bad](#script-no-deprecated-dollar-scopedslots-api-bad) · [Good](#script-no-deprecated-dollar-scopedslots-api-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -1027,7 +1027,7 @@ Disallow the removed Vue 2 events API ($on / $off / $once)
 [Bad](#script-no-deprecated-events-api-bad) · [Good](#script-no-deprecated-events-api-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -1097,7 +1097,7 @@ Disallow `this` inside a prop default/validator function (removed in Vue 3)
 [Bad](#script-no-deprecated-props-default-this-bad) · [Good](#script-no-deprecated-props-default-this-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -1261,7 +1261,7 @@ export default {
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_dupe_keys.rs#L52) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_dupe_keys.rs#L55) · [All rules](all.md)
 
 ### `script/no-duplicate-attr-inheritance`
 
@@ -3670,7 +3670,7 @@ export default {
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/require_prop_type_constructor.rs#L59) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/require_prop_type_constructor.rs#L65) · [All rules](all.md)
 
 ### `script/require-prop-types`
 
@@ -3679,7 +3679,7 @@ Require every prop to declare a type
 [Bad](#script-require-prop-types-bad) · [Good](#script-require-prop-types-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.

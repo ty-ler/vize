@@ -769,7 +769,7 @@ const userName = computed(() => props.user.name);
 [错误示例](#script-no-deprecated-data-object-declaration-bad) · [正确示例](#script-no-deprecated-data-object-declaration-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 中的 JS/TS 脚本；示例展示对应的 Options API 或 script setup 形式  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -839,7 +839,7 @@ export default {
 [错误示例](#script-no-deprecated-destroyed-lifecycle-bad) · [正确示例](#script-no-deprecated-destroyed-lifecycle-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自动修复: 适用于已支持的诊断  
 适用范围: Vue SFC 中的 JS/TS 脚本；示例展示对应的 Options API 或 script setup 形式  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -900,7 +900,7 @@ export default { beforeUnmount() { clearTimeout(this.timer); } };
 [错误示例](#script-no-deprecated-dollar-listeners-api-bad) · [正确示例](#script-no-deprecated-dollar-listeners-api-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 中的 JS/TS 脚本；示例展示对应的 Options API 或 script setup 形式  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -964,7 +964,7 @@ const forwarded = ctx.attrs
 [错误示例](#script-no-deprecated-dollar-scopedslots-api-bad) · [正确示例](#script-no-deprecated-dollar-scopedslots-api-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 中的 JS/TS 脚本；示例展示对应的 Options API 或 script setup 形式  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -1029,7 +1029,7 @@ render($slots.default)
 [错误示例](#script-no-deprecated-events-api-bad) · [正确示例](#script-no-deprecated-events-api-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 中的 JS/TS 脚本；示例展示对应的 Options API 或 script setup 形式  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -1099,7 +1099,7 @@ emitter.on('event', handler)
 [错误示例](#script-no-deprecated-props-default-this-bad) · [正确示例](#script-no-deprecated-props-default-this-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 中的 JS/TS 脚本；示例展示对应的 Options API 或 script setup 形式  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -1263,7 +1263,7 @@ export default {
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_dupe_keys.rs#L52) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_dupe_keys.rs#L55) · [全部规则](all.md)
 
 ### `script/no-duplicate-attr-inheritance`
 
@@ -3672,7 +3672,7 @@ export default {
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/require_prop_type_constructor.rs#L59) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/require_prop_type_constructor.rs#L65) · [全部规则](all.md)
 
 ### `script/require-prop-types`
 
@@ -3681,7 +3681,7 @@ export default {
 [错误示例](#script-require-prop-types-bad) · [正确示例](#script-require-prop-types-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 中的 JS/TS 脚本；示例展示对应的 Options API 或 script setup 形式  
 选项: 没有规则专属选项。可以配置严重程度和预设。

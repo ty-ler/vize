@@ -11,11 +11,6 @@ on:
     # Daily 03:11 UTC, staggered from native smoke and e2e.
     - cron: "11 3 * * *"
   workflow_dispatch:
-    inputs:
-      allocation-ownership-diagnostic:
-        description: Run the finite allocation ownership experiment on its owned branch
-        type: boolean
-        default: false
 concurrency:
   # A push to main must not cancel an exact-SHA full validation used by release.
   group: check-v3-${{ github.workflow }}-${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('full-{0}', github.sha) || (github.event.pull_request.number || github.ref) }}
@@ -23,24 +18,6 @@ concurrency:
 permissions: { contents: read }
 env: { CARGO_TERM_COLOR: always, FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true }
 jobs:
-  allocation-ownership-diagnostic:
-    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/ci/vapor-allocation-ownership-20261004' && inputs.allocation-ownership-diagnostic }}
-    runs-on: blacksmith-32vcpu-ubuntu-2404
-    timeout-minutes: 90
-    permissions: { contents: read, actions: read }
-    env:
-      {
-        CARGO_BUILD_JOBS: "12",
-        CARGO_INCREMENTAL: "0",
-        RUST_TEST_THREADS: "4",
-        VIZE_NUXT_CONFIG_ITERATIONS: "100",
-        VIZE_TEST_REQUIRE_TSGO: "1",
-      }
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with: { fetch-depth: 0 }
-      - uses: ./.github/actions/diagnose-allocation-ownership
-        env: { GH_TOKEN: "${{ github.token }}" }
   pr-source-checks:
     name: PR source checks
     permissions: { contents: read, actions: read, checks: read }
@@ -119,7 +96,7 @@ jobs:
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 25
     permissions: { contents: read }
-    # Keep this list in sync with crates published by tools/moon/cmd/publish_crates.
+    # Keep this list in sync with crates published by tools/support/release/publish_crates.
     strategy:
       fail-fast: false
       matrix:
@@ -222,12 +199,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
         with: { toolchain: stable }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
-        with:
-          wild-version: "0.9.0"
+        with: { wild-version: "0.9.0" }
       - uses: ./.github/actions/setup-rust-sticky-cache
-        with:
-          key: check-vize-apps
-          cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
+        with: { key: check-vize-apps, cache-key-suffix: "${{ runner.os }}-${{ runner.arch }}" }
       - name: Install JS dependencies
         run: vp install --frozen-lockfile --prefer-offline
       - name: Check generated reference docs
@@ -244,6 +218,10 @@ jobs:
         run: vp exec tsx --test gallery/components/MarkdownContent.test.ts
       - name: Check Vize app fixtures
         run: vp run --workspace-root check:ci:vize-apps
+  release-gates:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+    permissions: { contents: read, issues: write } # Fuzz triage runs only on schedule and dispatch.
+    uses: ./.github/workflows/queue-release-gates.yml
   vue-parity:
     runs-on: blacksmith-32vcpu-ubuntu-2404
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
@@ -260,12 +238,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
         with: { toolchain: stable }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
-        with:
-          wild-version: "0.9.0"
+        with: { wild-version: "0.9.0" }
       - uses: ./.github/actions/setup-rust-sticky-cache
-        with:
-          key: vue-parity
-          cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
+        with: { key: vue-parity, cache-key-suffix: "${{ runner.os }}-${{ runner.arch }}" }
       - uses: ./.github/actions/check-vue-parity
   full-source-cli:
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
@@ -331,8 +306,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
         with: { toolchain: stable }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
-        with:
-          wild-version: "0.9.0"
+        with: { wild-version: "0.9.0" }
       - uses: ./.github/actions/setup-rust-sticky-cache
         with:
           key: build-js-packages
@@ -472,8 +446,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
         with: { toolchain: stable, components: llvm-tools-preview }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
-        with:
-          wild-version: "0.9.0"
+        with: { wild-version: "0.9.0" }
       - uses: ./.github/actions/setup-moonbit
       - uses: ./.github/actions/setup-rust-script
       - uses: ./.github/actions/setup-rust-sticky-cache
@@ -526,8 +499,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # nightly
         with: { toolchain: nightly, components: llvm-tools-preview }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
-        with:
-          wild-version: "0.9.0"
+        with: { wild-version: "0.9.0" }
       - uses: ./.github/actions/setup-moonbit
       - uses: ./.github/actions/setup-rust-script
       - uses: ./.github/actions/setup-rust-sticky-cache
@@ -580,7 +552,7 @@ jobs:
         if: steps.cache-wasm.outputs.cache-hit != 'true'
         uses: taiki-e/install-action@184183c2401be73c3bf42c2e61268aa5855379c1 # v2
         with:
-          tool: wasm-bindgen-cli@0.2.127
+          tool: wasm-bindgen-cli@0.2.129
       - name: Setup Vite+ and Node.js
         uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
         with:
@@ -645,6 +617,7 @@ jobs:
       - instruction-counts
       - level-dependency-direction
       - release-integration-catalog
+      - release-gates
     permissions:
       contents: read
     steps:

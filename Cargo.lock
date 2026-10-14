@@ -1206,7 +1206,7 @@ dependencies = [
 
 [[package]]
 name = "davinci_harness"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "davinci_test_support",
@@ -1226,7 +1226,7 @@ dependencies = [
 
 [[package]]
 name = "davinci_test_support"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "regex-lite",
  "serde_json",
@@ -2065,9 +2065,9 @@ dependencies = [
 
 [[package]]
 name = "js-sys"
-version = "0.3.104"
+version = "0.3.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e0c1080212aad755ea003d18543e8768dd432c48819efd73a7bf1e39b7a5a3a"
+checksum = "7883d941dae510fb2d978fc3fe018c71c9e2892fd38854de3e8b92c2e5ad9cc5"
 dependencies = [
  "cfg-if",
  "futures-util",
@@ -4533,7 +4533,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vize"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "clap",
  "corsa",
@@ -4591,7 +4591,7 @@ dependencies = [
 
 [[package]]
 name = "vize_armature"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "compact_str",
  "criterion",
@@ -4613,7 +4613,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_core"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "compact_str",
  "criterion",
@@ -4645,7 +4645,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_dom"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4664,7 +4664,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_jsx"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "insta",
@@ -4692,7 +4692,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_sfc"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4737,7 +4737,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_ssr"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4761,7 +4761,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_vapor"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4792,7 +4792,7 @@ dependencies = [
 
 [[package]]
 name = "vize_benchmarks"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "vize",
@@ -4802,7 +4802,7 @@ dependencies = [
 
 [[package]]
 name = "vize_canon"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "corsa",
  "corsa_lsp",
@@ -4848,7 +4848,7 @@ dependencies = [
 
 [[package]]
 name = "vize_carton"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "davinci_test_support",
  "globset",
@@ -4864,7 +4864,7 @@ dependencies = [
 
 [[package]]
 name = "vize_croquis"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "dashmap 6.2.1",
@@ -4899,7 +4899,7 @@ dependencies = [
 
 [[package]]
 name = "vize_croquis_cf"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4926,7 +4926,7 @@ dependencies = [
 
 [[package]]
 name = "vize_curator"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "davinci_test_support",
  "insta",
@@ -4952,7 +4952,7 @@ dependencies = [
 
 [[package]]
 name = "vize_dialect_moonbit"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "serde_json",
  "sha2 0.11.0",
@@ -4966,7 +4966,7 @@ dependencies = [
 
 [[package]]
 name = "vize_doctor"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "globset",
@@ -4982,7 +4982,7 @@ dependencies = [
 
 [[package]]
 name = "vize_extension_contract"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "serde",
  "vize_l0",
@@ -4993,7 +4993,7 @@ dependencies = [
 
 [[package]]
 name = "vize_extension_host"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "davinci_test_support",
  "serde",
@@ -5011,7 +5011,7 @@ dependencies = [
 
 [[package]]
 name = "vize_fresco"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "compact_str",
  "criterion",
@@ -5036,7 +5036,7 @@ dependencies = [
 
 [[package]]
 name = "vize_glyph"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -5061,7 +5061,7 @@ dependencies = [
 
 [[package]]
 name = "vize_guest"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "dlmalloc",
  "wit-bindgen 0.62.0",
@@ -5069,7 +5069,7 @@ dependencies = [
 
 [[package]]
 name = "vize_incremental"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "salsa",
  "toml",
@@ -5083,7 +5083,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l0"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "bitflags 2.13.1",
  "compact_str",
@@ -5114,7 +5114,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l0_derive"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5123,7 +5123,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l1"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "cssparser",
  "davinci_harness",
@@ -5141,7 +5141,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l1_to_l2"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -5173,7 +5173,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l2"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "oxc_ast",
  "oxc_span",
@@ -5184,7 +5184,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l2_to_l3"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "davinci_test_support",
  "insta",
@@ -5199,7 +5199,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l3"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "oxc_ast",
  "oxc_span",
@@ -5214,7 +5214,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l4"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "oxc_span",
  "oxc_syntax",
@@ -5229,7 +5229,7 @@ dependencies = [
 
 [[package]]
 name = "vize_lightningcss"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "ahash",
  "assert_cmd",
@@ -5267,7 +5267,7 @@ dependencies = [
 
 [[package]]
 name = "vize_maestro"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "async-trait",
  "dashmap 6.2.1",
@@ -5315,7 +5315,7 @@ dependencies = [
 
 [[package]]
 name = "vize_marquette"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "insta",
  "serde",
@@ -5327,7 +5327,7 @@ dependencies = [
 
 [[package]]
 name = "vize_musea"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -5342,7 +5342,7 @@ dependencies = [
 
 [[package]]
 name = "vize_oxc_formatter"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "cow-utils",
  "fast-glob",
@@ -5368,7 +5368,7 @@ dependencies = [
 
 [[package]]
 name = "vize_oxc_parser"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "bitflags 2.13.1",
  "compact_str",
@@ -5394,7 +5394,7 @@ dependencies = [
 
 [[package]]
 name = "vize_parcel_sourcemap"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "base64-simd 0.7.0",
  "data-url",
@@ -5406,7 +5406,7 @@ dependencies = [
 
 [[package]]
 name = "vize_patina"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "corsa",
  "criterion",
@@ -5444,7 +5444,7 @@ dependencies = [
 
 [[package]]
 name = "vize_relief"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "oxc_ast",
  "oxc_ast_visit",
@@ -5459,7 +5459,7 @@ dependencies = [
 
 [[package]]
 name = "vize_test_runner"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "pklrust",
  "serde",
@@ -5472,7 +5472,7 @@ dependencies = [
 
 [[package]]
 name = "vize_vitrine"
-version = "0.443.0"
+version = "0.454.0"
 dependencies = [
  "getrandom 0.3.4",
  "glob",
@@ -5568,9 +5568,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.127"
+version = "0.2.129"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b70935747edd64d89de3efa29d73789b806c15798f8e7dca4d8ac356b50ce70"
+checksum = "9bb54f33acc68fd454578d9820b0bde1a1a3d17aa17bb7b6595806d02886d409"
 dependencies = [
  "cfg-if",
  "once_cell",
@@ -5581,9 +5581,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.127"
+version = "0.2.129"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77775f8f3f7217702089053b94958f8f54061a3f663417df76e19cbdcca29bc1"
+checksum = "2e29d0c35b16e224a7eeb5cd2d25e3e1968fbd65604117b44d3b789d00ee8535"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -5591,22 +5591,22 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.127"
+version = "0.2.129"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e11d33f857dc2fb11b8bc75aee111aa9cbeb12cd9f25efd3d4c2a3dd4e235284"
+checksum = "6f501a8bc3719dba86ef8ae4728879c08001bea749eb1333ac5b91e040e2a6b7"
 dependencies = [
  "bumpalo",
  "proc-macro2",
  "quote",
- "syn 2.0.117",
+ "syn 3.0.5",
  "wasm-bindgen-shared",
 ]
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.127"
+version = "0.2.129"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ef64dbcc55df09c7e5a46182d181c2cfa3e925f3da937ea764728b4bbb9dcbf"
+checksum = "23f0c9c52aa7cd7d77769a4cfe2a9adb1b331f489a41d912ce14513d5ab995c6"
 dependencies = [
  "unicode-ident",
 ]
@@ -5895,9 +5895,9 @@ dependencies = [
 
 [[package]]
 name = "web-sys"
-version = "0.3.104"
+version = "0.3.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c435338968042f4f59a557f690a253676d47ce13ceb55d70100e7facf6620a30"
+checksum = "88261b9deccee56594c11a3460c462c41f58d148598fe70ad77070126a68aba4"
 dependencies = [
  "js-sys",
  "wasm-bindgen",

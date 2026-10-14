@@ -36,7 +36,7 @@ use vize_atelier_core::{CodegenOptions, TemplateSyntaxMode, options::CustomEleme
 use self::bindings::{
     collect_normal_script_bindings, croquis_to_legacy_bindings, merge_normal_script_bindings,
 };
-use self::diagnostics::{create_v_model_reactive_const_warning, create_vapor_ssr_fallback_warning};
+use self::diagnostics::create_v_model_reactive_const_warning;
 pub(crate) use self::helpers::is_ts_lang;
 use self::helpers::{
     demote_v_model_reactive_const_bindings, extract_component_name,
@@ -116,11 +116,9 @@ fn compile_sfc_inner(
     }
     let vapor_requested = vapor_requested(descriptor, &options);
 
-    // Vapor components currently render on the client. For SSR we fall back to
-    // the standard VDOM compiler and let the client hydrate with Vapor output.
-    if descriptor.template.is_some() && options.template.ssr && vapor_requested {
-        warnings.push(create_vapor_ssr_fallback_warning(descriptor));
-    }
+    // A Vapor component renders on the server through the SSR compiler and is
+    // marked `__vapor` (keeping Vapor's hydration anchors), as Vue's does.
+    options.template.vapor = options.template.ssr && vapor_requested;
     let is_vapor = !options.template.ssr && vapor_requested;
     // The production Vapor runtime does not expose script-setup bindings
     // through the component proxy. Every adapter must inline that template,
@@ -314,7 +312,7 @@ fn compile_sfc_inner(
                     }
 
                     // Export the component with render attached
-                    if is_vapor {
+                    if is_vapor || options.template.vapor {
                         code.push_str("_sfc_main.__vapor = true\n");
                     }
                     let render = if options.template.ssr {
@@ -343,7 +341,7 @@ fn compile_sfc_inner(
             // Without generated metadata the original script already exports
             // its component; only metadata-bearing scripts need `_sfc_main`.
             code.push_str(&final_script);
-            if is_vapor {
+            if is_vapor || options.template.vapor {
                 code.push_str("\n_sfc_main.__vapor = true");
             }
             if !compiled_styles.css_modules.is_empty() {
@@ -733,6 +731,7 @@ fn compile_sfc_inner(
                 preamble: &template_preamble,
                 render_body: &render_body,
                 render_is_block: is_vapor,
+                hydrates_as_vapor: options.template.vapor,
             },
             normal_script_content.as_deref(),
             &descriptor.css_vars,

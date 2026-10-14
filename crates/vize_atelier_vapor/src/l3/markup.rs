@@ -6,12 +6,124 @@ use vize_l3::{
     operand::OperandRole,
 };
 
+use super::LegacyReason;
+
+/// The message the legacy parser reports for `<div/>`.
+pub(crate) const SELF_CLOSING_RECOVERY: &str = "Invalid self-closing syntax on non-void HTML element was rewritten as an empty element with an explicit end tag.";
+
+/// The spans of self-closed non-void elements, each of which the legacy
+/// parser reports as a recovery that the native lane reproduces. The legacy
+/// reason when the legacy parser diagnoses markup the native lane cannot
+/// reproduce, or an element attribute rules the native lane out.
+/// Every op spans its authored markup: an element from `<` through its end
+/// tag (or `/>`), a binding over its attribute.
+pub(super) fn self_closing_recoveries(
+    allocator: &vize_carton::Allocator,
+    source: &str,
+    program: &Program<'_>,
+) -> Result<std::vec::Vec<(u32, u32)>, LegacyReason> {
+    // `v-pre` freezes some self-closed tags without a report.
+    if source.contains("v-pre") {
+        return (!legacy_diagnosed(allocator, source, program))
+            .then(std::vec::Vec::new)
+            .ok_or(LegacyReason::SurfaceSemantics);
+    }
+    let mut recoveries = std::vec::Vec::new();
+    let refused = scan(allocator, source, program, |op, markup| {
+        if op.kind == OpKind::InsertNode && markup.ends_with("/>") {
+            // A `<template>` with a structural directive is a fragment, not
+            // an HTML element, and the legacy parser accepts it self-closed.
+            if !structural_template(markup) {
+                recoveries.push((op.span.start, op.span.end));
+            }
+            true
+        } else {
+            false
+        }
+    });
+    if refused {
+        return Err(LegacyReason::SurfaceSemantics);
+    }
+    // An element attribute the native lane never admits (`ref`, `key`, an
+    // `on…` name) fails fast, before the native lane indexes the source.
+    if unsupported_attribute(program) {
+        return Err(LegacyReason::Binding);
+    }
+    Ok(recoveries)
+}
+
+/// Whether an element carries a static attribute that native admission
+/// rejects as a binding (`ref="r"` on a `<div>`).
+fn unsupported_attribute(program: &Program<'_>) -> bool {
+    program.operands.iter().any(|operand| {
+        operand.role == OperandRole::Attribute
+            && (program.ops.get(operand.op.index() as usize))
+                .is_some_and(|op| op.kind == OpKind::InsertNode)
+            && operand
+                .name
+                .is_none_or(|name| !super::native::validate::attribute_name(name))
+    })
+}
+
+/// Whether `<template …/>` carries `v-if`, `v-else-if`, `v-else`, `v-for` or
+/// a slot directive, which make the legacy parser treat it as a fragment.
+fn structural_template(markup: &str) -> bool {
+    let Some(rest) = markup.strip_prefix("<template") else {
+        return false;
+    };
+    if !rest.starts_with(|c: char| c.is_ascii_whitespace() || c == '/') {
+        return false;
+    }
+    let mut quote = None;
+    let mut boundary = true;
+    let mut start = None;
+    for (at, c) in rest.char_indices() {
+        if let Some(open) = quote {
+            if c == open {
+                quote = None;
+            }
+            continue;
+        }
+        match c {
+            '"' | '\'' => quote = Some(c),
+            _ if c.is_ascii_whitespace() || c == '=' || c == '/' || c == '>' => {
+                if let Some(from) = start.take()
+                    && structural(rest.get(from..at).unwrap_or_default())
+                {
+                    return true;
+                }
+                boundary = c != '=';
+            }
+            _ if boundary && start.is_none() => start = Some(at),
+            _ => {}
+        }
+    }
+    false
+}
+
+fn structural(name: &str) -> bool {
+    matches!(name, "v-if" | "v-else-if" | "v-else" | "v-for")
+        || name.starts_with('#')
+        || name.starts_with("v-slot")
+}
+
 /// Every op spans its authored markup: an element from `<` through its end
 /// tag, a binding over its attribute.
 pub(super) fn legacy_diagnosed(
     allocator: &vize_carton::Allocator,
     source: &str,
     program: &Program<'_>,
+) -> bool {
+    scan(allocator, source, program, |_, _| false)
+}
+
+/// Whether any op is markup the legacy parser diagnoses; `reproduced` takes
+/// an unclosed element the native lane can report itself.
+fn scan(
+    allocator: &vize_carton::Allocator,
+    source: &str,
+    program: &Program<'_>,
+    mut reproduced: impl FnMut(&vize_l3::op::Op, &str) -> bool,
 ) -> bool {
     let mut bindings = vize_carton::Vec::with_capacity_in(program.ops.len(), &allocator);
     bindings.resize(program.ops.len(), false);
@@ -30,7 +142,7 @@ pub(super) fn legacy_diagnosed(
             OpKind::InsertNode | OpKind::CreateComponent | OpKind::SlotOutlet
                 if markup.starts_with('<') =>
             {
-                !closed(markup, op.kind == OpKind::InsertNode)
+                !closed(markup, op.kind == OpKind::InsertNode) && !reproduced(op, markup)
             }
             _ if bound => empty_modifier(markup),
             _ => false,

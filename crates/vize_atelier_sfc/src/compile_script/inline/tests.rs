@@ -16,7 +16,7 @@ mod tests {
             render_fn_name: "",
             preamble: "",
             render_body: "null",
-            render_is_block: false,
+            ..Default::default()
         };
         let result = compile_script_setup_inline(
             script_content,
@@ -43,7 +43,7 @@ mod tests {
             render_fn_name: "",
             preamble: "",
             render_body: "null",
-            render_is_block: false,
+            ..Default::default()
         };
         let result = compile_script_setup_inline(
             script_content,
@@ -281,7 +281,7 @@ const x = ref(1)
             render_fn_name: "",
             preamble: "",
             render_body: "",
-            render_is_block: false,
+            ..Default::default()
         };
         let result = compile_script_setup_inline(
             script_content,

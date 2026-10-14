@@ -45,6 +45,7 @@ pub struct ScriptCompileResult {
 }
 
 /// Template parts for inline compilation
+#[derive(Default)]
 pub struct TemplateParts<'a> {
     pub imports: &'a str,
     pub hoisted: &'a str,
@@ -55,6 +56,9 @@ pub struct TemplateParts<'a> {
     pub render_body: &'a str,
     /// Whether render_body contains a full statement block instead of a return expression
     pub render_is_block: bool,
+    /// The render function is a server render whose markup a Vapor component
+    /// hydrates, so the server component carries `__vapor` too.
+    pub hydrates_as_vapor: bool,
 }
 
 /// Compile script block(s)

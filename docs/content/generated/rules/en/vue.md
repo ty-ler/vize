@@ -33,6 +33,7 @@ Every Vue rule has its purpose, configuration, Bad and Good examples on this pag
 | [`vue/no-deprecated-slot-attribute`](#vue-no-deprecated-slot-attribute) | [Bad](#vue-no-deprecated-slot-attribute-bad) · [Good](#vue-no-deprecated-slot-attribute-good) | Disallow the deprecated `slot` attribute |
 | [`vue/no-deprecated-slot-scope-attribute`](#vue-no-deprecated-slot-scope-attribute) | [Bad](#vue-no-deprecated-slot-scope-attribute-bad) · [Good](#vue-no-deprecated-slot-scope-attribute-good) | Disallow the deprecated `slot-scope` attribute |
 | [`vue/no-deprecated-v-bind-sync`](#vue-no-deprecated-v-bind-sync) | [Bad](#vue-no-deprecated-v-bind-sync-bad) · [Good](#vue-no-deprecated-v-bind-sync-good) | Disallow the deprecated `.sync` modifier on `v-bind` |
+| [`vue/no-deprecated-v-is`](#vue-no-deprecated-v-is) | [Bad](#vue-no-deprecated-v-is-bad) · [Good](#vue-no-deprecated-v-is-good) | Disallow the deprecated `v-is` directive |
 | [`vue/no-deprecated-v-on-native-modifier`](#vue-no-deprecated-v-on-native-modifier) | [Bad](#vue-no-deprecated-v-on-native-modifier-bad) · [Good](#vue-no-deprecated-v-on-native-modifier-good) | Disallow the deprecated `.native` modifier on `v-on` |
 | [`vue/no-deprecated-v-on-number-modifiers`](#vue-no-deprecated-v-on-number-modifiers) | [Bad](#vue-no-deprecated-v-on-number-modifiers-bad) · [Good](#vue-no-deprecated-v-on-number-modifiers-good) | Disallow deprecated numeric `keyCode` modifiers on `v-on` |
 | [`vue/no-dupe-v-else-if`](#vue-no-dupe-v-else-if) | [Bad](#vue-no-dupe-v-else-if-bad) · [Good](#vue-no-dupe-v-else-if-good) | Disallow duplicate conditions in `v-if` / `v-else-if` chains |
@@ -101,13 +102,16 @@ Every Vue rule has its purpose, configuration, Bad and Good examples on this pag
 | [`vue/valid-v-bind`](#vue-valid-v-bind) | [Bad](#vue-valid-v-bind-bad) · [Good](#vue-valid-v-bind-good) | Enforce valid `v-bind` directives |
 | [`vue/valid-v-cloak`](#vue-valid-v-cloak) | [Bad](#vue-valid-v-cloak-bad) · [Good](#vue-valid-v-cloak-good) | Enforce valid `v-cloak` directives |
 | [`vue/valid-v-else`](#vue-valid-v-else) | [Bad](#vue-valid-v-else-bad) · [Good](#vue-valid-v-else-good) | Enforce valid `v-else` directives |
+| [`vue/valid-v-else-if`](#vue-valid-v-else-if) | [Bad](#vue-valid-v-else-if-bad) · [Good](#vue-valid-v-else-if-good) | Enforce valid `v-else-if` directives |
 | [`vue/valid-v-for`](#vue-valid-v-for) | [Bad](#vue-valid-v-for-bad) · [Good](#vue-valid-v-for-good) | Enforce valid `v-for` directives |
 | [`vue/valid-v-html`](#vue-valid-v-html) | [Bad](#vue-valid-v-html-bad) · [Good](#vue-valid-v-html-good) | Enforce valid `v-html` directives |
 | [`vue/valid-v-if`](#vue-valid-v-if) | [Bad](#vue-valid-v-if-bad) · [Good](#vue-valid-v-if-good) | Enforce valid `v-if` directives |
+| [`vue/valid-v-is`](#vue-valid-v-is) | [Bad](#vue-valid-v-is-bad) · [Good](#vue-valid-v-is-good) | Enforce valid `v-is` directives |
 | [`vue/valid-v-memo`](#vue-valid-v-memo) | [Bad](#vue-valid-v-memo-bad) · [Good](#vue-valid-v-memo-good) | Enforce valid `v-memo` directives |
 | [`vue/valid-v-model`](#vue-valid-v-model) | [Bad](#vue-valid-v-model-bad) · [Good](#vue-valid-v-model-good) | Enforce valid `v-model` directives |
 | [`vue/valid-v-on`](#vue-valid-v-on) | [Bad](#vue-valid-v-on-bad) · [Good](#vue-valid-v-on-good) | Enforce valid `v-on` directives |
 | [`vue/valid-v-once`](#vue-valid-v-once) | [Bad](#vue-valid-v-once-bad) · [Good](#vue-valid-v-once-good) | Enforce valid `v-once` directives |
+| [`vue/valid-v-pre`](#vue-valid-v-pre) | [Bad](#vue-valid-v-pre-bad) · [Good](#vue-valid-v-pre-good) | Enforce valid `v-pre` directives |
 | [`vue/valid-v-show`](#vue-valid-v-show) | [Bad](#vue-valid-v-show-bad) · [Good](#vue-valid-v-show-good) | Enforce valid `v-show` directives |
 | [`vue/valid-v-slot`](#vue-valid-v-slot) | [Bad](#vue-valid-v-slot-bad) · [Good](#vue-valid-v-slot-good) | Enforce valid `v-slot` directives |
 | [`vue/valid-v-text`](#vue-valid-v-text) | [Bad](#vue-valid-v-text-bad) · [Good](#vue-valid-v-text-good) | Enforce valid `v-text` directives |
@@ -1109,7 +1113,7 @@ Disallow deprecated Vue 2 filter syntax using the pipe operator
 [Bad](#vue-no-deprecated-filter-bad) · [Good](#vue-no-deprecated-filter-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -1231,7 +1235,7 @@ Disallow the `is` attribute on native HTML elements
 [Bad](#vue-no-deprecated-html-element-is-bad) · [Good](#vue-no-deprecated-html-element-is-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -1293,7 +1297,7 @@ Disallow the deprecated `inline-template` attribute
 [Bad](#vue-no-deprecated-inline-template-bad) · [Good](#vue-no-deprecated-inline-template-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -1354,7 +1358,7 @@ Disallow the `tag` prop on &lt;router-link&gt;
 [Bad](#vue-no-deprecated-router-link-tag-prop-bad) · [Good](#vue-no-deprecated-router-link-tag-prop-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -1661,6 +1665,68 @@ Use an ordinary one-way title binding or v-model:title when an update channel is
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
 [Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_v_bind_sync.rs#L42) · [All rules](all.md)
+
+### `vue/no-deprecated-v-is`
+
+Disallow the deprecated `v-is` directive
+
+[Bad](#vue-no-deprecated-v-is-bad) · [Good](#vue-no-deprecated-v-is-good)
+
+Default severity: `error`  
+Presets: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
+Automatic fix: None; review the suggested change  
+Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
+Options: No rule-specific options. Severity and preset selection are configurable.
+
+**Configuration (Vite+)**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  lint: {
+    vize: {
+      "preset": "incremental",
+      "rules": {
+        "vue/no-deprecated-v-is": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="vue-no-deprecated-v-is-bad"></span>
+
+**Bad**
+
+`v-is` was deprecated in Vue 3.1; the example still uses it to swap the rendered component.
+
+```vue annotate="remove:2"
+<template>
+<tr v-is="'MyRow'"></tr>
+</template>
+```
+
+<span id="vue-no-deprecated-v-is-good"></span>
+
+**Good**
+
+The `is` attribute with the `vue:` prefix, or `<component :is>`, selects the component instead.
+
+```vue annotate="add:2,3"
+<template>
+<tr is="vue:MyRow"></tr>
+<component :is="MyRow" />
+</template>
+```
+
+Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
+
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_v_is.rs#L27) · [All rules](all.md)
 
 ### `vue/no-deprecated-v-on-native-modifier`
 
@@ -3100,7 +3166,7 @@ Disallow variable names that shadow variables in outer scope
 [Bad](#vue-no-template-shadow-bad) · [Good](#vue-no-template-shadow-good)
 
 Default severity: `warning`  
-Presets: `nuxt`, `opinionated`  
+Presets: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -3797,7 +3863,7 @@ Disallow using `v-else-if` or `v-else` on the same element as `v-for`
 [Bad](#vue-no-use-v-else-with-v-for-bad) · [Good](#vue-no-use-v-else-with-v-for-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -4753,7 +4819,7 @@ vp run lint
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs#L56) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs#L57) · [All rules](all.md)
 
 ### `vue/require-scoped-style`
 
@@ -4883,7 +4949,7 @@ The static child inside `<Transition>` has no conditional visibility or dynamic 
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/require_toggle_inside_transition.rs#L48) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/require_toggle_inside_transition.rs#L49) · [All rules](all.md)
 
 ### `vue/require-v-for-key`
 
@@ -5233,7 +5299,7 @@ Disallow `this.` in template expressions
 [Bad](#vue-this-in-template-bad) · [Good](#vue-this-in-template-good)
 
 Default severity: `warning`  
-Presets: `nuxt`, `opinionated`  
+Presets: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -5368,7 +5434,7 @@ Enforce `.exact` modifier on `v-on` when there are modifier-based handlers
 [Bad](#vue-use-v-on-exact-bad) · [Good](#vue-use-v-on-exact-good)
 
 Default severity: `warning`  
-Presets: `essential`, `nuxt`, `opinionated`  
+Presets: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -5489,7 +5555,7 @@ vp run lint
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L30) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L28) · [All rules](all.md)
 
 ### `vue/v-on-event-hyphenation`
 
@@ -6064,7 +6130,72 @@ Place bare `v-else` immediately after the corresponding `v-if` branch.
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/valid_v_else.rs#L32) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/valid_v_else.rs#L31) · [All rules](all.md)
+
+### `vue/valid-v-else-if`
+
+Enforce valid `v-else-if` directives
+
+[Bad](#vue-valid-v-else-if-bad) · [Good](#vue-valid-v-else-if-good)
+
+Default severity: `error`  
+Presets: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
+Automatic fix: None; review the suggested change  
+Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
+Options: No rule-specific options. Severity and preset selection are configurable.
+
+**Configuration (Vite+)**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  lint: {
+    vize: {
+      "preset": "incremental",
+      "rules": {
+        "vue/valid-v-else-if": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="vue-valid-v-else-if-bad"></span>
+
+**Bad**
+
+The examples leave `v-else-if` without a preceding conditional branch or a condition, or give it an argument or modifier.
+
+```vue annotate="remove:2,3,4,5"
+<template>
+<div v-else-if="foo"></div> <!-- without preceding v-if -->
+<div v-if="foo"></div><div v-else-if></div>
+<div v-if="foo"></div><div v-else-if:arg="bar"></div>
+<div v-if="foo"></div><div v-else-if.mod="bar"></div>
+</template>
+```
+
+<span id="vue-valid-v-else-if-good"></span>
+
+**Good**
+
+Place `v-else-if` with a condition immediately after the `v-if` or `v-else-if` branch it continues.
+
+```vue annotate="add:2,3"
+<template>
+<div v-if="foo"></div>
+<div v-else-if="bar"></div>
+</template>
+```
+
+Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
+
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/valid_v_else_if.rs#L34) · [All rules](all.md)
 
 ### `vue/valid-v-for`
 
@@ -6256,6 +6387,70 @@ Each `v-if` has a nonempty condition such as `ready` or `count > 0`, without an 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
 [Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/valid_v_if.rs#L29) · [All rules](all.md)
+
+### `vue/valid-v-is`
+
+Enforce valid `v-is` directives
+
+[Bad](#vue-valid-v-is-bad) · [Good](#vue-valid-v-is-good)
+
+Default severity: `error`  
+Presets: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
+Automatic fix: None; review the suggested change  
+Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
+Options: No rule-specific options. Severity and preset selection are configurable.
+
+**Configuration (Vite+)**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  lint: {
+    vize: {
+      "preset": "incremental",
+      "rules": {
+        "vue/valid-v-is": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="vue-valid-v-is-bad"></span>
+
+**Bad**
+
+`v-is` has an argument or modifier, lacks its value, or sits on a component instead of a native HTML element.
+
+```vue annotate="remove:2,3,4,5"
+<template>
+<tr v-is:arg="'MyRow'"></tr>
+<tr v-is.mod="'MyRow'"></tr>
+<tr v-is></tr>
+<MyComponent v-is="'MyRow'" />
+</template>
+```
+
+<span id="vue-valid-v-is-good"></span>
+
+**Good**
+
+`v-is` with a value on a native element such as `<tr>` names the component to render in its place.
+
+```vue annotate="add:2"
+<template>
+<tr v-is="'MyRow'"></tr>
+</template>
+```
+
+Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
+
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/valid_v_is.rs#L30) · [All rules](all.md)
 
 ### `vue/valid-v-memo`
 
@@ -6509,6 +6704,69 @@ Bare `v-once` marks the subtree for one-time rendering without unsupported synta
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
 [Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/valid_v_once.rs#L27) · [All rules](all.md)
+
+### `vue/valid-v-pre`
+
+Enforce valid `v-pre` directives
+
+[Bad](#vue-valid-v-pre-bad) · [Good](#vue-valid-v-pre-good)
+
+Default severity: `error`  
+Presets: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
+Automatic fix: None; review the suggested change  
+Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
+Options: No rule-specific options. Severity and preset selection are configurable.
+
+**Configuration (Vite+)**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  lint: {
+    vize: {
+      "preset": "incremental",
+      "rules": {
+        "vue/valid-v-pre": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="vue-valid-v-pre-bad"></span>
+
+**Bad**
+
+`v-pre` has an argument, modifier, or value, although this directive is a value-free marker that skips compilation.
+
+```vue annotate="remove:2,3,4"
+<template>
+<div v-pre:arg></div>
+<div v-pre.mod></div>
+<div v-pre="foo"></div>
+</template>
+```
+
+<span id="vue-valid-v-pre-good"></span>
+
+**Good**
+
+Bare `v-pre` leaves the subtree uncompiled, so its mustaches render as written.
+
+```vue annotate="add:2"
+<template>
+<div v-pre>{{ raw }}</div>
+</template>
+```
+
+Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
+
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/valid_v_pre.rs#L30) · [All rules](all.md)
 
 ### `vue/valid-v-show`
 

@@ -27,7 +27,7 @@ title: "繰り返し・条件分岐とテンプレートの構造"
 | [`vue/no-useless-template-attributes`](#vue-no-useless-template-attributes) | [悪い](#vue-no-useless-template-attributes-bad) · [良い](#vue-no-useless-template-attributes-good) | template 要素の効果がない属性を検出します。 |
 | [`vue/require-v-for-key`](#vue-require-v-for-key) | [悪い](#vue-require-v-for-key-bad) · [良い](#vue-require-v-for-key-good) | v-for に安定した :key を指定します。 |
 
-[全ルール](./all.md) · [ルール オプション](./options.md) · [ESLint 移行対応表](./migration.md) · [プロジェクトの検査](./cross-file.md) · [子への属性の継承](./project/vue-cross-file-attrs-fallthrough.md)
+[全ルール](./all.md) · [ルールのオプション](./options.md) · [ESLint 移行対応表](./migration.md) · [プロジェクトの検査](./cross-file.md) · [子への属性の継承](./project/vue-cross-file-attrs-fallthrough.md)
 
 ### `vue/no-child-content`
 
@@ -282,7 +282,7 @@ template の v-for に key を付け、繰り返す各フラグメントを識�
 [悪い例](#vue-no-template-shadow-bad) · [良い例](#vue-no-template-shadow-good)
 
 既定の重大度: `warning`  
-プリセット: `nuxt`, `opinionated`  
+プリセット: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。

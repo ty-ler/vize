@@ -361,7 +361,13 @@
       "status": "unimplemented"
     },
     "vue/no-deprecated-data-object-declaration": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/no-deprecated-data-object-declaration",
       "patinaSeverity": "error",
       "status": "mapped"
@@ -371,31 +377,61 @@
       "status": "unimplemented"
     },
     "vue/no-deprecated-destroyed-lifecycle": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/no-deprecated-destroyed-lifecycle",
       "patinaSeverity": "error",
       "status": "mapped"
     },
     "vue/no-deprecated-dollar-listeners-api": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/no-deprecated-dollar-listeners-api",
       "patinaSeverity": "error",
       "status": "mapped"
     },
     "vue/no-deprecated-dollar-scopedslots-api": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/no-deprecated-dollar-scopedslots-api",
       "patinaSeverity": "error",
       "status": "mapped"
     },
     "vue/no-deprecated-events-api": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/no-deprecated-events-api",
       "patinaSeverity": "error",
       "status": "mapped"
     },
     "vue/no-deprecated-filter": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "vue/no-deprecated-filter",
       "patinaSeverity": "error",
       "status": "mapped"
@@ -413,13 +449,25 @@
       "status": "mapped"
     },
     "vue/no-deprecated-html-element-is": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "vue/no-deprecated-html-element-is",
       "patinaSeverity": "error",
       "status": "mapped"
     },
     "vue/no-deprecated-inline-template": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "vue/no-deprecated-inline-template",
       "patinaSeverity": "error",
       "status": "mapped"
@@ -429,13 +477,25 @@
       "status": "unimplemented"
     },
     "vue/no-deprecated-props-default-this": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/no-deprecated-props-default-this",
       "patinaSeverity": "error",
       "status": "mapped"
     },
     "vue/no-deprecated-router-link-tag-prop": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "vue/no-deprecated-router-link-tag-prop",
       "patinaSeverity": "error",
       "status": "mapped"
@@ -489,8 +549,16 @@
       "status": "mapped"
     },
     "vue/no-deprecated-v-is": {
-      "issue": 3223,
-      "status": "unimplemented"
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
+      "patinaRule": "vue/no-deprecated-v-is",
+      "patinaSeverity": "error",
+      "status": "mapped"
     },
     "vue/no-deprecated-v-on-native-modifier": {
       "patinaPresets": [
@@ -894,6 +962,8 @@
     },
     "vue/no-template-shadow": {
       "patinaPresets": [
+        "ecosystem",
+        "general-recommended",
         "nuxt",
         "opinionated"
       ],
@@ -999,7 +1069,10 @@
       "status": "mapped"
     },
     "vue/no-use-v-else-with-v-for": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "vue/no-use-v-else-with-v-for",
       "patinaSeverity": "warning",
       "status": "mapped"
@@ -1285,7 +1358,9 @@
       "status": "mapped"
     },
     "vue/require-prop-types": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "opinionated"
+      ],
       "patinaRule": "script/require-prop-types",
       "patinaSeverity": "error",
       "status": "mapped"
@@ -1417,6 +1492,8 @@
     },
     "vue/this-in-template": {
       "patinaPresets": [
+        "ecosystem",
+        "general-recommended",
         "nuxt",
         "opinionated"
       ],
@@ -1426,7 +1503,9 @@
     },
     "vue/use-v-on-exact": {
       "patinaPresets": [
+        "ecosystem",
         "essential",
+        "general-recommended",
         "nuxt",
         "opinionated"
       ],
@@ -1607,8 +1686,16 @@
       "status": "mapped"
     },
     "vue/valid-v-else-if": {
-      "issue": 3223,
-      "status": "unimplemented"
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
+      "patinaRule": "vue/valid-v-else-if",
+      "patinaSeverity": "error",
+      "status": "mapped"
     },
     "vue/valid-v-for": {
       "patinaPresets": [
@@ -1647,8 +1734,16 @@
       "status": "mapped"
     },
     "vue/valid-v-is": {
-      "issue": 3223,
-      "status": "unimplemented"
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
+      "patinaRule": "vue/valid-v-is",
+      "patinaSeverity": "error",
+      "status": "mapped"
     },
     "vue/valid-v-memo": {
       "patinaPresets": [
@@ -1699,8 +1794,16 @@
       "status": "mapped"
     },
     "vue/valid-v-pre": {
-      "issue": 3223,
-      "status": "unimplemented"
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
+      "patinaRule": "vue/valid-v-pre",
+      "patinaSeverity": "error",
+      "status": "mapped"
     },
     "vue/valid-v-show": {
       "patinaPresets": [
@@ -1742,8 +1845,8 @@
   "schemaVersion": 1,
   "summary": {
     "intentionalDivergence": 2,
-    "mapped": 123,
-    "unimplemented": 127
+    "mapped": 127,
+    "unimplemented": 123
   },
   "upstream": {
     "package": "eslint-plugin-vue",

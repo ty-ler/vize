@@ -27,11 +27,24 @@ impl OwnershipSpec {
         case_sensitive: bool,
         source_kind: TsconfigSourceKind,
     ) -> bool {
-        let source_path = graph::normalize_path(source_path);
+        self.includes_normalized(
+            &graph::normalize_path(source_path),
+            case_sensitive,
+            source_kind,
+        )
+    }
+
+    /// [`Self::includes`] for a path already passed through `graph::normalize_path`.
+    pub(super) fn includes_normalized(
+        &self,
+        source_path: &Path,
+        case_sensitive: bool,
+        source_kind: TsconfigSourceKind,
+    ) -> bool {
         if self.files.as_ref().is_some_and(|files| {
             files
                 .iter()
-                .any(|file| paths_equal(file, &source_path, case_sensitive))
+                .any(|file| paths_equal(file, source_path, case_sensitive))
         }) {
             return true;
         }
@@ -42,10 +55,10 @@ impl OwnershipSpec {
         let included = match self.includes.as_ref() {
             Some(includes) => includes
                 .iter()
-                .any(|include| include.matches_include(&source_path, case_sensitive)),
+                .any(|include| include.matches_include(source_path, case_sensitive)),
             None if self.files.is_some() => false,
             None => GlobSpec::new(&self.default_base, "**/*")
-                .is_some_and(|include| include.matches_include(&source_path, case_sensitive)),
+                .is_some_and(|include| include.matches_include(source_path, case_sensitive)),
         };
         if !included {
             return false;
@@ -54,14 +67,14 @@ impl OwnershipSpec {
         let excluded = match self.excludes.as_ref() {
             Some(excludes) => excludes
                 .iter()
-                .any(|exclude| exclude.matches(&source_path, case_sensitive)),
+                .any(|exclude| exclude.matches(source_path, case_sensitive)),
             None => self
                 .out_dir
                 .as_ref()
                 .and_then(Option::as_ref)
                 .into_iter()
                 .chain(self.declaration_dir.as_ref().and_then(Option::as_ref))
-                .any(|exclude| exclude.matches(&source_path, case_sensitive)),
+                .any(|exclude| exclude.matches(source_path, case_sensitive)),
         };
         !excluded
     }

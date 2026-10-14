@@ -30,7 +30,6 @@ void test("walltime comparisons use the same source and runner without publishin
       "n8n-preparation",
       "native",
       "rust",
-      "rust-archive-window",
     ],
   );
   for (const key of ["docs", "js", "native", "rust"]) {
@@ -52,7 +51,7 @@ void test("walltime comparisons use the same source and runner without publishin
   assert.match(steps("rust"), /--runner cargo/);
   assert.match(steps("rust"), /--runner nextest/);
   assert.doesNotMatch(steps("rust"), /--filter|--partition|DISABLE_TSGO/);
-  assert.match(steps("native"), /moonbit-publish-concurrency-benchmark\.test\.ts/);
+  assert.match(steps("native"), /publish-npm-package-dirs-benchmark\.test\.ts/);
 });
 
 void test("baseline input partitions are manual-only, build once and retain both strict controller arms", () => {
@@ -73,7 +72,6 @@ void test("baseline input partitions are manual-only, build once and retain both
     "n8n-baseline",
     "n8n-preparation",
     "artifact-payload",
-    "rust-archive-window",
     "owned-worker-fault",
     "owned-worker-controls",
   ]);

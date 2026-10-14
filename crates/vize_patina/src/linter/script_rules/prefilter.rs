@@ -12,7 +12,10 @@ mod js_source;
 mod ref_operand;
 
 use super::registry::{
-    RULE_NO_ARROW_FUNCTIONS_IN_WATCH, RULE_NO_ASYNC_IN_COMPUTED, RULE_NO_DUPE_KEYS,
+    RULE_NO_ARROW_FUNCTIONS_IN_WATCH, RULE_NO_ASYNC_IN_COMPUTED,
+    RULE_NO_DEPRECATED_DATA_OBJECT_DECLARATION, RULE_NO_DEPRECATED_DESTROYED_LIFECYCLE,
+    RULE_NO_DEPRECATED_DOLLAR_LISTENERS_API, RULE_NO_DEPRECATED_DOLLAR_SCOPEDSLOTS_API,
+    RULE_NO_DEPRECATED_EVENTS_API, RULE_NO_DEPRECATED_PROPS_DEFAULT_THIS, RULE_NO_DUPE_KEYS,
     RULE_NO_DUPLICATE_ATTR_INHERITANCE, RULE_NO_IMPORT_COMPILER_MACROS, RULE_NO_INTERNAL_IMPORTS,
     RULE_NO_MULTIPLE_SLOT_ARGS, RULE_NO_POTENTIAL_COMPONENT_OPTION_TYPO, RULE_NO_REF_AS_OPERAND,
     RULE_NO_REQUIRED_PROP_WITH_DEFAULT, RULE_NO_RESERVED_IDENTIFIERS, RULE_NO_RESERVED_KEYS,
@@ -21,7 +24,7 @@ use super::registry::{
     RULE_NO_USE_COMPUTED_PROPERTY_LIKE_METHOD, RULE_NUXT_CONFIG_KEYS_ORDER,
     RULE_NUXT_NO_CONFIG_TEST_KEY, RULE_NUXT_NO_PAGE_META_RUNTIME_VALUES,
     RULE_NUXT_PREFER_IMPORT_META, RULE_PINIA_PREFER_STORE_TO_REFS, RULE_PREFER_COMPUTED,
-    RULE_PREFER_IMPORT_FROM_VUE, RULE_REQUIRE_PROP_TYPE_CONSTRUCTOR,
+    RULE_PREFER_IMPORT_FROM_VUE, RULE_REQUIRE_PROP_TYPE_CONSTRUCTOR, RULE_REQUIRE_PROP_TYPES,
     RULE_REQUIRE_VALID_DEFAULT_PROP, RULE_RETURN_IN_COMPUTED_PROPERTY,
     RULE_RETURN_IN_EMITS_VALIDATOR, RULE_VALID_DEFINE_EMITS, RULE_VALID_DEFINE_OPTIONS,
     RULE_VALID_DEFINE_PROPS, RULE_VALID_NEXT_TICK, RULE_VUE_ROUTER_PREFER_NAMED_PUSH,
@@ -42,7 +45,10 @@ pub(super) fn script_rule_may_match(rule_name: &str, source: &str) -> bool {
             contains(bytes, b"vue") && contains_any(bytes, INTERNAL_IMPORT_NEEDLES)
         }
         RULE_NO_RESERVED_IDENTIFIERS => contains_any(bytes, RESERVED_IDENTIFIER_NEEDLES),
-        RULE_NO_RESERVED_KEYS | RULE_NO_DUPE_KEYS | RULE_NO_POTENTIAL_COMPONENT_OPTION_TYPO => {
+        RULE_NO_DUPE_KEYS => {
+            source_may_define_component_options(bytes) || contains(bytes, b"defineProps")
+        }
+        RULE_NO_RESERVED_KEYS | RULE_NO_POTENTIAL_COMPONENT_OPTION_TYPO => {
             source_may_define_component_options(bytes)
         }
         RULE_NO_SIDE_EFFECTS_IN_COMPUTED => {
@@ -198,6 +204,26 @@ pub(super) fn script_rule_applies_to_filename(rule_name: &str, filename: &str) -
     rule_name != RULE_NUXT_CONFIG_KEYS_ORDER || is_nuxt_config_filename(filename)
 }
 
+/// Vue 2 migration rules and `require-prop-types` inspect component code only:
+/// an SFC or JSX module (as in eslint-plugin-vue) or one that calls
+/// `defineComponent`. A `$on`, `data: {}` or `props` object in any other module
+/// is not a Vue component.
+pub(super) fn script_rule_applies_to_module(rule_name: &str, source: &str, filename: &str) -> bool {
+    !matches!(
+        rule_name,
+        RULE_NO_DEPRECATED_DATA_OBJECT_DECLARATION
+            | RULE_NO_DEPRECATED_DESTROYED_LIFECYCLE
+            | RULE_NO_DEPRECATED_DOLLAR_LISTENERS_API
+            | RULE_NO_DEPRECATED_DOLLAR_SCOPEDSLOTS_API
+            | RULE_NO_DEPRECATED_EVENTS_API
+            | RULE_NO_DEPRECATED_PROPS_DEFAULT_THIS
+            | RULE_REQUIRE_PROP_TYPES
+    ) || [".vue", ".jsx", ".tsx"]
+        .iter()
+        .any(|extension| filename.ends_with(extension))
+        || contains(source.as_bytes(), b"defineComponent")
+}
+
 fn is_nuxt_config_filename(filename: &str) -> bool {
     let mut components = filename
         .rsplit(['/', '\\'])
@@ -266,80 +292,4 @@ fn source_may_match_ecosystem_rule(source: &str) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{is_nuxt_config_filename, script_rule_may_match};
-    use crate::linter::script_rules::registry::{
-        RULE_NO_ARROW_FUNCTIONS_IN_WATCH, RULE_NO_IMPORT_COMPILER_MACROS, RULE_VALID_DEFINE_PROPS,
-    };
-
-    #[test]
-    fn recognizes_supported_nuxt_config_paths() {
-        for extension in [
-            "js", "jsx", "ts", "tsx", "cjs", "cjsx", "cts", "ctsx", "mjs", "mjsx", "mts", "mtsx",
-        ] {
-            let root = format!("apps/web/nuxt.config.{extension}");
-            let hidden = format!("apps/web/.config/nuxt.{extension}");
-            assert!(is_nuxt_config_filename(&root), "{root}");
-            assert!(is_nuxt_config_filename(&hidden), "{hidden}");
-        }
-
-        assert!(is_nuxt_config_filename(r"apps\web\nuxt.config.js"));
-        assert!(is_nuxt_config_filename(r"apps\web\.config\nuxt.mts"));
-    }
-
-    #[test]
-    fn rejects_unrelated_or_lookalike_paths() {
-        for filename in [
-            "vitest.config.ts",
-            "vize.config.ts",
-            "components/DataTable.vue",
-            "nuxt.config.d.ts",
-            "nuxt.config.json",
-            "config/nuxt.ts",
-            ".config/not-nuxt.ts",
-            "my-nuxt.config.ts",
-        ] {
-            assert!(!is_nuxt_config_filename(filename), "{filename}");
-        }
-    }
-
-    #[test]
-    fn skips_common_script_setup_imports_without_macro_imports() {
-        assert!(!script_rule_may_match(
-            RULE_NO_IMPORT_COMPILER_MACROS,
-            "import { ref, computed } from 'vue'"
-        ));
-        assert!(script_rule_may_match(
-            RULE_NO_IMPORT_COMPILER_MACROS,
-            "import { defineProps } from 'vue'"
-        ));
-        assert!(script_rule_may_match(
-            RULE_NO_IMPORT_COMPILER_MACROS,
-            "import { defineProps } from\n'vue'"
-        ));
-        assert!(script_rule_may_match(
-            RULE_NO_IMPORT_COMPILER_MACROS,
-            "import { defineProps } from /* compiler macros */ 'vue'"
-        ));
-    }
-
-    #[test]
-    fn keeps_export_default_with_trivia_for_component_options_rules() {
-        assert!(script_rule_may_match(
-            RULE_NO_ARROW_FUNCTIONS_IN_WATCH,
-            "export /* component */ default { watch: { value: () => {} } }"
-        ));
-    }
-
-    #[test]
-    fn skips_define_props_rule_without_define_props_call() {
-        assert!(!script_rule_may_match(
-            RULE_VALID_DEFINE_PROPS,
-            "import { ref } from 'vue'\nconst count = ref(0)"
-        ));
-        assert!(script_rule_may_match(
-            RULE_VALID_DEFINE_PROPS,
-            "defineProps<{ value: string }>()"
-        ));
-    }
-}
+mod tests;

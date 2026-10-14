@@ -134,7 +134,7 @@ vize({
 | `customRenderer` | `compiler.customRenderer` または `vize({ customRenderer })` | 小文字の非 HTML タグをカスタムレンダラーの要素として扱います。`<TresMesh>` などの PascalCase タグには一致しません。 |
 | `customElements` | `compiler.customElements` または `vize({ customElements })` | Vue コンポーネントではなくカスタム要素としてコンパイルするタグのパターンです。TresJS の PascalCase レンダラータグには `["Tres*"]` を使います。 |
 | `templateSyntax` | `compiler.templateSyntax` または `vize({ templateSyntax })` | テンプレート構文の処理を `"standard"`、`"strict"`、`"quirks"` から選びます。 |
-| `whitespace` | `compiler.whitespace`、`vize({ whitespace })`、または `template.compilerOptions.whitespace` | Vue の `"condense"`（既定）と `"preserve"` を選びます。Vize の独自コンパイラ/Vite オプションでは `"vue2-line-breaks"` も指定でき、Vue 3 がテキストや補間の後の改行を空白一つにまとめる箇所で改行を残します。移行用の限定的なモードであり、Vue 2 の空白処理全体を再現するものではありません。 |
+| `whitespace` | `compiler.whitespace`、`vize({ whitespace })`、または `template.compilerOptions.whitespace` | Vue の `"condense"`（既定）と `"preserve"` を選びます。Vize の独自コンパイラ/Vite オプションでは `"vue2-line-breaks"` も指定でき、Vue 3 がテキストや補間の後の改行を空白一つにまとめる箇所で改行を残します。移行用の限定的なモードであり、Vue 2 の空白処理全体を再現するものではありません。Vue 2.7 の `whitespace: "preserve"`（Vue 2、vue-loader 15、Nuxt 2 が使う設定）と同じ出力にするには `"vue2-preserve"` を使います。テキストや補間の前後の空白は書いたとおりに残り、要素の間にある空白だけの部分は空白一つになります。 |
 | `template.compilerOptions.comments` | `vize({ template: { compilerOptions: { comments } } })` | テンプレートに書いたコメントは、既定では開発時に残し、本番ビルド時に省略します。`true` / `false` で変更できます。ネイティブ API を直接呼ぶ場合は `templateComments` を使い、既定値は `false` です。 |
 | `experimentals` | トップレベルの `experimentals` または `vize({ experimentals })` | Vue RFC とバックエンドの実験的機能を明示的に有効にします。キーの省略、`false`、`null` は無効です。 |
 | `include` | `vite.include` または `vize({ include })` | プラグインがコンパイルするファイルを指定します。 |
@@ -188,7 +188,9 @@ vize({ vueVersion: 2 });
 3. **HMR:** `.vue` ファイルの変更時は、そのファイルだけを再コンパイルします。変更が style のみに収まるかを判定し、可能な場合は style だけを更新して、コンポーネント全体の再描画を避けます。
 4. **CSS の抽出:** 本番ビルドでは、Vue コンポーネントの scoped CSS を抽出して `assets/vize-components.css` にまとめ、コンポーネントごとにスタイルを挿入する負荷を減らします。
 
-### コンパイル パイプライン
+<span id="コンパイル-パイプライン"></span>
+
+### コンパイルのパイプライン
 
 ```
 .vue file
@@ -253,6 +255,20 @@ Nuxt と連携できるよう、プラグインは Vite の環境ごとに `defi
 クライアントとサーバー/SSR を分離し、クライアント用の値が SSR の出力に入り込むのを防ぎます。
 
 <span id="nuxt-の互換性"></span>
+
+### スタイルプリプロセッサと Pug
+
+`<style lang="scss">`・`sass`・`less`・`stylus` は Vue と同じ順序で処理します。まずプリプロセッサを実行し、その出力に Vize がスコープを付けて `v-bind()` を解決します。`<style module>` のクラス名は、バンドラーの CSS Modules 処理が生成します。`@vitejs/plugin-vue` と同じく、プリプロセッサのパッケージ（`sass` または `sass-embedded`、`less`、`stylus`）をプロジェクトにインストールしてください。`<template lang="pug">` は Vize 自身がコンパイルするため、追加のパッケージは不要です。
+
+| 対象 | scss / sass / less / stylus | pug |
+| --- | --- | --- |
+| Vite | Vite が前処理し、その結果に Vize がスコープを付ける | ネイティブ |
+| `@vizejs/unplugin`（webpack・Rollup・Rolldown・esbuild） | webpack はプロジェクトのローダーを使用。Rollup・Rolldown・esbuild はインストール済みのプリプロセッサを実行 | ネイティブ |
+| `@vizejs/rspack` | プロジェクトのローダー（css-loader またはネイティブ CSS） | ネイティブ |
+| `vize build` | インストール済みのプリプロセッサを Node で実行 | ネイティブ |
+| `vize fmt` | プリプロセッサのブロックは 1 バイトも変更しない | 整形する |
+| `vize lint` | テンプレートのルールを適用。スタイルブロックは CSS として lint しない | テンプレートのルールを適用 |
+| LSP | CSS の補完とホバー（インデント記法を含む）、`v-bind()` の定義ジャンプ | タグの補完と定義ジャンプ |
 
 ## Nuxt との連携
 

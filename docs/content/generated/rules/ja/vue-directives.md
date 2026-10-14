@@ -25,7 +25,7 @@ title: "ディレクティブとイベントの書き方"
 | [`vue/v-slot-style`](#vue-v-slot-style) | [悪い](#vue-v-slot-style-bad) · [良い](#vue-v-slot-style-good) | v-slot の表記形式を揃えます。 |
 | [`vue/warn-custom-directive`](#vue-warn-custom-directive) | [悪い](#vue-warn-custom-directive-bad) · [良い](#vue-warn-custom-directive-good) | 登録が必要なカスタムディレクティブを検出します。 |
 
-[全ルール](./all.md) · [ルール オプション](./options.md) · [ESLint 移行対応表](./migration.md) · [プロジェクトの検査](./cross-file.md) · [子への属性の継承](./project/vue-cross-file-attrs-fallthrough.md)
+[全ルール](./all.md) · [ルールのオプション](./options.md) · [ESLint 移行対応表](./migration.md) · [プロジェクトの検査](./cross-file.md) · [子への属性の継承](./project/vue-cross-file-attrs-fallthrough.md)
 
 ### `vue/scoped-event-names`
 
@@ -103,7 +103,7 @@ vp run lint
 [悪い例](#vue-use-v-on-exact-bad) · [良い例](#vue-use-v-on-exact-good)
 
 既定の重大度: `warning`  
-プリセット: `essential`, `nuxt`, `opinionated`  
+プリセット: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -224,7 +224,7 @@ vp run lint
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L30) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L28) · [全ルール](all.md)
 
 ### `vue/v-on-style`
 

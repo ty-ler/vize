@@ -8,8 +8,8 @@
 //! to a fixpoint. Published packages are left alone: a canonical path that
 //! stays inside `node_modules` keeps the stub (that half is #3282), while a
 //! pnpm workspace symlink canonicalizes *out* of `node_modules` and is
-//! first-party source. Batch projects leave declaration files alone so their
-//! ambient declarations remain governed by the tsconfig. Editor sessions do
+//! first-party source. Batch mirrors source-backed declaration barrels while
+//! terminal ambient declarations remain governed by tsconfig. Editor sessions
 //! mirror reachable declarations, preserving their authored `.d.ts` spelling,
 //! but keep them inferred rather than adding them as ambient program roots
 //! (see [`is_declaration_file`]).
@@ -25,6 +25,7 @@
 use std::path::{Path, PathBuf};
 
 use oxc_span::SourceType;
+use rayon::prelude::*;
 #[cfg(test)]
 use vize_carton::cstr;
 use vize_carton::{FxHashMap, FxHashSet, String as CompactString};
@@ -33,6 +34,9 @@ use crate::batch::error::CorsaResult;
 
 use super::VirtualProject;
 
+#[path = "dependency_scan/declaration_sources.rs"]
+mod declaration_sources;
+use declaration_sources::source_backed;
 #[path = "dependency_scan/references.rs"]
 mod references;
 #[path = "dependency_scan/resolution.rs"]
@@ -51,7 +55,10 @@ type PackageResolver<'a> = &'a mut dyn FnMut(&Path, &str, crate::PackageResoluti
 impl VirtualProject {
     /// Register every reachable first-party dependency, to a fixpoint.
     pub fn register_reachable_dependencies(&mut self) -> CorsaResult<()> {
-        self.register_reachable_dependencies_with_overlays(&FxHashMap::default())
+        vize_carton::profile!(
+            "canon.project.reachable_dependencies",
+            self.register_reachable_dependencies_with_overlays(&FxHashMap::default())
+        )
     }
 
     /// Reconcile only dependencies reachable from sources rebuilt by one
@@ -100,10 +107,18 @@ impl VirtualProject {
         mut package_resolver: Option<PackageResolver<'_>>,
     ) -> CorsaResult<()> {
         let aliases = self.dependency_alias_map();
+        let mut source_cache = FxHashMap::default();
         let alias_prefixes: Vec<CompactString> = aliases
             .iter()
             .filter(|(pattern, target)| {
                 alias_may_reach_first_party(pattern, target, &self.project_root)
+                    || declaration_sources::alias_reaches_project_source(
+                        self,
+                        target,
+                        &aliases,
+                        overlays,
+                        &mut source_cache,
+                    )
             })
             .map(|(pattern, _)| {
                 CompactString::from(
@@ -135,9 +150,24 @@ impl VirtualProject {
                 .map(|file| file.original_path.clone())
                 .collect(),
         };
-        let mut visited: FxHashSet<PathBuf> = queue
+        // Canonicalize the initial importers once, in parallel; the edge index
+        // and the visited set both key on these paths.
+        let canonical_importers = queue
+            .par_iter()
+            .map(|path| {
+                let canonical = vize_carton::path::canonicalize_non_verbatim(path);
+                let is_file = canonical.is_file();
+                (path.clone(), canonical, is_file)
+            })
+            .collect::<Vec<_>>();
+        let mut visited: FxHashSet<PathBuf> = canonical_importers
             .iter()
-            .filter_map(|path| canonical_key(path))
+            .filter(|(_, _, is_file)| *is_file)
+            .map(|(_, canonical, _)| canonical.clone())
+            .collect();
+        let canonical_importers: FxHashMap<PathBuf, PathBuf> = canonical_importers
+            .into_iter()
+            .map(|(path, canonical, _)| (path, canonical))
             .collect();
 
         while let Some(importer) = queue.pop() {
@@ -175,7 +205,10 @@ impl VirtualProject {
                     workspace_package_specifiers,
                 )
             {
-                let released = self.replace_dependency_edges(&importer, dependency_targets);
+                let released = self.replace_canonical_dependency_edges(
+                    canonical_importer(&canonical_importers, &importer),
+                    dependency_targets,
+                );
                 self.prune_unowned_sources(released);
                 continue;
             }
@@ -241,13 +274,14 @@ impl VirtualProject {
                 // Declarations reached through a path reference must keep
                 // their transitive declaration imports in this same mirror.
                 // The final rewrite then points imports at that one identity.
-                // Ordinary source imports can still use TypeScript's authored
-                // declaration resolution without registering another root.
+                // Terminal declarations keep their authored identity, but a
+                // source-backed barrel must own its projected source edges.
                 if is_declaration_file(&key)
                     && !package_local
                     && !self.session_scripts
                     && !is_reference
                     && !is_declaration_file(&importer)
+                    && !source_backed(self, &key, &aliases, overlays, &mut source_cache)
                 {
                     continue;
                 }
@@ -274,7 +308,10 @@ impl VirtualProject {
                     queue.push(key);
                 }
             }
-            let released = self.replace_dependency_edges(&importer, dependency_targets);
+            let released = self.replace_canonical_dependency_edges(
+                canonical_importer(&canonical_importers, &importer),
+                dependency_targets,
+            );
             self.prune_unowned_sources(released);
         }
         Ok(())
@@ -331,6 +368,13 @@ impl VirtualProject {
         }
         aliases
     }
+}
+
+fn canonical_importer(known: &FxHashMap<PathBuf, PathBuf>, importer: &Path) -> PathBuf {
+    known
+        .get(importer)
+        .cloned()
+        .unwrap_or_else(|| vize_carton::path::canonicalize_non_verbatim(importer))
 }
 
 #[cfg(test)]

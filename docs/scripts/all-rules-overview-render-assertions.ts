@@ -7,7 +7,7 @@ import { owningRuleGroup } from "./rules/all-rules-overview.ts";
 const root = resolve(import.meta.dirname, "../..");
 
 /** All Rules is an index; complete examples belong to its unchanged group/reference pages. */
-export async function verifyRenderedRuleOverview(page: Page, route: string) {
+export function expectedRuleOverview(route: string) {
   const prefix = route.match(/^\/(ja\/|zh-CN\/|pt-BR\/|fr\/)?rules\/all$/)?.[1] ?? "";
   const locale = prefix.slice(0, -1) || "en";
   const source = readFileSync(
@@ -27,7 +27,12 @@ export async function verifyRenderedRuleOverview(page: Page, route: string) {
     id: match[1].replaceAll(/[^a-zA-Z0-9]+/g, "-").toLowerCase(),
     group: owningRuleGroup(match[1], projects.has(match[1])),
   }));
-  assert.equal(expected.length, 317, "overview retains all 317 rule headings");
+  assert.equal(expected.length, 321, "overview retains all 321 rule headings");
+  return { prefix, locale, expected };
+}
+
+export async function verifyRenderedRuleOverview(page: Page, route: string) {
+  const { prefix, locale, expected } = expectedRuleOverview(route);
   const actual = await page.evaluate(
     ({ expected, prefix }) => {
       const content = document.querySelector(".content");
@@ -84,6 +89,6 @@ export async function verifyRenderedRuleOverview(page: Page, route: string) {
     },
     { expected, prefix },
   );
-  assert.equal(actual.length, 317, `${route}: complete overview reading flow`);
+  assert.equal(actual.length, 321, `${route}: complete overview reading flow`);
   return { locale, entries: actual };
 }
