@@ -59,6 +59,18 @@ export function generateOutputWithMap(
       emitted,
       `_sfc_main.__scopeId = "data-v-${compiled.scopeId}";`,
     );
+  } else if (!hasExportDefault && !hasSfcMainDefined) {
+    // Template-only SFCs compile to a bare render export; wrap it as Vite does.
+    const render = moduleInfo.hasNamedRenderExport
+      ? "render"
+      : moduleInfo.hasNamedSsrRenderExport
+        ? "ssrRender"
+        : null;
+    if (render) {
+      const scope =
+        compiled.hasScoped && compiled.scopeId ? `, __scopeId: "data-v-${compiled.scopeId}"` : "";
+      emitted.append(`\nconst _sfc_main = { ${render}${scope} };\nexport default _sfc_main;`);
+    }
   }
 
   if (compiled.styles.length > 0) {
@@ -123,7 +135,9 @@ export function generateOutputWithMap(
     if (!isCustomElement && cssModuleHmrEntries.length > 0) {
       const cssModuleInterop = options.nativeCss
         ? ""
-        : 'const __vize_resolve_css_module__ = (value) => value.default && typeof value.default === "object" ? value.default : value;';
+        : // css-loader's default export is the CSS array with the class map on
+          // `.locals`; style-loader and mini-css-extract export the map itself.
+          'const __vize_resolve_css_module__ = (value) => value.default?.locals ?? (value.default && typeof value.default === "object" && !Array.isArray(value.default) ? value.default : value);';
       const cssModuleSetup = [
         cssModuleInterop,
         ...cssModuleHmrEntries.map(

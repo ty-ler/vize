@@ -7,11 +7,11 @@ title: CLI
 # CLI リファレンス
 
 CLI を使うと、Vue ファイルのコンパイル・整形・lint・型チェックをターミナルや CI で実行できます。
-アプリでは `vize` npm パッケージをインストールし、まず [package.json のスクリプト](#アプリケーション-パッケージ-スクリプト) を設定してください。
+アプリでは `vize` npm パッケージをインストールし、まず [package.json のスクリプト](#アプリケーションのパッケージのスクリプト) を設定してください。
 LSP、IDE 管理、`check-server`、プロファイリングには [Rust バイナリ](#rust-バイナリのインストール) を使います。
 
 npm パッケージは共有設定のヘルパーと、NAPI を利用する `build`、`fmt`、`lint`、`check`、`clean`、`ready`、`upgrade` を提供します。
-[エントリーポイントの比較](#npm-パッケージ-スクリプトと-rust-cli-の比較) で用途に合うものを選び、具体的な作業順序は [ユーザーワークフロー](./workflows.md) を参照してください。
+[エントリーポイントの比較](#npm-パッケージのスクリプトと-rust-cli-の比較) で用途に合うものを選び、具体的な作業順序は [ユーザーワークフロー](./workflows.md) を参照してください。
 
 ## アプリケーションのパッケージのスクリプト
 
@@ -117,6 +117,8 @@ vize build --profile src
 | `--profile`                   | 処理時間のプロファイルを表示する                                       |
 | `--continue-on-error`         | エラー後もコンパイルを続け、最後に失敗を報告する                       |
 
+`<style lang="scss">`・`sass`・`less`・`stylus` のブロックは、Vite と同じく、プロジェクトにインストールされたプリプロセッサ（`sass` または `sass-embedded`、`less`、`stylus`）でコンパイルしてからスコープを付けます。プリプロセッサのエラーは `.vue` ファイル内の行を指します。Node やパッケージが見つからない場合は、ブロックをそのまま出力して警告を表示します。
+
 ## フォーマット
 
 ```bash
@@ -139,6 +141,7 @@ vize fmt --write src
 | `--single-attribute-per-line`      | 属性を 1 行に 1 つずつ配置する                         |
 | `--max-attributes-per-line`        | 指定した属性数で改行する                               |
 | `--normalize-directive-shorthands` | `v-bind:` / `v-on:` / `v-slot:` の省略記法を正規化する |
+| `--preset`                         | `prettier` で Prettier と同じ Vue のレイアウトにする |
 | `--profile`                        | 処理時間のプロファイルを表示する                       |
 
 <a id="糸くず"></a>

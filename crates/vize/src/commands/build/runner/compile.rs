@@ -31,7 +31,6 @@ use std::{
     time::Instant,
 };
 
-use vize_atelier_core::parser::with_whitespace_mode;
 use vize_atelier_core::{CodegenOptions, options::CustomElementMatcher};
 use vize_atelier_sfc::{
     ScriptCompileOptions, SfcCompileExperimentalOptions, SfcCompileOptions, SfcParseOptions,
@@ -185,13 +184,21 @@ fn compile_file_inner(
         ..Default::default()
     };
 
-    let descriptor =
+    let mut descriptor =
         profile!("atelier.sfc.parse", parse_sfc(&source, parse_opts)).map_err(|e| {
             CompileError {
                 path: path.clone(),
                 error: e.message,
                 phase: ErrorPhase::Parse,
             }
+        })?;
+    let preprocess_warnings = settings
+        .preprocessed_styles
+        .apply(path, &mut descriptor)
+        .map_err(|error| CompileError {
+            path: path.clone(),
+            error,
+            phase: ErrorPhase::Compile,
         })?;
     let parse_time = parse_start.elapsed();
     if settings.record_profile_totals {
@@ -262,7 +269,7 @@ fn compile_file_inner(
         scope_id: None,
     };
 
-    let (result, capture) = with_whitespace_mode(settings.whitespace, settings.legacy_line_breaks, || {
+    let (result, capture) = settings.with_whitespace(|| {
         profile!("atelier.sfc.compile", {
         let experimental = SfcCompileExperimentalOptions {
             self_component: settings.experimental_self_component,
@@ -339,7 +346,10 @@ fn compile_file_inner(
         code: result.code,
         css: result.css,
         errors: result.errors.into_iter().map(|e| e.message).collect(),
-        warnings: result.warnings.into_iter().map(|e| e.message).collect(),
+        warnings: preprocess_warnings
+            .into_iter()
+            .chain(result.warnings.into_iter().map(|e| e.message))
+            .collect(),
         script_lang,
         macro_artifacts: result.macro_artifacts,
     };

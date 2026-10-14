@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "source": "Real-project sweep (2026-10-14): 73 of 24,323 SFCs in 30 fixture projects have empty top-level blocks, e.g. ant-design-vue site/src/layouts/header/index.vue `<style lang=\"less\" src=\"./index.less\"></style>`.",
+  "cases": [
+    {
+      "id": "style-src",
+      "source": "<template>\n  <div />\n</template>\n\n<style lang=\"less\" src=\"./index.less\"></style>\n",
+      "expected": "<template>\n  <div />\n</template>\n\n<style lang=\"less\" src=\"./index.less\"></style>\n"
+    },
+    {
+      "id": "script-src",
+      "source": "<script src=\"./a.ts\"></script>\n\n<template>\n  <div />\n</template>\n",
+      "expected": "<script src=\"./a.ts\"></script>\n\n<template>\n  <div />\n</template>\n"
+    },
+    {
+      "id": "empty-scoped-style",
+      "source": "<template>\n  <div />\n</template>\n\n<style scoped></style>\n",
+      "expected": "<template>\n  <div />\n</template>\n\n<style scoped></style>\n"
+    },
+    {
+      "id": "whitespace-only-style",
+      "source": "<template>\n  <div />\n</template>\n\n<style scoped>\n\n</style>\n",
+      "expected": "<template>\n  <div />\n</template>\n\n<style scoped></style>\n"
+    },
+    {
+      "id": "template-src",
+      "source": "<template src=\"./a.html\"></template>\n",
+      "expected": "<template src=\"./a.html\"></template>\n"
+    }
+  ]
+}

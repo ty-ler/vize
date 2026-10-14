@@ -37,6 +37,9 @@ impl RuleRegistry {
         registry.register(Box::new(crate::rules::vue::PropNameCasing::default()));
         registry.register(Box::new(crate::rules::vue::VOnStyle::default()));
         registry.register(Box::new(crate::rules::vue::VSlotStyle::default()));
+        registry.register(Box::new(crate::rules::vue::UseVOnExact));
+        registry.register(Box::new(crate::rules::vue::NoTemplateShadow));
+        registry.register(Box::new(crate::rules::vue::ThisInTemplate));
         registry.register(Box::new(crate::rules::vue::ValidVSlot));
         registry.register(Box::new(crate::rules::vue::NoChildContent));
         registry.register(Box::new(crate::rules::vue::ValidAttributeName));
@@ -55,6 +58,10 @@ impl RuleRegistry {
         registry.register(Box::new(crate::rules::vue::NoDeprecatedScopeAttribute));
         registry.register(Box::new(crate::rules::vue::NoDeprecatedVOnNumberModifiers));
         registry.register(Box::new(crate::rules::vue::NoDeprecatedFunctionalTemplate));
+        registry.register(Box::new(crate::rules::vue::NoDeprecatedFilter));
+        registry.register(Box::new(crate::rules::vue::NoDeprecatedHtmlElementIs));
+        registry.register(Box::new(crate::rules::vue::NoDeprecatedInlineTemplate));
+        registry.register(Box::new(crate::rules::vue::NoDeprecatedRouterLinkTagProp));
         crate::rules::vue::register_valid_directives(&mut registry);
         registry.register(Box::new(crate::rules::vapor::NoVueLifecycleEvents));
         crate::rules::vue::register_security(&mut registry);

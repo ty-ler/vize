@@ -1113,7 +1113,7 @@ Vue 2 のパイプによるフィルター構文を検出します。
 [悪い例](#vue-no-deprecated-filter-bad) · [良い例](#vue-no-deprecated-filter-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -1235,7 +1235,7 @@ functional を取り除き、コンポーネントの msg を直接参照しま�
 [悪い例](#vue-no-deprecated-html-element-is-bad) · [良い例](#vue-no-deprecated-html-element-is-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -1297,7 +1297,7 @@ vp run lint
 [悪い例](#vue-no-deprecated-inline-template-bad) · [良い例](#vue-no-deprecated-inline-template-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -1358,7 +1358,7 @@ router-link の削除済み tag prop を検出します。
 [悪い例](#vue-no-deprecated-router-link-tag-prop-bad) · [良い例](#vue-no-deprecated-router-link-tag-prop-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -3169,7 +3169,7 @@ lang を取り除き、通常の HTML の p を直接記述します。規約の
 [悪い例](#vue-no-template-shadow-bad) · [良い例](#vue-no-template-shadow-good)
 
 既定の重大度: `warning`  
-プリセット: `nuxt`, `opinionated`  
+プリセット: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -3866,7 +3866,7 @@ index を参照するか、未使用を意図する _index という名前にし
 [悪い例](#vue-no-use-v-else-with-v-for-bad) · [良い例](#vue-no-use-v-else-with-v-for-good)
 
 既定の重大度: `warning`  
-プリセット: _none_  
+プリセット: `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -4822,7 +4822,7 @@ vp run lint
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs#L56) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs#L57) · [全ルール](all.md)
 
 ### `vue/require-scoped-style`
 
@@ -4952,7 +4952,7 @@ vp run lint
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/require_toggle_inside_transition.rs#L48) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/require_toggle_inside_transition.rs#L49) · [全ルール](all.md)
 
 ### `vue/require-v-for-key`
 
@@ -5302,7 +5302,7 @@ vp run lint
 [悪い例](#vue-this-in-template-bad) · [良い例](#vue-this-in-template-good)
 
 既定の重大度: `warning`  
-プリセット: `nuxt`, `opinionated`  
+プリセット: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -5437,7 +5437,7 @@ const emailId = useId();
 [悪い例](#vue-use-v-on-exact-bad) · [良い例](#vue-use-v-on-exact-good)
 
 既定の重大度: `warning`  
-プリセット: `essential`, `nuxt`, `opinionated`  
+プリセット: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -5558,7 +5558,7 @@ vp run lint
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L30) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L28) · [全ルール](all.md)
 
 ### `vue/v-on-event-hyphenation`
 

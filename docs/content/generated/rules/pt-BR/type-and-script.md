@@ -768,7 +768,7 @@ Proibir um literal de objeto como opção data do componente (o Vue 3 exige uma 
 [Incorreto](#script-no-deprecated-data-object-declaration-bad) · [Correto](#script-no-deprecated-data-object-declaration-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -838,7 +838,7 @@ Proibir os hooks de ciclo de vida obsoletos destroyed e beforeDestroy
 [Incorreto](#script-no-deprecated-destroyed-lifecycle-bad) · [Correto](#script-no-deprecated-destroyed-lifecycle-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Correção automática: Disponível para os diagnósticos compatíveis  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -899,7 +899,7 @@ Proibir a propriedade de instância $listeners removida no Vue 3 (incorporada a 
 [Incorreto](#script-no-deprecated-dollar-listeners-api-bad) · [Correto](#script-no-deprecated-dollar-listeners-api-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -963,7 +963,7 @@ Proibir a propriedade de instância $scopedSlots removida no Vue 3 (usar $slots)
 [Incorreto](#script-no-deprecated-dollar-scopedslots-api-bad) · [Correto](#script-no-deprecated-dollar-scopedslots-api-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -1028,7 +1028,7 @@ Proibir a API de eventos do Vue 2 removida ($on / $off / $once)
 [Incorreto](#script-no-deprecated-events-api-bad) · [Correto](#script-no-deprecated-events-api-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -1098,7 +1098,7 @@ Proibir `this` dentro de uma função de valor padrão ou validação de prop (r
 [Incorreto](#script-no-deprecated-props-default-this-bad) · [Correto](#script-no-deprecated-props-default-this-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -3671,7 +3671,7 @@ export default {
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/require_prop_type_constructor.rs#L59) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/require_prop_type_constructor.rs#L65) · [Todas as regras](all.md)
 
 ### `script/require-prop-types`
 
@@ -3680,7 +3680,7 @@ Exigir que toda prop declare um tipo
 [Incorreto](#script-require-prop-types-bad) · [Correto](#script-require-prop-types-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.

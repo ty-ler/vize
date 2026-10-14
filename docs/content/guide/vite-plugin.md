@@ -125,7 +125,7 @@ vize({
 | `customRenderer`       | `compiler.customRenderer` or `vize({ customRenderer })` | Treat lowercase non-HTML tags as custom renderer elements. Does not match PascalCase tags such as `<TresMesh>`.                                 |
 | `customElements`       | `compiler.customElements` or `vize({ customElements })` | Tag patterns compiled as custom elements instead of Vue components. Use `["Tres*"]` for TresJS PascalCase renderer tags.                        |
 | `templateSyntax`       | `compiler.templateSyntax` or `vize({ templateSyntax })` | Choose `"standard"`, `"strict"`, or `"quirks"` template syntax handling.                                                                        |
-| `whitespace`           | `compiler.whitespace`, `vize({ whitespace })`, or `template.compilerOptions.whitespace` | Use Vue's `"condense"` (default) or `"preserve"` template whitespace mode. Vize also accepts `"vue2-line-breaks"` through its own compiler/Vite option to keep a newline after text or interpolation when Vue 3 would condense it to one space. This is a narrow migration mode, not full Vue 2 whitespace behavior. |
+| `whitespace`           | `compiler.whitespace`, `vize({ whitespace })`, or `template.compilerOptions.whitespace` | Use Vue's `"condense"` (default) or `"preserve"` template whitespace mode. Vize also accepts `"vue2-line-breaks"` through its own compiler/Vite option to keep a newline after text or interpolation when Vue 3 would condense it to one space. This is a narrow migration mode, not full Vue 2 whitespace behavior. For Vue 2.7 `whitespace: "preserve"` output (as used by Vue 2, vue-loader 15 and Nuxt 2), use `"vue2-preserve"`: whitespace next to text and interpolations is kept as written, and whitespace-only runs between elements become one space. |
 | `template.compilerOptions.comments` | `vize({ template: { compilerOptions: { comments } } })` | Preserve authored template comments in development by default and omit them in production. Set `true` or `false` to override either default. Direct native calls use `templateComments` and default to `false`. |
 | `experimentals`        | top-level `experimentals` or `vize({ experimentals })`  | Fully opt-in Vue RFC and backend experiments. Missing keys, `false`, and `null` are off.                                                        |
 | `include`              | `vite.include` or `vize({ include })`                   | Files that the plugin should compile.                                                                                                           |
@@ -242,6 +242,20 @@ Vite normally skips `import.meta.*` replacement for virtual modules (prefixed wi
 ### Per-Environment Isolation
 
 For Nuxt compatibility, the plugin isolates `define` values per Vite environment (client vs. server/SSR). This prevents client-side environment values from leaking into SSR output.
+
+### Style Preprocessors and Pug
+
+`<style lang="scss">`, `sass`, `less` and `stylus` follow Vue's order: the preprocessor runs first, then Vize scopes its output and resolves `v-bind()`. `<style module>` class maps come from your bundler's CSS-module pipeline. Install the preprocessor package (`sass` or `sass-embedded`, `less`, `stylus`) in your project, as you would with `@vitejs/plugin-vue`. `<template lang="pug">` is compiled by Vize itself, so no extra package is needed.
+
+| Surface | scss / sass / less / stylus | pug |
+| --- | --- | --- |
+| Vite | Vite preprocesses; Vize scopes the result | Native |
+| `@vizejs/unplugin` (webpack, Rollup, Rolldown, esbuild) | webpack uses your loaders; Rollup, Rolldown and esbuild run your installed preprocessor | Native |
+| `@vizejs/rspack` | Your loaders, with css-loader or native CSS | Native |
+| `vize build` | Runs your installed preprocessor through Node | Native |
+| `vize fmt` | Preprocessor blocks are left byte-identical | Formatted |
+| `vize lint` | Template rules apply; style blocks are not linted as CSS | Template rules apply |
+| LSP | CSS completion and hover (indented syntax included); `v-bind()` go-to-definition | Tag completion and go-to-definition |
 
 ## Nuxt Compatibility
 

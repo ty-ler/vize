@@ -17,6 +17,8 @@ mod callbacks;
 mod compat_reference;
 mod constructor;
 mod delimiters;
+#[cfg(test)]
+mod duplicate_dialect_tests;
 mod element;
 mod entry;
 #[cfg(test)]
@@ -45,8 +47,8 @@ pub use expression::retain_slot_parameters_in;
 #[doc(hidden)]
 pub use frozen::FrozenElements;
 pub use whitespace_context::{
-    current_legacy_line_breaks, current_whitespace_strategy, with_whitespace_mode,
-    with_whitespace_strategy,
+    current_legacy_line_breaks, current_vue2_preserve, current_whitespace_strategy,
+    with_vue2_preserve_whitespace, with_whitespace_mode, with_whitespace_strategy,
 };
 
 #[cfg(test)]

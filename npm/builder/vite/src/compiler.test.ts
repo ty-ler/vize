@@ -296,10 +296,10 @@ assert.match(
   /ssrRender/,
   "SSR builds should still emit server-renderer code paths when Vapor is enabled for the client",
 );
-assert.doesNotMatch(
-  ssrCompiled.code,
-  /__vapor/,
-  "SSR builds should not keep the Vapor component marker when the compiler falls back to VDOM",
+assert.equal(
+  ssrCompiled.code.match(/__vapor: true/g)?.length,
+  1,
+  "SSR builds mark a Vapor component so the client hydrates it as Vapor",
 );
 
 const batchResult = compileBatch(
@@ -329,10 +329,10 @@ assert.match(
   /\$setup\.Primitive/,
   "Batch SSR compilation should match single-file binding resolution for lowercase imported components",
 );
-assert.doesNotMatch(
-  batchResult.results[0]?.code ?? "",
-  /__vapor/,
-  "Batch SSR compilation should also drop the Vapor marker when falling back to VDOM",
+assert.equal(
+  (batchResult.results[0]?.code ?? "").match(/__vapor: true/g)?.length,
+  1,
+  "Batch SSR compilation should mark the Vapor component like single-file compilation",
 );
 
 const styleMetadataSource = `<template><div class="root">Styled</div></template>
@@ -779,10 +779,10 @@ assert.doesNotMatch(
   /<primitive><\/primitive>/,
   "Custom renderer SSR builds must not stringify imported lowercase components as plain elements",
 );
-assert.doesNotMatch(
-  customRendererSsrCompiled.code,
-  /__vapor/,
-  "Custom renderer SSR builds should not keep the Vapor marker after the SSR fallback",
+assert.equal(
+  customRendererSsrCompiled.code.match(/__vapor: true/g)?.length,
+  1,
+  "Custom renderer SSR builds mark the Vapor component like other SSR builds",
 );
 
 const ssrSuspenseSource = `<script setup lang="ts">

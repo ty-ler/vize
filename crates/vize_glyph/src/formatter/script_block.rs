@@ -1,4 +1,4 @@
-use super::{block_indent, opening_tag, write_attr, write_remaining_attrs};
+use super::{block_indent, opening_tag, write_attr, write_authored_attrs, write_remaining_attrs};
 use crate::{error::FormatError, options::FormatOptions, script};
 use vize_l0::{Allocator, ToCompactString};
 
@@ -33,14 +33,22 @@ pub(super) fn write_script_block(
         opening_tag::write_raw(output, opening_tag);
     } else {
         output.extend_from_slice(b"<script");
-        if block.setup {
-            write_attr(output, "setup", None);
+        if !write_authored_attrs(output, &block.attrs, source, &block.loc, options) {
+            if block.setup {
+                write_attr(output, "setup", None);
+            }
+            if let Some(lang) = &block.lang {
+                write_attr(output, "lang", Some(lang));
+            }
+            write_remaining_attrs(output, &block.attrs, &["setup", "lang"]);
         }
-        if let Some(lang) = &block.lang {
-            write_attr(output, "lang", Some(lang));
-        }
-        write_remaining_attrs(output, &block.attrs, &["setup", "lang"]);
         output.push(b'>');
+    }
+    // An empty block (for example one that only carries `src`) stays empty on
+    // one line, as Prettier prints it.
+    if trimmed.is_empty() {
+        output.extend_from_slice(b"</script>");
+        return Ok(());
     }
     output.extend_from_slice(options.newline_bytes());
 

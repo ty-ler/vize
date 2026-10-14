@@ -767,7 +767,7 @@ Vue 3 で関数にすべき data オプションのオブジェクト指定を�
 [悪い例](#script-no-deprecated-data-object-declaration-bad) · [良い例](#script-no-deprecated-data-object-declaration-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -837,7 +837,7 @@ Vue 2 の destroyed / beforeDestroy を検出し、Vue 3 の hook に置き換�
 [悪い例](#script-no-deprecated-destroyed-lifecycle-bad) · [良い例](#script-no-deprecated-destroyed-lifecycle-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自動修正: 対応している診断で利用できます  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -898,7 +898,7 @@ Vue 3 で $attrs に統合された $listeners を検出します。
 [悪い例](#script-no-deprecated-dollar-listeners-api-bad) · [良い例](#script-no-deprecated-dollar-listeners-api-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -962,7 +962,7 @@ Vue 3 で $slots に統合された $scopedSlots を検出します。
 [悪い例](#script-no-deprecated-dollar-scopedslots-api-bad) · [良い例](#script-no-deprecated-dollar-scopedslots-api-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -1027,7 +1027,7 @@ Vue 3 で削除された $on / $off / $once を検出します。
 [悪い例](#script-no-deprecated-events-api-bad) · [良い例](#script-no-deprecated-events-api-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -1097,7 +1097,7 @@ prop の default / validator 内で使えなくなった this を検出します
 [悪い例](#script-no-deprecated-props-default-this-bad) · [良い例](#script-no-deprecated-props-default-this-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -3670,7 +3670,7 @@ export default {
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/require_prop_type_constructor.rs#L59) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/require_prop_type_constructor.rs#L65) · [全ルール](all.md)
 
 ### `script/require-prop-types`
 
@@ -3679,7 +3679,7 @@ export default {
 [悪い例](#script-require-prop-types-bad) · [良い例](#script-require-prop-types-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。

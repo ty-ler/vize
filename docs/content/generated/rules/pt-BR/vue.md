@@ -1115,7 +1115,7 @@ Proibir a sintaxe obsoleta de filtros do Vue 2 com o operador de barra vertical
 [Incorreto](#vue-no-deprecated-filter-bad) · [Correto](#vue-no-deprecated-filter-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -1237,7 +1237,7 @@ Proibir o atributo `is` em elementos HTML nativos
 [Incorreto](#vue-no-deprecated-html-element-is-bad) · [Correto](#vue-no-deprecated-html-element-is-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -1299,7 +1299,7 @@ Proibir o atributo obsoleto `inline-template`
 [Incorreto](#vue-no-deprecated-inline-template-bad) · [Correto](#vue-no-deprecated-inline-template-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -1360,7 +1360,7 @@ Proibir a prop `tag` em &lt;router-link&gt;
 [Incorreto](#vue-no-deprecated-router-link-tag-prop-bad) · [Correto](#vue-no-deprecated-router-link-tag-prop-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -3168,7 +3168,7 @@ Proibir nomes de variáveis que ocultam variáveis de um escopo externo
 [Incorreto](#vue-no-template-shadow-bad) · [Correto](#vue-no-template-shadow-good)
 
 Severidade padrão: `warning`  
-Predefinições: `nuxt`, `opinionated`  
+Predefinições: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -3865,7 +3865,7 @@ Proibir `v-else-if` ou `v-else` no mesmo elemento que `v-for`
 [Incorreto](#vue-no-use-v-else-with-v-for-bad) · [Correto](#vue-no-use-v-else-with-v-for-good)
 
 Severidade padrão: `warning`  
-Predefinições: _none_  
+Predefinições: `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -4821,7 +4821,7 @@ vp run lint
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs#L56) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs#L57) · [Todas as regras](all.md)
 
 ### `vue/require-scoped-style`
 
@@ -4951,7 +4951,7 @@ O filho estático dentro de `<Transition>` não tem visibilidade condicional nem
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/require_toggle_inside_transition.rs#L48) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/require_toggle_inside_transition.rs#L49) · [Todas as regras](all.md)
 
 ### `vue/require-v-for-key`
 
@@ -5301,7 +5301,7 @@ Proibir `this.` nas expressões do template
 [Incorreto](#vue-this-in-template-bad) · [Correto](#vue-this-in-template-good)
 
 Severidade padrão: `warning`  
-Predefinições: `nuxt`, `opinionated`  
+Predefinições: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -5436,7 +5436,7 @@ Exigir o modificador `.exact` em `v-on` quando houver manipuladores baseados em 
 [Incorreto](#vue-use-v-on-exact-bad) · [Correto](#vue-use-v-on-exact-good)
 
 Severidade padrão: `warning`  
-Predefinições: `essential`, `nuxt`, `opinionated`  
+Predefinições: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -5557,7 +5557,7 @@ vp run lint
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L30) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L28) · [Todas as regras](all.md)
 
 ### `vue/v-on-event-hyphenation`
 

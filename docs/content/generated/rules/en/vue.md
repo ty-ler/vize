@@ -1113,7 +1113,7 @@ Disallow deprecated Vue 2 filter syntax using the pipe operator
 [Bad](#vue-no-deprecated-filter-bad) · [Good](#vue-no-deprecated-filter-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -1235,7 +1235,7 @@ Disallow the `is` attribute on native HTML elements
 [Bad](#vue-no-deprecated-html-element-is-bad) · [Good](#vue-no-deprecated-html-element-is-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -1297,7 +1297,7 @@ Disallow the deprecated `inline-template` attribute
 [Bad](#vue-no-deprecated-inline-template-bad) · [Good](#vue-no-deprecated-inline-template-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -1358,7 +1358,7 @@ Disallow the `tag` prop on &lt;router-link&gt;
 [Bad](#vue-no-deprecated-router-link-tag-prop-bad) · [Good](#vue-no-deprecated-router-link-tag-prop-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -3166,7 +3166,7 @@ Disallow variable names that shadow variables in outer scope
 [Bad](#vue-no-template-shadow-bad) · [Good](#vue-no-template-shadow-good)
 
 Default severity: `warning`  
-Presets: `nuxt`, `opinionated`  
+Presets: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -3863,7 +3863,7 @@ Disallow using `v-else-if` or `v-else` on the same element as `v-for`
 [Bad](#vue-no-use-v-else-with-v-for-bad) · [Good](#vue-no-use-v-else-with-v-for-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -4819,7 +4819,7 @@ vp run lint
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs#L56) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs#L57) · [All rules](all.md)
 
 ### `vue/require-scoped-style`
 
@@ -4949,7 +4949,7 @@ The static child inside `<Transition>` has no conditional visibility or dynamic 
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/require_toggle_inside_transition.rs#L48) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/require_toggle_inside_transition.rs#L49) · [All rules](all.md)
 
 ### `vue/require-v-for-key`
 
@@ -5299,7 +5299,7 @@ Disallow `this.` in template expressions
 [Bad](#vue-this-in-template-bad) · [Good](#vue-this-in-template-good)
 
 Default severity: `warning`  
-Presets: `nuxt`, `opinionated`  
+Presets: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -5434,7 +5434,7 @@ Enforce `.exact` modifier on `v-on` when there are modifier-based handlers
 [Bad](#vue-use-v-on-exact-bad) · [Good](#vue-use-v-on-exact-good)
 
 Default severity: `warning`  
-Presets: `essential`, `nuxt`, `opinionated`  
+Presets: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -5555,7 +5555,7 @@ vp run lint
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L30) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L28) · [All rules](all.md)
 
 ### `vue/v-on-event-hyphenation`
 

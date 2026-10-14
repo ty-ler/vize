@@ -16,7 +16,7 @@ fn compile_setup(script_content: &str) -> String {
             render_fn_name: "",
             preamble: "",
             render_body: "null",
-            render_is_block: false,
+            ..Default::default()
         },
         None,
         &[],

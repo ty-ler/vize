@@ -1114,7 +1114,7 @@ v-text 会替换段落内容，因此编写的后备文本无法在该指令生�
 [错误示例](#vue-no-deprecated-filter-bad) · [正确示例](#vue-no-deprecated-filter-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -1236,7 +1236,7 @@ SFC 模板使用了已移除的 functional 属性，并读取旧的 props 上下
 [错误示例](#vue-no-deprecated-html-element-is-bad) · [正确示例](#vue-no-deprecated-html-element-is-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -1298,7 +1298,7 @@ vp run lint
 [错误示例](#vue-no-deprecated-inline-template-bad) · [正确示例](#vue-no-deprecated-inline-template-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -1359,7 +1359,7 @@ Card 使用已弃用的 inline-template 属性接收其内容。
 [错误示例](#vue-no-deprecated-router-link-tag-prop-bad) · [正确示例](#vue-no-deprecated-router-link-tag-prop-good)
 
 默认严重程度: `error`  
-预设: _none_  
+预设: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -3167,7 +3167,7 @@ p Notice
 [错误示例](#vue-no-template-shadow-bad) · [正确示例](#vue-no-template-shadow-good)
 
 默认严重程度: `warning`  
-预设: `nuxt`, `opinionated`  
+预设: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -3864,7 +3864,7 @@ vp run lint
 [错误示例](#vue-no-use-v-else-with-v-for-bad) · [正确示例](#vue-no-use-v-else-with-v-for-good)
 
 默认严重程度: `warning`  
-预设: _none_  
+预设: `nuxt`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -4820,7 +4820,7 @@ vp run lint
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs#L56) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/require_component_registration.rs#L57) · [全部规则](all.md)
 
 ### `vue/require-scoped-style`
 
@@ -4950,7 +4950,7 @@ vp run lint
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/require_toggle_inside_transition.rs#L48) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/require_toggle_inside_transition.rs#L49) · [全部规则](all.md)
 
 ### `vue/require-v-for-key`
 
@@ -5300,7 +5300,7 @@ vp run lint
 [错误示例](#vue-this-in-template-bad) · [正确示例](#vue-this-in-template-good)
 
 默认严重程度: `warning`  
-预设: `nuxt`, `opinionated`  
+预设: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -5435,7 +5435,7 @@ const emailId = useId();
 [错误示例](#vue-use-v-on-exact-bad) · [正确示例](#vue-use-v-on-exact-good)
 
 默认严重程度: `warning`  
-预设: `essential`, `nuxt`, `opinionated`  
+预设: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
@@ -5556,7 +5556,7 @@ vp run lint
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L30) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/v_bind_style.rs#L28) · [全部规则](all.md)
 
 ### `vue/v-on-event-hyphenation`
 
