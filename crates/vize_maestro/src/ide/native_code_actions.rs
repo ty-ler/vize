@@ -79,12 +79,13 @@ impl CodeActionService {
     }
 }
 
-/// Whole-document TypeScript source actions this server forwards to tsgo.
-pub(crate) const NATIVE_SOURCE_KINDS: [&str; 4] = [
+/// Whole-document TypeScript source actions this server forwards to tsgo and
+/// advertises. Each has a real-tsgo whole-SFC oracle; `source.fixAll` waits
+/// for one.
+pub(crate) const NATIVE_SOURCE_KINDS: [&str; 3] = [
     "source.organizeImports",
     "source.sortImports",
     "source.removeUnusedImports",
-    "source.fixAll",
 ];
 
 impl CodeActionService {

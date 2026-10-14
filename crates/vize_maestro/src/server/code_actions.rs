@@ -147,8 +147,7 @@ mod tests {
             [
                 "source.organizeImports",
                 "source.sortImports",
-                "source.removeUnusedImports",
-                "source.fixAll"
+                "source.removeUnusedImports"
             ]
         );
     }

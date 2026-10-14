@@ -36,6 +36,26 @@ const value = a;
 </template>
 ";
 
+const SORTED: &str = "<script setup lang=\"ts\">
+import { a, b, c } from \"./lib\";
+const value = a;
+</script>
+
+<template>
+  <p>{{ value }} {{ c }}</p>
+</template>
+";
+
+const UNUSED_REMOVED: &str = "<script setup lang=\"ts\">
+import { c, a } from \"./lib\";
+const value = a;
+</script>
+
+<template>
+  <p>{{ value }} {{ c }}</p>
+</template>
+";
+
 fn apply(source: &str, action: &CodeActionOrCommand) -> String {
     let CodeActionOrCommand::CodeAction(action) = action else {
         panic!("source actions are code actions, not commands");
@@ -106,15 +126,21 @@ fn organize_imports_keeps_template_only_imports_and_edits_authored_script_only()
         assert_eq!(action.kind.as_ref(), Some(&organize));
         assert_eq!(apply(SOURCE, &actions[0]), ORGANIZED);
 
-        // Kinds the client did not ask for are not returned.
-        let sort = CodeActionKind::from("source.sortImports".to_string());
-        for action in
-            CodeActionService::native_source_actions(&ctx, std::slice::from_ref(&sort)).await
-        {
-            let CodeActionOrCommand::CodeAction(action) = action else {
-                panic!("sort imports is a code action");
+        // Sorting merges and orders without removing; removal keeps order and
+        // the template-only `c`. Each returns only the requested kind.
+        for (kind, expected) in [
+            ("source.sortImports", SORTED),
+            ("source.removeUnusedImports", UNUSED_REMOVED),
+        ] {
+            let kind = CodeActionKind::from(kind.to_string());
+            let actions =
+                CodeActionService::native_source_actions(&ctx, std::slice::from_ref(&kind)).await;
+            assert_eq!(actions.len(), 1, "{}: one action", kind.as_str());
+            let CodeActionOrCommand::CodeAction(action) = &actions[0] else {
+                panic!("{} is a code action", kind.as_str());
             };
-            assert_eq!(action.kind.as_ref(), Some(&sort));
+            assert_eq!(action.kind.as_ref(), Some(&kind));
+            assert_eq!(apply(SOURCE, &actions[0]), expected, "{}", kind.as_str());
         }
 
         let bridge = state
