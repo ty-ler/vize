@@ -252,7 +252,7 @@ test("create-vue formatter converges and repairs one exact attribute-spacing edi
           warnings: compiled.output.warnings,
         },
         {
-          css: "\n\n",
+          css: null,
           errors: [],
           filename: "App.vue",
           macro_artifacts: [],
