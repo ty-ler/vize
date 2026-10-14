@@ -14,7 +14,7 @@
       "tests/_fixtures/differential/lsp/event-rename/4075/named-model/author_contracts.py",
       "tests/_fixtures/differential/lsp/native-project-retirement-3952/observe-native-owner.py",
       "tests/editor-conformance/drivers/pty-bridge.py",
-      "tests/performance/support/current-baseline/sample_rss.py",
+
       "tests/performance/support/warm-type-backed-release-bridge.py",
       "tests/tooling/fixtures/owned_worker_gdb_laws.py",
       "tests/tooling/fixtures/owned_worker_laws.py",
@@ -72,7 +72,6 @@
       "tests/formal/impeto/Impeto/IvmMatrix.lean",
       "tests/formal/impeto/Impeto/Lattice.lean",
       "tests/formal/impeto/Impeto/LatticeFixture.lean",
-      "tests/formal/impeto/Impeto/LatticeLaws.lean",
       "tests/formal/impeto/Impeto/LoopBehavior.lean",
       "tests/formal/impeto/Impeto/LoopTests.lean",
       "tests/formal/impeto/Impeto/Model.lean",

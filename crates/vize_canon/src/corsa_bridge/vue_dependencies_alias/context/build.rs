@@ -105,24 +105,23 @@ pub(super) fn build(
         "alias_register_inputs",
         revision.requested_sources.len() + 1,
     );
-    project
-        .register_path_with_content(source_path, content)
-        .map_err(bridge_error)?;
     // An overlay edit invalidates generated contexts, not live membership.
     // Rebuild previously registered open sources in the same project revision
     // before stale contexts are pruned. Otherwise querying a dependency would
     // delete its still-open importer and recreate it on the next query.
-    let live_sources = environment
+    let refreshed_sources = environment
         .editor_session
         .cache()
-        .project_sources_to_refresh(project.virtual_root(), revision.overlay_identity);
-    for path in live_sources {
-        if path != source_path
-            && let Some(source) = overlays.get(&path)
-        {
-            project
-                .register_path_with_content(&path, source)
-                .map_err(bridge_error)?;
+        .overlay_sources_to_refresh(
+            project.virtual_root(),
+            revision.overlay_identity,
+            source_path,
+            overlays,
+        );
+    let mut inputs: Vec<(PathBuf, &str)> = vec![(source_path.to_path_buf(), content)];
+    for path in &refreshed_sources {
+        if let Some(source) = overlays.get(path) {
+            inputs.push((path.clone(), source));
         }
     }
     for (path, source) in revision.requested_sources {
@@ -131,10 +130,18 @@ pub(super) fn build(
             continue;
         }
         let source = overlays.get(&path).copied().unwrap_or(source);
-        project
-            .register_path_with_content(&path, source)
-            .map_err(bridge_error)?;
+        inputs.push((path, source));
     }
+    // One revision shares its dependency type sources. A workspace-wide query
+    // registers every Vue file, and a per-file snapshot would read, resolve
+    // and parse the same imported type modules once per importer.
+    project
+        .register_paths_with_content(
+            inputs
+                .iter()
+                .map(|(path, source)| (path.as_path(), *source)),
+        )
+        .map_err(bridge_error)?;
     register_phase.finish();
     let reachable_phase =
         crate::corsa_bridge::preparation_trace::Phase::start("alias_reachable_dependencies", 1);
@@ -248,6 +255,7 @@ pub(super) fn build(
         aliases,
         package_routes,
         route_inputs,
+        refreshed_sources,
         mirror,
         virtual_ts_options: environment.virtual_ts_options.clone(),
         query_surface: Default::default(),

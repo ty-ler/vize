@@ -199,28 +199,28 @@ impl LanguageServer for MaestroServer {
     async fn prepare_call_hierarchy(&self, params: CHPrepareParams) -> Result<Option<CHItems>> {
         let server = self.for_pos(&params.text_document_position_params).await;
         server
-            .native_request(async { call_hierarchy::prepare(&server, params).await })
+            .workspace_native_request(|| call_hierarchy::prepare(&server, params.clone()))
             .await
     }
 
     async fn incoming_calls(&self, params: CHIncomingParams) -> Result<Option<CHIncomingResponse>> {
         let server = self.for_document(&params.item.uri).await;
         server
-            .native_request(async { call_hierarchy::incoming(&server, params).await })
+            .workspace_native_request(|| call_hierarchy::incoming(&server, params.clone()))
             .await
     }
 
     async fn outgoing_calls(&self, params: CHOutgoingParams) -> Result<Option<CHOutgoingResponse>> {
         let server = self.for_document(&params.item.uri).await;
         server
-            .native_request(async { call_hierarchy::outgoing(&server, params).await })
+            .workspace_native_request(|| call_hierarchy::outgoing(&server, params.clone()))
             .await
     }
 
     async fn references(&self, params: ReferenceParams) -> Result<Option<Vec<Location>>> {
         let server = self.for_pos(&params.text_document_position).await;
         server
-            .native_request(async { references::references(&server, params).await })
+            .workspace_native_request(|| references::references(&server, params.clone()))
             .await
     }
 
@@ -257,7 +257,9 @@ impl LanguageServer for MaestroServer {
 
     async fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
         let server = self.for_pos(&params.text_document_position).await;
-        server.native_request(server.rename_request(params)).await
+        server
+            .workspace_native_request(|| server.rename_request(params.clone()))
+            .await
     }
 
     async fn semantic_tokens_full(
