@@ -1,9 +1,7 @@
 #![cfg(test)]
-#![expect(clippy::disallowed_macros, reason = "fixtures use std strings")]
-#![expect(clippy::disallowed_types, reason = "fixtures use std strings")]
 //! `v-html` and `v-text` values are template expressions the checker types,
 //! like every other directive value (#9110).
-use serde_json::Value;
+use serde_json::json;
 
 #[path = "support/lsp_process.rs"]
 mod lsp_process;
@@ -25,29 +23,21 @@ const shown = ref(true);
 </template>
 ";
 
-fn hover(fixture: &mut Fixture, needle: &str) -> String {
-    let result: Value = fixture.request("textDocument/hover", APP, needle);
-    result["contents"]["value"]
-        .as_str()
-        .unwrap_or_default()
-        .to_owned()
-}
-
 #[test]
 fn v_html_and_v_text_values_hover_with_their_checker_types() {
     let mut fixture = Fixture::new_with_vue(APP);
     fixture.open(APP);
-    for (needle, expected) in [
-        ("html\" />", "const html: string"),
-        ("text\" />", "const text: string"),
-        ("shown\">", "const shown: boolean"),
-    ] {
-        let contents = hover(&mut fixture, needle);
-        assert!(
-            contents.contains(expected),
-            "hover on {needle:?} must contain {expected:?}, got {contents:?}"
-        );
-        assert!(!contents.contains("Template binding"), "{contents}");
-    }
+    assert_eq!(
+        fixture.request("textDocument/hover", APP, "html\" />")["contents"],
+        json!({"kind": "markdown", "value": "```typescript\nconst html: string\n```"})
+    );
+    assert_eq!(
+        fixture.request("textDocument/hover", APP, "text\" />")["contents"],
+        json!({"kind": "markdown", "value": "```typescript\nconst text: string\n```"})
+    );
+    assert_eq!(
+        fixture.request("textDocument/hover", APP, "shown\">")["contents"],
+        json!({"kind": "markdown", "value": "```typescript\nconst shown: boolean\n```"})
+    );
     fixture.shutdown();
 }
