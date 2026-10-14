@@ -257,7 +257,7 @@ linter	Linter	source	crates/vize_patina/src/markup/context.rs	7	croquis	Croquis 
 linter	Linter	test/dev	crates/vize_patina/src/markup/differential.rs	34	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	test/dev	crates/vize_patina/src/markup/differential.rs	34	old_ast	old AST/parser	old	vize_relief	legacy	2
 linter	Linter	test/dev	crates/vize_patina/src/markup/differential.rs	34	old_ast	old AST/parser	old	vize_armature	legacy	1
-linter	Linter	source	crates/vize_patina/src/markup/differential/battery.rs	293	l0	L0	stage	vize_l0	preferred	9
+linter	Linter	source	crates/vize_patina/src/markup/differential/battery.rs	294	l0	L0	stage	vize_l0	preferred	9
 linter	Linter	source	crates/vize_patina/src/markup/differential/fixture_cursor.rs	6	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	source	crates/vize_patina/src/markup/differential/fixture_escape.rs	6	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	source	crates/vize_patina/src/markup/differential/fixture_syntax.rs	7	l0	L0	stage	vize_l0	preferred	1
@@ -1076,6 +1076,7 @@ linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/script_m
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/script_mutations.rs	14	raw_oxc	raw OXC	raw	oxc_semantic	raw	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_mutating_props/script_mutations.rs	14	raw_oxc	raw OXC	raw	oxc_syntax	raw	2
 linter	Linter	test/dev	crates/vize_patina/src/rules/vue/no_mutating_props/tests/script_mutations.rs	3	l0	L0	stage	vize_l0	preferred	1
+linter	Linter	source	crates/vize_patina/src/rules/vue/no_non_component_keep_alive_child.rs	12	l0	L0	stage	vize_l0	preferred	1
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_non_component_keep_alive_child.rs	12	old_ast	old AST/parser	old	vize_relief	legacy	3
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_reserved_component_names.rs	39	l0	L0	stage	vize_l0	preferred	2
 linter	Linter	source	crates/vize_patina/src/rules/vue/no_reserved_component_names.rs	39	croquis	Croquis analysis	old	vize_croquis	legacy	1
