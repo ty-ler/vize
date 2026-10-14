@@ -8,6 +8,12 @@ use std::time::Duration;
 use corsa_lsp::{LspClient, LspSpawnConfig};
 use serde_json::{Value, json};
 
+/// Bounds a hang, not latency: the assertion is about the shutdown/exit
+/// message shape. The fake server is a Python interpreter, whose start-up
+/// under a fully loaded test run exceeded a 5 s deadline (v0.454.0 check
+/// run 38531768017) although it answers immediately once running.
+const HANG_BOUND: Duration = Duration::from_secs(60);
+
 struct RawInitialize;
 
 impl lsp_types::request::Request for RawInitialize {
@@ -30,8 +36,8 @@ fn graceful_close_omits_shutdown_and_exit_params() {
     corsa::runtime::block_on(async {
         let client = LspClient::spawn(
             LspSpawnConfig::new(&server)
-                .with_request_timeout(Some(Duration::from_secs(5)))
-                .with_shutdown_timeout(Duration::from_secs(5)),
+                .with_request_timeout(Some(HANG_BOUND))
+                .with_shutdown_timeout(HANG_BOUND),
         )
         .await
         .unwrap();
