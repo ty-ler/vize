@@ -1,5 +1,0 @@
-<script setup lang="ts">
-const $data = 0
-const _secret = 0
-const $custom = 0
-</script>
