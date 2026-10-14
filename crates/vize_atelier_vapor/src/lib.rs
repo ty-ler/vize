@@ -25,6 +25,8 @@ pub mod steps;
 )]
 mod tests;
 #[cfg(test)]
+mod tests_block_shapes;
+#[cfg(test)]
 mod tests_component_prop_modifiers;
 #[cfg(test)]
 mod tests_davinci_differential;
@@ -44,6 +46,8 @@ mod tests_once_components;
 mod tests_root_component;
 #[cfg(test)]
 mod tests_same_event_listeners;
+#[cfg(test)]
+mod tests_set_html;
 #[cfg(test)]
 mod tests_setup_components;
 #[cfg(test)]

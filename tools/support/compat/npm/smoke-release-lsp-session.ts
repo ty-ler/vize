@@ -22,12 +22,44 @@ const app = pathToFileURL(appPath).href;
 const componentPath = path.join(root, "src", "components", "HelloWorld.vue");
 const appText = fs.readFileSync(appPath, "utf8");
 
+// The server always traces editor preparation, which shows whether a typed
+// request reached the checker. With VIZE_SMOKE_LSP_LOG_DIR set, the whole
+// session (stderr, every feature result) is also kept there for CI artifacts,
+// so a host-only failure such as the typeless Windows hover (#8940) shows
+// where the checker path gave up.
+const logDir = process.env.VIZE_SMOKE_LSP_LOG_DIR;
 const server = spawn(process.execPath, [path.join(root, "node_modules/vize/bin/vize"), "lsp"], {
   cwd: root,
   stdio: ["pipe", "pipe", "pipe"],
+  env: { ...process.env, VIZE_TRACE_EDITOR_PREPARATION: "1" },
 });
 let stderr = "";
 server.stderr.on("data", (chunk: Buffer) => (stderr += chunk.toString("utf8")));
+const results: { name: string; result: unknown }[] = [];
+// INFO lines are mostly per-request noise; warnings and errors say where the
+// checker path gave up.
+function serverEvidence(): string {
+  const lines = stderr.split(/\r?\n/);
+  const notable = lines.filter((line) =>
+    /\b(WARN|ERROR)\b|panicked|corsa|tsgo|vize_editor_preparation/i.test(line),
+  );
+  return [
+    `--- server warnings and errors (${notable.length} of ${lines.length} lines) ---`,
+    ...notable.slice(-120).map((line) => line.slice(0, 600)),
+    "--- server stderr (tail) ---",
+    stderr.slice(-3000),
+  ].join("\n");
+}
+function writeSessionLog(): void {
+  if (!logDir) return;
+  fs.mkdirSync(logDir, { recursive: true });
+  const name = `lsp-${process.platform}-${process.arch}-node${process.versions.node}-${process.pid}`;
+  fs.writeFileSync(path.join(logDir, `${name}.stderr.log`), stderr);
+  fs.writeFileSync(
+    path.join(logDir, `${name}.results.json`),
+    JSON.stringify({ root, app, results }, null, 2),
+  );
+}
 
 type Message = {
   id?: number;
@@ -121,8 +153,10 @@ async function expectFeature(
 ) {
   try {
     const result = await request(method, params);
+    results.push({ name, result });
     if (!ok(result)) failures.push(`${name}: ${JSON.stringify(result)?.slice(0, 600)}`);
   } catch (error) {
+    results.push({ name, result: String(error) });
     failures.push(`${name}: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
@@ -157,7 +191,8 @@ await expectFeature(
   { ...at("const title", 6), newName: "heading" },
   (result) => mentions(result, appPath),
 );
-assert.deepEqual(failures, [], `project-local vize lsp failed in ${root}`);
+writeSessionLog();
+assert.deepEqual(failures, [], `project-local vize lsp failed in ${root}\n${serverEvidence()}`);
 
 await request("shutdown", undefined);
 send({ method: "exit" });
