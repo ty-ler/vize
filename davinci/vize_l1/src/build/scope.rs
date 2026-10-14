@@ -53,8 +53,14 @@ impl<'a> Recovery<'a> {
                     depth,
                 });
             }
+            return (ns, Some(depth));
         }
-        (ns, depth)
+        // Optional end tags close silently: a later end tag of a closed
+        // descendant stays a stray end tag, as in the shipped parser.
+        let optional = (!self_closing && self.repair_interactive && ns == Namespace::Html)
+            .then(|| optional_end_depth(stack, tag))
+            .flatten();
+        (ns, optional)
     }
 
     /// Matching an ancestor also ends descendants; stray and redundant
@@ -96,3 +102,97 @@ fn namespace<'a, F: Frame<'a>>(stack: &[F], tag: &str) -> Namespace {
 fn interactive(tag: &str) -> bool {
     (tag.eq_ignore_ascii_case("a") || tag.eq_ignore_ascii_case("button")) && is_html_tag(tag)
 }
+
+/// The shipped parser's "in body" optional end tags: a new `li`, `dt`/`dd`,
+/// `option` or `optgroup` closes its open namesake, and `p` or a block
+/// start tag closes an open `p` in button scope.
+fn optional_end_depth<'a, F: Frame<'a>>(stack: &[F], tag: &str) -> Option<usize> {
+    let any = |tags: &[&str]| {
+        stack
+            .iter()
+            .rposition(|frame| tree_element(frame) && tag_in(frame.tag(), tags))
+    };
+    if tag.eq_ignore_ascii_case("li") {
+        return scoped(stack, "li", LIST_ITEM_SCOPE);
+    }
+    if tag_in(tag, &["dt", "dd"]) {
+        return any(&["dt", "dd"]);
+    }
+    if tag.eq_ignore_ascii_case("option") {
+        return stack
+            .iter()
+            .rposition(|frame| frame.tag().eq_ignore_ascii_case("option"));
+    }
+    if tag.eq_ignore_ascii_case("optgroup") {
+        return any(&["option", "optgroup"]);
+    }
+    if tag_in(tag, CLOSES_P) {
+        return scoped(stack, "p", BUTTON_SCOPE);
+    }
+    None
+}
+
+/// The innermost open `target` reachable from the insertion point before a
+/// scope boundary or a non-element (component, slot, structural template).
+fn scoped<'a, F: Frame<'a>>(stack: &[F], target: &str, boundary: &[&str]) -> Option<usize> {
+    for (index, frame) in stack.iter().enumerate().rev() {
+        if !tree_element(frame) {
+            return None;
+        }
+        if frame.tag().eq_ignore_ascii_case(target) {
+            return Some(index);
+        }
+        if tag_in(frame.tag(), boundary) {
+            return None;
+        }
+    }
+    None
+}
+
+fn tree_element<'a, F: Frame<'a>>(frame: &F) -> bool {
+    frame.namespace() == Namespace::Html
+        && is_html_tag(frame.tag())
+        && !frame.tag().eq_ignore_ascii_case("slot")
+        && !frame.tag().eq_ignore_ascii_case("component")
+}
+
+fn tag_in(tag: &str, tags: &[&str]) -> bool {
+    tags.iter()
+        .any(|candidate| tag.eq_ignore_ascii_case(candidate))
+}
+
+const BUTTON_SCOPE: &[&str] = &[
+    "applet", "button", "caption", "html", "table", "td", "th", "marquee", "object", "template",
+];
+
+const LIST_ITEM_SCOPE: &[&str] = &[
+    "applet", "caption", "html", "table", "td", "th", "marquee", "object", "template", "ol", "ul",
+];
+
+const CLOSES_P: &[&str] = &[
+    "address",
+    "article",
+    "aside",
+    "blockquote",
+    "div",
+    "dl",
+    "fieldset",
+    "footer",
+    "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "hr",
+    "main",
+    "nav",
+    "ol",
+    "p",
+    "pre",
+    "section",
+    "table",
+    "ul",
+];
