@@ -50,6 +50,11 @@ pub(super) fn write_template_block(
         write_remaining_attrs(output, &block.attrs, &["lang"]);
         output.push(b'>');
     }
+    // An empty block stays empty on one line, as Prettier prints it.
+    if content.trim().is_empty() {
+        output.extend_from_slice(b"</template>");
+        return Ok(());
+    }
     if native_html && preserve_whitespace {
         // Layout-looking newlines and indentation can belong to rendered text
         // under compiler.whitespace=preserve. Format tag syntax while leaving
