@@ -1,8 +1,0 @@
-<script setup lang="ts">
-import Child from "@/Child.vue"
-import type { Count } from "@/contracts"
-
-const count: Count = 1
-</script>
-
-<template><Child :count="count" /></template>
