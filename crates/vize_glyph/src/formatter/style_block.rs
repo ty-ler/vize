@@ -39,6 +39,12 @@ pub(super) fn write_style_block(
         write_remaining_attrs(output, &block.attrs, &["scoped", "lang"]);
         output.push(b'>');
     }
+    // An empty block (for example one that only carries `src`) stays empty on
+    // one line, as Prettier prints it.
+    if content.trim().is_empty() {
+        output.extend_from_slice(b"</style>");
+        return Ok(());
+    }
     output.extend_from_slice(options.newline_bytes());
 
     if options.vue_indent_script_and_style {

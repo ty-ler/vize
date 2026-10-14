@@ -1,14 +1,9 @@
-import {
-  extractSfcStyleBlocks,
-  generateSfcScopeId,
-  wrapSfcScopedPreprocessorStyle,
-} from "@vizejs/native";
+import { extractSfcStyleBlocks, generateSfcScopeId } from "@vizejs/native";
+import { isPreprocessorLang } from "./style-scope.ts";
 import type { CompiledModule, StyleBlockInfo, StyleBlockNapi } from "./types.ts";
 
-const PREPROCESSOR_LANGS = new Set(["scss", "sass", "less", "stylus", "styl"]);
-
 function needsPreprocessor(block: StyleBlockInfo): boolean {
-  return block.lang !== null && PREPROCESSOR_LANGS.has(block.lang);
+  return isPreprocessorLang(block.lang);
 }
 
 function isCssModule(block: StyleBlockInfo): boolean {
@@ -69,15 +64,24 @@ const __vize_css_id__ = ${cssId};
 ${output}`;
 }
 
+const CSS_MODULE_LOCALS = "__vize_css_module_locals__";
+const CSS_MODULE_LOCALS_HELPER = `const ${CSS_MODULE_LOCALS} = (ns) =>
+  ns.default?.locals ??
+  (ns.default && typeof ns.default === "object" && !Array.isArray(ns.default)
+    ? ns.default
+    : Object.fromEntries(Object.entries(ns).filter(([key]) => key !== "default")));`;
+
 export interface GenerateOutputOptions {
   isProduction: boolean;
   isDev: boolean;
   extractCss?: boolean;
   filePath?: string;
+  /** Overrides the `?vue&type=style` import specifier (webpack style files). */
+  styleRequest?: (block: StyleBlockInfo, scoped: string | null) => string;
 }
 
 export function generateOutput(compiled: CompiledModule, options: GenerateOutputOptions): string {
-  const { isProduction, isDev, extractCss, filePath } = options;
+  const { isProduction, isDev, extractCss, filePath, styleRequest } = options;
 
   let output = compiled.code;
   const exportDefaultRegex = /^export default /m;
@@ -123,20 +127,35 @@ export function generateOutput(compiled: CompiledModule, options: GenerateOutput
         params.set("scoped", `data-v-${compiled.scopeId}`);
       }
 
-      const importUrl = `${filePath}?${params.toString()}`;
+      const scoped = block.scoped ? `data-v-${compiled.scopeId}` : null;
+      const styleFile = styleRequest?.(block, scoped);
 
       if (isCssModule(block)) {
         const bindingName = typeof block.module === "string" ? block.module : "$style";
-        const moduleParams = new URLSearchParams(params);
-        moduleParams.set("module", typeof block.module === "string" ? block.module : "");
-        cssModuleImports.push(
-          `import ${bindingName} from ${JSON.stringify(`${filePath}?${moduleParams.toString()}`)};`,
-        );
+        if (styleFile) {
+          // css-loader exports class names as named exports (v7 default) or
+          // on the default export, depending on its options.
+          const namespace = `__vize_css_module_${block.index}__`;
+          cssModuleImports.push(
+            `import * as ${namespace} from ${JSON.stringify(styleFile)};`,
+            `const ${bindingName} = ${CSS_MODULE_LOCALS}(${namespace});`,
+          );
+        } else {
+          const moduleParams = new URLSearchParams(params);
+          moduleParams.set("module", typeof block.module === "string" ? block.module : "");
+          const moduleUrl = `${filePath}?${moduleParams.toString()}`;
+          cssModuleImports.push(`import ${bindingName} from ${JSON.stringify(moduleUrl)};`);
+        }
       } else {
-        styleImports.push(`import ${JSON.stringify(importUrl)};`);
+        styleImports.push(
+          `import ${JSON.stringify(styleFile ?? `${filePath}?${params.toString()}`)};`,
+        );
       }
     }
 
+    if (cssModuleImports.some((line) => line.includes(CSS_MODULE_LOCALS))) {
+      cssModuleImports.unshift(CSS_MODULE_LOCALS_HELPER);
+    }
     const allImports = [...styleImports, ...cssModuleImports].join("\n");
     if (allImports) {
       output = `${allImports}\n${output}`;
@@ -165,14 +184,6 @@ export function generateOutput(compiled: CompiledModule, options: GenerateOutput
   }
 
   return output;
-}
-
-export function wrapScopedPreprocessorStyle(
-  content: string,
-  scoped: string | null,
-  lang: string | null,
-): string {
-  return wrapSfcScopedPreprocessorStyle(content, scoped, lang);
 }
 
 export function toStyleBlockInfo(block: StyleBlockNapi): StyleBlockInfo {

@@ -37,7 +37,7 @@ import { LspSession } from "../../tooling/support/lsp/session.ts";
 const appPath = createVueTypecheckAppPath;
 const sourceSha256 = "bdafe70baf73a040d432b574108ce0e11823a3c1c1cc8bdfe01d118d6ff7d35a";
 const compiledCodeSha256 = "1216a548943fe8a09ab349a913c627d4115f93935b75ec89922415511475eff7";
-const formattedSourceSha256 = "70a313db2f293cad24d1ea32a0a24538d81f78df3a73712172968624b092bd42";
+const formattedSourceSha256 = "f6c836cc1aa667f33f324274df259e30580183194259abe0546efd5f552b8728";
 const formattedCodeSha256 = "17e394dd258667ffaae5ae7bc92357ff703fcb15f26854244404c8587f47d07b";
 const cleanHeading = "  <h1>You did it!</h1>";
 const brokenHeading = "  <h1>You did it!</h2>";
@@ -226,8 +226,8 @@ test("create-vue formatter converges and repairs one exact attribute-spacing edi
       assert.notEqual(formattedSource, pinnedSource);
       assert.equal(sha256(formattedSource), formattedSourceSha256);
       assert.equal(fs.statSync(fixture.resolve(appPath)).mode & 0o777, sourceMode);
-      assert.equal(formattedSource.startsWith('<script setup lang="ts">\n\n</script>\n'), true);
-      assert.equal(formattedSource.endsWith("<style scoped>\n\n</style>\n"), true);
+      assert.equal(formattedSource.startsWith('<script setup lang="ts"></script>\n'), true);
+      assert.equal(formattedSource.endsWith("<style scoped></style>\n"), true);
       assert.equal(formattedSource.includes("\r"), false);
       assert.equal(formattedSource.includes("  \n"), false, "canonical source has trailing spaces");
       assert.equal(count(formattedSource, formattedAnchor), 1);
@@ -252,7 +252,7 @@ test("create-vue formatter converges and repairs one exact attribute-spacing edi
           warnings: compiled.output.warnings,
         },
         {
-          css: "\n\n",
+          css: null,
           errors: [],
           filename: "App.vue",
           macro_artifacts: [],

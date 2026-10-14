@@ -1,2 +1,1 @@
-<template lang="pug" src="./App.pug">
-</template>
+<template lang="pug" src="./App.pug"></template>
