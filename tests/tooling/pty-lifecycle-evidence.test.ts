@@ -1,42 +1,34 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
+import {
+  mkdirSync,
+  mkdtempSync,
+  openSync,
+  closeSync,
+  opendirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  symlinkSync,
+  type Dir,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
-
-const helper = fileURLToPath(new URL("./support/pty-command.py", import.meta.url));
-
-function inspect(script) {
-  const result = spawnSync(
-    "python3",
-    [
-      "-c",
-      `import importlib.util, json, os, socket, sys, tempfile
-spec = importlib.util.spec_from_file_location("pty_command", sys.argv[1])
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
-${script}`,
-      helper,
-    ],
-    { encoding: "utf8", timeout: 5_000 },
-  );
-  assert.equal(result.error, undefined, result.stderr);
-  assert.equal(result.status, 0, result.stderr);
-  return JSON.parse(result.stdout);
-}
+import { setTimeout as sleep } from "node:timers/promises";
+import { commandPhase, processChannels } from "./support/pty-evidence.ts";
 
 void test("PTY phases identify Git transport stages without retaining argument values", () => {
-  const phases = inspect(`
-commands = [
-    [b"git", b"-C", b"/private/credential", b"pull", b"origin", b"main"],
-    [b"git", b"fetch", b"https://credential@private.invalid/index"],
-    [b"git", b"remote-https", b"origin", b"https://credential@private.invalid/index"],
-    [b"/usr/lib/git-core/git-remote-https", b"origin", b"private-value"],
-    [b"ssh", b"private-host", b"private-command"],
-    [b"/private/unknown-credential", b"private-value"],
-    [b"moon", b"update"],
-    [b"git", b"unknown-operation"],
-]
-print(json.dumps([module.command_phase(command) for command in commands]))`);
+  const phases = [
+    ["git", "-C", "/private/credential", "pull", "origin", "main"],
+    ["git", "fetch", "https://credential@private.invalid/index"],
+    ["git", "remote-https", "origin", "https://credential@private.invalid/index"],
+    ["/usr/lib/git-core/git-remote-https", "origin", "private-value"],
+    ["ssh", "private-host", "private-command"],
+    ["/private/unknown-credential", "private-value"],
+    ["moon", "update"],
+    ["git", "unknown-operation"],
+  ].map(commandPhase);
   assert.deepEqual(phases, [
     "git:pull",
     "git:fetch",
@@ -51,25 +43,23 @@ print(json.dumps([module.command_phase(command) for command in commands]))`);
 });
 
 void test("PTY Git phases distinguish global option values from the actual subcommand", () => {
-  const phases = inspect(`
-commands = [
-    [b"git", b"config", b"credential.helper", b"pull"],
-    [b"git", b"-C", b"fetch", b"status"],
-    [b"git", b"-C", b"fetch", b"config", b"credential.helper", b"pull"],
-    [b"git", b"-c", b"credential.helper=fetch", b"config", b"credential.helper", b"pull"],
-    [b"git", b"-Cprivate", b"-ccredential.helper=fetch", b"--no-pager", b"pull"],
-    [b"git", b"--git-dir=fetch", b"--work-tree", b"pull", b"remote-https"],
-    [b"git", b"--namespace=fetch", b"--config-env=credential.helper=PRIVATE_VALUE", b"config"],
-    [b"git", b"-C", b"", b"-C", b"private", b"fetch"],
-    [b"git", b"-C"],
-    [b"git", b"-c", b""],
-    [b"git", b"--config-env=fetch", b"pull"],
-    [b"git", b"--unknown", b"private", b"pull"],
-    [b"git", b"--", b"fetch"],
-    [b"git", b"unknown-operation", b"fetch"],
-    [b"moon", b"run", b"update"],
-]
-print(json.dumps([module.command_phase(command) for command in commands]))`);
+  const phases = [
+    ["git", "config", "credential.helper", "pull"],
+    ["git", "-C", "fetch", "status"],
+    ["git", "-C", "fetch", "config", "credential.helper", "pull"],
+    ["git", "-c", "credential.helper=fetch", "config", "credential.helper", "pull"],
+    ["git", "-Cprivate", "-ccredential.helper=fetch", "--no-pager", "pull"],
+    ["git", "--git-dir=fetch", "--work-tree", "pull", "remote-https"],
+    ["git", "--namespace=fetch", "--config-env=credential.helper=PRIVATE_VALUE", "config"],
+    ["git", "-C", "", "-C", "private", "fetch"],
+    ["git", "-C"],
+    ["git", "-c", ""],
+    ["git", "--config-env=fetch", "pull"],
+    ["git", "--unknown", "private", "pull"],
+    ["git", "--", "fetch"],
+    ["git", "unknown-operation", "fetch"],
+    ["moon", "run", "update"],
+  ].map(commandPhase);
   assert.deepEqual(phases, [
     "git:config",
     "git",
@@ -91,61 +81,95 @@ print(json.dumps([module.command_phase(command) for command in commands]))`);
 });
 
 void test("PTY channel scans close their directory at both entry and emitted-channel bounds", () => {
-  const observations = inspect(`
-original_scandir = module.os.scandir
-results = []
-for anonymous in (False, True):
-    with tempfile.TemporaryDirectory() as root:
-        os.mkdir(os.path.join(root, "fd"))
-        for index in range(300):
-            target = f"pipe:[{index}]" if anonymous else f"/private/credential-{index}"
-            os.symlink(target, os.path.join(root, "fd", str(index)))
-        count = {"examined": 0, "closed": False}
-        class ObservedDirectory:
-            def __init__(self, directory):
-                self.entries = original_scandir(directory)
-            def __enter__(self):
-                return self
-            def __exit__(self, *_):
-                self.entries.close()
-                count["closed"] = True
-            def __iter__(self):
-                return self
-            def __next__(self):
-                entry = next(self.entries)
-                count["examined"] += 1
-                return entry
-        module.os.scandir = ObservedDirectory
-        channels = module.process_channels(root)
-        module.os.scandir = original_scandir
-        results.append({**count, "channels": len(channels)})
-print(json.dumps(results))`);
+  const observations = [false, true].map((anonymous) => {
+    const root = mkdtempSync(path.join(tmpdir(), "vize-pty-channels-"));
+    try {
+      mkdirSync(path.join(root, "fd"));
+      for (let index = 0; index < 300; index += 1) {
+        const target = anonymous ? `pipe:[${index}]` : `/private/credential-${index}`;
+        symlinkSync(target, path.join(root, "fd", String(index)));
+      }
+      const count = { examined: 0, closed: false };
+      const observed = (directory: string): Pick<Dir, "readSync" | "closeSync"> => {
+        const entries = opendirSync(directory);
+        return {
+          readSync: () => {
+            const entry = entries.readSync();
+            if (entry !== null) count.examined += 1;
+            return entry;
+          },
+          closeSync: () => {
+            entries.closeSync();
+            count.closed = true;
+          },
+        };
+      };
+      const channels = processChannels(root, observed);
+      return { ...count, channels: channels.size };
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
   assert.deepEqual(observations, [
     { examined: 256, closed: true, channels: 0 },
     { examined: 64, closed: true, channels: 64 },
   ]);
 });
 
+function childrenOf(parent: number): number[] {
+  return readdirSync("/proc")
+    .filter((name) => /^\d+$/u.test(name))
+    .filter((name) => {
+      try {
+        const stat = readFileSync(`/proc/${name}/stat`, "latin1");
+        return (
+          Number(
+            stat
+              .slice(stat.lastIndexOf(")") + 1)
+              .trim()
+              .split(/\s+/u)[1],
+          ) === parent
+        );
+      } catch {
+        return false;
+      }
+    })
+    .map(Number);
+}
+
 void test(
   "PTY Linux evidence relates anonymous pipe and socket owners while excluding file paths",
   { skip: process.platform !== "linux" },
-  () => {
-    const evidence = inspect(`
-read_fd, write_fd = os.pipe()
-left, right = socket.socketpair()
-with tempfile.NamedTemporaryFile(prefix="private-credential-") as private_file:
-    channels = module.process_channels(f"/proc/{os.getpid()}")
-    print(json.dumps({
-        "channels": channels,
-        "pipe": [str(read_fd), str(write_fd)],
-        "socket": [str(left.fileno()), str(right.fileno())],
-        "privateFile": str(private_file.fileno()),
-    }))`);
-    const { channels, pipe, socket: sockets, privateFile } = evidence;
-    assert.match(channels[pipe[0]], /^pipe:\[\d+\]$/);
-    assert.equal(channels[pipe[0]], channels[pipe[1]]);
-    for (const fd of sockets) assert.match(channels[fd], /^socket:\[\d+\]$/);
-    assert.equal(Object.hasOwn(channels, privateFile), false);
-    assert.doesNotMatch(JSON.stringify(channels), /private|credential|\/tmp\//);
+  async () => {
+    const root = mkdtempSync(path.join(tmpdir(), "vize-pty-owners-"));
+    const privateFile = openSync(path.join(root, "private-credential-file"), "w");
+    // Writer and reader share one anonymous pipe; the reader's stdout is a
+    // socket to this process; every process also holds a private file as fd 3.
+    const shell = spawn("/bin/sh", ["-c", "sleep 30 | sleep 30"], {
+      stdio: ["ignore", "pipe", "ignore", privateFile],
+    });
+    try {
+      let sleepers: number[] = [];
+      for (let attempt = 0; attempt < 100 && sleepers.length < 2; attempt += 1) {
+        await sleep(20);
+        sleepers = childrenOf(shell.pid ?? -1);
+      }
+      assert.equal(sleepers.length, 2);
+      const channels = sleepers.map((pid) => processChannels(`/proc/${pid}`));
+      const writer = channels.find((owned) => owned.get("1")?.startsWith("pipe:["));
+      const reader = channels.find((owned) => owned.get("0")?.startsWith("pipe:["));
+      assert.ok(writer !== undefined && reader !== undefined);
+      assert.match(writer.get("1") ?? "", /^pipe:\[\d+\]$/u);
+      assert.equal(writer.get("1"), reader.get("0"));
+      assert.match(reader.get("1") ?? "", /^socket:\[\d+\]$/u);
+      for (const owned of channels) assert.equal(owned.has("3"), false);
+      const serialized = JSON.stringify(channels.map((owned) => [...owned]));
+      assert.doesNotMatch(serialized, /private|credential|\/tmp\//u);
+    } finally {
+      for (const pid of childrenOf(shell.pid ?? -1)) process.kill(pid, "SIGKILL");
+      shell.kill("SIGKILL");
+      closeSync(privateFile);
+      rmSync(root, { recursive: true, force: true });
+    }
   },
 );

@@ -95,6 +95,11 @@
     "tests/tooling/support/publish-npm-package-dirs-failure-fixture.ts",
     "tests/tooling/support/publish-npm-package-dirs-fixture.ts",
     "tests/tooling/support/release-cli-fixture.ts",
+    "tests/tooling/support/pty-session.ts",
+    "tests/tooling/support/pty-evidence.ts",
+    "tests/tooling/support/pty-command.ts",
+    "tests/tooling/pty-lifecycle-evidence.test.ts",
+    "tests/editor-conformance/drivers/pty-bridge.ts",
     "tests/tooling/support/release-command.ts"
   ]
 }
