@@ -1,7 +1,0 @@
-<script setup lang="ts">
-function ordinary(defineProps: () => { user: { name: string } }) {
-  const { user: { name } } = defineProps();
-  return name;
-}
-</script>
-<template><div /></template>

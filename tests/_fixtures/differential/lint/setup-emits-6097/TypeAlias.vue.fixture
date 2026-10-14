@@ -1,4 +1,0 @@
-<script setup lang="ts">
-type defineEmits = { value: string }
-const emit = defineEmits({ submit(payload) { void payload } })
-</script>

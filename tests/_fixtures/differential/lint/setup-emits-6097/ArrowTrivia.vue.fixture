@@ -1,4 +1,0 @@
-<script setup lang="ts">
-const emit = defineEmits({ submit: (payload) => /* validate */
-{ void payload } })
-</script>

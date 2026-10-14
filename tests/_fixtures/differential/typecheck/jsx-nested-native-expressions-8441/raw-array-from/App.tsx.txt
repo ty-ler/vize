@@ -1,4 +1,0 @@
-const Host = (_props: any) => <div/>;
-const ok = true;
-const items = [0, 1, 2];
-export const view = <Host>{{ content: () => <div>{Array.from({ length: 3 }, (_, i) => <p>{i}</p>)}</div> }}</Host>;

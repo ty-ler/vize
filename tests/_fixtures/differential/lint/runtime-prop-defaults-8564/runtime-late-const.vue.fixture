@@ -1,3 +1,0 @@
-<script setup lang="ts">
-const props = defineProps({ value: { required: true, default: 1 } }); const defineProps = (value) => value;
-</script>
