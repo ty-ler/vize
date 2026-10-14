@@ -1,0 +1,33 @@
+name: Repro 9067 runtime child teardown crash
+run-name: Repro 9067 @ ${{ github.sha }}
+
+# Temporary diagnostic branch only (never merged): counts SIGSEGV after a
+# passing payload with the runtime bundled per child vs once in the parent.
+on:
+  push:
+    branches: [ci/repro-9067]
+
+permissions:
+  contents: read
+
+jobs:
+  repro:
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with:
+          node-version-file: "package.json"
+          cache: true
+          run-install: true
+      - name: Spawn the runtime child per variant
+        env:
+          REPRO_ROUNDS: "12"
+          REPRO_CONCURRENCY: "32"
+          REPRO_VARIANTS: ${{ matrix.shard == 1 && 'baseline,prebundled' || 'prebundled,baseline' }}
+        run: node tests/tooling/support/repro-9067/driver.mjs
