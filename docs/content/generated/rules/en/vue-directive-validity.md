@@ -415,9 +415,13 @@ Automatic fix: None; review the suggested change
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: See [typed options and defaults](options.md).
 
-Unsupported modifiers are reported individually at their names, including on long-form `v-on:click`, dynamic arguments and object listener syntax. Accepted names match `eslint-plugin-vue` 10.9.2: Vue's built-in modifiers, the complete keyboard alias table, any single Unicode code point, and names with a finite decimal integer prefix (`Number.parseInt(name, 10)` semantics). For example, `.13suffix` is accepted. Numeric-key deprecation and `.native` migration belong to separate rules.
+**Modifier validation**
 
-Only `.stop` and `.prevent` allow an omitted handler. `.once`, `.enter` and configured custom names still need a handler. Add custom names under `vue.linter.ruleOptions`:
+Unsupported modifiers are reported individually at the modifier name, including on long-form `v-on:click`, dynamic event arguments, and object listener syntax. The accepted names match `eslint-plugin-vue` 10.9.2: Vue's built-in event modifiers, the complete keyboard alias table, any single Unicode code point, and names with a finite decimal integer prefix (JavaScript `Number.parseInt(name, 10)` semantics). For example, `.13suffix` is accepted by this rule. Numeric-key deprecation and `.native` migration diagnostics belong to separate rules.
+
+Only `.stop` and `.prevent` provide behavior without a handler. A modifier such as `.once`, `.enter`, or a configured custom name still needs a handler expression.
+
+Projects with custom event handling can add names under `vue.linter.ruleOptions`:
 
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
@@ -430,9 +434,9 @@ export default defineConfig({}).withVue({
 });
 ```
 
-This permits `@click.custom="handler"`. Names are exact and case-sensitive; options supplement the built-in names and do not enable a disabled rule. Scoped entries can replace inherited names or reset them with `[]`.
+This allows `@click.custom="handler"`. Names are exact and case-sensitive; options supplement the built-in names and do not enable a disabled rule. Scoped config entries can replace inherited names with a new list or reset them with `[]`.
 
-The keyboard table is adapted from the MIT-licensed [eslint-plugin-vue keyboard aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json); its source and license are preserved alongside the implementation.
+The keyboard table is adapted from the MIT-licensed [eslint-plugin-vue keyboard aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json). Its source and license are preserved alongside the implementation.
 
 **Configuration (Vite+)**
 

@@ -423,9 +423,13 @@ v-on のイベント名・式・修飾子を検査します。
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: [型付きオプションと既定値](options.md)を参照してください。
 
-未対応の修飾子は名前ごとに指摘します。長い形式の `v-on:click`、動的な引数、オブジェクト形式も対象です。対応する名前は `eslint-plugin-vue` 10.9.2 と同じで、Vue 標準の修飾子、キーボードの別名、Unicode の1コードポイント、有限の10進整数で始まる名前（`Number.parseInt(name, 10)` と同じ解釈）です。たとえば `.13suffix` はこのルールでは有効です。数値キーの非推奨と `.native` の移行は別のルールで検査します。
+**修飾子の検証**
 
-ハンドラーを省略できるのは `.stop` と `.prevent` だけです。`.once`、`.enter`、独自の名前にはハンドラーが必要です。独自の修飾子は `vue.linter.ruleOptions` に追加します。
+未対応の修飾子は、修飾子の名前ごとに報告します。長い `v-on:click`、動的なイベント引数、オブジェクト形式も対象です。受け付ける名前は `eslint-plugin-vue` 10.9.2 に合わせ、Vue 組み込みのイベント修飾子、完全なキー別名一覧、単一の Unicode コードポイント、有限な十進整数の接頭辞を持つ名前です。整数は JavaScript の `Number.parseInt(name, 10)` と同じように読み取るため、`.13suffix` もこのルールでは有効です。数値キーの非推奨判定と `.native` の移行診断は別のルールが担当します。
+
+ハンドラーなしで動作するのは `.stop` と `.prevent` だけです。`.once`、`.enter`、設定した独自の名前にもハンドラー式が必要です。
+
+独自のイベント処理で使う名前は `vue.linter.ruleOptions` に追加できます。
 
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
@@ -438,9 +442,9 @@ export default defineConfig({}).withVue({
 });
 ```
 
-この設定では `@click.custom="handler"` が有効になります。名前は大文字と小文字を区別し、標準の一覧に追加します。オプションだけでは無効なルールは有効になりません。スコープ別の設定で一覧を置き換えたり、`[]` にリセットしたりできます。
+これにより `@click.custom="handler"` を使えます。名前は大文字と小文字を区別して完全一致で比較し、組み込みの名前に追加します。ルール自体が無効な場合は有効にしません。範囲別の設定では継承した一覧を置き換え、`[]` でリセットできます。
 
-キーボードの一覧は MIT ライセンスの [eslint-plugin-vue keyboard aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json) に基づき、元のソースとライセンスを実装に同梱しています。
+キーの一覧は、MIT ライセンスの [eslint-plugin-vue のキー別名](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json) を元にしています。出典とライセンスは実装とともに保持しています。
 
 **設定（Vite+）**
 

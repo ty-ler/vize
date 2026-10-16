@@ -1805,7 +1805,9 @@ vp run lint
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
 
-第一个具有十进制整数前缀的数字修饰符决定诊断结果。`@keyup.13.27="submit"` 只报告 `13`，并提供 `@keyup.enter.27="submit"` 作为修复；再次修复可以将 `27` 替换为 `escape`。`@keyup.13suffix="submit"` 也会变为 `@keyup.enter="submit"`。数值 0–9 不受此规则限制，因此 `@keyup.0.13="submit"` 不会触发诊断。`999` 等未知数值会被报告，但不提供修复。现有的 Vue 2 和 petite-vue 豁免继续有效。
+**数值修饰符的选择与修复**
+
+首个名称带十进制整数前缀的数值修饰符决定诊断结果。`@keyup.13.27="submit"` 只报告 `13`，并提供修复结果 `@keyup.enter.27="submit"`；再次修复可以将 `27` 替换为 `escape`。`@keyup.13suffix="submit"` 也会变为 `@keyup.enter="submit"`。0–9 不在检查范围内，因此 `@keyup.0.13="submit"` 不会触发此规则。`999` 等未知值会被报告，但不提供修复。现有的 Vue 2 和 petite-vue 豁免仍然有效。
 
 **配置（Vite+）**
 
@@ -3174,7 +3176,9 @@ p Notice
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
 
-当前检查比较嵌套的 v-for 绑定。单个 v-for 绑定仅与脚本绑定同名时，不会因此被报告。
+此检查比较模板内的 `v-for`、`v-slot`（包括 `#name`）和旧式作用域插槽绑定。它报告遮蔽先前绑定的标识符，也包括按属性顺序比较的同一元素上的声明。兄弟元素具有独立的作用域。属性键和默认值中的引用不属于声明，`v-pre` 会使其子树不参与检查。
+
+脚本和组件属性的名称不在当前检查范围内：单个模板绑定不会仅仅因为与脚本绑定同名就产生警告。诊断范围覆盖源代码中实际编写的标识符，包括转义写法和 HTML 实体。
 
 **配置（Vite+）**
 
@@ -5442,11 +5446,13 @@ const emailId = useId();
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
 
-此规则比较原生元素上同一事件的监听器。自定义组件事件会被忽略，除非两个监听器都使用 `.native`。不同的事件名称和互不重叠的键盘过滤条件不会冲突。
+**处理器何时会重叠**
 
-系统修饰符指定必须按下的键，因此 `@keydown.alt.shift` 也接受 Ctrl+Alt+Shift。如果另一个处理器使用 `@keydown.alt.ctrl.shift`，请给范围更广的处理器添加 `.exact`，使两种操作保持独立。`.exact` 允许已声明的系统修饰键，并拒绝额外的 Ctrl、Shift、Alt 或 Meta 键。
+此规则比较原生元素上同一事件的监听器。对于自定义组件事件，只有两个监听器都使用 `.native` 时才进行检查。事件名称不同或按键过滤器没有共同按键时，不会发生冲突。
 
-多个键盘修饰符表示可选项：`@keydown.up.down` 接受上、下方向键中的任意一个。在按下 Ctrl+ArrowDown 时，它可能与 `@keydown.ctrl.down` 重叠。规则报告需要 `.exact` 的指令名称，不包含其处理器表达式。
+系统修饰符指定必须按下的按键，因此 `@keydown.alt.shift` 也接受 Ctrl+Alt+Shift。如果另一个处理器使用 `@keydown.alt.ctrl.shift`，请为匹配范围更广的处理器添加 `.exact`，以区分这些操作。`.exact` 允许其声明的系统修饰符，并拒绝额外的 Ctrl、Shift、Alt 或 Meta 键。
+
+多个键盘修饰符表示备选项：`@keydown.up.down` 接受上、下两个方向键中的任意一个。按下 Ctrl+下方向键时，它可能与 `@keydown.ctrl.down` 重叠。规则报告需要 `.exact` 的指令键，不包括其处理器表达式。
 
 **配置（Vite+）**
 
@@ -6599,9 +6605,13 @@ vp run lint
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 参见[类型化选项和默认值](/rules/options.md)。
 
-不支持的修饰符会逐个在其名称处报告，完整形式的 `v-on:click`、动态参数和对象监听器语法也会检查。接受的名称与 `eslint-plugin-vue` 10.9.2 一致：Vue 内置修饰符、完整的键盘别名表、任意单个 Unicode 码点，以及具有有限十进制整数前缀的名称（按 `Number.parseInt(name, 10)` 的语义解析）。例如，`.13suffix` 是有效名称。数字按键的弃用和 `.native` 的迁移由其他规则检查。
+**修饰符验证**
 
-只有 `.stop` 和 `.prevent` 允许省略处理器。`.once`、`.enter` 和配置的自定义名称仍然需要处理器。在 `vue.linter.ruleOptions` 中添加自定义名称：
+不受支持的修饰符会在各自名称的位置被单独报告，包括长格式 `v-on:click`、动态事件参数和监听器对象语法中的修饰符。接受的名称与 `eslint-plugin-vue` 10.9.2 一致：Vue 内置的事件修饰符、完整的按键别名表、任意单个 Unicode 码点，以及带有有限十进制整数前缀的名称（遵循 JavaScript 的 `Number.parseInt(name, 10)` 语义）。例如，此规则接受 `.13suffix`。数字键码的弃用诊断和 `.native` 的迁移诊断由其他规则负责。
+
+只有 `.stop` 和 `.prevent` 在没有处理器时也能产生行为。`.once`、`.enter` 或配置的自定义名称等修饰符仍然需要处理器表达式。
+
+使用自定义事件处理的项目可以在 `vue.linter.ruleOptions` 下添加名称：
 
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
@@ -6614,9 +6624,9 @@ export default defineConfig({}).withVue({
 });
 ```
 
-此设置允许 `@click.custom="handler"`。名称按原样匹配且区分大小写；选项补充内置名称，不会启用已禁用的规则。作用域条目可以替换继承的名称，或用 `[]` 清空它们。
+这允许使用 `@click.custom="handler"`。名称必须精确匹配且区分大小写；这些选项补充内置名称，不会启用已禁用的规则。限定作用范围的配置条目可以用新列表替换继承的名称，或用 `[]` 将其重置。
 
-键盘别名表改编自采用 MIT 许可证的 [eslint-plugin-vue keyboard aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json)；原始源码和许可证随实现一同保留。
+按键表改编自采用 MIT 许可证的 [eslint-plugin-vue 按键别名](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json)。其源代码和许可证与实现一同保留。
 
 **配置（Vite+）**
 
