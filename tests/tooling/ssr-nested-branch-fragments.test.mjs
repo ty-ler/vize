@@ -6,7 +6,7 @@ import { compileFunction } from "node:vm";
 
 const capture = process.env.VIZE_NESTED_BRANCH_CAPTURE;
 
-test(
+await test(
   "nested conditional SSR fragments keep parent attributes on the actual root",
   { skip: !capture && "source-built SSR modules execute in the scoped SSR action" },
   async () => {
