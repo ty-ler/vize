@@ -51,20 +51,16 @@ regression evidence rather than production dependencies.
 false-positive labels without conflating provider silence and product truth.
 `provenance.json.gz` retains all row classifications, full primary source
 packets and hashes. Known Vue instances and unknown receivers keep their
-existing warnings. A separate authored-wrapper repair now qualifies the one
-lexically proven tiny-emitter call with complete local-reference evidence;
-`crates/vize_patina/tests/authored_event_wrappers.rs` checks the exact pinned
-source and preserves its sibling unresolved warning. All eight unresolved
-receiver rows remain the acceptance frontier. The immutable reports continue
-to record the original findings. The scoped-slots rule remains a separate scope in
+existing warnings. One lexically proven tiny-emitter call and eight unresolved
+receiver rows remain visible as the acceptance frontier; this PR does not claim
+to resolve them. The scoped-slots rule remains a separate scope in
 `expanded-audit.json`.
 
 The pinned Vue 3 runtime packet in `runtime.json` and its executable control
 verify public `$root`/`$parent` identity, component Options returned by a custom
 factory, missing removed APIs after TypeScript erasure, silent optional calls,
 and the still-working `$emit`. A real foreign emitter control still works,
-which documents the distinction between foreign APIs and Vue instance methods.
-The local callable-transfer proof does not establish arbitrary receiver identity.
+which documents the remaining distinction the broad script rule cannot prove.
 
 The child-owned controls retain the intended scriptless/dual-script, loop,
 slot, escaped-identifier, dynamic-argument and handler behavior. The preserved
