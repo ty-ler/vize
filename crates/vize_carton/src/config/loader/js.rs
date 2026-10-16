@@ -16,7 +16,11 @@ use crate::config::ConfigDocument;
 
 /// Evaluate a JS-like config file through Node and deserialize the result.
 pub(super) fn parse_js_config(path: &Path) -> Result<ConfigDocument, Box<dyn std::error::Error>> {
-    let (config_path, json, dependencies) = evaluate_js_config_with_dependencies(path)?;
+    let EvaluatedConfig {
+        path: config_path,
+        json,
+        dependencies,
+    } = evaluate_js_config_with_dependencies(path)?;
 
     // Public Vite settings permit flat entry arrays. Normalize only that shape
     // with the same pure Rust projection used by vize/config; ordinary objects
@@ -39,17 +43,15 @@ pub(super) fn parse_js_config(path: &Path) -> Result<ConfigDocument, Box<dyn std
     Ok(document)
 }
 
-/// Evaluate a JS-like config file through Node and return its JSON output.
-pub(super) fn evaluate_js_config(
-    path: &Path,
-) -> Result<(PathBuf, Vec<u8>), Box<dyn std::error::Error>> {
-    let (path, json, _) = evaluate_js_config_with_dependencies(path)?;
-    Ok((path, json))
+struct EvaluatedConfig {
+    path: PathBuf,
+    json: Vec<u8>,
+    dependencies: Vec<std::string::String>,
 }
 
 fn evaluate_js_config_with_dependencies(
     path: &Path,
-) -> Result<(PathBuf, Vec<u8>, Vec<std::string::String>), Box<dyn std::error::Error>> {
+) -> Result<EvaluatedConfig, Box<dyn std::error::Error>> {
     let config_path = if path.is_absolute() {
         path.to_path_buf()
     } else {
@@ -97,9 +99,9 @@ process.stdout.write(JSON.stringify({ config: config ?? {}, dependencies }));
         dependencies: Vec<std::string::String>,
     }
     let evaluated: Evaluation = serde_json::from_slice(&output.stdout)?;
-    Ok((
-        config_path,
-        serde_json::to_vec(&evaluated.config)?,
-        evaluated.dependencies,
-    ))
+    Ok(EvaluatedConfig {
+        path: config_path,
+        json: serde_json::to_vec(&evaluated.config)?,
+        dependencies: evaluated.dependencies,
+    })
 }
