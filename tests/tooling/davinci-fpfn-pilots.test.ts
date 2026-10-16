@@ -18,7 +18,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const fixtures = path.join(root, "tests/_fixtures/davinci-fpfn");
@@ -81,7 +81,7 @@ test("seeding is deterministic: a second run is byte-identical", () => {
   }
 });
 
-test("identity assertion measures current recall exactly (class a 0/3, class b 4/4)", () => {
+test("identity assertion measures current recall exactly (class a 0/3, class b 4/4)", async () => {
   const reportPath = path.join(seedOut, "assert-report.json");
   const result = runTool(seedTool, ["--assert", "--out", seedOut, "--report", reportPath]);
   assert.equal(result.status, 1, `${result.stdout}\n${result.stderr}`);
@@ -89,6 +89,14 @@ test("identity assertion measures current recall exactly (class a 0/3, class b 4
     readJson(reportPath),
     readJson(path.join(expectedDir, "assert-report.json")),
   );
+  for (const tree of ["original", "seeded"]) {
+    const generated = path.join(seedOut, "class-b", tree, "vite.config.mjs");
+    const source = (await import(pathToFileURL(generated).href)).default;
+    assert.deepEqual(source, {
+      vue: { linter: { rules: { "vue/no-unused-setup-bindings": "warn" } } },
+    });
+    assert.equal(fs.existsSync(path.join(path.dirname(generated), "vize.config.json")), false);
+  }
 });
 
 // --- assertion-mechanism self-tests (synthetic lint JSON hooks) -------------
