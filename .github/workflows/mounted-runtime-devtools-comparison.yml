@@ -28,7 +28,20 @@ jobs:
           for scope in historical current; do
             (
               cd "$RUNNER_TEMP/patterned-$scope"
-              vp install --filter vize-workspace --filter @vize/tests --frozen-lockfile --prefer-offline --ignore-scripts
+              vp install --filter vize-workspace --filter @vize/tests --filter @vizejs/ui --frozen-lockfile --prefer-offline --ignore-scripts
+              # Evaluate the real resolver in each isolated graph, including both
+              # npm/ui-owned aliases and the official compiler version assertions.
+              node --input-type=module -e '
+                const release = await import(process.argv[1]);
+                console.log(JSON.stringify({
+                  source: process.argv[2],
+                  version: release.vueVaporVersion,
+                  supportedVersion: release.vueVaporSupportedVersion,
+                  runtimeEntry: release.vueVaporRuntimeEntry,
+                  browserRuntime: release.vueVaporBrowserRuntime
+                }));
+              ' "file://$PWD/tests/tooling/support/vue-vapor-release.mjs" "$(git rev-parse HEAD)" \
+                > "$RUNNER_TEMP/patterned-exit-preflight-$scope.json"
             )
           done
       - name: Capture exactly six ordinary children and three synthetic controls
@@ -42,7 +55,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: patterned-exit-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/patterned-exit-evidence/
+          path: |
+            ${{ runner.temp }}/patterned-exit-evidence/
+            ${{ runner.temp }}/patterned-exit-preflight-*.json
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
