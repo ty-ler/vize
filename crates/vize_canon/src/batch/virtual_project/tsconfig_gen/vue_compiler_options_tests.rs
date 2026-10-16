@@ -303,6 +303,7 @@ fn governing_paths_include_inherited_configs_and_auto_target_vue_manifest() {
     let project = VirtualProject::new(root.path()).unwrap();
     let paths = project.governing_config_paths();
     for path in [config, base, manifest] {
+        let path = vize_carton::path::canonicalize_non_verbatim(&path);
         assert!(paths.contains(&path), "missing {path:?} from {paths:?}");
     }
 }

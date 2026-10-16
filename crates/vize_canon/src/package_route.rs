@@ -47,6 +47,7 @@ pub use model::{
 
 /// Read an installed package's manifest using the same importer-scoped lookup
 /// as package routes, including workspace self references and pnpm links.
+#[cfg(feature = "native")]
 pub(crate) fn installed_package_manifest(
     importer_dir: &Path,
     package: &str,
