@@ -194,6 +194,7 @@ impl ServerState {
         key: &ProjectContextKey,
         snapshot: Option<&vize_carton::config::LoadedLspConfig>,
         previous: Option<&RetainedConfiguration>,
+        snapshot_failed: bool,
     ) -> Arc<ServerState> {
         let root = &key.root;
         let mut state = ServerState::new();
@@ -214,6 +215,12 @@ impl ServerState {
                     .config_reload_failed
                     .store(true, Ordering::Release);
             }
+        }
+        if snapshot_failed {
+            state
+                .project_contexts
+                .config_reload_failed
+                .store(true, Ordering::Release);
         }
         state.apply_lsp_initialization_options(
             self.project_contexts.initialization_options.read().as_ref(),
