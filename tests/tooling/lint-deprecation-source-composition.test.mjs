@@ -144,7 +144,18 @@ const vectors = [
     ],
   ],
 ];
-function validateRanges(original, current, changes) {
+// Reviewed native evolution, preserving both frozen fixture versions:
+// https://github.com/ubugeeei-prod/vize/commit/8291843d8faa040d1378033a5d4732a4c85be654
+// #9213 adds exactly these first-numeric keyCode fixes; all offsets are authored
+// UTF-8 bytes, including the Unicode/CRLF witness. No other packet delta is allowed.
+const numericFixes = [
+  [0, "numeric-shorthand", 0, 0, 39, 41, "enter"],
+  [1, "numeric-longhand", 1, 0, 43, 45, "escape"],
+  [2, "numeric-combined", 0, 0, 39, 41, "enter"],
+  [4, "combined", 1, 1, 50, 52, "enter"],
+  [10, "unicode-crlf", 1, 1, 70, 72, "escape"],
+];
+function validateRanges(original, current, changes, fixes) {
   const inverse = structuredClone(current);
   for (const [index, id, start, end, lspStart, lspEnd] of changes) {
     const row = inverse.cases[index];
@@ -165,16 +176,78 @@ function validateRanges(original, current, changes) {
     row.lspDiagnostics[0].range.start.character = old.lspDiagnostics[0].range.start.character;
     row.lspDiagnostics[0].range.end.character = old.lspDiagnostics[0].range.end.character;
   }
+  for (const [index, id, diagnosticIndex, essentialIndex, start, end, name] of fixes) {
+    const row = inverse.cases[index];
+    assert.equal(row.id, id);
+    for (const [field, finding] of [
+      ["diagnostics", diagnosticIndex],
+      ["essentialDiagnostics", essentialIndex],
+    ]) {
+      assert.equal(row[field][finding].rule_name, "vue/no-deprecated-v-on-number-modifiers");
+      assert.equal(original.cases[index][field][finding].fix, null);
+      assert.deepEqual(row[field][finding].fix, {
+        message: "Replace the numeric keyCode modifier with a named key",
+        edits: [{ start, end, new_text: name }],
+      });
+      row[field][finding].fix = null;
+    }
+  }
+  if (fixes.length) {
+    // #9213 selects only the first numeric modifier in this exact authored
+    // .13.27 input. Preserve and authenticate the previous complete .27 packet.
+    const row = inverse.cases[2];
+    const old = original.cases[2];
+    assert.equal(row.id, "numeric-combined");
+    assert.equal(
+      old.source,
+      '<template><button type="button" @keyup.13.27.stop="submit">Submit</button></template>\n',
+    );
+    const message =
+      "The numeric keyCode modifier '.27' on 'v-on' was removed in Vue 3; use a named key instead";
+    const native = {
+      end: 44,
+      fix: null,
+      help: null,
+      labels: [],
+      message,
+      rule_name: "vue/no-deprecated-v-on-number-modifiers",
+      severity: "error",
+      start: 42,
+    };
+    const lsp = {
+      code: "vue/no-deprecated-v-on-number-modifiers",
+      codeDescription: {
+        href: "https://eslint.vuejs.org/rules/no-deprecated-v-on-number-modifiers.html",
+      },
+      message:
+        message +
+        "\n\nHelp: Replace the numeric keyCode modifier with a named key (e.g. @keyup.enter instead of @keyup.13).",
+      range: { end: { character: 44, line: 0 }, start: { character: 42, line: 0 } },
+      severity: 1,
+      source: "vize/lint",
+    };
+    for (const [field, expected] of [
+      ["diagnostics", native],
+      ["essentialDiagnostics", native],
+      ["lspDiagnostics", lsp],
+    ]) {
+      assert.equal(old[field].length, 2);
+      assert.deepEqual(old[field][1], expected);
+      assert.equal(row[field].length, 1);
+      row[field].push(structuredClone(expected));
+    }
+  }
   assert.deepEqual(inverse, original);
 }
-void test("current whole preset packets differ only at seven approved byte and UTF-16 range witnesses", () => {
+void test("current whole preset packets retain seven range witnesses and reviewed first-numeric selection and fixes", () => {
   for (const [directory, hash, changes] of vectors) {
     const fixture = path.join(root, "tests/_fixtures", directory);
     const old = fs.readFileSync(path.join(fixture, "cases.json"));
     assert.equal(digest(old), hash);
     const original = JSON.parse(old);
     const current = JSON.parse(fs.readFileSync(path.join(fixture, "current-range-cases.json")));
-    validateRanges(original, current, changes);
+    const fixes = directory === "lint-default-migrations" ? numericFixes : [];
+    validateRanges(original, current, changes, fixes);
     const mutations = [
       (packet) => {
         packet.cases[0].source += "foreign";
@@ -191,10 +264,38 @@ void test("current whole preset packets differ only at seven approved byte and U
       (packet) => packet.cases.pop(),
       (packet) => packet.cases.reverse(),
     ];
+    if (fixes.length)
+      mutations.push(
+        (packet) => {
+          packet.cases[0].diagnostics[0].fix.message += "foreign";
+        },
+        (packet) => {
+          packet.cases[0].diagnostics[0].fix.edits[0].start++;
+        },
+        (packet) => {
+          packet.cases[0].diagnostics[0].fix.edits[0].new_text = "unreviewed";
+        },
+        (packet) => {
+          packet.cases[0].essentialDiagnostics[0].fix.edits.push({
+            start: 0,
+            end: 1,
+            new_text: "foreign",
+          });
+        },
+        (packet) => {
+          packet.cases[3].diagnostics[0].fix = packet.cases[0].diagnostics[0].fix;
+        },
+        (packet) => {
+          packet.cases[1].diagnostics.reverse();
+        },
+        (packet) => {
+          packet.cases[2].diagnostics.push(original.cases[2].diagnostics[1]);
+        },
+      );
     for (const mutate of mutations) {
       const changed = structuredClone(current);
       mutate(changed);
-      assert.throws(() => validateRanges(original, changed, changes));
+      assert.throws(() => validateRanges(original, changed, changes, fixes));
     }
   }
 });
