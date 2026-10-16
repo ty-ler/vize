@@ -244,9 +244,48 @@ function custodyJournal(stderr: string): CustodyJournal[] {
 function assertCustodyJournal(
   journal: CustodyJournal[],
   owners: { old: OwnerGraph; new: OwnerGraph },
+  warmLive: { old: OwnerGraph; new: OwnerGraph },
   mode: "held" | "killed",
   faultNativePid: number | null,
 ) {
+  const livePids = {
+    old: new Set(warmLive.old.map((entry) => entry.proxy.pid)),
+    new: new Set(warmLive.new.map((entry) => entry.proxy.pid)),
+  };
+  for (const owner of ["old", "new"] as const) {
+    assert.equal(owners[owner].length, 4);
+    assert.equal(warmLive[owner].length, 2);
+    assert.equal(livePids[owner].size, 2);
+    assert.deepEqual(warmLive[owner].map((entry) => entry.role).sort(), [
+      "editor-lsp",
+      "project-api",
+    ]);
+    const early = owners[owner].filter((entry) => !livePids[owner].has(entry.proxy.pid));
+    assert.equal(early.length, 2);
+    assert.deepEqual(early.map((entry) => entry.role).sort(), ["editor-lsp", "project-api"]);
+    for (const current of warmLive[owner]) {
+      const birth = owners[owner].find((entry) => entry.proxy.pid === current.proxy.pid);
+      assert.ok(
+        birth,
+        "every independently observed current owner must have its physical birth record",
+      );
+      assert.equal(current.role, birth.role);
+      for (const [live, born] of [
+        [current.proxy, birth.proxy],
+        [current.native, birth.native],
+      ])
+        for (const key of [
+          "pid",
+          "birth_ticks",
+          "parent",
+          "executable",
+          "executableSha256",
+          "commandBase64",
+          "commandArguments",
+        ] as const)
+          assert.deepEqual(live[key], born[key]);
+    }
+  }
   const closed = new Set<string>();
   const terminals = new Set<number>();
   const sequences = { old: new Set<number>(), new: new Set<number>() };
@@ -254,6 +293,11 @@ function assertCustodyJournal(
   const observed = { old: 0, new: 0 };
   const historicalFailures: CustodyJournal[] = [];
   const historicalError = "LSP close: process is closed: jsonrpc connection";
+  // The Vue-only config has no ordinary TS member: project_identity::startup_member
+  // rejects editor bootstrap; configured_project records and closes that failed
+  // construction before shared_transport uses the independent API. Reaping is clean,
+  // but the historical construction failure remains raw and is never called clean.
+  const constructorError = "Native startup configuration has no existing absolute member";
   for (const event of journal) {
     const receipt = event.receipt;
     const recovered = event.kind === "recovered";
@@ -348,17 +392,18 @@ function assertCustodyJournal(
     }
     const failedOld = mode === "killed" && owner === "old";
     const errors = recovered ? [] : rawErrors(receipt.raw_errors);
-    if (failedOld) {
-      if (recovered)
-        assert.ok(receipt.retirementError === null || receipt.retirementError === historicalError);
-      else assert.deepEqual(errors, errors.length === 0 ? [] : [historicalError]);
-    }
-    if (failedOld && (recovered ? receipt.retirementError !== null : errors.length > 0))
-      historicalFailures.push(event);
-    if (!failedOld) {
-      assert.deepEqual(errors, []);
-      if (recovered) assert.equal(receipt.retirementError, null);
-    }
+    const faultInReceipt =
+      failedOld &&
+      children.some((child) =>
+        graph.some(
+          (entry) => entry.proxy.pid === child.expectedPid && entry.native.pid === faultNativePid,
+        ),
+      );
+    // The retained 32af packet has successful constructor cleanup and one
+    // SDK close error aggregated with that exact faulted child's final row.
+    if (recovered) assert.equal(receipt.retirementError, null);
+    assert.deepEqual(errors, faultInReceipt ? [historicalError] : []);
+    if (faultInReceipt) historicalFailures.push(event);
     for (const child of children) {
       const expected = graph.find((entry) => entry.proxy.pid === child.expectedPid);
       assert.ok(expected);
@@ -373,8 +418,33 @@ function assertCustodyJournal(
           Number(child.spawnSequence) <= graph.length,
       );
       const sequence = Number(child.spawnSequence);
+      assert.equal(
+        livePids[owner].has(expected.proxy.pid),
+        sequence >= 3,
+        "typed lifecycle phase must match independently observed warm-live ownership",
+      );
       assert.ok(!sequences[owner].has(sequence));
       sequences[owner].add(sequence);
+      assert.equal(expected.role, sequence === 1 || sequence === 4 ? "editor-lsp" : "project-api");
+      if (sequence <= 2) {
+        assert.equal(recovered, true, "initial constructor custody precedes current owner closure");
+        assert.equal(receipt.observedCount, sequence);
+        assert.equal(receipt.publishedCount, sequence - 1);
+        assert.equal(children.length, 1);
+        assert.equal(
+          receipt.retirementError,
+          null,
+          "successful cleanup does not erase failed construction",
+        );
+      } else {
+        assert.equal(recovered, false);
+        assert.equal(receipt.observedCount, 4);
+        assert.equal(receipt.publishedCount, 2);
+        assert.deepEqual(
+          children.map((entry) => Number(entry.spawnSequence)).sort((a, b) => a - b),
+          [3, 4],
+        );
+      }
       exactKeys(child, [
         "spawnSequence",
         "expectedPid",
@@ -392,7 +462,10 @@ function assertCustodyJournal(
       assert.equal(child.role, expected.role === "project-api" ? "api" : "editor-lsp");
       assert.equal(child.close_error, null);
       const killed = failedOld && expected.native.pid === faultNativePid;
-      if (killed) assert.equal(expected.role, "editor-lsp");
+      if (killed) {
+        assert.equal(expected.role, "editor-lsp");
+        assert.equal(sequence, 4);
+      }
       const status = `ExitStatus(unix_wait_status(${killed ? 9 : 0}))`;
       assert.deepEqual(child.terminal, {
         pid: expected.proxy.pid,
@@ -404,7 +477,10 @@ function assertCustodyJournal(
         reaped: true,
       });
       const childErrors = rawErrors(child.raw_errors);
-      assert.deepEqual(childErrors, []);
+      assert.deepEqual(
+        childErrors,
+        sequence === 1 ? [constructorError] : killed ? [historicalError] : [],
+      );
       if (!recovered)
         for (const error of childErrors)
           assert.ok(
@@ -473,9 +549,72 @@ function assertCustodyJournal(
   }
   if (mode === "killed")
     assert.ok(
-      historicalFailures.length > 0,
-      "the killed old owner's full protocol failure must remain in its recovered retirementError or final raw_errors",
+      historicalFailures.length === 1,
+      "the killed old owner's exact SDK close failure must appear once in its final custody context",
     );
+}
+
+function assertWarmLivePhaseControl(
+  journal: CustodyJournal[],
+  owners: { old: OwnerGraph; new: OwnerGraph },
+  warmLive: { old: OwnerGraph; new: OwnerGraph },
+  mode: "held" | "killed",
+  faultNativePid: number | null,
+) {
+  const derived = structuredClone(journal);
+  const constructorEvent = derived.find(
+    (event) =>
+      event.owner === "new" &&
+      event.kind === "recovered" &&
+      (event.receipt.children as Record<string, unknown>[]).some(
+        (child) => child.spawnSequence === 1,
+      ),
+  );
+  const currentEvent = derived.find(
+    (event) =>
+      event.owner === "new" &&
+      event.kind === "active" &&
+      (event.receipt.children as Record<string, unknown>[]).some(
+        (child) => child.spawnSequence === 4,
+      ),
+  );
+  assert.ok(constructorEvent && currentEvent);
+  const constructors = constructorEvent.receipt.children as Record<string, unknown>[];
+  const currents = currentEvent.receipt.children as Record<string, unknown>[];
+  const initialIndex = constructors.findIndex((child) => child.spawnSequence === 1);
+  const currentIndex = currents.findIndex((child) => child.spawnSequence === 4);
+  const initialRow = constructors[initialIndex];
+  const currentRow = currents[currentIndex];
+  const changedInitial = { ...currentRow, spawnSequence: 1, raw_errors: initialRow.raw_errors };
+  const changedCurrent = { ...initialRow, spawnSequence: 4, raw_errors: currentRow.raw_errors };
+  constructors[initialIndex] = changedInitial;
+  currents[currentIndex] = changedCurrent;
+  currentEvent.receipt.expectedOwnedPids = currents.map((child) => child.expectedPid);
+  const expectedRejection =
+    "typed lifecycle phase must match independently observed warm-live ownership";
+  let actualRejection = "";
+  assert.throws(
+    () => {
+      try {
+        assertCustodyJournal(derived, owners, warmLive, mode, faultNativePid);
+      } catch (error) {
+        actualRejection = error instanceof Error ? error.message : String(error);
+        throw error;
+      }
+    },
+    { message: new RegExp(expectedRejection, "u") },
+  );
+  return {
+    kind: "derived-input oracle negative control, not runtime process evidence",
+    owner: "new",
+    sourceJournalUnmodified: true,
+    mutations: [
+      { before: initialRow, after: changedInitial },
+      { before: currentRow, after: changedCurrent },
+    ],
+    expectedRejection,
+    actualRejection,
+  };
 }
 
 export async function retiredOwnerWitness(
@@ -968,6 +1107,14 @@ export async function retiredOwnerWitness(
     assertCustodyJournal(
       journal,
       { old: allOldGraph, new: allNewGraph },
+      { old: oldGraph, new: newGraph },
+      mode,
+      mode === "killed" ? oldLsp.native.pid : null,
+    );
+    observation.warmLivePhaseOracleControl = assertWarmLivePhaseControl(
+      journal,
+      { old: allOldGraph, new: allNewGraph },
+      { old: oldGraph, new: newGraph },
       mode,
       mode === "killed" ? oldLsp.native.pid : null,
     );

@@ -9,6 +9,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tower_lsp::lsp_types::{FileChangeType, FileEvent, Url};
+use vize_l0::cstr;
 
 struct EmergencyCleanup<'a>(&'a Path);
 impl Drop for EmergencyCleanup<'_> {
@@ -97,7 +98,7 @@ fn run(mode: &str) {
                 }]);
             }
             "drain" => worker_state.retire_project_contexts(),
-            _ => unreachable!(),
+            _ => panic!("unsupported native detach mode: {operation}"),
         }
     });
     paused.recv_timeout(Duration::from_secs(5)).unwrap();
@@ -130,12 +131,12 @@ fn run(mode: &str) {
         }
     };
     let pids_after = std::fs::read_to_string(root.path().join("backend.pids")).unwrap();
-    let proof = json!({"mode":mode,"ownerKind":if mode == "primary-watcher" {"primary-root"} else {"project-context"},"cachedOwnerTransferredBeforeDeferredRetire":detached_slot_empty,"before":before,"afterFinalSnapshotBeforeDeferredRetire":after,"finalOutcome":format!("{outcome:?}"),"backendPidsAfter":pids_after});
+    let proof = json!({"mode":mode,"ownerKind":if mode == "primary-watcher" {"primary-root"} else {"project-context"},"cachedOwnerTransferredBeforeDeferredRetire":detached_slot_empty,"before":before,"afterFinalSnapshotBeforeDeferredRetire":after,"finalOutcome":cstr!("{outcome:?}"),"backendPidsAfter":pids_after});
     if let Some(capture) = std::env::var_os("VIZE_NATIVE_CONTEXT_TRANSFER_CAPTURE_DIR") {
         let capture = std::path::PathBuf::from(capture);
         std::fs::create_dir_all(&capture).unwrap();
         std::fs::write(
-            capture.join(format!("{mode}.json")),
+            capture.join(cstr!("{mode}.json").as_str()),
             serde_json::to_vec_pretty(&proof).unwrap(),
         )
         .unwrap();

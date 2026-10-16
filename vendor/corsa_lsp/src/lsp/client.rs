@@ -5,7 +5,7 @@ use crate::{
 };
 use corsa_core::{
     SharedObserver,
-    fast::{CompactString, SmallVec},
+    fast::{CompactString, SmallVec, compact_format},
 };
 use corsa_runtime::BroadcastReceiver;
 use lsp_types::{
@@ -208,7 +208,9 @@ impl LspClient {
                     .with_observer_if_some(config.observer.clone()),
             )
             .map_err(|error| {
-                terminal.record_error(format!("LSP JSON-RPC setup failed: {error}"));
+                terminal.record_error(
+                    compact_format(format_args!("LSP JSON-RPC setup failed: {error}")).as_str(),
+                );
                 error
             })?,
             process,
@@ -322,21 +324,24 @@ impl LspClient {
         let receipt = self.process.abort_receipt()?;
         let transport = self.rpc.begin_abort(self.shutdown_timeout);
         let reader = self.rpc.join_reader_for_abort(self.shutdown_timeout);
-        let errors: Vec<_> = [transport, reader]
+        let errors: SmallVec<[CompactString; 2]> = [transport, reader]
             .into_iter()
             .filter_map(Result::err)
-            .map(|error| error.to_string())
+            .map(|error| compact_format(format_args!("{error}")))
             .collect();
         if errors.is_empty() {
             Ok(receipt)
         } else {
-            Err(CorsaError::Protocol(
-                format!(
-                    "startup abort terminal {receipt:?}; transport close: {}",
-                    errors.join("; ")
-                )
-                .into(),
-            ))
+            let mut joined_errors = CompactString::default();
+            for (index, error) in errors.iter().enumerate() {
+                if index != 0 {
+                    joined_errors.push_str("; ");
+                }
+                joined_errors.push_str(error);
+            }
+            Err(CorsaError::Protocol(compact_format(format_args!(
+                "startup abort terminal {receipt:?}; transport close: {joined_errors}"
+            ))))
         }
     }
 
@@ -366,7 +371,7 @@ impl LspClient {
         let process_result = self.process.shutdown(self.shutdown_timeout).await;
         let reader_result = self.rpc.join_reader(self.shutdown_timeout);
 
-        let errors: Vec<_> = [
+        let errors: SmallVec<[CorsaError; 4]> = [
             protocol_result,
             transport_result,
             process_result,
@@ -378,14 +383,14 @@ impl LspClient {
         for error in &errors {
             self.process
                 .terminal_observer()
-                .record_error(format!("LSP close: {error}"));
+                .record_error(compact_format(format_args!("LSP close: {error}")).as_str());
         }
         match errors.len() {
             0 => Ok(()),
             1 => Err(errors.into_iter().next().unwrap()),
-            _ => Err(CorsaError::Protocol(
-                format!("LSP close errors: {errors:?}").into(),
-            )),
+            _ => Err(CorsaError::Protocol(compact_format(format_args!(
+                "LSP close errors: {errors:?}"
+            )))),
         }
     }
 }
