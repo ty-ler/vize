@@ -15,12 +15,20 @@ impl ServerState {
             .as_deref()
             .and_then(Path::parent)
             .unwrap_or(directory);
-        let selected = loaded
-            .config
-            .type_checker
-            .tsconfig
-            .as_deref()
-            .map(|path| base.join(path))
+        let selected = self
+            .project_contexts
+            .key
+            .read()
+            .as_ref()
+            .and_then(|key| key.tsconfig.clone())
+            .or_else(|| {
+                loaded
+                    .config
+                    .type_checker
+                    .tsconfig
+                    .as_deref()
+                    .map(|path| base.join(path))
+            })
             .unwrap_or_else(|| {
                 [
                     root.join("tsconfig.json"),
@@ -45,7 +53,18 @@ impl ServerState {
                 Err(error) => tracing::warn!("Failed to resolve project configuration: {error}"),
             }
             // Authored Vite dialects, including Vue 3, take precedence.
-            if loaded.features.vue_version.is_none() {
+            let source_owner = self
+                .project_contexts
+                .key
+                .read()
+                .as_ref()
+                .is_some_and(|key| key.tsconfig.is_some());
+            let solution_shell = !source_owner
+                && vize_canon::batch::TsconfigOwnershipCache::default()
+                    .project_paths(&selected)
+                    .len()
+                    > 1;
+            if loaded.features.vue_version.is_none() && !solution_shell {
                 match vize_canon::snapshot_tsconfig_vue_target(root, &selected) {
                     Ok(Some(version)) => {
                         loaded.features.vue_version = Some(version);

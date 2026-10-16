@@ -218,14 +218,37 @@ impl ServerState {
 
     /// Load workspace options from the shared Vite/TypeScript project snapshot.
     pub fn load_workspace_config(&self, dir: &Path) {
-        let loaded = vize_carton::config::load_lsp_config_snapshot(Some(dir));
+        self.apply_workspace_config_snapshot(
+            dir,
+            vize_carton::config::load_lsp_config_snapshot(Some(dir)),
+        );
+    }
+
+    pub(super) fn apply_workspace_config_snapshot(
+        &self,
+        dir: &Path,
+        loaded: vize_carton::config::LoadedLspConfig,
+    ) {
+        #[cfg(feature = "native")]
+        if loaded.valid
+            && self
+                .project_contexts
+                .key
+                .read()
+                .as_ref()
+                .is_none_or(|key| key.tsconfig.is_none())
+        {
+            *self.project_contexts.loaded_config.write() = Some(loaded.clone());
+        }
         #[cfg(feature = "native")]
         let mut loaded = loaded;
         if !loaded.valid {
+            self.refuse_unconfigured_linter_context(dir);
             return;
         }
         #[cfg(feature = "native")]
         if !self.apply_tsconfig_config_snapshot(dir, &mut loaded) {
+            self.refuse_unconfigured_linter_context(dir);
             return;
         }
         self.install_project_linter_context(
@@ -286,6 +309,7 @@ impl ServerState {
         }
         #[cfg(feature = "native")]
         if !self.apply_tsconfig_config_snapshot(dir, &mut loaded) {
+            self.refuse_unconfigured_linter_context(dir);
             return;
         }
         self.apply_project_formatting_default(loaded.source_path.as_deref());
