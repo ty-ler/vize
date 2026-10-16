@@ -40,10 +40,9 @@ impl ProjectContext {
         key: ProjectContextKey,
         snapshot: vize_carton::config::LoadedLspConfig,
     ) -> Self {
-        Self {
-            snapshot: Some(snapshot),
-            ..Self::new(key)
-        }
+        let mut context = Self::new(key);
+        context.snapshot = Some(snapshot);
+        context
     }
 
     pub(super) async fn initialize_async(
