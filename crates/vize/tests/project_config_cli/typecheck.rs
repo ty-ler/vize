@@ -170,7 +170,8 @@ fn inherited_vue_targets_preserve_complete_checker_reports_and_vite_precedence()
         .args(["check", "--format", "json"])
         .output()
         .unwrap();
-    assert_eq!(invalid.status.code(), Some(2), "{invalid:?}");
+    assert_eq!(invalid.status.code(), Some(1), "{invalid:?}");
+    assert!(invalid.stdout.is_empty(), "{invalid:?}");
     assert!(
         std::str::from_utf8(&invalid.stderr)
             .unwrap()
