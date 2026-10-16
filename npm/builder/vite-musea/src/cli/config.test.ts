@@ -306,3 +306,34 @@ void test("one configuration evaluation retains current project and preview meta
   });
   assert.equal(await fs.promises.readFile(marker, "utf8"), "evaluation\n");
 });
+
+void test("Musea reads fluent Vue settings from one evaluation of the Vite config", async (t) => {
+  const workspace = await fs.promises.mkdtemp(path.join(os.tmpdir(), "musea-fluent-vue-"));
+  t.after(() => fs.promises.rm(workspace, { force: true, recursive: true }));
+  const helperUrl = pathToFileURL(path.resolve("../vite/src/vite-plus.ts")).href;
+  const marker = path.join(workspace, "evaluated.txt");
+  const configPath = path.join(workspace, "vite.config.mjs");
+  await fs.promises.writeFile(
+    configPath,
+    `import { appendFileSync } from "node:fs";
+    import { defineConfig } from ${JSON.stringify(helperUrl)};
+    export default defineConfig(() => {
+      appendFileSync(${JSON.stringify(marker)}, "evaluation\\n");
+      return { root: "gallery" };
+    }, { plugin: false, tasks: false, conflicts: false }).withVue({
+      musea: { include: ["stories/**/*.art.vue"], basePath: "/stories", vrt: { threshold: 0 } },
+    });`,
+  );
+  assert.deepEqual(await loadMuseaConfiguration(configPath, workspace), {
+    fileSet: {
+      root: path.join(workspace, "gallery"),
+      projectRoot: path.join(workspace, "gallery"),
+      include: ["stories/**/*.art.vue"],
+      exclude: ["node_modules/**", "dist/**"],
+    },
+    vrt: { threshold: 0 },
+    configDir: workspace,
+    previewBasePath: "/stories",
+  });
+  assert.equal(await fs.promises.readFile(marker, "utf8"), "evaluation\n");
+});

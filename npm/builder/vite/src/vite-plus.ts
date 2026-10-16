@@ -67,6 +67,7 @@ export function defineConfig(
                 ...vp.run,
                 tasks: { ...createTasks(vp.run?.tasks, options.tasks), ...vp.run?.tasks },
               },
+        [sourceConfigKey]: source,
         [taskConfigKey]: metadata,
       };
     },

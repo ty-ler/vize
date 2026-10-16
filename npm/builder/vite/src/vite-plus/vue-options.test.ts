@@ -2,10 +2,15 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { defineConfig as defineVpConfig, type ConfigEnv } from "vite-plus";
 import { defineConfig, withVue } from "../vite-plus.ts";
-import { resolveConfigExport } from "../config.ts";
+import { resolveConfigExport, resolveViteConfigExport } from "../config.ts";
 import { projectViteConfigSource } from "../../../../cli/src/config/vite-runtime.mjs";
 import { normalizeConfig, resolveConfig } from "./config.ts";
-import { taskConfigKey, type ConfigWithVizeTasks, type VueConfigObject } from "./types.ts";
+import {
+  sourceConfigKey,
+  taskConfigKey,
+  type ConfigWithVizeTasks,
+  type VueConfigObject,
+} from "./types.ts";
 
 const env: ConfigEnv = {
   command: "serve",
@@ -103,6 +108,11 @@ void test("canonical sections reach the same native normalizer as the selected V
     env,
   );
   assert.deepEqual(native, direct);
+  assert.deepEqual(
+    await resolveViteConfigExport(result, env, process.cwd()),
+    direct,
+    "an evaluated fluent export must project the same Vue settings as its raw source",
+  );
   assert.equal(native.formatter?.singleQuote, false);
   assert.equal(native.formatter?.printWidth, 70);
   assert.equal(native.typeChecker?.strict, false);
@@ -251,4 +261,20 @@ void test("pack.vue is consumed without forwarding native settings to Vite+", as
   const result = await defineConfig(source, integration).withVue({})(env);
   assert.deepEqual(result.pack, [{ outDir: "lib" }]);
   assert.deepEqual(source.pack, [{ outDir: "lib", vue: false }]);
+});
+
+void test("evaluated fluent output retains its raw Vue source without another callback", async () => {
+  let calls = 0;
+  const plugin = { name: "consumer" };
+  const output = await defineConfig(() => {
+    calls++;
+    return { root: "gallery", plugins: [plugin] };
+  }, integration).withVue({ formatter: { singleQuote: true } })(env);
+  const source = Reflect.get(output, sourceConfigKey) as VueConfigObject;
+  assert.equal(typeof source, "object");
+  assert.equal(source.root, "gallery");
+  assert.deepEqual(source.vue, { formatter: { singleQuote: true } });
+  assert.equal(source.plugins?.[0], plugin);
+  assert.ok(!("vue" in output));
+  assert.equal(calls, 1);
 });
