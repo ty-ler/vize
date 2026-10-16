@@ -38,6 +38,8 @@ pub struct CorsaBridge {
     worker: BoundedWorker<Option<CorsaProjectClient>>,
     /// Whether the bridge is initialized
     initialized: Arc<AtomicBool>,
+    /// Final server termination permanently closes startup admission.
+    finalizing: Arc<AtomicBool>,
     /// Whether the reusable editor LSP session may have read stale disk state.
     disk_project_state_dirty: AtomicBool,
     /// Profiler for performance tracking
@@ -53,9 +55,9 @@ pub struct CorsaBridge {
     shared_editor_transport: bool,
 }
 
-#[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
 mod shutdown;
 
+#[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
 impl CorsaBridge {
     /// Create a new Corsa bridge with default configuration.
     pub fn new() -> Self {
@@ -91,6 +93,7 @@ impl CorsaBridge {
             ),
             config,
             initialized: Arc::new(AtomicBool::new(false)),
+            finalizing: Arc::new(AtomicBool::new(false)),
             disk_project_state_dirty: AtomicBool::new(false),
             profiler,
             cache_stats: CacheStats::new(),
@@ -104,6 +107,9 @@ impl CorsaBridge {
     /// handshake is synchronous IPC: a backend that accepts stdio and never
     /// answers otherwise blocks until `corsa`'s own 30s backstop gives up.
     pub async fn spawn(&self) -> Result<(), CorsaBridgeError> {
+        if self.finalizing.load(Ordering::Acquire) {
+            return Err(CorsaBridgeError::ProcessTerminated);
+        }
         let _timer = self.profiler.timer("corsa_spawn");
 
         if self.initialized.load(Ordering::SeqCst) {
@@ -113,7 +119,13 @@ impl CorsaBridge {
         let config = self.config.clone();
         let shared_editor_transport = self.shared_editor_transport;
         let initialized = Arc::clone(&self.initialized);
+        let finalizing = Arc::clone(&self.finalizing);
         self.submit_async(move |slot| {
+            // Admission is checked again on the owner lane: final cleanup may
+            // have queued while this startup still awaited an entered request.
+            if finalizing.load(Ordering::Acquire) {
+                return Err(CorsaBridgeError::ProcessTerminated);
+            }
             if slot.is_some() {
                 initialized.store(true, Ordering::SeqCst);
                 return Ok(());

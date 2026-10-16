@@ -87,6 +87,12 @@ impl ProjectContext {
         Some(state)
     }
 
+    /// Finalization captures a published owner after closing context admission.
+    /// Ordinary lookups must continue to hide this same retired state.
+    pub(super) fn initialized_state_for_exit(&self) -> Option<Arc<ServerState>> {
+        self.state.get().cloned()
+    }
+
     pub(super) fn initialized_state(&self) -> Option<Arc<ServerState>> {
         (!self.retired.load(Ordering::Acquire))
             .then(|| self.state.get().cloned())
@@ -105,6 +111,14 @@ impl ProjectContext {
                 .retired
                 .store(true, Ordering::Release);
         }
+    }
+
+    pub(super) fn mark_retired_for_exit(&self) {
+        self.retired.store(true, Ordering::Release);
+        if let Some(state) = self.state.get() {
+            state.freeze_corsa_owner_for_exit();
+        }
+        self.mark_retired();
     }
 
     pub(super) fn retire(&self) {
@@ -158,3 +172,6 @@ impl Drop for ProjectContext {
         }
     }
 }
+
+#[cfg(test)]
+mod exit_tests;

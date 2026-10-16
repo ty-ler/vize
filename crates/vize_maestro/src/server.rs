@@ -142,6 +142,20 @@ impl MaestroServer {
         &self.state.documents
     }
 
+    /// The transport retains this finalizer even after the LSP service ends,
+    /// including stdin EOF or Exit without a preceding shutdown request.
+    #[cfg(feature = "native")]
+    #[expect(
+        clippy::disallowed_types,
+        reason = "transport retains the actual shared server owner until native close"
+    )]
+    pub(crate) fn native_transport_finalizer(
+        &self,
+    ) -> BoxFuture<'static, Result<(), vize_l0::String>> {
+        let state = std::sync::Arc::clone(&self.state);
+        async move { state.shutdown_corsa_project_contexts().await }.boxed()
+    }
+
     async fn finish_shutdown(&self) -> tower_lsp::jsonrpc::Result<()> {
         #[cfg(feature = "native")]
         let native_close = self.state.shutdown_corsa_project_contexts().await;

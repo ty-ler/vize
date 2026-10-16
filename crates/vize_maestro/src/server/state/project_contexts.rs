@@ -109,6 +109,9 @@ impl ServerState {
         };
         let context = {
             let mut contexts = self.project_contexts.contexts.lock();
+            if self.project_contexts.shutting_down.load(Ordering::Acquire) {
+                return None;
+            }
             if !contexts.contains_key(&root) && self.is_primary_boundary(&root) {
                 return None;
             }
@@ -222,22 +225,23 @@ impl ServerState {
     }
 
     /// Freeze discovery before final shutdown snapshots the cached owners.
-    /// Capture initialized states before marking their contexts retired, since
-    /// ordinary lookup intentionally hides retired owners.
+    /// Close every context before reading its raw published state. A startup
+    /// that was already admitted must be captured; a later initializer observes
+    /// retirement before it can return its state to a native request.
     pub(super) fn freeze_project_contexts_for_exit(&self) -> Vec<Arc<ServerState>> {
+        self.freeze_corsa_owner_for_exit();
         self.project_contexts
             .shutting_down
             .store(true, Ordering::Release);
         self.project_contexts.retired.store(true, Ordering::Release);
         let contexts = self.project_contexts.contexts.lock();
-        let states = contexts
-            .values()
-            .filter_map(|context| context.initialized_state())
-            .collect();
         for context in contexts.values() {
-            context.mark_retired();
+            context.mark_retired_for_exit();
         }
-        states
+        contexts
+            .values()
+            .filter_map(|context| context.initialized_state_for_exit())
+            .collect()
     }
 
     pub(crate) fn retire_project_contexts(&self) {

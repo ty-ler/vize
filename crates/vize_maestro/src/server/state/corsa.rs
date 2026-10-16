@@ -110,7 +110,7 @@ impl ServerState {
             let mut slot = self.corsa_bridge.write();
             // Final shutdown freezes the owner before taking this same slot.
             // Never publish a new pending child behind its captured owner set.
-            if self.project_context_retired() {
+            if self.project_context_retired() || self.corsa_finalizing.load(Ordering::Acquire) {
                 return None;
             }
             *slot = Some(Arc::clone(&bridge));
@@ -233,7 +233,7 @@ impl ServerState {
         let mut slot = self.corsa_bridge.write();
         // A failed in-flight request must not drop the finalizer's pending
         // owner between freezing the project and taking its cached bridge.
-        if self.project_context_retired() {
+        if self.project_context_retired() || self.corsa_finalizing.load(Ordering::Acquire) {
             return;
         }
         if slot
@@ -251,7 +251,12 @@ impl ServerState {
     /// Configuration owns the cached process. Retire without waiting for IPC;
     /// worker keepalive lets an abandoned old session finish on its own lane.
     pub(super) fn retire_corsa_configuration(&self) {
-        *self.corsa_bridge.write() = None;
+        {
+            let mut slot = self.corsa_bridge.write();
+            if !self.corsa_finalizing.load(Ordering::Acquire) {
+                *slot = None;
+            }
+        }
         self.corsa_init_failed.store(false, Ordering::SeqCst);
         *self.corsa_init_failure_reason.write() = None;
         self.typecheck_unavailable_notified
@@ -262,7 +267,7 @@ impl ServerState {
         let mut slot = self.corsa_bridge.write();
         // Final shutdown owns the retained pending bridge until it queues and
         // acknowledges actual client closure, including unfinished startup.
-        if self.project_context_retired() {
+        if self.project_context_retired() || self.corsa_finalizing.load(Ordering::Acquire) {
             return;
         }
         if slot

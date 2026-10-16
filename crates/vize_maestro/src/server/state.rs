@@ -182,6 +182,12 @@ pub struct ServerState {
     /// (#3240).
     #[cfg(feature = "native")]
     corsa_bridge: RwLock<Option<Arc<CorsaBridge>>>,
+    /// Final termination retains failed owners and the first failure for retry.
+    #[cfg(feature = "native")]
+    corsa_shutdown: AsyncMutex<corsa_shutdown::NativeShutdown>,
+    /// Final-exit ownership differs from nonblocking configuration retirement.
+    #[cfg(feature = "native")]
+    corsa_finalizing: AtomicBool,
     /// Serializes Corsa bridge initialization without tying us to a runtime.
     #[cfg(feature = "native")]
     corsa_init_lock: AsyncMutex<()>,
