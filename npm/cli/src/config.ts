@@ -281,6 +281,18 @@ function parseJsonConfig(content: string, filePath: string): ResolvedVizeConfig 
 }
 
 function normalizeLoadedConfig(config: unknown): ResolvedVizeConfig {
+  const hasExtends = (value: unknown) =>
+    value !== null && typeof value === "object" && Object.hasOwn(value, "extends");
+  const entries = Array.isArray(config)
+    ? config
+    : config && typeof config === "object" && "entries" in config
+      ? (config as { entries?: unknown }).entries
+      : undefined;
+  if (hasExtends(config) || (Array.isArray(entries) && entries.some(hasExtends))) {
+    throw new Error(
+      "Custom config extends is no longer supported; use defineConfig(vpConfig).withVue(vueConfig); standard tsconfig extends remains supported",
+    );
+  }
   const native = require("@vizejs/native") as NativeConfigHelpers;
   return native.normalizeVizeConfig(config ?? null) as ResolvedVizeConfig;
 }
