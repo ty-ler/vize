@@ -30,6 +30,7 @@ mod unix {
         corsa_requirement,
         nuxt_cli::resolve_test_corsa_path,
         nuxt_stress::required_iterations,
+        vite_config,
     };
 
     #[test]
