@@ -57,6 +57,7 @@
       "label": "code actions",
       "kind": "request",
       "method": "textDocument/codeAction",
+      "diagnosticsFromRequest": true,
       "match": {
         "range": { "start": { "line": 7, "character": 6 }, "end": { "line": 7, "character": 7 } }
       },
