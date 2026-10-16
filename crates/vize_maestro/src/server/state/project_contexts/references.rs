@@ -63,15 +63,12 @@ impl ServerState {
             if state.project_context_retired() {
                 return None;
             }
-            contexts
+            let context = contexts
                 .entry(key.clone())
-                .or_insert_with(|| {
-                    Arc::new(registry::ProjectContext::with_snapshot(
-                        key.clone(),
-                        snapshot,
-                    ))
-                })
-                .clone()
+                .or_insert_with(|| Arc::new(registry::ProjectContext::new(key.clone())))
+                .clone();
+            context.provide_snapshot(snapshot);
+            context
         };
         self.project_contexts.routes.insert(uri.clone(), key);
         Some(context)
