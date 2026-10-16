@@ -218,15 +218,35 @@ impl ServerState {
 
     /// Load workspace options from the shared Vite/TypeScript project snapshot.
     pub fn load_workspace_config(&self, dir: &Path) {
+        match Self::prepare_workspace_config(dir) {
+            Ok(loaded) => self.apply_workspace_config_snapshot(dir, loaded),
+            Err(error) => tracing::warn!("Failed to load project configuration: {error}"),
+        }
+    }
+
+    pub(super) fn prepare_workspace_config(
+        dir: &Path,
+    ) -> Result<vize_carton::config::LoadedLspConfig, vize_l0::String> {
         let loaded = vize_carton::config::load_lsp_config_snapshot(Some(dir));
-        #[cfg(feature = "native")]
-        let mut loaded = loaded;
-        if !loaded.valid {
-            return;
+        if let Some(error) = loaded.error.clone() {
+            return Err(error.into());
         }
         #[cfg(feature = "native")]
-        if !self.apply_tsconfig_config_snapshot(dir, &mut loaded) {
-            return;
+        let mut loaded = loaded;
+        #[cfg(feature = "native")]
+        Self::prepare_tsconfig_config_snapshot(dir, &mut loaded)?;
+        Ok(loaded)
+    }
+
+    pub(super) fn apply_workspace_config_snapshot(
+        &self,
+        dir: &Path,
+        loaded: vize_carton::config::LoadedLspConfig,
+    ) {
+        #[cfg(feature = "native")]
+        {
+            *self.project_contexts.config_dependencies.write() =
+                loaded.project.dependencies.clone();
         }
         self.install_project_linter_context(
             dir,
@@ -278,15 +298,17 @@ impl ServerState {
 
     /// Load LSP options from the shared Vite/TypeScript project snapshot.
     pub fn load_lsp_config(&self, dir: &Path) {
-        let loaded = vize_carton::config::load_lsp_config_snapshot(Some(dir));
+        let loaded = match Self::prepare_workspace_config(dir) {
+            Ok(loaded) => loaded,
+            Err(error) => {
+                tracing::warn!("Failed to load project configuration: {error}");
+                return;
+            }
+        };
         #[cfg(feature = "native")]
-        let mut loaded = loaded;
-        if !loaded.valid {
-            return;
-        }
-        #[cfg(feature = "native")]
-        if !self.apply_tsconfig_config_snapshot(dir, &mut loaded) {
-            return;
+        {
+            *self.project_contexts.config_dependencies.write() =
+                loaded.project.dependencies.clone();
         }
         self.apply_project_formatting_default(loaded.source_path.as_deref());
         if loaded.source_path.is_none() {

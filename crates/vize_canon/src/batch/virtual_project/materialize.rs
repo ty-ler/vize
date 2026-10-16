@@ -354,6 +354,27 @@ impl VirtualProject {
         paths
     }
 
+    /// Validate every inherited configuration before replacing an editor owner.
+    /// Uses the same resolver and merge traversal as compiler options; batch
+    /// checking retains its existing permissive missing-config behavior.
+    pub fn checked_governing_config_paths(&self) -> crate::batch::error::CorsaResult<Vec<PathBuf>> {
+        let Some(anchored) = self.resolved_tsconfig_path() else {
+            return Ok(Vec::new());
+        };
+        let mut roots = vec![anchored.clone()];
+        roots.extend(super::tsconfig_gen::references::referenced_project_configs(
+            &anchored,
+        ));
+        let mut paths = Vec::new();
+        for config in roots {
+            paths.extend(self.checked_compiler_config_paths(&config)?);
+            paths.extend(self.vue_target_manifest_path(&config));
+        }
+        paths.sort();
+        paths.dedup();
+        Ok(paths)
+    }
+
     /// File that project-level (file-less) diagnostics are attributed to:
     /// the effective tsconfig when one exists, otherwise the project root.
     pub(crate) fn project_diagnostics_anchor(&self) -> PathBuf {
@@ -365,3 +386,7 @@ impl VirtualProject {
 #[cfg(all(test, unix))]
 #[path = "tests/editor_union_alias_transition.rs"]
 mod alias_transition_tests;
+
+#[cfg(test)]
+#[path = "tests/editor_configuration_graph.rs"]
+mod editor_configuration_graph_tests;

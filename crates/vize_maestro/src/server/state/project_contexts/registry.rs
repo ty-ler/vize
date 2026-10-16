@@ -16,6 +16,10 @@ type Initialization = Shared<BoxFuture<'static, Option<Arc<ServerState>>>>;
 pub(super) struct ProjectContext {
     root: PathBuf,
     state: OnceLock<Arc<ServerState>>,
+    prepared_config: super::Mutex<Option<vize_carton::config::LoadedLspConfig>>,
+    // Available even while initialization has consumed the prepared snapshot
+    // but has not yet published its ServerState in the OnceLock.
+    prepared_dependencies: Vec<PathBuf>,
     #[cfg(feature = "experimental-source-navigation")]
     navigation: OnceLock<Arc<NativeNavigationProject<'static>>>,
     retired: AtomicBool,
@@ -27,11 +31,20 @@ impl ProjectContext {
         Self {
             root,
             state: OnceLock::new(),
+            prepared_config: super::Mutex::new(None),
+            prepared_dependencies: Vec::new(),
             #[cfg(feature = "experimental-source-navigation")]
             navigation: OnceLock::new(),
             retired: AtomicBool::new(false),
             initialization: super::Mutex::new(None),
         }
+    }
+
+    pub(super) fn with_config(root: PathBuf, config: vize_carton::config::LoadedLspConfig) -> Self {
+        let mut context = Self::new(root);
+        context.prepared_dependencies = config.project.dependencies.clone();
+        *context.prepared_config.lock() = Some(config);
+        context
     }
 
     pub(super) async fn initialize_async(
@@ -78,13 +91,23 @@ impl ProjectContext {
         }
         let state = self
             .state
-            .get_or_init(|| owner.new_project_state(&self.root))
+            .get_or_init(|| {
+                let prepared = self.prepared_config.lock().take();
+                owner.new_project_state(&self.root, prepared)
+            })
             .clone();
         if self.retired.load(Ordering::Acquire) {
             state.retire_project_owner();
             return None;
         }
         Some(state)
+    }
+
+    pub(super) fn config_dependencies(&self) -> Vec<PathBuf> {
+        if let Some(state) = self.initialized_state() {
+            return state.project_contexts.config_dependencies.read().clone();
+        }
+        self.prepared_dependencies.clone()
     }
 
     pub(super) fn initialized_state(&self) -> Option<Arc<ServerState>> {

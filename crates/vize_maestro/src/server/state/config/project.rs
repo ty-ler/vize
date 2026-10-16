@@ -4,11 +4,10 @@ use std::path::Path;
 use super::ServerState;
 
 impl ServerState {
-    pub(super) fn apply_tsconfig_config_snapshot(
-        &self,
+    pub(super) fn prepare_tsconfig_config_snapshot(
         directory: &Path,
         loaded: &mut vize_carton::config::LoadedLspConfig,
-    ) -> bool {
+    ) -> Result<(), vize_l0::String> {
         let root = loaded.project.project_root.as_deref().unwrap_or(directory);
         let base = loaded
             .source_path
@@ -40,9 +39,13 @@ impl ServerState {
             match vize_canon::VirtualProject::new(root) {
                 Ok(mut project) => {
                     project.set_tsconfig_path(Some(selected.clone()));
-                    dependencies.extend(project.governing_config_paths());
+                    dependencies.extend(
+                        project
+                            .checked_governing_config_paths()
+                            .map_err(|error| vize_l0::cstr!("{error}"))?,
+                    );
                 }
-                Err(error) => tracing::warn!("Failed to resolve project configuration: {error}"),
+                Err(error) => return Err(vize_l0::cstr!("{error}")),
             }
             // Authored Vite dialects, including Vue 3, take precedence.
             if loaded.features.vue_version.is_none() {
@@ -53,8 +56,7 @@ impl ServerState {
                     }
                     Ok(None) => {}
                     Err(error) => {
-                        tracing::warn!("Failed to load vueCompilerOptions: {error}");
-                        return false;
+                        return Err(vize_l0::cstr!("{error}"));
                     }
                 }
             }
@@ -62,7 +64,7 @@ impl ServerState {
         dependencies.push(selected);
         dependencies.sort();
         dependencies.dedup();
-        *self.project_contexts.config_dependencies.write() = dependencies;
-        true
+        loaded.project.dependencies = dependencies;
+        Ok(())
     }
 }

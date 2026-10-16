@@ -14,7 +14,7 @@ use std::{
     },
 };
 use tower_lsp::lsp_types::{ClientCapabilities, Url};
-use vize_l0::FxHashMap;
+use vize_l0::{FxHashMap, FxHashSet};
 
 use super::{LspFeatureConfig, ServerState};
 
@@ -28,6 +28,8 @@ pub(super) struct ProjectContexts {
     boundary: RwLock<Option<PathBuf>>,
     pub(super) config_dependencies: RwLock<Vec<PathBuf>>,
     contexts: Mutex<FxHashMap<PathBuf, Arc<registry::ProjectContext>>>,
+    reload_admission: Mutex<FxHashMap<PathBuf, Weak<futures::lock::Mutex<()>>>>,
+    pending_config_reloads: Mutex<FxHashSet<PathBuf>>,
     routes: DashMap<Url, PathBuf>,
     initialization_options: RwLock<Option<serde_json::Value>>,
     client_capabilities: RwLock<ClientCapabilities>,
@@ -139,13 +141,21 @@ impl ServerState {
             .or_else(|| self.project_contexts.boundary.read().clone())
     }
 
-    fn new_project_state(self: &Arc<Self>, root: &Path) -> Arc<ServerState> {
+    fn new_project_state(
+        self: &Arc<Self>,
+        root: &Path,
+        prepared: Option<vize_carton::config::LoadedLspConfig>,
+    ) -> Arc<ServerState> {
         let mut state = ServerState::new();
         state.documents = self.documents.clone();
         *state.project_contexts.owner.write() = Some(Arc::downgrade(self));
         state.record_client_capabilities(&self.project_contexts.client_capabilities.read());
         state.set_workspace_root(root.to_path_buf());
-        state.load_workspace_config(root);
+        if let Some(snapshot) = prepared {
+            state.apply_workspace_config_snapshot(root, snapshot);
+        } else {
+            state.load_workspace_config(root);
+        }
         state.apply_lsp_initialization_options(
             self.project_contexts.initialization_options.read().as_ref(),
         );
@@ -208,6 +218,10 @@ impl ServerState {
         let _change = self.project_routing_change();
         self.project_contexts.routes.clear();
         let roots = self.workspace_root_paths();
+        self.project_contexts
+            .pending_config_reloads
+            .lock()
+            .retain(|root| roots.iter().any(|folder| root.starts_with(folder)));
         let mut retired = Vec::new();
         self.project_contexts.contexts.lock().retain(|root, state| {
             let retained = roots.iter().any(|folder| root.starts_with(folder));
@@ -227,7 +241,11 @@ impl ServerState {
             .shutting_down
             .store(true, Ordering::Release);
         self.retire_project_owner();
-        let contexts = std::mem::take(&mut *self.project_contexts.contexts.lock());
+        let contexts = {
+            let mut contexts = self.project_contexts.contexts.lock();
+            self.project_contexts.pending_config_reloads.lock().clear();
+            std::mem::take(&mut *contexts)
+        };
         for context in contexts.into_values() {
             context.retire();
         }
@@ -306,6 +324,9 @@ mod asynchronous;
 mod capabilities;
 #[cfg(test)]
 mod config_dependencies;
+mod config_reload;
+#[cfg(test)]
+mod config_reload_tests;
 mod current;
 #[cfg(test)]
 mod lock_order_tests;
