@@ -159,3 +159,30 @@ All 15 target/git/registry mounts unmounted successfully. Compared with the earl
 Nextest reacted to the initial SIGINT and the runner reported cancellation within 100 ms in both active cohorts. The one-second second-signal fallback was not exercised by this hosted run. Compiler and Language server artifact upload was skipped on cancellation, so an actual process exit 130/143 was not observable; do not substitute the implementation's expected code for a retained result. No Linux process-state snapshot was captured. Zero logged orphan terminations and successful unmounts are the available cleanup evidence.
 
 The required `test-report` refused `pr-source-checks: cancelled` and exited 1. The intentionally cancelled workflow completed after 235 s and consumed 46.8 runner-minutes. This is an expected non-green cancellation experiment, not evidence of ordinary PR latency or the five-minute target. A full same-head rerun must be recorded separately.
+
+## Complete normal rerun
+
+[Attempt 2](https://github.com/ubugeeei-prod/vize/actions/runs/38899025329/attempts/2)
+reran all 33 jobs at the same source head, reusing zero completed jobs. From
+the attempt start at 12:19:06 UTC to the required report at 12:23:15, it took
+249 seconds (4m09s), consuming 44.8 runner-minutes. Clippy, all 18,159 selected
+Rust tests, every native runtime lane and the strict reports passed. The five
+cohorts contained no duplicate test identity and every timing receipt recorded
+exit code zero. Compiler retained the same 7,154 identities and Language server
+the same 1,701 as the earlier PR measurement. Fresh main adds 20 other identities
+and replaces two Patina names, for a net increase of 18 tests.
+
+The critical path is now JS builders: 208 seconds, including 24 seconds of setup
+and a 168-second product step. Native Cargo accounts for 46.95 seconds inside
+that step; serial package build/test work remains a measured follow-up target.
+Compiler took 193 seconds (Cargo 57.79; nextest 94.342), Language server 175,
+and the combined Clippy/navigation/doctest lane 159. All ordinary sibling
+workflows at the same head passed; Musea was longest at 230 seconds.
+
+This is a complete normal rerun after an intentional cancellation, not a fresh
+PR push or a controlled attribution experiment. Original workflow creation to
+the final required report spans 588 seconds, including the cancelled attempt
+and time before retry; all ordinary workflows span 592 seconds. The measured
+4m09s normal attempt meets the five-minute target for this observation. It is
+not a guarantee for future queue or cold-cache conditions, and it does not
+establish final App qualification or end-to-end release time.

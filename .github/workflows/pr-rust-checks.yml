@@ -287,11 +287,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: ./.github/actions/cache-vp-bootstrap
-      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: "package.json"
-          run-install: false
+          package-manager-cache: false
       - name: Require the complete Rust tier
         env:
           RUN_RUST: ${{ inputs.run-rust }}
@@ -318,7 +317,7 @@ jobs:
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           node tools/support/compat/github/select-rust-workers.mjs verify target/differential/typechecker/worker-selection.json .artifacts/typechecker-workers
-          vp node tests/differential/typechecker-shards.ts aggregate .artifacts/typechecker-workers target/differential/typechecker
+          node tests/differential/typechecker-shards.ts aggregate .artifacts/typechecker-workers target/differential/typechecker
       - name: Upload typechecker shared corpus evidence
         if: ${{ !cancelled() && github.event_name == 'merge_group' && inputs.run-rust && needs.pr-rust-shard.result == 'success' && contains(fromJSON(inputs.rust-plan).packages, 'vize_canon') }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

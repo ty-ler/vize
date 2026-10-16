@@ -81,3 +81,13 @@ completes successfully. The local controls establish behavior, not hosted
 latency: a subsequent exact-key Actions restore must show pnpm's
 `passes supply-chain policies (verified ... ago)` result and a measured install
 duration. No 70-second reduction or five-minute whole-PR result is claimed yet.
+
+At source `986df9a534e18941da8d23cb90ed2bf8d733f355`, six completed setup
+observations from [Check attempt 1](https://github.com/ubugeeei-prod/vize/actions/runs/38899025329/attempts/1)
+and [Musea](https://github.com/ubugeeei-prod/vize/actions/runs/38899025194) all
+resolved the same valid exact key, requested `save=false`, skipped the writer
+and missed the cold namespace. Discovery took 91–156 ms and restore lookup
+198–219 ms. Normal policy verification still checked all 2,333 entries; installs
+took 3.2–3.7 seconds with zero downloads. This confirms actual hosted configuration
+compatibility and read-only operation. The earlier 70-second metadata request
+did not recur, so its absence is not attributed to this still-cold cache.
