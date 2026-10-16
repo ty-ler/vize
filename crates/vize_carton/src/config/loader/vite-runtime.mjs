@@ -30,7 +30,7 @@ async function resolveSource(value, env, parents = new Set()) {
   if (parents.has(value)) throw new Error("Circular Vue configuration source");
   parents.add(value);
   try {
-    if (typeof value === "function" && sourceConfigKey in value) {
+    if ((typeof value === "function" || object(value)) && sourceConfigKey in value) {
       return await resolveSource(value[sourceConfigKey], env, parents);
     }
     const config = await (typeof value === "function" ? value(env) : value);

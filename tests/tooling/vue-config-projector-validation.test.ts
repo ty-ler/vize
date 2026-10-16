@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import {
   projectViteConfigSource,
+  resolveViteConfigExport,
   vueConfigOptions,
 } from "../../crates/vize_carton/src/config/loader/vite-runtime.mjs";
 
@@ -314,4 +315,19 @@ test("new public numeric Vue 0.10 ingress projects native enums and respects can
       .vueVersion,
     "2",
   );
+});
+
+test("evaluated fluent output retains native policy without evaluating Vite plugins or tasks again", async () => {
+  const source = {
+    vue: { musea: { include: ["stories/*.art.vue"] }, formatter: { singleQuote: true } },
+  };
+  const processed = {
+    plugins: [
+      () => {
+        throw new Error("plugin evaluated");
+      },
+    ],
+    [Symbol.for("@vizejs/vite-plugin/vite-plus/source")]: source,
+  };
+  assert.deepEqual(await resolveViteConfigExport(processed), await resolveViteConfigExport(source));
 });

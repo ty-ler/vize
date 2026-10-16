@@ -10,7 +10,11 @@ import {
 } from "../../../../cli/src/config/vite-runtime.mjs";
 
 export async function resolveConfig(config: VueConfig, env: ConfigEnv): Promise<VueConfigObject> {
-  if (typeof config === "function" && sourceConfigKey in config) {
+  if (
+    config !== null &&
+    (typeof config === "function" || typeof config === "object") &&
+    sourceConfigKey in config
+  ) {
     return resolveConfig(config[sourceConfigKey] as VueConfig, env);
   }
   const source = await (typeof config === "function" ? config(env) : config);
