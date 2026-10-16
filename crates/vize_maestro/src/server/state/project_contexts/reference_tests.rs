@@ -34,8 +34,8 @@ impl ReferenceFixture {
         Self::write_leaf(&root, "modern", "modern", 3.5);
         let state = Arc::new(ServerState::new());
         state.set_workspace_root(root.clone());
-        state.set_workspace_folders(vec![root.clone()]);
         state.load_workspace_config(&root);
+        state.apply_initialize_workspace_folders(None, Some(&root));
         let legacy = Url::from_file_path(root.join("src/legacy/App.vue")).unwrap();
         let modern = Url::from_file_path(root.join("src/modern/App.vue")).unwrap();
         Self {
@@ -80,7 +80,19 @@ impl ReferenceFixture {
 }
 
 fn assert_dialect(state: &ServerState, version: VueVersion) {
-    assert_eq!(state.type_checker_vue_version(), version);
+    assert_eq!(
+        state.type_checker_vue_version(),
+        version,
+        "owner={:?}, checker={:?}, authored={:?}",
+        state.project_contexts.key.read().as_ref(),
+        state.get_type_checker_config(),
+        state
+            .project_contexts
+            .loaded_config
+            .read()
+            .as_ref()
+            .map(|loaded| loaded.features)
+    );
     assert_eq!(state.legacy_vue2_enabled(), version == VueVersion::V2_7);
 }
 
