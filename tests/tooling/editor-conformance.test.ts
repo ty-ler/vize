@@ -7,6 +7,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 import { parse } from "yaml";
+import { parse as parseToml } from "@iarna/toml";
+import { userLanguages } from "../editor-conformance/drivers/helix.ts";
 
 import {
   evaluate,
@@ -135,13 +137,13 @@ test("the judge accepts the ideal transcript and rejects every corrupted expecta
   assert.deepEqual(negativeControl(scenario, idealTranscript(), [root]), []);
 });
 
-test("initialize requires the declared disabled JSX routing hint without weakening exactness", () => {
+test("initialize requires the canonical project JSX routing hint without weakening exactness", () => {
   const expected = byId("initialize").expect as any;
-  assert.deepEqual(expected.capabilities.experimental, { vize: { jsxTypecheck: false } });
+  assert.deepEqual(expected.capabilities.experimental, { vize: { jsxTypecheck: true } });
   for (const hint of [
     undefined,
-    { vize: { jsxTypecheck: true } },
-    { vize: { jsxTypecheck: "false" } },
+    { vize: { jsxTypecheck: false } },
+    { vize: { jsxTypecheck: "true" } },
   ]) {
     const entries = idealTranscript();
     const initialize = entries.find((entry) => entry.msg?.result?.serverInfo != null)!;
@@ -287,4 +289,35 @@ test("every client has a driver and only Zed is a protocol replay", async () => 
   const zed = JSON.parse(fs.readFileSync(`${suiteRoot}/clients/zed-1.16.1.json`, "utf8"));
   assert.match(zed.source, /^zed-industries\/zed v1\.16\.1 crates\/lsp\/src\/lsp\.rs /u);
   assert.equal(zed.clientInfo.version, "1.16.1");
+});
+
+test("current completion retains authored candidates and the complete independent Vue globals vector", () => {
+  const authored = JSON.parse(fs.readFileSync(`${suiteRoot}/expected/completion.json`, "utf8"));
+  const globals = JSON.parse(
+    readRepoFile(
+      "tests",
+      "_fixtures",
+      "differential",
+      "lsp",
+      "template-expression-globals-8015",
+      "globals.expected.json",
+    ),
+  );
+  assert.deepEqual(byId("completion").expect, [...authored, ...globals]);
+});
+
+test("Helix formatting opt-in supports absent and existing initialization option tables", () => {
+  const packaged = readRepoFile("editors", "helix", "languages.toml");
+  for (const source of [packaged, `${packaged}\n[language-server.vize.config]\nhover = false\n`]) {
+    const before = parseToml(source) as any;
+    const after = parseToml(userLanguages(source)) as any;
+    assert.deepEqual(after["language-server"].vize.config, {
+      ...before["language-server"].vize.config,
+      formatting: true,
+    });
+    assert.deepEqual(after.language, before.language);
+    delete before["language-server"].vize.config;
+    delete after["language-server"].vize.config;
+    assert.deepEqual(after, before);
+  }
 });
