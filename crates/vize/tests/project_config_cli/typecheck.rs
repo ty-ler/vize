@@ -137,13 +137,15 @@ fn inherited_vue_targets_preserve_complete_checker_reports_and_vite_precedence()
         assert_eq!(report, baseline_report, "{target}: complete checker report");
     }
 
-    // A solution shell must use its owning referenced project's Vue target.
+    // An unused solution-shell target must not override its owning referenced
+    // project's target, even when the shell value is unsupported.
     fs::rename(root.join("tsconfig.json"), root.join("tsconfig.app.json")).unwrap();
     write(
         root,
         "tsconfig.json",
         r#"{
-        "files": [], "references": [{"path":"./tsconfig.app.json"}]
+        "files": [], "references": [{"path":"./tsconfig.app.json"}],
+        "vueCompilerOptions": {"target":4}
     }"#,
     );
     let (referenced, referenced_report) = check(root, &corsa);
