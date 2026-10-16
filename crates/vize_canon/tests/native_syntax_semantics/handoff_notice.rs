@@ -42,8 +42,16 @@ fn required_semantic_completion_does_not_report_runtime_degradation() {
         ),
         "{stdout}"
     );
-    assert_eq!(
-        stderr, "",
-        "required same-config completion was reported as degradation: {stderr}"
+    // Native TypeScript 7.0.2 can print this exact line on successful LSP exit.
+    // The corpus opens at most one diagnostic session per broken/repaired case.
+    assert!(
+        stderr.lines().count() <= 2,
+        "unexpected native output: {stderr}"
     );
+    for line in stderr.lines() {
+        assert_eq!(
+            line, "error handling method 'exit': EOF",
+            "required same-config completion was reported as degradation: {stderr}"
+        );
+    }
 }

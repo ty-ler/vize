@@ -51,3 +51,14 @@ node --test tests/tooling/docs-all-lint-rules.test.ts \
 The corpus decision records its separate 15-test verification. These local
 checks establish source consistency; the final combined Actions qualification
 remains the acceptance boundary for the runtime assertions and integrated tree.
+
+The first integrated [native Canon job](https://github.com/ubugeeei-prod/vize/actions/runs/38924018440/job/117050971900)
+disproved the new empty-stderr assumption. Its complete syntax/semantic corpus
+passed, but native TypeScript 7.0.2 emitted `error handling method 'exit': EOF`
+for each of its two diagnostic-session exits. A separate direct native LSP
+initialize/hover/shutdown/exit replay also exited zero with that exact line;
+Corsa inherits the child's stderr. The handoff assertion now permits only that
+complete provider line, at most once per broken/repaired session. Unknown
+output and every Vize degradation warning still fail. Successful execution and
+the one-test, zero-failure result remain mandatory; no product diagnostics,
+transport failure checks or runtime behavior changed.
