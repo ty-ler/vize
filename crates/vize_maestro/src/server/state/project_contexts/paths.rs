@@ -48,7 +48,7 @@ pub(super) fn physical_path(path: &Path) -> PathBuf {
 
 #[cfg(all(test, unix))]
 mod tests {
-    use super::{document_context_root, physical_path};
+    use super::{Path, document_context_root, physical_path};
 
     #[test]
     fn existing_files_remain_readable_file_paths_after_identity_normalization() {
@@ -60,7 +60,21 @@ mod tests {
             normalized.is_file(),
             "a config identity must not append a directory separator"
         );
-        assert_eq!(std::fs::read_to_string(normalized).unwrap(), "{}");
+        assert_eq!(std::fs::read_to_string(&normalized).unwrap(), "{}");
+        let alias = fixture.path().join("linked-tsconfig.json");
+        std::os::unix::fs::symlink(&config, &alias).unwrap();
+        let linked = physical_path(&alias);
+        assert!(linked.is_file());
+        assert_eq!(std::fs::read_to_string(linked).unwrap(), "{}");
+        let directory = physical_path(fixture.path());
+        assert!(directory.is_dir());
+        assert!(std::fs::read_dir(&directory).unwrap().count() >= 2);
+        let missing = physical_path(&fixture.path().join("new/Unsaved.vue"));
+        assert!(!missing.exists());
+        assert_eq!(
+            missing.strip_prefix(directory).unwrap(),
+            Path::new("new/Unsaved.vue")
+        );
     }
 
     #[test]
