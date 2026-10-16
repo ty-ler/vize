@@ -40,7 +40,12 @@ reaping. Only an authenticated native 7.0.2 executable and complete initialize
 contract select shutdown followed by stdin EOF. Foreign servers retain standard
 shutdown/exit. No stderr bytes, including the historical EOF line, are discarded.
 A clean result requires one completed successful terminal receipt and an
-acknowledged graceful shutdown. Startup failure and discard retain raw evidence.
+acknowledged graceful shutdown. Startup failure and discard retain raw evidence. Final LSP shutdown freezes
+cache admission and waits for the actual queued client close, including an
+unfinished or abandoned startup. The same finalizer runs after Exit or stdin EOF.
+Failed owners and the first error survive retries; neither an empty cache slot
+nor a timeout produces a successful shutdown response. Ordinary configuration
+retirement stays asynchronous.
 
 Package identities are nominal Rust types: applications exchanging Corsa types
 must consistently use the owned graph. Mixing upstream and owned providers is
@@ -53,7 +58,10 @@ laws. They additionally run the frozen full diagnostic vector and repaired input
 against the actual native process; the batch receipt borrows the same retained
 snapshot attachment used for diagnostics. CLI controls retain unexpected stderr,
 non-UTF8 bytes, nonzero status, signal termination and forced timeout evidence.
-Concurrent rename sessions verify their actual child termination.
+Concurrent rename sessions verify their actual child termination. A small real
+stdio test separately checks shutdown/Exit, Exit with stdin still open, and EOF;
+its proof requires the observed native PID/birth to disappear, and never uses a
+kill fallback to obtain a passing result.
 
 `checked-corsa-package-consumer.py` assembles all six normalized Cargo archives
 and checks complete source membership and licenses. Archive assembly with
@@ -72,21 +80,31 @@ manifests/locks and metadata. It admits only the structural six-provider
 migration, preserves unrelated dependencies and the actual runtime, and demands
 fresh compilation of all six provider libraries on each side. It keeps the
 existing workload packets, invalidation controls and numerical ceilings. A source
-pair does not replace public release qualification.
+pair does not replace public release qualification. Earlier baseline/candidate
+runs exposed a final direct-child zombie after server exit. Those complete
+packets and observations remain evidence, while the candidate and installed
+public side now additionally require actual disappearance or a different birth
+identity. A same-birth zombie cannot satisfy final owner reaping.
 
 ## Publication plan and current prerequisites
 
 Read-only crates.io queries on 2026-10-16 returned HTTP 404 for all six owned
-package names. There are no published versions or owners to inspect. This is
+package names. There are no published versions or owners to inspect for those names. The
+existing `vize_canon` owner query identifies the user `ubugeeei`; this does not
+establish a future token's permission to create the new namespaces. This is
 not proof that a future authenticated first publication will be permitted. No
 names have been registered and no crates have been published by this change.
 
-The existing release catalog remains unchanged while release PR #9196 is open.
-The manifest resolver is prepared for the six vendor paths; adding the packages
-to the ordered publisher catalog is a separate release coordination step. The
+The shipping graph and publisher catalog stay deferred until the urgent next
+minor carrying #9202 and #9199 is public and its source receipts are closed, as
+confirmed by the release coordinator. Closing #9196 alone does not clear this
+hold; merging a new six-package graph between pinned release sources would
+invalidate that delivery. The manifest resolver is prepared for the six vendor
+paths; adding the packages to the ordered publisher catalog is a separate release
+coordination step. The
 local workspace version is preparation, not a public-release promise. Per the
 pre-1.0 release policy, ship the migration in a new minor release after the
-existing release finishes.
+urgent release and source-receipt closure finish.
 
 After source and package/native Actions pass:
 
