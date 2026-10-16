@@ -221,6 +221,25 @@ impl ServerState {
         }
     }
 
+    /// Freeze discovery before final shutdown snapshots the cached owners.
+    /// Capture initialized states before marking their contexts retired, since
+    /// ordinary lookup intentionally hides retired owners.
+    pub(super) fn freeze_project_contexts_for_exit(&self) -> Vec<Arc<ServerState>> {
+        self.project_contexts
+            .shutting_down
+            .store(true, Ordering::Release);
+        self.project_contexts.retired.store(true, Ordering::Release);
+        let contexts = self.project_contexts.contexts.lock();
+        let states = contexts
+            .values()
+            .filter_map(|context| context.initialized_state())
+            .collect();
+        for context in contexts.values() {
+            context.mark_retired();
+        }
+        states
+    }
+
     pub(crate) fn retire_project_contexts(&self) {
         self.project_contexts
             .shutting_down

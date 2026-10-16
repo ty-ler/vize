@@ -31,6 +31,8 @@ mod corsa_overlays;
 #[cfg(feature = "native")]
 mod corsa_requests;
 #[cfg(feature = "native")]
+mod corsa_shutdown;
+#[cfg(feature = "native")]
 mod diagnostic_locks;
 #[cfg(feature = "native")]
 mod global_components;

@@ -54,6 +54,8 @@ pub struct CorsaBridge {
 }
 
 #[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
+mod shutdown;
+
 impl CorsaBridge {
     /// Create a new Corsa bridge with default configuration.
     pub fn new() -> Self {

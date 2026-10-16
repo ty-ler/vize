@@ -142,9 +142,9 @@ impl MaestroServer {
         &self.state.documents
     }
 
-    fn finish_shutdown(&self) -> tower_lsp::jsonrpc::Result<()> {
+    async fn finish_shutdown(&self) -> tower_lsp::jsonrpc::Result<()> {
         #[cfg(feature = "native")]
-        self.state.retire_project_contexts();
+        let native_close = self.state.shutdown_corsa_project_contexts().await;
         #[cfg(feature = "experimental-source-navigation")]
         {
             if let Some(navigation) = &self.navigation {
@@ -153,6 +153,13 @@ impl MaestroServer {
             self.state
                 .retire_module_links(ModuleLinkRetirement::Shutdown);
         }
+        #[cfg(feature = "native")]
+        native_close.map_err(|reason| {
+            tracing::error!(error = %reason, "native owners did not close before LSP shutdown");
+            let mut error = tower_lsp::jsonrpc::Error::internal_error();
+            error.data = Some(serde_json::json!({"nativeShutdownError":reason}));
+            error
+        })?;
         Ok(())
     }
 

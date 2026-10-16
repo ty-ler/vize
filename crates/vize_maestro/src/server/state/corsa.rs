@@ -106,7 +106,15 @@ impl ServerState {
         });
         // Keep a cancelled startup's worker/session owner. Until it drains,
         // later callers refuse rather than creating a second backend process.
-        *self.corsa_bridge.write() = Some(Arc::clone(&bridge));
+        {
+            let mut slot = self.corsa_bridge.write();
+            // Final shutdown freezes the owner before taking this same slot.
+            // Never publish a new pending child behind its captured owner set.
+            if self.project_context_retired() {
+                return None;
+            }
+            *slot = Some(Arc::clone(&bridge));
+        }
 
         // The bridge's worker-owned async reply yields while its synchronous
         // handshake drains, and enforces the configured deadline (#8012).
@@ -223,6 +231,11 @@ impl ServerState {
     /// works.
     pub fn retire_corsa_bridge(&self, failed: &Arc<CorsaBridge>) {
         let mut slot = self.corsa_bridge.write();
+        // A failed in-flight request must not drop the finalizer's pending
+        // owner between freezing the project and taking its cached bridge.
+        if self.project_context_retired() {
+            return;
+        }
         if slot
             .as_ref()
             .is_some_and(|current| Arc::ptr_eq(current, failed))
@@ -247,6 +260,11 @@ impl ServerState {
 
     fn discard_corsa_startup(&self, pending: &Arc<CorsaBridge>) {
         let mut slot = self.corsa_bridge.write();
+        // Final shutdown owns the retained pending bridge until it queues and
+        // acknowledges actual client closure, including unfinished startup.
+        if self.project_context_retired() {
+            return;
+        }
         if slot
             .as_ref()
             .is_some_and(|current| Arc::ptr_eq(current, pending))
