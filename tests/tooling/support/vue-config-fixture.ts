@@ -23,6 +23,23 @@ function fixtureDocument(document: NativeConfigFixture): ConfigObject {
 }
 
 /**
+ * Explicit plugin.config accepts native scoped compiler options that are not
+ * part of canonical Vue entries. Carry those fixtures without discovery or
+ * canonical rewrites, leaving module options to the real adapter's precedence.
+ */
+export function inlineVuePluginFixtureOptions(
+  moduleOptions: ConfigObject | false | undefined,
+  document: NativeConfigFixture | null | undefined,
+): ConfigObject | false {
+  if (moduleOptions === false) return false;
+  const options = structuredClone(moduleOptions ?? {});
+  if (document !== null && document !== undefined) {
+    options.config = structuredClone(fixtureDocument(document));
+  }
+  return options;
+}
+
+/**
  * Carry existing native JSON test vectors through the canonical Vite API.
  * This is test infrastructure, not support for discovering retired config files.
  * Native fixtures default JSX checking to false; Vite projects default it to true.

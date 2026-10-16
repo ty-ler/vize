@@ -6,10 +6,54 @@ import { test } from "node:test";
 import { pathToFileURL } from "node:url";
 import { projectViteConfigSource } from "../../crates/vize_carton/src/config/loader/vite-runtime.mjs";
 import {
+  inlineVuePluginFixtureOptions,
   nativeConfigToVueOptions,
   vueConfigFixtureSource,
   writeVueConfigFixture,
 } from "./support/vue-config-fixture.ts";
+
+test("explicit inline fixtures retain scoped compiler settings and module options without canonical rewrites", () => {
+  const native = {
+    vue: { version: "2.7" },
+    lsp: { formatting: false },
+    compiler: { whitespace: "preserve" },
+    entries: [{ files: ["app/components/tight/**"], compiler: { whitespace: "condense" } }],
+  };
+  const moduleOptions = { whitespace: "condense", experimental: { hmr: false } };
+  const bytes = JSON.stringify(native);
+  for (const document of [native, bytes, new TextEncoder().encode(bytes)]) {
+    const options = inlineVuePluginFixtureOptions(moduleOptions, document);
+    assert.ok(options !== false);
+    assert.deepEqual(options, {
+      whitespace: "condense",
+      experimental: { hmr: false },
+      config: {
+        vue: { version: "2.7" },
+        lsp: { formatting: false },
+        compiler: { whitespace: "preserve" },
+        entries: [{ files: ["app/components/tight/**"], compiler: { whitespace: "condense" } }],
+      },
+    });
+    assert.notEqual(options, moduleOptions);
+    assert.notEqual(options.config, native);
+    const config = options.config as typeof native;
+    config.entries[0].compiler.whitespace = "changed";
+    (options.experimental as typeof moduleOptions.experimental).hmr = true;
+    assert.equal(native.entries[0].compiler.whitespace, "condense");
+    assert.equal(moduleOptions.experimental.hmr, false);
+  }
+  assert.equal(JSON.stringify(native), bytes);
+});
+
+test("disabled inline modules ignore config documents and absent documents preserve module options", () => {
+  assert.equal(inlineVuePluginFixtureOptions(false, "not JSON"), false);
+  for (const document of [null, undefined]) {
+    assert.deepEqual(inlineVuePluginFixtureOptions(undefined, document), {});
+    assert.deepEqual(inlineVuePluginFixtureOptions({ whitespace: "preserve" }, document), {
+      whitespace: "preserve",
+    });
+  }
+});
 
 test("native fixture carrier preserves independently specified native settings through the real projector", async () => {
   const native = {
