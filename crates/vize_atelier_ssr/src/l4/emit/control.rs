@@ -68,7 +68,8 @@ impl<'r, 'a> Emitter<'_, 'r, 'a, '_, '_, '_> {
             let shape = self.scan_region(self.pos)?;
             self.branch_key = self.branch_key_span(fact, index)?;
             let emitted = self.children(Flags {
-                as_fragment: !disable_nested_fragments && shape.legacy_children > 1,
+                as_fragment: !disable_nested_fragments
+                    && (shape.legacy_children > 1 || self.segment(self.pos)?.kind == Kind::If),
                 disable_nested_fragments,
                 disable_comments: false,
                 inherit_attrs,
