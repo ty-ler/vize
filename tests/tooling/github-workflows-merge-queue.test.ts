@@ -89,7 +89,7 @@ test("queue scope reaches the planner and every selected source lane remains req
   ]);
   assert.equal(
     source.jobs["source-report"].if,
-    "${{ always() && !contains(needs.*.result, 'cancelled') }}",
+    "${{ always() && github.event_name == 'merge_group' && !contains(needs.*.result, 'cancelled') }}",
   );
   assert.match(commands(source.jobs["source-report"]), /canonical-corpus-selection\.mjs/);
   assert.ok(check.jobs["test-report"].needs?.includes("pr-source-checks"));
@@ -183,13 +183,17 @@ test("queue Rust keeps affected doctests beside archive builds and the different
   );
   const manual = check.jobs["clippy-and-test"].steps?.find((step) => step.name === "Test");
   assert.equal(manual?.uses, actionPath);
-  assert.equal(manual?.with?.["workspace-already-tested"], undefined);
+  assert.equal(manual?.with?.["workspace-already-tested"], "true");
+  assert.deepEqual(check.jobs["full-rust-report"].needs, [
+    "full-rust-workspace",
+    "clippy-and-test",
+  ]);
   assert.equal(recipe.inputs["workspace-already-tested"].default, "false");
   assert.equal(recipe.runs.using, "composite");
   const workspaceStep = recipe.runs.steps.find((step) => step.name === "Test Rust workspace");
   assert.ok(workspaceStep);
   assert.equal(workspaceStep.if, "${{ inputs.workspace-already-tested != 'true' }}");
-  assert.equal(workspaceStep.run, "node tools/support/compat/github/run-rust-workspace-tests.mjs");
+  assert.equal(workspaceStep.run, "node tools/support/compat/github/run-rust-workspace-tests.ts");
   const hydration = recipe.runs.steps[0];
   assert.equal(
     hydration.run,
