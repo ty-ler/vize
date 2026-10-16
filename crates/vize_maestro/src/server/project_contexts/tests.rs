@@ -358,7 +358,7 @@ async fn protocol_send(service: &mut LspService<MaestroServer>, value: Value) ->
 #[test]
 fn registered_client_watcher_reloads_imported_vite_policy_through_the_protocol() {
     use futures::{SinkExt, StreamExt};
-    block_on(async {
+    block_on(crate::runtime::timeout(std::time::Duration::from_secs(30), async {
         let root = tempfile::tempdir().unwrap();
         file(
             root.path(),
@@ -417,6 +417,7 @@ fn registered_client_watcher_reloads_imported_vite_policy_through_the_protocol()
             ),
             register
         );
+        let scenario = async {
         assert_eq!(notification, None);
         let registration = &registration["registrations"][0];
         assert_eq!(registration["method"], "workspace/didChangeWatchedFiles");
@@ -458,5 +459,18 @@ fn registered_client_watcher_reloads_imported_vite_policy_through_the_protocol()
             Some(source)
         );
         assert_eq!(service.inner().state.documents.version(&a), Some(7));
-    });
+        };
+        // Keep the client reading while notifications and requests are sent.
+        let client = async {
+            while let Some(request) = socket.next().await {
+                if let Some(id) = request.id() {
+                    socket.send(tower_lsp::jsonrpc::Response::from_ok(id.clone(), Value::Null)).await.unwrap();
+                }
+            }
+        };
+        futures::pin_mut!(scenario, client);
+        if let futures::future::Either::Right(_) = futures::future::select(scenario, client).await {
+            panic!("client disconnected before the watcher scenario completed");
+        }
+    })).expect("registered watcher protocol completes within 30 seconds");
 }
