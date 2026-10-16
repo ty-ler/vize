@@ -32,6 +32,7 @@ function idealTranscript(source: Scenario = scenario): Entry[] {
   const entries: Entry[] = [];
   let id = 0;
   let version = 0;
+  let published: unknown[] = [];
   const push = (dir: "c2s" | "s2c", msg: object) =>
     entries.push({
       session: 7,
@@ -57,6 +58,7 @@ function idealTranscript(source: Scenario = scenario): Entry[] {
         params: { textDocument: { uri, languageId: source.languageId, version, text: expect } },
       });
     } else if (step.kind === "diagnostics") {
+      published = expect;
       push("s2c", {
         method: "textDocument/publishDiagnostics",
         params: { uri, version, diagnostics: expect },
@@ -65,7 +67,11 @@ function idealTranscript(source: Scenario = scenario): Entry[] {
       push("c2s", {
         id: ++id,
         method: step.method,
-        params: { textDocument: { uri }, ...step.match },
+        params: {
+          textDocument: { uri },
+          ...step.match,
+          ...(step.diagnosticsFromRequest ? { context: { diagnostics: published } } : {}),
+        },
       });
       push("s2c", { id, result: expect });
     } else if (step.kind === "text") {
@@ -325,4 +331,66 @@ test("Helix formatting opt-in supports absent and existing initialization option
 test("Helix explicitly sends the complete scenario initialization profile", () => {
   const configured = parseToml(userLanguages(undefined, scenario.initializationOptions)) as any;
   assert.deepEqual(configured["language-server"].vize.config, scenario.initializationOptions);
+});
+
+function codeActionExchange(entries: Entry[]) {
+  const request = entries.find((entry) => entry.msg?.method === "textDocument/codeAction")!.msg!;
+  const response = entries.find(
+    (entry) => entry.dir === "s2c" && entry.msg?.id === request.id,
+  )!.msg!;
+  const diagnostic = request.params.context.diagnostics.find(
+    (value: any) => value.code === "vue/no-multi-spaces",
+  );
+  return { request, response, diagnostic };
+}
+
+function echoActionDiagnostic(response: any, diagnostic: unknown) {
+  for (const action of response.result) action.diagnostics = [structuredClone(diagnostic)];
+}
+
+test("code actions compare full client diagnostic echoes while published diagnostics stay exact", () => {
+  const entries = idealTranscript();
+  const { response, diagnostic } = codeActionExchange(entries);
+  delete diagnostic.codeDescription;
+  echoActionDiagnostic(response, diagnostic);
+  assert.deepEqual(failures(entries), []);
+  response.result[0].diagnostics[0].codeDescription = { href: "https://unexpected.test/" };
+  assert.deepEqual(failures(entries), ["code-action"]);
+  delete response.result[0].diagnostics[0].codeDescription;
+  response.result[0].diagnostics[0].message = "changed by server";
+  assert.deepEqual(failures(entries), ["code-action"]);
+});
+
+test("code action echo preserves supplied metadata and rejects changed rule identity", () => {
+  const entries = idealTranscript();
+  const { response, diagnostic } = codeActionExchange(entries);
+  diagnostic.codeDescription = { href: "https://client.test/rule" };
+  diagnostic.data = { client: "retained", revision: 7 };
+  diagnostic.message = "Client explanation retained";
+  echoActionDiagnostic(response, diagnostic);
+  assert.deepEqual(failures(entries), []);
+  delete response.result[0].diagnostics[0].data;
+  assert.deepEqual(failures(entries), ["code-action"]);
+  for (const change of [
+    { code: "unknown/rule" },
+    { source: "another/linter" },
+    { range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } } },
+  ]) {
+    const invalid = idealTranscript();
+    const exchange = codeActionExchange(invalid);
+    Object.assign(exchange.diagnostic, change);
+    echoActionDiagnostic(exchange.response, exchange.diagnostic);
+    assert.deepEqual(failures(invalid), ["code-action"]);
+  }
+});
+
+test("corrupted canonical action documentation fails even when the client omits documentation", () => {
+  const entries = idealTranscript();
+  const { response, diagnostic } = codeActionExchange(entries);
+  delete diagnostic.codeDescription;
+  echoActionDiagnostic(response, diagnostic);
+  const corrupted = structuredClone(scenario);
+  const action = corrupted.steps.find((value) => value.id === "code-action")!;
+  (action.expect as any[])[0].diagnostics[0].codeDescription.href = "https://corrupted.test/";
+  assert.deepEqual(failures(entries, corrupted), ["code-action"]);
 });
