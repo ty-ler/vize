@@ -73,12 +73,12 @@ test("full tooling captures historical documents once with the original Vue2 ord
       "./.github/actions/test-native-vue2-scriptless-sfc",
     ],
   );
-  assert.equal(outer.runs.steps[1].if, "${{ always() }}");
+  assert.equal(outer.runs.steps[1].if, "${{ !cancelled() }}");
   for (const step of outer.runs.steps)
     assert.deepEqual(step.with, { "comparison-base": "${{ inputs.comparison-base }}" });
   assert.equal(
     workflow.jobs["test-scripts"].if,
-    "${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}",
+    "${{ !cancelled() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}",
   );
   assert.equal(
     workflow.jobs["test-scripts"].steps.filter(
@@ -91,7 +91,7 @@ test("full tooling captures historical documents once with the original Vue2 ord
     (step: any) => step.uses === "./.github/actions/test-native-historical-sfc-documents",
   );
   assert.equal(hooks.length, 1);
-  assert.equal(hooks[0].if, "${{ always() && inputs.shard == '1' }}");
+  assert.equal(hooks[0].if, "${{ !cancelled() && inputs.shard == '1' }}");
   assert.deepEqual(hooks[0].with, {
     "comparison-base": "0000000000000000000000000000000000000000",
   });
