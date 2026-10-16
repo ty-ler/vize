@@ -16,6 +16,7 @@ type Initialization = Shared<BoxFuture<'static, Option<Arc<ServerState>>>>;
 pub(super) struct ProjectContext {
     key: ProjectContextKey,
     snapshot: OnceLock<vize_carton::config::LoadedLspConfig>,
+    snapshot_failed: AtomicBool,
     previous: Option<RetainedConfiguration>,
     state: OnceLock<Arc<ServerState>>,
     #[cfg(feature = "experimental-source-navigation")]
@@ -29,6 +30,7 @@ impl ProjectContext {
         Self {
             key: key.into(),
             snapshot: OnceLock::new(),
+            snapshot_failed: AtomicBool::new(false),
             previous: None,
             state: OnceLock::new(),
             #[cfg(feature = "experimental-source-navigation")]
@@ -38,8 +40,14 @@ impl ProjectContext {
         }
     }
 
-    pub(super) fn provide_snapshot(&self, snapshot: vize_carton::config::LoadedLspConfig) {
-        let _ = self.snapshot.set(snapshot);
+    pub(super) fn provide_snapshot(
+        &self,
+        snapshot: vize_carton::config::LoadedLspConfig,
+        failed: bool,
+    ) {
+        if self.snapshot.set(snapshot).is_ok() {
+            self.snapshot_failed.store(failed, Ordering::Release);
+        }
     }
 
     pub(super) fn replacement(&self) -> Self {
@@ -106,7 +114,12 @@ impl ProjectContext {
         let state = self
             .state
             .get_or_init(|| {
-                owner.new_project_state(&self.key, self.snapshot.get(), self.previous.as_ref())
+                owner.new_project_state(
+                    &self.key,
+                    self.snapshot.get(),
+                    self.previous.as_ref(),
+                    self.snapshot_failed.load(Ordering::Acquire),
+                )
             })
             .clone();
         if self.retired.load(Ordering::Acquire) {
