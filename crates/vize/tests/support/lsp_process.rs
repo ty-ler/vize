@@ -248,6 +248,9 @@ impl LspProcess {
     }
 
     fn poll_exit(&mut self) -> ExitStatus {
+        if let Some(passive) = &mut self.passive {
+            passive.begin_exit_wait();
+        }
         let deadline = Instant::now() + PROCESS_EXIT_TIMEOUT;
         loop {
             let status = self
@@ -264,6 +267,13 @@ impl LspProcess {
                 return status;
             }
             if Instant::now() >= deadline {
+                if let Some(passive) = &self.passive {
+                    passive.record_exit_deadline(
+                        self.child.as_ref().unwrap().id(),
+                        PROCESS_EXIT_TIMEOUT,
+                        self.stdin.is_some(),
+                    );
+                }
                 let transport = if self.stdin.is_some() {
                     " while stdin remained open"
                 } else {

@@ -6,16 +6,28 @@
     reason = "test-only passive custody uses standard files and JSON buffers"
 )]
 
-use std::{io, io::Write, path::PathBuf, process::Command};
+use std::{
+    io,
+    io::Write,
+    path::PathBuf,
+    process::Command,
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+};
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
 const MAX_PERSISTED_BYTES: usize = 4 * 1024 * 1024;
 
+#[path = "process_state.rs"]
+mod process_state;
+
 pub(super) struct Passive {
     root: PathBuf,
     identity: Value,
+    created: Instant,
+    created_at: u128,
+    exit_wait: Option<Instant>,
 }
 
 impl Passive {
@@ -30,6 +42,9 @@ impl Passive {
         // hashing, process probe or extra request precedes original initialize.
         Self {
             root,
+            created: Instant::now(),
+            created_at: unix_millis(),
+            exit_wait: None,
             identity: json!({
                 "pid":pid,
                 "declaredExecutable":command.get_program().to_string_lossy(),
@@ -40,6 +55,41 @@ impl Passive {
                 "identityScope":"original spawned LSP PID and declared command; no executable-byte or backend-PID join",
                 "extraIdentityProbe":false
             }),
+        }
+    }
+
+    pub(super) fn begin_exit_wait(&mut self) {
+        self.exit_wait = Some(Instant::now());
+    }
+
+    /// Observe only after the original deadline; the caller still fails and
+    /// kills/reaps its original child. No probe runs on the successful path.
+    pub(super) fn record_exit_deadline(&self, pid: u32, timeout: Duration, stdin_open: bool) {
+        let started_at = unix_millis();
+        let snapshot = process_state::snapshot(pid);
+        let packet = json!({
+            "schema":"vize-lsp-exit-deadline-v1", "pid":pid,
+            "observation":"after original exit deadline, before original kill; non-atomic proc reads",
+            "observedAtUnixMillis":started_at,"finishedAtUnixMillis":unix_millis(),
+            "processSpawnObservedAtUnixMillis":self.created_at,
+            "elapsedSinceSpawnMillis":self.created.elapsed().as_millis(),
+            "elapsedExitWaitMillis":self.exit_wait.map(|start|start.elapsed().as_millis()),
+            "originalTimeoutMillis":timeout.as_millis(),"stdinOpen":stdin_open,
+            "processState":snapshot,
+            "llvmProfileFile":std::env::var_os("LLVM_PROFILE_FILE").map(|value|value.to_string_lossy().into_owned())
+        });
+        let result = (|| -> io::Result<()> {
+            std::fs::create_dir_all(&self.root)?;
+            std::fs::write(
+                self.root.join("exit-deadline.json"),
+                serde_json::to_vec_pretty(&packet)?,
+            )
+        })();
+        if let Err(error) = result {
+            let _ = writeln!(
+                std::io::stderr().lock(),
+                "passive LSP deadline evidence could not be persisted: {error}"
+            );
         }
     }
 
@@ -79,8 +129,27 @@ impl Passive {
                 "representation":"decoded JSON messages and already-owned stderr bytes; not raw wire frames",
                 "overflowMeaning":"incomplete observation, never an accepted whole packet"
             }))?,
+        )?;
+        std::fs::write(
+            self.root.join("lifecycle.json"),
+            serde_json::to_vec_pretty(&json!({
+                "schema":"vize-lsp-passive-lifecycle-v1", "pid":self.identity["pid"],
+                "processSpawnObservedAtUnixMillis":self.created_at,
+                "terminalObservedAtUnixMillis":unix_millis(),
+                "terminalAfterSpawnMillis":self.created.elapsed().as_millis(),
+                "exitWaitStartedAfterSpawnMillis":self.exit_wait.map(|start|start.duration_since(self.created).as_millis()),
+                "elapsedExitWaitMillis":self.exit_wait.map(|start|start.elapsed().as_millis()),
+                "observation":"terminal after original teardown and reader joins; no process probe on success"
+            }))?,
         )
     }
+}
+
+fn unix_millis() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis()
 }
 
 fn hex(bytes: &[u8]) -> String {

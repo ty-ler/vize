@@ -5,7 +5,7 @@
     reason = "test-only JSON and filesystem controls use standard buffers"
 )]
 
-use std::{path::PathBuf, process::Command};
+use std::{fs, path::PathBuf, process::Command};
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -17,6 +17,10 @@ use sha2::{Digest, Sha256};
 )]
 mod passive;
 use passive::Passive;
+
+#[path = "support/lsp_process/process_state.rs"]
+#[allow(dead_code, reason = "the LSP helper owns platform dispatch")]
+mod process_state;
 
 fn expected(terminal: Value) -> Value {
     json!({
@@ -119,4 +123,106 @@ fn artifact_write_failure_is_reported_without_panicking_or_overwriting() {
         Some(std::io::ErrorKind::AlreadyExists)
     );
     assert_eq!(std::fs::read(root).unwrap(), b"original unrelated bytes");
+}
+
+#[test]
+#[cfg(unix)]
+fn complete_thread_and_fd_observations_retain_original_bytes() {
+    let case = tempfile::tempdir().unwrap();
+    let process = case.path().join("17");
+    let thread = process.join("task/19");
+    fs::create_dir_all(&thread).unwrap();
+    fs::create_dir(process.join("fd")).unwrap();
+    std::os::unix::fs::symlink("pipe:[12345]", process.join("fd/0")).unwrap();
+    for file in ["stat", "status", "wchan"] {
+        fs::write(process.join(file), format!("process {file}\n")).unwrap();
+    }
+    let files = [
+        "comm", "stat", "status", "wchan", "syscall", "stack", "children",
+    ];
+    let mut expected = serde_json::Map::new();
+    for file in files {
+        let bytes = format!("thread {file}\n").into_bytes();
+        fs::write(thread.join(file), &bytes).unwrap();
+        expected.insert(file.into(), json!({"complete":true,"bytes":bytes}));
+    }
+    let actual = process_state::from_proc(case.path(), 17);
+    assert_eq!(
+        actual["tasks"],
+        json!({"complete":true,"entries":[{"name":"19","observation":expected}]})
+    );
+    assert_eq!(
+        actual["fds"],
+        json!({"complete":true,"entries":[{"name":"0","observation":{"target":"pipe:[12345]"}}]})
+    );
+    for file in ["stat", "status", "wchan"] {
+        assert_eq!(
+            actual[file],
+            json!({"complete":true,"bytes":format!("process {file}\n").as_bytes()})
+        );
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn deadline_observation_does_not_kill_the_owned_child_or_replace_its_terminal_packet() {
+    let case = tempfile::tempdir().unwrap();
+    let root = case.path().join("capture");
+    let mut command = Command::new("sh");
+    command
+        .args(["-c", "read line"])
+        .stdin(std::process::Stdio::piped());
+    let mut child = command.spawn().unwrap();
+    let mut capture = Passive::with_root(root.clone(), child.id(), &command);
+    capture.begin_exit_wait();
+    capture.record_exit_deadline(child.id(), std::time::Duration::ZERO, true);
+    // The helper observes; only the existing owner decides to kill and reap.
+    let alive = child.try_wait().unwrap();
+    child.kill().unwrap();
+    let status = child.wait().unwrap();
+    assert_eq!(alive, None);
+    let terminal =
+        json!({"originalFailure":"original deadline expired", "exitSuccess":status.success()});
+    capture.persist(terminal.clone()).unwrap();
+    let packet: Value =
+        serde_json::from_slice(&fs::read(root.join("evidence.json")).unwrap()).unwrap();
+    assert_eq!(packet["terminalEvidence"], terminal);
+    let deadline: Value =
+        serde_json::from_slice(&fs::read(root.join("exit-deadline.json")).unwrap()).unwrap();
+    assert_eq!(deadline["pid"], child.id());
+    assert_eq!(deadline["stdinOpen"], true);
+    assert_eq!(deadline["originalTimeoutMillis"], 0);
+    let lifecycle: Value =
+        serde_json::from_slice(&fs::read(root.join("lifecycle.json")).unwrap()).unwrap();
+    assert_eq!(lifecycle["pid"], child.id());
+    assert!(
+        lifecycle["terminalAfterSpawnMillis"].as_u64().unwrap()
+            >= lifecycle["exitWaitStartedAfterSpawnMillis"]
+                .as_u64()
+                .unwrap()
+    );
+}
+
+#[test]
+fn missing_and_incomplete_observations_are_never_empty_successes() {
+    let case = tempfile::tempdir().unwrap();
+    let missing = process_state::from_proc(case.path(), 17);
+    assert_eq!(missing["tasks"]["errorKind"], "NotFound");
+    assert_eq!(missing["fds"]["errorKind"], "NotFound");
+    let path = case.path().join("long");
+    fs::write(&path, vec![b'x'; (64 * 1024) + 1]).unwrap();
+    assert_eq!(
+        process_state::read(&path),
+        json!({"complete":false,"bytes":vec![b'x';(64 * 1024)]})
+    );
+    fs::create_dir(case.path().join("many")).unwrap();
+    for item in ["1", "2"] {
+        fs::write(case.path().join("many").join(item), b"").unwrap();
+    }
+    let limited =
+        process_state::entries(&case.path().join("many"), 1, |_| json!({"observed":true}));
+    assert_eq!(
+        limited,
+        json!({"complete":false,"entries":[{"name":"1","observation":{"observed":true}}]})
+    );
 }

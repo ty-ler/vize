@@ -1,0 +1,118 @@
+name: LSP coverage exit probe
+run-name: LSP coverage exit probe @ ${{ github.sha }}
+# Temporary diagnostic only. This workflow must never land on main.
+on:
+  push:
+    branches: [ci/probe-lsp-coverage-exit-20261017]
+permissions: { contents: read }
+env: { CARGO_TERM_COLOR: always, FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true }
+jobs:
+  original-instrumented-exit:
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 50
+    env:
+      NODE_OPTIONS: "--disable-warning=DEP0040 --disable-warning=DEP0169"
+      VIZE_NUXT_CONFIG_ITERATIONS: "100"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with: { fetch-depth: 2 }
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: false
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
+        with: { toolchain: "1.99.1", components: llvm-tools-preview }
+      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
+        with: { wild-version: "0.9.0" }
+      - uses: ./.github/actions/setup-moonbit
+      - uses: ./.github/actions/setup-rust-script
+      # The generic action deliberately refuses sticky mounts on non-main pushes.
+      # These are the original source-coverage keys, with no write authorization.
+      - name: Mount read-only Cargo registry clone
+        uses: useblacksmith/stickydisk@3f6be1451e3cad893b778bc93495c80452a5da26 # v1.7.2
+        with:
+          key: ubugeeei-prod/vize-cargo-registry-Linux-X64
+          path: ~/.cargo/registry
+          commit: false
+      - name: Mount read-only Cargo git clone
+        uses: useblacksmith/stickydisk@3f6be1451e3cad893b778bc93495c80452a5da26 # v1.7.2
+        with:
+          key: ubugeeei-prod/vize-cargo-git-Linux-X64
+          path: ~/.cargo/git
+          commit: false
+      - name: Mount read-only source coverage target clone
+        uses: useblacksmith/stickydisk@3f6be1451e3cad893b778bc93495c80452a5da26 # v1.7.2
+        with:
+          key: ubugeeei-prod/vize-coverage-source-target-Linux-X64
+          path: ${{ github.workspace }}/target
+          commit: false
+      - uses: ./.github/actions/reuse-rust-target
+        with: { target-path: "${{ github.workspace }}/target", record: "false" }
+      - name: Install original frozen JS dependencies
+        run: vp install --frozen-lockfile --prefer-offline
+      - name: Install original Pkl CLI and pinned native fixture
+        run: npm install --global @pkl-community/pkl@0.27.2 && git submodule update --init --force --depth 1 -- tests/_fixtures/_git/element-plus
+      - uses: taiki-e/install-action@184183c2401be73c3bf42c2e61268aa5855379c1 # v2
+        with: { tool: "cargo-llvm-cov@0.8.7,cargo-nextest@0.9.146" }
+      - name: Record original source and runtime configuration
+        run: |
+          mkdir -p "$RUNNER_TEMP/lsp-coverage-exit-probe" target/llvm-cov
+          {
+            git rev-parse HEAD HEAD^
+            git diff --name-status a00fb6cff9268e1371ba260739d905050e2a2573 HEAD
+            git diff --exit-code a00fb6cff9268e1371ba260739d905050e2a2573 -- crates/vize/src crates/vize_maestro crates/vize_canon tests/_fixtures/differential/lsp/rename-source-authority/8009 .config/nextest.toml Cargo.lock
+            rustc -vV
+            cargo llvm-cov --version
+            cargo nextest --version
+            node --version
+            test -z "${VIZE_TEST_REQUIRE_TSGO+x}"
+            test -z "${VIZE_TEST_DISABLE_TSGO+x}"
+            printf '%s\n' 'VIZE_TEST_REQUIRE_TSGO=UNSET; VIZE_TEST_DISABLE_TSGO=UNSET (same as original coverage job)'
+            sha256sum node_modules/@typescript/typescript-linux-x64/lib/tsc
+          } > "$RUNNER_TEMP/lsp-coverage-exit-probe/configuration.txt"
+          cat "$RUNNER_TEMP/lsp-coverage-exit-probe/configuration.txt"
+      - name: Run the unchanged instrumented original and normal-exit controls once
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          VIZE_NATIVE_SYNTAX_CAPTURE_DIR: ${{ runner.temp }}/source-coverage-native-syntax
+          VIZE_LSP_PASSIVE_EVIDENCE: ${{ runner.temp }}/lsp-coverage-exit-probe/passive
+        run: |
+          set -o pipefail
+          cargo llvm-cov nextest --workspace --profile full --test-threads 8 \
+            -E 'package(=vize) & ((binary(=lsp_component_attribute_authority_cli) & test(=attribute_controls::original_nested_loop_aliases_keep_exact_local_rename_and_read_vectors)) | (binary(=lsp_cli) & (test(=lsp_exit_notification_terminates_process_while_stdin_stays_open) | test(=lsp_survives_a_closed_stderr_pipe))) | binary(=lsp_passive_evidence_cli))' \
+            --json --summary-only --output-path target/llvm-cov/lsp-exit-probe.json \
+            2>&1 | tee "$RUNNER_TEMP/lsp-coverage-exit-probe/run.log"
+      - name: Retain post-run executable identity and selected JUnit
+        if: ${{ always() }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/lsp-coverage-exit-probe"
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          root = Path(os.environ["RUNNER_TEMP"]) / "lsp-coverage-exit-probe"
+          identities = []
+          for packet in sorted((root / "passive").glob("*/evidence.json")):
+              try:
+                  content = json.loads(packet.read_bytes())
+                  executable = Path(content["process"]["declaredExecutable"])
+                  data = executable.read_bytes()
+                  identities.append({"packet":str(packet),"pid":content["process"]["pid"],"executable":str(executable),"bytes":len(data),"sha256":hashlib.sha256(data).hexdigest()})
+              except (OSError, ValueError, KeyError) as error:
+                  identities.append({"packet":str(packet),"error":str(error)})
+          (root / "executable-identities.json").write_text(json.dumps(identities, indent=2) + "\n")
+          for index, receipt in enumerate([Path("target/llvm-cov-target/nextest/full/junit.xml"), Path("target/nextest/full/junit.xml")]):
+              if receipt.is_file():
+                  (root / f"junit-{index}.xml").write_bytes(receipt.read_bytes())
+          PY
+      - name: Retain complete diagnostic observations
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lsp-coverage-exit-probe-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/lsp-coverage-exit-probe/
+            ${{ runner.temp }}/source-coverage-native-syntax/
+            target/llvm-cov/lsp-exit-probe.json
+          if-no-files-found: error
+          retention-days: 14
