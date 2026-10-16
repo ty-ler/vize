@@ -155,19 +155,18 @@ test("the Rust report waits for the builder and every named test cohort", () => 
   );
   const reportSteps = rust.jobs["rust-source-report"].steps ?? [];
   const gate = reportSteps.findIndex((step) => step.name === "Require the complete Rust tier");
-  const gateRuntime = reportSteps.findIndex((step) =>
-    step.uses?.startsWith("voidzero-dev/setup-vp@"),
-  );
+  const gateRuntime = reportSteps.findIndex((step) => step.uses?.startsWith("actions/setup-node@"));
   assert.ok(gateRuntime >= 0 && gateRuntime < gate);
   assert.equal(reportSteps[gateRuntime].if, undefined);
   assert.equal(
-    reportSteps.filter((step) => step.uses?.startsWith("voidzero-dev/setup-vp@")).length,
+    reportSteps.filter((step) => step.uses?.startsWith("actions/setup-node@")).length,
     1,
   );
   assert.deepEqual(reportSteps[gateRuntime].with, {
     "node-version-file": "package.json",
-    "run-install": false,
+    "package-manager-cache": false,
   });
+  assert.ok(reportSteps.every((step) => !step.uses?.includes("setup-vp@")));
   const select = reportSteps.findIndex(
     (step) => step.name === "Select latest source-bound Rust workers",
   );
