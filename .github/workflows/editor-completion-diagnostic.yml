@@ -39,7 +39,7 @@ jobs:
           node --input-type=module <<'NODE'
           import path from 'node:path';
           import { prepareRealVueWorkspace } from './tools/support/compat/editor-e2e/real-vue-workspace.mjs';
-          for (const name of ['immediate', 'same-document', 'sibling']) {
+          for (const name of ['immediate', 'same-document', 'sibling', 'edited-sibling', 'deleted-dependency', 'reopened']) {
             prepareRealVueWorkspace(path.join(process.env.VIZE_COMPLETION_PROBE_ROOT, name));
           }
           NODE
@@ -48,6 +48,8 @@ jobs:
         env:
           VIZE_COMPLETION_PROBE_ROOT: ${{ github.workspace }}/.completion-native-diagnostic
         run: |
+          cargo test --locked --profile ci -p vize_canon --lib lsp_client::workspace_project::retention_tests:: -- --nocapture
+          cargo test --locked --profile ci -p vize_canon --lib lsp_client::editor_lsp::completion_resolve::issued::tests:: -- --nocapture
           cargo test --locked --profile ci -p vize_maestro --lib ide::completion::resolve:: -- --include-ignored --nocapture --test-threads=1
       - name: Preserve every first-observation packet and native protocol trace
         if: ${{ always() }}
@@ -58,5 +60,22 @@ jobs:
             .completion-native-diagnostic/*/receipt.json
             .completion-native-diagnostic/*/protocol-traces/
           include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 3
+  editor-host:
+    needs: native-interleaving
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: ./.github/actions/vscode-host-smoke
+        env:
+          VIZE_TEST_COMPLETION_EVIDENCE: ${{ runner.temp }}/vize-completion-observations/rich-completion.json
+      - name: Preserve completion observations even when the host succeeds
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: editor-host-completion-observations-${{ github.sha }}
+          path: ${{ runner.temp }}/vize-completion-observations/
           if-no-files-found: warn
           retention-days: 3

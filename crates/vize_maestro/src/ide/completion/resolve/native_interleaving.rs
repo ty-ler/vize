@@ -1,10 +1,13 @@
-//! Diagnostic-only ordering controls using the unchanged real host fixtures.
+//! Real-native completion lifetime around canonical project synchronization.
 
 use super::*;
 use crate::ide::{DiagnosticService, IdeContext};
 use sha2::{Digest, Sha256};
 use std::{fs, path::PathBuf, process::Command};
-use tower_lsp::lsp_types::{CompletionItemKind, CompletionResponse, Documentation, MarkupKind};
+use tower_lsp::lsp_types::{
+    CompletionItemKind, CompletionResponse, Documentation, MarkupKind,
+    TextDocumentContentChangeEvent,
+};
 
 const EXPECTED_DETAIL: &str = "(method) header(props: {\n    title: string;\n}): any";
 const EXPECTED_MARKDOWN: &str = "```typescript\n(method) header(props: {\n    title: string;\n}): any\n```\n\n**Header** shown above the invoice.\n\n*@param* `props` — Customer-visible heading.\n\n*@example*\n```tsx\nheader({ title: 'Summary' })\n```";
@@ -25,6 +28,24 @@ fn exact_host_candidate_resolves_after_unchanged_same_document_diagnostics() {
 #[ignore = "requires diagnostic preparation of the exact real-host fixtures and native runtime"]
 fn exact_host_candidate_resolves_after_unchanged_sibling_diagnostics() {
     run("sibling");
+}
+
+#[test]
+#[ignore = "requires preparation of the exact real-host fixtures and native runtime"]
+fn actual_sibling_edit_refuses_the_previously_issued_candidate() {
+    run("edited-sibling");
+}
+
+#[test]
+#[ignore = "requires preparation of the exact real-host fixtures and native runtime"]
+fn actual_dependency_deletion_refuses_the_previously_issued_candidate() {
+    run("deleted-dependency");
+}
+
+#[test]
+#[ignore = "requires preparation of the exact real-host fixtures and native runtime"]
+fn identical_reopened_host_document_refuses_the_previously_issued_candidate() {
+    run("reopened");
 }
 
 fn hash(bytes: &[u8]) -> vize_l0::String {
@@ -62,6 +83,15 @@ fn run(intervention: &str) {
     let sibling_path = root.join("src/RichAuthoring.vue");
     let slot_disk = fs::read_to_string(&slot_path).unwrap();
     let sibling_source = fs::read_to_string(&sibling_path).unwrap();
+    let corpus = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/_fixtures/differential/lsp/unchanged-sibling-completion");
+    for name in ["SlotAuthoring.vue", "RichAuthoring.vue", "InvoiceCard.vue"] {
+        assert_eq!(
+            fs::read(root.join("src").join(name)).unwrap(),
+            fs::read(corpus.join(vize_l0::cstr!("{name}.txt").as_str())).unwrap(),
+            "the complete historical authored source is the regression input"
+        );
+    }
     let slot_source = slot_disk.replacen("ownSlots.header", "ownSlots.", 1);
     assert_ne!(slot_source, slot_disk);
     assert_eq!(
@@ -112,8 +142,9 @@ fn run(intervention: &str) {
     save(&receipt);
     crate::runtime::block_on(async {
         let bridge = state.get_corsa_bridge().await.expect("real native bridge");
-        // Both authored buffers already exist; only an unchanged refresh is
-        // interleaved after issuance, never an authored edit or reopen.
+        // Warm Rich first. Slot then becomes a new member of that same Canon
+        // project before the candidate is issued. The sibling case performs
+        // only an unchanged diagnostic; explicit mutation controls are separate.
         receipt["warmSiblingDiagnostics"] =
             json!(DiagnosticService::collect_async(&state, &sibling_uri).await);
         receipt["warmSlotDiagnostics"] =
@@ -142,6 +173,42 @@ fn run(intervention: &str) {
             "immediate" => vec![],
             "same-document" => DiagnosticService::collect_async(&state, &slot_uri).await,
             "sibling" => DiagnosticService::collect_async(&state, &sibling_uri).await,
+            "edited-sibling" => {
+                let edited = sibling_source.replace("amount: number", "amount: string");
+                assert_ne!(edited, sibling_source);
+                assert!(state.documents.apply_changes(
+                    &sibling_uri,
+                    vec![TextDocumentContentChangeEvent {
+                        range: None,
+                        range_length: None,
+                        text: edited.clone(),
+                    }],
+                    6
+                ));
+                state.update_virtual_docs(&sibling_uri, &edited);
+                receipt["editedSiblingSource"] = json!(edited);
+                DiagnosticService::collect_async(&state, &sibling_uri).await
+            }
+            "deleted-dependency" => {
+                let deleted = root.join("src/InvoiceCard.vue");
+                fs::remove_file(&deleted).unwrap();
+                // Apply the same source retirement and deferred disk dirty bit
+                // used by the watched-file/delete handlers, then collect once.
+                state.forget_workspace_vue_files(Url::from_file_path(&deleted).unwrap().as_str());
+                state.invalidate_batch_cache();
+                state.retire_corsa_bridge_for_deleted_vue_files();
+                state.mark_corsa_disk_state_dirty();
+                receipt["deletedDependency"] = json!(deleted);
+                DiagnosticService::collect_async(&state, &sibling_uri).await
+            }
+            "reopened" => {
+                state.close_document(&slot_uri);
+                state
+                    .documents
+                    .open(slot_uri.clone(), slot_source.clone(), 6, "vue".into());
+                state.update_virtual_docs(&slot_uri, &slot_source);
+                vec![]
+            }
             _ => unreachable!(),
         };
         receipt["interveningDiagnostics"] = json!(diagnostics);
@@ -152,19 +219,57 @@ fn run(intervention: &str) {
         receipt["siblingRevisionAfter"] =
             json!(state.documents.get(&sibling_uri).unwrap().revision());
         save(&receipt);
+        let current = state
+            .get_corsa_bridge()
+            .await
+            .expect("current native bridge");
         bridge.shutdown().await.unwrap();
+        if !std::sync::Arc::ptr_eq(&bridge, &current) {
+            current.shutdown().await.unwrap();
+        }
 
         assert_eq!(state.documents.text(&slot_uri).unwrap(), slot_source);
-        assert_eq!(state.documents.text(&sibling_uri).unwrap(), sibling_source);
-        assert_eq!(
-            state.documents.get(&slot_uri).unwrap().revision(),
-            slot_revision
-        );
-        assert_eq!(
-            state.documents.get(&sibling_uri).unwrap().revision(),
-            sibling_revision
-        );
+        if intervention == "edited-sibling" {
+            assert_eq!(
+                state.documents.text(&sibling_uri).unwrap(),
+                sibling_source.replace("amount: number", "amount: string")
+            );
+            assert_ne!(
+                state.documents.get(&sibling_uri).unwrap().revision(),
+                sibling_revision
+            );
+        } else {
+            assert_eq!(state.documents.text(&sibling_uri).unwrap(), sibling_source);
+            assert_eq!(
+                state.documents.get(&sibling_uri).unwrap().revision(),
+                sibling_revision
+            );
+        }
+        if intervention == "reopened" {
+            assert_ne!(
+                state.documents.get(&slot_uri).unwrap().revision(),
+                slot_revision
+            );
+        } else {
+            assert_eq!(
+                state.documents.get(&slot_uri).unwrap().revision(),
+                slot_revision
+            );
+        }
         assert_eq!(fs::read_to_string(&slot_path).unwrap(), slot_disk);
+        assert_eq!(fs::read_to_string(&sibling_path).unwrap(), sibling_source);
+        if matches!(
+            intervention,
+            "edited-sibling" | "deleted-dependency" | "reopened"
+        ) {
+            assert_eq!(original.detail, None);
+            assert_eq!(original.documentation, None);
+            assert_eq!(
+                resolved, original,
+                "an obsolete item must remain wholly unresolved"
+            );
+            return;
+        }
         assert_eq!(resolved.label, "header");
         assert_eq!(resolved.kind, Some(CompletionItemKind::METHOD));
         assert_eq!(resolved.detail.as_deref(), Some(EXPECTED_DETAIL));
