@@ -158,25 +158,8 @@ pub fn validate_explicit_config_path(path: &Path) -> Result<(), std::string::Str
         return Err(crate::cstr!("config file not found: {display}").into());
     }
 
-    if path.is_file() {
-        return parse_raw_config_file(path)
-            .map(|_| ())
-            .map_err(|error| crate::cstr!("failed to parse {display}: {error}").into());
-    }
-
-    if path.is_dir() {
-        for file_name in CONFIG_FILE_NAMES {
-            let candidate = path.join(file_name);
-            if candidate.exists() {
-                let candidate_display = candidate.display();
-                return parse_raw_config_file(&candidate)
-                    .map(|_| ())
-                    .map_err(|error| {
-                        crate::cstr!("failed to parse {candidate_display}: {error}").into()
-                    });
-            }
-        }
-        return Err(crate::cstr!("no Vite config file found under {display}").into());
+    if path.is_file() || path.is_dir() {
+        return load_raw_config_checked(Some(path)).map(|_| ());
     }
 
     Err(crate::cstr!("config path is neither a file nor a directory: {display}").into())
