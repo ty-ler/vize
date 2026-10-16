@@ -3,7 +3,7 @@
     clippy::disallowed_types,
     reason = "registry cells retain their isolated native owner"
 )]
-use super::{Arc, AtomicBool, Ordering, ProjectContextKey, ServerState};
+use super::{Arc, AtomicBool, Ordering, ProjectContextKey, RetainedConfiguration, ServerState};
 #[cfg(feature = "experimental-source-navigation")]
 use crate::source_project::{SourceQueryProject, navigation::NativeNavigationProject};
 use futures::{
@@ -15,7 +15,8 @@ type Initialization = Shared<BoxFuture<'static, Option<Arc<ServerState>>>>;
 
 pub(super) struct ProjectContext {
     key: ProjectContextKey,
-    snapshot: Option<vize_carton::config::LoadedLspConfig>,
+    snapshot: OnceLock<vize_carton::config::LoadedLspConfig>,
+    previous: Option<RetainedConfiguration>,
     state: OnceLock<Arc<ServerState>>,
     #[cfg(feature = "experimental-source-navigation")]
     navigation: OnceLock<Arc<NativeNavigationProject<'static>>>,
@@ -27,7 +28,8 @@ impl ProjectContext {
     pub(super) fn new(key: impl Into<ProjectContextKey>) -> Self {
         Self {
             key: key.into(),
-            snapshot: None,
+            snapshot: OnceLock::new(),
+            previous: None,
             state: OnceLock::new(),
             #[cfg(feature = "experimental-source-navigation")]
             navigation: OnceLock::new(),
@@ -36,12 +38,26 @@ impl ProjectContext {
         }
     }
 
-    pub(super) fn with_snapshot(
+    pub(super) fn provide_snapshot(&self, snapshot: vize_carton::config::LoadedLspConfig) {
+        let _ = self.snapshot.set(snapshot);
+    }
+
+    pub(super) fn replacement(&self) -> Self {
+        let previous = self
+            .initialized_state()
+            .and_then(|state| state.retained_configuration())
+            .or_else(|| self.previous.clone());
+        let mut replacement = Self::new(self.key.clone());
+        replacement.previous = previous;
+        replacement
+    }
+
+    pub(super) fn with_previous(
         key: ProjectContextKey,
-        snapshot: vize_carton::config::LoadedLspConfig,
+        previous: Option<RetainedConfiguration>,
     ) -> Self {
         let mut context = Self::new(key);
-        context.snapshot = Some(snapshot);
+        context.previous = previous;
         context
     }
 
@@ -89,7 +105,9 @@ impl ProjectContext {
         }
         let state = self
             .state
-            .get_or_init(|| owner.new_project_state(&self.key, self.snapshot.as_ref()))
+            .get_or_init(|| {
+                owner.new_project_state(&self.key, self.snapshot.get(), self.previous.as_ref())
+            })
             .clone();
         if self.retired.load(Ordering::Acquire) {
             state.retire_project_owner();

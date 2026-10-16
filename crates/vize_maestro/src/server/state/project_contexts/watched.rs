@@ -121,15 +121,16 @@ impl ServerState {
             .collect::<Vec<_>>();
         affected.extend(pending);
         for root in &affected {
-            let previous = if root.tsconfig.is_some() {
-                contexts.remove(root)
-            } else {
-                contexts.insert(
-                    root.clone(),
-                    Arc::new(registry::ProjectContext::new(root.clone())),
-                )
-            };
-            if let Some(previous) = previous {
+            let replacement = contexts
+                .get(root)
+                .map(|context| context.replacement())
+                .unwrap_or_else(|| {
+                    registry::ProjectContext::with_previous(
+                        root.clone(),
+                        self.retained_configuration(),
+                    )
+                });
+            if let Some(previous) = contexts.insert(root.clone(), Arc::new(replacement)) {
                 previous.mark_retired();
                 retired.push(previous);
             }
