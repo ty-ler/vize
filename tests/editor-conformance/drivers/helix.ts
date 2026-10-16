@@ -55,15 +55,13 @@ function visibleText(raw: string): string {
 }
 
 /** The packaged languages.toml with `formatting = true` added to the server config table. */
-function userLanguages(): string {
-  const packaged = fs.readFileSync(
-    path.join(repoRoot, "editors", "helix", "languages.toml"),
-    "utf8",
-  );
+export function userLanguages(
+  packaged = fs.readFileSync(path.join(repoRoot, "editors", "helix", "languages.toml"), "utf8"),
+): string {
   const table = "[language-server.vize.config]\n";
-  if (!packaged.includes(table))
-    throw new Error("editors/helix/languages.toml lost its config table");
-  return packaged.replace(table, `${table}formatting = true\n`);
+  return packaged.includes(table)
+    ? packaged.replace(table, `${table}formatting = true\n`)
+    : `${packaged}\n${table}formatting = true\n`;
 }
 
 async function run(context: DriverContext): Promise<void> {
