@@ -91,3 +91,21 @@ and missed the cold namespace. Discovery took 91–156 ms and restore lookup
 took 3.2–3.7 seconds with zero downloads. This confirms actual hosted configuration
 compatibility and read-only operation. The earlier 70-second metadata request
 did not recur, so its absence is not attributed to this still-cold cache.
+
+## Native test runtime
+
+The exhaustive tooling task exposed a different `vp` on PATH than the isolated
+test: workspace Vite+ 0.1.24 has no global `env` command. Prepending the real
+workspace binary directory reproduces the hosted `Command 'env' not found`.
+The native test now invokes the pnpm already selected by `vp run`/`vp exec` and
+requires its reported version to exactly match the root `packageManager` pin.
+The same PATH and environment serve every policy probe. The cache action's
+pre-install global-Vite+ invocation remains unchanged.
+
+`COREPACK_ENABLE_NETWORK=0` prevents a different PATH from downloading a separate
+package manager. An empty Corepack cache fails explicitly; a wrong pnpm version
+fails before installation. Neither case skips the test. The original synthetic
+manifests and frozen lockfile are retained: adding a manifest package-manager
+field would require a new pnpm package-manager dependency section in that lockfile.
+The actual managed-runtime invocation passes all existing cold/warm, age, trust,
+integrity and corrupt-record assertions with the original install flags.

@@ -104,7 +104,7 @@ fn check_workspace_server_deps(vue_files: usize) {
     for name in 0..vue_files {
         write_file(
             root,
-            vize_carton::cstr!("app/src/{name}.vue").as_str(),
+            vize_l0::cstr!("app/src/{name}.vue").as_str(),
             "<template><div /></template>",
         );
     }
@@ -134,7 +134,21 @@ fn check_workspace_server_deps(vue_files: usize) {
     );
     let expected = run_check(&app, &corsa, Some("1"));
     assert_eq!(expected["errorCount"], 1, "{expected}");
-    assert!(expected.to_string().contains("TS2322"), "{expected}");
+    assert_eq!(expected["warningCount"], 0, "{expected}");
+    let diagnosed_files = expected["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|file| file["diagnostics"] != serde_json::json!([]))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        diagnosed_files,
+        [&serde_json::json!({
+            "file": root.join("lib/src/index.ts").canonicalize().unwrap(),
+            "diagnostics": ["error:2:14 [TS2322] Type 'string' is not assignable to type 'number'."]
+        })],
+        "{expected}"
+    );
     for servers in [Some("2"), None] {
         assert_eq!(
             run_check(&app, &corsa, servers),

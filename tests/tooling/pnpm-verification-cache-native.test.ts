@@ -99,8 +99,23 @@ snapshots:
 `,
     );
   }
-  const environment = Object.fromEntries(
-    Object.entries(process.env).filter(([key]) => !/^(?:pnpm|npm)_config_/i.test(key)),
+  const environment = {
+    ...Object.fromEntries(
+      Object.entries(process.env).filter(([key]) => !/^(?:pnpm|npm)_config_/i.test(key)),
+    ),
+    COREPACK_ENABLE_NETWORK: "0",
+  };
+  // vp run/exec selects the managed pnpm on PATH, but also exposes the workspace
+  // vp binary, which does not implement the global CLI's `env` subcommand.
+  const version = await execute("pnpm", ["--version"], {
+    cwd: producer,
+    env: environment,
+    timeout: 15_000,
+  });
+  assert.equal(
+    `pnpm@${version.stdout.trim()}`,
+    packageManager,
+    "native verification controls require the exact pinned pnpm runtime",
   );
   const install = async (root: string, age = "1440", trustPolicy = "off") => {
     requests.length = 0;
@@ -123,13 +138,8 @@ snapshots:
     let output: string;
     try {
       const result = await execute(
-        "vp",
+        "pnpm",
         [
-          "env",
-          "exec",
-          "--package-manager",
-          packageManager,
-          "pnpm",
           "install",
           "--frozen-lockfile",
           "--lockfile-only",

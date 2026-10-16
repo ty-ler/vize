@@ -17,13 +17,33 @@ fn required_semantic_completion_does_not_report_runtime_degradation() {
         .output()
         .unwrap();
     let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(output.status.success(), "{output:?}");
-    assert!(
-        String::from_utf8_lossy(&output.stdout).contains("running 1 test"),
+    let lines = stdout
+        .lines()
+        .filter(|line| !line.is_empty())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        lines.first().copied(),
+        Some("running 1 test"),
         "the native corpus filter must execute its test: {output:?}"
     );
-    assert!(
-        !stderr.contains("Corsa CLI fast path unavailable"),
+    let summary = lines.last().unwrap().split("; ").collect::<Vec<_>>();
+    let [result, failed, ignored, measured, _, _] = summary.as_slice() else {
+        panic!("missing complete native test result: {stdout}");
+    };
+    assert_eq!(
+        (*result, *failed, *ignored, *measured),
+        (
+            "test result: ok. 1 passed",
+            "0 failed",
+            "0 ignored",
+            "0 measured"
+        ),
+        "{stdout}"
+    );
+    assert_eq!(
+        stderr, "",
         "required same-config completion was reported as degradation: {stderr}"
     );
 }

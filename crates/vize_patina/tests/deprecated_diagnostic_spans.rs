@@ -49,7 +49,13 @@ fn pinned_originals_and_minimal_cases_match_complete_native_packets() {
         ) {
             // vue-eslint-parser splits the type union before the TS parser.
             // Keep #7911's native correctness: this pipe is in type grammar.
-            assert!(source.contains("activeScript.script_type as 'JavaScript' | 'CSS'"));
+            let message = &packet["messages"][0];
+            let start = byte_offset(source, &message["line"], &message["column"]);
+            let end = byte_offset(source, &message["endLine"], &message["endColumn"]);
+            assert_eq!(
+                source.get(start as usize..end as usize),
+                Some("activeScript.script_type as 'JavaScript' | 'CSS'")
+            );
             assert_eq!(packet["errorCount"], 1);
             assert_eq!(packet["messages"][0]["ruleId"], "vue/no-deprecated-filter");
             let actual = linter.lint_sfc(source, filename);

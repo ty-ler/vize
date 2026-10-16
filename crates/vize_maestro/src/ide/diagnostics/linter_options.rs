@@ -373,7 +373,12 @@ mod valid_v_on_options_tests {
             "test.vue",
         );
         assert_eq!(result.error_count, 1);
-        assert!(result.diagnostics[0].message.contains("unknown"));
+        assert_eq!(result.diagnostics.len(), 1);
+        assert_eq!(result.diagnostics[0].rule_name, "vue/valid-v-on");
+        assert_eq!(
+            result.diagnostics[0].message,
+            "v-on does not support the modifier 'unknown'"
+        );
         let empty = apply_rule_options(Linter::with_registry(RuleRegistry::new()), &options, false);
         assert!(!empty.registry().has_rule("vue/valid-v-on"));
     }
