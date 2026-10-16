@@ -68,15 +68,6 @@ function directNativeChildren(parent: number, executable: string) {
   return children;
 }
 
-test(
-  "retired in-flight native owner remains joined across configuration replacement and final shutdown",
-  {
-    skip: process.platform !== "linux",
-    timeout: 30000,
-  },
-  async () => retiredOwnerWitness(directNativeChildren),
-);
-
 for (const mode of ["shutdown-exit", "exit", "eof"] as const) {
   test(
     `real stdio ${mode} reaps its same-birth native semantic owner`,
@@ -204,3 +195,12 @@ for (const mode of ["shutdown-exit", "exit", "eof"] as const) {
     },
   );
 }
+
+test(
+  "retired in-flight native owner remains joined across configuration replacement and final shutdown",
+  {
+    skip: process.platform !== "linux",
+    timeout: 30000,
+  },
+  async () => retiredOwnerWitness(directNativeChildren),
+);
