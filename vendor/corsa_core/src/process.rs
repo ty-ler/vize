@@ -327,7 +327,7 @@ mod tests {
     fn terminate_child_process_reaps_running_child() {
         let mut child = Command::new("sh")
             .arg("-c")
-            .arg("sleep 30")
+            .arg("exec sleep 30")
             .spawn()
             .expect("spawn sleeper");
         terminate_child_process(&mut child).expect("terminate child");
@@ -338,7 +338,7 @@ mod tests {
     fn wait_for_child_exit_times_out_and_reaps() {
         let mut child = Command::new("sh")
             .arg("-c")
-            .arg("sleep 30")
+            .arg("exec sleep 30")
             .spawn()
             .expect("spawn sleeper");
         wait_for_child_exit(&mut child, Duration::from_millis(10)).expect("wait with timeout");

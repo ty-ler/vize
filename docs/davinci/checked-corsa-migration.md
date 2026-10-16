@@ -25,6 +25,16 @@ upstream source, a checked overlay, an owned manifest or a retained license. The
 source verifier checks the complete inventory and six full MIT notices. It does
 not constrain unrelated Vize source or require a finite Git history.
 
+The facade's upstream allocation policy originally refers to its monorepo. Its
+complete original test remains in `tests/data/upstream_policy.rs.txt`. The active
+test checks all 13 imported fast-module paths and the actual Cargo-resolved
+registry runtime's broadcast module. The five upstream `corsa_ref` CLI-tool
+paths are outside this six-package dependency graph and are not shipped; their
+historical policy remains in that original file. The original native baseline
+JSON and optional upstream dataset/backend conditions remain unchanged; only
+its packaged fixture path is relative to the actual facade manifest. Separate
+required Vize native laws provide actual product acceptance.
+
 The overlays add owned-process observations, acknowledged shutdown and bounded
 reaping. Only an authenticated native 7.0.2 executable and complete initialize
 contract select shutdown followed by stdin EOF. Foreign servers retain standard

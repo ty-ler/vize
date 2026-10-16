@@ -1,33 +1,63 @@
-use std::{fs, path::PathBuf};
+use std::{fs, path::PathBuf, process::Command};
+
+// The original monorepo policy is retained in data/upstream_policy.rs.txt.
+// Apply every imported fast-module rule to the checked graph, plus the actual
+// locked registry runtime. corsa_ref is separate, unimported upstream CLI tooling.
 
 const FAST_PATHS: &[&str] = &[
-    "src/core/corsa_core/src/process.rs",
-    "src/core/corsa_runtime/src/broadcast.rs",
-    "src/core/corsa_lsp/src/lsp/client.rs",
-    "src/core/corsa_lsp/src/lsp/overlay.rs",
-    "src/core/corsa_lsp/src/lsp/virtual_document.rs",
-    "src/core/corsa_lsp/src/lsp/custom.rs",
-    "src/core/corsa_orchestrator/src/orchestrator/api.rs",
-    "src/core/corsa_orchestrator/src/orchestrator/distributed.rs",
-    "src/core/corsa_orchestrator/src/orchestrator/raft/config.rs",
-    "src/core/corsa_orchestrator/src/orchestrator/raft/messages.rs",
-    "src/core/corsa_orchestrator/src/orchestrator/raft/mod.rs",
-    "src/core/corsa_orchestrator/src/orchestrator/raft/node.rs",
-    "src/core/corsa_orchestrator/src/orchestrator/raft/transport.rs",
-    "src/core/corsa_orchestrator/src/orchestrator/state.rs",
-    "src/core/corsa_ref/src/git.rs",
-    "src/core/corsa_ref/src/lockfile.rs",
-    "src/core/corsa_ref/src/manager.rs",
-    "src/core/corsa_ref/src/status.rs",
-    "src/core/corsa_ref/src/main.rs",
+    "vendor/corsa_core/src/process.rs",
+    "vendor/corsa_lsp/src/lsp/client.rs",
+    "vendor/corsa_lsp/src/lsp/overlay.rs",
+    "vendor/corsa_lsp/src/lsp/virtual_document.rs",
+    "vendor/corsa_lsp/src/lsp/custom.rs",
+    "vendor/corsa_orchestrator/src/orchestrator/api.rs",
+    "vendor/corsa_orchestrator/src/orchestrator/distributed.rs",
+    "vendor/corsa_orchestrator/src/orchestrator/raft/config.rs",
+    "vendor/corsa_orchestrator/src/orchestrator/raft/messages.rs",
+    "vendor/corsa_orchestrator/src/orchestrator/raft/mod.rs",
+    "vendor/corsa_orchestrator/src/orchestrator/raft/node.rs",
+    "vendor/corsa_orchestrator/src/orchestrator/raft/transport.rs",
+    "vendor/corsa_orchestrator/src/orchestrator/state.rs",
 ];
 
 #[test]
 fn fast_modules_avoid_std_alloc_shorthands() {
     let root = workspace_root();
     let mut violations = Vec::new();
-    for relative in FAST_PATHS {
-        let path = root.join(relative);
+    let mut paths: Vec<_> = FAST_PATHS
+        .iter()
+        .map(|relative| root.join(relative))
+        .collect();
+    // Resolve the registry package from Cargo's actual locked graph; do not
+    // silently omit its existing policy because it is not a workspace member.
+    let metadata = Command::new(env!("CARGO"))
+        .args(["metadata", "--locked", "--offline", "--format-version", "1"])
+        .current_dir(&root)
+        .output()
+        .unwrap();
+    assert!(metadata.status.success(), "locked runtime metadata failed");
+    let metadata: serde_json::Value = serde_json::from_slice(&metadata.stdout).unwrap();
+    let runtime: Vec<_> = metadata["packages"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|package| package["name"] == "corsa_runtime")
+        .collect();
+    assert_eq!(runtime.len(), 1, "exactly one runtime provider");
+    assert_eq!(runtime[0]["version"], "1.14.2");
+    assert!(
+        runtime[0]["source"]
+            .as_str()
+            .unwrap()
+            .starts_with("registry+")
+    );
+    paths.push(
+        PathBuf::from(runtime[0]["manifest_path"].as_str().unwrap())
+            .parent()
+            .unwrap()
+            .join("src/broadcast.rs"),
+    );
+    for path in paths {
         let content = fs::read_to_string(&path).unwrap();
         let body = content.split("\n#[cfg(test)]").next().unwrap_or(&content);
         for (index, line) in body.lines().enumerate() {
@@ -35,7 +65,7 @@ fn fast_modules_avoid_std_alloc_shorthands() {
                 || contains_word(line, "String")
                 || contains_word(line, "Vec")
             {
-                violations.push(format!("{}:{}", relative, index + 1));
+                violations.push(format!("{}:{}", path.display(), index + 1));
             }
         }
     }

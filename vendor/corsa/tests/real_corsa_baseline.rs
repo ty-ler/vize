@@ -97,8 +97,8 @@ fn real_corsa_api_summary_matches_pinned_baseline() {
 }
 
 fn load_baseline() -> Value {
-    let path = support::workspace_root()
-        .join("src/bindings/rust/corsa/tests/data/real_corsa_api_baseline.json");
+    let path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/data/real_corsa_api_baseline.json");
     serde_json::from_str(std::fs::read_to_string(path).unwrap().as_str()).unwrap()
 }
 
