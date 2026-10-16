@@ -122,7 +122,11 @@ fn failed_native_project_open_drop_preserves_exact_nonowning_terminal_custody() 
     assert_eq!(snapshot.pending.len(), 1);
     assert_eq!(snapshot.completed.len(), 1);
     assert!(snapshot.pending[0].custody_complete());
-    let receipt = json!({"executable":executable,"binarySha256":cstr!("{:x}",Sha256::digest(std::fs::read(&executable).unwrap())),"versionStdout":version.stdout,"versionStderr":version.stderr,"openProject":absent,"rawBootstrapFailure":failure,"child":crate::lsp_client::retirement::observation_json(&snapshot.pending[0])});
+    let binary_sha: String = Sha256::digest(std::fs::read(&executable).unwrap())
+        .iter()
+        .map(|byte| cstr!("{byte:02x}"))
+        .collect();
+    let receipt = json!({"executable":executable,"binarySha256":binary_sha,"versionStdout":version.stdout,"versionStderr":version.stderr,"openProject":absent,"rawBootstrapFailure":failure,"child":crate::lsp_client::retirement::observation_json(&snapshot.pending[0])});
     let capture = std::path::PathBuf::from(
         std::env::var_os("VIZE_SNAPSHOT_SOURCE_CAPTURE_DIR")
             .expect("native gate capture directory"),

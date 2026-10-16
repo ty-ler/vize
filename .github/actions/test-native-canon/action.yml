@@ -3,7 +3,7 @@ description: Require native snapshot ownership, projection ranges and syntax/sem
 runs:
   using: composite
   steps:
-    - name: Verify complete checked source and independent package consumers
+    - name: Verify checked source and package consumer census
       shell: bash
       env:
         CARGO_TARGET_DIR: ${{ github.workspace }}/target
@@ -13,8 +13,6 @@ runs:
         python3 tools/support/compat/github/checked-corsa-package-consumer-test.py
         python3 tools/support/compat/github/checked-corsa-public-consumer-test.py
         cargo fetch --locked
-        export SOURCE_SHA="$(git rev-parse HEAD)"
-        python3 tools/support/compat/github/checked-corsa-package-consumer.py --output "$RUNNER_TEMP/checked-corsa-package-consumer"
     - name: Test poisoned actual owned process lock and exact reaping
       shell: bash
       env:
@@ -88,6 +86,14 @@ runs:
         unset VIZE_TEST_DISABLE_TSGO
         cargo test --locked --profile ci -p vize_canon --lib batch::executor::session::native_test_receipt::native_semantic_completion::native_semantic_completion_keeps_frozen_full_vector_and_actual_terminal_owner -- --exact --nocapture --test-threads=1 | tee "$RUNNER_TEMP/native-semantic-completion-test.log"
         grep -F "test result: ok. 1 passed" "$RUNNER_TEMP/native-semantic-completion-test.log"
+    - name: Verify complete checked source and independent package consumers
+      shell: bash
+      env:
+        CARGO_TARGET_DIR: ${{ github.workspace }}/target
+      run: |
+        set -euo pipefail
+        export SOURCE_SHA="$(git rev-parse HEAD)"
+        python3 tools/support/compat/github/checked-corsa-package-consumer.py --output "$RUNNER_TEMP/checked-corsa-package-consumer"
     - name: Preserve actual native inputs and responses
       if: ${{ always() }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

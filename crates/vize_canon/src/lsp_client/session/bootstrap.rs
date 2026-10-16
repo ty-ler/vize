@@ -32,12 +32,12 @@ pub(in crate::lsp_client) fn spawn_project_session_with_control(
     ) {
         Ok((session, registration)) => (note_project_init(session), registration),
         Err(error) if should_retry_json_rpc(mode, &error) => {
-            if let Some(control) = control {
-                if let Err(closed) = control.check_admission() {
-                    return Err(ProjectSessionSpawnError::Failed(cstr!(
-                        "{closed}; refused native fallback after: {error}"
-                    )));
-                }
+            if let Some(control) = control
+                && let Err(closed) = control.check_admission()
+            {
+                return Err(ProjectSessionSpawnError::Failed(cstr!(
+                    "{closed}; refused native fallback after: {error}"
+                )));
             }
             match spawn_project_session_with_mode(
                 executable,

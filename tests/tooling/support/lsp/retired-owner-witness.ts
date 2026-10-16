@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { stripVTControlCharacters } from "node:util";
 import {
   isReaped,
   observeReaped,
@@ -30,6 +31,13 @@ type OwnerGraph = Array<{
   proxy: Witness;
   native: Witness;
 }>;
+type PhysicalStart = {
+  phase: "before-protocol-forwarding";
+  invocation: "editor-lsp" | "project-api" | "version-probe";
+  args: string[];
+  proxy: Witness;
+  native: Witness;
+};
 type CustodyJournal = {
   kind: "retired" | "active" | "recovered";
   owner?: "old" | "new";
@@ -85,6 +93,114 @@ function rawErrors(value: unknown): string[] {
   return value;
 }
 
+function physicalIdentity(value: unknown): Witness {
+  const identity = object(value, "physical identity before protocol forwarding");
+  exactKeys(identity, [
+    "pid",
+    "birth_ticks",
+    "parent",
+    "executable",
+    "executableSha256",
+    "commandBase64",
+    "commandArguments",
+    "wholeStatBefore",
+    "wholeStatAfter",
+  ]);
+  for (const field of ["pid", "birth_ticks", "parent"])
+    assert.ok(Number.isSafeInteger(identity[field]) && Number(identity[field]) > 0);
+  for (const field of [
+    "executable",
+    "executableSha256",
+    "commandBase64",
+    "wholeStatBefore",
+    "wholeStatAfter",
+  ])
+    assert.equal(typeof identity[field], "string");
+  assert.match(identity.executableSha256 as string, /^[a-f0-9]{64}$/u);
+  assert.ok(Array.isArray(identity.commandArguments));
+  assert.ok(identity.commandArguments.every((arg) => typeof arg === "string"));
+  const command = Buffer.from(identity.commandBase64 as string, "base64");
+  assert.equal(command.toString("base64"), identity.commandBase64);
+  assert.equal(command.at(-1), 0);
+  assert.deepEqual(command.toString("utf8").split("\0").filter(Boolean), identity.commandArguments);
+  for (const field of ["wholeStatBefore", "wholeStatAfter"]) {
+    const stat = identity[field] as string;
+    assert.equal(Number(stat.slice(0, stat.indexOf(" ("))), identity.pid);
+    const fields = stat
+      .slice(stat.lastIndexOf(") ") + 2)
+      .trim()
+      .split(/\s+/u);
+    assert.match(fields[19], /^\d+$/u);
+    assert.equal(Number(fields[19]), identity.birth_ticks);
+    assert.equal(Number(fields[1]), identity.parent);
+    assert.notEqual(fields[0], "Z", "birth evidence must observe a live process");
+  }
+  return identity as unknown as Witness;
+}
+
+function physicalStarts(
+  gate: { root: string; proxy: string },
+  images: {
+    vizePid: number;
+    node: string;
+    nodeSha256: string;
+    native: string;
+    nativeSha256: string;
+  },
+): PhysicalStart[] {
+  const lines = fs.readFileSync(path.join(gate.root, "physical-starts.jsonl"), "utf8");
+  assert.ok(lines.endsWith("\n"), "the complete birth census must have no partial row");
+  return lines
+    .trimEnd()
+    .split("\n")
+    .map((line) => {
+      const row = object(JSON.parse(line), "physical spawn before protocol forwarding");
+      exactKeys(row, ["phase", "invocation", "args", "proxy", "native"]);
+      assert.equal(row.phase, "before-protocol-forwarding");
+      assert.ok(Array.isArray(row.args) && row.args.every((arg) => typeof arg === "string"));
+      const args: string[] = row.args;
+      const invocation =
+        args.includes("--lsp") && args.includes("--stdio") && !args.includes("--api")
+          ? "editor-lsp"
+          : args.includes("--api") && !args.includes("--lsp")
+            ? "project-api"
+            : args.length === 1 && args[0] === "--version"
+              ? "version-probe"
+              : "unknown";
+      assert.notEqual(
+        invocation,
+        "unknown",
+        "every invocation must be classified from actual argv",
+      );
+      assert.equal(row.invocation, invocation);
+      if (invocation === "editor-lsp") assert.deepEqual(args, ["--lsp", "--stdio"]);
+      if (invocation === "project-api") {
+        assert.equal(args.length, 4);
+        assert.deepEqual(args.slice(0, 3), ["--api", "--async", "--cwd"]);
+        assert.ok(path.isAbsolute(args[3]));
+      }
+      const proxy = physicalIdentity(row.proxy);
+      const native = physicalIdentity(row.native);
+      assert.equal(proxy.parent, images.vizePid);
+      assert.equal(native.parent, proxy.pid);
+      assert.equal(proxy.executable, images.node);
+      assert.equal(proxy.executableSha256, images.nodeSha256);
+      assert.equal(native.executable, images.native);
+      assert.equal(native.executableSha256, images.nativeSha256);
+      assert.equal(proxy.commandArguments[0], "node");
+      assert.deepEqual(proxy.commandArguments.slice(1), [gate.proxy, ...args]);
+      assert.deepEqual(native.commandArguments, [images.native, ...args]);
+      assert.notEqual(proxy.pid, native.pid);
+      return {
+        phase: "before-protocol-forwarding",
+        invocation: row.invocation as PhysicalStart["invocation"],
+        args,
+        proxy,
+        native,
+      };
+    });
+}
+
 /** Keep complete source event lines; JSON is the sole final trace field. */
 function custodyJournal(stderr: string): CustodyJournal[] {
   const journal: CustodyJournal[] = [];
@@ -106,7 +222,7 @@ function custodyJournal(stderr: string): CustodyJournal[] {
     },
   ];
   for (const rawLine of stderr.split("\n")) {
-    const line = rawLine.replace(/\u001b\[[0-?]*[ -/]*[@-~]/gu, "");
+    const line = stripVTControlCharacters(rawLine);
     for (const event of events) {
       const marker = `${event.target}: ${event.message} receipt=`;
       const start = line.indexOf(marker);
@@ -129,12 +245,15 @@ function assertCustodyJournal(
   journal: CustodyJournal[],
   owners: { old: OwnerGraph; new: OwnerGraph },
   mode: "held" | "killed",
+  faultNativePid: number | null,
 ) {
   const closed = new Set<string>();
   const terminals = new Set<number>();
   const sequences = { old: new Set<number>(), new: new Set<number>() };
   const published = { old: 0, new: 0 };
+  const observed = { old: 0, new: 0 };
   const historicalFailures: CustodyJournal[] = [];
+  const historicalError = "LSP close: process is closed: jsonrpc connection";
   for (const event of journal) {
     const receipt = event.receipt;
     const recovered = event.kind === "recovered";
@@ -185,7 +304,7 @@ function assertCustodyJournal(
       assert.deepEqual(
         receipt.attachedBindings,
         [],
-        "this fixture observes two owned SDK proxy processes, not an API attachment",
+        "this fixture observes owned SDK proxy processes, not an API attachment",
       );
       assert.ok(Array.isArray(receipt.expectedOwnedPids));
       assert.deepEqual(
@@ -214,16 +333,26 @@ function assertCustodyJournal(
     const owner = ownerName;
     event.owner = owner;
     assert.equal(receipt.publishedCount, published[owner]);
-    assert.equal(receipt.observedCount, 2);
+    const frontier = Math.max(
+      observed[owner],
+      ...children.map((child) => Number(child.spawnSequence)),
+    );
+    assert.equal(receipt.observedCount, recovered ? frontier : graph.length);
+    observed[owner] = Number(receipt.observedCount);
     if (recovered) {
       assert.ok(!closed.has(owner), "recovery cannot publish after the owner's final closure");
-      assert.ok(published[owner] + children.length <= 2);
+      assert.ok(published[owner] + children.length <= observed[owner]);
     } else {
-      assert.equal(published[owner] + children.length, 2);
+      assert.equal(published[owner] + children.length, graph.length);
       closed.add(owner);
     }
     const failedOld = mode === "killed" && owner === "old";
     const errors = recovered ? [] : rawErrors(receipt.raw_errors);
+    if (failedOld) {
+      if (recovered)
+        assert.ok(receipt.retirementError === null || receipt.retirementError === historicalError);
+      else assert.deepEqual(errors, errors.length === 0 ? [] : [historicalError]);
+    }
     if (failedOld && (recovered ? receipt.retirementError !== null : errors.length > 0))
       historicalFailures.push(event);
     if (!failedOld) {
@@ -238,9 +367,14 @@ function assertCustodyJournal(
         "each physical owner terminal must appear exactly once",
       );
       terminals.add(expected.proxy.pid);
-      assert.ok(child.spawnSequence === 1 || child.spawnSequence === 2);
-      assert.ok(!sequences[owner].has(child.spawnSequence));
-      sequences[owner].add(child.spawnSequence);
+      assert.ok(
+        Number.isSafeInteger(child.spawnSequence) &&
+          Number(child.spawnSequence) >= 1 &&
+          Number(child.spawnSequence) <= graph.length,
+      );
+      const sequence = Number(child.spawnSequence);
+      assert.ok(!sequences[owner].has(sequence));
+      sequences[owner].add(sequence);
       exactKeys(child, [
         "spawnSequence",
         "expectedPid",
@@ -257,7 +391,8 @@ function assertCustodyJournal(
       );
       assert.equal(child.role, expected.role === "project-api" ? "api" : "editor-lsp");
       assert.equal(child.close_error, null);
-      const killed = failedOld && expected.role === "editor-lsp";
+      const killed = failedOld && expected.native.pid === faultNativePid;
+      if (killed) assert.equal(expected.role, "editor-lsp");
       const status = `ExitStatus(unix_wait_status(${killed ? 9 : 0}))`;
       assert.deepEqual(child.terminal, {
         pid: expected.proxy.pid,
@@ -269,7 +404,7 @@ function assertCustodyJournal(
         reaped: true,
       });
       const childErrors = rawErrors(child.raw_errors);
-      if (!killed) assert.deepEqual(childErrors, []);
+      assert.deepEqual(childErrors, []);
       if (!recovered)
         for (const error of childErrors)
           assert.ok(
@@ -329,8 +464,12 @@ function assertCustodyJournal(
     "the complete recovery/final union must contain every exact physical proxy PID once",
   );
   for (const owner of ["old", "new"] as const) {
-    assert.equal(published[owner], 2);
-    assert.deepEqual([...sequences[owner]].sort(), [1, 2]);
+    assert.equal(observed[owner], owners[owner].length);
+    assert.equal(published[owner], owners[owner].length);
+    assert.deepEqual(
+      [...sequences[owner]].sort((a, b) => a - b),
+      Array.from({ length: owners[owner].length }, (_, index) => index + 1),
+    );
   }
   if (mode === "killed")
     assert.ok(
@@ -358,6 +497,7 @@ export async function retiredOwnerWitness(
   const native = fs.realpathSync(path.join(path.dirname(manifest), "lib/tsc"));
   const nativeSha256 = digest(fs.readFileSync(native));
   const node = fs.realpathSync(process.execPath);
+  const nodeSha256 = digest(fs.readFileSync(node));
   const provider = process.env.VIZE_EDITOR_CONFIG_VUE_ROOT;
   assert.ok(provider);
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "vize-retired-inflight-"));
@@ -374,7 +514,10 @@ export async function retiredOwnerWitness(
     fs.writeFileSync(path.join(root, "package.json"), '{"type":"commonjs"}');
     const proxy = path.join(root, "tsgo.js");
     fs.writeFileSync(proxy, proxyBytes, { mode: 0o755 });
-    fs.writeFileSync(path.join(root, "gate.json"), JSON.stringify({ runtime: native, root }));
+    fs.writeFileSync(
+      path.join(root, "gate.json"),
+      JSON.stringify({ runtime: native, root, physicalWitness: true }),
+    );
     return { role, root, proxy };
   });
   const config = (proxy: string) => ({
@@ -399,6 +542,7 @@ export async function retiredOwnerWitness(
     proxyBytesBase64: proxyBytes.toString("base64"),
     proxySha256: digest(proxyBytes),
     node,
+    nodeSha256,
     vizePid: session.processId,
     events,
     configurations: gates.map((gate) => config(gate.proxy)),
@@ -406,7 +550,33 @@ export async function retiredOwnerWitness(
   };
   const responses: unknown[] = [];
   session.responseObservers.push((message) => responses.push(message));
-  const graph = (gate: (typeof gates)[number]): OwnerGraph => {
+  const physicalByOwner = new Map<string, PhysicalStart[]>();
+  const census = (gate: (typeof gates)[number]): OwnerGraph => {
+    const starts = physicalStarts(gate, {
+      vizePid: session.processId,
+      node,
+      nodeSha256,
+      native,
+      nativeSha256,
+    });
+    physicalByOwner.set(gate.role, starts);
+    observation[`${gate.role}PhysicalStarts`] = starts;
+    const sdk = starts.filter((start) => start.invocation !== "version-probe");
+    assert.equal(
+      sdk.length,
+      4,
+      "each actual initialized owner has four independently witnessed SDK spawns",
+    );
+    assert.equal(sdk.filter((start) => start.invocation === "project-api").length, 2);
+    assert.equal(sdk.filter((start) => start.invocation === "editor-lsp").length, 2);
+    return sdk.map((start) => ({
+      owner: gate.role,
+      role: start.invocation as "editor-lsp" | "project-api",
+      proxy: start.proxy,
+      native: start.native,
+    }));
+  };
+  const graph = (gate: (typeof gates)[number], born: OwnerGraph): OwnerGraph => {
     const proxies = children(session.processId, node).filter((child) =>
       child.commandArguments.includes(gate.proxy),
     );
@@ -423,7 +593,24 @@ export async function retiredOwnerWitness(
       const role = proxy.commandArguments.includes("--lsp") ? "editor-lsp" : "project-api";
       assert.ok(proxy.commandArguments.includes(role === "editor-lsp" ? "--lsp" : "--api"));
       assert.ok(image.commandArguments.includes(role === "editor-lsp" ? "--lsp" : "--api"));
-      return { owner: gate.role, role, proxy, native: image };
+      const birth = born.find((entry) => entry.proxy.pid === proxy.pid);
+      assert.ok(birth, "a live SDK proxy must already have its before-forwarding birth witness");
+      assert.equal(birth.role, role);
+      for (const [current, original] of [
+        [proxy, birth.proxy],
+        [image, birth.native],
+      ])
+        for (const key of [
+          "pid",
+          "birth_ticks",
+          "parent",
+          "executable",
+          "executableSha256",
+          "commandBase64",
+          "commandArguments",
+        ] as const)
+          assert.deepEqual(current[key], original[key]);
+      return { ...birth, proxy, native: image };
     });
   };
   let success = false;
@@ -455,7 +642,9 @@ export async function retiredOwnerWitness(
       result: await session.request("textDocument/hover", params, 10000),
     };
     assert.deepEqual((observation.warmQuery as { result: unknown }).result, expected);
-    const oldGraph = graph(gates[0]);
+    const allOldGraph = census(gates[0]);
+    observation.oldFullOwnerGraph = allOldGraph;
+    const oldGraph = graph(gates[0], allOldGraph);
     observation.oldOwnerGraph = oldGraph;
     assert.deepEqual(oldGraph.map((entry) => entry.role).sort(), ["editor-lsp", "project-api"]);
     fs.writeFileSync(path.join(gates[0].root, "arm"), "");
@@ -568,9 +757,35 @@ export async function retiredOwnerWitness(
         result: expected,
       },
     );
-    const newGraph = graph(gates[1]);
+    const allNewGraph = census(gates[1]);
+    observation.newFullOwnerGraph = allNewGraph;
+    const newGraph = graph(gates[1], allNewGraph);
     observation.newOwnerGraph = newGraph;
     assert.deepEqual(newGraph.map((entry) => entry.role).sort(), ["editor-lsp", "project-api"]);
+    const all = [...allOldGraph, ...allNewGraph].flatMap((entry) => [entry.proxy, entry.native]);
+    assert.equal(all.length, 16);
+    assert.equal(new Set(all.map((entry) => entry.pid)).size, 16);
+    const probes = [...physicalByOwner.values()].flatMap((starts) =>
+      starts
+        .filter((start) => start.invocation === "version-probe")
+        .flatMap((start) => [start.proxy, start.native]),
+    );
+    all.push(...probes);
+    assert.equal(new Set(all.map((entry) => entry.pid)).size, all.length);
+    const unchangedBirthCensus = () => {
+      for (const gate of gates)
+        assert.deepEqual(
+          physicalStarts(gate, {
+            vizePid: session.processId,
+            node,
+            nodeSha256,
+            native,
+            nativeSha256,
+          }),
+          physicalByOwner.get(gate.role),
+          "no additional, missing or rewritten spawn can escape the complete birth census",
+        );
+    };
     if (mode === "held") {
       const heldLive = children(oldLsp.proxy.pid, native).find(
         (child) =>
@@ -596,7 +811,7 @@ export async function retiredOwnerWitness(
       );
       const probes: unknown[] = [];
       observation.newOwnerClosureProbes = probes;
-      const newIdentities = newGraph.flatMap((entry) => [entry.proxy, entry.native]);
+      const newIdentities = allNewGraph.flatMap((entry) => [entry.proxy, entry.native]);
       const newClosure = (async () => {
         while (polling) {
           const observed = newIdentities.map(actualProbe);
@@ -664,19 +879,23 @@ export async function retiredOwnerWitness(
           result: null,
         },
       );
-      const atAck = [...oldGraph, ...newGraph]
-        .flatMap((entry) => [entry.proxy, entry.native])
-        .map(actualProbe);
-      observation.allOwnerIdentitiesAtShutdownAck = atAck;
-      assert.ok(
-        atAck.every((entry) => isReaped(entry, entry.current)),
-        "a null recovered shutdown ACK requires both exact API/editor owner lives already reaped; same-birth zombies fail",
-      );
-      record("all-recovered-owner-identities-absent-at-ack");
     }
+    unchangedBirthCensus();
+    const atAck = all.map(actualProbe);
+    observation.allOwnerIdentitiesAtShutdownAck = atAck;
+    assert.ok(
+      atAck.every((entry) => isReaped(entry, entry.current)),
+      "a null shutdown ACK requires every exact early/final API/editor proxy/native life already reaped; same-birth zombies fail",
+    );
+    const vizeStatAtAck = fs.readFileSync(`/proc/${session.processId}/stat`, "utf8");
+    const vizeImageAtAck = fs.realpathSync(`/proc/${session.processId}/exe`);
+    observation.vizeAtShutdownAck = { wholeStat: vizeStatAtAck, executable: vizeImageAtAck };
+    assert.notEqual(vizeStatAtAck.slice(vizeStatAtAck.lastIndexOf(") ") + 2).split(" ")[0], "Z");
+    assert.equal(vizeImageAtAck, fs.realpathSync(process.env.VIZE_LSP_BIN!));
+    record("all-owner-identities-absent-at-ack");
     observation.serverExit = await session.finishInput("exit");
     assert.deepEqual(observation.serverExit, { exitCode: 0, signal: null });
-    const all = [...oldGraph, ...newGraph].flatMap((entry) => [entry.proxy, entry.native]);
+    unchangedBirthCensus();
     observation.allOwnerReaping = await observeReaped(all);
     assert.equal(
       (observation.allOwnerReaping as { reaped: boolean }).reaped,
@@ -684,12 +903,49 @@ export async function retiredOwnerWitness(
       "every old/new proxy and native child must be absent or have a different birth; zombies fail",
     );
     for (const gate of gates) {
+      const starts = physicalByOwner.get(gate.role)!;
+      const terminalBytes = fs.readFileSync(
+        path.join(gate.root, "physical-terminals.jsonl"),
+        "utf8",
+      );
+      assert.ok(terminalBytes.endsWith("\n"));
+      const physicalTerminals = terminalBytes
+        .trimEnd()
+        .split("\n")
+        .map((line) => object(JSON.parse(line), "actual native terminal"));
+      assert.equal(physicalTerminals.length, starts.length);
+      const terminalPids = new Set<number>();
+      for (const terminal of physicalTerminals) {
+        const start = starts.find((entry) => entry.native.pid === terminal.nativePid);
+        assert.ok(start, "every terminal must match an independently witnessed native birth");
+        assert.ok(!terminalPids.has(start.native.pid));
+        terminalPids.add(start.native.pid);
+        const killed = mode === "killed" && start.native.pid === oldLsp.native.pid;
+        assert.deepEqual(terminal, {
+          proxyPid: start.proxy.pid,
+          nativePid: start.native.pid,
+          code: killed ? null : 0,
+          signal: killed ? "SIGKILL" : null,
+        });
+      }
+      const nativePids = fs
+        .readFileSync(path.join(gate.root, "native.pids"), "utf8")
+        .trimEnd()
+        .split("\n")
+        .map((pid) => {
+          assert.match(pid, /^\d+$/u);
+          return Number(pid);
+        });
+      assert.deepEqual(
+        nativePids.toSorted((a, b) => a - b),
+        starts.map((start) => start.native.pid).sort((a, b) => a - b),
+      );
       const exits = fs
         .readFileSync(path.join(gate.root, "native.exits"), "utf8")
         .trim()
         .split("\n")
         .map((line) => JSON.parse(line));
-      assert.ok(exits.length >= 2);
+      assert.equal(exits.length, starts.length);
       if (mode === "killed" && gate.role === "old") {
         const killed = exits.filter((exit) => exit.code === null && exit.signal === "SIGKILL");
         assert.equal(killed.length, 1, "retain exactly the explicitly injected old native fault");
@@ -709,7 +965,12 @@ export async function retiredOwnerWitness(
     }
     const journal = custodyJournal(session.stderrText);
     observation.typedRetirementJournal = journal;
-    assertCustodyJournal(journal, { old: oldGraph, new: newGraph }, mode);
+    assertCustodyJournal(
+      journal,
+      { old: allOldGraph, new: allNewGraph },
+      mode,
+      mode === "killed" ? oldLsp.native.pid : null,
+    );
     success = true;
   } catch (error) {
     observation.failure = error instanceof Error ? error.stack : String(error);
