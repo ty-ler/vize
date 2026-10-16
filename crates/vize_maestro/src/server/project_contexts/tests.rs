@@ -343,16 +343,19 @@ fn primary_configuration_replacement_refuses_retained_owner_and_drains_its_worke
     );
 }
 
-async fn protocol_send(service: &mut LspService<MaestroServer>, value: Value) -> Option<Value> {
+async fn protocol_send(
+    service: &mut LspService<MaestroServer>,
+    value: Value,
+) -> FixtureResult<Option<Value>> {
     use tower::Service;
-    futures::future::poll_fn(|cx| service.poll_ready(cx))
-        .await
-        .unwrap();
-    service
-        .call(serde_json::from_value::<tower_lsp::jsonrpc::Request>(value).unwrap())
-        .await
-        .unwrap()
-        .map(|response| serde_json::to_value(response).unwrap())
+    futures::future::poll_fn(|cx| service.poll_ready(cx)).await?;
+    Ok(service
+        .call(serde_json::from_value::<tower_lsp::jsonrpc::Request>(
+            value,
+        )?)
+        .await?
+        .map(serde_json::to_value)
+        .transpose()?)
 }
 
 #[test]
@@ -392,7 +395,7 @@ fn registered_client_watcher_reloads_imported_vite_policy_through_the_protocol()
             server
         });
         let root_uri = Url::from_directory_path(root.path()).unwrap();
-        let initialized = protocol_send(&mut service, json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"rootUri":root_uri,"capabilities":{"workspace":{"didChangeWatchedFiles":{"dynamicRegistration":true}}},"initializationOptions":{"lint":false,"typecheck":false,"ecosystem":false}}})).await.unwrap();
+        let initialized = protocol_send(&mut service, json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"rootUri":root_uri,"capabilities":{"workspace":{"didChangeWatchedFiles":{"dynamicRegistration":true}}},"initializationOptions":{"lint":false,"typecheck":false,"ecosystem":false}}})).await.unwrap().unwrap();
         assert!(initialized.get("error").is_none());
         let register = async {
             loop {
@@ -418,7 +421,7 @@ fn registered_client_watcher_reloads_imported_vite_policy_through_the_protocol()
             register
         );
         let scenario = async {
-        assert_eq!(notification, None);
+        assert_eq!(notification.unwrap(), None);
         let registration = &registration["registrations"][0];
         assert_eq!(registration["method"], "workspace/didChangeWatchedFiles");
         assert!(registration["registerOptions"]["watchers"].as_array().unwrap().iter().any(|watcher| watcher["globPattern"] == "**/*.{vue,ts,tsx,mts,cts,js,jsx,mjs,cjs}"));
@@ -426,12 +429,12 @@ fn registered_client_watcher_reloads_imported_vite_policy_through_the_protocol()
         let a = file(root.path(), "packages/a/src/App.vue", "<template />").unwrap();
         let b = file(root.path(), "packages/b/src/App.vue", "<template />").unwrap();
         for uri in [&a, &b] {
-            assert_eq!(protocol_send(&mut service, json!({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":uri,"languageId":"vue","version":7,"text":source}}})).await, None);
+            assert_eq!(protocol_send(&mut service, json!({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":uri,"languageId":"vue","version":7,"text":source}}})).await.unwrap(), None);
         }
         let hover = |id: i32, uri: &Url| json!({"jsonrpc":"2.0","id":id,"method":"textDocument/hover","params":{"textDocument":{"uri":uri},"position":{"line":1,"character":15}}});
-        let before_a = protocol_send(&mut service, hover(2, &a)).await.unwrap();
+        let before_a = protocol_send(&mut service, hover(2, &a)).await.unwrap().unwrap();
         assert_eq!(before_a, json!({"jsonrpc":"2.0","id":2,"result":null}));
-        let before_b = protocol_send(&mut service, hover(3, &b)).await.unwrap();
+        let before_b = protocol_send(&mut service, hover(3, &b)).await.unwrap().unwrap();
         assert!(before_b["result"].is_object());
         let sibling = service.inner().state.document_project_state(&b).unwrap();
         std::fs::write(
@@ -439,13 +442,13 @@ fn registered_client_watcher_reloads_imported_vite_policy_through_the_protocol()
             "export default { languageServer: { hover: true } };",
         )
         .unwrap();
-        assert_eq!(protocol_send(&mut service, json!({"jsonrpc":"2.0","method":"workspace/didChangeWatchedFiles","params":{"changes":[{"uri":helper,"type":2}]}})).await, None);
-        let after_a = protocol_send(&mut service, hover(4, &a)).await.unwrap();
+        assert_eq!(protocol_send(&mut service, json!({"jsonrpc":"2.0","method":"workspace/didChangeWatchedFiles","params":{"changes":[{"uri":helper,"type":2}]}})).await.unwrap(), None);
+        let after_a = protocol_send(&mut service, hover(4, &a)).await.unwrap().unwrap();
         assert_eq!(
             after_a,
             json!({"jsonrpc":"2.0","id":4,"result":before_b["result"]})
         );
-        let after_b = protocol_send(&mut service, hover(5, &b)).await.unwrap();
+        let after_b = protocol_send(&mut service, hover(5, &b)).await.unwrap().unwrap();
         assert_eq!(
             after_b,
             json!({"jsonrpc":"2.0","id":5,"result":before_b["result"]})
