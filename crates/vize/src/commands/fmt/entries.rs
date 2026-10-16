@@ -19,7 +19,21 @@ pub(super) fn resolve_patterns(
     snapshot: &config::LoadedFormatterSnapshot,
 ) -> ResolvedFmtPatterns {
     let explicit = !args.patterns.is_empty();
-    let values = if explicit {
+    // An authored Vite root must not redirect a missing explicit cwd input.
+    // Entry-relative fallback still applies when both tools share that root.
+    let scoped_fallback = snapshot.project_root.as_deref().is_none_or(|root| {
+        std::env::current_dir()
+            .ok()
+            .and_then(|cwd| {
+                std::fs::canonicalize(root)
+                    .ok()
+                    .zip(std::fs::canonicalize(cwd).ok())
+            })
+            .is_some_and(|(project, invocation)| project == invocation)
+    });
+    let values = if explicit && !scoped_fallback {
+        compact_patterns(&args.patterns)
+    } else if explicit {
         load_fmt_entry_file_set(snapshot)
             .as_ref()
             .map(|entry_file_set| entry_file_set.expand_patterns(&args.patterns))

@@ -11,7 +11,7 @@ at https://vizejs.dev/guide/experimentals-vue-rfcs. They cover backend experimen
 
 | Surface                          | Accepted option shape                                                                               | Off and override behavior                                                                                       |
 | -------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `vite.config.*`                  | `vue.experimentals` switch values                                                                       | Shared default for npm commands, `vize check`, LSP sessions, and Vite plugin instances that load project config |
+| `vite.config.*`                  | `vue.experimentals` switch values                                                                   | Shared default for npm commands, `vize check`, LSP sessions, and Vite plugin instances that load project config |
 | Direct `vize({ experimentals })` | the same switch values                                                                              | Wins over shared config; `false` and `null` explicitly disable a shared opt-in for that plugin invocation       |
 | Native template APIs             | `experimental*` boolean fields on `compile`, `compileVapor`, and `parseTemplate` options            | Caller must pass final booleans; aliases and `{}` are not resolved                                              |
 | Native SFC APIs                  | `experimental*` boolean fields on `compileSfc`, `compileSfcBatch`, and `compileSfcBatchWithResults` | Caller must pass final booleans; `strictSlotChildren` is meaningful for SFC/check virtual TypeScript surfaces   |
@@ -25,8 +25,8 @@ export default defineConfig({}).withVue({
     inTagComment: true,
     patternedTemplate: true,
     selfComponent: true,
-    strictSlotChildren: true
-  }
+    strictSlotChildren: true,
+  },
 });
 ```
 
@@ -171,8 +171,8 @@ export default defineConfig({}).withVue({
   experimentals: {
     serverScript: true,
     vapor: true,
-    jsxVapor: true
-  }
+    jsxVapor: true,
+  },
 });
 ```
 
