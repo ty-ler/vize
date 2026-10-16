@@ -176,3 +176,21 @@ test("writer emits a genuine discoverable module while source fixture bytes stay
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("authored parity projects retain their original native configuration policy through Vite", async () => {
+  for (const [name, original] of [
+    ["options-api", {}],
+    ["class-component", {}],
+    ["vue2-filter-build", { compiler: { compatibility: { vueVersion: "2" } } }],
+  ] as const) {
+    const root = new URL(`../_fixtures/_projects/${name}/`, import.meta.url);
+    const archived = readFileSync(new URL("vize.config.json", root));
+    assert.deepEqual(JSON.parse(archived.toString()), original);
+    const { default: exported } = await import(new URL("vite.config.mjs", root).href);
+    assert.deepEqual(await projectViteConfigSource(exported), {
+      ...original,
+      typeChecker: { jsxTypecheck: false },
+    });
+    assert.deepEqual(readFileSync(new URL("vize.config.json", root)), archived);
+  }
+});
