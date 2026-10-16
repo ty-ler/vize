@@ -293,6 +293,14 @@ impl ServerState {
         self.apply_project_formatting_default(loaded.source_path.as_deref());
         if loaded.source_path.is_none() {
             self.apply_config_features(loaded.features);
+            #[cfg(feature = "native")]
+            if let Some(tsconfig) = loaded.config.type_checker.tsconfig.as_deref() {
+                self.apply_type_checker_config(
+                    loaded.config.type_checker.clone(),
+                    loaded.request_timeout_ms,
+                    Path::new(tsconfig),
+                );
+            }
         }
         if let Some(source_path) = loaded.source_path {
             let source = source_path.display().to_string();
