@@ -228,9 +228,12 @@ await test("Vite 7's real esbuild loader bundles the original module rather than
           selected,
           undefined,
           undefined,
-          (namespace: { default: unknown }) => resolveViteConfigExport(namespace.default),
+          (namespace: Record<string, unknown>) => resolveViteConfigExport(namespace.default),
         );
-        assert.equal(evaluated.value.formatter.printWidth, 94);
+        assert.deepEqual(evaluated.value, {
+          typeChecker: { jsxTypecheck: true },
+          formatter: { printWidth: 94 },
+        });
         assert.ok(evaluated.dependencies.includes(helper));
       },
       true,
