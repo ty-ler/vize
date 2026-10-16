@@ -97,7 +97,10 @@ test("affected native runtime proofs execute independently of the scheduled tool
   const skip = steps.find((step) => step.name === "Explain unrelated skip");
   assert.equal(skip?.if, "${{ matrix.lane == 'none' }}");
   const report = source.jobs["source-report"];
-  assert.equal(report.if, "${{ always() && !contains(needs.*.result, 'cancelled') }}");
+  assert.equal(
+    report.if,
+    "${{ always() && github.event_name == 'merge_group' && !contains(needs.*.result, 'cancelled') }}",
+  );
   assert.ok(report.needs?.includes("pr-native-runtime"));
   assert.equal(
     report.steps?.at(-1)?.run,
@@ -151,7 +154,7 @@ test("the Rust report waits for the builder and every named test cohort", () => 
   ]);
   assert.equal(
     rust.jobs["rust-source-report"].if,
-    "${{ always() && !contains(needs.*.result, 'cancelled') }}",
+    "${{ always() && github.event_name == 'merge_group' && !contains(needs.*.result, 'cancelled') }}",
   );
   const reportSteps = rust.jobs["rust-source-report"].steps ?? [];
   const gate = reportSteps.findIndex((step) => step.name === "Require the complete Rust tier");
