@@ -1,4 +1,4 @@
-import { useCssVars as _useCssVars, unref as _unref, defineComponent as _defineComponent } from 'vue'
+import { defineComponent as _defineComponent } from 'vue'
 import type { mastodon } from 'masto'
 
 
@@ -11,10 +11,6 @@ export default /*@__PURE__*/_defineComponent({
   },
   setup(__props: any, { expose: __expose }) {
   __expose();
-
-_useCssVars(_ctx => ({
-  "v4a184587": (_unref(gridColumnNumber))
-}))
 
 
 

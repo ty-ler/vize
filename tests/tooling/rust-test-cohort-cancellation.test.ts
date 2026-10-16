@@ -132,6 +132,7 @@ if (process.argv[2] === "metadata") {
     PATH: mode === "spawn-error" ? directory : `${directory}:${process.env.PATH ?? ""}`,
     VIZE_CANCELLATION_MODE: mode,
     VIZE_CANCELLATION_ENV: "preserved ' literal\nvalue",
+    VIZE_RUST_COHORT_TIMING_PATH: join(directory, "target/nextest/pr/timing.json"),
   };
   return { directory, env, argv: [runner, plan, "compiler", ...options], options };
 }
@@ -148,6 +149,14 @@ for (const [mode, expected] of [
     assert.equal(result.signal, null);
     assert.match(result.stdout, /cargo stdout\n$/);
     assert.equal(result.stderr, "cargo stderr\n");
+    const timing = JSON.parse(readFileSync(env.VIZE_RUST_COHORT_TIMING_PATH, "utf8"));
+    assert.deepEqual(timing, {
+      phase: "workspace-cohort",
+      cohort: "compiler",
+      elapsed_seconds: timing.elapsed_seconds,
+      exit_code: expected,
+    });
+    assert.ok(Number.isSafeInteger(timing.elapsed_seconds) && timing.elapsed_seconds >= 0);
     const invocation = JSON.parse(readFileSync(join(directory, "invocation.json"), "utf8"));
     assert.deepEqual(invocation.argv, [
       "nextest",
@@ -172,6 +181,7 @@ void test("cohort CLI preserves Cargo spawn errors as failures", posix, (t) => {
   const result = spawnSync(process.execPath, argv, { cwd: directory, env, encoding: "utf8" });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /spawn cargo ENOENT/);
+  assert.equal(JSON.parse(readFileSync(env.VIZE_RUST_COHORT_TIMING_PATH, "utf8")).exit_code, 1);
 });
 
 for (const [signal, mode, escalated] of [
@@ -180,6 +190,7 @@ for (const [signal, mode, escalated] of [
   ["SIGINT", "ignore-int", true],
   ["SIGINT", "leader-exits", true],
   ["SIGINT", "ignore-all", true],
+  ["SIGTERM", "ignore-all", true],
 ] as const) {
   void test(
     `cohort cancellation ${signal}/${mode} drains only its own child group`,
@@ -189,34 +200,30 @@ for (const [signal, mode, escalated] of [
       const unrelated = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], {
         stdio: "ignore",
       });
-      const workflowStep = signal === "SIGINT" && mode === "graceful";
-      let command = [process.execPath, ...argv];
-      if (workflowStep) {
-        const workflow = parse(
-          readFileSync(
-            new URL("../../.github/workflows/pr-rust-checks.yml", import.meta.url),
-            "utf8",
-          ),
-        ) as { jobs: Record<string, { steps: { name?: string; run?: string }[] }> };
-        const step = workflow.jobs["pr-rust-shard"].steps.find(
-          ({ name }) => name === "Build and run the affected Rust test cohort",
-        );
-        assert.ok(step?.run);
-        const helperDirectory = join(directory, "tools/support/compat/github");
-        mkdirSync(helperDirectory, { recursive: true });
-        writeFileSync(
-          join(helperDirectory, "run-rust-test-cohort.ts"),
-          `import { main } from ${JSON.stringify(pathToFileURL(runner).href)}; await main();\n`,
-        );
-        Object.assign(env, {
-          RUNNER_TEMP: directory,
-          RUST_PLAN_JSON: readFileSync(argv[1], "utf8"),
-          COHORT: "compiler",
-          NEXTEST_PROFILE: "pr",
-          NEXTEST_FILTER: "package(=vize_relief)",
-        });
-        command = ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step.run];
-      }
+      const workflow = parse(
+        readFileSync(
+          new URL("../../.github/workflows/pr-rust-checks.yml", import.meta.url),
+          "utf8",
+        ),
+      ) as { jobs: Record<string, { steps: { name?: string; run?: string }[] }> };
+      const step = workflow.jobs["pr-rust-shard"].steps.find(
+        ({ name }) => name === "Build and run the affected Rust test cohort",
+      );
+      assert.ok(step?.run);
+      const helperDirectory = join(directory, "tools/support/compat/github");
+      mkdirSync(helperDirectory, { recursive: true });
+      writeFileSync(
+        join(helperDirectory, "run-rust-test-cohort.ts"),
+        `import { main } from ${JSON.stringify(pathToFileURL(runner).href)}; await main();\n`,
+      );
+      Object.assign(env, {
+        RUNNER_TEMP: directory,
+        RUST_PLAN_JSON: readFileSync(argv[1], "utf8"),
+        COHORT: "compiler",
+        NEXTEST_PROFILE: "pr",
+        NEXTEST_FILTER: "package(=vize_relief)",
+      });
+      const command = ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step.run];
       const child = spawn(command[0], command.slice(1), { cwd: directory, env });
       let stderr = "";
       child.stdout.resume();
@@ -247,11 +254,21 @@ for (const [signal, mode, escalated] of [
       const pids = JSON.parse(readFileSync(ready, "utf8"));
       assert.ok(unrelated.pid);
       assert.notEqual(unrelated.pid, pids.child);
+      assert.equal(pids.runner, child.pid, "the signalled step PID must become the Node runner");
       const started = performance.now();
-      process.kill(pids.runner, signal);
-      assert.deepEqual(await exit, { code: signal === "SIGINT" ? 130 : 143, signal: null }, stderr);
+      // Actions signals the process it launched (Bash), not a discovered Node
+      // descendant. The workflow must make that entry PID own cancellation.
+      child.kill(signal);
+      const result = await Promise.race([
+        exit,
+        delay(7_000, undefined, { ref: false }).then(() => ({
+          code: "still-running",
+          signal: null,
+        })),
+      ]);
+      assert.deepEqual(result, { code: signal === "SIGINT" ? 130 : 143, signal: null }, stderr);
       const elapsed = performance.now() - started;
-      assert.ok(elapsed < 6_000, `cancellation took ${elapsed}ms`);
+      assert.ok(elapsed < 7_000, `cancellation took ${elapsed}ms`);
       assert.equal(
         signalIfPresent(pids.child, 0),
         false,
@@ -268,31 +285,34 @@ for (const [signal, mode, escalated] of [
         "owned group must be drained before exit",
       );
       assert.equal(signalIfPresent(unrelated.pid, 0), true, "unrelated process must survive");
-      if (workflowStep) {
-        const timing = JSON.parse(
-          readFileSync(join(directory, "target/nextest/pr/timing.json"), "utf8"),
+      const timing = JSON.parse(
+        readFileSync(join(directory, "target/nextest/pr/timing.json"), "utf8"),
+      );
+      assert.equal(timing.phase, "workspace-cohort");
+      assert.equal(timing.cohort, "compiler");
+      assert.equal(timing.exit_code, signal === "SIGINT" ? 130 : 143);
+      assert.ok(Number.isSafeInteger(timing.elapsed_seconds) && timing.elapsed_seconds >= 0);
+      for (const result of ["failure", "cancelled"]) {
+        assert.equal(
+          requireRustTier("pull_request", "true", {
+            "pr-rust-build": { result: "success" },
+            "pr-rust-shard": { result },
+          }).exitCode,
+          1,
         );
-        assert.equal(timing.phase, "workspace-cohort");
-        assert.equal(timing.cohort, "compiler");
-        assert.equal(timing.exit_code, 130, "actual workflow must retain the cancelled exit");
-        for (const result of ["failure", "cancelled"]) {
-          assert.equal(
-            requireRustTier("pull_request", "true", {
-              "pr-rust-build": { result: "success" },
-              "pr-rust-shard": { result },
-            }).exitCode,
-            1,
-          );
-        }
       }
       const signals = readFileSync(join(directory, "signals"), "utf8").trim().split("\n");
       assert.ok(signals.includes(`child ${signal}`), signals.join(", "));
       assert.ok(signals.includes(`grandchild ${signal}`), signals.join(", "));
       if (escalated) {
         assert.ok(signals.includes("grandchild SIGTERM"), signals.join(", "));
-        assert.ok(elapsed >= 1_000, "ignored SIGINT must reach the bounded SIGTERM escalation");
+        assert.ok(elapsed >= 1_000, "ignored cancellation must reach the second signal");
+        if (signal === "SIGTERM") {
+          assert.equal(signals.filter((entry) => entry === "grandchild SIGTERM").length, 2);
+          assert.equal(signals.filter((entry) => entry === "child SIGTERM").length, 2);
+        }
       }
-      if (mode === "ignore-all") assert.ok(elapsed >= 2_000, "SIGKILL escalation must run");
+      if (mode === "ignore-all") assert.ok(elapsed >= 4_000, "SIGKILL escalation must run");
     },
   );
 }

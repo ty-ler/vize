@@ -27,6 +27,7 @@ on:
       - ".github/actions/setup-rust-sticky-cache/**"
       - ".github/actions/reuse-rust-target/**"
       - ".github/actions/cache-vp-bootstrap/**"
+      - ".github/actions/cache-pnpm-verification/**"
       - ".github/actions/setup-js-package-tests/**"
       - ".github/workflows/rust-pr-target-seed.yml"
       - "package.json"
@@ -109,7 +110,11 @@ jobs:
         with:
           node-version-file: "package.json"
           cache: true
-          run-install: true
+          run-install: false
+      - uses: ./.github/actions/cache-pnpm-verification
+        with: { save: "true" }
+      - name: Install JS dependencies
+        run: vp install
       - uses: ./.github/actions/setup-rust-sticky-cache
         with:
           key: clippy-test

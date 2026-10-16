@@ -40,16 +40,38 @@ the evidence does not support attributing the 144-second wait to runner capacity
 
 ## Change
 
+The first hosted cancellation probe,
+[38896572920](https://github.com/ubugeeei-prod/vize/actions/runs/38896572920),
+exposed an additional boundary: no owned-group message appeared, target unmount
+was busy, and nextest/test processes survived until orphan cleanup. GitHub
+runner 2.337.0 sends its initial Unix signal to the
+[launched process PID](https://github.com/actions/runner/blob/v2.337.0/src/Runner.Sdk/ProcessInvoker.cs),
+which was Bash waiting for Node. The original local fixture signalled the Node
+descendant directly and therefore did not validate that boundary. Signalling
+the actual Bash entry reproduced the failure locally: it remained running
+after six seconds.
+
+The PR step now uses `exec node`, so its original PID becomes the typed runner.
+The runner writes the existing `phase`, `cohort`, `elapsed_seconds` and
+`exit_code` timing receipt when `VIZE_RUST_COHORT_TIMING_PATH` is explicitly set.
+This preserves failure/cancellation status without a waiting shell in front of
+the signal handler. Its normal Cargo arguments are unchanged.
+
 The cohort CLI previously used `spawnSync` for `cargo nextest run`. Its Node
 event loop could not handle cancellation while Cargo was running. Launch that
 same executable and argument vector asynchronously in a new POSIX process
 group, with inherited environment, working directory and standard streams.
 
-On SIGINT or SIGTERM, signal only that owned group. If SIGINT is ignored,
-send SIGTERM after one second. Send SIGKILL after two seconds if the group
-still exists. Await the direct child's completion and the disappearance of
+On SIGINT or SIGTERM, signal only that owned group. If it remains alive,
+send a second SIGTERM after one second, including when the first signal was
+SIGTERM. Nextest owns separate test groups; its pinned
+[0.9.146 shutdown implementation](https://github.com/nextest-rs/nextest/blob/cargo-nextest-0.9.146/nextest-runner/src/runner/unix.rs)
+uses that second signal to kill those groups itself. Give nextest time to reap
+them before sending SIGKILL to its group at four seconds if still necessary.
+Await the direct child's completion and the disappearance of
 the group, including grandchildren remaining after Cargo itself exits, before
-returning. The overall drain limit is five seconds from the first signal.
+returning. The overall drain limit is six seconds from the first signal,
+within the Actions runner's initial 7.5-second grace period.
 An undrained group produces an explicit failure with exit status 1; it is
 never reported as clean.
 SIGKILL cannot promise immediate completion of uninterruptible kernel I/O.
@@ -77,11 +99,35 @@ SIGINT, a leader exiting zero before its grandchild, and descendants ignoring
 both graceful signals. Every control requires the owned group to be gone before
 the CLI exits while an unrelated process remains alive.
 
-The SIGINT control also runs the actual PR cohort workflow shell. Its timing
-receipt and shell status must retain exit code 130, and both failed and cancelled
+Every cancellation control runs the actual PR workflow shell and signals its
+entry PID, checking that `exec` replaced Bash with the Node runner. Its timing
+receipt and exit status must retain 130/143, and both failed and cancelled
 cohort results must fail the required Rust aggregate. Local validation uses
 macOS with Node 26.12.0 and the pinned Node 24.14.0; Linux group teardown still
 needs Actions validation, especially orphan/zombie reaping by the guest's init.
+
+The opt-in `rust-test-cohort-nextest-cancellation.test.ts` requires installed
+Rust and exactly cargo-nextest 0.9.146. It builds only a dependency-free
+temporary crate, whose test ignores SIGINT/SIGTERM and starts a Node descendant.
+The control proves that the test has a different process group from nextest,
+signals the real workflow entry, and requires both groups and the descendant
+to disappear before the runner exits. It does not build the repository or
+download/install tools; explicitly enabling it with missing tools fails.
+
+With the previous escalation, initial SIGTERM killed nextest at 2.041 seconds
+while the test and descendant remained alive. After always sending the second
+signal, initial SIGINT completed in 1.049 seconds and SIGTERM in 1.044 seconds;
+both logged nextest's second-signal cleanup and left no observed survivors.
+This local isolated probe used Rust 1.99.0 on macOS; it is not qualification of
+the current product workspace or its subsequently updated Rust toolchain.
+The downloaded macOS 0.9.146 archive matched the upstream SHA-256
+`39785160b3c2f6ed9a765049cf4fa79f3b39aa02eb7598a5a0e2a1a0b9ffb9a8`.
+
+To repeat using the already installed pinned nextest and Rust on `PATH`:
+
+```sh
+VIZE_CANCELLATION_REAL_NEXTEST=1 node --test tests/tooling/rust-test-cohort-nextest-cancellation.test.ts
+```
 
 Existing cohort-projection, workflow and strict Rust-gate tests remain required.
 Fresh Actions on the committed change must establish ordinary CI acceptance;

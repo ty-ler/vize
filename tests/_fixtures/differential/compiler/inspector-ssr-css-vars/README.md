@@ -1,4 +1,4 @@
-# Elk StatusMedia SSR CSS variable comparison
+# Elk CSS variables and scoped slot comparison
 
 `StatusMedia.vue.txt` is the complete unmodified
 [Elk source](https://github.com/elk-zone/elk/blob/8aa2b4650760eeba4ea1fdd9dc18d8a88ca5d7f0/app/components/status/StatusMedia.vue)
@@ -11,7 +11,19 @@ current inspector before its missing `ssrCssVars` input is repaired. The DOM
 reference is unchanged. The SSR reference was independently generated through
 the pinned public compiler-sfc `parse`, `compileScript`, and `compileTemplate`
 APIs, with `ssrCssVars: descriptor.cssVars` and the same filename, production,
-scope and binding metadata options as the inspector.
+scope and binding metadata options as the inspector. Its script compilation
+also receives `templateOptions.ssr`, so the SSR reference excludes client-only
+`useCssVars` calls while retaining the server-rendered CSS variable.
+
+`NavSideItem.vue.txt` is another complete unmodified source from the same
+archive. Its scoped style has no `:slotted()` selector. Independent full DOM
+and SSR references pass `slotted: descriptor.slotted` to both inline script
+template options and separate template compilation. The corresponding
+`.slotted.*` references insert exactly one scoped `:slotted(.nav-icon)` rule
+before the existing closing style tag. They retain slot scope handling,
+preventing an unconditional `slotted: false` implementation from passing.
+`NavSideItem.source.json` records the source hash, exact inserted rule, and
+the official Vue Vite plugin implementation supporting both invocation paths.
 
 `tests/tooling/inspector-ssr-css-vars.test.ts` executes the actual JavaScript
 embedded in the Rust inspector, using a real Node process and the pinned Vue
@@ -19,6 +31,7 @@ compiler. It compares the complete DOM and SSR code, requires no compiler
 warnings, and checks that the actual server renderer consumes the CSS variable
 sentinel. A negative control replaces only the one authored
 `v-bind(gridColumnNumber)` with literal `2`; no CSS variable may be emitted.
+It also compares the complete NavSideItem outputs and both scoped-slot cases.
 
 ## Historical check
 
@@ -31,10 +44,12 @@ the executable SHA-256 is
 `4fb15d98311cd20d24082914a30e08101421e0262c40bdd79bc8b6ce8e82c26d`.
 This release follows #6519 by 51 commits; it is not that PR's exact head.
 
-Current native output is already different on main because of subsequent
+Native output from the compared clean snapshot
+`cd861aa001f7ea458f8b0147e5b9c850b9db1c87` differs because of subsequent
 props-rest, page-metadata, nested-await and SSR CSS variable correctness fixes.
-Fixing this oracle changes only StatusMedia's official output in the complete
-current Elk SSR report: additions remain 9217 and removals become 25010, with
-three official errors and no native errors. The addition budget still fails.
-No budget, authored consumer, native compiler output, or snapshot assertion is
-relaxed by this fixture.
+The CSS-variable option alone changes only StatusMedia's official output:
+additions remain 9217 and removals become 25010. The subsequent scoped-slot
+and SSR script-context corrections are documented in
+`docs/davinci/decisions/2026-10-16-6830-inspector-ssr-css-vars.md`.
+The addition budget still fails. No budget, authored consumer, native compiler
+output, or snapshot assertion is relaxed by these fixtures.

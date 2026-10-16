@@ -136,10 +136,14 @@ void test("named Rust cohorts preserve filtered execution and receipt-bound queu
   for (const step of [prRun, archiveRun]) {
     assert.match(step.run ?? "", /-E "\$NEXTEST_FILTER"/);
     assert.match(step.run ?? "", /--profile "\$NEXTEST_PROFILE"/);
-    assert.match(step.run ?? "", /else phase_exit=\$\?/);
-    assert.match(step.run ?? "", /exit "\$phase_exit"/);
     assert.doesNotMatch(step.run ?? "", /--partition/);
   }
+  assert.match(
+    prRun.run ?? "",
+    /exec node tools\/support\/compat\/github\/run-rust-test-cohort\.ts/,
+  );
+  assert.match(archiveRun.run ?? "", /else phase_exit=\$\?/);
+  assert.match(archiveRun.run ?? "", /exit "\$phase_exit"/);
   const verify = steps.findIndex((step) => /rust-test-archive\.mjs verify/.test(step.run ?? ""));
   assert.ok(
     verify >= 0 && verify < steps.indexOf(archiveRun),

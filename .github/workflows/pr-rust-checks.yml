@@ -212,7 +212,10 @@ jobs:
         with:
           node-version-file: "package.json"
           cache: true
-          run-install: true
+          run-install: false
+      - uses: ./.github/actions/cache-pnpm-verification
+      - name: Install JS dependencies
+        run: vp install
       - uses: taiki-e/install-action@184183c2401be73c3bf42c2e61268aa5855379c1 # v2
         with:
           tool: cargo-nextest@0.9.146
@@ -247,11 +250,8 @@ jobs:
         # Cargo targets when safe; the existing filter still selects all tests.
         run: |
           node -e 'require("node:fs").writeFileSync(process.env.RUNNER_TEMP + "/rust-plan.json", process.env.RUST_PLAN_JSON)'
-          phase_started=$SECONDS
-          if node tools/support/compat/github/run-rust-test-cohort.ts "$RUNNER_TEMP/rust-plan.json" "$COHORT" --cargo-profile ci --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass; then phase_exit=0; else phase_exit=$?; fi
-          mkdir -p "target/nextest/$NEXTEST_PROFILE"
-          printf '{"phase":"workspace-cohort","cohort":"%s","elapsed_seconds":%d,"exit_code":%d}\n' "$COHORT" "$((SECONDS - phase_started))" "$phase_exit" > "target/nextest/$NEXTEST_PROFILE/timing.json"
-          exit "$phase_exit"
+          export VIZE_RUST_COHORT_TIMING_PATH="target/nextest/$NEXTEST_PROFILE/timing.json"
+          exec node tools/support/compat/github/run-rust-test-cohort.ts "$RUNNER_TEMP/rust-plan.json" "$COHORT" --cargo-profile ci --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass
       - name: Run Rust test cohort without rebuilding
         if: ${{ github.event_name == 'merge_group' }}
         # Baked env! paths still occur in tests. Extract to the original workspace

@@ -13,6 +13,8 @@ const fixture = new URL(
 const read = (name: string) => readFileSync(new URL(name, fixture), "utf8");
 const source = read("StatusMedia.vue.txt");
 const origin = JSON.parse(read("source.json"));
+const navSource = read("NavSideItem.vue.txt");
+const navOrigin = JSON.parse(read("NavSideItem.source.json"));
 const requireVue = createRequire(new URL("../package.json", import.meta.url));
 const compiler = requireVue("vue/compiler-sfc");
 const rust = readFileSync(
@@ -37,13 +39,13 @@ interface ComparedFile {
   vizeFormattedCode: string;
 }
 
-function compare(target: "dom" | "ssr", input: string): ComparedFile {
+function compare(target: "dom" | "ssr", input: string, filename = origin.path): ComparedFile {
   const result = spawnSync(process.execPath, ["--input-type=module", "-e", embedded], {
     cwd,
     input: JSON.stringify({
       target,
       moduleRoot: cwd,
-      files: [{ path: origin.path, source: input, vizeCode: "" }],
+      files: [{ path: filename, source: input, vizeCode: "" }],
     }),
     encoding: "utf8",
     timeout: 30_000,
@@ -54,7 +56,7 @@ function compare(target: "dom" | "ssr", input: string): ComparedFile {
   const report = JSON.parse(result.stdout) as { files: ComparedFile[] };
   assert.equal(report.files.length, 1);
   const file = report.files[0];
-  assert.equal(file.path, origin.path);
+  assert.equal(file.path, filename);
   assert.equal(file.parser, "typescript");
   assert.equal(file.official.error, null);
   assert.deepEqual(file.official.warnings, []);
@@ -75,6 +77,7 @@ void test("official inspector SSR includes the authored CSS variable without cha
   for (const target of ["dom", "ssr"] as const) {
     const file = compare(target, source);
     assert.equal(file.official.code, read(`StatusMedia.${target}.expected.ts.txt`));
+    if (target === "ssr") assert.doesNotMatch(file.official.code, /_useCssVars/);
   }
   const original = read("StatusMedia.ssr.original.ts.txt");
   assert.doesNotMatch(original, /const _cssVars/);
@@ -89,4 +92,34 @@ void test("the same whole SFC with a literal CSS value emits no SSR CSS variable
   const control = source.replace(expression, "2");
   const file = compare("ssr", control);
   assert.doesNotMatch(file.official.code, /const _cssVars|:--v4a184587|_useCssVars/);
+});
+
+void test("inspector retains the complete pinned Elk NavSideItem without slotted selectors", () => {
+  assert.equal(Buffer.byteLength(navSource), navOrigin.sourceBytes);
+  assert.equal(createHash("sha256").update(navSource).digest("hex"), navOrigin.sourceSha256);
+  const descriptor = compiler.parse(navSource, { filename: navOrigin.path }).descriptor;
+  assert.equal(descriptor.slotted, false);
+  assert.equal(
+    descriptor.styles.some((style: { scoped: boolean }) => style.scoped),
+    true,
+  );
+});
+
+void test("official inspector honors descriptor.slotted for inline DOM and separate SSR", () => {
+  for (const target of ["dom", "ssr"] as const) {
+    const file = compare(target, navSource, navOrigin.path);
+    assert.equal(file.official.code, read(`NavSideItem.${target}.expected.ts.txt`));
+  }
+});
+
+void test("a slotted selector retains slot scope handling in the same complete SFC", () => {
+  assert.equal(navSource.split("</style>").length, 2);
+  const control = navSource.replace("</style>", `${navOrigin.negativeControl.addedRule}</style>`);
+  assert.equal(compiler.parse(control, { filename: navOrigin.path }).descriptor.slotted, true);
+  for (const target of ["dom", "ssr"] as const) {
+    const file = compare(target, control, navOrigin.path);
+    const expected = read(`NavSideItem.slotted.${target}.expected.ts.txt`);
+    assert.notEqual(expected, read(`NavSideItem.${target}.expected.ts.txt`));
+    assert.equal(file.official.code, expected);
+  }
 });
