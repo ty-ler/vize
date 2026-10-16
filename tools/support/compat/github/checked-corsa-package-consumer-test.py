@@ -198,10 +198,17 @@ class SourceConsumerContracts(unittest.TestCase):
             def build_once(self, provider, mode, directory):
                 self.builds.append((provider, mode, directory))
 
+            def command(self, label, args):
+                self.test_command = args
+                return f"test {source_consumers.MINIMAL_STORY_TEST} ... ok\ntest result: ok. 1 passed; 0 failed; 0 ignored;\n"
+
         runner = Runner()
         result = source_consumers.qualify_source_consumers(runner, "0.999.0", {}, lambda *args: [])
         self.assertEqual([(provider, mode) for provider, mode, _ in runner.builds],
                          [("canon-source", "default-native"), *[("cli-source", name) for name in ["default", "minimal", "glyph", "maestro", "all"]]])
+        self.assertIn("--no-default-features", runner.test_command)
+        self.assertIn(source_consumers.MINIMAL_STORY_TEST, runner.test_command)
+        self.assertTrue(result["minimalStoryCollectionTestPassed"])
         for record, graph in zip(list(runner.records.values())[1:], result["cli"]):
             manifest, source = record
             self.assertEqual(set(manifest["dependencies"]), {"vize"})
@@ -215,6 +222,11 @@ class SourceConsumerContracts(unittest.TestCase):
                                    "manifest_path": "/source/Cargo.toml"}], "resolve": {"nodes": []}}
         with self.assertRaisesRegex(ValueError, "unexpected vize_canon"):
             source_consumers.package_features(metadata, "vize_canon", Path("/source/Cargo.toml"))
+
+    def test_missing_filtered_or_unrelated_minimal_story_execution_is_refused(self):
+        for output in ["", "test result: ok. 0 passed; 0 failed;", "test unrelated ... ok\ntest result: ok. 1 passed; 0 failed;"]:
+            with self.subTest(output=output), self.assertRaisesRegex(ValueError, "one exact regression"):
+                source_consumers.verify_minimal_story_test(output)
 
 
 if __name__ == "__main__":

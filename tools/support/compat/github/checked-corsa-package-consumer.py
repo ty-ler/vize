@@ -273,7 +273,8 @@ class Acceptance:
                    "pathDefaultAndDistributedBuilt": True,
                    "archiveDefaultAndDistributedBuilt": True, "consumerTestsPassed": True, "defaultExperimentalImportRefused": True,
                    "consumerPatches": False, "publicRegistryAcceptance": False, "cliVariantsCompiled": True,
-                   "canonDefaultNativeCompiled": True}
+                   "canonDefaultNativeCompiled": True,
+                   "minimalStoryCollectionTestPassed": source_consumers["minimalStoryCollectionTestPassed"]}
         (self.output / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
 
 

@@ -4,6 +4,13 @@ import json
 from pathlib import Path
 import tomllib
 
+MINIMAL_STORY_TEST = "commands::musea::migrate::tests::story_collection_is_available_without_formatter_features"
+
+
+def verify_minimal_story_test(output):
+    if f"test {MINIMAL_STORY_TEST} ... ok" not in output or "test result: ok. 1 passed; 0 failed;" not in output:
+        raise ValueError("minimal CLI story collection must execute its one exact regression")
+
 
 def source_manifest(dependency, directory, defaults=True, features=()):
     manifest = '[package]\nname = "source-feature-consumer"\nversion = "0.0.0"\nedition = "2024"\n[workspace]\n'
@@ -68,4 +75,7 @@ def qualify_source_consumers(runner, version, providers, verify_graph):
         cli.append({"mode": label, "features": features, "canonFeatures": canon_native,
                     "packages": verify_graph(metadata, version, providers, False)})
         runner.build_once("cli-source", label, directory)
-    return {"canon": canon, "cli": cli}
+    output = runner.command("cli-minimal-story-collection-test", ["cargo", "test", "--locked", "--offline", "--profile", "ci",
+        "-p", "vize", "--no-default-features", "--lib", MINIMAL_STORY_TEST, "--", "--exact", "--nocapture"])
+    verify_minimal_story_test(output)
+    return {"canon": canon, "cli": cli, "minimalStoryCollectionTestPassed": True}

@@ -45,6 +45,9 @@ unification. These builds share the CI dependency cache and avoid repeated CLI
 binary linking; CLI runtime behavior is qualified by the surrounding native
 acceptance workflow. The receipt records each actual root compilation before
 setting `canonDefaultNativeCompiled` and `cliVariantsCompiled` to true.
+It then runs the one exact Musea story-discovery regression with CLI default
+features disabled and records `minimalStoryCollectionTestPassed` only after
+confirming that the named test executed and passed.
 
 `--output` selects a new evidence directory. Preserve its top-level `*.json`,
 `*.stdout`, `*.stderr` and `package-target/package/*.crate` files as CI artifacts;
