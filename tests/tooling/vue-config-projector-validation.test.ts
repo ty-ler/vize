@@ -355,3 +355,48 @@ test("every native language-server boolean survives canonical projection, includ
     /vue\.languageServer: unknown option crossFileAnalysis/u,
   );
 });
+
+test("canonical lint preset names match the native parser, including accepted aliases", async () => {
+  const native = await readFile(
+    new URL("../../crates/vize_patina/src/preset.rs", import.meta.url),
+    "utf8",
+  );
+  const parse = /pub fn parse\(value: &str\) -> Option<Self> \{([\s\S]*?)\n    \}/u.exec(native);
+  assert.ok(parse);
+  const accepted = [...parse[1].matchAll(/"([^"]+)"/gu)].map((match) => match[1]);
+  assert.ok(accepted.includes("happy-path"));
+  assert.ok(accepted.includes("recommended"));
+  assert.ok(accepted.includes("all"));
+  const schema = JSON.parse(
+    await readFile(
+      new URL("../../npm/cli/schemas/vize.config.schema.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.deepEqual(
+    schema.definitions.LinterConfig.properties.preset.enum.toSorted(),
+    accepted.toSorted(),
+  );
+  const generated = await readFile(
+    new URL("../../npm/cli/src/types/generated.ts", import.meta.url),
+    "utf8",
+  );
+  const presetType = /export interface LinterConfig \{[\s\S]*?\bpreset\?:\s*([\s\S]*?);/u.exec(
+    generated,
+  );
+  assert.ok(presetType);
+  assert.deepEqual(
+    [...presetType[1].matchAll(/"([^"]+)"/gu)].map((match) => match[1]).toSorted(),
+    accepted.toSorted(),
+  );
+  for (const preset of accepted) {
+    const result = await projectViteConfigSource({ vue: { linter: { preset } } });
+    assert.deepEqual(result.linter, { preset });
+  }
+  for (const preset of ["", "Recommended", "essentials", "not-a-preset"]) {
+    await assert.rejects(
+      projectViteConfigSource({ vue: { linter: { preset } } }),
+      /vue\.linter\.preset: unsupported native option value/u,
+    );
+  }
+});
