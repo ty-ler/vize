@@ -17,5 +17,6 @@
     "templateOptionsLine": 218,
     "inlineTemplateOptionsLine": 281,
     "packageUrl": "https://www.npmjs.com/package/@vitejs/plugin-vue/v/6.0.7"
-  }
+  },
+  "referenceNodeEnvironment": "production"
 }

@@ -98,18 +98,18 @@ return (_ctx: any,_cache: any) => {
               _createElementVNode("div", {
                 class: _normalizeClass(__props.icon),
                 "text-xl": ""
-              }, null, 2 /* CLASS */)
+              }, null, 2)
             ]),
             _renderSlot(_ctx.$slots, "default", {}, () => [
-              _createElementVNode("span", _hoisted_1, _toDisplayString(_ctx.isHydrated ? __props.text : ' '), 1 /* TEXT */)
+              _createElementVNode("span", _hoisted_1, _toDisplayString(_ctx.isHydrated ? __props.text : ' '), 1)
             ])
-          ], 2 /* CLASS */)
+          ], 2)
         ]),
-        _: 3 /* FORWARDED */
-      }, 8 /* PROPS */, ["disabled", "content"])
+        _: 3
+      }, 8, ["disabled", "content"])
     ]),
-    _: 3 /* FORWARDED */
-  }, 8 /* PROPS */, ["to", "disabled", "class", "active-class", "tabindex", "onClick"]))
+    _: 3
+  }, 8, ["to", "disabled", "class", "active-class", "tabindex", "onClick"]))
 }
 }
 

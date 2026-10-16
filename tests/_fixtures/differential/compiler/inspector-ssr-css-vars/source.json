@@ -7,5 +7,6 @@
   "officialImplementationSha256": "131cae84341c63aeb3c10dcdc2401a7bfd299adff8ef64bf5fcc1d734fed1cce",
   "originalReport": "https://github.com/ubugeeei-prod/vize/actions/runs/38889389579",
   "ssrOracle": "Independent public compileScript with templateOptions.ssr and compileTemplate with ssrCssVars/slotted from the descriptor; same isProd/id/scoped/bindingMetadata options as inspector.",
-  "negativeControl": "The one authored v-bind(gridColumnNumber) is replaced with literal 2; all other original bytes are retained."
+  "negativeControl": "The one authored v-bind(gridColumnNumber) is replaced with literal 2; all other original bytes are retained.",
+  "referenceNodeEnvironment": "production"
 }

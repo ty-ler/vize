@@ -137,7 +137,7 @@ export function ssrRender(_ctx, _push, _parent, _attrs, $props, $setup, $data, $
                     _createVNode("div", {
                       class: $props.icon,
                       "text-xl": ""
-                    }, null, 2 /* CLASS */)
+                    }, null, 2)
                   ]),
                   _renderSlot(_ctx.$slots, "default", {}, () => [
                     _createVNode("span", {
@@ -145,13 +145,13 @@ export function ssrRender(_ctx, _push, _parent, _attrs, $props, $setup, $data, $
                       "sm:hidden": "",
                       "xl:block": "",
                       "select-none": ""
-                    }, _toDisplayString(_ctx.isHydrated ? $props.text : ' '), 1 /* TEXT */)
+                    }, _toDisplayString(_ctx.isHydrated ? $props.text : ' '), 1)
                   ])
-                ], 2 /* CLASS */)
+                ], 2)
               ]
             }
           }),
-          _: 3 /* FORWARDED */
+          _: 3
         }, _parent, _scopeId))
       } else {
         return [
@@ -185,7 +185,7 @@ export function ssrRender(_ctx, _push, _parent, _attrs, $props, $setup, $data, $
                   _createVNode("div", {
                     class: $props.icon,
                     "text-xl": ""
-                  }, null, 2 /* CLASS */)
+                  }, null, 2)
                 ]),
                 _renderSlot(_ctx.$slots, "default", {}, () => [
                   _createVNode("span", {
@@ -193,15 +193,15 @@ export function ssrRender(_ctx, _push, _parent, _attrs, $props, $setup, $data, $
                     "sm:hidden": "",
                     "xl:block": "",
                     "select-none": ""
-                  }, _toDisplayString(_ctx.isHydrated ? $props.text : ' '), 1 /* TEXT */)
+                  }, _toDisplayString(_ctx.isHydrated ? $props.text : ' '), 1)
                 ])
-              ], 2 /* CLASS */)
+              ], 2)
             ]),
-            _: 3 /* FORWARDED */
-          }, 8 /* PROPS */, ["disabled", "content"])
+            _: 3
+          }, 8, ["disabled", "content"])
         ]
       }
     }),
-    _: 3 /* FORWARDED */
+    _: 3
   }, _parent))
 }

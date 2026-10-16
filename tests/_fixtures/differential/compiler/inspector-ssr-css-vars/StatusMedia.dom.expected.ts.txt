@@ -44,8 +44,8 @@ return (_ctx: any,_cache: any) => {
         "w-full": "",
         "h-full": "",
         "is-preview": __props.isPreview
-      }, null, 8 /* PROPS */, ["attachment", "attachments", "full-size", "is-preview"]))
-    }), 128 /* KEYED_FRAGMENT */))
+      }, null, 8, ["attachment", "attachments", "full-size", "is-preview"]))
+    }), 128))
   ]))
 }
 }

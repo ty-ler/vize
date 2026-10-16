@@ -532,7 +532,7 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import process from "node:process";
-
+process.env.NODE_ENV = "production";
 async function readStdin() {
   const chunks = [];
   for await (const chunk of process.stdin) chunks.push(chunk);

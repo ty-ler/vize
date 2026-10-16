@@ -7,8 +7,8 @@ compiler version and implementation digest are recorded in `source.json`.
 The upstream MIT license is retained as `LICENSE`.
 
 `StatusMedia.ssr.original.ts.txt` retains the full official output from the
-current inspector before its missing `ssrCssVars` input is repaired. The DOM
-reference is unchanged. The SSR reference was independently generated through
+inspector before its missing `ssrCssVars` input was repaired. That correction
+left the DOM reference unchanged. The SSR reference was independently generated through
 the pinned public compiler-sfc `parse`, `compileScript`, and `compileTemplate`
 APIs, with `ssrCssVars: descriptor.cssVars` and the same filename, production,
 scope and binding metadata options as the inspector. Its script compilation
@@ -32,6 +32,13 @@ warnings, and checks that the actual server renderer consumes the CSS variable
 sentinel. A negative control replaces only the one authored
 `v-bind(gridColumnNumber)` with literal `2`; no CSS variable may be emitted.
 It also compares the complete NavSideItem outputs and both scoped-slot cases.
+
+The current complete reference files use `NODE_ENV=production`, matching the
+Inspector's production compilation options. The later environment correction
+removes Vue's development patch-flag annotations from these six outputs; source
+bytes, CSS-variable behavior, and slotted-selector controls remain unchanged.
+The original Mutes runtime regression is retained separately in
+`../inspector-production-mode/`.
 
 ## Historical check
 
