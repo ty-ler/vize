@@ -16,7 +16,8 @@ pub(crate) fn needs_fragment(children: &[TemplateChildNode<'_>]) -> bool {
             | TemplateChildNode::If(_),
         ] => true,
         [TemplateChildNode::Element(element)] if element.tag_type == ElementType::Template => {
-            needs_fragment(&element.children)
+            matches!(element.children.as_slice(), [TemplateChildNode::If(_)])
+                || rendered_child_count(&element.children) > 1
         }
         [_] | [] => false,
         _ => {
