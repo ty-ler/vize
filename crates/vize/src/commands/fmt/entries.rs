@@ -19,9 +19,7 @@ pub(super) fn resolve_patterns(
     snapshot: &config::LoadedFormatterSnapshot,
 ) -> ResolvedFmtPatterns {
     let explicit = !args.patterns.is_empty();
-    let values = if explicit && snapshot.project_root.is_some() {
-        compact_patterns(&args.patterns)
-    } else if explicit {
+    let values = if explicit {
         load_fmt_entry_file_set(snapshot)
             .as_ref()
             .map(|entry_file_set| entry_file_set.expand_patterns(&args.patterns))
