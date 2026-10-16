@@ -30,7 +30,7 @@ class PublicAcceptance(base.Acceptance):
 
     def metadata(self, label, directory, features=(), locked=False):
         flags = ["--locked"] if locked else []
-        # This is the only resolving/download step; subsequent compilation is offline.
+        # Only metadata resolves/downloads dependencies; builds use --locked --offline.
         return json.loads(self.command(label, ["cargo", "metadata", "--format-version", "1", *flags, *features], directory))
 
 
