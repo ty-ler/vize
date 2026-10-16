@@ -28,6 +28,8 @@ for (const signal of ["SIGTERM", "SIGINT"]) {
 
 if (framed) {
   let selected;
+  let shutdownId;
+  let shutdownAcknowledged = false;
   const parse = (consume) => {
     let buffered = Buffer.alloc(0);
     return (chunk) => {
@@ -49,6 +51,14 @@ if (framed) {
   process.stdin.on(
     "data",
     parse((frame, message) => {
+      if (message.method === "shutdown") shutdownId = message.id;
+      if (message.method === "exit" && shutdownAcknowledged) {
+        // This foreign proxy receives standard LSP Exit. Its actual pinned
+        // native child needs EOF after the acknowledged Shutdown response.
+        fs.writeFileSync(path.join(gate.root, "translated-exit.bin"), frame);
+        child.stdin.end();
+        return;
+      }
       if (message.method === "textDocument/hover" && fs.existsSync(path.join(gate.root, "arm"))) {
         try {
           fs.writeFileSync(path.join(gate.root, "claimed"), "", { flag: "wx" });
@@ -62,11 +72,17 @@ if (framed) {
       child.stdin.write(frame);
     }),
   );
-  process.stdin.on("end", () => child.stdin.end());
+  process.stdin.on("end", () => {
+    if (!child.stdin.writableEnded) child.stdin.end();
+  });
   let output = Promise.resolve();
   child.stdout.on(
     "data",
     parse((frame, message) => {
+      if (shutdownId !== undefined && message.id === shutdownId && message.result === null) {
+        shutdownAcknowledged = true;
+        fs.writeFileSync(path.join(gate.root, "shutdown-response.bin"), frame);
+      }
       output = output
         .then(async () => {
           if (selected !== undefined && message.id === selected) {
