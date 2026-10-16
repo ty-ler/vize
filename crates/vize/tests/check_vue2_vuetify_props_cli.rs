@@ -1,4 +1,6 @@
 #![cfg(test)]
+#[path = "support/vite_config.rs"]
+mod vite_config;
 use std::{
     path::{Path, PathBuf},
     process::Command,
@@ -22,7 +24,7 @@ fn check_vue2_dialect_allows_vuetify_style_prop_aliases() {
         .args([
             "check",
             "--config",
-            "vize.config.json",
+            "vite.config.mjs",
             "--tsconfig",
             "tsconfig.json",
             "src/App.vue",
@@ -60,8 +62,8 @@ fn create_project(name: &str) -> PathBuf {
     std::fs::create_dir_all(project_root.join("src")).unwrap();
     write_test_vite_stub(&project_root.join("node_modules")).unwrap();
     std::fs::write(
-        project_root.join("vize.config.json"),
-        r#"{ "vue": { "version": "2.7" } }"#,
+        project_root.join("vite.config.mjs"),
+        vite_config::source(r#"{ "vue": { "version": "2.7" } }"#),
     )
     .unwrap();
     std::fs::write(
