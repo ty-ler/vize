@@ -17,11 +17,55 @@ export async function importConfigModule(configPath, withoutVite) {
   ).namespace;
 }
 
-/** Return the actual loader graph alongside the untouched module namespace. */
+/** Keep runtime imports observable until the optional export evaluator settles. */
+async function captureConfigEvaluation(
+  load,
+  configPath,
+  registerModuleHooks,
+  evaluate,
+  privateDirectory,
+) {
+  const files = new Set([configPath]);
+  const owners = new Set([pathToFileURL(configPath).href]);
+  const isPrivate = (path) => {
+    if (!privateDirectory) return false;
+    const inside = relative(privateDirectory, path);
+    return inside !== ".." && !inside.startsWith(`..${sep}`) && !isAbsolute(inside);
+  };
+  const hooks =
+    typeof registerModuleHooks === "function"
+      ? registerModuleHooks({
+          resolve(specifier, context, nextResolve) {
+            const result = nextResolve(specifier, context);
+            if (result.url.startsWith("file:")) {
+              const path = fileURLToPath(result.url);
+              // Vite's generated module owns config execution, but its build engine
+              // and private adapters are not authored configuration dependencies.
+              if (owners.has(result.url) || owners.has(context.parentURL) || isPrivate(path)) {
+                owners.add(result.url);
+                if (!isPrivate(path)) files.add(path);
+              }
+            }
+            return result;
+          },
+        })
+      : undefined;
+  try {
+    const { namespace, dependencies = [] } = await load();
+    for (const path of dependencies) if (!isPrivate(path)) files.add(path);
+    const value = evaluate ? await evaluate(namespace) : namespace;
+    return { namespace, value, dependencies: [...files] };
+  } finally {
+    hooks?.deregister();
+  }
+}
+
+/** Await evaluate(namespace) once before sealing its graph; retain the namespace unchanged. */
 export async function importConfigModuleWithDependencies(
   configPath,
   registerModuleHooks = nodeModule.registerHooks,
   withoutVite,
+  evaluate,
 ) {
   const configURL = pathToFileURL(configPath);
   const require = createRequire(configURL);
@@ -32,26 +76,27 @@ export async function importConfigModuleWithDependencies(
     .find((directory) => lstatSync(directory, { throwIfNoEntry: false }) !== undefined);
   // The public CLI can retain its explicit TypeScript transform fallback. Native
   // editor snapshots always request the complete real import graph instead.
-  if (candidate === undefined) {
-    if (withoutVite) return { namespace: await withoutVite(configURL), dependencies: [configPath] };
-    if (typeof registerModuleHooks !== "function") {
+  if (typeof registerModuleHooks !== "function") {
+    if (evaluate) {
+      throw new Error(
+        "Tracking imports while evaluating a Vite config requires Node.js 22.15 or newer. Upgrade Node.js; installed Vite alone cannot track runtime imports.",
+      );
+    }
+    if (candidate === undefined && !withoutVite) {
       throw new Error(
         "Loading a Vite config without project Vite requires Node.js 22.15 or newer to track imported configuration files. Upgrade Node.js or install Vite in the project.",
       );
     }
-    const dependencies = new Set([configPath]);
-    const hooks = registerModuleHooks({
-      resolve(specifier, context, nextResolve) {
-        const result = nextResolve(specifier, context);
-        if (result.url.startsWith("file:")) dependencies.add(fileURLToPath(result.url));
-        return result;
-      },
-    });
-    try {
-      return { namespace: await import(configURL.href), dependencies: [...dependencies] };
-    } finally {
-      hooks.deregister();
-    }
+  }
+  if (candidate === undefined) {
+    return captureConfigEvaluation(
+      async () => ({
+        namespace: await (withoutVite ? withoutVite(configURL) : import(configURL.href)),
+      }),
+      configPath,
+      registerModuleHooks,
+      evaluate,
+    );
   }
   const viteDirectory = realpathSync(candidate);
   const viteEntry = realpathSync(require.resolve("vite"));
@@ -68,21 +113,27 @@ export async function importConfigModuleWithDependencies(
       `import * as original from ${JSON.stringify(configModuleImportPath(configURL))};\nexport default { namespace: original };\n`,
       { flag: "wx", mode: 0o600 },
     );
-    const loaded = await loadConfigFromFile(
-      { mode: "development", command: "serve" },
-      adapter,
-      moduleConfigDirectory(configPath),
-      "silent",
-      undefined,
-      "bundle",
+    return await captureConfigEvaluation(
+      async () => {
+        const loaded = await loadConfigFromFile(
+          { mode: "development", command: "serve" },
+          adapter,
+          moduleConfigDirectory(configPath),
+          "silent",
+          undefined,
+          "bundle",
+        );
+        if (!loaded) throw new Error(`Vite did not load the selected config: ${configPath}`);
+        return {
+          namespace: loaded.config.namespace,
+          dependencies: loaded.dependencies,
+        };
+      },
+      configPath,
+      registerModuleHooks,
+      evaluate,
+      temporary,
     );
-    if (!loaded) throw new Error(`Vite did not load the selected config: ${configPath}`);
-    return {
-      namespace: loaded.config.namespace,
-      dependencies: [
-        ...new Set([configPath, ...loaded.dependencies.filter((path) => path !== adapter)]),
-      ],
-    };
   } finally {
     await rm(temporary, { recursive: true, force: true });
   }

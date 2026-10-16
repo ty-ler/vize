@@ -12,7 +12,7 @@ import {
   symlink,
   writeFile,
 } from "node:fs/promises";
-import { createRequire } from "node:module";
+import { createRequire, registerHooks } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
@@ -28,6 +28,18 @@ import { resolveViteConfigExport } from "../../crates/vize_carton/src/config/loa
 const require = createRequire(join(process.cwd(), "package.json"));
 const vitePackage = dirname(require.resolve("vite/package.json"));
 const execute = promisify(execFile);
+
+async function nativeLoaderScript() {
+  const loader = new URL("../../crates/vize_carton/src/config/loader/js.rs", import.meta.url);
+  const source = await readFile(loader, "utf8");
+  const includes = [...source.matchAll(/include_str!\("([^"]+)"\)/g)];
+  const scripts = [...source.matchAll(/r#"([\s\S]*?)"#/g)];
+  assert.equal(scripts.length, 1);
+  const bodies = await Promise.all(
+    includes.map((match) => readFile(new URL(match[1], loader), "utf8")),
+  );
+  return [...bodies, scripts[0][1]].join("");
+}
 
 async function project(
   run: (directory: string) => Promise<void>,
@@ -151,15 +163,7 @@ await test("the loader removes its private adapters after both successful and re
 });
 
 await test("the exact script embedded by native Carton loads and projects the original selected config once", async () => {
-  const loader = new URL("../../crates/vize_carton/src/config/loader/js.rs", import.meta.url);
-  const source = await readFile(loader, "utf8");
-  const includes = [...source.matchAll(/include_str!\("([^"]+)"\)/g)];
-  const scripts = [...source.matchAll(/r#"([\s\S]*?)"#/g)];
-  assert.equal(scripts.length, 1);
-  const bodies = await Promise.all(
-    includes.map((match) => readFile(new URL(match[1], loader), "utf8")),
-  );
-  const script = [...bodies, scripts[0][1]].join("");
+  const script = await nativeLoaderScript();
   await project(async (directory) => {
     const selected = join(directory, "vite.config.mts");
     const counter = join(directory, "native-evaluations.txt");
@@ -211,6 +215,23 @@ await test("Vite 7's real esbuild loader bundles the original module rather than
         await writeFile(selected, authored);
         assert.deepEqual((await importConfigModule(selected)).default, { value: 7 });
         assert.equal(await readFile(selected, "utf8"), authored);
+        const helper = join(directory, "policy.mjs");
+        await writeFile(helper, "export default {formatter:{printWidth:94}};");
+        await writeFile(
+          selected,
+          `export default async()=>{
+          const name='policy';
+          return {vue:(await import(new URL('./'+name+'.mjs',import.meta.url))).default};
+        };`,
+        );
+        const evaluated = await importConfigModuleWithDependencies(
+          selected,
+          undefined,
+          undefined,
+          (namespace: { default: unknown }) => resolveViteConfigExport(namespace.default),
+        );
+        assert.equal(evaluated.value.formatter.printWidth, 94);
+        assert.ok(evaluated.dependencies.includes(helper));
       },
       true,
       installed,
@@ -330,5 +351,120 @@ await test("older Node runtimes require project Vite to retain a complete config
     await writeFile(selected, "export default {};");
     const loaded = await importConfigModuleWithDependencies(selected, null);
     assert.ok(loaded.dependencies.includes(selected));
+  });
+});
+
+for (const withVite of [true, false]) {
+  for (const form of ["factory", "fluent", "top-level"]) {
+    await test(`native async export retains runtime helpers exactly once (Vite: ${withVite}, form: ${form})`, async () => {
+      const script = await nativeLoaderScript();
+      await project(async (directory) => {
+        const selected = join(directory, "vite.config.mjs");
+        const helper = join(directory, "policy.mjs");
+        const counter = join(directory, "evaluations.txt");
+        await writeFile(
+          helper,
+          `import {appendFileSync} from 'node:fs';
+          appendFileSync(${JSON.stringify(counter)},'helper\\n');
+          export default {languageServer:{hover:false}};`,
+        );
+        const authored = `import {appendFileSync} from 'node:fs';
+          appendFileSync(${JSON.stringify(counter)},'module\\n');
+          const source=async()=>{
+            appendFileSync(${JSON.stringify(counter)},'source\\n');
+            await new Promise(resolve=>setTimeout(resolve,1));
+            const name='policy';
+            const helper=await import(new URL('./'+name+'.mjs',import.meta.url));
+            return {vue:helper.default};
+          };
+          ${
+            form === "fluent"
+              ? `const wrapper=()=>{throw new Error('fluent wrapper evaluated');};
+            wrapper[Symbol.for('@vizejs/vite-plugin/vite-plus/source')]=source;
+            export default wrapper;`
+              : form === "top-level"
+                ? "export default await source();"
+                : "export default source;"
+          }
+        `;
+        await writeFile(selected, authored);
+        const output = await execute(
+          process.execPath,
+          ["--input-type=module", "-e", script, selected],
+          {
+            cwd: directory,
+            timeout: 10_000,
+          },
+        );
+        const loaded = JSON.parse(output.stdout);
+        assert.equal(loaded.config.languageServer.hover, false);
+        assert.ok(loaded.dependencies.includes(selected));
+        assert.ok(
+          loaded.dependencies.includes(helper),
+          "runtime-imported policy must invalidate the snapshot",
+        );
+        assert.deepEqual([...loaded.dependencies].sort(), [selected, helper].sort());
+        assert.ok(
+          loaded.dependencies.every((file: string) => !file.includes("vize-config-module-")),
+        );
+        assert.equal(await readFile(counter, "utf8"), "module\nsource\nhelper\n");
+        assert.equal(await readFile(selected, "utf8"), authored);
+      }, withVite);
+    });
+  }
+}
+
+await test("tracked export evaluation releases hooks after success and rejection", async () => {
+  for (const stage of ["success", "import", "evaluate"]) {
+    await project(async (directory) => {
+      const selected = join(directory, "vite.config.mjs");
+      await writeFile(
+        selected,
+        stage === "import" ? "throw new Error('import failed');" : "export default {};",
+      );
+      let active = 0;
+      let evaluations = 0;
+      const tracked = (hooks: Parameters<typeof registerHooks>[0]) => {
+        const registration = registerHooks(hooks);
+        active++;
+        return {
+          deregister() {
+            active--;
+            registration.deregister();
+          },
+        };
+      };
+      const evaluation = importConfigModuleWithDependencies(
+        selected,
+        tracked,
+        undefined,
+        async (namespace: unknown) => {
+          evaluations++;
+          assert.equal(active, 1);
+          await Promise.resolve();
+          if (stage === "evaluate") throw new Error("evaluation failed");
+          return namespace;
+        },
+      );
+      if (stage !== "success") await assert.rejects(evaluation, /(?:import|evaluation) failed/);
+      else await evaluation;
+      assert.equal(active, 0);
+      assert.equal(evaluations, stage === "import" ? 0 : 1);
+    }, false);
+  }
+});
+
+await test("installed Vite cannot replace runtime import tracking on older Node", async () => {
+  await project(async (directory) => {
+    const selected = join(directory, "vite.config.mjs");
+    await writeFile(selected, "export default {};");
+    let evaluated = false;
+    await assert.rejects(
+      importConfigModuleWithDependencies(selected, null, undefined, () => {
+        evaluated = true;
+      }),
+      /Node\.js 22\.15.*Upgrade Node\.js/,
+    );
+    assert.equal(evaluated, false);
   });
 });

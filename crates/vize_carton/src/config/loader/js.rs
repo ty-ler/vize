@@ -66,13 +66,16 @@ import { dirname } from "node:path";
 
 const configPath = process.argv[1];
 console.log = (...args) => console.error(...args);
-const { namespace: module, dependencies } = await importConfigModuleWithDependencies(configPath);
-const exported = module.default ?? module;
-const config = isViteConfigFile(configPath)
-  ? await resolveViteConfigExport(exported, undefined, dirname(configPath))
-  : typeof exported === "function"
-  ? await exported({ mode: "development", command: "serve" })
-  : exported;
+const { value: config, dependencies } = await importConfigModuleWithDependencies(
+  configPath, undefined, undefined, async (module) => {
+    const exported = module.default ?? module;
+    return isViteConfigFile(configPath)
+      ? await resolveViteConfigExport(exported, undefined, dirname(configPath))
+      : typeof exported === "function"
+      ? await exported({ mode: "development", command: "serve" })
+      : exported;
+  },
+);
 process.stdout.write(JSON.stringify({ config: config ?? {}, dependencies }));
 "#,
     ]
