@@ -28,3 +28,26 @@ Existing strict-gate, worker-selection, typechecker transport and workflow
 contracts run under Node 24.14.0. Hosted normal-PR and merge-queue execution
 remain the acceptance authority. The seven-second setup difference is an
 observed opportunity, not a promised saving or a five-minute guarantee.
+
+## Fresh hosted result
+
+[Check 38902375238](https://github.com/ubugeeei-prod/vize/actions/runs/38902375238)
+at `e4ad440e0b53224952d97cb731621cc0ba3ee513` passed on its first attempt.
+The tested merge was `8ae32f8cb265a9549be0e0bfca25f9294abe6963`, with base
+`163c349e00cc49d117da0a24b2d5acf26aa3c9b1`. Check ran from 12:42:07 UTC
+to the required report's completion at 12:46:34: **267 seconds**. All nine
+ordinary workflows, including managed Code Quality's earlier 12:42:01 start,
+completed in **273 seconds**. No jobs were reused or rerun.
+
+All 18,188 Rust test identities passed with no duplicates. Every identity from
+the previous run remains; main's `v-pre` regression test accounts for the one
+addition. Clippy, doctests and all strict aggregates passed. The Rust report
+took eight seconds instead of 16, and the final product-to-report interval was
+18 seconds instead of 37. The critical product changed from Compiler to JS
+builders, so the full 28-second improvement cannot be attributed to this edit.
+
+This run used 76.3 runner-minutes across 48 jobs, versus 61.5 in the preceding
+fresh run. Sources, workloads and cache state differ. The five-minute target
+was observed for this run; it is not a latency guarantee or a demonstrated
+runner-cost reduction. Exact-source full and protected merge-queue validation
+remain separate acceptance requirements.
