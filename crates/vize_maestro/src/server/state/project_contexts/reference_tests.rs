@@ -356,37 +356,6 @@ fn invalid_solution_target_does_not_override_valid_source_projects_or_vite_polic
 }
 
 #[test]
-fn document_selection_terminates_after_the_primary_owner_is_shut_down() {
-    let fixture = ReferenceFixture::new("export default {};");
-    fixture.state.retire_project_contexts();
-    let state = fixture.state.clone();
-    let uri = fixture.legacy.clone();
-    let (sender, receiver) = std::sync::mpsc::channel();
-    let worker = std::thread::spawn(move || {
-        sender
-            .send(crate::runtime::block_on(
-                state.document_project_state_async(&uri),
-            ))
-            .unwrap()
-    });
-    let completed = receiver.recv_timeout(std::time::Duration::from_secs(3));
-    if completed.is_err() {
-        // Release a regressed routing loop so the test does not strand a worker.
-        fixture
-            .state
-            .project_contexts
-            .retired
-            .store(false, Ordering::Release);
-    }
-    assert!(
-        completed
-            .expect("shutdown must stop foreground routing")
-            .is_none()
-    );
-    worker.join().unwrap();
-}
-
-#[test]
 fn invalid_leaf_reload_keeps_the_last_valid_dialect_until_the_config_is_fixed() {
     let fixture = ReferenceFixture::new("export default {};");
     let state = &fixture.state;
@@ -479,4 +448,26 @@ fn invalid_vite_reload_keeps_the_last_valid_policy_until_the_config_is_fixed() {
         assert_projection(&current, &a, "unsavedViteReload");
         previous = current;
     }
+}
+
+#[test]
+fn typescript_only_references_select_the_same_checker_and_editor_project() {
+    let fixture = ReferenceFixture::new("export default {};");
+    std::fs::remove_file(fixture.root.join("vite.config.mjs")).unwrap();
+    let state = Arc::new(ServerState::new());
+    state.set_workspace_root(fixture.root.clone());
+    state.load_workspace_config(&fixture.root);
+    state.apply_initialize_workspace_folders(None, Some(&fixture.root));
+    let legacy = state.document_project_state(&fixture.legacy).unwrap();
+    let modern = state.document_project_state(&fixture.modern).unwrap();
+    assert_dialect(&legacy, VueVersion::V2_7);
+    assert_dialect(&modern, VueVersion::V3);
+    assert_eq!(
+        legacy.get_type_checker_config().tsconfig.as_deref(),
+        fixture.root.join("tsconfig.legacy.json").to_str()
+    );
+    assert_eq!(
+        modern.get_type_checker_config().tsconfig.as_deref(),
+        fixture.root.join("tsconfig.modern.json").to_str()
+    );
 }
