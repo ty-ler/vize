@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { parse } from "yaml";
-import { buildTasks } from "../../tools/config/vite-plus/tasks/build.ts";
 import { aggregateNeedsResults } from "../../tools/support/compat/github/require-needs-success.ts";
 import { sourceInventoryLanes } from "../../tools/support/compat/davinci/source-inventories.ts";
 import { readRepoFile, root } from "./support/github-workflows.ts";
@@ -165,15 +164,18 @@ test("source gates cover iteration events while full qualification runs on sched
   assert.equal(appAction.runs.using, "composite");
   const appSteps = appAction.runs.steps;
   assert.ok(appSteps.some((step) => /cargo build --profile ci -p vize/.test(step.run ?? "")));
-  const configExports = appSteps.findIndex(
-    (step) => step.run === "vp run --workspace-root build:vite-plugin",
-  );
-  const configBuild = buildTasks["build:vite-plugin"].command;
-  assert.match(
+  const configExports = appSteps.findIndex((step) => step.name === "Build public Vue config APIs");
+  const configBuild = appSteps[configExports]?.run;
+  assert.equal(configBuild, "(cd npm/cli && vp pack) && (cd npm/builder/vite && vp pack)");
+  assert.doesNotMatch(
     configBuild,
-    /--filter '\.\/npm\/cli'[\s\S]*&&[\s\S]*--filter '\.\/npm\/builder\/vite'/,
+    /vp run|rust-script|generate:rule-types|build:native|cargo build/,
   );
-  assert.doesNotMatch(configBuild, /build:native|cargo build|build:packages/);
+  assert.match(
+    readRepoFile("examples", "vite-musea", "vite.config.ts"),
+    /from ["']@vizejs\/vite-plugin\/vite-plus["']/,
+    "the app config must exercise the public consumer API",
+  );
   assert.ok(
     configExports >= 0 &&
       configExports < appSteps.findIndex((step) => step.name === "Check Vize app fixtures") &&
