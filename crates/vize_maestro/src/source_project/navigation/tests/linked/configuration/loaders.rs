@@ -6,7 +6,11 @@ use vize_l0::config::{VueDialect, VueVersion};
 
 fn config(source: &str) -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
-    std::fs::write(dir.path().join("vize.config.json"), source).unwrap();
+    std::fs::write(
+        dir.path().join("vite.config.mjs"),
+        vize_l0::cstr!("export default {{ vue: {} }};", source).as_bytes(),
+    )
+    .unwrap();
     dir
 }
 

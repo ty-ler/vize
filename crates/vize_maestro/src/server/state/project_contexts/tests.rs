@@ -165,16 +165,16 @@ fn vite_source_root_honors_host_projected_checker_paths() {
 }
 
 #[test]
-fn dedicated_package_policy_remains_opt_in_and_explicit_options_still_win() {
+fn vite_package_policy_uses_project_defaults_and_explicit_options_still_win() {
     let (project, state, a, _b) = fixture();
     std::fs::write(
-        project.path().join("packages/a/vize.config.json"),
-        r#"{"languageServer":{"hover":true}}"#,
+        project.path().join("packages/a/vite.config.mjs"),
+        r#"export default { vue: {"languageServer":{"hover":true}} };"#,
     )
     .unwrap();
     let context = state.document_project_state(&a).unwrap();
     assert!(context.lsp_features().hover);
-    assert!(!context.lsp_features().formatting);
+    assert!(context.lsp_features().formatting);
     let (_fixture, state, a, _b) = fixture();
     state.apply_lsp_initialization_options(Some(&serde_json::json!({"hover":true})));
     assert!(
@@ -333,7 +333,11 @@ fn initializing_multiple_editor_folders_does_not_import_unused_packages() {
 #[test]
 fn malformed_workspace_config_keeps_the_complete_historical_feature_defaults() {
     let dir = tempfile::tempdir().expect("workspace");
-    std::fs::write(dir.path().join("vize.config.json"), "not valid json").expect("config");
+    std::fs::write(
+        dir.path().join("vite.config.mjs"),
+        "export default { vue: not valid json };",
+    )
+    .expect("config");
     let state = super::ServerState::new();
     state.load_workspace_config(dir.path());
     assert_eq!(

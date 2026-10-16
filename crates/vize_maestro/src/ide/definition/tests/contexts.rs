@@ -228,7 +228,7 @@ export default {
     let dir = tempfile::tempdir().unwrap();
     let dir_path = Box::leak(Box::new(dir)).path();
     fs::write(
-        dir_path.join("vize.config.json"),
+        dir_path.join("vite.config.mjs"),
         r#"{ "typeChecker": { "optionsApi": false } }"#,
     )
     .unwrap();

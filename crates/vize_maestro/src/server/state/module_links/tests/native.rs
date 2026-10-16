@@ -13,8 +13,12 @@ fn module_link_context_retains_complete_actual_applied_values_and_separate_load_
         let dir = tempfile::tempdir().unwrap();
         let config_dir = dir.path().join("config");
         std::fs::create_dir(&config_dir).unwrap();
-        let config_path = config_dir.join("vize.config.json");
-        std::fs::write(&config_path, CONFIG).unwrap();
+        let config_path = config_dir.join("vite.config.mjs");
+        std::fs::write(
+            &config_path,
+            vize_l0::cstr!("export default {{ vue: {} }};", CONFIG).as_bytes(),
+        )
+        .unwrap();
         let root = dir.path().join("actual-root");
         let state = ServerState::new();
         assert!(matches!(
@@ -65,8 +69,12 @@ fn module_link_context_retains_complete_actual_applied_values_and_separate_load_
 #[test]
 fn module_link_actual_equal_reload_and_root_checker_aba_invalidate_original_ticket() {
     let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("vize.config.json");
-    std::fs::write(&path, CONFIG).unwrap();
+    let path = dir.path().join("vite.config.mjs");
+    std::fs::write(
+        &path,
+        vize_l0::cstr!("export default {{ vue: {} }};", CONFIG).as_bytes(),
+    )
+    .unwrap();
     let state = ServerState::new();
     state.set_workspace_root(dir.path().into());
     state.load_lsp_config(dir.path());
@@ -90,9 +98,13 @@ fn module_link_actual_equal_reload_and_root_checker_aba_invalidate_original_tick
         Err(ModuleLinkContextError::Superseded)
     );
     let checker_a = state.capture_module_link_context().unwrap();
-    std::fs::write(&path, "{}").unwrap();
+    std::fs::write(&path, "export default { vue: {} };").unwrap();
     state.load_workspace_config(dir.path());
-    std::fs::write(&path, CONFIG).unwrap();
+    std::fs::write(
+        &path,
+        vize_l0::cstr!("export default {{ vue: {} }};", CONFIG).as_bytes(),
+    )
+    .unwrap();
     state.load_workspace_config(dir.path());
     assert_eq!(
         state.with_current_module_link_context(&checker_a, || ()),
@@ -108,8 +120,12 @@ fn module_link_actual_equal_reload_and_root_checker_aba_invalidate_original_tick
 fn module_link_missing_config_does_not_replace_actual_origin_or_generation() {
     let dir = tempfile::tempdir().unwrap();
     let no_config = tempfile::tempdir().unwrap();
-    let path = dir.path().join("vize.config.json");
-    std::fs::write(&path, CONFIG).unwrap();
+    let path = dir.path().join("vite.config.mjs");
+    std::fs::write(
+        &path,
+        vize_l0::cstr!("export default {{ vue: {} }};", CONFIG).as_bytes(),
+    )
+    .unwrap();
     let state = ServerState::new();
     state.set_workspace_root(dir.path().into());
     state.load_workspace_config(dir.path());
@@ -165,7 +181,7 @@ fn module_link_capture_waits_for_complete_applied_tuple_origin_and_generation_co
         // Test-only rendezvous exposes the real private assignment boundary.
         // The production closure only performs its authoritative assignment.
         writer_state.update_module_link_context(
-            Some("/actual-config/vize.config.json".into()),
+            Some("/actual-config/vite.config.mjs".into()),
             || {
                 *writer_state.type_checker_config.write() = (
                     TypeCheckerConfig {
@@ -209,7 +225,7 @@ fn module_link_capture_waits_for_complete_applied_tuple_origin_and_generation_co
     assert_eq!(fresh.root(), Path::new("/actual-before"));
     assert_eq!(
         fresh.load_origin(),
-        Some(Path::new("/actual-config/vize.config.json"))
+        Some(Path::new("/actual-config/vite.config.mjs"))
     );
     assert_eq!(
         fresh.project().tsconfig(),

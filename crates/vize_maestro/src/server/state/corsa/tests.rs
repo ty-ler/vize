@@ -60,12 +60,15 @@ fn held_backend(timeout_ms: u64) -> (tempfile::TempDir, ServerState) {
     )
     .unwrap();
     std::fs::write(
-        root.path().join("vize.config.json"),
-        json!({
-            "lsp":{"typecheck":true,"lint":false},
-            "typeChecker":{"corsaPath":backend,"lspRequestTimeoutMs":timeout_ms}
-        })
-        .to_string(),
+        root.path().join("vite.config.mjs"),
+        vize_l0::cstr!(
+            "export default {{ vue: {} }};",
+            json!({
+                "languageServer":{"typecheck":true,"lint":false},
+                "typeChecker":{"corsaPath":backend,"lspRequestTimeoutMs":timeout_ms}
+            })
+        )
+        .as_bytes(),
     )
     .unwrap();
     let state = ServerState::new();
