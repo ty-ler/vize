@@ -20,7 +20,7 @@ const plan = (vueParity: boolean, docs: boolean, miri: boolean, fuzz: boolean) =
   fuzz,
 });
 
-void test("queue candidates run the release gates their paths can affect", () => {
+void test("release qualification planning selects gates from their actual input paths", () => {
   for (const [paths, expected] of [
     [["docs/content/ja/guide/cli.md"], plan(false, true, false, false)],
     [["docs/davinci/decisions/2026-10-14-x.md"], plan(false, false, false, false)],
@@ -74,28 +74,37 @@ void test("a release gate may skip only when the plan did not select it", () => 
   );
 });
 
-void test("Check wires every planned gate into the required report", () => {
+void test("the reusable release gate workflow requires every planned result in its own report", () => {
   type Workflow = {
     jobs: Record<
       string,
-      { needs?: string[]; if?: string; uses?: string; with?: object; steps?: unknown[] }
+      {
+        needs?: string[];
+        if?: string;
+        uses?: string;
+        with?: object;
+        steps?: { uses?: string; run?: string }[];
+      }
     >;
   };
-  const check = parse(readRepoFile(".github", "workflows", "check.yml")) as Workflow;
   const workflow = parse(
     readRepoFile(".github", "workflows", "queue-release-gates.yml"),
   ) as Workflow;
-  assert.equal(check.jobs["release-gates"]!.uses, "./.github/workflows/queue-release-gates.yml");
-  assert.ok(check.jobs["test-report"]!.needs!.includes("release-gates"));
   const gate = workflow.jobs["release-gates"]!;
+  assert.equal(gate.if, "${{ always() }}");
+  assert.ok(
+    gate.steps?.some(
+      (step) => step.run === "node tools/support/compat/github/plan-release-gates.ts --check",
+    ),
+  );
   assert.deepEqual(
     [...gate.needs!].sort(),
     ["release-gate-plan", ...Object.values(RELEASE_GATE_JOBS)].sort(),
   );
-  assert.deepEqual(
-    workflow.jobs["vue-parity"]!.steps,
-    check.jobs["vue-parity"]!.steps,
-    "the queue runs the release vue-parity job unchanged",
+  assert.ok(
+    workflow.jobs["vue-parity"]!.steps?.some(
+      (step) => step.uses === "./.github/actions/check-vue-parity",
+    ),
   );
   for (const [decision, job] of Object.entries(RELEASE_GATE_JOBS)) {
     assert.match(
@@ -113,7 +122,7 @@ void test("Check wires every planned gate into the required report", () => {
   assert.deepEqual(workflow.jobs["fuzz-replay"]!.with, { mode: "replay" });
 });
 
-void test("the queue's docs review applies the release link predicate without a browser", () => {
+void test("the docs qualification applies the release link predicate without a browser", () => {
   const dist = mkdtempSync(join(tmpdir(), "vize-static-links-"));
   try {
     const page = (route: string, body: string) => {

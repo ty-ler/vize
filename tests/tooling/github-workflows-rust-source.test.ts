@@ -127,7 +127,7 @@ void test("named Rust cohorts preserve filtered execution and receipt-bound queu
   assert.equal(workers.env?.NEXTEST_FILTER, "${{ matrix.filter }}");
   assert.deepEqual(needs(workers), ["merge-rust-source"]);
   const steps = workers.steps ?? [];
-  const prRun = steps.find((step) => /cargo nextest run @packages@/.test(step.run ?? ""));
+  const prRun = steps.find((step) => /run-rust-test-cohort\.ts/.test(step.run ?? ""));
   const archiveRun = steps.find((step) => /cargo nextest run --archive-file/.test(step.run ?? ""));
   assert.ok(prRun && archiveRun);
   assert.match(prRun.if ?? "", /pull_request/);

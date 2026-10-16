@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { type AppConfig, syncGitFixtureWorktree } from "./apps.ts";
 import { prepareSeparateLintInstallGraph } from "./lint-fixture-install-graph.ts";
 import { resolveLintEnvironmentCli } from "./lint-fixture-runtime.ts";
+import { prepareInstalledNpmxNuxt } from "./npmx-check-preparation.ts";
 import {
   assertPinnedFixtureFiles,
   exportPinnedFixtureGitlinks,
@@ -103,6 +104,10 @@ function prepareFixtureDependencies(app: AppConfig, suite: "lint" | "check"): Pr
     { cwd: installRoot, env, stdio: "inherit", timeout: 900_000 },
   );
   migration?.attach();
+  const nuxt =
+    name === "npmx.dev" && suite === "check"
+      ? prepareInstalledNpmxNuxt(root, installRoot, source, env)
+      : undefined;
   // This exact authored postinstall command provides the eagerly imported
   // Electron path. Browser downloads and application generators are unrelated
   // to reading these original lint inputs and remain in their existing suites.
@@ -138,7 +143,7 @@ function prepareFixtureDependencies(app: AppConfig, suite: "lint" | "check"): Pr
               .filter((file) => fs.statSync(path.join(root, "packages/i18n/built", file)).isFile())
               .map((file) => path.join("packages/i18n/built", file)),
           ]
-        : [];
+        : (nuxt?.generatedInputs ?? []);
   const generatedHashes = Object.fromEntries(
     generatedInputs.map((file) => [file, sha256(fs.readFileSync(path.join(root, file)))]),
   );
@@ -146,6 +151,7 @@ function prepareFixtureDependencies(app: AppConfig, suite: "lint" | "check"): Pr
     assertPinnedFixtureFiles(root, source);
     assert.equal(sha256(fs.readFileSync(lockPath)), lockSha256, "frozen dependency lock changed");
     migration?.verify();
+    nuxt?.verify();
     for (const [file, expected] of Object.entries(generatedHashes)) {
       assert.equal(
         sha256(fs.readFileSync(path.join(root, file))),
@@ -180,6 +186,7 @@ function prepareFixtureDependencies(app: AppConfig, suite: "lint" | "check"): Pr
       originalFrozenClosure: name !== "npmx.dev" && name !== "naive-ui",
       generatedLock: name === "naive-ui",
       ...(migration ? { migration: migration.receipt } : {}),
+      ...(nuxt ? { nuxt: nuxt.receipt } : {}),
       generatedInputs: generatedHashes,
       vite: {
         manifest: JSON.parse(fs.readFileSync(viteManifest, "utf8")),

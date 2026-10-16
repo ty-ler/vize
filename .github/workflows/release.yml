@@ -506,6 +506,7 @@ jobs:
         build-release-packages,
         release-npm-native,
         release-npm-cli,
+        release-npm-unplugin,
         smoke-release-packages,
         release-preflight,
       ]
@@ -958,7 +959,6 @@ jobs:
             vize-${{ inputs.tag_name }}-*.cosign.bundle
 
   # Publish vize CLI npm package (using Trusted Publishing / OIDC)
-
   # Native bindings are distributed via @vizejs/native-* optionalDependencies (NAPI-RS)
   release-npm-cli:
     name: Release vize CLI to npm

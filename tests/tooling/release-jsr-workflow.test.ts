@@ -51,3 +51,28 @@ await test("the release calls the JSR workflow after the npm packages it re-expo
     assert.ok(needs.has(job), `release-jsr waits for ${job}`);
   }
 });
+
+for (const [file, job, condition] of [
+  ["release-jsr.yml", "consumer", "matrix.runtime == 'deno'"],
+  ["jsr-package.yml", "package", undefined],
+] as const) {
+  await test(`${file} applies the shared scoped age policy only to Deno`, () => {
+    const steps = workflow(file).jobs[job]?.steps ?? [];
+    const deno = steps.filter((step) => runs(step, /\bdeno run\b/));
+    assert.equal(deno.length, 1);
+    assert.equal(deno[0]?.if, condition);
+    const script = deno[0]?.run ?? "";
+    const copied = script.match(
+      /\bcp\s+"?(?:\$GITHUB_WORKSPACE\/)?tools\/support\/release\/jsr\/consumer-deno\.json"?\s+"?([^"\s]+)/,
+    );
+    assert.ok(copied, "copy the canonical policy into the fresh consumer");
+    const config = script.match(/\bdeno run\b[^\n]*--config(?:=|\s+)"?([^"\s]+)/);
+    assert.equal(config?.[1], copied[1], "explicitly load the copied policy");
+    assert.deepEqual(
+      steps.filter((step) => runs(step, /consumer-deno\.json/)),
+      deno,
+      "Node/Bun and shared setup never load the Deno policy",
+    );
+    assert.ok(steps.every((step) => !runs(step, /--minimum-dependency-age/)));
+  });
+}

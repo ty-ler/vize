@@ -37,4 +37,5 @@ jobs:
       - name: Import the staged entry points under Deno
         run: |
           cp tools/support/release/jsr/consumer.ts "$RUNNER_TEMP/consumer.ts"
-          deno run --minimum-dependency-age=0 --allow-all "$RUNNER_TEMP/consumer.ts" "file://$RUNNER_TEMP/jsr-package/"
+          cp tools/support/release/jsr/consumer-deno.json "$RUNNER_TEMP/consumer-deno.json"
+          deno run --config "$RUNNER_TEMP/consumer-deno.json" --allow-all "$RUNNER_TEMP/consumer.ts" "file://$RUNNER_TEMP/jsr-package/"

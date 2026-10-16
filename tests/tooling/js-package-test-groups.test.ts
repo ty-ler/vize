@@ -10,6 +10,10 @@ import type { PackagePath } from "../../tools/config/vite-plus/task-helpers.ts";
 import { testedPackages } from "../../tools/config/vite-plus/task-inputs.ts";
 import { testedPackageGroups } from "../../tools/config/vite-plus/tested-package-groups.ts";
 import { testAndBenchmarkTasks } from "../../tools/config/vite-plus/tasks/test-benchmark.ts";
+import {
+  planAffectedJs,
+  readJsWorkspace,
+} from "../../tools/support/compat/github/plan-affected-js.ts";
 import { readRepoFile, root } from "./support/github-workflows.ts";
 
 type Manifest = {
@@ -25,9 +29,11 @@ type Step = {
   id?: string;
   run?: string;
   uses?: string;
+  if?: string;
+  env?: Record<string, string>;
   with?: Record<string, unknown>;
 };
-type Job = { strategy?: { matrix?: { group?: string[] } }; steps?: Step[] };
+type Job = { strategy?: { matrix?: string }; steps?: Step[] };
 
 const jsChecks = parse(readRepoFile(".github", "workflows", "pr-js-checks.yml")) as {
   jobs: Record<string, Job>;
@@ -152,12 +158,20 @@ void test("group tasks keep the full set's preparation, wrapper, order and concu
   );
 });
 
-void test("PR CI runs every group once and the qualification and conformance jobs separately", () => {
-  const groups = jsChecks.jobs["pr-js-package-tests"]?.strategy?.matrix?.group;
+void test("PR CI runs each affected group once and keeps qualification and conformance separate", () => {
+  const packages = jsChecks.jobs["pr-js-package-tests"];
+  assert.equal(packages.strategy?.matrix, "${{ fromJSON(inputs.js-plan).matrix }}");
+  const full = planAffectedJs(readJsWorkspace(root), ["pnpm-lock.yaml"]);
   assert.deepEqual(
-    groups,
+    full.matrix.group,
     testedPackageGroups.map(({ name }) => name),
   );
+  const runs = (packages.steps ?? []).filter((step) =>
+    step.run?.includes('vp run --workspace-root "test:js:$VIZE_JS_PACKAGE_GROUP"'),
+  );
+  assert.equal(runs.length, 1);
+  assert.equal(runs[0].env?.VIZE_JS_PACKAGE_GROUP, "${{ matrix.group }}");
+  assert.equal(runs[0].if, "${{ (inputs.run-js && matrix.group != 'none') }}");
   const cacheKey = (job: Job | undefined) =>
     job?.steps?.find((step) => step.uses === "./.github/actions/setup-rust-sticky-cache")?.with
       ?.key;
@@ -165,7 +179,15 @@ void test("PR CI runs every group once and the qualification and conformance job
   assert.equal(cacheKey(jsChecks.jobs["pr-js-package-tests"]), "test-js-packages");
   assert.equal(cacheKey(jsChecks.jobs["pr-oxlint-project-qualification"]), "test-js-packages");
   assert.equal(cacheKey(jsChecks.jobs["pr-js-package-conformance"]), "build-js-packages");
-  assert.equal(cacheKey(check.jobs["test-js-packages"]), undefined, "uses its setup action");
+  assert.ok(
+    check.jobs["test-js-packages"].steps?.some(
+      (step) => step.uses === "./.github/actions/setup-js-package-tests",
+    ),
+  );
+  const setup = parse(
+    readRepoFile(".github", "actions", "setup-js-package-tests", "action.yml"),
+  ) as { runs: Job };
+  assert.equal(cacheKey(setup.runs), "test-js-packages");
   assert.equal(cacheKey(check.jobs["build-js-packages"]), "build-js-packages");
 
   const qualification = jsChecks.jobs["pr-oxlint-project-qualification"]?.steps ?? [];
