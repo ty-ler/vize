@@ -34,7 +34,6 @@ fn write_entry_config(root: &Path) {
             r#"{
   "entries": [
     {
-      "name": "design-system",
       "basePath": "design-system",
       "files": ["src/**/*.vue", "src/**/*.art.vue"]
     }
@@ -50,13 +49,12 @@ fn write_entry_ts_config(root: &Path) {
         "vite.config.mjs",
         &vite_config::source(
             r#"{
-  entries: [
+  "entries": [
     {
-      name: "design-system",
-      basePath: "design-system",
-      files: ["src/**/*.vue", "src/**/*.art.vue"],
-    },
-  ],
+      "basePath": "design-system",
+      "files": ["src/**/*.vue", "src/**/*.art.vue"]
+    }
+  ]
 }
 "#,
         ),
@@ -132,10 +130,10 @@ fn fmt_check_supports_root_relative_ts_paths_for_config_entries() {
         "vite.config.mjs",
         &vite_config::source(
             r#"{
-  entries: [
-    { name: "app", basePath: ".", files: ["*.ts", "components/**/*.vue"] },
-    { name: "scripts", basePath: "scripts", files: ["**/*.ts"] },
-  ],
+  "entries": [
+    { "basePath": ".", "files": ["*.ts", "components/**/*.vue"] },
+    { "basePath": "scripts", "files": ["**/*.ts"] }
+  ]
 }
 "#,
         ),

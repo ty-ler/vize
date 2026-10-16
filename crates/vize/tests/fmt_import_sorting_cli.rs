@@ -130,10 +130,18 @@ fn malformed_sort_settings_fail_closed_and_no_config_bypasses_them() {
         r#"{"formatter":{"sortImports":{"groups":["external",{"newlinesBetween":true},{"newlinesBetween":false},"sibling"]}}}"#,
         "{",
     ] {
-        fs::write(root.join("vite.config.mjs"), vite_config::source(invalid))
-            .expect("invalid config");
+        let config_name = if invalid == "{" {
+            fs::write(root.join("config.json"), invalid).expect("malformed native JSON");
+            "config.json"
+        } else {
+            fs::write(root.join("vite.config.mjs"), vite_config::source(invalid))
+                .expect("invalid config");
+            "vite.config.mjs"
+        };
         assert_eq!(
-            fmt(root, &["--write", "UserCard.vue"]).status.code(),
+            fmt(root, &["--config", config_name, "--write", "UserCard.vue"])
+                .status
+                .code(),
             Some(2)
         );
         assert_eq!(

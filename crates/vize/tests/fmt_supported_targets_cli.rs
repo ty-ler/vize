@@ -36,7 +36,6 @@ fn fmt_check_supports_root_relative_json_paths_for_config_entries() {
             r#"{
   "entries": [
     {
-      "name": "design-system",
       "basePath": "design-system",
       "files": ["src/**/*.json", "src/**/*.md"]
     }

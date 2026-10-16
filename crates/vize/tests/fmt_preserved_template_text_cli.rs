@@ -1,4 +1,8 @@
 #![cfg(feature = "glyph")]
+#![expect(
+    clippy::disallowed_macros,
+    reason = "historical JavaScript config carrier"
+)]
 #[path = "support/vite_config.rs"]
 mod vite_config;
 
@@ -23,12 +27,12 @@ fn discovered_and_explicit_compiler_whitespace_survives_three_cli_writes() {
         ("explicit-js.mjs", TS, true),
     ] {
         let project = tempfile::tempdir().unwrap();
-        let native = config
-            .strip_prefix("export default ")
-            .unwrap_or(config)
-            .trim()
-            .trim_end_matches(';');
-        let config = vite_config::source(native);
+        let config = if let Some(native) = config.strip_prefix("export default ") {
+            let native = native.trim().trim_end_matches(';');
+            format!("export default {{ vue: {native} }};\n")
+        } else {
+            vite_config::source(config)
+        };
         fs::write(project.path().join(config_name), &config).unwrap();
         fs::write(project.path().join("App.vue"), SOURCE).unwrap();
         for mode in ["--check", "--write", "--write", "--write", "--check"] {

@@ -1,5 +1,9 @@
 //! Whole configured check/write/fixed-point custody for inline template syntax.
 #![cfg(feature = "glyph")]
+#![expect(
+    clippy::disallowed_macros,
+    reason = "historical JavaScript config carrier"
+)]
 #[path = "support/vite_config.rs"]
 mod vite_config;
 
@@ -16,12 +20,13 @@ fn replay(
     let root = project.path();
     fs::write(root.join("Example.vue"), source)?;
     let native = std::str::from_utf8(config)?;
-    let native = native
-        .strip_prefix("export default ")
-        .unwrap_or(native)
-        .trim()
-        .trim_end_matches(';');
-    let config = vite_config::source(native).into_bytes();
+    let config = if let Some(native) = native.strip_prefix("export default ") {
+        let native = native.trim().trim_end_matches(';');
+        format!("export default {{ vue: {native} }};\n")
+    } else {
+        vite_config::source(native)
+    }
+    .into_bytes();
     fs::write(root.join(name), &config)?;
     for (pass, mode) in ["--check", "--write", "--write", "--write", "--check"]
         .iter()
