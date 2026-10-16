@@ -102,9 +102,14 @@ test("the actual required Check report command fails a red or missing instructio
   const report = workflow.jobs?.["test-report"];
   const command = report?.steps?.at(-1)?.run;
   assert.ok(command);
-  assert.equal(command, "node tools/support/compat/github/require-needs-success.ts --check-report");
+  const [executable, ...args] = command.trim().split(/\s+/);
+  assert.equal(executable, "node");
+  assert.deepEqual(args, [
+    "tools/support/compat/github/require-needs-success.ts",
+    "--check-report",
+  ]);
   const run = (event: string, results: Record<string, unknown>) =>
-    spawnSync(process.execPath, command.split(" ").slice(1), {
+    spawnSync(process.execPath, args, {
       cwd: root,
       encoding: "utf8",
       env: { ...process.env, GITHUB_EVENT_NAME: event, NEEDS_JSON: JSON.stringify(results) },
@@ -138,14 +143,16 @@ test("full scheduled and manual aggregate commands reject incomplete instruction
   assert.deepEqual(report?.steps?.at(-1)?.with, { "needs-json": "${{ toJSON(needs) }}" });
   const command = action.runs.steps.at(-1)?.run;
   assert.ok(command);
-  assert.equal(command, "node tools/support/compat/github/require-needs-success.ts");
+  const [executable, ...args] = command.trim().split(/\s+/);
+  assert.equal(executable, "node");
+  assert.deepEqual(args, ["tools/support/compat/github/require-needs-success.ts"]);
   for (const event of ["schedule", "workflow_dispatch"])
     for (const result of ["success", "failure", "cancelled", "skipped", undefined]) {
       const results: Record<string, { result?: string }> = Object.fromEntries(
         (report?.needs ?? []).map((name) => [name, { result: "success" }]),
       );
       results["instruction-counts"] = result ? { result } : {};
-      const observation = spawnSync(process.execPath, command.split(" ").slice(1), {
+      const observation = spawnSync(process.execPath, args, {
         cwd: root,
         encoding: "utf8",
         env: { ...process.env, GITHUB_EVENT_NAME: event, NEEDS_JSON: JSON.stringify(results) },
