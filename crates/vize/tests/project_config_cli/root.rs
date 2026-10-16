@@ -23,7 +23,7 @@ fn omitted_build_inputs_use_vite_root_and_explicit_inputs_remain_local() {
         inventory(&root.join("configured")),
         oracle!("build-configured.json")
     );
-    assert_configuration(root, SETTINGS, false, Some("evaluated\n"));
+    assert_configuration(root, &SETTINGS, false, Some("evaluated\n"));
 
     reset_evaluations(root);
     assert_success(&run(
@@ -41,7 +41,7 @@ fn omitted_build_inputs_use_vite_root_and_explicit_inputs_remain_local() {
         inventory(&root.join("explicit")),
         oracle!("build-explicit.json")
     );
-    assert_configuration(root, SETTINGS, false, Some("evaluated\n"));
+    assert_configuration(root, &SETTINGS, false, Some("evaluated\n"));
 
     reset_evaluations(root);
     assert_success(&run(root, &["build", "--no-config", "-o", "defaults"]));
@@ -49,7 +49,7 @@ fn omitted_build_inputs_use_vite_root_and_explicit_inputs_remain_local() {
         inventory(&root.join("defaults")),
         oracle!("build-defaults.json")
     );
-    assert_configuration(root, SETTINGS, false, None);
+    assert_configuration(root, &SETTINGS, false, None);
 }
 
 #[test]
@@ -59,19 +59,19 @@ fn omitted_lint_inputs_scope_entry_rules_and_ignores_to_vite_root() {
     let (output, report) = lint_report(root, &[]);
     assert_eq!(output.status.code(), Some(1), "{output:?}");
     assert_eq!(report, oracle!("lint-configured.json"));
-    assert_configuration(root, SETTINGS, false, Some("evaluated\n"));
+    assert_configuration(root, &SETTINGS, false, Some("evaluated\n"));
 
     reset_evaluations(root);
     let (explicit, report) = lint_report(root, &["src/Decoy.vue", "--config", "vite.config.mjs"]);
     assert_eq!(explicit.status.code(), Some(1), "{explicit:?}");
     assert_eq!(report, oracle!("lint-explicit.json"));
-    assert_configuration(root, SETTINGS, false, Some("evaluated\n"));
+    assert_configuration(root, &SETTINGS, false, Some("evaluated\n"));
 
     reset_evaluations(root);
     let (defaults, report) = lint_report(root, &["--no-config"]);
     assert_eq!(defaults.status.code(), Some(0), "{defaults:?}");
     assert_eq!(report, oracle!("lint-defaults.json"));
-    assert_configuration(root, SETTINGS, false, None);
+    assert_configuration(root, &SETTINGS, false, None);
 }
 
 #[cfg(feature = "glyph")]
@@ -83,7 +83,7 @@ fn omitted_format_inputs_follow_vite_root_without_writing_siblings() {
     assert_success(&run(root, &["fmt", "--write"]));
     let mut expected = oracle!("fmt-configured.json");
     assert_eq!(inventory(root), expected);
-    assert_configuration(root, SETTINGS, false, Some("evaluated\n"));
+    assert_configuration(root, &SETTINGS, false, Some("evaluated\n"));
 
     reset_evaluations(root);
     assert_success(&run(
@@ -98,13 +98,13 @@ fn omitted_format_inputs_follow_vite_root_without_writing_siblings() {
     ));
     expected["src/Decoy.vue"] = json!({"text":include_str!("../../../../tests/_fixtures/differential/config/vite-root-8371/oracles/fmt-explicit.vue.txt")});
     assert_eq!(inventory(root), expected);
-    assert_configuration(root, SETTINGS, false, Some("evaluated\n"));
+    assert_configuration(root, &SETTINGS, false, Some("evaluated\n"));
 
     reset_evaluations(root);
     let missing = run(root, &["fmt", "--write", "src/Image.vue"]);
     assert_eq!(missing.status.code(), Some(1), "{missing:?}");
     assert_eq!(inventory(root), expected);
-    assert_configuration(root, SETTINGS, false, Some("evaluated\n"));
+    assert_configuration(root, &SETTINGS, false, Some("evaluated\n"));
 
     reset_evaluations(root);
     write(root, "src/Decoy.vue", APP);
@@ -115,7 +115,7 @@ fn omitted_format_inputs_follow_vite_root_without_writing_siblings() {
     expected["src/Decoy.vue"] = json!({"text":include_str!("../../../../tests/_fixtures/differential/config/vite-root-8371/oracles/fmt-default.vue.txt")});
     expected.as_object_mut().unwrap().remove(".evaluations");
     assert_eq!(inventory(root), expected);
-    assert_configuration(root, SETTINGS, false, None);
+    assert_configuration(root, &SETTINGS, false, None);
 }
 
 #[test]
@@ -130,14 +130,18 @@ fn native_vite_arrays_keep_global_settings_and_root_relative_scoped_entries() {
 }
 
 #[test]
-fn dedicated_configuration_keeps_the_existing_invocation_root() {
+fn explicit_native_configuration_keeps_the_existing_invocation_root() {
     let project = project();
     let root = project.path();
     write(root, "vize.config.json", DEDICATED);
-    let (output, report) = lint_report(root, &[]);
+    write(root, "manual.json", DEDICATED);
+    let (output, report) = lint_report(root, &["--config", "manual.json"]);
     assert_eq!(output.status.code(), Some(1), "{output:?}");
     assert_eq!(report, oracle!("lint-dedicated.json"));
-    assert_success(&run(root, &["build", "-o", "dedicated"]));
+    assert_success(&run(
+        root,
+        &["build", "-o", "dedicated", "--config", "manual.json"],
+    ));
     assert_eq!(
         inventory(&root.join("dedicated")),
         oracle!("build-dedicated.json")
@@ -146,7 +150,41 @@ fn dedicated_configuration_keeps_the_existing_invocation_root() {
         fs::read_to_string(root.join("vize.config.json")).unwrap(),
         DEDICATED
     );
-    assert_configuration(root, SETTINGS, true, None);
+    assert_eq!(
+        fs::read_to_string(root.join("manual.json")).unwrap(),
+        DEDICATED
+    );
+    assert_configuration(root, &SETTINGS, true, None);
+}
+
+#[test]
+fn stale_dedicated_configuration_does_not_override_vite_and_explicit_use_rejects() {
+    let project = project();
+    let root = project.path();
+    write(root, "vize.config.json", DEDICATED);
+    let (output, report) = lint_report(root, &[]);
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
+    assert_eq!(report, oracle!("lint-configured.json"));
+    assert_configuration(root, &SETTINGS, true, Some("evaluated\n"));
+
+    reset_evaluations(root);
+    assert_success(&run(root, &["build", "-o", "configured"]));
+    assert_eq!(
+        inventory(&root.join("configured")),
+        oracle!("build-configured.json")
+    );
+    assert_configuration(root, &SETTINGS, true, Some("evaluated\n"));
+
+    reset_evaluations(root);
+    super::support::assert_legacy_config_rejected(&run(
+        root,
+        &["lint", "--config", "vize.config.json", "--format", "json"],
+    ));
+    assert_eq!(
+        fs::read_to_string(root.join("vize.config.json")).unwrap(),
+        DEDICATED
+    );
+    assert_configuration(root, &SETTINGS, true, None);
 }
 
 #[test]
@@ -180,7 +218,7 @@ fn omitted_check_inputs_use_vite_tsconfig_and_explicit_tsconfig_stays_local() {
     let (output, report) = check(&[]);
     assert_success(&output);
     assert_eq!(report, oracle!("check-configured.json"));
-    assert_configuration(root, SETTINGS, false, Some("evaluated\n"));
+    assert_configuration(root, &SETTINGS, false, Some("evaluated\n"));
 
     let cases = [
         (
@@ -199,7 +237,7 @@ fn omitted_check_inputs_use_vite_tsconfig_and_explicit_tsconfig_stays_local() {
         let (output, report) = check(args);
         assert_eq!(output.status.code(), Some(1), "{args:?}: {output:?}");
         assert_eq!(report, expected);
-        assert_configuration(root, SETTINGS, false, evaluation);
+        assert_configuration(root, &SETTINGS, false, evaluation);
     }
     write(
         root,
@@ -213,5 +251,5 @@ fn omitted_check_inputs_use_vite_tsconfig_and_explicit_tsconfig_stays_local() {
         fs::read_to_string(root.join("manual.json")).unwrap(),
         r#"{"typeChecker":{"tsconfig":"tsconfig.json"}}"#
     );
-    assert_configuration(root, SETTINGS, false, None);
+    assert_configuration(root, &SETTINGS, false, None);
 }
