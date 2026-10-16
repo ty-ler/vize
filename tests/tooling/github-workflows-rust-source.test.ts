@@ -13,6 +13,7 @@ type Step = {
 };
 type Job = {
   if?: string;
+  "runs-on"?: string;
   needs?: string[] | string;
   steps?: Step[];
   uses?: string;
@@ -188,4 +189,47 @@ void test("trusted main and scheduled runs seed the CI profiles while candidate 
     assert.ok(String(mount.with?.key).startsWith("${{ steps.cache-policy.outputs.sticky-"));
     assert.ok(mount.if?.includes("steps.cache-policy.outputs.sticky == 'true'"));
   }
+});
+
+void test("the native seed reuses the PR build profile and cache without running package tests", () => {
+  const seed = workflow("rust-pr-target-seed.yml");
+  const job = seed.jobs["js-native-target-seed"];
+  const candidate = js.jobs["pr-js-package-tests"];
+  assert.equal(job["runs-on"], candidate["runs-on"]);
+  assert.equal(job.env?.CARGO_BUILD_JOBS, candidate.env?.CARGO_BUILD_JOBS);
+  assert.equal(commands(job).trim(), "vp run --workspace-root build:native:test");
+  assert.ok(job.steps?.some((step) => step.uses === "./.github/actions/setup-js-package-tests"));
+  const bootstrap = job.steps?.find((step) => step.uses === "./.github/actions/cache-vp-bootstrap");
+  assert.ok(bootstrap);
+  assert.notEqual(bootstrap.with?.save, "true", "only the runtime seed saves the bootstrap key");
+
+  const setup = parse(
+    readRepoFile(".github", "actions", "setup-js-package-tests", "action.yml"),
+  ) as {
+    runs: { steps: Step[] };
+  };
+  for (const action of [
+    "dtolnay/rust-toolchain@",
+    "wild-linker/action@",
+    "./.github/actions/setup-rust-sticky-cache",
+  ]) {
+    const seeded = setup.runs.steps.find((step) => step.uses?.startsWith(action));
+    const checked = candidate.steps?.find((step) => step.uses?.startsWith(action));
+    assert.ok(seeded && checked, `${action} is shared with the candidate build`);
+    assert.deepEqual(seeded.with, checked.with);
+  }
+  assert.equal(
+    setup.runs.steps.find((step) => step.uses === "./.github/actions/setup-rust-sticky-cache")?.with
+      ?.key,
+    "test-js-packages",
+  );
+  const push = seed.on?.push as { paths: string[] } | undefined;
+  assert.ok(push);
+  for (const path of [
+    "npm/native/**",
+    "tools/config/vite-plus/tasks/build.ts",
+    "tools/config/vite-plus/task-*.ts",
+    ".github/actions/setup-js-package-tests/**",
+  ])
+    assert.ok(push.paths.includes(path), `${path} refreshes the native seed`);
 });

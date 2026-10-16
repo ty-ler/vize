@@ -30,6 +30,7 @@ jobs:
       playground: ${{ steps.plan.outputs.playground }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with: { fetch-depth: 2 }
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with: { node-version-file: "package.json", package-manager-cache: false }
       - name: Resolve and fetch comparison base
@@ -39,7 +40,7 @@ jobs:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           comparison_base="$(node tools/support/compat/github/comparison-base.ts)"
-          if [[ ! "$comparison_base" =~ ^0+$ ]]; then
+          if [[ ! "$comparison_base" =~ ^0+$ ]] && ! git cat-file -e "${comparison_base}^{commit}" 2>/dev/null; then
             git fetch --no-tags origin "$comparison_base"
           fi
       - name: Plan source checks
