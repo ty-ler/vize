@@ -102,6 +102,8 @@ impl LoadedRawConfig {
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive]
 pub struct LoadedProjectConfig {
+    /// Actual files read by the host evaluation, including imported helpers.
+    pub dependencies: Vec<PathBuf>,
     pub document: ConfigDocument,
     pub source_path: Option<PathBuf>,
     pub project_root: Option<PathBuf>,
@@ -128,6 +130,12 @@ pub fn try_load_project_config_with_source(
 fn project_config_snapshot(loaded: LoadedRawConfig) -> LoadedProjectConfig {
     let project_root = loaded.project_root();
     LoadedProjectConfig {
+        dependencies: loaded
+            .config
+            .config_dependencies()
+            .iter()
+            .map(PathBuf::from)
+            .collect(),
         document: loaded.config,
         source_path: loaded.source_path,
         project_root,

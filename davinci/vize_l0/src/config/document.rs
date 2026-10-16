@@ -19,14 +19,38 @@ use super::model::{
 /// declaration-order rules without another parse or serialization roundtrip.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(transparent)]
-pub struct ConfigDocument(RawVizeConfig);
+#[expect(
+    clippy::disallowed_types,
+    reason = "host metadata retains filesystem path strings"
+)]
+pub struct ConfigDocument(RawVizeConfig, #[serde(skip)] Vec<std::string::String>);
 
 impl ConfigDocument {
     /// Defaults for projects without dedicated Vize configuration.
     ///
     /// Keep `Default` unchanged for existing dedicated configuration files.
     pub fn project_defaults() -> Self {
-        Self(RawVizeConfig::project_defaults())
+        Self(RawVizeConfig::project_defaults(), Vec::new())
+    }
+
+    /// Files read by the host while evaluating this snapshot.
+    ///
+    /// Host metadata is never accepted from authored configuration values.
+    #[expect(
+        clippy::disallowed_types,
+        reason = "host metadata retains filesystem path strings"
+    )]
+    pub fn config_dependencies(&self) -> &[std::string::String] {
+        &self.1
+    }
+
+    /// Retain host-observed dependencies without changing configuration semantics.
+    #[expect(
+        clippy::disallowed_types,
+        reason = "host metadata retains filesystem path strings"
+    )]
+    pub fn set_config_dependencies(&mut self, dependencies: Vec<std::string::String>) {
+        self.1 = dependencies;
     }
 
     /// Project identity supplied by the Vite host projection.

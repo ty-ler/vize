@@ -19,7 +19,10 @@ import { test } from "node:test";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
-import { importConfigModule } from "../../crates/vize_carton/src/config/loader/module-runtime.mjs";
+import {
+  importConfigModule,
+  importConfigModuleWithDependencies,
+} from "../../crates/vize_carton/src/config/loader/module-runtime.mjs";
 import { resolveViteConfigExport } from "../../crates/vize_carton/src/config/loader/vite-runtime.mjs";
 
 const require = createRequire(join(process.cwd(), "package.json"));
@@ -86,7 +89,7 @@ await test("raw Vize factory authority survives bundling and its source evaluate
        wrapper[Symbol.for('@vizejs/vite-plugin/vite-plus/source')]=async(env)=>{
          const counts=JSON.parse(readFileSync(counter,'utf8')); counts.source++;
          writeFileSync(counter,JSON.stringify(counts));
-         return {vize:{formatter:{printWidth:env.command==='serve'?91:92}}};
+         return {vue:{formatter:{printWidth:env.command==='serve'?91:92}}};
        };
        export default wrapper;`,
     );
@@ -165,7 +168,7 @@ await test("the exact script embedded by native Carton loads and projects the or
        appendFileSync(${JSON.stringify(counter)}, ${JSON.stringify("module\n")});
        export default () => {
          appendFileSync(${JSON.stringify(counter)}, ${JSON.stringify("source\n")});
-         return {vize:{formatter:{printWidth:pkg.value+83}},fmt:{vize:{singleQuote:true}}};
+         return {vue:{formatter:{printWidth:pkg.value+83}},fmt:{vue:{singleQuote:true}}};
        };`;
     await writeFile(selected, authored);
     const loaded = await execute(
@@ -176,7 +179,8 @@ await test("the exact script embedded by native Carton loads and projects the or
         timeout: 10_000,
       },
     );
-    const config = JSON.parse(loaded.stdout);
+    const { config, dependencies } = JSON.parse(loaded.stdout);
+    assert.ok(dependencies.includes(selected));
     assert.deepEqual(config.formatter, { printWidth: 90, singleQuote: true });
     assert.equal(config.typeChecker.jsxTypecheck, true);
     assert.equal(await readFile(counter, "utf8"), "module\nsource\n");
@@ -241,7 +245,7 @@ await test("nearest present Vite owns loading while legitimate symlinks and hois
           const counts=JSON.parse(readFileSync(counter,'utf8'));counts.source++;
           writeFileSync(counter,JSON.stringify(counts));
           if(env.command!=='serve'||env.mode!=='development')throw new Error('environment changed');
-          return {vize:{formatter:{printWidth:91}}};
+          return {vue:{formatter:{printWidth:91}}};
         };export default wrapper;`;
       await writeFile(selected, authored);
       if (["empty", "broken", "dangling"].includes(installation)) {
@@ -273,7 +277,7 @@ await test("global Vite search paths cannot replace a dependency-free project's 
       "export function loadConfigFromFile(){throw new Error('global Vite executed');}",
     );
     const selected = join(directory, "vite.config.mjs");
-    const authored = "export default {vize:{formatter:{printWidth:92}}};";
+    const authored = "export default {vue:{formatter:{printWidth:92}}};";
     await writeFile(selected, authored);
     const loader = new URL(
       "../../crates/vize_carton/src/config/loader/module-runtime.mjs",
@@ -291,7 +295,40 @@ await test("global Vite search paths cannot replace a dependency-free project's 
       },
     );
     assert.equal(output.stderr, "");
-    assert.deepEqual(JSON.parse(output.stdout), { vize: { formatter: { printWidth: 92 } } });
+    assert.deepEqual(JSON.parse(output.stdout), { vue: { formatter: { printWidth: 92 } } });
     assert.equal(await readFile(selected, "utf8"), authored);
   }, false);
+});
+
+for (const withVite of [true, false]) {
+  await test(`configuration graph retains imported helpers (Vite installed: ${withVite})`, async () => {
+    await project(async (directory) => {
+      const helper = join(directory, "policy.mjs");
+      const selected = join(directory, "vite.config.mjs");
+      await writeFile(helper, "export default { languageServer: { hover: false } };");
+      await writeFile(selected, "import vue from './policy.mjs'; export default { vue };");
+      const loaded = await importConfigModuleWithDependencies(selected);
+      assert.deepEqual(loaded.namespace.default, { vue: { languageServer: { hover: false } } });
+      assert.ok(loaded.dependencies.includes(selected));
+      assert.ok(loaded.dependencies.includes(helper));
+      assert.ok(loaded.dependencies.every((path) => !path.includes("vize-config-module-")));
+    }, withVite);
+  });
+}
+
+await test("older Node runtimes require project Vite to retain a complete configuration graph", async () => {
+  await project(async (directory) => {
+    const selected = join(directory, "vite.config.mjs");
+    await writeFile(selected, "export default {};");
+    await assert.rejects(
+      importConfigModuleWithDependencies(selected, null),
+      /Node\.js 22\.15.*install Vite/,
+    );
+  }, false);
+  await project(async (directory) => {
+    const selected = join(directory, "vite.config.mjs");
+    await writeFile(selected, "export default {};");
+    const loaded = await importConfigModuleWithDependencies(selected, null);
+    assert.ok(loaded.dependencies.includes(selected));
+  });
 });

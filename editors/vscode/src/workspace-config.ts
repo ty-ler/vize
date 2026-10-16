@@ -15,7 +15,7 @@ export class WorkspaceLspConfigDiscovery {
   private refreshGeneration = 0;
 
   constructor(
-    private readonly dedicatedConfigFiles: readonly string[],
+    private readonly projectConfigFiles: readonly string[],
     private readonly trace: (message: string) => void = () => {},
   ) {}
 
@@ -23,7 +23,7 @@ export class WorkspaceLspConfigDiscovery {
     return (
       this.discovered ||
       (workspace.workspaceFolders ?? []).some((folder) =>
-        [...this.dedicatedConfigFiles, ...WORKSPACE_PROJECT_CONFIG_FILES].some((filename) =>
+        [...this.projectConfigFiles, ...WORKSPACE_PROJECT_CONFIG_FILES].some((filename) =>
           fs.existsSync(path.join(folder.uri.fsPath, filename)),
         ),
       )
