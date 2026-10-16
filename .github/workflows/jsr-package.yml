@@ -21,8 +21,10 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with: { persist-credentials: false }
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with: { node-version: "24", package-manager-cache: false }
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with: { node-version-file: "package.json", run-install: false }
+      - name: Install frozen tooling dependencies
+        run: vp install --frozen-lockfile --prefer-offline --filter vize-workspace --ignore-scripts
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2
         with: { deno-version: "2.9.7" }
       - name: Test package generation
@@ -35,4 +37,4 @@ jobs:
       - name: Import the staged entry points under Deno
         run: |
           cp tools/support/release/jsr/consumer.ts "$RUNNER_TEMP/consumer.ts"
-          deno run --allow-all "$RUNNER_TEMP/consumer.ts" "file://$RUNNER_TEMP/jsr-package/"
+          deno run --minimum-dependency-age=0 --allow-all "$RUNNER_TEMP/consumer.ts" "file://$RUNNER_TEMP/jsr-package/"

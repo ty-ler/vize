@@ -49,3 +49,23 @@ The pre-fix Rust run rejects the root `g` control and the complete original
 FacetBarChart. The repaired source passes all three integration tests and all
 23 existing rule unit tests, including dynamic `is` handling. All three public
 oracle tests pass. Hosted whole-app validation remains a separate check.
+
+## Keep the new originals in automatic corpus sweeps
+
+The first repair Check run, [38882495270](https://github.com/ubugeeei-prod/vize/actions/runs/38882495270),
+found the two new whole-source Vue fixtures in the existing Canon projection
+and L3 remarks sweeps. Their fixed corpus censuses therefore needed additive
+registration. The files remain in both sweeps; the repair does not exclude
+them or replace existing coverage.
+
+Canon retains its original 64 comparisons and the seven previously registered
+additions. A separate authenticated registry adds exactly two diagnostic
+comparisons from FacetBarChart; the complete Timeline source contributes zero.
+Both original files are checked by path, byte count, mode and SHA256, including
+missing-input and same-size mutation controls. All six focused projection
+tests pass, with no source-mapping divergence.
+
+The L3 baseline adds only the two file rows and six complete remarks belonging
+to these sources. Removing those additions must reproduce the old 553-file
+baseline byte for byte. All existing corpus assertions and observations remain
+in place; a fresh Check run must confirm the complete combined sweep.
