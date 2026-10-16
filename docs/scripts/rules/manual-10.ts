@@ -39,14 +39,30 @@ export const manual10: Record<string, RuleExample> = {
   "vue/valid-v-on": {
     bad: {
       language: "vue",
-      source: "<template>\n  <div v-on></div>\n  <div @></div>\n  <div @click></div>\n</template>",
+      source:
+        '<template>\n  <div v-on></div>\n  <div @></div>\n  <div @click></div>\n  <div @click.sync="handleClick"></div>\n  <div @click.nativeish="handleClick"></div>\n  <div @click.once></div>\n</template>',
     },
     good: {
       language: "vue",
       source:
-        '<template>\n  <div @click="handleClick"></div>\n  <div v-on="{ click: handleClick }"></div>\n</template>',
+        '<template>\n  <div @click="handleClick"></div>\n  <form @submit.prevent></form>\n  <input @keyup.page-down="handlePageDown" />\n  <input @keyup.あ="handleKey" />\n  <div v-on="{ click: handleClick }"></div>\n</template>',
     },
     evidence: "docs/content/rules/vue-directive-validity.md",
+    ruleOptions: { modifiers: ["custom"] },
+    note: [
+      "## Modifier validation",
+      "",
+      "Unsupported modifiers are reported individually at their names, including on long-form, dynamic and object listeners. Accepted names follow `eslint-plugin-vue` 10.9.2: Vue event modifiers, keyboard aliases, single Unicode code points, and finite decimal integer prefixes (`Number.parseInt(name, 10)`). Thus `.13suffix` is accepted; numeric-key and `.native` migrations use separate rules. Only `.stop` and `.prevent` work without handlers; `.once`, `.enter`, and custom names require one.",
+      "",
+      '`modifiers` adds exact, case-sensitive names without enabling the rule. The Vite+ configuration below accepts `@click.custom="handler"`; standalone config uses `linter.ruleOptions`. Scoped entries replace the list; `[]` resets it. The keyboard table comes from the MIT-licensed [eslint-plugin-vue aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json); source and license are retained beside the implementation.',
+    ].join("\n"),
+    noteJa: [
+      "## 修飾子の検証",
+      "",
+      "未対応の修飾子は、その名前の位置で個別に報告します。長い形式・動的引数・オブジェクト形式のリスナーも対象です。`eslint-plugin-vue` 10.9.2 と同じく、Vue のイベント修飾子、キーの別名、単一の Unicode コードポイント、十進整数として有限の値を読み取れる接頭辞（`Number.parseInt(name, 10)`）を許可します。そのため `.13suffix` も有効です。数値キーと `.native` の移行は別のルールで検査します。ハンドラーなしで動作するのは `.stop` と `.prevent` だけで、`.once`・`.enter`・独自の名前には式が必要です。",
+      "",
+      '`modifiers` は大文字と小文字を区別する完全一致の名前を追加します。ルールは別に有効にしてください。以下の Vite+ 設定は `@click.custom="handler"` を許可します。単独の設定では `linter.ruleOptions` を使います。スコープ付きの設定はリストを置き換え、`[]` でリセットできます。キーの表は MIT ライセンスの [eslint-plugin-vue の別名一覧](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json)に由来し、実装とともに元のソースとライセンスを保持しています。',
+    ].join("\n"),
   },
   "vue/valid-v-show": {
     bad: {

@@ -1167,7 +1167,7 @@ Chamar capitalize(message) aplica a transformação como uma expressão comum.
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L53) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L56) · [Todas as regras](all.md)
 
 ### `vue/no-deprecated-functional-template`
 
@@ -1802,9 +1802,13 @@ Proibir modificadores numéricos obsoletos de `keyCode` em `v-on`
 
 Severidade padrão: `error`  
 Predefinições: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
-Correção automática: Nenhuma; revise a alteração sugerida  
+Correção automática: Disponível para os diagnósticos compatíveis  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
+
+**Seleção numérica e correções**
+
+O primeiro modificador com prefixo numérico decimal determina o diagnóstico. `@keyup.13.27="submit"` reporta apenas `13` e oferece `@keyup.enter.27="submit"`; outra passagem pode substituir `27` por `escape`. `@keyup.13suffix="submit"` também se torna `@keyup.enter="submit"`. Valores de 0 a 9 são isentos, portanto `@keyup.0.13="submit"` não gera diagnóstico nesta regra. Valores desconhecidos como `999` são reportados sem correção. Vue 2 e petite-vue continuam isentos.
 
 **Configuração (Vite+)**
 
@@ -3173,7 +3177,9 @@ Correção automática: Nenhuma; revise a alteração sugerida
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
 
-A verificação atual compara variáveis de v-for aninhados. Ela não reporta uma variável de um único v-for apenas porque compartilha o nome de uma variável do script.
+A verificação compara variáveis de `v-for`, de `v-slot` (incluindo `#name`) e de slots com escopo legados no template. Ela reporta o identificador que oculta uma variável anterior, incluindo declarações no mesmo elemento na ordem dos atributos. Elementos irmãos têm escopos independentes. Chaves de propriedade e referências em valores padrão não são declarações, e `v-pre` torna sua subárvore inerte.
+
+Nomes de propriedades do script e do componente estão fora da verificação atual: uma variável isolada do template não produz aviso apenas porque uma variável do script tem o mesmo nome. Os intervalos de diagnóstico cobrem o identificador escrito, incluindo grafias escapadas e entidades HTML.
 
 **Configuração (Vite+)**
 
@@ -5358,7 +5364,7 @@ Use `message`, `className` e `handleClick` diretamente. A string literal `'this.
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [Todas as regras](all.md)
 
 ### `vue/use-unique-element-ids`
 
@@ -5441,6 +5447,14 @@ Correção automática: Nenhuma; revise a alteração sugerida
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
 
+**Quando os manipuladores se sobrepõem**
+
+A regra compara listeners do mesmo evento em um elemento nativo. Ela ignora eventos de componentes personalizados, a menos que ambos os listeners usem `.native`. Nomes de eventos diferentes e filtros de teclado sem interseção não entram em conflito.
+
+Modificadores de sistema são teclas obrigatórias, portanto `@keydown.alt.shift` também aceita Ctrl+Alt+Shift. Se um segundo manipulador usa `@keydown.alt.ctrl.shift`, adicione `.exact` ao manipulador mais amplo para separar as ações. `.exact` permite os modificadores de sistema declarados e rejeita teclas Ctrl, Shift, Alt ou Meta adicionais.
+
+Vários modificadores de teclado são alternativas: `@keydown.up.down` aceita qualquer uma das setas. Ele pode se sobrepor a `@keydown.ctrl.down` em Ctrl+ArrowDown. A regra reporta a chave da diretiva que precisa de `.exact`, excluindo a expressão do manipulador.
+
 **Configuração (Vite+)**
 
 ```ts
@@ -5496,7 +5510,7 @@ O manipulador de clique comum também pode executar em Ctrl-clique, sobrepondo-s
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L28) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L31) · [Todas as regras](all.md)
 
 ### `vue/v-bind-style`
 
@@ -6590,7 +6604,13 @@ Severidade padrão: `error`
 Predefinições: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
-Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
+Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md).
+
+**Validação de modificadores**
+
+Modificadores não suportados são reportados individualmente em seus nomes, inclusive em listeners de forma longa, dinâmicos e em objeto. Os nomes aceitos seguem `eslint-plugin-vue` 10.9.2: modificadores de eventos do Vue, aliases de teclado, pontos de código Unicode únicos e prefixos inteiros decimais finitos (`Number.parseInt(name, 10)`). Assim, `.13suffix` é aceito; migrações de teclas numéricas e de `.native` usam regras separadas. Apenas `.stop` e `.prevent` funcionam sem manipulador; `.once`, `.enter` e nomes personalizados exigem um.
+
+`modifiers` adiciona nomes exatos e sensíveis a maiúsculas e minúsculas sem ativar a regra. A configuração Vite+ abaixo aceita `@click.custom="handler"`; a configuração independente usa `linter.ruleOptions`. Entradas com escopo substituem a lista; `[]` a redefine. A tabela de teclado vem dos [aliases eslint-plugin-vue](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json), sob licença MIT; a fonte e a licença são preservadas junto à implementação.
 
 **Configuração (Vite+)**
 
@@ -6603,6 +6623,13 @@ export default defineConfig({
       "preset": "incremental",
       "rules": {
         "vue/valid-v-on": "error"
+      },
+      "ruleOptions": {
+        "vue/valid-v-on": {
+          "modifiers": [
+            "custom"
+          ]
+        }
       }
     },
   },
@@ -6617,13 +6644,16 @@ vp run lint
 
 **Incorreto**
 
-As formas de listener omitem um argumento de evento ou a expressão obrigatória de manipulador ou objeto.
+Os listeners omitem um evento ou expressão obrigatória, ou usam modificadores não suportados, como .sync e .nativeish.
 
-```vue annotate="remove:2,3,4"
+```vue annotate="remove:2,3,4,5,6,7"
 <template>
   <div v-on></div>
   <div @></div>
   <div @click></div>
+  <div @click.sync="handleClick"></div>
+  <div @click.nativeish="handleClick"></div>
+  <div @click.once></div>
 </template>
 ```
 
@@ -6631,11 +6661,14 @@ As formas de listener omitem um argumento de evento ou a expressão obrigatória
 
 **Correto**
 
-Use um evento com seu manipulador ou passe um objeto de listeners para `v-on` sem argumento.
+Use um manipulador, um modificador de ação sem manipulador, um modificador de teclado suportado ou um objeto de listeners para `v-on` sem argumento.
 
-```vue annotate="add:2,3"
+```vue annotate="add:2,3,4,5,6"
 <template>
   <div @click="handleClick"></div>
+  <form @submit.prevent></form>
+  <input @keyup.page-down="handlePageDown" />
+  <input @keyup.あ="handleKey" />
   <div v-on="{ click: handleClick }"></div>
 </template>
 ```

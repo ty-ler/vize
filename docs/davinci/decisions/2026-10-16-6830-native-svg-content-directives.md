@@ -41,9 +41,9 @@ Its renderer then runs the exact original watermark group in a receiving
 chart slot and the complete original SVG fragment in a receiving component.
 Both create native SVG `g` elements and assign `innerHTML`, even when a `g`
 component is registered; an unknown lowercase control resolves its registered
-component. These are focused compiler/renderer observations, not an execution
-of the complete npmx application. Whole-app snapshots and unrelated findings
-are not changed by this repair.
+component. These are focused compiler/renderer observations. Whole-app
+expectations are reviewed separately in the
+[application lint record](2026-10-16-6830-app-lint-expectations.md).
 
 The pre-fix Rust run rejects the root `g` control and the complete original
 FacetBarChart. The repaired source passes all three integration tests and all
@@ -69,3 +69,12 @@ The L3 baseline adds only the two file rows and six complete remarks belonging
 to these sources. Removing those additions must reproduce the old 553-file
 baseline byte for byte. All existing corpus assertions and observations remain
 in place; a fresh Check run must confirm the complete combined sweep.
+
+Full qualification also exercises the L1-to-L2 sweep with `legacy-differential`.
+Its unchanged producer adds the same two files and 43 complete remarks: nine
+applied and 34 missed. Removing only those additions restores the original
+553-file, 1,240-remark baseline byte for byte. The existing generator also
+updates its required `remarks-backlog.md` companion. A second run without the
+update flag passes with 555 files, 1,283 remarks and zero observed changes.
+All 43 new absolute source spans were reviewed against the original SVG files;
+existing records, source pins, assertions and lowering behavior remain intact.

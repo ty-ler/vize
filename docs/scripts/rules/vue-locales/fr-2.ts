@@ -146,8 +146,8 @@ export const frenchVue2 = {
   ],
   "vue/valid-v-on": [
     "Exiger des directives `v-on` valides",
-    "Les formes d’écouteurs omettent un argument d’événement ou l’expression de gestionnaire ou d’objet nécessaire.",
-    "Utilisez un événement avec son gestionnaire, ou transmettez un objet d’écouteurs à `v-on` sans argument.",
+    "Les écouteurs omettent un événement ou une expression obligatoire, ou utilisent des modificateurs non pris en charge tels que .sync et .nativeish.",
+    "Utilisez un gestionnaire, un modificateur d’action sans gestionnaire, un modificateur de clavier pris en charge ou un objet d’écouteurs pour `v-on` sans argument.",
   ],
   "vue/valid-v-once": [
     "Exiger des directives `v-once` valides",
@@ -187,6 +187,25 @@ export const frenchVue2 = {
 } satisfies Record<string, readonly [purpose: string, bad: string, good: string]>;
 
 export const frenchVueNotes = {
+  "The check compares `v-for`, `v-slot` (including `#name`), and legacy scoped-slot bindings within the template. It reports the identifier that hides an earlier binding, including declarations on the same element in attribute order. Sibling elements have independent scopes. Property keys and default-value references are not declarations, and `v-pre` makes its subtree inert.":
+    "Le contrôle compare les liaisons de `v-for`, de `v-slot` (y compris `#name`) et des anciens slots à portée dans le template. Il signale l’identifiant qui masque une liaison antérieure, y compris les déclarations du même élément dans l’ordre des attributs. Les éléments frères ont des portées indépendantes. Les clés de propriété et les références des valeurs par défaut ne sont pas des déclarations, et `v-pre` rend son sous-arbre inerte.",
+  "Script and component property names are outside the current check: a single template binding does not produce a warning merely because a script binding has the same name. Diagnostic ranges cover the authored identifier, including escaped spellings and HTML entities.":
+    "Les noms des propriétés du script et du composant sont hors du contrôle actuel : une liaison de template isolée ne produit pas d’avertissement simplement parce qu’une liaison du script porte le même nom. Les plages de diagnostic couvrent l’identifiant écrit, y compris les graphies échappées et les entités HTML.",
+  "## When handlers overlap": "## Quand les gestionnaires se chevauchent",
+  "The rule compares listeners for the same event on a native element. It ignores custom component events unless both listeners use `.native`. Different event names and disjoint keyboard filters do not conflict.":
+    "La règle compare les écouteurs du même événement sur un élément natif. Elle ignore les événements de composants personnalisés sauf si les deux écouteurs utilisent `.native`. Des noms d’événements différents et des filtres de clavier disjoints ne créent pas de conflit.",
+  "System modifiers are required keys, so `@keydown.alt.shift` also accepts Ctrl+Alt+Shift. If a second handler uses `@keydown.alt.ctrl.shift`, add `.exact` to the broader handler to keep those actions separate. `.exact` permits its declared system modifiers and rejects additional Ctrl, Shift, Alt or Meta keys.":
+    "Les modificateurs système sont des touches requises : `@keydown.alt.shift` accepte donc aussi Ctrl+Alt+Shift. Si un second gestionnaire utilise `@keydown.alt.ctrl.shift`, ajoutez `.exact` au gestionnaire le plus large pour séparer ces actions. `.exact` autorise les modificateurs système déclarés et refuse les touches Ctrl, Shift, Alt ou Meta supplémentaires.",
+  "Multiple keyboard modifiers are alternatives: `@keydown.up.down` accepts either arrow key. It can overlap `@keydown.ctrl.down` on Ctrl+ArrowDown. The rule reports the directive key that needs `.exact`, excluding its handler expression.":
+    "Plusieurs modificateurs de clavier sont des alternatives : `@keydown.up.down` accepte l’une ou l’autre flèche. Il peut chevaucher `@keydown.ctrl.down` sur Ctrl+ArrowDown. La règle signale la clé de directive qui nécessite `.exact`, sans inclure l’expression du gestionnaire.",
+  "## Modifier validation": "## Validation des modificateurs",
+  "Unsupported modifiers are reported individually at their names, including on long-form, dynamic and object listeners. Accepted names follow `eslint-plugin-vue` 10.9.2: Vue event modifiers, keyboard aliases, single Unicode code points, and finite decimal integer prefixes (`Number.parseInt(name, 10)`). Thus `.13suffix` is accepted; numeric-key and `.native` migrations use separate rules. Only `.stop` and `.prevent` work without handlers; `.once`, `.enter`, and custom names require one.":
+    "Les modificateurs non pris en charge sont signalés individuellement sur leur nom, y compris pour les écouteurs longs, dynamiques et sous forme d’objet. Les noms acceptés suivent `eslint-plugin-vue` 10.9.2 : modificateurs d’événements Vue, alias de clavier, points de code Unicode uniques et préfixes d’entiers décimaux finis (`Number.parseInt(name, 10)`). Ainsi, `.13suffix` est accepté ; les migrations des touches numériques et de `.native` relèvent de règles distinctes. Seuls `.stop` et `.prevent` fonctionnent sans gestionnaire ; `.once`, `.enter` et les noms personnalisés en exigent un.",
+  '`modifiers` adds exact, case-sensitive names without enabling the rule. The Vite+ configuration below accepts `@click.custom="handler"`; standalone config uses `linter.ruleOptions`. Scoped entries replace the list; `[]` resets it. The keyboard table comes from the MIT-licensed [eslint-plugin-vue aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json); source and license are retained beside the implementation.':
+    '`modifiers` ajoute des noms exacts et sensibles à la casse sans activer la règle. La configuration Vite+ ci-dessous accepte `@click.custom="handler"` ; la configuration autonome utilise `linter.ruleOptions`. Les entrées de portée remplacent la liste ; `[]` la réinitialise. La table de clavier provient des [alias eslint-plugin-vue](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json), sous licence MIT ; la source et la licence sont conservées avec l’implémentation.',
+  "## Numeric selection and fixes": "## Sélection numérique et corrections",
+  'The first decimal-prefix numeric modifier determines the finding. `@keyup.13.27="submit"` reports only `13` and offers `@keyup.enter.27="submit"`; another fix pass can replace `27` with `escape`. `@keyup.13suffix="submit"` also becomes `@keyup.enter="submit"`. Values 0–9 are exempt, so `@keyup.0.13="submit"` is clean under this rule. Unknown values such as `999` report without a fix. Vue 2 and petite-vue remain exempt.':
+    'Le premier modificateur à préfixe numérique décimal détermine le diagnostic. `@keyup.13.27="submit"` ne signale que `13` et propose `@keyup.enter.27="submit"` ; une autre passe peut remplacer `27` par `escape`. `@keyup.13suffix="submit"` devient aussi `@keyup.enter="submit"`. Les valeurs 0–9 sont exemptées : `@keyup.0.13="submit"` ne produit donc aucun diagnostic pour cette règle. Les valeurs inconnues telles que `999` sont signalées sans correction. Vue 2 et petite-vue restent exemptés.',
   "The component filename is checked. PascalCase and kebab-case are accepted; mixed casing is reported.":
     "Le nom de fichier du composant est contrôlé. PascalCase et kebab-case sont acceptés ; une casse mixte est signalée.",
   "Bad has cyclomatic complexity 13 and cognitive complexity 25 (limits: 11 and 16). Each component is measured separately; only inline HTML templates are supported.":
@@ -199,8 +218,6 @@ export const frenchVueNotes = {
     "Activez cette règle uniquement pour un contrat à racine unique. Vue 3 prend normalement en charge les fragments.",
   "This catalog entry does not currently emit its rule-specific finding through SFC lint. The Bad/Good pair describes the intended convention, not an executable finding. Enabling the ID does not supply the missing SFC check.":
     "Cette entrée du catalogue n’émet actuellement aucun diagnostic propre à cette règle lors du lint des SFC. La paire Mauvais/Bon décrit la convention souhaitée, et non un diagnostic exécutable. Activer l’identifiant ne fournit pas le contrôle SFC manquant.",
-  "The current check compares nested v-for bindings. It does not report a single v-for binding merely because it shares a script binding's name.":
-    "Le contrôle actuel compare les liaisons de v-for imbriqués. Il ne signale pas une liaison v-for isolée simplement parce qu’elle porte le même nom qu’une liaison du script.",
   "Checks declared prop names, not the casing of attributes passed to a child.":
     "Contrôle les noms des props déclarées, et non la casse des attributs transmis à un enfant.",
   "List explicit component names supplied by application plugins or Musea previewSetup. PascalCase and kebab-case spellings are accepted; regular expressions are not interpreted. Options do not enable the rule. Later layers replace the list; an empty list clears inherited names.":

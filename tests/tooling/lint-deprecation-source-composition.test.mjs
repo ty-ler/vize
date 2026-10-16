@@ -133,6 +133,7 @@ const vectors = [
       [4, "full-modifiers", 18, 49, 18, 49],
       [5, "utf8-crlf", 40, 59, 32, 51],
     ],
+    [],
   ],
   [
     "lint-default-migrations",
@@ -142,10 +143,45 @@ const vectors = [
       [4, "combined", 10, 20, 10, 20],
       [10, "unicode-crlf", 30, 40, 10, 20],
     ],
+    [
+      [0, "numeric-shorthand", 39, 41, "enter"],
+      [1, "numeric-longhand", 43, 45, "escape"],
+      [2, "numeric-combined", 39, 41, "enter"],
+      [4, "combined", 50, 52, "enter"],
+      [10, "unicode-crlf", 70, 72, "escape"],
+    ],
   ],
 ];
-function validateRanges(original, current, changes) {
+function validateCurrentPacket(original, current, changes, numericFixes) {
   const inverse = structuredClone(current);
+  // #9213 intentionally adds named-key fixes and reports only the first
+  // numeric modifier. Keep the original packets immutable and invert just
+  // those approved changes, including the complete fix and LSP cardinality.
+  for (const [index, id, start, end, new_text] of numericFixes) {
+    const row = inverse.cases[index];
+    assert.equal(row.id, id);
+    for (const field of ["diagnostics", "essentialDiagnostics"]) {
+      const findings = row[field].filter(
+        (finding) => finding.rule_name === "vue/no-deprecated-v-on-number-modifiers",
+      );
+      assert.equal(findings.length, 1);
+      assert.deepEqual(findings[0].fix, {
+        message: "Replace the numeric keyCode modifier with a named key",
+        edits: [{ start, end, new_text }],
+      });
+      findings[0].fix = null;
+    }
+  }
+  if (numericFixes.length) {
+    const row = inverse.cases[2];
+    const old = original.cases[2];
+    assert.equal(row.id, "numeric-combined");
+    for (const field of ["diagnostics", "essentialDiagnostics", "lspDiagnostics"]) {
+      assert.equal(row[field].length, 1);
+      assert.equal(old[field].length, 2);
+      row[field].push(old[field][1]);
+    }
+  }
   for (const [index, id, start, end, lspStart, lspEnd] of changes) {
     const row = inverse.cases[index];
     const old = original.cases[index];
@@ -167,14 +203,14 @@ function validateRanges(original, current, changes) {
   }
   assert.deepEqual(inverse, original);
 }
-void test("current whole preset packets differ only at seven approved byte and UTF-16 range witnesses", () => {
-  for (const [directory, hash, changes] of vectors) {
+void test("current whole preset packets retain approved spans and numeric-key migrations", () => {
+  for (const [directory, hash, changes, numericFixes] of vectors) {
     const fixture = path.join(root, "tests/_fixtures", directory);
     const old = fs.readFileSync(path.join(fixture, "cases.json"));
     assert.equal(digest(old), hash);
     const original = JSON.parse(old);
     const current = JSON.parse(fs.readFileSync(path.join(fixture, "current-range-cases.json")));
-    validateRanges(original, current, changes);
+    validateCurrentPacket(original, current, changes, numericFixes);
     const mutations = [
       (packet) => {
         packet.cases[0].source += "foreign";
@@ -191,10 +227,35 @@ void test("current whole preset packets differ only at seven approved byte and U
       (packet) => packet.cases.pop(),
       (packet) => packet.cases.reverse(),
     ];
+    if (numericFixes.length) {
+      mutations.push(
+        (packet) => {
+          packet.cases[0].diagnostics[0].fix = null;
+        },
+        (packet) => {
+          packet.cases[0].diagnostics[0].fix.edits[0].new_text = "escape";
+        },
+        (packet) => {
+          packet.cases[0].essentialDiagnostics[0].fix.edits[0].start++;
+        },
+        (packet) => {
+          packet.cases[0].diagnostics[0].fix.message += "foreign";
+        },
+        (packet) => {
+          packet.cases[0].diagnostics[0].fix.edits.push({ start: 0, end: 0, new_text: "foreign" });
+        },
+        (packet) => {
+          packet.cases[2].diagnostics.push(original.cases[2].diagnostics[1]);
+        },
+        (packet) => {
+          packet.cases[2].lspDiagnostics.push(original.cases[2].lspDiagnostics[1]);
+        },
+      );
+    }
     for (const mutate of mutations) {
       const changed = structuredClone(current);
       mutate(changed);
-      assert.throws(() => validateRanges(original, changed, changes));
+      assert.throws(() => validateCurrentPacket(original, changed, changes, numericFixes));
     }
   }
 });
