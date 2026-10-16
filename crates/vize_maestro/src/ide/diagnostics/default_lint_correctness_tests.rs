@@ -177,9 +177,12 @@ fn editor_vue_version_is_owned_by_the_matching_folder_and_global_fallback() {
             } else {
                 &case["lspDiagnostics"]
             };
+            #[cfg(feature = "native")]
             let owner = state
                 .document_project_state(&uri)
                 .unwrap_or_else(|| state.clone());
+            #[cfg(not(feature = "native"))]
+            let owner = state.clone();
             assert_eq!(
                 serde_json::to_value(DiagnosticService::collect_lint_only(&owner, &uri)).unwrap(),
                 *expected,
