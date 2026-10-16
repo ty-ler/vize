@@ -1166,7 +1166,7 @@ L’appel capitalize(message) applique la transformation sous la forme d’une e
 
 Le bon exemple évite le diagnostic de cette règle avec la configuration ci-dessus ; d’autres règles peuvent encore signaler des diagnostics.
 
-[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L53) · [Toutes les règles](all.md)
+[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L56) · [Toutes les règles](all.md)
 
 ### `vue/no-deprecated-functional-template`
 
@@ -1801,9 +1801,13 @@ Interdire les modificateurs numériques obsolètes `keyCode` sur `v-on`
 
 Gravité par défaut: `error`  
 Préréglages: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
-Correction automatique: Aucune ; examinez la modification proposée  
+Correction automatique: Disponible pour les diagnostics pris en charge  
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
+
+**Sélection numérique et corrections**
+
+Le premier modificateur à préfixe numérique décimal détermine le diagnostic. `@keyup.13.27="submit"` ne signale que `13` et propose `@keyup.enter.27="submit"` ; une autre passe peut remplacer `27` par `escape`. `@keyup.13suffix="submit"` devient aussi `@keyup.enter="submit"`. Les valeurs 0–9 sont exemptées : `@keyup.0.13="submit"` ne produit donc aucun diagnostic pour cette règle. Les valeurs inconnues telles que `999` sont signalées sans correction. Vue 2 et petite-vue restent exemptés.
 
 **Configuration (Vite+)**
 
@@ -3172,7 +3176,9 @@ Correction automatique: Aucune ; examinez la modification proposée
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
 
-Le contrôle actuel compare les liaisons de v-for imbriqués. Il ne signale pas une liaison v-for isolée simplement parce qu’elle porte le même nom qu’une liaison du script.
+Le contrôle compare les liaisons de `v-for`, de `v-slot` (y compris `#name`) et des anciens slots à portée dans le template. Il signale l’identifiant qui masque une liaison antérieure, y compris les déclarations du même élément dans l’ordre des attributs. Les éléments frères ont des portées indépendantes. Les clés de propriété et les références des valeurs par défaut ne sont pas des déclarations, et `v-pre` rend son sous-arbre inerte.
+
+Les noms des propriétés du script et du composant sont hors du contrôle actuel : une liaison de template isolée ne produit pas d’avertissement simplement parce qu’une liaison du script porte le même nom. Les plages de diagnostic couvrent l’identifiant écrit, y compris les graphies échappées et les entités HTML.
 
 **Configuration (Vite+)**
 
@@ -5357,7 +5363,7 @@ Utilisez directement `message`, `className` et `handleClick`. La chaîne littér
 
 Le bon exemple évite le diagnostic de cette règle avec la configuration ci-dessus ; d’autres règles peuvent encore signaler des diagnostics.
 
-[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [Toutes les règles](all.md)
+[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [Toutes les règles](all.md)
 
 ### `vue/use-unique-element-ids`
 
@@ -5440,6 +5446,14 @@ Correction automatique: Aucune ; examinez la modification proposée
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
 
+**Quand les gestionnaires se chevauchent**
+
+La règle compare les écouteurs du même événement sur un élément natif. Elle ignore les événements de composants personnalisés sauf si les deux écouteurs utilisent `.native`. Des noms d’événements différents et des filtres de clavier disjoints ne créent pas de conflit.
+
+Les modificateurs système sont des touches requises : `@keydown.alt.shift` accepte donc aussi Ctrl+Alt+Shift. Si un second gestionnaire utilise `@keydown.alt.ctrl.shift`, ajoutez `.exact` au gestionnaire le plus large pour séparer ces actions. `.exact` autorise les modificateurs système déclarés et refuse les touches Ctrl, Shift, Alt ou Meta supplémentaires.
+
+Plusieurs modificateurs de clavier sont des alternatives : `@keydown.up.down` accepte l’une ou l’autre flèche. Il peut chevaucher `@keydown.ctrl.down` sur Ctrl+ArrowDown. La règle signale la clé de directive qui nécessite `.exact`, sans inclure l’expression du gestionnaire.
+
 **Configuration (Vite+)**
 
 ```ts
@@ -5495,7 +5509,7 @@ Le gestionnaire de clic ordinaire peut également s’exécuter lors d’un Ctrl
 
 Le bon exemple évite le diagnostic de cette règle avec la configuration ci-dessus ; d’autres règles peuvent encore signaler des diagnostics.
 
-[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L28) · [Toutes les règles](all.md)
+[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L31) · [Toutes les règles](all.md)
 
 ### `vue/v-bind-style`
 
@@ -6589,7 +6603,13 @@ Gravité par défaut: `error`
 Préréglages: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correction automatique: Aucune ; examinez la modification proposée  
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
-Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
+Options: Consultez les [options typées et leurs valeurs par défaut](/rules/options.md).
+
+**Validation des modificateurs**
+
+Les modificateurs non pris en charge sont signalés individuellement sur leur nom, y compris pour les écouteurs longs, dynamiques et sous forme d’objet. Les noms acceptés suivent `eslint-plugin-vue` 10.9.2 : modificateurs d’événements Vue, alias de clavier, points de code Unicode uniques et préfixes d’entiers décimaux finis (`Number.parseInt(name, 10)`). Ainsi, `.13suffix` est accepté ; les migrations des touches numériques et de `.native` relèvent de règles distinctes. Seuls `.stop` et `.prevent` fonctionnent sans gestionnaire ; `.once`, `.enter` et les noms personnalisés en exigent un.
+
+`modifiers` ajoute des noms exacts et sensibles à la casse sans activer la règle. La configuration Vite+ ci-dessous accepte `@click.custom="handler"` ; la configuration autonome utilise `linter.ruleOptions`. Les entrées de portée remplacent la liste ; `[]` la réinitialise. La table de clavier provient des [alias eslint-plugin-vue](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json), sous licence MIT ; la source et la licence sont conservées avec l’implémentation.
 
 **Configuration (Vite+)**
 
@@ -6602,6 +6622,13 @@ export default defineConfig({
       "preset": "incremental",
       "rules": {
         "vue/valid-v-on": "error"
+      },
+      "ruleOptions": {
+        "vue/valid-v-on": {
+          "modifiers": [
+            "custom"
+          ]
+        }
       }
     },
   },
@@ -6616,13 +6643,16 @@ vp run lint
 
 **Mauvais**
 
-Les formes d’écouteurs omettent un argument d’événement ou l’expression de gestionnaire ou d’objet nécessaire.
+Les écouteurs omettent un événement ou une expression obligatoire, ou utilisent des modificateurs non pris en charge tels que .sync et .nativeish.
 
-```vue annotate="remove:2,3,4"
+```vue annotate="remove:2,3,4,5,6,7"
 <template>
   <div v-on></div>
   <div @></div>
   <div @click></div>
+  <div @click.sync="handleClick"></div>
+  <div @click.nativeish="handleClick"></div>
+  <div @click.once></div>
 </template>
 ```
 
@@ -6630,11 +6660,14 @@ Les formes d’écouteurs omettent un argument d’événement ou l’expression
 
 **Bon**
 
-Utilisez un événement avec son gestionnaire, ou transmettez un objet d’écouteurs à `v-on` sans argument.
+Utilisez un gestionnaire, un modificateur d’action sans gestionnaire, un modificateur de clavier pris en charge ou un objet d’écouteurs pour `v-on` sans argument.
 
-```vue annotate="add:2,3"
+```vue annotate="add:2,3,4,5,6"
 <template>
   <div @click="handleClick"></div>
+  <form @submit.prevent></form>
+  <input @keyup.page-down="handlePageDown" />
+  <input @keyup.あ="handleKey" />
   <div v-on="{ click: handleClick }"></div>
 </template>
 ```

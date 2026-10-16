@@ -1,6 +1,7 @@
-import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { spawn } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 import { readCargoMetadata } from "./plan-affected-rust.ts";
 import type { CargoMetadata } from "./plan-affected-rust.ts";
@@ -126,27 +127,135 @@ export function rustTestTargetProjection(
   return projections.get(cohort)!;
 }
 
-export function main(argv = process.argv.slice(2)) {
-  const [planPath, cohort, ...options] = argv;
-  if (!planPath || !cohort) throw new Error("expected Rust plan path and semantic cohort");
-  const plan = JSON.parse(readFileSync(planPath, "utf8"));
-  // Validate the unchanged package roots before reading metadata or launching Cargo.
-  rustCommand(plan, ["cargo", "nextest", "run", "@packages@"]);
-  const projection = rustTestTargetProjection(readCargoMetadata(), plan.packages, cohort);
-  process.stdout.write(
-    `Cargo targets (${cohort}): ${projection.reason ?? `${projection.args.filter((arg) => arg === "--test").length} integration targets and shared unit targets`}\n`,
-  );
-  const [executable, ...args] = rustCommand(plan, [
-    "cargo",
-    "nextest",
-    "run",
-    "@packages@",
-    ...projection.args,
-    ...options,
-  ]);
-  const result = spawnSync(executable, args, { stdio: "inherit", shell: false });
-  if (result.error) throw result.error;
-  process.exitCode = result.status ?? 1;
+async function runCargo(executable: string, args: string[]): Promise<number> {
+  // Only this child and descendants inherit this new POSIX process group.
+  // Keep the event loop live: spawnSync prevents cancellation handlers running
+  // while nextest/Cargo are compiling, leaving their children for runner cleanup.
+  const grouped = process.platform !== "win32";
+  const child = spawn(executable, args, {
+    detached: grouped,
+    stdio: "inherit",
+    shell: false,
+  });
+  let closed = false;
+  const completion = new Promise<{ status: number | null; error?: Error }>((resolve) => {
+    child.once("error", (error) => {
+      closed = true;
+      resolve({ status: null, error });
+    });
+    child.once("close", (status) => {
+      closed = true;
+      resolve({ status });
+    });
+  });
+  function signalOwned(signal: "SIGINT" | "SIGTERM" | "SIGKILL" | 0): boolean {
+    if (child.pid === undefined) return false;
+    try {
+      if (grouped) process.kill(-child.pid, signal);
+      else if (closed) return false;
+      else if (signal !== 0) child.kill(signal);
+      return true;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ESRCH") return false;
+      throw error;
+    }
+  }
+  let cancelled: "SIGINT" | "SIGTERM" | undefined;
+  let interrupted!: () => void;
+  const cancellation = new Promise<void>((resolve) => {
+    interrupted = resolve;
+  });
+  const cancel = (signal: "SIGINT" | "SIGTERM") => {
+    cancelled ??= signal;
+    interrupted();
+  };
+  const onInterrupt = () => cancel("SIGINT");
+  const onTerminate = () => cancel("SIGTERM");
+  process.on("SIGINT", onInterrupt);
+  process.on("SIGTERM", onTerminate);
+  try {
+    await Promise.race([completion, cancellation]);
+    if (cancelled) {
+      const started = performance.now();
+      process.stderr.write(`Rust cohort received ${cancelled}; stopping its owned Cargo group.\n`);
+      signalOwned(cancelled);
+      let repeated = false;
+      let killed = false;
+      // The group can outlive the direct Cargo child. Do not stop draining when
+      // that child exits, or clear escalation while its compiler children live.
+      while (signalOwned(0) || !closed) {
+        const elapsed = performance.now() - started;
+        // Nextest owns separate test groups. A second shutdown signal makes
+        // nextest kill/reap those groups before we consider killing nextest.
+        // This is required even when the first signal was already SIGTERM.
+        if (!repeated && elapsed >= 1_000) {
+          signalOwned("SIGTERM");
+          repeated = true;
+        }
+        if (!killed && elapsed >= 4_000) {
+          signalOwned("SIGKILL");
+          killed = true;
+        }
+        if (elapsed >= 6_000) {
+          child.unref();
+          throw new Error("owned Cargo process group did not drain after cancellation and SIGKILL");
+        }
+        await delay(25);
+      }
+      // A child may catch a cancellation signal and exit zero. Cancellation
+      // must still fail the step and its required Rust aggregate.
+      return cancelled === "SIGINT" ? 130 : 143;
+    }
+    const result = await completion;
+    if (result.error) throw result.error;
+    return result.status ?? 1;
+  } finally {
+    process.removeListener("SIGINT", onInterrupt);
+    process.removeListener("SIGTERM", onTerminate);
+  }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main();
+export async function main(argv = process.argv.slice(2)) {
+  const started = performance.now();
+  const [planPath, cohort, ...options] = argv;
+  let status = 1;
+  try {
+    if (!planPath || !cohort) throw new Error("expected Rust plan path and semantic cohort");
+    const plan = JSON.parse(readFileSync(planPath, "utf8"));
+    // Validate the unchanged package roots before reading metadata or launching Cargo.
+    rustCommand(plan, ["cargo", "nextest", "run", "@packages@"]);
+    const projection = rustTestTargetProjection(readCargoMetadata(), plan.packages, cohort);
+    process.stdout.write(
+      `Cargo targets (${cohort}): ${projection.reason ?? `${projection.args.filter((arg) => arg === "--test").length} integration targets and shared unit targets`}\n`,
+    );
+    const [executable, ...args] = rustCommand(plan, [
+      "cargo",
+      "nextest",
+      "run",
+      "@packages@",
+      ...projection.args,
+      ...options,
+    ]);
+    status = await runCargo(executable, args);
+    process.exitCode = status;
+  } finally {
+    // The workflow execs this CLI so Actions signals Node directly. Keep its
+    // existing receipt here instead of leaving a waiting Bash process in front.
+    const timingPath = process.env.VIZE_RUST_COHORT_TIMING_PATH;
+    if (timingPath) {
+      mkdirSync(dirname(timingPath), { recursive: true });
+      writeFileSync(
+        timingPath,
+        `${JSON.stringify({
+          phase: "workspace-cohort",
+          cohort,
+          elapsed_seconds: Math.floor((performance.now() - started) / 1_000),
+          exit_code: status,
+        })}\n`,
+      );
+    }
+  }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href)
+  await main();

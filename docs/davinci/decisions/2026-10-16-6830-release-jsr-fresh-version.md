@@ -63,3 +63,30 @@ and needs the same exceptions. The generated `jsr.json` already sets
 `minimumDependencyAge: 0` for publication, but the separate consumer script
 does not load that configuration. Publication behavior remains unchanged;
 the shared consumer configuration governs only the two Deno consumer runs.
+
+The independent consumer-policy change is extracted from reviewed source
+`08f798af09931b4f6339a0a5422f13feaf80dfbc` onto current main; unrelated App,
+performance, cancellation, and publication changes are excluded. Future release
+preparation must refresh its release workflow manifest against the new source.
+The existing v0.457.0 release receipt remains immutable.
+
+The package check now invokes `verify-consumer-age.ts` with the pinned actual
+Deno 2.9.7 runtime. Three separate empty caches and projects use the exact shared
+policy against a local read-only npm registry fixture: a one-hour-old Vize-owned
+package executes, a one-hour-old external package is rejected by the dependency
+age check before its archive is fetched, and a 48-hour-old external package
+executes. Positive controls require the module's marker output; the negative
+control requires the age-specific error, a nonzero exit, no marker, and no
+archive request. The fixture establishes policy semantics, not public registry
+acceptance.
+
+An optional `published-version` input on the read-only **JSR package checks**
+workflow additionally runs the unchanged published facade/config/native compiler
+consumer for an explicit existing JSR version in a new empty cache and the same
+empty `package.json` project shape used by release consumers. It never invokes
+publication. Keep this proof separate from the fixture: `controlled-registry.json`
+and `public-registry.json` retain their own actual Deno version, source SHA,
+configuration and consumer hashes, commands, status, stdout and stderr. Artifacts
+are retained on either outcome. The staged import uses a separate fresh cache
+from the publication dry-run. Hosted pinned-runtime evidence is required; a local
+fixture smoke with another Deno version does not establish that acceptance.

@@ -50,6 +50,24 @@ export const manual9: Record<string, RuleExample> = {
         '<template>\n  <button\n    type="button"\n    @click.exact="handleClick"\n    @click.ctrl="handleCtrlClick"\n  >\n    Save\n  </button>\n</template>',
     },
     evidence: "docs/content/rules/vue-directives.md",
+    note: [
+      "## When handlers overlap",
+      "",
+      "The rule compares listeners for the same event on a native element. It ignores custom component events unless both listeners use `.native`. Different event names and disjoint keyboard filters do not conflict.",
+      "",
+      "System modifiers are required keys, so `@keydown.alt.shift` also accepts Ctrl+Alt+Shift. If a second handler uses `@keydown.alt.ctrl.shift`, add `.exact` to the broader handler to keep those actions separate. `.exact` permits its declared system modifiers and rejects additional Ctrl, Shift, Alt or Meta keys.",
+      "",
+      "Multiple keyboard modifiers are alternatives: `@keydown.up.down` accepts either arrow key. It can overlap `@keydown.ctrl.down` on Ctrl+ArrowDown. The rule reports the directive key that needs `.exact`, excluding its handler expression.",
+    ].join("\n"),
+    noteJa: [
+      "## ハンドラーが重なる場合",
+      "",
+      "ネイティブ要素の同じイベントに対するリスナーを比較します。カスタムコンポーネントのイベントは、両方のリスナーが `.native` を使う場合だけ検査します。イベント名が違う場合や、キーの条件が重ならない場合は競合しません。",
+      "",
+      "システム修飾子は押されている必要があるキーを指定するため、`@keydown.alt.shift` は Ctrl+Alt+Shift にも反応します。別のハンドラーが `@keydown.alt.ctrl.shift` を使う場合は、条件の広い方に `.exact` を追加して処理を分けます。`.exact` は指定したシステム修飾子だけを許可し、追加の Ctrl・Shift・Alt・Meta キーを拒否します。",
+      "",
+      "複数のキー修飾子はいずれかのキーに対応します。`@keydown.up.down` は上下どちらの矢印キーにも反応するため、Ctrl+ArrowDown では `@keydown.ctrl.down` と重なります。診断範囲は `.exact` が必要なディレクティブのキーで、ハンドラー式は含みません。",
+    ].join("\n"),
   },
   "vue/v-bind-style": {
     bad: {
