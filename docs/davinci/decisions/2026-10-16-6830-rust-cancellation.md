@@ -103,8 +103,8 @@ Every cancellation control runs the actual PR workflow shell and signals its
 entry PID, checking that `exec` replaced Bash with the Node runner. Its timing
 receipt and exit status must retain 130/143, and both failed and cancelled
 cohort results must fail the required Rust aggregate. Local validation uses
-macOS with Node 26.12.0 and the pinned Node 24.14.0; Linux group teardown still
-needs Actions validation, especially orphan/zombie reaping by the guest's init.
+macOS with Node 26.12.0 and the pinned Node 24.14.0. The hosted experiment below
+records Linux teardown evidence separately from those local process controls.
 
 The opt-in `rust-test-cohort-nextest-cancellation.test.ts` requires installed
 Rust and exactly cargo-nextest 0.9.146. It builds only a dependency-free
@@ -139,3 +139,23 @@ The observed replacement run reached its required report in 8m02s from run
 creation, or 5m38s from first job allocation. Removing the cancellation wait
 alone therefore would not meet the five-minute PR target. Keep the actual
 creation-to-required-report measurement, including queue time.
+
+## Hosted cancellation proof
+
+The second controlled experiment cancelled only [Check 38899025329, attempt 1](https://github.com/ubugeeei-prod/vize/actions/runs/38899025329/attempts/1), at source head `986df9a534e18941da8d23cb90ed2bf8d733f355`, base `d6c82266aec2d44eff688c679ce38959d882a2e4`, and tested merge `2b10e767adecca793bcc47918692bf3f5b5ba9e8`. The recorded command boundary was `2026-10-16T12:16:35.857Z` immediately before `gh run cancel` and `12:16:37.687Z` immediately afterward; the command accepted the request.
+
+Both the [Compiler job](https://github.com/ubugeeei-prod/vize/actions/runs/38899025329/job/116966508517) and [Language server job](https://github.com/ubugeeei-prod/vize/actions/runs/38899025329/job/116966508578) were executing nextest when they logged `Rust cohort received SIGINT; stopping its owned Cargo group.` Compiler received it at `12:16:52.1398095Z`, Language server at `12:16:51.9215235Z`. This is 14.452 s and 14.234 s after the cancellation command returned; external request delivery is distinct from the handler's cleanup time. Their jobs completed 4.861 s and 3.079 s after the handler message.
+
+| Cohort               | Outcome                               | Rust cache post step | Target unmount action | Logged orphan terminations | Busy or failed unmounts |
+| -------------------- | ------------------------------------- | -------------------: | --------------------: | -------------------------: | ----------------------: |
+| Compiler             | Cancelled during tests                |                  3 s |               3.106 s |                          0 |                       0 |
+| Language server      | Cancelled during tests                |                  1 s |               1.536 s |                          0 |                       0 |
+| Type checker         | Tests passed; job cancelled afterward |                  3 s |               2.941 s |                          0 |                       0 |
+| Lint and format      | Passed before request                 |                  4 s |               2.992 s |                          0 |                       0 |
+| CLI and integrations | Passed before request                 |                  3 s |               3.171 s |                          0 |                       0 |
+
+All 15 target/git/registry mounts unmounted successfully. Compared with the earlier controlled run `38896572920`, the Compiler cache post step changed from 34 s with 34 logged orphan terminations and a busy target unmount to 3 s with none. Language server changed from 5 s with 24 logged orphan terminations and a busy target unmount to 1 s with none. These are observed cross-run differences, with different source revisions and cancellation positions.
+
+Nextest reacted to the initial SIGINT and the runner reported cancellation within 100 ms in both active cohorts. The one-second second-signal fallback was not exercised by this hosted run. Compiler and Language server artifact upload was skipped on cancellation, so an actual process exit 130/143 was not observable; do not substitute the implementation's expected code for a retained result. No Linux process-state snapshot was captured. Zero logged orphan terminations and successful unmounts are the available cleanup evidence.
+
+The required `test-report` refused `pr-source-checks: cancelled` and exited 1. The intentionally cancelled workflow completed after 235 s and consumed 46.8 runner-minutes. This is an expected non-green cancellation experiment, not evidence of ordinary PR latency or the five-minute target. A full same-head rerun must be recorded separately.

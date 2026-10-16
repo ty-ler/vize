@@ -31,3 +31,15 @@ of the Inspector report and mutable preparation directory:
 | Elk         | `8aa2b4650760eeba4ea1fdd9dc18d8a88ca5d7f0` |       259 | `d02a84ea90084e448e52b595e36d740296f72f8d6f16d8f71d2c35ee5a63e6f0` |
 | VueFes      | `8eff3cd7dd79a7f47bbf2b78202b9aa2070ec5a6` |        71 | `ab1162e3967372fa4f651c1cd39d4ceb37b85de84d79769ff908f6a8935a8c72` |
 | npmX        | `c9e8be91e61eeeae956e2068722caa09e293cc68` |       220 | `1414645911bc91961dd8bd248a08e6cb2eec188695ae8cdbb5ae1672cb3f4bec` |
+
+DOM and SSR are separate named test cases for each application. A DOM
+assertion previously stopped the shared test before SSR ran, discarding the
+second observation precisely when qualification failed. Both targets now run
+and retain their complete report independently; either failure still fails
+the application gate. This changes no numerical bound or error expectation.
+
+A controlled CLI-transport probe makes DOM return a native-error mismatch
+while SSR returns a complete valid input census. The original combined case
+exits 1 without an SSR artifact; the separate cases retain both reports and
+still exit 1. This verifies continuation and failure propagation, not compiler
+behavior. The source-built App run remains the compiler authority.
