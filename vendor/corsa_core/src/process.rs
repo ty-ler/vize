@@ -1,13 +1,9 @@
+use crate::fast::{CompactString, SmallVec};
 use crate::process_receipt::{ProcessObservation, ProcessObserver, ProcessTermination};
-use crate::{
-    CorsaError, Result,
-    fast::{CompactString, SmallVec},
-};
 use std::{
     ffi::OsStr,
     path::PathBuf,
     process::{Child, Stdio},
-    sync::{Mutex, TryLockError},
     thread,
     time::{Duration, Instant},
 };
@@ -34,6 +30,7 @@ pub struct CorsaCommand {
     cwd: PathBuf,
     env: SmallVec<[(CompactString, CompactString); 4]>,
     process_observer: Option<ProcessObserver>,
+    lifetime_observer: Option<(ProcessLifetimeObserver, CompactString)>,
 }
 
 impl CorsaCommand {
@@ -44,6 +41,7 @@ impl CorsaCommand {
             cwd: std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
             env: SmallVec::new(),
             process_observer: None,
+            lifetime_observer: None,
         }
     }
 
@@ -83,6 +81,16 @@ impl CorsaCommand {
     /// Existing unobserved spawn methods keep inherited stderr.
     pub fn with_process_observer(mut self, observer: ProcessObserver) -> Self {
         self.process_observer = Some(observer);
+        self
+    }
+
+    /// Observe every guarded SDK spawn without retaining its process lifetime.
+    pub fn with_lifetime_observer(
+        mut self,
+        observer: ProcessLifetimeObserver,
+        context: impl Into<CompactString>,
+    ) -> Self {
+        self.lifetime_observer = Some((observer, context.into()));
         self
     }
 
@@ -165,91 +173,15 @@ impl CorsaCommand {
     }
 }
 
-/// Owns a child process and guarantees it is eventually terminated.
-///
-/// This guard exists to keep long-running editors, tests, and benchmarks from
-/// leaking Corsa subprocesses. Shutdown attempts a graceful wait first and
-/// then forcefully kills and reaps the child when necessary.
-#[derive(Debug)]
-pub struct AsyncChildGuard {
-    child: Mutex<Option<Child>>,
-    observation: Mutex<Option<ProcessObservation>>,
-}
-
-impl AsyncChildGuard {
-    /// Wraps a running child process.
-    pub fn new(child: Child) -> Self {
-        Self {
-            child: Mutex::new(Some(child)),
-            observation: Mutex::new(None),
-        }
-    }
-
-    /// Owns the observation returned alongside this exact child.
-    pub fn new_observed(child: Child, observation: Option<ProcessObservation>) -> Self {
-        Self {
-            child: Mutex::new(Some(child)),
-            observation: Mutex::new(observation),
-        }
-    }
-
-    /// Waits for graceful exit and force-kills the process when the deadline expires.
-    ///
-    /// The process is always reaped before this method returns successfully.
-    pub async fn shutdown(&self, wait_for: Duration) -> Result<()> {
-        let (mut child, poisoned) = match self.child.lock() {
-            Ok(child) => (child, false),
-            Err(poisoned) => (poisoned.into_inner(), true),
-        };
-        let Some(mut child) = child.take() else {
-            return if poisoned {
-                Err(process_guard_poisoned())
-            } else {
-                Ok(())
-            };
-        };
-        let terminal = wait_for_child_exit_receipt(&mut child, wait_for);
-        if let Some(observation) = self
-            .observation
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .take()
-        {
-            observation.finish(child.id(), terminal, wait_for)?;
-        } else {
-            terminal?;
-        }
-        if poisoned {
-            return Err(process_guard_poisoned());
-        }
-        Ok(())
-    }
-}
-
-impl Drop for AsyncChildGuard {
-    fn drop(&mut self) {
-        let mut child = match self.child.try_lock() {
-            Ok(child) => child,
-            Err(TryLockError::Poisoned(poisoned)) => poisoned.into_inner(),
-            Err(TryLockError::WouldBlock) => return,
-        };
-        if let Some(child) = child.as_mut() {
-            let terminal = terminate_child_process_receipt(child, false);
-            if let Some(observation) = self
-                .observation
-                .get_mut()
-                .unwrap_or_else(|e| e.into_inner())
-                .take()
-            {
-                let _ = observation.finish(child.id(), terminal, Duration::from_secs(2));
-            }
-        }
-    }
-}
-
-fn process_guard_poisoned() -> CorsaError {
-    CorsaError::Join(CompactString::from("process guard lock poisoned"))
-}
+mod guard;
+pub use guard::AsyncChildGuard;
+mod lifetime;
+pub use lifetime::{
+    ProcessCloseObservation, ProcessCloseReceipt, ProcessLifetimeObserver, ProcessLifetimeSnapshot,
+    ProcessOwnership, ProcessTerminalObserver,
+};
+mod owned;
+pub use owned::OwnedProcess;
 
 /// Waits for a child process to exit and forcefully terminates it after a timeout.
 ///
@@ -320,8 +252,37 @@ fn terminate_child_process_receipt(
 
 #[cfg(all(test, unix))]
 mod tests {
-    use super::{terminate_child_process, wait_for_child_exit};
+    use super::{AsyncChildGuard, terminate_child_process, wait_for_child_exit};
     use std::{process::Command, time::Duration};
+
+    #[test]
+    fn startup_abort_after_natural_shutdown_retains_exact_terminal_acknowledgment() {
+        use std::{
+            future::Future,
+            task::{Context, Poll, Waker},
+        };
+        let child = Command::new("sh")
+            .args(["-c", "exit 0"])
+            .spawn()
+            .expect("spawn natural exit");
+        let pid = child.id();
+        let guard = AsyncChildGuard::new(child);
+        let mut shutdown = Box::pin(guard.shutdown(Duration::from_secs(1)));
+        assert!(matches!(
+            shutdown
+                .as_mut()
+                .poll(&mut Context::from_waker(Waker::noop())),
+            Poll::Ready(Ok(()))
+        ));
+        drop(shutdown);
+        let receipt = guard
+            .abort_receipt()
+            .expect("cached shutdown")
+            .expect("exact terminal receipt");
+        assert_eq!(receipt.pid, pid);
+        assert!(receipt.status.success() && receipt.reaped);
+        assert!(!receipt.kill_requested && !receipt.timed_out);
+    }
 
     #[test]
     fn terminate_child_process_reaps_running_child() {

@@ -241,20 +241,24 @@ impl ServerState {
             .is_some_and(|current| Arc::ptr_eq(current, failed))
         {
             let _change = self.corsa_environment_change();
-            *slot = None;
+            if let Some(retired) = slot.take() {
+                self.corsa_retired.retain_and_close(retired);
+            }
             tracing::warn!(
                 "corsa bridge retired after a backend failure; a fresh session will be spawned on demand"
             );
         }
     }
 
-    /// Configuration owns the cached process. Retire without waiting for IPC;
-    /// worker keepalive lets an abandoned old session finish on its own lane.
+    /// Transfer process custody without waiting for IPC. The retired ledger
+    /// starts cleanup on a separate lane and final shutdown joins its result.
     pub(super) fn retire_corsa_configuration(&self) {
         {
             let mut slot = self.corsa_bridge.write();
-            if !self.corsa_finalizing.load(Ordering::Acquire) {
-                *slot = None;
+            if !self.corsa_finalizing.load(Ordering::Acquire)
+                && let Some(retired) = slot.take()
+            {
+                self.corsa_retired.retain_and_close(retired);
             }
         }
         self.corsa_init_failed.store(false, Ordering::SeqCst);
@@ -273,8 +277,9 @@ impl ServerState {
         if slot
             .as_ref()
             .is_some_and(|current| Arc::ptr_eq(current, pending))
+            && let Some(retired) = slot.take()
         {
-            *slot = None;
+            self.corsa_retired.retain_and_close(retired);
         }
     }
 }

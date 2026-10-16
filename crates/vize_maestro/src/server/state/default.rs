@@ -72,6 +72,8 @@ impl ServerState {
             #[cfg(feature = "native")]
             corsa_shutdown: AsyncMutex::new(Default::default()),
             #[cfg(feature = "native")]
+            corsa_retired: Default::default(),
+            #[cfg(feature = "native")]
             corsa_finalizing: AtomicBool::new(false),
             #[cfg(feature = "native")]
             corsa_init_lock: AsyncMutex::new(()),

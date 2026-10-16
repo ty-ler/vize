@@ -41,11 +41,32 @@ contract select shutdown followed by stdin EOF. Foreign servers retain standard
 shutdown/exit. No stderr bytes, including the historical EOF line, are discarded.
 A clean result requires one completed successful terminal receipt and an
 acknowledged graceful shutdown. Startup failure and discard retain raw evidence.
-Final LSP shutdown freezes cache admission and waits for the actual queued client close, including an
-unfinished or abandoned startup. The same finalizer runs after Exit or stdin EOF.
-Failed owners and the first error survive retries; neither an empty cache slot
-nor a timeout produces a successful shutdown response. Ordinary configuration
-retirement stays asynchronous.
+Final LSP shutdown freezes cache admission and waits for the actual queued client
+close, including unfinished startup and owners removed by configuration changes.
+Typed cancellation handles are published before synchronous initialization, so
+finalization can terminate and reap the exact owned child without acquiring a
+handshake lock. The same finalizer runs after Exit or stdin EOF. An empty cache
+slot or a timeout cannot produce a successful shutdown response.
+
+Ordinary configuration retirement stays asynchronous. Context removal transfers
+its native owner to a shared retirement ledger before releasing the registry
+lock; final shutdown joins current and retired owners concurrently. A past
+protocol failure remains visible with its raw status, signal and error, while
+complete terminal custody allows a recovered healthy server to close. Missing
+reap acknowledgments retain cleanup handles and fail final shutdown. The first
+failure of the active final shutdown attempt remains sticky.
+
+Non-owning observations survive failed constructors and process-owner Drop.
+Each receipt snapshot copies terminal and stderr evidence, and completed records
+are pruned only after their exact snapshot is handed to a typed caller or
+offered to the diagnostic event. Socket attachments own no separate child; `attachedBindings` records
+the bindings retained at cleanup, rather than a history of every earlier socket
+attachment.
+Ordinary recovery offers completed receipts to the existing INFO diagnostic
+event before pruning them. Disabled logging follows normal log semantics and
+does not promise durable terminal history; it cannot change metadata growth or
+process lifetime. Live and incomplete owners always remain tracked, regardless
+of logging configuration.
 
 Package identities are nominal Rust types: applications exchanging Corsa types
 must consistently use the owned graph. Mixing upstream and owned providers is
@@ -62,6 +83,12 @@ Concurrent rename sessions verify their actual child termination. A small real
 stdio test separately checks shutdown/Exit, Exit with stdin still open, and EOF;
 its proof requires the observed native PID/birth to disappear, and never uses a
 kill fallback to obtain a passing result.
+Additional actual native cases hold an old owner's response while a new owner
+serves requests, and terminate an old owner before a healthy replacement closes.
+Their packets retain exact API/editor identities, terminal results and the final
+shutdown response. Controlled handshake tests also pause real context removal
+and watcher replacement before deferred retirement, including the primary root;
+the final acknowledgment requires the recorded child birth to disappear first.
 
 `checked-corsa-package-consumer.py` assembles all six normalized Cargo archives
 and checks complete source membership and licenses. Archive assembly with

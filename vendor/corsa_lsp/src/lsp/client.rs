@@ -189,15 +189,14 @@ impl LspClient {
         args.push(CompactString::from("--lsp"));
         args.push(CompactString::from("--stdio"));
         args.extend(config.extra_args);
-        let (mut child, process_observation) = config
+        let corsa_core::OwnedProcess {
+            stdin,
+            stdout,
+            process,
+        } = config
             .command
-            .spawn_observed_async(args.iter().map(CompactString::as_str))?;
-        let stdin = child.stdin.take().ok_or(CorsaError::Closed("lsp stdin"))?;
-        let stdout = child
-            .stdout
-            .take()
-            .ok_or(CorsaError::Closed("lsp stdout"))?;
-        let process = Arc::new(AsyncChildGuard::new_observed(child, process_observation));
+            .spawn_guarded(args.iter().map(CompactString::as_str))?;
+        let terminal = process.terminal_observer();
         Ok(Self {
             rpc: JsonRpcConnection::try_spawn_with_options(
                 BufReader::new(stdout),
@@ -207,7 +206,11 @@ impl LspClient {
                     .with_request_timeout(config.request_timeout)
                     .with_outbound_capacity(config.outbound_capacity)
                     .with_observer_if_some(config.observer.clone()),
-            )?,
+            )
+            .map_err(|error| {
+                terminal.record_error(format!("LSP JSON-RPC setup failed: {error}"));
+                error
+            })?,
             process,
             shutdown_timeout: config.shutdown_timeout,
             shutdown: Arc::new(ShutdownCoordinator::default()),
@@ -219,6 +222,10 @@ impl LspClient {
     /// Only messages without a local handler are forwarded to subscribers.
     pub fn subscribe(&self) -> BroadcastReceiver<InboundEvent> {
         self.rpc.subscribe()
+    }
+
+    pub fn process_ownership(&self) -> corsa_core::ProcessOwnership {
+        corsa_core::ProcessOwnership::Owned(self.process.terminal_observer())
     }
 
     /// Creates a virtual-document overlay synchronized with this client.
@@ -309,6 +316,30 @@ impl LspClient {
         result
     }
 
+    /// Abort an initializing transport without acquiring handshake state.
+    /// Returns only after this owned child has been killed and reaped.
+    pub fn abort_startup(&self) -> Result<Option<corsa_core::ProcessCloseReceipt>> {
+        let receipt = self.process.abort_receipt()?;
+        let transport = self.rpc.begin_abort(self.shutdown_timeout);
+        let reader = self.rpc.join_reader_for_abort(self.shutdown_timeout);
+        let errors: Vec<_> = [transport, reader]
+            .into_iter()
+            .filter_map(Result::err)
+            .map(|error| error.to_string())
+            .collect();
+        if errors.is_empty() {
+            Ok(receipt)
+        } else {
+            Err(CorsaError::Protocol(
+                format!(
+                    "startup abort terminal {receipt:?}; transport close: {}",
+                    errors.join("; ")
+                )
+                .into(),
+            ))
+        }
+    }
+
     /// Gracefully closes the LSP session with the protocol `shutdown` / `exit` sequence.
     ///
     /// The params-less `shutdown` request is answered before the params-less
@@ -335,9 +366,26 @@ impl LspClient {
         let process_result = self.process.shutdown(self.shutdown_timeout).await;
         let reader_result = self.rpc.join_reader(self.shutdown_timeout);
 
-        protocol_result
-            .and(transport_result)
-            .and(process_result)
-            .and(reader_result)
+        let errors: Vec<_> = [
+            protocol_result,
+            transport_result,
+            process_result,
+            reader_result,
+        ]
+        .into_iter()
+        .filter_map(Result::err)
+        .collect();
+        for error in &errors {
+            self.process
+                .terminal_observer()
+                .record_error(format!("LSP close: {error}"));
+        }
+        match errors.len() {
+            0 => Ok(()),
+            1 => Err(errors.into_iter().next().unwrap()),
+            _ => Err(CorsaError::Protocol(
+                format!("LSP close errors: {errors:?}").into(),
+            )),
+        }
     }
 }

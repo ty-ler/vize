@@ -10,9 +10,9 @@ use super::{
     driver::ClientDriver,
 };
 use crate::{
-    CorsaError, Result,
+    Result,
     jsonrpc::{JsonRpcConnection, JsonRpcConnectionOptions},
-    process::{AsyncChildGuard, CorsaCommand},
+    process::CorsaCommand,
 };
 use corsa_core::fast::{CompactString, SmallVec};
 use std::{
@@ -33,12 +33,11 @@ pub(super) async fn spawn_jsonrpc_stdio(
     // flows. The worker process is wrapped in `AsyncChildGuard` so shutdown
     // always reaps the child.
     let args = stdio_args(command, run_external_code, filesystem.as_deref(), true);
-    let mut child = command.spawn_async(args.iter().map(CompactString::as_str))?;
-    let stdin = child.stdin.take().ok_or(CorsaError::Closed("api stdin"))?;
-    let stdout = child
-        .stdout
-        .take()
-        .ok_or(CorsaError::Closed("api stdout"))?;
+    let corsa_core::OwnedProcess {
+        stdin,
+        stdout,
+        process,
+    } = command.spawn_guarded(args.iter().map(CompactString::as_str))?;
     let handlers = filesystem.map(jsonrpc_handlers).unwrap_or_default();
     let rpc = JsonRpcConnection::try_spawn_with_options(
         BufReader::new(stdout),
@@ -48,10 +47,16 @@ pub(super) async fn spawn_jsonrpc_stdio(
             .with_request_timeout(request_timeout)
             .with_outbound_capacity(outbound_capacity)
             .with_observer_if_some(observer),
-    )?;
+    )
+    .map_err(|error| {
+        process
+            .terminal_observer()
+            .record_error(format!("API JSON-RPC setup failed: {error}"));
+        error
+    })?;
     Ok(ClientDriver::JsonRpc {
         rpc,
-        process: Some(Arc::new(AsyncChildGuard::new(child))),
+        process: Some(process),
         shutdown_timeout,
     })
 }
@@ -67,7 +72,7 @@ pub(super) fn spawn_msgpack_stdio(
     // Msgpack mode keeps a dedicated worker thread around the blocking stdio
     // pipes. This avoids async framing overhead on the hot path.
     let args = stdio_args(command, run_external_code, filesystem.as_deref(), false);
-    let child = command.spawn_blocking(args.iter().map(CompactString::as_str))?;
+    let child = command.spawn_guarded(args.iter().map(CompactString::as_str))?;
     let worker = super::msgpack_worker::MsgpackWorker::spawn(
         child,
         filesystem,

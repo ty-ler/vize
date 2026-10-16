@@ -26,6 +26,49 @@ pub(crate) enum ClientDriver {
 }
 
 impl ClientDriver {
+    pub(crate) fn process_ownership(&self) -> corsa_core::ProcessOwnership {
+        match self {
+            Self::JsonRpc {
+                process: Some(process),
+                ..
+            } => corsa_core::ProcessOwnership::Owned(process.terminal_observer()),
+            Self::JsonRpc { process: None, .. } => corsa_core::ProcessOwnership::Attached,
+            Self::Msgpack { worker } => worker.process_ownership(),
+        }
+    }
+    pub(crate) async fn abort_startup(&self) -> Result<Option<corsa_core::ProcessCloseReceipt>> {
+        match self {
+            Self::JsonRpc {
+                rpc,
+                process,
+                shutdown_timeout,
+            } => {
+                let receipt = process
+                    .as_ref()
+                    .map_or(Ok(None), |process| process.abort_receipt())?;
+                let transport = rpc.begin_abort(*shutdown_timeout);
+                let reader = rpc.join_reader_for_abort(*shutdown_timeout);
+                let errors: Vec<_> = [transport, reader]
+                    .into_iter()
+                    .filter_map(Result::err)
+                    .map(|error| error.to_string())
+                    .collect();
+                if errors.is_empty() {
+                    Ok(receipt)
+                } else {
+                    Err(CorsaError::Protocol(
+                        format!(
+                            "startup abort terminal {receipt:?}; transport close: {}",
+                            errors.join("; ")
+                        )
+                        .into(),
+                    ))
+                }
+            }
+            Self::Msgpack { worker } => worker.abort_startup().await,
+        }
+    }
+
     pub(crate) async fn request_typed<T, P>(
         &self,
         method: &str,
@@ -285,12 +328,30 @@ impl ClientDriver {
                 process,
                 shutdown_timeout,
             } => {
-                rpc.begin_close()?;
+                let transport = rpc.begin_close();
+                let child = match process {
+                    Some(process) => process.shutdown(*shutdown_timeout).await,
+                    None => Ok(()),
+                };
+                let reader = rpc.join_reader(*shutdown_timeout);
+                let errors: Vec<_> = [transport, child, reader]
+                    .into_iter()
+                    .filter_map(Result::err)
+                    .collect();
                 if let Some(process) = process {
-                    process.shutdown(*shutdown_timeout).await?;
+                    for error in &errors {
+                        process
+                            .terminal_observer()
+                            .record_error(format!("API transport close: {error}"));
+                    }
                 }
-                rpc.join_reader(*shutdown_timeout)?;
-                Ok(())
+                match errors.len() {
+                    0 => Ok(()),
+                    1 => Err(errors.into_iter().next().unwrap()),
+                    _ => Err(CorsaError::Protocol(
+                        format!("API transport close errors: {errors:?}").into(),
+                    )),
+                }
             }
             Self::Msgpack { worker } => worker.close().await,
         }

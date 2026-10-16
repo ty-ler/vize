@@ -7,16 +7,19 @@
 
 use crate::{CorsaError, Result};
 use corsa_core::{
-    CorsaEvent, SharedObserver,
+    AsyncChildGuard, CorsaEvent, SharedObserver,
     fast::{CompactString, SmallVec, compact_format},
-    observe, terminate_child_process,
+    observe,
 };
 use log::warn;
 use parking_lot::Mutex;
 use std::{
     io::{BufReader, BufWriter},
-    process::Child,
-    sync::{Arc, mpsc},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+        mpsc,
+    },
     thread,
     time::Duration,
 };
@@ -36,9 +39,10 @@ use super::{
 pub(crate) struct MsgpackWorker {
     tx: Mutex<Option<mpsc::SyncSender<WorkerCommand>>>,
     join: Mutex<Option<thread::JoinHandle<()>>>,
-    process: Arc<std::sync::Mutex<Option<Child>>>,
+    process: Arc<AsyncChildGuard>,
     request_timeout: Option<Duration>,
     observer: Option<SharedObserver>,
+    terminated: AtomicBool,
 }
 
 /// Successful response returned from the worker thread.
@@ -58,21 +62,17 @@ enum WorkerCommand {
 
 impl MsgpackWorker {
     pub(crate) fn spawn(
-        mut child: Child,
+        child: corsa_core::OwnedProcess,
         filesystem: Option<Arc<dyn ApiFileSystem>>,
         request_timeout: Option<Duration>,
         queue_capacity: usize,
         observer: Option<SharedObserver>,
     ) -> Result<Self> {
-        let stdin = child
-            .stdin
-            .take()
-            .ok_or(CorsaError::Closed("msgpack stdin"))?;
-        let stdout = child
-            .stdout
-            .take()
-            .ok_or(CorsaError::Closed("msgpack stdout"))?;
-        let process = Arc::new(std::sync::Mutex::new(Some(child)));
+        let corsa_core::OwnedProcess {
+            stdin,
+            stdout,
+            process,
+        } = child;
         let worker_process = process.clone();
         let (tx, rx) = mpsc::sync_channel::<WorkerCommand>(queue_capacity.max(1));
         let join = thread::Builder::new()
@@ -101,17 +101,21 @@ impl MsgpackWorker {
                         WorkerCommand::Shutdown => break,
                     }
                 }
-                if let Some(mut child) = lock_unpoisoned(&worker_process).take() {
-                    let _ = terminate_child_process(&mut child);
-                }
+                let _ = worker_process.abort();
             })
-            .map_err(CorsaError::Io)?;
+            .map_err(|error| {
+                process
+                    .terminal_observer()
+                    .record_error(format!("msgpack worker setup failed: {error}"));
+                CorsaError::Io(error)
+            })?;
         Ok(Self {
             tx: Mutex::new(Some(tx)),
             join: Mutex::new(Some(join)),
             process,
             request_timeout,
             observer,
+            terminated: AtomicBool::new(false),
         })
     }
 
@@ -153,7 +157,14 @@ impl MsgpackWorker {
                         timeout,
                     },
                 );
-                self.terminate_process("request timeout");
+                if let Err(error) = self.terminate_process("request timeout") {
+                    return CorsaError::Protocol(
+                        format!(
+                            "msgpack request `{method}` timed out; child abort failed: {error}"
+                        )
+                        .into(),
+                    );
+                }
                 CorsaError::timeout(
                     compact_format(format_args!("msgpack request `{method}`")).as_str(),
                     timeout,
@@ -167,11 +178,15 @@ impl MsgpackWorker {
         Ok(response.bytes)
     }
 
+    pub(crate) fn process_ownership(&self) -> corsa_core::ProcessOwnership {
+        corsa_core::ProcessOwnership::Owned(self.process.terminal_observer())
+    }
+
     pub(crate) async fn close(&self) -> Result<()> {
         if let Some(sender) = self.tx.lock().take() {
             let _ = sender.try_send(WorkerCommand::Shutdown);
         }
-        self.terminate_process("close");
+        self.terminate_process("close")?;
         if let Some(join) = self.join.lock().take() {
             join.join()
                 .map_err(|_| CorsaError::Join("msgpack worker".into()))?;
@@ -179,23 +194,45 @@ impl MsgpackWorker {
         Ok(())
     }
 
-    fn terminate_process(&self, reason: &str) {
-        if let Some(mut child) = lock_unpoisoned(&self.process).take() {
-            let _ = terminate_child_process(&mut child);
-            observe(
-                self.observer.as_ref(),
-                CorsaEvent::MsgpackWorkerTerminated {
-                    reason: CompactString::from(reason),
-                },
-            );
+    pub(crate) async fn abort_startup(&self) -> Result<Option<corsa_core::ProcessCloseReceipt>> {
+        if let Some(sender) = self.tx.lock().take() {
+            let _ = sender.try_send(WorkerCommand::Shutdown);
         }
+        let receipt = self.process.abort_receipt()?;
+        self.observe_termination("startup abort");
+        let timeout = Duration::from_secs(2);
+        let deadline = std::time::Instant::now() + timeout;
+        let mut worker = self.join.lock();
+        while worker.as_ref().is_some_and(|task| !task.is_finished()) {
+            if std::time::Instant::now() >= deadline {
+                return Err(CorsaError::timeout("msgpack startup worker close", timeout));
+            }
+            thread::sleep(Duration::from_millis(10));
+        }
+        if let Some(join) = worker.take() {
+            join.join()
+                .map_err(|_| CorsaError::Join("msgpack worker".into()))?;
+        }
+        Ok(receipt)
     }
-}
 
-fn lock_unpoisoned<T>(mutex: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
-    mutex
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
+    fn terminate_process(&self, reason: &str) -> Result<()> {
+        self.process.abort()?;
+        self.observe_termination(reason);
+        Ok(())
+    }
+
+    fn observe_termination(&self, reason: &str) {
+        if self.terminated.swap(true, Ordering::AcqRel) {
+            return;
+        }
+        observe(
+            self.observer.as_ref(),
+            CorsaEvent::MsgpackWorkerTerminated {
+                reason: CompactString::from(reason),
+            },
+        );
+    }
 }
 
 /// Reads tuples until the matching response for `method` arrives.

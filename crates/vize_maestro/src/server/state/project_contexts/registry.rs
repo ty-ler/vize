@@ -121,6 +121,16 @@ impl ProjectContext {
         self.mark_retired();
     }
 
+    /// The registry lock still makes this owner visible to finalization.
+    /// Transfer native custody before detaching it; unrelated retirement can
+    /// continue after unlocking without opening an untracked-owner window.
+    pub(super) fn transfer_native_before_detach(&self) {
+        self.mark_retired();
+        if let Some(state) = self.state.get() {
+            state.retire_corsa_configuration();
+        }
+    }
+
     pub(super) fn retire(&self) {
         self.mark_retired();
         #[cfg(feature = "experimental-source-navigation")]

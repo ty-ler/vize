@@ -21,6 +21,22 @@ runs:
         set -euo pipefail
         unset VIZE_TEST_DISABLE_TSGO
         cargo test --locked --profile ci -p vize_maestro --lib corsa_session_tests -- --nocapture --test-threads=1
+    - name: Require held-startup abort acknowledgment and physical reaping
+      shell: bash
+      env:
+        VIZE_INLAY_HINT_CAPTURE: ${{ runner.temp }}/native-lsp/held-startup
+      run: |
+        set -euo pipefail
+        unset VIZE_TEST_DISABLE_TSGO
+        cargo test --locked --profile ci -p vize --test lsp_corsa_responsiveness_cli -- --nocapture --test-threads=1
+    - name: Require atomic context detach and final owner transfer
+      shell: bash
+      env:
+        VIZE_NATIVE_CONTEXT_TRANSFER_CAPTURE_DIR: ${{ runner.temp }}/native-lsp/context-transfer
+      run: |
+        set -euo pipefail
+        cargo test --locked --profile ci -p vize_maestro --lib native_detach_tests -- --nocapture --test-threads=1 | tee "$RUNNER_TEMP/native-context-transfer-test.log"
+        grep -F "test result: ok. 4 passed" "$RUNNER_TEMP/native-context-transfer-test.log"
     - name: Build the same-source CLI and record its identity
       shell: bash
       run: |

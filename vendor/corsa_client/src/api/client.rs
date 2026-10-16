@@ -252,11 +252,19 @@ impl ApiClient {
                 Arc::new(driver)
             }
         };
-        let release_queue = Arc::new(SnapshotReleaseQueue::spawn(
-            driver.clone(),
-            config.profiler.clone(),
-            config.release_queue_capacity,
-        )?);
+        let release_queue = Arc::new(
+            SnapshotReleaseQueue::spawn(
+                driver.clone(),
+                config.profiler.clone(),
+                config.release_queue_capacity,
+            )
+            .map_err(|error| {
+                if let corsa_core::ProcessOwnership::Owned(observer) = driver.process_ownership() {
+                    observer.record_error(format!("API release queue setup failed: {error}"));
+                }
+                error
+            })?,
+        );
         Ok(Self {
             driver,
             initialized: Arc::new(SingleflightCell::default()),
@@ -440,10 +448,53 @@ impl ApiClient {
     /// This is idempotent. After closing, further requests return
     /// [`CorsaError::Closed`].
     pub async fn close(&self) -> Result<()> {
-        self.release_queue
+        let releases = self
+            .release_queue
             .close(self.driver.shutdown_timeout())
-            .await?;
-        self.driver.close().await
+            .await;
+        let driver = self.driver.close().await;
+        let errors: Vec<_> = [releases, driver]
+            .into_iter()
+            .filter_map(Result::err)
+            .collect();
+        if let corsa_core::ProcessOwnership::Owned(observer) = self.process_ownership() {
+            for error in &errors {
+                observer.record_error(format!("API close: {error}"));
+            }
+        }
+        match errors.len() {
+            0 => Ok(()),
+            1 => Err(errors.into_iter().next().unwrap()),
+            _ => Err(CorsaError::Protocol(
+                format!("API close errors: {errors:?}").into(),
+            )),
+        }
+    }
+
+    /// Read-only exact process evidence; socket attachments own no child.
+    pub fn process_ownership(&self) -> corsa_core::ProcessOwnership {
+        self.driver.process_ownership()
+    }
+
+    /// Abort an unfinished startup through its exact transport/process owner.
+    /// Process close precedes release draining so a held handshake cannot
+    /// prevent the owned child from being killed and reaped.
+    pub async fn abort_startup(&self) -> Result<Option<corsa_core::ProcessCloseReceipt>> {
+        let process = self.driver.abort_startup().await;
+        let releases = self
+            .release_queue
+            .close(self.driver.shutdown_timeout())
+            .await;
+        match (process, releases) {
+            (Ok(receipt), Ok(())) => Ok(receipt),
+            (Err(error), Ok(())) => Err(error),
+            (Ok(receipt), Err(error)) => Err(CorsaError::Protocol(
+                format!("startup abort terminal {receipt:?}; release drain: {error}").into(),
+            )),
+            (Err(process), Err(releases)) => Err(CorsaError::Protocol(
+                format!("startup process abort: {process}; release drain: {releases}").into(),
+            )),
+        }
     }
 
     /// Returns whether unstable upstream endpoints are allowed for this client.

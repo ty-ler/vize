@@ -22,7 +22,9 @@ pub mod jsonrpc {
 /// Re-exports child-process helpers used to launch Corsa over LSP stdio.
 pub mod process {
     pub use corsa_core::{
-        AsyncChildGuard, CorsaCommand, ProcessObservation, ProcessObserver, ProcessReceipt,
+        AsyncChildGuard, CorsaCommand, ProcessCloseObservation, ProcessCloseReceipt,
+        ProcessLifetimeObserver, ProcessLifetimeSnapshot, ProcessObservation, ProcessObserver,
+        ProcessOwnership, ProcessReceipt, ProcessTerminalObserver,
     };
 }
 

@@ -197,7 +197,7 @@ for (const mode of ["shutdown-exit", "exit", "eof"] as const) {
 }
 
 test(
-  "retired in-flight native owner remains joined across configuration replacement and final shutdown",
+  "retired in-flight native owner preserves typed custody across replacement and final shutdown",
   {
     skip: process.platform !== "linux",
     timeout: 30000,
@@ -206,7 +206,7 @@ test(
 );
 
 test(
-  "killed old native owner retains its fault receipt before healthy replacement shutdown",
+  "killed old native owner retains typed failed-terminal custody before healthy replacement shutdown",
   { skip: process.platform !== "linux", timeout: 30000 },
   async () => retiredOwnerWitness(directNativeChildren, "killed"),
 );

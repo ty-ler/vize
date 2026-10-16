@@ -99,6 +99,9 @@ fn release_handle(
     handle: SnapshotHandle,
 ) {
     if let Err(error) = corsa_runtime::block_on(driver.release_handle(&handle, profiler)) {
+        if let corsa_core::ProcessOwnership::Owned(observer) = driver.process_ownership() {
+            observer.record_error(format!("snapshot release {}: {error}", handle.as_str()));
+        }
         warn!(
             "failed to release corsa snapshot `{}`: {error}",
             handle.as_str()
@@ -127,7 +130,7 @@ fn wait_for_worker(
         }
         Err(mpsc::RecvTimeoutError::Timeout) => {
             warn!("{operation} did not stop within {} ms", timeout.as_millis());
-            Ok(())
+            Err(CorsaError::timeout(operation, timeout))
         }
         Err(mpsc::RecvTimeoutError::Disconnected) => Err(CorsaError::Closed(operation)),
     }

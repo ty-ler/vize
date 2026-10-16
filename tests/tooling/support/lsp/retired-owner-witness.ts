@@ -24,6 +24,19 @@ type Witness = {
   wholeStatAfter: string;
 };
 type ChildObserver = (parent: number, executable: string) => Witness[];
+type OwnerGraph = Array<{
+  owner: string;
+  role: "editor-lsp" | "project-api";
+  proxy: Witness;
+  native: Witness;
+}>;
+type CustodyJournal = {
+  kind: "retired" | "active" | "recovered";
+  owner?: "old" | "new";
+  rawLine: string;
+  json: string;
+  receipt: Record<string, unknown>;
+};
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const fixture = new URL(
@@ -47,6 +60,283 @@ function actualProbe(identity: Witness) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return { ...identity, current: null };
     throw error;
   }
+}
+
+function object(value: unknown, label: string): Record<string, unknown> {
+  assert.ok(
+    value !== null && typeof value === "object" && !Array.isArray(value),
+    `${label} must be a complete object`,
+  );
+  return value as Record<string, unknown>;
+}
+
+function exactKeys(value: Record<string, unknown>, keys: string[]) {
+  assert.deepEqual(
+    Object.keys(value).sort(),
+    keys.toSorted(),
+    "the frozen custody schema must stay complete",
+  );
+}
+
+function rawErrors(value: unknown): string[] {
+  assert.ok(
+    Array.isArray(value) && value.every((entry) => typeof entry === "string" && entry.length > 0),
+  );
+  return value;
+}
+
+/** Keep complete source event lines; JSON is the sole final trace field. */
+function custodyJournal(stderr: string): CustodyJournal[] {
+  const journal: CustodyJournal[] = [];
+  const events = [
+    {
+      kind: "recovered" as const,
+      target: "vize_canon::lsp_client::startup_control",
+      message: "recovered native owner terminal custody",
+    },
+    {
+      kind: "retired" as const,
+      target: "vize_maestro::server::state::corsa_shutdown::retired",
+      message: "retired native owner terminal custody",
+    },
+    {
+      kind: "active" as const,
+      target: "vize_canon::corsa_bridge::bridge::shutdown",
+      message: "native active owner shutdown custody",
+    },
+  ];
+  for (const rawLine of stderr.split("\n")) {
+    const line = rawLine.replace(/\u001b\[[0-?]*[ -/]*[@-~]/gu, "");
+    for (const event of events) {
+      const marker = `${event.target}: ${event.message} receipt=`;
+      const start = line.indexOf(marker);
+      if (start < 0) continue;
+      assert.match(line.slice(0, start), /\bINFO\s+$/u);
+      const json = line.slice(start + marker.length).trim();
+      assert.ok(json.startsWith("{"), "the custody event must retain its complete JSON tail");
+      journal.push({
+        kind: event.kind,
+        rawLine,
+        json,
+        receipt: object(JSON.parse(json), "custody receipt"),
+      });
+    }
+  }
+  return journal;
+}
+
+function assertCustodyJournal(
+  journal: CustodyJournal[],
+  owners: { old: OwnerGraph; new: OwnerGraph },
+  mode: "held" | "killed",
+) {
+  const closed = new Set<string>();
+  const terminals = new Set<number>();
+  const sequences = { old: new Set<number>(), new: new Set<number>() };
+  const published = { old: 0, new: 0 };
+  const historicalFailures: CustodyJournal[] = [];
+  for (const event of journal) {
+    const receipt = event.receipt;
+    const recovered = event.kind === "recovered";
+    exactKeys(
+      receipt,
+      recovered
+        ? ["children", "retirementError", "observedCount", "publishedCount"]
+        : [
+            "custody_complete",
+            "raw_errors",
+            "expectedOwnedPids",
+            "children",
+            "attachedBindings",
+            "missingAttachmentBinding",
+            "observedCount",
+            "publishedCount",
+            "pendingCleanupHandles",
+            "pendingStartupCustody",
+          ],
+    );
+    assert.ok(Array.isArray(receipt.children));
+    const children = receipt.children.map((child) => object(child, "owned child"));
+    const pids = children.map((child) => child.expectedPid);
+    assert.ok(pids.every((pid) => Number.isSafeInteger(pid) && Number(pid) > 0));
+    assert.equal(new Set(pids).size, pids.length);
+    assert.ok(
+      Number.isSafeInteger(receipt.observedCount) && Number.isSafeInteger(receipt.publishedCount),
+    );
+    assert.ok((receipt.observedCount as number) >= 0 && (receipt.publishedCount as number) >= 0);
+    if (recovered) {
+      assert.ok(
+        children.length > 0,
+        "recovery publication must retain actual complete terminal rows",
+      );
+      assert.ok(
+        receipt.retirementError === null ||
+          (typeof receipt.retirementError === "string" && receipt.retirementError.length > 0),
+      );
+    } else {
+      assert.equal(
+        receipt.custody_complete,
+        true,
+        "missing or incomplete process custody cannot permit a successful shutdown",
+      );
+      assert.equal(receipt.pendingCleanupHandles, 0);
+      assert.equal(receipt.pendingStartupCustody, false);
+      assert.equal(receipt.missingAttachmentBinding, false);
+      assert.deepEqual(
+        receipt.attachedBindings,
+        [],
+        "this fixture observes two owned SDK proxy processes, not an API attachment",
+      );
+      assert.ok(Array.isArray(receipt.expectedOwnedPids));
+      assert.deepEqual(
+        receipt.expectedOwnedPids.toSorted((a, b) => a - b),
+        pids.toSorted((a, b) => Number(a) - Number(b)),
+      );
+      if (receipt.observedCount === 0) {
+        assert.equal(receipt.publishedCount, 0);
+        assert.deepEqual(children, []);
+        assert.deepEqual(rawErrors(receipt.raw_errors), []);
+        continue; // Empty owners cannot replace either physically witnessed owner's final closure.
+      }
+    }
+    const candidates = Object.entries(owners).filter(
+      ([, graph]) =>
+        (recovered || (event.kind === "retired" ? graph === owners.old : graph === owners.new)) &&
+        pids.every((pid) => graph.some((entry) => entry.proxy.pid === pid)),
+    );
+    assert.equal(
+      candidates.length,
+      1,
+      "every reported owned PID must match the physically witnessed API/editor proxy graph",
+    );
+    const [ownerName, graph] = candidates[0];
+    assert.ok(ownerName === "old" || ownerName === "new");
+    const owner = ownerName;
+    event.owner = owner;
+    assert.equal(receipt.publishedCount, published[owner]);
+    assert.equal(receipt.observedCount, 2);
+    if (recovered) {
+      assert.ok(!closed.has(owner), "recovery cannot publish after the owner's final closure");
+      assert.ok(published[owner] + children.length <= 2);
+    } else {
+      assert.equal(published[owner] + children.length, 2);
+      closed.add(owner);
+    }
+    const failedOld = mode === "killed" && owner === "old";
+    const errors = recovered ? [] : rawErrors(receipt.raw_errors);
+    if (failedOld && (recovered ? receipt.retirementError !== null : errors.length > 0))
+      historicalFailures.push(event);
+    if (!failedOld) {
+      assert.deepEqual(errors, []);
+      if (recovered) assert.equal(receipt.retirementError, null);
+    }
+    for (const child of children) {
+      const expected = graph.find((entry) => entry.proxy.pid === child.expectedPid);
+      assert.ok(expected);
+      assert.ok(
+        !terminals.has(expected.proxy.pid),
+        "each physical owner terminal must appear exactly once",
+      );
+      terminals.add(expected.proxy.pid);
+      assert.ok(child.spawnSequence === 1 || child.spawnSequence === 2);
+      assert.ok(!sequences[owner].has(child.spawnSequence));
+      sequences[owner].add(child.spawnSequence);
+      exactKeys(child, [
+        "spawnSequence",
+        "expectedPid",
+        "role",
+        "terminal",
+        "raw_errors",
+        "close_error",
+        "stderrCustody",
+      ]);
+      assert.notEqual(
+        child.expectedPid,
+        expected.native.pid,
+        "SDK custody names the Node proxy; the actual pinned native leaf is witnessed separately",
+      );
+      assert.equal(child.role, expected.role === "project-api" ? "api" : "editor-lsp");
+      assert.equal(child.close_error, null);
+      const killed = failedOld && expected.role === "editor-lsp";
+      const status = `ExitStatus(unix_wait_status(${killed ? 9 : 0}))`;
+      assert.deepEqual(child.terminal, {
+        pid: expected.proxy.pid,
+        status,
+        exitCode: killed ? null : 0,
+        signal: killed ? 9 : null,
+        killRequested: false,
+        timedOut: false,
+        reaped: true,
+      });
+      const childErrors = rawErrors(child.raw_errors);
+      if (!killed) assert.deepEqual(childErrors, []);
+      if (!recovered)
+        for (const error of childErrors)
+          assert.ok(
+            errors.includes(error),
+            "the complete top-level journal must retain every child error verbatim",
+          );
+      const stderr = object(child.stderrCustody, "stderr custody");
+      if (expected.role === "project-api")
+        assert.deepEqual(stderr, { mode: "inherited-server-stderr" });
+      else {
+        exactKeys(stderr, ["mode", "receipts"]);
+        assert.equal(stderr.mode, "observed-editor");
+        assert.ok(Array.isArray(stderr.receipts));
+        assert.equal(stderr.receipts.length, 1);
+        const row = object(stderr.receipts[0], "complete editor stderr receipt");
+        exactKeys(row, [
+          "pid",
+          "completed",
+          "bytes",
+          "stderrComplete",
+          "stderrError",
+          "processError",
+          "status",
+          "timedOut",
+          "killRequested",
+          "reaped",
+        ]);
+        assert.ok(
+          Array.isArray(row.bytes) &&
+            row.bytes.every((byte) => Number.isInteger(byte) && byte >= 0 && byte <= 255),
+          "every native stderr byte must remain lossless",
+        );
+        assert.deepEqual(row, {
+          pid: expected.proxy.pid,
+          completed: true,
+          bytes: killed ? row.bytes : [],
+          stderrComplete: true,
+          stderrError: null,
+          processError: null,
+          status,
+          timedOut: false,
+          killRequested: false,
+          reaped: true,
+        });
+      }
+    }
+    published[owner] += children.length;
+  }
+  assert.deepEqual(
+    [...closed].sort(),
+    ["new", "old"],
+    "both retired and current final closed-custody receipts remain mandatory after recovery pruning",
+  );
+  assert.deepEqual(
+    [...terminals].sort((a, b) => a - b),
+    [...owners.old, ...owners.new].map((entry) => entry.proxy.pid).sort((a, b) => a - b),
+    "the complete recovery/final union must contain every exact physical proxy PID once",
+  );
+  for (const owner of ["old", "new"] as const) {
+    assert.equal(published[owner], 2);
+    assert.deepEqual([...sequences[owner]].sort(), [1, 2]);
+  }
+  if (mode === "killed")
+    assert.ok(
+      historicalFailures.length > 0,
+      "the killed old owner's full protocol failure must remain in its recovered retirementError or final raw_errors",
+    );
 }
 
 export async function retiredOwnerWitness(
@@ -116,7 +406,7 @@ export async function retiredOwnerWitness(
   };
   const responses: unknown[] = [];
   session.responseObservers.push((message) => responses.push(message));
-  const graph = (gate: (typeof gates)[number]) => {
+  const graph = (gate: (typeof gates)[number]): OwnerGraph => {
     const proxies = children(session.processId, node).filter((child) =>
       child.commandArguments.includes(gate.proxy),
     );
@@ -417,6 +707,9 @@ export async function retiredOwnerWitness(
             "the actual native exits cleanly; a kill is never success",
           );
     }
+    const journal = custodyJournal(session.stderrText);
+    observation.typedRetirementJournal = journal;
+    assertCustodyJournal(journal, { old: oldGraph, new: newGraph }, mode);
     success = true;
   } catch (error) {
     observation.failure = error instanceof Error ? error.stack : String(error);
@@ -425,6 +718,13 @@ export async function retiredOwnerWitness(
     polling = false;
     observation.responses = responses;
     observation.stderr = session.stderrText;
+    if (!observation.typedRetirementJournal) {
+      try {
+        observation.typedRetirementJournal = custodyJournal(session.stderrText);
+      } catch (error) {
+        observation.typedJournalParseFailure = error instanceof Error ? error.stack : String(error);
+      }
+    }
     observation.gateEvidence = gates.map((gate) => ({
       ...gate,
       files: Object.fromEntries(

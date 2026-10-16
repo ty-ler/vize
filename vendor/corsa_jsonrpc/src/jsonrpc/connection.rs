@@ -406,14 +406,43 @@ impl JsonRpcConnection {
         Ok(())
     }
 
+    /// Close admission after an owned startup process was aborted, retaining
+    /// an unfinished writer for retry instead of blocking on its pipe forever.
+    pub fn begin_abort(&self, timeout: Duration) -> Result<()> {
+        if !self.inner.closed.swap(true, Ordering::SeqCst) {
+            self.inner
+                .fail_pending(CorsaError::Closed("jsonrpc connection"));
+        }
+        self.inner.outbound.lock().take();
+        let deadline = std::time::Instant::now() + timeout;
+        let mut writer = self.inner.write_task.lock();
+        while writer.as_ref().is_some_and(|task| !task.is_finished()) {
+            if std::time::Instant::now() >= deadline {
+                return Err(CorsaError::timeout("jsonrpc startup writer close", timeout));
+            }
+            thread::sleep(Duration::from_millis(10));
+        }
+        if let Some(task) = writer.take() {
+            task.join()
+                .map_err(|_| CorsaError::Join("jsonrpc writer thread panicked".into()))?;
+        }
+        Ok(())
+    }
+
     /// Joins the reader thread, falling back after `timeout` if the transport stays blocked.
     pub fn join_reader(&self, timeout: Duration) -> Result<()> {
-        self.inner.join_reader(timeout)
+        self.inner.join_reader(timeout, false)
+    }
+
+    /// Startup abort requires an actual reader acknowledgment, retaining an
+    /// unfinished reader for retry instead of normalizing its timeout.
+    pub fn join_reader_for_abort(&self, timeout: Duration) -> Result<()> {
+        self.inner.join_reader(timeout, true)
     }
 }
 
 impl Inner {
-    fn join_reader(&self, timeout: Duration) -> Result<()> {
+    fn join_reader(&self, timeout: Duration, strict: bool) -> Result<()> {
         let done = self.read_done.lock();
         let Some(done_rx) = done.as_ref() else {
             return Ok(());
@@ -434,7 +463,11 @@ impl Inner {
                     "jsonrpc reader thread did not stop within {} ms; continuing shutdown",
                     timeout.as_millis()
                 );
-                Ok(())
+                if strict {
+                    Err(CorsaError::timeout("jsonrpc startup reader close", timeout))
+                } else {
+                    Ok(())
+                }
             }
             Err(mpsc::RecvTimeoutError::Disconnected) => Err(CorsaError::Closed("jsonrpc reader")),
         }

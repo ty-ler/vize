@@ -144,6 +144,7 @@ impl ServerState {
     fn new_project_state(self: &Arc<Self>, root: &Path) -> Arc<ServerState> {
         let mut state = ServerState::new();
         state.documents = self.documents.clone();
+        state.corsa_retired = self.corsa_retired.clone();
         *state.project_contexts.owner.write() = Some(Arc::downgrade(self));
         state.record_client_capabilities(&self.project_contexts.client_capabilities.read());
         state.set_workspace_root(root.to_path_buf());
@@ -214,11 +215,13 @@ impl ServerState {
         self.project_contexts.contexts.lock().retain(|root, state| {
             let retained = roots.iter().any(|folder| root.starts_with(folder));
             if !retained {
-                state.mark_retired();
+                state.transfer_native_before_detach();
                 retired.push(state.clone());
             }
             retained
         });
+        #[cfg(test)]
+        lock_order_tests::after_context_removal();
         for previous in retired {
             previous.retire();
         }
@@ -249,7 +252,15 @@ impl ServerState {
             .shutting_down
             .store(true, Ordering::Release);
         self.retire_project_owner();
-        let contexts = std::mem::take(&mut *self.project_contexts.contexts.lock());
+        let contexts = {
+            let mut contexts = self.project_contexts.contexts.lock();
+            for context in contexts.values() {
+                context.transfer_native_before_detach();
+            }
+            std::mem::take(&mut *contexts)
+        };
+        #[cfg(test)]
+        lock_order_tests::after_context_removal();
         for context in contexts.into_values() {
             context.retire();
         }

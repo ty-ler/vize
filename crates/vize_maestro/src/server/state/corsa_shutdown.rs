@@ -1,8 +1,11 @@
-//! Final server shutdown captures and closes every cached native owner.
+//! Final shutdown joins current owners and nonblocking configuration retirement.
 use super::ServerState;
 use std::sync::Arc;
 use vize_canon::CorsaBridge;
 use vize_l0::{String, cstr};
+
+mod retired;
+pub(super) use retired::RetiredOwners;
 
 #[derive(Default)]
 pub(super) struct NativeShutdown {
@@ -36,9 +39,10 @@ impl ServerState {
         }
         self.retire_project_contexts();
         let bridges = finalization.pending.clone();
-        let outcomes =
-            futures::future::join_all(bridges.iter().map(|bridge| bridge.shutdown_for_exit()))
-                .await;
+        let (outcomes, retired) = futures::join!(
+            futures::future::join_all(bridges.iter().map(|bridge| bridge.shutdown_for_exit())),
+            self.corsa_retired.close_for_exit(),
+        );
         finalization.pending.clear();
         let mut errors = Vec::new();
         for (bridge, outcome) in bridges.into_iter().zip(outcomes) {
@@ -46,6 +50,9 @@ impl ServerState {
                 finalization.pending.push(bridge);
                 errors.push(error);
             }
+        }
+        if let Err(error) = retired {
+            errors.push(vize_canon::CorsaBridgeError::CommunicationError(error));
         }
         if !errors.is_empty() && finalization.first_failure.is_none() {
             finalization.first_failure = Some(cstr!(

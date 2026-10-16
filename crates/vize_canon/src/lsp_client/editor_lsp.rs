@@ -50,6 +50,7 @@ mod project_identity;
 mod readiness;
 mod requests;
 mod responder;
+mod retirement;
 mod retry;
 pub mod snapshot_source;
 mod synchronize;
@@ -66,6 +67,8 @@ use responder::spawn_responder;
 /// A reusable `--lsp --stdio` session for standard diagnostics and editor
 /// requests.
 pub(super) struct EditorLspSession {
+    startup_control: Option<super::startup_control::StartupControl>,
+    startup_registration: Option<super::startup_control::Registration>,
     client: LspClient,
     process_observer: ProcessObserver,
     overlay: LspOverlay,
@@ -95,20 +98,63 @@ pub(super) struct EditorLspSession {
 }
 
 impl EditorLspSession {
+    #[cfg(test)]
     fn spawn(executable: &str, cwd: &Path, project_root: &Path) -> Result<Self, String> {
+        Self::spawn_with_control(executable, cwd, project_root, None)
+    }
+
+    fn spawn_with_control(
+        executable: &str,
+        cwd: &Path,
+        project_root: &Path,
+        control: Option<super::startup_control::StartupControl>,
+    ) -> Result<Self, String> {
+        let mut session = Self::spawn_initializing(executable, cwd, project_root, control)?;
+        session.finish_startup()?;
+        Ok(session)
+    }
+
+    fn finish_startup(&mut self) -> Result<(), String> {
+        if let Some(control) = &self.startup_control {
+            control.check_admission()?;
+        }
+        self.startup_registration.take();
+        Ok(())
+    }
+
+    fn spawn_initializing(
+        executable: &str,
+        cwd: &Path,
+        project_root: &Path,
+        startup_control: Option<super::startup_control::StartupControl>,
+    ) -> Result<Self, String> {
         let process_observer = ProcessObserver::default();
         let mut spawn = LspSpawnConfig::new(executable).with_cwd(cwd.to_path_buf());
         spawn.command = spawn
             .command
             .with_process_observer(process_observer.clone());
-        let client = block_on(LspClient::spawn(spawn))
-            .map_err(|error| cstr!("Failed to start Corsa editor LSP session: {error}"))?;
+        let (client, registration) = match &startup_control {
+            Some(control) => {
+                let (client, registration) =
+                    control.spawn_editor(spawn, process_observer.clone())?;
+                (client, Some(registration))
+            }
+            None => (
+                block_on(LspClient::spawn(spawn))
+                    .map_err(|error| cstr!("Failed to start Corsa editor LSP session: {error}"))?,
+                None,
+            ),
+        };
         let stop = Arc::new(AtomicBool::new(false));
         let responder = spawn_responder(client.clone(), stop.clone());
 
         let initialized = match initialize_lsp_client(&client, project_root) {
             Ok(response) => response,
             Err(error) => {
+                crate::lsp_client::retirement::ownership_error(
+                    &client.process_ownership(),
+                    cstr!("native editor initialization failed: {error}").as_str(),
+                );
                 stop.store(true, Ordering::Relaxed);
                 let _ = block_on(client.close());
                 let _ = responder.join();
@@ -121,6 +167,8 @@ impl EditorLspSession {
         crate::corsa_session_cache::note_typescript_project_init();
 
         Ok(Self {
+            startup_control,
+            startup_registration: registration,
             overlay: client.overlay(),
             client,
             process_observer,

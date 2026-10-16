@@ -185,6 +185,9 @@ pub struct ServerState {
     /// Final termination retains failed owners and the first failure for retry.
     #[cfg(feature = "native")]
     corsa_shutdown: AsyncMutex<corsa_shutdown::NativeShutdown>,
+    /// Configuration retirement keeps process custody until asynchronous close acknowledges it.
+    #[cfg(feature = "native")]
+    corsa_retired: corsa_shutdown::RetiredOwners,
     /// Final-exit ownership differs from nonblocking configuration retirement.
     #[cfg(feature = "native")]
     corsa_finalizing: AtomicBool,
