@@ -59,3 +59,46 @@ Fast harness refusal tests require no Rust builds:
 ```sh
 python3 tools/support/compat/github/checked-corsa-package-consumer-test.py
 ```
+
+## Separate minor publication and public acceptance
+
+The release coordinator must first clear the existing shipping hold and publish
+the six owned packages in dependency order (core, JSON-RPC, client, LSP,
+orchestrator, facade), followed by Canon and its Vize dependencies in the new
+minor. This helper does not publish, register names, edit a catalog, or inspect
+ownership. Keep the existing `corsa_runtime` 1.14.2 registry package.
+
+After those exact versions are public, run from the clean checkout of the
+immutable release source. Supply the explicit version and source SHA rather
+than inferring them from current registry state:
+
+```sh
+python3 tools/support/compat/github/checked-corsa-public-consumer.py \
+  --version "${VIZE_RELEASE_VERSION:?exact published version required}" \
+  --source-sha "${VIZE_RELEASE_SOURCE_SHA:?immutable release commit required}" \
+  --output "${RUNNER_TEMP:?}/checked-corsa-public-${VIZE_RELEASE_VERSION}"
+```
+
+The output must be new and outside the repository, without ancestor Cargo
+configuration. The helper creates fresh Cargo home/target directories, strips
+Cargo source/compiler overrides, and uses version-only crates.io dependencies.
+It builds and tests default/distributed six-package consumers, then compiles an
+independent published Canon consumer through its default native feature. Every
+owned provider/version, the single runtime, complete archive membership,
+compiled source bytes, registry lock checksum, exact release VCS SHA and MIT
+notice must agree. Preserve the entire `evidence` directory plus the seven
+downloaded `.crate` files identified by its receipt.
+
+Publishing strips development dependencies with `--allow-dirty`; the public
+archive evidence preserves the actual normalized/original manifests and VCS
+receipt, including truthful `dirty: true`. Canon now includes the complete root
+MIT notice, addressing its prior missing license file. CLI is `publish = false`:
+its five feature variants remain source acceptance, and the public receipt
+does not claim they were installed from crates.io. No public acceptance is
+established until this optional helper completes successfully after publication.
+
+Offline refusal controls make no registry requests:
+
+```sh
+python3 tools/support/compat/github/checked-corsa-public-consumer-test.py
+```
