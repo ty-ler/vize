@@ -33,6 +33,12 @@ impl From<PathBuf> for ProjectContextKey {
     }
 }
 
+#[derive(Clone)]
+pub(super) struct RetainedConfiguration {
+    authored: vize_carton::config::LoadedLspConfig,
+    applied: vize_carton::config::LoadedLspConfig,
+}
+
 #[derive(Default)]
 pub(super) struct ProjectContexts {
     owner: RwLock<Option<Weak<ServerState>>>,
@@ -44,6 +50,8 @@ pub(super) struct ProjectContexts {
     pub(super) config_dependencies: RwLock<Vec<PathBuf>>,
     pub(super) key: RwLock<Option<ProjectContextKey>>,
     pub(super) loaded_config: RwLock<Option<vize_carton::config::LoadedLspConfig>>,
+    pub(super) applied_config: RwLock<Option<vize_carton::config::LoadedLspConfig>>,
+    pub(super) config_reload_failed: AtomicBool,
     reference_ownership: Mutex<vize_canon::batch::TsconfigOwnershipCache>,
     contexts: Mutex<FxHashMap<ProjectContextKey, Arc<registry::ProjectContext>>>,
     routes: DashMap<Url, ProjectContextKey>,
@@ -185,6 +193,7 @@ impl ServerState {
         self: &Arc<Self>,
         key: &ProjectContextKey,
         snapshot: Option<&vize_carton::config::LoadedLspConfig>,
+        previous: Option<&RetainedConfiguration>,
     ) -> Arc<ServerState> {
         let root = &key.root;
         let mut state = ServerState::new();
@@ -193,9 +202,18 @@ impl ServerState {
         *state.project_contexts.key.write() = Some(key.clone());
         state.record_client_capabilities(&self.project_contexts.client_capabilities.read());
         state.set_workspace_root(root.to_path_buf());
-        match snapshot {
-            Some(snapshot) => state.apply_workspace_config_snapshot(root, snapshot.clone()),
-            None => state.load_workspace_config(root),
+        let loaded = snapshot
+            .cloned()
+            .unwrap_or_else(|| vize_carton::config::load_lsp_config_snapshot(Some(root)));
+        if !state.apply_workspace_config_snapshot(root, loaded) {
+            if let Some(previous) = previous {
+                state.apply_retained_workspace_config(root, previous.applied.clone());
+                *state.project_contexts.loaded_config.write() = Some(previous.authored.clone());
+                state
+                    .project_contexts
+                    .config_reload_failed
+                    .store(true, Ordering::Release);
+            }
         }
         state.apply_lsp_initialization_options(
             self.project_contexts.initialization_options.read().as_ref(),
@@ -212,6 +230,13 @@ impl ServerState {
             }
         }
         Arc::new(state)
+    }
+
+    fn retained_configuration(&self) -> Option<RetainedConfiguration> {
+        Some(RetainedConfiguration {
+            authored: self.project_contexts.loaded_config.read().clone()?,
+            applied: self.project_contexts.applied_config.read().clone()?,
+        })
     }
 
     pub(crate) fn project_open_typecheck_dependents(self: &Arc<Self>, uri: &Url) -> Vec<Url> {
