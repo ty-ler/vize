@@ -1,3 +1,4 @@
+import { vueConfigFixtureSource } from "./support/vue-config-fixture.ts";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -237,10 +238,10 @@ await test("source-built CSS consumers survive exact originals and preserve whol
         const wholeExpected = repaired?.wholeCode ?? entry.expected;
         const file = path.join(directory, "App.vue");
         fs.writeFileSync(file, entry.source);
-        const config = JSON.stringify({ formatter: entry.options }) + "\n";
-        fs.writeFileSync(path.join(directory, "vize.config.json"), config);
+        const config = vueConfigFixtureSource({ formatter: entry.options });
+        fs.writeFileSync(path.join(directory, "vite.config.mjs"), config);
         const options = Object.keys(entry.options).length
-          ? ["--config", "vize.config.json"]
+          ? ["--config", "vite.config.mjs"]
           : ["--no-config"];
         for (const [pass, mode] of [
           "--check",
@@ -281,14 +282,13 @@ await test("source-built CSS consumers survive exact originals and preserve whol
         const filename = entry.options.filename;
         const file = path.join(directory, filename);
         fs.writeFileSync(file, entry.source);
-        const config =
-          JSON.stringify({
-            linter: {
-              preset: "incremental",
-              rules: Object.fromEntries(entry.options.enabledRules.map((rule) => [rule, "warn"])),
-            },
-          }) + "\n";
-        fs.writeFileSync(path.join(directory, "vize.config.json"), config);
+        const config = vueConfigFixtureSource({
+          linter: {
+            preset: "incremental",
+            rules: Object.fromEntries(entry.options.enabledRules.map((rule) => [rule, "warn"])),
+          },
+        });
+        fs.writeFileSync(path.join(directory, "vite.config.mjs"), config);
         let previous: string | undefined;
         for (let pass = 1; pass <= 2; pass += 1) {
           const row = invoke(
@@ -302,7 +302,7 @@ await test("source-built CSS consumers survive exact originals and preserve whol
               "--locale",
               "en",
               "--config",
-              "vize.config.json",
+              "vite.config.mjs",
               filename,
             ],
             file,
