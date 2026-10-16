@@ -95,7 +95,7 @@ fn native_semantic_completion_keeps_frozen_full_vector_and_actual_terminal_owner
     // This separate positive control checks only the five generated program
     // URIs. An ordinary import exposes the leaf global there; it does not claim
     // authored shared.ts is clean. The negative keeps all eight frozen inputs.
-    let valid_root = capture_root.join("factory-valid-import");
+    let valid_root = root.parent().unwrap().join("factory-valid-import");
     fs::create_dir_all(&valid_root).unwrap();
     for entry in case["inputFiles"].as_array().unwrap() {
         let source = root.join(entry["file"].as_str().unwrap());
