@@ -25,14 +25,14 @@ impl ServerState {
             .filter_map(|event| event.uri.to_file_path().ok())
             .map(|path| physical_path(&path))
             .collect::<Vec<_>>();
-        let config_paths = changed_paths
+        let marker_paths = changes
             .iter()
-            .filter(|path| {
-                is_config_marker(path)
-                    && !excluded_config_path(path, &roots)
-                    && !excluded_config_path(path, &physical_roots)
-            })
+            .filter_map(|event| event.uri.to_file_path().ok())
+            .filter(|path| !excluded_config_path(path, &roots))
+            .map(|path| physical_path(&path))
+            .filter(|path| is_config_marker(path) && !excluded_config_path(path, &physical_roots))
             .collect::<Vec<_>>();
+        let config_paths = marker_paths.iter().collect::<Vec<_>>();
         let dependency_changed = |state: &ServerState| {
             state
                 .project_contexts
