@@ -257,7 +257,7 @@ fn vue_version_2_7_alone_enables_legacy_lowering() {
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(
         dir.path().join("vite.config.mjs"),
-        r#"export default { vue: { "vue": { "version": "2.7" } } };"#,
+        r#"export default { vue: { "version":"2.7" } };"#,
     )
     .unwrap();
 
@@ -299,7 +299,7 @@ fn vue_version_3_keeps_legacy_lowering_disabled() {
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(
         dir.path().join("vite.config.mjs"),
-        r#"export default { vue: { "vue": { "version": "3" } } };"#,
+        r#"export default { vue: { "version":"3" } };"#,
     )
     .unwrap();
 
