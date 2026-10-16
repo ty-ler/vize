@@ -22,8 +22,8 @@ title: "vue/no-template-shadow"
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-shadow": "warn"

@@ -20,8 +20,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/this-in-template": "warn"
@@ -62,4 +62,4 @@ Use `message`, `className`, and `handleClick` directly. The literal string `'thi
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [All rules](../all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [All rules](../all.md)

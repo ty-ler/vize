@@ -140,8 +140,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/a11y-img-alt": "warn"
@@ -209,8 +209,8 @@ Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md)
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/attribute-hyphenation": "warn"
@@ -270,8 +270,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/attribute-order": "warn"
@@ -333,8 +333,8 @@ O nome de arquivo do componente é verificado. PascalCase e kebab-case são acei
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/component-definition-name-casing": "warn"
@@ -394,8 +394,8 @@ Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md)
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/component-name-in-template-casing": "warn"
@@ -464,8 +464,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-button-has-type": "warn"
@@ -529,8 +529,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-quotes": "warn"
@@ -593,8 +593,8 @@ Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md)
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-self-closing": "warn"
@@ -665,8 +665,8 @@ Veja [o cálculo da complexidade e os limites dos componentes](../guide/cross-fi
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/max-template-complexity": "warn"
@@ -745,8 +745,8 @@ A ocorrência diagnosticada é o nome de arquivo. Renomeie o mesmo componente; a
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/multi-word-component-names": "error"
@@ -806,8 +806,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/mustache-interpolation-spacing": "warn"
@@ -871,8 +871,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-array-index-key": "warn"
@@ -932,8 +932,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-bare-strings-in-template": "warn"
@@ -1000,8 +1000,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-boolean-attr-value": "warn"
@@ -1065,8 +1065,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-child-content": "error"
@@ -1126,8 +1126,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-filter": "error"
@@ -1167,7 +1167,7 @@ Chamar capitalize(message) aplica a transformação como uma expressão comum.
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L53) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L56) · [Todas as regras](all.md)
 
 ### `vue/no-deprecated-functional-template`
 
@@ -1187,8 +1187,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-functional-template": "error"
@@ -1248,8 +1248,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-html-element-is": "error"
@@ -1310,8 +1310,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-inline-template": "error"
@@ -1371,8 +1371,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-router-link-tag-prop": "error"
@@ -1434,8 +1434,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-scope-attribute": "error"
@@ -1495,8 +1495,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-slot-attribute": "error"
@@ -1561,8 +1561,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-slot-scope-attribute": "error"
@@ -1622,8 +1622,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-bind-sync": "error"
@@ -1686,8 +1686,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-is": "error"
@@ -1748,8 +1748,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-on-native-modifier": "error"
@@ -1802,9 +1802,11 @@ Proibir modificadores numéricos obsoletos de `keyCode` em `v-on`
 
 Severidade padrão: `error`  
 Predefinições: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
-Correção automática: Nenhuma; revise a alteração sugerida  
+Correção automática: Disponível para os diagnósticos compatíveis  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
+
+O primeiro modificador numérico com prefixo decimal determina o diagnóstico. `@keyup.13.27="submit"` reporta apenas `13` e oferece `@keyup.enter.27="submit"`; outra passagem de correção pode substituir `27` por `escape`. `@keyup.13suffix="submit"` também se torna `@keyup.enter="submit"`. Os valores de 0 a 9 são isentos, então `@keyup.0.13="submit"` não gera diagnóstico nesta regra. Valores desconhecidos, como `999`, são reportados sem correção. As isenções existentes para Vue 2 e petite-vue continuam em vigor.
 
 **Configuração (Vite+)**
 
@@ -1812,8 +1814,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-on-number-modifiers": "error"
@@ -1876,8 +1878,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-dupe-v-else-if": "error"
@@ -1939,8 +1941,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-duplicate-attributes": "error"
@@ -2000,8 +2002,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-empty-component-block": "warn"
@@ -2072,8 +2074,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-inline-style": "warn"
@@ -2135,8 +2137,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-invalid-html-attribute": "warn"
@@ -2196,8 +2198,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-lone-template": "warn"
@@ -2257,8 +2259,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multi-spaces": "warn"
@@ -2320,8 +2322,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multiple-objects-in-class": "warn"
@@ -2386,8 +2388,8 @@ Ative apenas quando houver um contrato de raiz única. O Vue 3 normalmente supor
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multiple-template-root": "error"
@@ -2448,8 +2450,8 @@ Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md)
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-mutating-props": "error"
@@ -2516,8 +2518,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-negated-v-if-condition": "warn"
@@ -2584,8 +2586,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-non-component-keep-alive-child": "warn"
@@ -2660,8 +2662,8 @@ Esta entrada do catálogo atualmente não emite uma ocorrência específica da r
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-preprocessor-lang": "warn"
@@ -2723,8 +2725,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-reserved-component-names": "error"
@@ -2792,8 +2794,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-root-v-if": "warn"
@@ -2859,8 +2861,8 @@ Esta entrada do catálogo atualmente não emite uma ocorrência específica da r
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-script-non-standard-lang": "warn"
@@ -2922,8 +2924,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-src-attribute": "warn"
@@ -2993,8 +2995,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-static-inline-styles": "warn"
@@ -3053,8 +3055,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-key": "error"
@@ -3118,8 +3120,8 @@ Esta entrada do catálogo atualmente não emite uma ocorrência específica da r
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-lang": "warn"
@@ -3181,8 +3183,8 @@ A verificação atual compara variáveis de v-for aninhados. Ela não reporta um
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-shadow": "warn"
@@ -3242,8 +3244,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-target-blank": "warn"
@@ -3303,8 +3305,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-textarea-mustache": "error"
@@ -3364,8 +3366,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-undefined-refs": "warn"
@@ -3423,8 +3425,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unsafe-url": "warn"
@@ -3484,8 +3486,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unsandboxed-iframe": "warn"
@@ -3546,8 +3548,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-components": "warn"
@@ -3615,8 +3617,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-properties": "warn"
@@ -3685,8 +3687,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-refs": "warn"
@@ -3749,8 +3751,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-setup-bindings": "warn"
@@ -3808,8 +3810,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-vars": "warn"
@@ -3876,8 +3878,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-else-with-v-for": "warn"
@@ -3939,8 +3941,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-if-with-v-for": "warn"
@@ -4008,8 +4010,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-mustaches": "warn"
@@ -4074,8 +4076,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-template-attributes": "error"
@@ -4135,8 +4137,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-v-bind": "warn"
@@ -4199,8 +4201,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-for-template-key-on-child": "error"
@@ -4260,8 +4262,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-html": "warn"
@@ -4321,8 +4323,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-text": "warn"
@@ -4382,8 +4384,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-text-v-html-on-component": "error"
@@ -4446,8 +4448,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/permitted-contents": "error"
@@ -4512,8 +4514,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prefer-props-shorthand": "warn"
@@ -4580,8 +4582,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prefer-true-attribute-shorthand": "warn"
@@ -4646,8 +4648,8 @@ Verifica os nomes de props declaradas, e não o padrão de maiúsculas e minúsc
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prop-name-casing": "warn"
@@ -4709,8 +4711,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-component-is": "error"
@@ -4772,8 +4774,8 @@ Liste nomes explícitos de componentes fornecidos por plugins da aplicação ou 
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-component-registration": "warn"
@@ -4841,8 +4843,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-scoped-style": "warn"
@@ -4906,8 +4908,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-toggle-inside-transition": "error"
@@ -4971,8 +4973,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-v-for-key": "error"
@@ -5032,8 +5034,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/scoped-event-names": "warn"
@@ -5101,8 +5103,8 @@ Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md)
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/sfc-element-order": "warn"
@@ -5177,8 +5179,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/single-style-block": "warn"
@@ -5251,8 +5253,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/slot-name-casing": "warn"
@@ -5312,8 +5314,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/this-in-template": "warn"
@@ -5358,7 +5360,7 @@ Use `message`, `className` e `handleClick` diretamente. A string literal `'this.
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [Todas as regras](all.md)
 
 ### `vue/use-unique-element-ids`
 
@@ -5378,8 +5380,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/use-unique-element-ids": "warn"
@@ -5441,14 +5443,20 @@ Correção automática: Nenhuma; revise a alteração sugerida
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
 
+A regra compara listeners do mesmo evento em um elemento nativo. Eventos de componentes personalizados são ignorados, a menos que ambos os listeners usem `.native`. Nomes de eventos diferentes e filtros de teclado sem interseção não entram em conflito.
+
+Os modificadores de sistema indicam teclas obrigatórias, então `@keydown.alt.shift` também aceita Ctrl+Alt+Shift. Se um segundo manipulador usa `@keydown.alt.ctrl.shift`, adicione `.exact` ao manipulador mais abrangente para manter essas ações separadas. `.exact` permite os modificadores de sistema declarados e rejeita teclas Ctrl, Shift, Alt ou Meta adicionais.
+
+Múltiplos modificadores de teclado são alternativas: `@keydown.up.down` aceita qualquer uma das duas setas. Ele pode se sobrepor a `@keydown.ctrl.down` em Ctrl+ArrowDown. A regra reporta a chave da diretiva que precisa de `.exact`, sem incluir a expressão do manipulador.
+
 **Configuração (Vite+)**
 
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/use-v-on-exact": "warn"
@@ -5496,7 +5504,7 @@ O manipulador de clique comum também pode executar em Ctrl-clique, sobrepondo-s
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L28) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L31) · [Todas as regras](all.md)
 
 ### `vue/v-bind-style`
 
@@ -5516,8 +5524,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-bind-style": "warn"
@@ -5577,8 +5585,8 @@ Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md)
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-event-hyphenation": "warn"
@@ -5641,8 +5649,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-handler-style": "warn"
@@ -5707,8 +5715,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-style": "warn"
@@ -5768,8 +5776,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-slot-style": "warn"
@@ -5839,8 +5847,8 @@ A grafia malformada de um atributo é diagnosticada por parser/template antes qu
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-attribute-name": "error"
@@ -5900,8 +5908,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-template-root": "error"
@@ -5961,8 +5969,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-bind": "error"
@@ -6025,8 +6033,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-cloak": "error"
@@ -6088,8 +6096,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else": "error"
@@ -6152,8 +6160,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else-if": "error"
@@ -6217,8 +6225,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-for": "error"
@@ -6281,8 +6289,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-html": "error"
@@ -6344,8 +6352,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-if": "error"
@@ -6408,8 +6416,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-is": "error"
@@ -6472,8 +6480,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-memo": "error"
@@ -6533,8 +6541,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-model": "error"
@@ -6590,7 +6598,26 @@ Severidade padrão: `error`
 Predefinições: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
-Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
+Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md).
+
+Modificadores não suportados são reportados individualmente em seus nomes, inclusive na forma longa `v-on:click`, em argumentos dinâmicos e na sintaxe de objeto de listeners. Os nomes aceitos correspondem ao `eslint-plugin-vue` 10.9.2: modificadores nativos do Vue, a tabela completa de aliases de teclado, qualquer ponto de código Unicode isolado e nomes com um prefixo inteiro decimal finito (conforme a semântica de `Number.parseInt(name, 10)`). Por exemplo, `.13suffix` é aceito. A descontinuação de teclas numéricas e a migração de `.native` pertencem a regras separadas.
+
+Apenas `.stop` e `.prevent` permitem omitir o manipulador. `.once`, `.enter` e nomes personalizados configurados ainda exigem um manipulador. Adicione nomes personalizados em `vue.linter.ruleOptions`:
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  linter: {
+    rules: { "vue/valid-v-on": "error" },
+    ruleOptions: { "vue/valid-v-on": { modifiers: ["custom"] } },
+  },
+});
+```
+
+Isso permite `@click.custom="handler"`. Os nomes devem corresponder exatamente e diferenciam maiúsculas de minúsculas; as opções complementam os nomes nativos e não ativam uma regra desativada. Entradas por escopo podem substituir os nomes herdados ou removê-los com `[]`.
+
+A tabela de teclado foi adaptada dos [aliases de teclado do eslint-plugin-vue](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json), sob a licença MIT; o código-fonte original e a licença são preservados junto à implementação.
 
 **Configuração (Vite+)**
 
@@ -6598,11 +6625,18 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-on": "error"
+      },
+      "ruleOptions": {
+        "vue/valid-v-on": {
+          "modifiers": [
+            "custom"
+          ]
+        }
       }
     },
   },
@@ -6619,11 +6653,14 @@ vp run lint
 
 As formas de listener omitem um argumento de evento ou a expressão obrigatória de manipulador ou objeto.
 
-```vue annotate="remove:2,3,4"
+```vue annotate="remove:2,3,4,5,6,7"
 <template>
   <div v-on></div>
   <div @></div>
   <div @click></div>
+  <div @click.sync="handleClick"></div>
+  <div @click.nativeish="handleClick"></div>
+  <div @click.once></div>
 </template>
 ```
 
@@ -6633,9 +6670,12 @@ As formas de listener omitem um argumento de evento ou a expressão obrigatória
 
 Use um evento com seu manipulador ou passe um objeto de listeners para `v-on` sem argumento.
 
-```vue annotate="add:2,3"
+```vue annotate="add:2,3,4,5,6"
 <template>
   <div @click="handleClick"></div>
+  <form @submit.prevent></form>
+  <input @keyup.page-down="handlePageDown" />
+  <input @keyup.あ="handleKey" />
   <div v-on="{ click: handleClick }"></div>
 </template>
 ```
@@ -6662,8 +6702,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-once": "error"
@@ -6725,8 +6765,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-pre": "error"
@@ -6788,8 +6828,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-show": "error"
@@ -6851,8 +6891,8 @@ Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md)
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-slot": "error"
@@ -6917,8 +6957,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-text": "error"
@@ -6980,8 +7020,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/warn-custom-block": "warn"
@@ -7049,8 +7089,8 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/warn-custom-directive": "warn"

@@ -70,7 +70,7 @@ vp exec vize musea --build
 
 ## Configuração Compartilhada
 
-Coloque os valores compartilhados em `vize.musea`, no nível superior de `vite.config.*`. As opções passadas diretamente a `musea()` substituem os valores correspondentes. Uma configuração específica existente no mesmo projeto Vite mantém sua prioridade.
+Coloque os valores compartilhados em `vue.musea` no `vite.config.*`. As opções passadas diretamente a `musea()` substituem os valores correspondentes. Mova as opções das configurações específicas removidas para `vue.musea`.
 
 ```ts
 // vite.config.ts
@@ -79,7 +79,7 @@ import { musea } from "@vizejs/vite-plugin-musea";
 
 export default defineConfig({
   plugins: [musea()],
-  vize: {
+  vue: {
     musea: {
       include: ["src/**/*.art.vue"],
       exclude: ["node_modules/**", "dist/**"],

@@ -138,8 +138,8 @@ title: Vue ルール
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/a11y-img-alt": "warn"
@@ -207,8 +207,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/attribute-hyphenation": "warn"
@@ -268,8 +268,8 @@ first-name に変更し、設定されたハイフン区切りの属性名の方
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/attribute-order": "warn"
@@ -331,8 +331,8 @@ v-if、id、イベントハンドラーの順に並べ、ルールの順序に�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/component-definition-name-casing": "warn"
@@ -392,8 +392,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/component-name-in-template-casing": "warn"
@@ -462,8 +462,8 @@ button に有効な type を明示します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-button-has-type": "warn"
@@ -527,8 +527,8 @@ HTML 属性値の引用符を揃えます。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-quotes": "warn"
@@ -591,8 +591,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-self-closing": "warn"
@@ -663,8 +663,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/max-template-complexity": "warn"
@@ -743,8 +743,8 @@ defineProps<{ rows: Row[] }>();
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/multi-word-component-names": "error"
@@ -804,8 +804,8 @@ mustache 内の空白を揃えます。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/mustache-interpolation-spacing": "warn"
@@ -869,8 +869,8 @@ v-for の配列インデックスをそのまま key に使う箇所を検出し
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-array-index-key": "warn"
@@ -930,8 +930,8 @@ item.id を key に使い、位置が変わっても同じ項目に同じ key �
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-bare-strings-in-template": "warn"
@@ -998,8 +998,8 @@ HTML の真偽属性に不要な値を指定した箇所を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-boolean-attr-value": "warn"
@@ -1063,8 +1063,8 @@ v-html / v-text と子コンテンツを同時に指定する箇所を検出し�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-child-content": "error"
@@ -1124,8 +1124,8 @@ Vue 2 のパイプによるフィルター構文を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-filter": "error"
@@ -1165,7 +1165,7 @@ capitalize を適用するために、廃止されたフィルターのパイプ
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L53) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L56) · [全ルール](all.md)
 
 ### `vue/no-deprecated-functional-template`
 
@@ -1185,8 +1185,8 @@ SFC の template で削除済みの functional 属性を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-functional-template": "error"
@@ -1246,8 +1246,8 @@ functional を取り除き、コンポーネントの msg を直接参照しま�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-html-element-is": "error"
@@ -1308,8 +1308,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-inline-template": "error"
@@ -1369,8 +1369,8 @@ router-link の削除済み tag prop を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-router-link-tag-prop": "error"
@@ -1432,8 +1432,8 @@ template の削除済み scope 属性を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-scope-attribute": "error"
@@ -1493,8 +1493,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-slot-attribute": "error"
@@ -1559,8 +1559,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-slot-scope-attribute": "error"
@@ -1620,8 +1620,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-bind-sync": "error"
@@ -1684,8 +1684,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-is": "error"
@@ -1746,8 +1746,8 @@ Vue 3.1 で非推奨になった `v-is` で、描画するコンポーネント�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-on-native-modifier": "error"
@@ -1800,9 +1800,11 @@ v-on の削除済みの数値 keyCode 修飾子を検出します。
 
 既定の重大度: `error`  
 プリセット: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
-自動修正: なし。修正内容を確認してください  
+自動修正: 対応している診断で利用できます  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
+
+最初の10進整数で始まる修飾子が診断の対象になります。`@keyup.13.27="submit"` は `13` だけを指摘し、`@keyup.enter.27="submit"` への修正を提示します。次の修正で `27` を `escape` にできます。`@keyup.13suffix="submit"` も `@keyup.enter="submit"` になります。0〜9 は対象外なので、`@keyup.0.13="submit"` はこのルールでは指摘しません。`999` など対応するキー名がない値には修正を提示しません。Vue 2 と petite-vue は引き続き対象外です。
 
 **設定（Vite+）**
 
@@ -1810,8 +1812,8 @@ v-on の削除済みの数値 keyCode 修飾子を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-on-number-modifiers": "error"
@@ -1874,8 +1876,8 @@ v-if / v-else-if の条件重複を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-dupe-v-else-if": "error"
@@ -1937,8 +1939,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-duplicate-attributes": "error"
@@ -1998,8 +2000,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-empty-component-block": "warn"
@@ -2070,8 +2072,8 @@ const message = "Hello";
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-inline-style": "warn"
@@ -2133,8 +2135,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-invalid-html-attribute": "warn"
@@ -2194,8 +2196,8 @@ a の rel に、ヘルプへの参照を表す help を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-lone-template": "warn"
@@ -2255,8 +2257,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multi-spaces": "warn"
@@ -2318,8 +2320,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multiple-objects-in-class": "warn"
@@ -2384,8 +2386,8 @@ class の配列に、まとめられるオブジェクトリテラルを二つ�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multiple-template-root": "error"
@@ -2446,8 +2448,8 @@ section で囲み、ルートを一つにします。単一ルートを前提と
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-mutating-props": "error"
@@ -2514,8 +2516,8 @@ v-else がある条件分岐の否定条件を反転して読みやすくしま�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-negated-v-if-condition": "warn"
@@ -2582,8 +2584,8 @@ KeepAlive の直下に通常の HTML 要素を置く箇所を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-non-component-keep-alive-child": "warn"
@@ -2659,8 +2661,8 @@ CSS プリプロセッサーより標準の CSS を使う方針を示します�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-preprocessor-lang": "warn"
@@ -2722,8 +2724,8 @@ style の lang に SCSS を指定しています。プリプロセッサーを�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-reserved-component-names": "error"
@@ -2791,8 +2793,8 @@ defineOptions({ name: "AppButton" });
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-root-v-if": "warn"
@@ -2859,8 +2861,8 @@ script の非標準の lang 指定を避ける方針を示します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-script-non-standard-lang": "warn"
@@ -2922,8 +2924,8 @@ SFC ブロックの外部 src 指定を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-src-attribute": "warn"
@@ -2993,8 +2995,8 @@ p {
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-static-inline-styles": "warn"
@@ -3053,8 +3055,8 @@ v-for 用ではない template の key 指定を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-key": "error"
@@ -3119,8 +3121,8 @@ template の lang 指定を避ける方針を示します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-lang": "warn"
@@ -3182,8 +3184,8 @@ lang を取り除き、通常の HTML の p を直接記述します。規約の
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-shadow": "warn"
@@ -3243,8 +3245,8 @@ target=_blank の外部リンクに適切な rel を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-target-blank": "warn"
@@ -3304,8 +3306,8 @@ textarea 内の mustache を検出し、v-model の使用を勧めます。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-textarea-mustache": "error"
@@ -3365,8 +3367,8 @@ v-model で、編集可能な textarea の値と message を関連付けます�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-undefined-refs": "warn"
@@ -3424,8 +3426,8 @@ script setup で宣言済みの message を補間で参照し、未定義の名�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unsafe-url": "warn"
@@ -3485,8 +3487,8 @@ iframe に sandbox 属性を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unsandboxed-iframe": "warn"
@@ -3547,8 +3549,8 @@ sandbox で制限し、script が必要な場合にだけ allow-scripts を明�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-components": "warn"
@@ -3616,8 +3618,8 @@ defineProps に宣言しているのに使わない prop を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-properties": "warn"
@@ -3686,8 +3688,8 @@ defineProps<{ title: string; description: string }>();
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-refs": "warn"
@@ -3750,8 +3752,8 @@ script setup に宣言しているのに読み取らない変数を検出しま�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-setup-bindings": "warn"
@@ -3809,8 +3811,8 @@ v-for / v-slot に宣言しているのに使わない変数を検出します�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-vars": "warn"
@@ -3877,8 +3879,8 @@ index を参照するか、未使用を意図する _index という名前にし
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-else-with-v-for": "warn"
@@ -3940,8 +3942,8 @@ template に v-else を分け、その子の p に v-for を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-if-with-v-for": "warn"
@@ -4009,8 +4011,8 @@ const visibleItems = computed(() => items.filter((item) => item.visible));
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-mustaches": "warn"
@@ -4075,8 +4077,8 @@ template 要素の効果がない属性を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-template-attributes": "error"
@@ -4136,8 +4138,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-v-bind": "warn"
@@ -4200,8 +4202,8 @@ template v-for の key を子ではなく template に指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-for-template-key-on-child": "error"
@@ -4261,8 +4263,8 @@ XSS を防ぐため、v-html の使用に警告します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-html": "warn"
@@ -4322,8 +4324,8 @@ v-text の代わりに mustache を使う方針を適用します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-text": "warn"
@@ -4383,8 +4385,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-text-v-html-on-component": "error"
@@ -4447,8 +4449,8 @@ HTML の要素ごとのコンテンツモデルを検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/permitted-contents": "error"
@@ -4513,8 +4515,8 @@ Vue 3.4 の同名 prop バインディングの省略形を使います。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prefer-props-shorthand": "warn"
@@ -4581,8 +4583,8 @@ true を指定するバインディングを真偽属性の省略形にします
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prefer-true-attribute-shorthand": "warn"
@@ -4647,8 +4649,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prop-name-casing": "warn"
@@ -4710,8 +4712,8 @@ defineProps<{ userName: string }>();
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-component-is": "error"
@@ -4773,8 +4775,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-component-registration": "warn"
@@ -4842,8 +4844,8 @@ style に scoped を指定する方針を適用します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-scoped-style": "warn"
@@ -4907,8 +4909,8 @@ transition の子要素に表示を切り替える条件を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-toggle-inside-transition": "error"
@@ -4972,8 +4974,8 @@ v-for に安定した :key を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-v-for-key": "error"
@@ -5033,8 +5035,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/scoped-event-names": "warn"
@@ -5102,8 +5104,8 @@ SFC のトップレベルブロックを設定した順に並べます。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/sfc-element-order": "warn"
@@ -5178,8 +5180,8 @@ SFC の style を一つのブロックにまとめます。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/single-style-block": "warn"
@@ -5252,8 +5254,8 @@ panel と title の scoped スタイルを二つの style ブロックに分け�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/slot-name-casing": "warn"
@@ -5313,8 +5315,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/this-in-template": "warn"
@@ -5359,7 +5361,7 @@ vp run lint
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [全ルール](all.md)
 
 ### `vue/use-unique-element-ids`
 
@@ -5379,8 +5381,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/use-unique-element-ids": "warn"
@@ -5442,14 +5444,20 @@ const emailId = useId();
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
 
+ネイティブ要素の同じイベントのリスナーを比較します。カスタムコンポーネントのイベントは、両方のリスナーが `.native` を使う場合だけ対象です。イベント名が異なる場合や、キーボードの条件が重ならない場合は競合しません。
+
+システム修飾子は必要なキーを指定するため、`@keydown.alt.shift` は Ctrl+Alt+Shift でも実行されます。別のハンドラーが `@keydown.alt.ctrl.shift` を使う場合は、条件の広いハンドラーに `.exact` を付けます。`.exact` は指定したシステム修飾子だけを許可し、追加の Ctrl・Shift・Alt・Meta キーを拒否します。
+
+複数のキーボード修飾子は選択肢です。`@keydown.up.down` は上下どちらの矢印キーでも実行され、Ctrl+ArrowDown では `@keydown.ctrl.down` と重なります。診断範囲は `.exact` が必要なディレクティブのキーで、ハンドラーの式は含みません。
+
 **設定（Vite+）**
 
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/use-v-on-exact": "warn"
@@ -5497,7 +5505,7 @@ vp run lint
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L28) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L31) · [全ルール](all.md)
 
 ### `vue/v-bind-style`
 
@@ -5517,8 +5525,8 @@ v-bind の表記形式を揃えます。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-bind-style": "warn"
@@ -5578,8 +5586,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-event-hyphenation": "warn"
@@ -5642,8 +5650,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-handler-style": "warn"
@@ -5708,8 +5716,8 @@ v-on の表記形式を揃えます。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-style": "warn"
@@ -5769,8 +5777,8 @@ v-slot の表記形式を揃えます。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-slot-style": "warn"
@@ -5840,8 +5848,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-attribute-name": "error"
@@ -5901,8 +5909,8 @@ Vue 3 のフラグメントに対応する有効なテンプレートルート�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-template-root": "error"
@@ -5962,8 +5970,8 @@ v-bind の引数・値・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-bind": "error"
@@ -6026,8 +6034,8 @@ v-cloak の引数・値・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-cloak": "error"
@@ -6089,8 +6097,8 @@ v-else の位置・引数・値を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else": "error"
@@ -6153,8 +6161,8 @@ v-else-if の位置・引数・値を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else-if": "error"
@@ -6218,8 +6226,8 @@ v-for の式と変数宣言を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-for": "error"
@@ -6282,8 +6290,8 @@ v-html の値・引数・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-html": "error"
@@ -6345,8 +6353,8 @@ v-if に有効な条件式を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-if": "error"
@@ -6409,8 +6417,8 @@ v-is の適用先・引数・値を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-is": "error"
@@ -6473,8 +6481,8 @@ v-memo の値を配列の式にします。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-memo": "error"
@@ -6534,8 +6542,8 @@ v-model の値・引数・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-model": "error"
@@ -6591,7 +6599,26 @@ v-on のイベント名・式・修飾子を検査します。
 プリセット: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
-オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
+オプション: [型付きオプションと既定値](options.md)を参照してください。
+
+未対応の修飾子は名前ごとに指摘します。長い形式の `v-on:click`、動的な引数、オブジェクト形式も対象です。対応する名前は `eslint-plugin-vue` 10.9.2 と同じで、Vue 標準の修飾子、キーボードの別名、Unicode の1コードポイント、有限の10進整数で始まる名前（`Number.parseInt(name, 10)` と同じ解釈）です。たとえば `.13suffix` はこのルールでは有効です。数値キーの非推奨と `.native` の移行は別のルールで検査します。
+
+ハンドラーを省略できるのは `.stop` と `.prevent` だけです。`.once`、`.enter`、独自の名前にはハンドラーが必要です。独自の修飾子は `vue.linter.ruleOptions` に追加します。
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  linter: {
+    rules: { "vue/valid-v-on": "error" },
+    ruleOptions: { "vue/valid-v-on": { modifiers: ["custom"] } },
+  },
+});
+```
+
+この設定では `@click.custom="handler"` が有効になります。名前は大文字と小文字を区別し、標準の一覧に追加します。オプションだけでは無効なルールは有効になりません。スコープ別の設定で一覧を置き換えたり、`[]` にリセットしたりできます。
+
+キーボードの一覧は MIT ライセンスの [eslint-plugin-vue keyboard aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json) に基づき、元のソースとライセンスを実装に同梱しています。
 
 **設定（Vite+）**
 
@@ -6599,11 +6626,18 @@ v-on のイベント名・式・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-on": "error"
+      },
+      "ruleOptions": {
+        "vue/valid-v-on": {
+          "modifiers": [
+            "custom"
+          ]
+        }
       }
     },
   },
@@ -6620,11 +6654,14 @@ vp run lint
 
 イベント引数または必要なハンドラー・オブジェクト式がありません。
 
-```vue annotate="remove:2,3,4"
+```vue annotate="remove:2,3,4,5,6,7"
 <template>
   <div v-on></div>
   <div @></div>
   <div @click></div>
+  <div @click.sync="handleClick"></div>
+  <div @click.nativeish="handleClick"></div>
+  <div @click.once></div>
 </template>
 ```
 
@@ -6634,9 +6671,12 @@ vp run lint
 
 イベントとハンドラーを指定するか、引数なしの `v-on` にリスナーのオブジェクトを渡します。
 
-```vue annotate="add:2,3"
+```vue annotate="add:2,3,4,5,6"
 <template>
   <div @click="handleClick"></div>
+  <form @submit.prevent></form>
+  <input @keyup.page-down="handlePageDown" />
+  <input @keyup.あ="handleKey" />
   <div v-on="{ click: handleClick }"></div>
 </template>
 ```
@@ -6663,8 +6703,8 @@ v-once の引数・値・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-once": "error"
@@ -6726,8 +6766,8 @@ v-pre の引数・値・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-pre": "error"
@@ -6789,8 +6829,8 @@ v-show に有効な条件式を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-show": "error"
@@ -6852,8 +6892,8 @@ v-slot の適用先・宣言・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-slot": "error"
@@ -6918,8 +6958,8 @@ v-text の値・引数・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-text": "error"
@@ -6981,8 +7021,8 @@ SFC のカスタムブロックを検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/warn-custom-block": "warn"
@@ -7050,8 +7090,8 @@ const hello = "Hello";
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/warn-custom-directive": "warn"

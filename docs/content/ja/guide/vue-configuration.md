@@ -86,7 +86,7 @@ CLI のスコープ付き Lint は従来の動作を保ちます。エディタ�
 TypeScript の `compilerOptions`、標準の `extends`、`references` は既存の
 TypeScript プロジェクトに置きます。`strictTemplates` などの Vue テンプレート設定は
 `vueCompilerOptions` に記述します。CLI とエディタはこのプロジェクト設定を使います。
-[設定ガイド](./configuration.md)も参照してください。
+[設定ガイド](./configuration.md#typescript-and-vue-template-checking)も参照してください。
 
 ## 既存の設定を移行する
 

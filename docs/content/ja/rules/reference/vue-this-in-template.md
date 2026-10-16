@@ -20,8 +20,8 @@ title: "vue/this-in-template"
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/this-in-template": "warn"
@@ -62,4 +62,4 @@ vp run lint
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [全ルール](../all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [全ルール](../all.md)

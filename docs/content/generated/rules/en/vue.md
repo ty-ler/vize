@@ -138,8 +138,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/a11y-img-alt": "warn"
@@ -207,8 +207,8 @@ Options: See [typed options and defaults](options.md).
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/attribute-hyphenation": "warn"
@@ -268,8 +268,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/attribute-order": "warn"
@@ -331,8 +331,8 @@ The component filename is checked. PascalCase and kebab-case are accepted; mixed
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/component-definition-name-casing": "warn"
@@ -392,8 +392,8 @@ Options: See [typed options and defaults](options.md).
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/component-name-in-template-casing": "warn"
@@ -462,8 +462,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-button-has-type": "warn"
@@ -527,8 +527,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-quotes": "warn"
@@ -591,8 +591,8 @@ Options: See [typed options and defaults](options.md).
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-self-closing": "warn"
@@ -663,8 +663,8 @@ See [complexity scoring and component boundaries](../guide/cross-file-complexity
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/max-template-complexity": "warn"
@@ -743,8 +743,8 @@ The filename is the finding. Rename the same component; changing a child tag doe
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/multi-word-component-names": "error"
@@ -804,8 +804,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/mustache-interpolation-spacing": "warn"
@@ -869,8 +869,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-array-index-key": "warn"
@@ -930,8 +930,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-bare-strings-in-template": "warn"
@@ -998,8 +998,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-boolean-attr-value": "warn"
@@ -1063,8 +1063,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-child-content": "error"
@@ -1124,8 +1124,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-filter": "error"
@@ -1165,7 +1165,7 @@ Calling capitalize(message) applies the transformation as an ordinary expression
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L53) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L56) · [All rules](all.md)
 
 ### `vue/no-deprecated-functional-template`
 
@@ -1185,8 +1185,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-functional-template": "error"
@@ -1246,8 +1246,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-html-element-is": "error"
@@ -1308,8 +1308,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-inline-template": "error"
@@ -1369,8 +1369,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-router-link-tag-prop": "error"
@@ -1432,8 +1432,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-scope-attribute": "error"
@@ -1493,8 +1493,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-slot-attribute": "error"
@@ -1559,8 +1559,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-slot-scope-attribute": "error"
@@ -1620,8 +1620,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-bind-sync": "error"
@@ -1684,8 +1684,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-is": "error"
@@ -1746,8 +1746,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-on-native-modifier": "error"
@@ -1800,9 +1800,11 @@ Disallow deprecated numeric `keyCode` modifiers on `v-on`
 
 Default severity: `error`  
 Presets: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
-Automatic fix: None; review the suggested change  
+Automatic fix: Available for supported findings  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
+
+The first decimal-prefix numeric modifier determines the finding. `@keyup.13.27="submit"` reports only `13` and offers `@keyup.enter.27="submit"`; another fix pass can replace `27` with `escape`. `@keyup.13suffix="submit"` also becomes `@keyup.enter="submit"`. Values 0–9 are exempt, so `@keyup.0.13="submit"` is clean under this rule. Unknown values such as `999` report without a fix. The existing Vue 2 and petite-vue exemption remains in effect.
 
 **Configuration (Vite+)**
 
@@ -1810,8 +1812,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-on-number-modifiers": "error"
@@ -1874,8 +1876,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-dupe-v-else-if": "error"
@@ -1937,8 +1939,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-duplicate-attributes": "error"
@@ -1998,8 +2000,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-empty-component-block": "warn"
@@ -2070,8 +2072,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-inline-style": "warn"
@@ -2133,8 +2135,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-invalid-html-attribute": "warn"
@@ -2194,8 +2196,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-lone-template": "warn"
@@ -2255,8 +2257,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multi-spaces": "warn"
@@ -2318,8 +2320,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multiple-objects-in-class": "warn"
@@ -2384,8 +2386,8 @@ Enable only for a single-root contract. Vue 3 normally supports fragments.
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multiple-template-root": "error"
@@ -2446,8 +2448,8 @@ Options: See [typed options and defaults](options.md).
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-mutating-props": "error"
@@ -2514,8 +2516,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-negated-v-if-condition": "warn"
@@ -2582,8 +2584,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-non-component-keep-alive-child": "warn"
@@ -2658,8 +2660,8 @@ This catalog entry does not currently emit its rule-specific finding through SFC
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-preprocessor-lang": "warn"
@@ -2721,8 +2723,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-reserved-component-names": "error"
@@ -2790,8 +2792,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-root-v-if": "warn"
@@ -2857,8 +2859,8 @@ This catalog entry does not currently emit its rule-specific finding through SFC
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-script-non-standard-lang": "warn"
@@ -2920,8 +2922,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-src-attribute": "warn"
@@ -2991,8 +2993,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-static-inline-styles": "warn"
@@ -3051,8 +3053,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-key": "error"
@@ -3116,8 +3118,8 @@ This catalog entry does not currently emit its rule-specific finding through SFC
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-lang": "warn"
@@ -3179,8 +3181,8 @@ The current check compares nested v-for bindings. It does not report a single v-
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-shadow": "warn"
@@ -3240,8 +3242,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-target-blank": "warn"
@@ -3301,8 +3303,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-textarea-mustache": "error"
@@ -3362,8 +3364,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-undefined-refs": "warn"
@@ -3421,8 +3423,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unsafe-url": "warn"
@@ -3482,8 +3484,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unsandboxed-iframe": "warn"
@@ -3544,8 +3546,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-components": "warn"
@@ -3613,8 +3615,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-properties": "warn"
@@ -3683,8 +3685,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-refs": "warn"
@@ -3747,8 +3749,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-setup-bindings": "warn"
@@ -3806,8 +3808,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-vars": "warn"
@@ -3874,8 +3876,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-else-with-v-for": "warn"
@@ -3937,8 +3939,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-if-with-v-for": "warn"
@@ -4006,8 +4008,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-mustaches": "warn"
@@ -4072,8 +4074,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-template-attributes": "error"
@@ -4133,8 +4135,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-v-bind": "warn"
@@ -4197,8 +4199,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-for-template-key-on-child": "error"
@@ -4258,8 +4260,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-html": "warn"
@@ -4319,8 +4321,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-text": "warn"
@@ -4380,8 +4382,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-text-v-html-on-component": "error"
@@ -4444,8 +4446,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/permitted-contents": "error"
@@ -4510,8 +4512,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prefer-props-shorthand": "warn"
@@ -4578,8 +4580,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prefer-true-attribute-shorthand": "warn"
@@ -4644,8 +4646,8 @@ Checks declared prop names, not the casing of attributes passed to a child.
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prop-name-casing": "warn"
@@ -4707,8 +4709,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-component-is": "error"
@@ -4770,8 +4772,8 @@ List explicit component names supplied by application plugins or Musea previewSe
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-component-registration": "warn"
@@ -4839,8 +4841,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-scoped-style": "warn"
@@ -4904,8 +4906,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-toggle-inside-transition": "error"
@@ -4969,8 +4971,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-v-for-key": "error"
@@ -5030,8 +5032,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/scoped-event-names": "warn"
@@ -5099,8 +5101,8 @@ Options: See [typed options and defaults](options.md).
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/sfc-element-order": "warn"
@@ -5175,8 +5177,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/single-style-block": "warn"
@@ -5249,8 +5251,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/slot-name-casing": "warn"
@@ -5310,8 +5312,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/this-in-template": "warn"
@@ -5356,7 +5358,7 @@ Use `message`, `className`, and `handleClick` directly. The literal string `'thi
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [All rules](all.md)
 
 ### `vue/use-unique-element-ids`
 
@@ -5376,8 +5378,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/use-unique-element-ids": "warn"
@@ -5439,14 +5441,20 @@ Automatic fix: None; review the suggested change
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
 
+The rule compares listeners for the same event on a native element. It ignores custom component events unless both listeners use `.native`. Different event names and disjoint keyboard filters do not conflict.
+
+System modifiers are required keys, so `@keydown.alt.shift` also accepts Ctrl+Alt+Shift. If a second handler uses `@keydown.alt.ctrl.shift`, add `.exact` to the broader handler to keep those actions separate. `.exact` permits its declared system modifiers and rejects additional Ctrl, Shift, Alt or Meta keys.
+
+Multiple keyboard modifiers are alternatives: `@keydown.up.down` accepts either arrow key. It can overlap `@keydown.ctrl.down` on Ctrl+ArrowDown. The rule reports the directive key that needs `.exact`, excluding its handler expression.
+
 **Configuration (Vite+)**
 
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/use-v-on-exact": "warn"
@@ -5494,7 +5502,7 @@ The plain click handler can also run on Ctrl-click, overlapping the separate `.c
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L28) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L31) · [All rules](all.md)
 
 ### `vue/v-bind-style`
 
@@ -5514,8 +5522,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-bind-style": "warn"
@@ -5575,8 +5583,8 @@ Options: See [typed options and defaults](options.md).
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-event-hyphenation": "warn"
@@ -5639,8 +5647,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-handler-style": "warn"
@@ -5705,8 +5713,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-style": "warn"
@@ -5766,8 +5774,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-slot-style": "warn"
@@ -5837,8 +5845,8 @@ Malformed attribute spelling is diagnosed by parser/template before this defensi
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-attribute-name": "error"
@@ -5898,8 +5906,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-template-root": "error"
@@ -5959,8 +5967,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-bind": "error"
@@ -6023,8 +6031,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-cloak": "error"
@@ -6086,8 +6094,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else": "error"
@@ -6150,8 +6158,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else-if": "error"
@@ -6215,8 +6223,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-for": "error"
@@ -6279,8 +6287,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-html": "error"
@@ -6342,8 +6350,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-if": "error"
@@ -6406,8 +6414,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-is": "error"
@@ -6470,8 +6478,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-memo": "error"
@@ -6531,8 +6539,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-model": "error"
@@ -6588,7 +6596,26 @@ Default severity: `error`
 Presets: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
-Options: No rule-specific options. Severity and preset selection are configurable.
+Options: See [typed options and defaults](options.md).
+
+Unsupported modifiers are reported individually at their names, including on long-form `v-on:click`, dynamic arguments and object listener syntax. Accepted names match `eslint-plugin-vue` 10.9.2: Vue's built-in modifiers, the complete keyboard alias table, any single Unicode code point, and names with a finite decimal integer prefix (`Number.parseInt(name, 10)` semantics). For example, `.13suffix` is accepted. Numeric-key deprecation and `.native` migration belong to separate rules.
+
+Only `.stop` and `.prevent` allow an omitted handler. `.once`, `.enter` and configured custom names still need a handler. Add custom names under `vue.linter.ruleOptions`:
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  linter: {
+    rules: { "vue/valid-v-on": "error" },
+    ruleOptions: { "vue/valid-v-on": { modifiers: ["custom"] } },
+  },
+});
+```
+
+This permits `@click.custom="handler"`. Names are exact and case-sensitive; options supplement the built-in names and do not enable a disabled rule. Scoped entries can replace inherited names or reset them with `[]`.
+
+The keyboard table is adapted from the MIT-licensed [eslint-plugin-vue keyboard aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json); its source and license are preserved alongside the implementation.
 
 **Configuration (Vite+)**
 
@@ -6596,11 +6623,18 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-on": "error"
+      },
+      "ruleOptions": {
+        "vue/valid-v-on": {
+          "modifiers": [
+            "custom"
+          ]
+        }
       }
     },
   },
@@ -6617,11 +6651,14 @@ vp run lint
 
 The listener forms omit an event argument or their required handler/object expression.
 
-```vue annotate="remove:2,3,4"
+```vue annotate="remove:2,3,4,5,6,7"
 <template>
   <div v-on></div>
   <div @></div>
   <div @click></div>
+  <div @click.sync="handleClick"></div>
+  <div @click.nativeish="handleClick"></div>
+  <div @click.once></div>
 </template>
 ```
 
@@ -6631,9 +6668,12 @@ The listener forms omit an event argument or their required handler/object expre
 
 Use an event with its handler, or pass a listener object to argument-free `v-on`.
 
-```vue annotate="add:2,3"
+```vue annotate="add:2,3,4,5,6"
 <template>
   <div @click="handleClick"></div>
+  <form @submit.prevent></form>
+  <input @keyup.page-down="handlePageDown" />
+  <input @keyup.あ="handleKey" />
   <div v-on="{ click: handleClick }"></div>
 </template>
 ```
@@ -6660,8 +6700,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-once": "error"
@@ -6723,8 +6763,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-pre": "error"
@@ -6786,8 +6826,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-show": "error"
@@ -6849,8 +6889,8 @@ Options: See [typed options and defaults](options.md).
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-slot": "error"
@@ -6915,8 +6955,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-text": "error"
@@ -6978,8 +7018,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/warn-custom-block": "warn"
@@ -7047,8 +7087,8 @@ Options: No rule-specific options. Severity and preset selection are configurabl
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/warn-custom-directive": "warn"

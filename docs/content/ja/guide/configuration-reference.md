@@ -74,7 +74,7 @@ TypeScript 標準の `extends`（パッケージと配列の形式を含む）�
 `checkUnknownComponents`、`checkUnknownEvents`、`checkUnknownDirectives`、
 `strictVModel`、`strictCssModules`、`jsxSlots`、`inferComponentDollarEl`、
 `inferComponentDollarRefs`、`inferTemplateDollarEl`、`inferTemplateDollarRefs`、
-`inferTemplateSlots`、`inferTemplateAttrs`、`fallthroughAttributes`、
+`inferTemplateDollarSlots`、`inferTemplateDollarAttrs`、`fallthroughAttributes`、
 `checkRequiredFallthroughAttributes`、`resolveStyleImports`、`resolveStyleClassNames`、
 `vapor` です。`vue-tsc` の全オプションに対応するという意味ではありません。
 
@@ -82,6 +82,25 @@ TypeScript 標準の `extends`（パッケージと配列の形式を含む）�
 自動選択はプロジェクトにインストールされた Vue に従い、Vite の明示的な `vue.version`
 を優先します。未対応の値は設定エラーになります。TypeScript の厳密さは
 `compilerOptions` で指定し、Vize の明示的な型チェック設定は対応する既定値を上書きします。
+
+### TypeScript プロジェクトの所有関係と対応範囲
+
+設定はソースファイルを所有する TypeScript プロジェクトから読みます。継承した JSONC、標準のパッケージ・配列形式の `extends`、プロジェクトの `references` も保持します。`target: "auto"` はそのプロジェクトにインストールされた Vue を解決し、見つからない場合や未対応のバージョンでは設定エラーになります。2.7 未満の数値の Vue 2 ターゲットは Vue 2、2.7 は Vue 2.7、Vue 3.x と `99` は現在の Vue 3 系列を選びます。Vite に `vue.version` を明示した場合は、`"3"` も含めて `target` より優先します。
+
+| Vue compiler option | 対応する動作 |
+| --- | --- |
+| `target` | 上記の規則でプロジェクトの Vue ターゲットを選択します。 |
+| `strictTemplates` | 対応する厳密なテンプレート検査の既定値を設定します。明示した個別の設定が優先します。 |
+| `checkUnknownProps`, `checkUnknownComponents`, `checkUnknownEvents`, `checkUnknownDirectives` | 対応する未知のテンプレート要素の検査を設定します。 |
+| `strictVModel`, `strictCssModules`, `strictComponentAttrs` | 各項目の検査を設定します。`strictComponentAttrs` は明示指定が必要で、`strictTemplates` だけでは有効になりません。 |
+| `jsxSlots` | JSX のスロット検査を設定します。 |
+| `inferComponentDollarEl`, `inferComponentDollarRefs`, `inferTemplateDollarEl`, `inferTemplateDollarRefs`, `inferTemplateDollarSlots`, `inferTemplateDollarAttrs` | 対応するコンポーネント・テンプレートの型推論を設定します。 |
+| `fallthroughAttributes`, `checkRequiredFallthroughAttributes` | fallthrough 属性の扱いと検査を設定します。 |
+| `resolveStyleImports`, `resolveStyleClassNames` | 対応するスタイルの import・クラス解決を設定します。 |
+| `vapor` | 対応する Vapor のプロジェクト設定です。 |
+| `plugins` | `vue-router/volar/sfc-typed-router` を認識します。任意の Vue 言語プラグインを読み込む機能ではありません。 |
+
+`optionsWrapper` は未対応です。Vue ツールではコードを前後から包む prefix/suffix を指定するもので、Options API のスイッチではありません。Vize の既存の Options API 検査は別の `vue.typeChecker.optionsApi` で設定します。ここに挙げた対応は限定的なマッピングで、すべての `vue-tsc` オプションとの同等性を示すものではありません。
 
 ## 実験的なフラットエントリ
 

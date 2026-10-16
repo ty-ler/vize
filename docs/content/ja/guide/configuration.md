@@ -34,6 +34,8 @@ export default defineConfig(vpConfig).withVue({
 `vue: { ... }` を直接書く方法も同じです。パス、スコープ、設定の合成については
 [Vue の設定を共有する](./vue-configuration.md)を参照してください。
 
+<span id="typescript-and-vue-template-checking"></span>
+
 ## TypeScript と Vue テンプレートの型チェック
 
 標準の `extends` と `references` を含め、既存の TypeScript プロジェクトを使います。

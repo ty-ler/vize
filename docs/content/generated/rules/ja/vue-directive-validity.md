@@ -47,8 +47,8 @@ v-bind の引数・値・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-bind": "error"
@@ -111,8 +111,8 @@ v-else の位置・引数・値を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else": "error"
@@ -175,8 +175,8 @@ v-for の式と変数宣言を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-for": "error"
@@ -239,8 +239,8 @@ v-if に有効な条件式を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-if": "error"
@@ -303,8 +303,8 @@ v-memo の値を配列の式にします。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-memo": "error"
@@ -364,8 +364,8 @@ v-model の値・引数・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-model": "error"
@@ -421,7 +421,26 @@ v-on のイベント名・式・修飾子を検査します。
 プリセット: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
-オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
+オプション: [型付きオプションと既定値](options.md)を参照してください。
+
+未対応の修飾子は名前ごとに指摘します。長い形式の `v-on:click`、動的な引数、オブジェクト形式も対象です。対応する名前は `eslint-plugin-vue` 10.9.2 と同じで、Vue 標準の修飾子、キーボードの別名、Unicode の1コードポイント、有限の10進整数で始まる名前（`Number.parseInt(name, 10)` と同じ解釈）です。たとえば `.13suffix` はこのルールでは有効です。数値キーの非推奨と `.native` の移行は別のルールで検査します。
+
+ハンドラーを省略できるのは `.stop` と `.prevent` だけです。`.once`、`.enter`、独自の名前にはハンドラーが必要です。独自の修飾子は `vue.linter.ruleOptions` に追加します。
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  linter: {
+    rules: { "vue/valid-v-on": "error" },
+    ruleOptions: { "vue/valid-v-on": { modifiers: ["custom"] } },
+  },
+});
+```
+
+この設定では `@click.custom="handler"` が有効になります。名前は大文字と小文字を区別し、標準の一覧に追加します。オプションだけでは無効なルールは有効になりません。スコープ別の設定で一覧を置き換えたり、`[]` にリセットしたりできます。
+
+キーボードの一覧は MIT ライセンスの [eslint-plugin-vue keyboard aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json) に基づき、元のソースとライセンスを実装に同梱しています。
 
 **設定（Vite+）**
 
@@ -429,11 +448,18 @@ v-on のイベント名・式・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-on": "error"
+      },
+      "ruleOptions": {
+        "vue/valid-v-on": {
+          "modifiers": [
+            "custom"
+          ]
+        }
       }
     },
   },
@@ -450,11 +476,14 @@ vp run lint
 
 イベント引数または必要なハンドラー・オブジェクト式がありません。
 
-```vue annotate="remove:2,3,4"
+```vue annotate="remove:2,3,4,5,6,7"
 <template>
   <div v-on></div>
   <div @></div>
   <div @click></div>
+  <div @click.sync="handleClick"></div>
+  <div @click.nativeish="handleClick"></div>
+  <div @click.once></div>
 </template>
 ```
 
@@ -464,9 +493,12 @@ vp run lint
 
 イベントとハンドラーを指定するか、引数なしの `v-on` にリスナーのオブジェクトを渡します。
 
-```vue annotate="add:2,3"
+```vue annotate="add:2,3,4,5,6"
 <template>
   <div @click="handleClick"></div>
+  <form @submit.prevent></form>
+  <input @keyup.page-down="handlePageDown" />
+  <input @keyup.あ="handleKey" />
   <div v-on="{ click: handleClick }"></div>
 </template>
 ```
@@ -493,8 +525,8 @@ v-show に有効な条件式を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-show": "error"
@@ -556,8 +588,8 @@ v-slot の適用先・宣言・修飾子を検査します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-slot": "error"

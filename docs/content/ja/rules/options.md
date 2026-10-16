@@ -7,7 +7,7 @@ title: ルールのオプション
 <!-- Type-aware reference: [型ルールのオプション](./options-type.md) -->
 
 ルールの判定方法をプロジェクトに合わせたいときに、このページを使ってください。
-Vite+ では `vite.config.ts` の `lint.vize.ruleOptions` に指定し、`vp run lint` で検査します。
+Vite+ では `vite.config.ts` の `vue.linter.ruleOptions` に指定し、`vp run lint` で検査します。
 単独で使う互換設定では、同じ内容を `linter.ruleOptions` に指定します。
 
 `linter.ruleOptions` には、オプションを受け取るルールの設定をプロジェクトごとに指定します。
@@ -79,6 +79,7 @@ export default defineConfig({
 | `vue/v-on-event-hyphenation` | `"always" \| "never"` | コンポーネントの静的なイベントリスナー名を、ハイフン区切りにするかを指定します。 |
 | `vue/attribute-hyphenation` | `"always" \| "never"` | テンプレートのコンポーネントに渡すプロパティの属性名を、ハイフン区切りにするかを指定します。 |
 | `vue/valid-v-slot` | `{ allowModifiers?: boolean }` | 既定は `false`。`true` では、名前付きスロットの修飾子を許可します。引数なしの修飾子や、そのスロット自身のプロパティに依存する動的な名前は報告します。 |
+| `vue/valid-v-on` | `{ modifiers?: string[] }` | 大文字・小文字を区別する修飾子名を標準の一覧に追加します。スコープ別の設定では一覧を置き換え、`[]` で独自の名前をリセットします。`.stop`・`.prevent` 以外にはハンドラーが必要です。 |
 | `musea/prefer-design-tokens` | `{ tokens?: Array<{ path: string; value: string; tier?: string }> }` | トークンのデータを指定し、ルールを有効にするか、空でないトークンのリストで暗黙に選択した場合だけ報告します。`tier` の既定は `primitive` です。 |
 | `type/strict-boolean-expressions` | `{ allowString?: boolean; allowNumber?: boolean; allowNullableObject?: boolean; allowNullableBoolean?: boolean; allowNullableString?: boolean; allowNullableNumber?: boolean; allowNullableEnum?: boolean; allowAny?: boolean }` | `allowString`、`allowNumber`、`allowNullableObject` の既定は `true`、その他は `false` です。ルールを明示的に有効にする必要があります。 |
 
@@ -537,8 +538,8 @@ Vuetify のデータテーブルなど、ドットを含むスロット名を使
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       rules: { "vue/valid-v-slot": "error" },
       ruleOptions: { "vue/valid-v-slot": { allowModifiers: true } },
     },
@@ -626,8 +627,8 @@ export default defineConfig({
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       rules: { "script/define-props-destructuring": "warn" },
       ruleOptions: { "script/define-props-destructuring": { destructure: "only-when-assigned" } },
     },
@@ -652,7 +653,7 @@ const { size = "md" } = defineProps<{ size?: string }>();
 ```
 
 ESLint からの移行では、ルール名とオプションの指定位置を変更します。
-追加する `rules` と `ruleOptions` は、上記の `lint.vize` に指定してください。
+追加する `rules` と `ruleOptions` は、上記の `vue.linter` に指定してください。
 
 ```ts annotate="remove:1;add:2,3"
  rules: { "vue/define-props-destructuring": ["warn", "always"] }
@@ -670,8 +671,8 @@ PascalCase と kebab-case の表記を許可し、正規表現は解釈しませ
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "rules": {
         "vue/require-component-registration": "warn"
       },

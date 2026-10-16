@@ -4,7 +4,7 @@ title: Rule Options
 
 # Rule Options
 
-With Vite+, configure `lint.vize.ruleOptions` in `vite.config.ts` and run `vp run lint`. The standalone compatibility config uses the same values under `linter.ruleOptions`.
+With Vite+, configure `vue.linter.ruleOptions` in `vite.config.ts` and run `vp run lint`. The standalone compatibility config uses the same values under `linter.ruleOptions`.
 
 `linter.ruleOptions` holds typed project-local settings for rules that accept options. Unknown
 option fields are rejected, and later matching config entries replace the full option object for the
@@ -76,6 +76,7 @@ export default defineConfig({
 | `vue/v-on-event-hyphenation` | `"always" \| "never"` | Configures whether event listener names should be hyphenated. |
 | `vue/attribute-hyphenation` | `"always" \| "never"` | Configures whether component prop attributes should be hyphenated in templates. |
 | `vue/valid-v-slot` | `{ allowModifiers?: boolean }` | Defaults to `false`. Permit static and dynamic named-slot modifiers with `true`; argless modifiers and references to the slot's own parameters remain invalid. |
+| `vue/valid-v-on` | `{ modifiers?: string[] }` | Add exact, case-sensitive event modifier names to the built-in set. Scoped entries replace the list; `[]` resets custom names. A handler is still required except with `.stop` or `.prevent`. |
 | `musea/prefer-design-tokens` | `{ tokens?: Array<{ path: string; value: string; tier?: string }> }` | Off unless token data is configured and the rule is enabled or implicitly selected by a non-empty token list. `tier` defaults to `primitive`. |
 | `type/strict-boolean-expressions` | `{ allowString?: boolean; allowNumber?: boolean; allowNullableObject?: boolean; allowNullableBoolean?: boolean; allowNullableString?: boolean; allowNullableNumber?: boolean; allowNullableEnum?: boolean; allowAny?: boolean }` | `allowString`, `allowNumber`, and `allowNullableObject` default to `true`; the other options default to `false`. Explicit rule enablement is required. |
 
@@ -145,8 +146,8 @@ For components supplied by application plugins or Musea `previewSetup`, configur
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "rules": {
         "vue/require-component-registration": "warn"
       },

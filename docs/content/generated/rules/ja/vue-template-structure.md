@@ -47,8 +47,8 @@ v-html / v-text と子コンテンツを同時に指定する箇所を検出し�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-child-content": "error"
@@ -108,8 +108,8 @@ v-if / v-else-if の条件重複を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-dupe-v-else-if": "error"
@@ -171,8 +171,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-lone-template": "warn"
@@ -232,8 +232,8 @@ v-for 用ではない template の key 指定を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-key": "error"
@@ -295,8 +295,8 @@ template の v-for に key を付け、繰り返す各フラグメントを識�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-shadow": "warn"
@@ -356,8 +356,8 @@ v-for / v-slot に宣言しているのに使わない変数を検出します�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-vars": "warn"
@@ -424,8 +424,8 @@ index を参照するか、未使用を意図する _index という名前にし
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-if-with-v-for": "warn"
@@ -493,8 +493,8 @@ template 要素の効果がない属性を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-template-attributes": "error"
@@ -554,8 +554,8 @@ v-for に安定した :key を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-v-for-key": "error"

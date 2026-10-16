@@ -78,7 +78,7 @@ Supported Vue options include `target`, `strictTemplates`, `checkUnknownProps`,
 `checkUnknownComponents`, `checkUnknownEvents`, `checkUnknownDirectives`,
 `strictVModel`, `strictCssModules`, `jsxSlots`, `inferComponentDollarEl`,
 `inferComponentDollarRefs`, `inferTemplateDollarEl`, `inferTemplateDollarRefs`,
-`inferTemplateSlots`, `inferTemplateAttrs`, `fallthroughAttributes`,
+`inferTemplateDollarSlots`, `inferTemplateDollarAttrs`, `fallthroughAttributes`,
 `checkRequiredFallthroughAttributes`, `resolveStyleImports`, `resolveStyleClassNames`
 and `vapor`. This does not imply support for every `vue-tsc` option.
 
@@ -87,6 +87,25 @@ selection follows the installed project Vue package; explicit `vue.version` in
 Vite takes precedence. Unsupported target values produce a configuration error.
 TypeScript strictness remains in `compilerOptions`; explicit Vize typechecker
 options override the corresponding project defaults.
+
+### TypeScript project ownership and support limits
+
+These options come from the TypeScript project that owns the source file, including inherited JSONC configuration, standard package/array `extends` and project `references`. `target: "auto"` resolves the project's installed Vue package; a missing or unsupported version produces a configuration error. Numeric Vue 2 targets below 2.7 select Vue 2, exactly 2.7 selects Vue 2.7, and Vue 3.x or `99` selects the modern Vue 3 family. An explicitly supplied `vue.version` in Vite, including `"3"`, takes precedence over `target`.
+
+| Vue compiler option | Supported behavior |
+| --- | --- |
+| `target` | Select the project's Vue target as described above. |
+| `strictTemplates` | Supply defaults for the supported strict template checks; explicit options remain authoritative. |
+| `checkUnknownProps`, `checkUnknownComponents`, `checkUnknownEvents`, `checkUnknownDirectives` | Configure the corresponding unknown template member checks. |
+| `strictVModel`, `strictCssModules`, `strictComponentAttrs` | Configure the corresponding checks. `strictComponentAttrs` is explicit; `strictTemplates` does not enable it automatically. |
+| `jsxSlots` | Configure JSX slot checking. |
+| `inferComponentDollarEl`, `inferComponentDollarRefs`, `inferTemplateDollarEl`, `inferTemplateDollarRefs`, `inferTemplateDollarSlots`, `inferTemplateDollarAttrs` | Configure the corresponding component/template inference. |
+| `fallthroughAttributes`, `checkRequiredFallthroughAttributes` | Configure fallthrough attribute handling and checks. |
+| `resolveStyleImports`, `resolveStyleClassNames` | Configure the supported style import/class resolution. |
+| `vapor` | Set the supported Vapor project option. |
+| `plugins` | Recognize `vue-router/volar/sfc-typed-router`; arbitrary Vue language plugins are not loaded. |
+
+`optionsWrapper` is unsupported. In Vue tooling it describes code prefix/suffix wrapping, not an Options API switch. Vize's existing Options API checking is controlled separately by `vue.typeChecker.optionsApi`. The mapping above is bounded support, not complete `vue-tsc` option parity.
 
 ## Experimental Flat Entries
 
