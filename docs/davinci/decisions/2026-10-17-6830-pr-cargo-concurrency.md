@@ -6,8 +6,9 @@ Set `CARGO_BUILD_JOBS=24` only for pull-request executions of `pr-rust-shard`.
 Merge-queue workers retain 12, including nested Cargo invoked by their tests.
 Keep the 32-vCPU runner, nextest 16, libtest 4, package roots, features, target
 selection, profiles, tests, cancellation and cache policy. The archive producer
-and Clippy job retain their existing settings. Hosted trial results are pending;
-this change does not establish the five-minute whole-PR target.
+and Clippy job retain their existing settings. Keep 24 after the first hosted
+trial passed without dropping cases; this observation does not establish a
+causal speedup or the five-minute whole-PR maximum.
 
 ## Evidence for trying 24
 
@@ -33,17 +34,29 @@ introduction and shard decisions contain no OOM-derived rationale. The
 already passed with jobs=24 on the same runner SKU. This demonstrates feasibility,
 not worst-case memory headroom; no peak-memory measurement was retained.
 
-## Observe the actual trial
+## Actual trial
 
 The jobs=12 [parent run](https://github.com/ubugeeei-prod/vize/actions/runs/38935551261)
 at `d6c5c95c2a7b7703bf5e49cfa8a0db1a0766fb92` passed in 4m45s;
 the first title event to required success was 6m07s, including 82s before Check
 started. Its actual checkout was `95fd88af62d77fea9e93faab3a4ecee3434643f1`,
-which also includes intervening main changes. Compare the trial's actual merge inputs and
-all cohort test identities before interpreting timings. Retain first attempts,
-failures and every ordinary workflow's completion time. Separate job scheduling,
-setup, Cargo build, nextest execution, post steps and final-report time using
-existing logs, JUnit and timing artifacts; add no persistent probe workflow.
+which also includes intervening main changes.
+
+The jobs=24 [trial](https://github.com/ubugeeei-prod/vize/actions/runs/38936385902)
+at `55725a8d555ab3170eaf2bc681e8367ed27aa600` passed Check in 4m21s and
+all ten ordinary workflows in 4m26s from the earliest observed event. Its actual
+checkout was `af9574852a968cc6dfb709e3d1f392ccb2ce07a5`. All 18,224 baseline
+Rust cases passed again, with no duplicate identities. Intervening main #9290
+added four provider-selection cases in two integration helpers: 18,228 passed.
+Production Rust, Cargo.lock, toolchain, package selection and feature inputs
+were identical, but the compiled integration helpers were not.
+
+JS builders was the final workload in both runs: its test step took 207s and
+182s, with Cargo still set to 12. Both final-report tails were 9s. The overall
+time reduction therefore cannot be attributed to the Rust cohort setting.
+The first Check's event delay was 82s versus 4s for the trial. All observations
+are first attempts; no failed job was retried or omitted. Use the existing logs,
+JUnit and timing artifacts rather than adding a persistent probe workflow.
 
 Sticky mounts and source-mtime restoration were successful in the earlier pair,
 but identical cache keys do not prove identical trusted snapshots or usable

@@ -38,3 +38,27 @@ neither this graph change nor the earlier 9m19s build-only benchmark establishes
 the ten-minute end-to-end target. Focused contracts exercise byte corruption,
 foreign source/run/tag, rerun attempts, symlinks and missing signature refusal,
 and preserve the full final publication dependency barrier.
+
+## Remaining release time
+
+A later audit of the same original release found that source checks, metadata-PR
+checks and release builds already overlapped. Candidate readiness at 21:12:02 UTC
+was followed by metadata merge at 21:12:21 and the annotated tag at 21:12:51 on
+October 15. Publication started at 21:13:32; GitHub Release became public at
+21:48:48, 60m01s after the operator started. These timestamps span three attempts,
+and the Deno consumer still failed; they are not a successful release benchmark.
+The npm critical path was native 11m27s, CLI 5m02s, Vite plugin 2m09s and Nuxt
+3m53s. Platform publication already used concurrency four; this change uses eight.
+
+The [trusted cache seed](https://github.com/ubugeeei-prod/vize/actions/runs/38904921642)
+spent 9m47s planning and building, plus 8m10s queued. Windows ARM CLI was its
+8m33s critical build. Qualification, metadata integration, tagging, publication
+and public acceptance are outside that measurement. The remaining ten-minute
+target needs a complete successful release measurement with each phase retained.
+
+Do not move metadata merge-queue admission before readiness as a timing shortcut.
+The existing catalog gate authenticates source and metadata identity but does not
+check the release run's readiness or H's required checks; the operator checks
+those before admission. There were no merge-group runs in the historical release
+window, so its short merge interval is not evidence of today's protected queue
+cost. No queue-guard change is justified by these observations.
