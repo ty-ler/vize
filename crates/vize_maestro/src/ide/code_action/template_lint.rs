@@ -8,8 +8,8 @@
 
 use super::{CodeActionService, IdeContext, get_line_indent, ranges_overlap, template_position};
 use tower_lsp::lsp_types::{
-    CodeAction, CodeActionKind, CodeActionOrCommand, CodeDescription, Diagnostic, NumberOrString,
-    Range, TextEdit, WorkspaceEdit,
+    CodeAction, CodeActionKind, CodeActionOrCommand, Diagnostic, NumberOrString, Range, TextEdit,
+    WorkspaceEdit,
 };
 
 /// One template lint pass over the resident descriptor, shared across the
@@ -222,14 +222,5 @@ fn selected_diagnostics(
                 && diagnostic.range == range
                 && matches!(&diagnostic.code, Some(NumberOrString::String(code)) if code == rule)
         })
-        .map(|diagnostic| {
-            let mut diagnostic = diagnostic.clone();
-            // Clients may omit documentation when echoing published diagnostics.
-            // Recover only that absent metadata from the publisher's authority.
-            if diagnostic.code_description.is_none() {
-                diagnostic.code_description = crate::ide::diagnostics::rule_docs_url(rule)
-                    .map(|href| CodeDescription { href });
-            }
-            vec![diagnostic]
-        })
+        .map(|diagnostic| vec![diagnostic.clone()])
 }
