@@ -9,7 +9,11 @@ use std::path::Path;
 
 use crate::config::ConfigDocument;
 
-use super::{discovery::{CONFIG_MIGRATION, is_retired_config}, js::parse_js_config, pkl};
+use super::{
+    discovery::{CONFIG_MIGRATION, is_retired_config},
+    js::parse_js_config,
+    pkl,
+};
 
 /// Parse a single config file path without discovery fallback.
 pub(super) fn parse_raw_config_file(
@@ -48,10 +52,20 @@ pub(super) fn document_from_json(
 ) -> Result<ConfigDocument, Box<dyn std::error::Error>> {
     // Internal serialized native payloads remain supported, but never load a
     // second custom inheritance graph beside TypeScript's own project model.
-    if json.windows(b"\"extends\"".len()).any(|part| part == b"\"extends\"") {
+    if json
+        .windows(b"\"extends\"".len())
+        .any(|part| part == b"\"extends\"")
+    {
         let value: serde_json::Value = serde_json::from_slice(json)?;
-        let has_extends = |value: &serde_json::Value| value.as_object().is_some_and(|object| object.contains_key("extends"));
-        let entries = value.get("entries").and_then(serde_json::Value::as_array).or_else(|| value.as_array());
+        let has_extends = |value: &serde_json::Value| {
+            value
+                .as_object()
+                .is_some_and(|object| object.contains_key("extends"))
+        };
+        let entries = value
+            .get("entries")
+            .and_then(serde_json::Value::as_array)
+            .or_else(|| value.as_array());
         if has_extends(&value) || entries.is_some_and(|entries| entries.iter().any(has_extends)) {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput,
                 "Custom config extends is no longer supported; use defineConfig(vpConfig).withVue(vueConfig); standard tsconfig extends remains supported").into());

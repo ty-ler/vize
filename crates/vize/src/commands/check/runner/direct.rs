@@ -51,7 +51,9 @@ pub(crate) fn run_direct(args: &CheckArgs) {
         .and_then(Path::parent)
         .unwrap_or(cwd.as_path());
     if !config.type_checker.enabled {
-        eprintln!("[vize] Skipping check because typeChecker.enabled is false in vize.config.");
+        eprintln!(
+            "[vize] Skipping check because typeChecker.enabled is false in vite.config.* vue settings."
+        );
         return;
     }
     let project = crate::config::ProjectModel::new(

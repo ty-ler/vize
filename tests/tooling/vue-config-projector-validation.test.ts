@@ -190,7 +190,10 @@ test("retired namespaces fail without invoking any legacy or Vite hooks", async 
     return {};
   };
   assert.equal(vueConfigOptions({ vize }), undefined);
-  await assert.rejects(projectViteConfigSource({ vue: { compiler: false }, vize }), /vize: configuration is no longer supported/);
+  await assert.rejects(
+    projectViteConfigSource({ vue: { compiler: false }, vize }),
+    /vize: configuration is no longer supported/,
+  );
   assert.equal(calls, 0);
   await assert.rejects(
     projectViteConfigSource({ vize: { packageLocalUnknown: { active: true } } }),

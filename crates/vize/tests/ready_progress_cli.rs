@@ -36,8 +36,10 @@ fn ready(root: &Path, pattern: &str) -> Command {
 
 const FMT: &str =
     "Found 1 file(s)\nReformatted: App.vue\n\nFormatted 1 file(s)\n  1 file(s) reformatted\n";
-const LINT: &str = "[vize] Skipping lint because linter.enabled is false in vize.config.\n";
-const CHECK: &str = "[vize] Skipping check because typeChecker.enabled is false in vize.config.\n";
+const LINT: &str =
+    "[vize] Skipping lint because linter.enabled is false in vite.config.* vue settings.\n";
+const CHECK: &str =
+    "[vize] Skipping check because typeChecker.enabled is false in vite.config.* vue settings.\n";
 const BUILT: &str = "Built: App.vue -> ./dist/App.js\n";
 const BUILD: &str = "\x1b[32m✓ 1 file compiled in <elapsed>s\x1b[0m\n";
 const MISSING: &str = "No .vue, .js, .mjs, .cjs, .ts, .mts, .cts, .jsx, .tsx, .json, .jsonc, .yaml, .yml, .md, or .markdown files found matching the patterns\n";

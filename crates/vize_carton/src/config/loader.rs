@@ -111,6 +111,13 @@ pub fn load_project_config_with_source(path: Option<&Path>) -> LoadedProjectConf
     project_config_snapshot(load_raw_config_with_source(path))
 }
 
+/// Load one project root without requiring a Vite file, but reject invalid or retired settings.
+pub fn try_load_project_config_from_root(
+    root: &Path,
+) -> Result<LoadedProjectConfig, std::string::String> {
+    checked::load_raw_editor_config_checked(Some(root)).map(project_config_snapshot)
+}
+
 /// Reject malformed discovered or explicitly selected project configuration.
 pub fn try_load_project_config_with_source(
     path: Option<&Path>,

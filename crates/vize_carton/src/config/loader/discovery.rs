@@ -8,21 +8,33 @@ use std::path::{Path, PathBuf};
 
 /// Config file names in precedence order for directory auto-discovery.
 pub(super) const CONFIG_FILE_NAMES: [&str; 6] = [
-    "vite.config.ts", "vite.config.js", "vite.config.mjs", "vite.config.cjs", "vite.config.mts", "vite.config.cts",
+    "vite.config.ts",
+    "vite.config.js",
+    "vite.config.mjs",
+    "vite.config.cjs",
+    "vite.config.mts",
+    "vite.config.cts",
 ];
 
 pub(super) const CONFIG_MIGRATION: &str = "vize.config.* is no longer supported; move Vue settings to vue: in vite.config.* and TypeScript settings to tsconfig.json";
 
 pub(super) fn is_retired_config(path: &Path) -> bool {
-    let Some(name) = path.file_name().and_then(|name| name.to_str()) else { return false; };
+    let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+        return false;
+    };
     name.strip_prefix("vize.config.").is_some_and(|extension| {
-        matches!(extension, "pkl" | "ts" | "mts" | "cts" | "js" | "mjs" | "cjs" | "json")
+        matches!(
+            extension,
+            "pkl" | "ts" | "mts" | "cts" | "js" | "mjs" | "cjs" | "json"
+        )
     })
 }
 
 pub(super) fn has_retired_config(directory: &Path) -> bool {
     std::fs::read_dir(directory).is_ok_and(|entries| {
-        entries.filter_map(Result::ok).any(|entry| is_retired_config(&entry.path()))
+        entries
+            .filter_map(Result::ok)
+            .any(|entry| is_retired_config(&entry.path()))
     })
 }
 

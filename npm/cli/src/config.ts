@@ -29,7 +29,8 @@ const require = createRequire(import.meta.url);
 
 export const CONFIG_FILE_NAMES = VITE_CONFIG_FILE_NAMES;
 const RETIRED_CONFIG = /^vize\.config\.(?:pkl|[cm]?[jt]s|json)$/;
-const CONFIG_MIGRATION = "vize.config.* is no longer supported; move Vue settings to vue: in vite.config.* and TypeScript settings to tsconfig.json";
+const CONFIG_MIGRATION =
+  "vize.config.* is no longer supported; move Vue settings to vue: in vite.config.* and TypeScript settings to tsconfig.json";
 
 const DEFAULT_CONFIG_ENV: ConfigEnv = {
   mode: "development",
@@ -107,7 +108,11 @@ async function loadConfigFromDir(
       return config;
     }
   }
-  if (viteConfig && fs.existsSync(dir) && fs.readdirSync(dir).some((name) => RETIRED_CONFIG.test(name))) {
+  if (
+    viteConfig &&
+    fs.existsSync(dir) &&
+    fs.readdirSync(dir).some((name) => RETIRED_CONFIG.test(name))
+  ) {
     throw new Error(CONFIG_MIGRATION);
   }
   return null;

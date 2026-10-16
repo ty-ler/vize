@@ -44,15 +44,21 @@ async function resolveSource(value, env, parents = new Set()) {
 
 function rejectLegacyConfig(source) {
   if (Object.hasOwn(source, "extends")) {
-    throw new Error("Custom config extends is no longer supported; use defineConfig(vpConfig).withVue(vueConfig)");
+    throw new Error(
+      "Custom config extends is no longer supported; use defineConfig(vpConfig).withVue(vueConfig)",
+    );
   }
   if (Object.hasOwn(source, "vize")) {
-    throw new Error("vize: configuration is no longer supported; move Vue settings to vue: in vite.config.*");
+    throw new Error(
+      "vize: configuration is no longer supported; move Vue settings to vue: in vite.config.*",
+    );
   }
   for (const key of ["lint", "fmt", "pack"]) {
     const values = Array.isArray(source[key]) ? source[key] : [source[key]];
     if (values.some((value) => object(value) && Object.hasOwn(value, "vize"))) {
-      throw new Error(`${key}.vize is no longer supported; use ${key}.vue or the shared vue: settings`);
+      throw new Error(
+        `${key}.vize is no longer supported; use ${key}.vue or the shared vue: settings`,
+      );
     }
   }
 }
@@ -118,12 +124,7 @@ export async function projectViteConfigSource(source, env, configDir) {
   const lint = source.lint?.vue;
   if (typeof lint === "boolean") overrides.linter = { enabled: lint };
   else if (object(lint)) {
-    const {
-      typecheck: _typecheck,
-      locale: _locale,
-      helpLevel: _helpLevel,
-      ...native
-    } = lint;
+    const { typecheck: _typecheck, locale: _locale, helpLevel: _helpLevel, ...native } = lint;
     overrides.linter = native;
   }
   if (object(source.fmt)) {

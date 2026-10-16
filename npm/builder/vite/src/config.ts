@@ -1,7 +1,10 @@
 import type { ResolvedVizeConfig } from "./types.ts";
 import type { ConfigEnv, LoadConfigOptions, UserConfigExport } from "./types.ts";
 import { createRequire } from "node:module";
-import { VITE_CONFIG_FILE_NAMES, resolveViteConfigExport as projectViteConfigExport } from "../../../cli/src/config/vite-runtime.mjs";
+import {
+  VITE_CONFIG_FILE_NAMES,
+  resolveViteConfigExport as projectViteConfigExport,
+} from "../../../cli/src/config/vite-runtime.mjs";
 
 /**
  * Shared Vize configuration helpers for the Vite plugin package.
