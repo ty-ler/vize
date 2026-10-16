@@ -10,6 +10,8 @@ import tarfile
 import tempfile
 import unittest
 
+import checked_corsa_source_consumers as source_consumers
+
 SPEC = importlib.util.spec_from_file_location("consumer", Path(__file__).with_name("checked-corsa-package-consumer.py"))
 consumer = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(consumer)
@@ -159,6 +161,60 @@ class ConsumerCacheIsolation(unittest.TestCase):
             self.assertEqual(args[args.index("--package") + 1], "checked-corsa-consumer-archive-consumer")
             self.assertNotIn("--workspace", args)
         self.assertEqual(len(runner.consumer_builds), 2)
+
+
+class SourceConsumerContracts(unittest.TestCase):
+    def test_default_canon_is_not_artificially_enabled_or_patched(self):
+        manifest = consumer.tomllib.loads(source_consumers.source_manifest("vize_canon", Path("/source/canon")))
+        self.assertEqual(manifest["dependencies"], {"vize_canon": {"path": "/source/canon"}})
+        self.assertNotIn("patch", manifest)
+
+    def test_all_six_external_sources_must_reach_actual_library_builds(self):
+        root = Path(__file__).resolve().parents[4]
+
+        class Runner:
+            def __init__(self):
+                self.root, self.records, self.builds = root, {}, []
+
+            def consumer(self, name, manifest, source):
+                directory = Path("/external") / name
+                self.records[directory] = (consumer.tomllib.loads(manifest), source)
+                return directory
+
+            def metadata(self, label, directory):
+                dependencies = self.records[directory][0]["dependencies"]
+                requested = dependencies.get("vize", {})
+                features = set(requested.get("features", []))
+                if requested.get("default-features", True):
+                    features.add("default")
+                if "default" in features:
+                    features.update(["glyph", "maestro"])
+                packages = [{"id": name, "name": name, "source": None,
+                             "manifest_path": str(root / "crates" / name / "Cargo.toml")}
+                            for name in ["vize", "vize_canon"]]
+                return {"packages": packages, "resolve": {"nodes": [
+                    {"id": "vize", "features": sorted(features)}, {"id": "vize_canon", "features": ["default", "native"]}]}}
+
+            def build_once(self, provider, mode, directory):
+                self.builds.append((provider, mode, directory))
+
+        runner = Runner()
+        result = source_consumers.qualify_source_consumers(runner, "0.999.0", {}, lambda *args: [])
+        self.assertEqual([(provider, mode) for provider, mode, _ in runner.builds],
+                         [("canon-source", "default-native"), *[("cli-source", name) for name in ["default", "minimal", "glyph", "maestro", "all"]]])
+        for record, graph in zip(list(runner.records.values())[1:], result["cli"]):
+            manifest, source = record
+            self.assertEqual(set(manifest["dependencies"]), {"vize"})
+            self.assertNotIn("patch", manifest)
+            self.assertIn(b"vize::cli::run_from_args", source)
+            self.assertEqual(b"vize::glyph::FormatOptions" in source, "glyph" in graph["features"])
+            self.assertEqual(b"vize::maestro::serve_blocking" in source, "maestro" in graph["features"])
+
+    def test_source_feature_metadata_rejects_registry_or_foreign_provider(self):
+        metadata = {"packages": [{"id": "canon", "name": "vize_canon", "source": consumer.REGISTRY,
+                                   "manifest_path": "/source/Cargo.toml"}], "resolve": {"nodes": []}}
+        with self.assertRaisesRegex(ValueError, "unexpected vize_canon"):
+            source_consumers.package_features(metadata, "vize_canon", Path("/source/Cargo.toml"))
 
 
 if __name__ == "__main__":

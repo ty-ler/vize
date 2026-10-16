@@ -19,6 +19,8 @@ import tarfile
 import time
 import tomllib
 
+from checked_corsa_source_consumers import qualify_source_consumers
+
 
 ALIASES = ("corsa_core", "corsa_jsonrpc", "corsa_client", "corsa_lsp", "corsa_orchestrator", "corsa")
 OWNED = {"vize_" + name for name in ALIASES}
@@ -164,12 +166,15 @@ class Acceptance:
         # This also makes fresh:false evidence reliable on sticky-worker reruns.
         self.command(label + "-clean-root", ["cargo", "clean", "--locked", "--offline", "--package", name, *PROFILE], directory)
 
+    def build_once(self, label, mode, directory, features=()):
+        # Match the native worker's ci profile so dependencies reuse its cache.
+        self.clean_consumer(label + "-" + mode, directory)
+        output = self.command(label + "-" + mode + "-build", ["cargo", "build", "--locked", "--offline", "--lib", "--message-format=json", *PROFILE, *features], directory)
+        self.consumer_builds.append({"provider": label, "mode": mode, "artifact": verify_consumer_build(output, directory)})
+
     def builds(self, label, directory):
-        # Match the native worker's ci profile so registry dependencies reuse its cache.
         for mode, features in [("default", []), ("distributed", ["--features", "distributed"])]:
-            self.clean_consumer(label + "-" + mode, directory)
-            output = self.command(label + "-" + mode + "-build", ["cargo", "build", "--locked", "--offline", "--lib", "--message-format=json", *PROFILE, *features], directory)
-            self.consumer_builds.append({"provider": label, "mode": mode, "artifact": verify_consumer_build(output, directory)})
+            self.build_once(label, mode, directory, features)
             self.command(label + "-" + mode + "-test", ["cargo", "test", "--locked", "--offline", "--lib", *PROFILE, *features], directory)
 
     def run(self):
@@ -185,24 +190,6 @@ class Acceptance:
             require(dependency["package"] == "vize_" + alias and dependency["version"] == "=" + version,
                     "workspace alias/version mismatch")
             providers["vize_" + alias] = (self.root / dependency["path"] / "Cargo.toml", None)
-
-        cli_graphs = []
-        cli_manifest = tomllib.loads((self.root / "crates/vize/Cargo.toml").read_text())
-        # Cargo metadata --all-features selects features on every workspace member.
-        # External CLI consumers isolate the actual vize feature configurations.
-        for label, defaults, features in [("default", True, []), ("minimal", False, []),
-                                         ("glyph", False, ["glyph"]), ("maestro", False, ["maestro"]),
-                                         ("all", False, sorted(cli_manifest["features"]))]:
-            manifest = '[package]\nname = "cli-feature-consumer"\nversion = "0.0.0"\nedition = "2024"\n[workspace]\n[dependencies.vize]\n'
-            manifest += 'path = ' + json.dumps(str(self.root / "crates/vize")) + '\ndefault-features = ' + str(defaults).lower() + '\nfeatures = ' + json.dumps(features) + '\n'
-            directory = self.consumer("cli-" + label, manifest, b"// Metadata-only CLI feature consumer.\n")
-            metadata = self.metadata("cli-" + label + "-metadata", directory)
-            package = next(package for package in metadata["packages"] if package["name"] == "vize")
-            activated = next(node["features"] for node in metadata["resolve"]["nodes"] if node["id"] == package["id"])
-            require(all(feature in activated for feature in features), "CLI requested feature was not activated")
-            require(("glyph" in activated) == (defaults or "glyph" in features)
-                    and ("maestro" in activated) == (defaults or "maestro" in features), "CLI optional feature parity changed")
-            cli_graphs.append({"mode": label, "features": activated, "packages": verify_graph(metadata, version, providers, False)})
 
         fixture = self.root / "tests/_fixtures/ci/checked-corsa-consumer"
         template = (fixture / "Cargo.toml").read_text()
@@ -277,13 +264,16 @@ class Acceptance:
                 and "corsa::orchestrator::RaftConfig" in errors[0]["message"], "default build failed for a reason other than gated RaftConfig")
         require(any(span["is_primary"] and (negative / span["file_name"]).resolve() == (negative / "src/lib.rs").resolve()
                     for span in errors[0]["spans"]), "negative diagnostic must originate in the independent refusal consumer")
+        source_consumers = qualify_source_consumers(self, version, providers, verify_graph)
         require(not self.command("final-source-status", ["git", "status", "--porcelain", "--untracked-files=no"]), "acceptance mutated tracked source")
         require(self.command("final-source-head", ["git", "rev-parse", "HEAD"]).strip() == self.source_sha, "source identity changed")
         receipt = {"sourceSha": self.source_sha, "version": version, "fixtureSha256": digest(source), "commands": self.commands,
-                   "graphs": graphs, "cliMetadata": cli_graphs, "archives": archives, "consumerBuilds": self.consumer_builds,
+                   "graphs": graphs, "cliMetadata": source_consumers["cli"], "canonDefaultNative": source_consumers["canon"],
+                   "archives": archives, "consumerBuilds": self.consumer_builds,
                    "pathDefaultAndDistributedBuilt": True,
                    "archiveDefaultAndDistributedBuilt": True, "consumerTestsPassed": True, "defaultExperimentalImportRefused": True,
-                   "consumerPatches": False, "publicRegistryAcceptance": False, "cliVariantsCompiled": False}
+                   "consumerPatches": False, "publicRegistryAcceptance": False, "cliVariantsCompiled": True,
+                   "canonDefaultNativeCompiled": True}
         (self.output / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
 
 

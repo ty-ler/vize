@@ -36,9 +36,15 @@ the owned registry names are not yet published. Compilation proof comes from
 the subsequent archive-consumer builds and tests. No publishing occurs, and a
 successful receipt explicitly records `publicRegistryAcceptance: false`.
 
-CLI default, minimal, glyph, maestro and all-feature dependency graphs are
-checked through separate `vize` consumers. This is metadata evidence; native
-CLI behavior is qualified by the surrounding native acceptance workflow.
+An independent Canon-only root must compile its default native public APIs.
+CLI default, minimal, glyph, maestro and all-feature configurations also compile
+through separate `vize` library consumers. They reference the public CLI
+entrypoint, native Canon exports, and enabled glyph/maestro/profiling exports.
+Their metadata must preserve the selected features without workspace-wide
+unification. These builds share the CI dependency cache and avoid repeated CLI
+binary linking; CLI runtime behavior is qualified by the surrounding native
+acceptance workflow. The receipt records each actual root compilation before
+setting `canonDefaultNativeCompiled` and `cliVariantsCompiled` to true.
 
 `--output` selects a new evidence directory. Preserve its top-level `*.json`,
 `*.stdout`, `*.stderr` and `package-target/package/*.crate` files as CI artifacts;
