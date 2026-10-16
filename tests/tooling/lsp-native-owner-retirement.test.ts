@@ -48,13 +48,15 @@ function directNativeChildren(parent: number, executable: string) {
       assert.equal(later[19], fields[19], "native birth changed during identity observation");
       assert.equal(Number(later[1]), parent);
       assert.notEqual(later[0], "Z", "the semantic provider must be live before termination");
+      const command = fs.readFileSync(`/proc/${pid}/cmdline`);
       children.push({
         pid,
         birth_ticks: Number(fields[19]),
         parent,
         executable,
         executableSha256: digest(fs.readFileSync(`/proc/${pid}/exe`)),
-        commandBase64: fs.readFileSync(`/proc/${pid}/cmdline`).toString("base64"),
+        commandBase64: command.toString("base64"),
+        commandArguments: command.toString("utf8").split("\0").filter(Boolean),
         wholeStatBefore: before,
         wholeStatAfter: after,
       });
@@ -145,12 +147,19 @@ for (const mode of ["shutdown-exit", "exit", "eof"] as const) {
         assert.match(hoverToText(response as Parameters<typeof hoverToText>[0]), /\bnumber\b/u);
         const children = directNativeChildren(session.processId, native);
         observation.nativeOwners = children;
+        assert.equal(children.length, 2, "this fixture owns an API session and an editor LSP");
         assert.equal(
-          children.length,
+          children.filter((child) => child.commandArguments.includes("--api")).length,
           1,
-          "one actual pinned direct-child provider must have served this session",
+          "the actual API owner must be present before termination",
         );
-        assert.equal(children[0].executableSha256, observation.nativeSha256);
+        assert.equal(
+          children.filter((child) => child.commandArguments.includes("--lsp")).length,
+          1,
+          "the actual editor LSP owner must be present before termination",
+        );
+        for (const child of children)
+          assert.equal(child.executableSha256, observation.nativeSha256);
         if (mode === "shutdown-exit") {
           observation.shutdownResponse = await session.request("shutdown", undefined, 5000);
           assert.equal(observation.shutdownResponse, null);
