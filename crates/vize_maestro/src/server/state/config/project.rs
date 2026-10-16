@@ -81,6 +81,7 @@ impl ServerState {
         dependencies.push(selected);
         dependencies.sort();
         dependencies.dedup();
+        loaded.project.dependencies = dependencies.clone();
         *self.project_contexts.config_dependencies.write() = dependencies;
         true
     }

@@ -218,7 +218,7 @@ impl ServerState {
 
     /// Load workspace options from the shared Vite/TypeScript project snapshot.
     pub fn load_workspace_config(&self, dir: &Path) {
-        self.apply_workspace_config_snapshot(
+        let _ = self.apply_workspace_config_snapshot(
             dir,
             vize_carton::config::load_lsp_config_snapshot(Some(dir)),
         );
@@ -228,29 +228,59 @@ impl ServerState {
         &self,
         dir: &Path,
         loaded: vize_carton::config::LoadedLspConfig,
+    ) -> bool {
+        self.apply_workspace_snapshot(dir, loaded, true)
+    }
+
+    #[cfg(feature = "native")]
+    pub(super) fn apply_retained_workspace_config(
+        &self,
+        dir: &Path,
+        loaded: vize_carton::config::LoadedLspConfig,
     ) {
+        let _ = self.apply_workspace_snapshot(dir, loaded, false);
+    }
+
+    fn apply_workspace_snapshot(
+        &self,
+        dir: &Path,
+        loaded: vize_carton::config::LoadedLspConfig,
+        refresh_tsconfig: bool,
+    ) -> bool {
         #[cfg(feature = "native")]
-        if loaded.valid
-            && self
-                .project_contexts
-                .key
-                .read()
-                .as_ref()
-                .is_none_or(|key| key.tsconfig.is_none())
-        {
-            *self.project_contexts.loaded_config.write() = Some(loaded.clone());
-        }
+        let authored = loaded.clone();
         #[cfg(feature = "native")]
         let mut loaded = loaded;
         if !loaded.valid {
             self.refuse_unconfigured_linter_context(dir);
-            return;
+            #[cfg(feature = "native")]
+            self.project_contexts
+                .config_reload_failed
+                .store(true, Ordering::Release);
+            return false;
         }
         #[cfg(feature = "native")]
-        if !self.apply_tsconfig_config_snapshot(dir, &mut loaded) {
-            self.refuse_unconfigured_linter_context(dir);
-            return;
+        {
+            if refresh_tsconfig && !self.apply_tsconfig_config_snapshot(dir, &mut loaded) {
+                self.refuse_unconfigured_linter_context(dir);
+                self.project_contexts
+                    .config_reload_failed
+                    .store(true, Ordering::Release);
+                return false;
+            }
+            if !refresh_tsconfig {
+                *self.project_contexts.config_dependencies.write() =
+                    loaded.project.dependencies.clone();
+            } else {
+                *self.project_contexts.loaded_config.write() = Some(authored);
+            }
+            *self.project_contexts.applied_config.write() = Some(loaded.clone());
+            self.project_contexts
+                .config_reload_failed
+                .store(false, Ordering::Release);
         }
+        #[cfg(not(feature = "native"))]
+        let _ = refresh_tsconfig;
         self.install_project_linter_context(
             dir,
             &loaded.project.document,
@@ -297,6 +327,7 @@ impl ServerState {
                 &source,
             );
         }
+        true
     }
 
     /// Load LSP options from the shared Vite/TypeScript project snapshot.
