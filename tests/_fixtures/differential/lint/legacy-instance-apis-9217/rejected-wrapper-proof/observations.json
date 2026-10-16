@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "status": "rejected-unsound-no-shipment",
+  "baselineMain": "c83021d545c76cd5cf5ee7e15e6ebdeaf533f35a",
+  "candidateCommit": "bb3c50d6fe496887f0cb73d78e990605a74d4cdf",
+  "driver": "actual retained rule with diagnostic-only shim, cached OXC, Rust 1.99.0; independent of complete SFC/Actions qualification",
+  "records": [
+    {
+      "id": "global-assign-alias",
+      "sourceSha256": "632992bc2fc41c985221f714e1f8a25b16e6e42b3339ef3aa050b48d2a36684f",
+      "baseline": [
+        [
+          163,
+          166
+        ]
+      ],
+      "rejectedCandidate": []
+    },
+    {
+      "id": "inherited-setter",
+      "sourceSha256": "b03af1f0fbff0578ac2999eaaa15032d28df204f6b11fba5d9029757572c5056",
+      "baseline": [
+        [
+          204,
+          207
+        ]
+      ],
+      "rejectedCandidate": []
+    }
+  ]
+}

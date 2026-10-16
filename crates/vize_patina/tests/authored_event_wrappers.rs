@@ -111,3 +111,21 @@ fn independent_component_calls_still_report_inside_foreign_wrappers() {
     let start = source.find("$on('x')").unwrap() as u32;
     assert_eq!(warnings(source), vec![(start, start + 3)]);
 }
+
+// These two intentionally failing boundary regressions explain why #9276 was
+// rejected and closed. They must pass before this candidate can be revived.
+#[test]
+fn global_assign_alias_does_not_prove_foreign_method_ownership() {
+    let source = include_str!(
+        "../../../tests/_fixtures/differential/lint/legacy-instance-apis-9217/rejected-wrapper-proof/global-assign-alias.ts.txt"
+    );
+    assert_eq!(warnings(source).len(), 1);
+}
+
+#[test]
+fn inherited_setters_do_not_prove_foreign_method_ownership() {
+    let source = include_str!(
+        "../../../tests/_fixtures/differential/lint/legacy-instance-apis-9217/rejected-wrapper-proof/inherited-setter.ts.txt"
+    );
+    assert_eq!(warnings(source).len(), 1);
+}

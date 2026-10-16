@@ -1,0 +1,2 @@
+({}).__proto__.__defineSetter__("$on", function () { Reflect.defineProperty(this, "$on", { value: Vue.prototype.$on }); });
+let bus = {}; const methods = {$on: () => {}}; Object.assign(bus, methods); bus.$on("x");
