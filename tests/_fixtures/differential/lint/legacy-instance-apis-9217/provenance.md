@@ -29,10 +29,12 @@ claim every Matrix false-positive label is a product defect. The temporary
 factory/region/receiver gating was removed after this audit.
 
 [Issue #9217](https://github.com/ubugeeei-prod/vize/issues/9217) remains the
-acceptance tracker. The one proven tiny-emitter call still receives the existing
-warning; its sibling unresolved reference also remains visible. The eight
-unresolved identities are not suppressed. Exact source and diagnostic packets
-remain separate from this policy decision.
+acceptance tracker. The subsequent authored-wrapper repair qualifies the one
+proven tiny-emitter call through retained AST and complete lexical-reference
+evidence. Its sibling unresolved reference still receives the existing warning.
+The eight unresolved identities are not suppressed. The original source,
+diagnostic and classification packets remain unchanged; the new exact-source
+acceptance lives in `crates/vize_patina/tests/authored_event_wrappers.rs`.
 
 The tiny-emitter source is Gogocode's
 `packages/gogocode-vue-playground/packages/vue3/src/components/events-api/B.vue`,
