@@ -334,7 +334,7 @@ fn attribute_hyphenation_style(
 }
 
 /// Point the new native type rule at its actual Vize reference.
-pub(super) fn rule_docs_url(rule_name: &str) -> Option<Url> {
+pub(in crate::ide) fn rule_docs_url(rule_name: &str) -> Option<Url> {
     if rule_name == "type/strict-boolean-expressions" {
         return Url::parse(
             "https://github.com/ubugeeei-prod/vize/blob/main/docs/content/rules/type-and-script.md",
