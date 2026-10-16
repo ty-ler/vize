@@ -96,11 +96,11 @@ For Vite Plus projects, keep the Vite Plus client type and append the plugin pac
 
 ## Shared native settings
 
-For Vite+, use the integration helper's `compiler` field. For ordinary Vite, use direct plugin options. Put native CLI/editor settings in the same Vite config's top-level `vize` object; see [Configuration](./configuration.md) for supported syntax, discovery and release availability. Existing dedicated formats remain an optional reference path.
+For Vite+, use the integration helper's `compiler` field. For ordinary Vite, use direct plugin options. Put native CLI/editor settings in the same Vite config's top-level `vue` object; see [Configuration](./configuration.md) for supported syntax, discovery and release availability. Existing dedicated formats remain an optional reference path.
 
 ## Compiler Options
 
-Direct options passed to `vize()` take precedence, followed by inline `config`, then discovered project settings and defaults. A dedicated `vize.config.*` takes priority over Vite config in the same directory. `config: false` opts out of automatic discovery.
+Direct options passed to `vize()` take precedence, followed by inline `config`, then discovered project settings and defaults. Use `vue:` in the Vite configuration; dedicated `vize.config.*` files are no longer supported. `config: false` opts out of automatic discovery.
 
 ```ts
 vize({
@@ -265,7 +265,7 @@ The plugin exposes a compatibility shim for tools that probe for `@vitejs/plugin
 // nuxt.config.ts — using the dedicated Nuxt module
 export default defineNuxtConfig({
   modules: ["@vizejs/nuxt"],
-  vize: {
+  vue: {
     compiler: true,
   },
 });

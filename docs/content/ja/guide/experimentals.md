@@ -29,13 +29,15 @@ RFC ごとの診断、直接呼び出せる API、実装の制限、未対応の
 新しい TypeScript 設定では、推奨する camelCase の名前を使ってください。
 
 ```ts
-import { defineConfig } from "vize";
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  experimentals: {
-    patternedTemplate: true, inTagComment: true,
-    selfComponent: true, strictSlotChildren: true,
-    serverScript: false, vapor: null, jsxVapor: {},
+  vue: {
+    experimentals: {
+      patternedTemplate: true, inTagComment: true,
+      selfComponent: true, strictSlotChildren: true,
+      serverScript: false, vapor: null, jsxVapor: {},
+    },
   },
 });
 ```
@@ -85,7 +87,7 @@ experimentals {
 
 ## 優先順位
 
-共有の `vize.config.*` は、プロジェクト設定を読み込むツールの既定値になります。
+共有の `vite.config.*` の `vue.experimentals` は、プロジェクト設定を読み込むツールの既定値になります。
 Vite プラグインに直接渡したオプションは、共有設定より優先します。
 明示的に無効にする指定も、共有設定を上書きします。
 

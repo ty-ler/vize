@@ -7,7 +7,7 @@ title: JSX と TSX
 # JSX と TSX
 
 > **対応状況:** JSX/TSX はコンパイラ、リンター、型チェッカー、LSP、フォーマッタで扱えます。
-> 専用の `vize.config.*` がない新規プロジェクトでは、Vue JSX の型チェックを既定で有効にします。専用設定がある場合は明示的に有効にしてください。
+> Vue JSX の型チェックはプロジェクトの既定値で有効です。`vite.config.*` の `vue.typeChecker.jsxTypecheck` で変更できます。
 > 新規プロジェクトの既定値のリリース検証は未完了です。React が混在するプロジェクトでは、Vue JSX の型チェックを明示的に無効にしてください。
 > スタンドアロンの `.jsx`/`.tsx` モジュールでは、HMR 対応が主な未完了項目です。
 
@@ -181,13 +181,15 @@ const TodoList = ({ todos, initialActiveId }: TodoListProps) => {
 値は `"vdom"` または `"vapor"` で、デフォルトは `"vdom"` です。
 
 ```ts
-// vize.config.ts
-import { defineConfig } from "vize";
+// vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  compiler: {
-    // Default every .jsx/.tsx component to Vapor output.
-    jsxMode: "vapor",
+  vue: {
+    compiler: {
+      // Default every .jsx/.tsx component to Vapor output.
+      jsxMode: "vapor",
+    },
   },
 });
 ```
@@ -217,7 +219,7 @@ const Classic = () => {
 各コンポーネントの出力先は独立しているため、**1 つのファイルで VDOM と Vapor を併用できます**。
 
 ```tsx
-// vize.config: { compiler: { jsxMode: "vapor" } }
+// vite.config.ts: { vue: { compiler: { jsxMode: "vapor" } } }
 
 // No directive -> takes the configured default (Vapor here).
 export const Dashboard = () => <main>{/* ... */}</main>;
@@ -345,18 +347,19 @@ vize fmt src --write
 
 ## 型チェック
 
-専用の `vize.config.*` がないプロジェクトでは、Vue JSX の型チェックを既定で**有効**にする方針です。
-専用設定がある場合、`typeChecker.jsxTypecheck` は明示的に有効にするまで `false` のままです。
+Vue JSX の型チェックはプロジェクトの既定値で**有効**です。`vite.config.*` の `vue.typeChecker.jsxTypecheck` で変更できます。
 新規プロジェクトの既定値のリリース検証は未完了です。Vue と React が混在する場合は、[Vue JSX の型チェックを明示的に無効にしてください](https://github.com/ubugeeei-prod/vize/blob/main/docs/davinci/decisions/2026-10-10-fresh-lsp-capability-policy.md#react-owned-projects)。Vue SFC の型チェックは引き続き利用できます。
 
 ```ts
-// vize.config.ts
-import { defineConfig } from "vize";
+// vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  typeChecker: {
-    enabled: true,
-    jsxTypecheck: true,
+  vue: {
+    typeChecker: {
+      enabled: true,
+      jsxTypecheck: true,
+    },
   },
 });
 ```

@@ -6,352 +6,165 @@ title: Shared Configuration Reference
 
 # Shared Configuration Reference
 
-Prefer existing `vite.config.*` and `tsconfig.json`; see [Configuration](./configuration.md). This page documents the native settings and optional dedicated formats.
+Use `vue:` in the existing Vite configuration and `vueCompilerOptions` in the
+TypeScript project. See [Configuration](./configuration.md) for a minimal setup.
 
 ## Config Files
 
-Vite config is discovered when no dedicated config exists in the same nearest project directory. The CLI also accepts an explicit `--config`; direct plugin options and explicit editor feature switches take precedence. Dedicated-config paths use the config directory. Vite-owned `typeChecker` paths and scoped `basePath` use the selected Vite `root`; explicit CLI inputs retain their invocation-directory base. For package scopes, use `vize.entries` and the target package's TypeScript project.
+The CLI and editor discover `vite.config.ts`, `.mts`, `.cts`, `.js`, `.mjs` and
+`.cjs` in the nearest project. `package.json`, `tsconfig.json` and `jsconfig.json`
+form project boundaries. Commands can select a Vite config with `--config`.
+Dedicated `vize.config.*` files are no longer supported. A stale dedicated file
+beside a Vite configuration is ignored; a dedicated-only project receives a
+migration error.
 
-The npm package commands and `@vizejs/vite-plugin` load these files from the project root in this priority order:
-
-- `vize.config.pkl`
-- `vize.config.ts`
-- `vize.config.js`
-- `vize.config.mjs`
-- `vize.config.json`
-
-The Rust CLI reads the same config file names in the order above for command-native settings such as
-`check`, `lint`, `lsp`, and `fmt`.
+Vite-owned relative paths use the selected Vite `root`, which resolves from the
+configuration directory. Explicit CLI inputs and `--tsconfig` use the command's
+working directory. Direct plugin options and explicit editor feature switches
+override the shared settings.
 
 ## TypeScript Config
 
 ```ts
-import { defineConfig } from "vize";
+// vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
-export default defineConfig(({ command, mode, isSsrBuild }) => ({
+export default defineConfig({
+  server: { port: 3000 },
+}).withVue({
   compiler: {
-    sourceMap: mode !== "production",
-    ssr: isSsrBuild,
+    sourceMap: true,
     vapor: false,
-    customRenderer: false,
     templateSyntax: "standard",
   },
-  vite: {
-    include: [/\.vue$/],
-    exclude: [/node_modules/],
-    scanPatterns: ["src/**/*.vue"],
-    ignorePatterns: ["node_modules/**", "dist/**", ".git/**"],
-  },
-  linter: {
-    enabled: command !== "build",
-    preset: "happy-path",
-  },
-  typeChecker: {
-    enabled: true,
-    strict: true,
-  },
-  formatter: {
-    printWidth: 100,
-    singleQuote: false,
-  },
-  lsp: {
-    lint: true,
-    typecheck: false,
-    editor: false,
-    formatting: false,
-  },
-  musea: {
-    include: ["src/**/*.art.vue"],
-    basePath: "/__musea__",
-  },
-}));
+  linter: { preset: "happy-path" },
+  formatter: { printWidth: 100 },
+  languageServer: { hover: true },
+});
 ```
+
+The `vue` section accepts `version`, `compiler`, `typeChecker`, `linter`,
+`formatter`, `languageServer`, `globalTypes`, `files`, `ignores`, `basePath`,
+`lib`, `vite`, `musea`, `experimentals`, `dialect`, `name` and `entries`. Use native option names. Unknown canonical
+members are errors. See the [compiler reference](./compiler-configuration-reference.md)
+for compilation modes and [rule options](../rules/options.md) for typed lint options.
 
 ## Vue Type Resolution
 
-Vize does not pin Vue's type surface from the published `vize` package: `vize check`, the language
-server, and package commands resolve `vue`, `@vue/compiler-sfc`, and related ambient types from the
-analyzed project, so Vue 3 patch, minor, and prerelease choices stay under that project's control
-rather than the version used to build Vize. For predictable results, declare the supported Vue
-version in the user project (not via Vize internals), keep `vue`, `@vue/compiler-sfc`, and
-integrations such as Nuxt aligned there, and run `vize check` from the project root or point
-`typeChecker.tsconfig` at the target package; use `typeChecker.corsaPath` only to pick the checker
-binary, never to override Vue type versions. When a project supports multiple Vue ranges, test each
-in its own package matrix so Vize follows the active dependency graph, not a hard-coded type path.
+`vize check` and the language server resolve Vue types from the analyzed project.
+Declare the intended Vue version there and keep `vue`, `@vue/compiler-sfc` and
+framework integrations aligned. Vize's own build dependencies do not choose the
+consumer's Vue version.
+
+Keep ambient declarations, generated auto-import files, path aliases and Vue
+`ComponentCustomProperties` declarations in the project's `tsconfig.json`.
+Standard TypeScript `extends` (including package and array forms) and project
+`references` retain their meaning.
+
+```json
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": { "strict": true, "noEmit": true },
+  "vueCompilerOptions": {
+    "target": 3.5,
+    "strictTemplates": true,
+    "checkUnknownComponents": true
+  },
+  "include": ["src/**/*"]
+}
+```
+
+Supported Vue options include `target`, `strictTemplates`, `checkUnknownProps`,
+`checkUnknownComponents`, `checkUnknownEvents`, `checkUnknownDirectives`,
+`strictVModel`, `strictCssModules`, `jsxSlots`, `inferComponentDollarEl`,
+`inferComponentDollarRefs`, `inferTemplateDollarEl`, `inferTemplateDollarRefs`,
+`inferTemplateSlots`, `inferTemplateAttrs`, `fallthroughAttributes`,
+`checkRequiredFallthroughAttributes`, `resolveStyleImports`, `resolveStyleClassNames`
+and `vapor`. This does not imply support for every `vue-tsc` option.
+
+`target` accepts Vue 2.x through 2.7, Vue 3.x, `99` and `"auto"`. Automatic target
+selection follows the installed project Vue package; explicit `vue.version` in
+Vite takes precedence. Unsupported target values produce a configuration error.
+TypeScript strictness remains in `compilerOptions`; explicit Vize typechecker
+options override the corresponding project defaults.
 
 ## Experimental Flat Entries
 
-Monorepos can describe root defaults and package-scoped overrides with `entries`. Plain object
-configs are normalized to one entry internally, and array exports are accepted by `defineConfig` for
-ESLint-flat-config-style authoring.
+Use the target package's TypeScript project for monorepo checking. Scoped Vue lint
+settings can use `vue.entries`:
 
 ```ts
 export default defineConfig({
-  formatter: {
-    printWidth: 100,
+  root: "apps/web",
+  vue: {
+    entries: [
+      {
+        files: ["src/trusted/**/*.vue"],
+        linter: { rules: { "vue/no-v-html": "off" } },
+      },
+    ],
   },
-  entries: [
-    {
-      name: "web app",
-      basePath: "apps/web",
-      files: ["src/**/*.vue"],
-      typeChecker: {
-        tsconfig: "tsconfig.app.json",
-      },
-    },
-    {
-      name: "ui package",
-      basePath: "packages/ui",
-      files: ["src/**/*.vue"],
-      formatter: {
-        singleQuote: true,
-      },
-    },
-  ],
 });
 ```
+
+Entries accept `basePath`, `files`, `ignores` and `linter`; other sections remain
+project-wide. Do not move TypeScript project references into these entries.
 
 ## Shared Bases with `extends`
 
-A dedicated config file can build on other config files. `extends` takes one specifier or an
-array of them:
+There is no Vize-specific `extends`. Reuse ordinary JavaScript objects:
 
-```json
-{
-  "extends": ["../../vize.base.json", "@acme/vize-config/strict"],
-  "linter": {
-    "rules": {
-      "vue/no-v-html": "off"
-    }
-  }
-}
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+import vpConfig from "./build-options.ts";
+import vueConfig from "./vue-options.ts";
+
+export default defineConfig(vpConfig).withVue(vueConfig);
 ```
 
-- `./`, `../` and absolute paths resolve from the extending file. A directory resolves to its
-  `vize.config.*`, in the [config file order](#config-files).
-- Any other specifier is a package, resolved through Node from the extending file, so
-  `@scope/pkg/subpath` follows the package's `exports`.
-- Bases apply in order, and the extending file wins. Objects merge key by key, `entries` are
-  appended after the bases' entries, and every other value (strings, numbers, arrays such as
-  `files`) is replaced.
-- An item in `entries` can extend a base that has no `entries` of its own. The base adds settings to
-  that entry, and the entry keeps its own `name`, `basePath`, `files` and `ignores`.
-- A cycle, a missing base, or a value that is not a string is an error, not an empty config.
-
-Bases can be JSON, JavaScript, TypeScript or PKL. The `vize` CLI (`check`, `lint`, `fmt`, `lsp`) and
-the language server compose `extends`; the language server reloads when `vize.config.*` changes, not
-when a base file changes. The Vite plugin does not read `extends` yet: import the shared object from
-TypeScript and spread it instead.
-
-## PKL Config
-
-```pkl
-amends "node_modules/vize/pkl/vize.pkl"
-
-compiler {
-  sourceMap = true
-  vapor = false
-  customRenderer = false
-  templateSyntax = "standard"
-}
-
-vite {
-  scanPatterns = new Listing {
-    "src/**/*.vue"
-  }
-}
-
-linter {
-  preset = "happy-path"
-}
-
-typeChecker {
-  enabled = true
-  strict = true
-}
-
-entries = new Listing {
-  new ConfigEntry {
-    name = "web app"
-    basePath = "apps/web"
-    files = new Listing { "src/**/*.vue" }
-    typeChecker {
-      tsconfig = "tsconfig.app.json"
-    }
-  }
-}
-
-lsp {
-  lint = true
-  typecheck = false
-  editor = false
-  formatting = false
-}
-```
-
-## JSON Config
-
-```json
-{
-  "$schema": "./node_modules/vize/schemas/vize.config.schema.json",
-  "compiler": {
-    "sourceMap": true,
-    "vapor": false,
-    "customRenderer": false,
-    "templateSyntax": "standard"
-  },
-  "vite": {
-    "scanPatterns": ["src/**/*.vue"]
-  },
-  "linter": {
-    "preset": "happy-path"
-  },
-  "typeChecker": {
-    "enabled": true,
-    "strict": true
-  },
-  "musea": {
-    "include": ["src/**/*.art.vue"],
-    "basePath": "/__musea__"
-  }
-}
-```
-
-## Compiler reference
-
-[Compiler options and syntax](./compiler-configuration-reference.md) covers the option table,
-template syntax modes, JSX/TSX output modes, and standalone HTML dialect detection.
+This does not change standard TypeScript `extends` or Vite config functions.
 
 ## Static Analysis Options
 
-Use `linter` for the npm lint path:
+Set native Vue lint options in `vue.linter` and language-server options in
+`vue.languageServer`. Vue rules use `vue.linter.rules`; Oxlint rules keep their
+existing `lint.rules` location. See [Lint execution](./lint-execution.md) for
+cross-file and type-aware checks and [Rule Options](../rules/options.md) for
+complete option objects. Unknown rule option fields are rejected.
 
-```ts
-export default defineConfig({
-  linter: {
-    enabled: true,
-    preset: "opinionated",
-    rules: {
-      "vue/require-v-for-key": "error",
-      "vue/no-v-html": "warn",
-    },
-  },
-});
-```
-
-### Lint Rule Options
-
-Some rules accept typed settings under `linter.ruleOptions`; see
-[Rule Options](../rules/options.md) for the complete table. Severity still belongs in
-`linter.rules`.
-
-Use `typeChecker` for the npm check path:
-
-```ts
-export default defineConfig({
-  typeChecker: {
-    enabled: true,
-    strict: true,
-    checkProps: true,
-    checkEmits: true,
-    checkTemplateBindings: true,
-    // Vue 3 Options API template bindings; default-on (matches vue-tsc).
-    optionsApi: true,
-  },
-});
-```
-
-`typeChecker.optionsApi` resolves Vue 3 Options API template bindings
-(`data`/`computed`/`methods`/`inject`/`setup`/`props` on a plain `<script> export default { ... }`).
-It ships in the standard build (not the `legacy` feature), is **on by default** (matching `vue-tsc`),
-and runs only for non-`<script setup>` components, so that common path stays zero-cost; set
-`optionsApi: false` to opt out. Legacy Vue 2.7 / Nuxt 2 support (`typeChecker.legacyVue2`, which adds
-the Nuxt 2 template globals) is a separate `legacy`-build opt-in.
-
-`typeChecker.tsconfig` and `typeChecker.corsaPath` are part of the shared schema, but the
-project-backed Corsa path is the Rust CLI surface today. `corsaPath` is shared by `vize check`,
-type-aware `vize lint`, and `vize lsp` (`typeChecker.tsgoPath` is a deprecated alias); the runtime
-stack is the TypeScript 7 native platform package (`typescript` / `@typescript/typescript-*`) plus
-the Corsa/corsa-bind API layer. Leave `corsaPath` unset unless you need to point Vize at a specific
-installed `lib/tsc` executable. Keep ambient declarations, generated auto-import files, path aliases, and Vue
-`ComponentCustomProperties` declarations in your project `tsconfig.json`, and use a package script
-such as `vize:check:app` for `--tsconfig` or `--corsa-path` overrides.
-
-```json
-{ "typeChecker": { "servers": 1 } }
-```
-
-`typeChecker.servers` sets the maximum number of parallel Corsa CLI processes (`1`–`32`).
-When omitted, Vize auto-tunes the count to the available CPUs and Vue file count. Set `1` to
-check in a single process. Vize partitions independent import graph components and shares
-ambient declarations; interconnected projects can use fewer processes than requested.
-Workspace package dependencies resolve from the importing package in every mode.
+`vue.typeChecker.tsconfig` selects another TypeScript project. Use
+`vue.typeChecker.corsaPath` only to select an installed checker executable, not
+Vue types. `vue.typeChecker.servers` limits parallel checker processes (`1`–`32`);
+when omitted, Vize tunes concurrency to the project and available CPUs.
 
 ## Musea Options
 
-Shared config currently covers the gallery file set and route:
-
-```ts
-export default defineConfig({
-  musea: { include: ["src/**/*.art.vue"], exclude: ["node_modules/**", "dist/**"], basePath: "/__musea__", storybookCompat: false, inlineArt: false },
-});
-```
-
-Pass presentation-focused options such as `previewCss`, `previewSetup`, `tokensPath`, `theme`, and
-`storybookOutDir` directly to `musea()` in `vite.config.ts`.
-
-## Existing dedicated workflow settings
-
-Projects already using a dedicated `vize.config.*` can retain this complete workflow preset. For new projects, prefer the existing Vite configuration in [User Workflows](./workflows.md); published-release availability is explained in [Configuration](./configuration.md).
-
-```ts
-import { defineConfig } from "vize";
-
-export default defineConfig({
-  formatter: {
-    printWidth: 100,
-  },
-  linter: {
-    preset: "happy-path",
-  },
-  typeChecker: {
-    enabled: true,
-    strict: true,
-    tsconfig: "tsconfig.json",
-  },
-  vite: {
-    scanPatterns: ["src/**/*.vue"],
-  },
-});
-```
+See [Musea shared configuration](#musea-shared-configuration). Presentation options
+such as `previewCss`, `previewSetup`, `tokensPath`, `theme` and `storybookOutDir`
+belong in the `musea()` plugin options.
 
 ## Musea shared configuration
 
-Put shared defaults in the top-level `vize.musea` option of `vite.config.*`.
-`musea()` options override individual shared options. Existing `vize.config.*`
-files remain supported and take precedence over shared settings in the same Vite project.
+Keep shared discovery, route and VRT settings in `vue.musea`. Direct `musea()`
+options override corresponding shared values.
 
 ```ts
-// vite.config.ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 import { musea } from "@vizejs/vite-plugin-musea";
 
 export default defineConfig({
   plugins: [musea()],
-  vize: {
+  vue: {
     musea: {
       include: ["src/**/*.art.vue"],
       exclude: ["node_modules/**", "dist/**"],
       basePath: "/__musea__",
-      storybookCompat: false,
       inlineArt: false,
     },
   },
 });
 ```
 
-`musea-vrt` also reads shared `include`, `exclude`, and `vrt` settings from this
-Vite configuration. Shared `vrt.outDir` selects the snapshot directory; plugin
-`vrt` options override the corresponding shared options. `vize musea new` creates
-an example art file and uses Musea's default discovery without generating a
+`musea-vrt` reads shared `include`, `exclude` and `vrt` options from the same Vite
+configuration. `vize musea new` creates an example story without creating a
 dedicated configuration file.

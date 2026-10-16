@@ -23,18 +23,20 @@ diagnostics, direct API entry points, implementation boundaries, and deferred sy
 Prefer the recommended camelCase names in new TypeScript config:
 
 ```ts
-import { defineConfig } from "vize";
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  experimentals: {
-    patternedTemplate: true, inTagComment: true,
-    selfComponent: true, strictSlotChildren: true,
-    serverScript: false, vapor: null, jsxVapor: {},
+  vue: {
+    experimentals: {
+      patternedTemplate: true, inTagComment: true,
+      selfComponent: true, strictSlotChildren: true,
+      serverScript: false, vapor: null, jsxVapor: {},
+    },
   },
 });
 ```
 
-For JSON and Pkl config, the same values are accepted. Use `{}` only when you want to enable the feature while leaving room for future nested options:
+The same option values can be represented as JSON data inside a shared JavaScript object. Use `{}` only when you want to enable the feature while leaving room for future nested options:
 
 ```json
 {
@@ -72,11 +74,11 @@ Each key is a switch:
 
 Missing keys, `false`, and `null` are off. `true` and `{}` are on.
 
-Typed TypeScript and Pkl config should use only `true`, `false`, `null`, or `{}`. The config loader treats other present non-`false` and non-`null` JSON values as enabled for compatibility, but that is not the documented public shape.
+Typed TypeScript configuration should use only `true`, `false`, `null`, or `{}`. The config loader treats other present non-`false` and non-`null` JSON values as enabled for compatibility, but that is not the documented public shape.
 
 ## Precedence
 
-Shared `vize.config.*` values are the default for tools that load project config. Direct Vite plugin options win over shared config, including explicit opt-outs:
+Shared `vue.experimentals` in `vite.config.*` values are the default for tools that load project config. Direct Vite plugin options win over shared config, including explicit opt-outs:
 
 ```ts
 import { defineConfig } from "vite";

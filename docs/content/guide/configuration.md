@@ -1,62 +1,64 @@
 ---
 title: Configuration
-description: Share Vize settings from your existing Vite config and TypeScript project.
+description: Share Vue settings from your existing Vite config and TypeScript project.
 ---
 
 # Configuration
 
-Keep Vize settings in `vite.config.ts` and the TypeScript project in `tsconfig.json`. Defaults need no dedicated Vize configuration file.
+Keep Vue tooling settings in `vue:` in `vite.config.*` and TypeScript settings in
+`tsconfig.json`. The CLI, Vite integration and editor extension read these project
+files. No dedicated Vize configuration is needed.
 
-> [!NOTE]
-> Vize 0.457.0 supports shared Vite configuration in the native CLI and `init` without a dedicated Vize file. Keep the CLI, Vite integration and editor extension up to date to use the shared configuration workflow. The [reference](./configuration-reference.md) covers discovery, precedence and optional dedicated formats.
+## Keep your Vite+ configuration
 
-## Vite+ configuration
+Use the Vize helper around your existing configuration:
 
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
-export default defineConfig({
+const vpConfig = {
+  server: { port: 3000 },
+};
+
+export default defineConfig(vpConfig).withVue({
   compiler: { sourceMap: true },
-  lint: { vize: { preset: "essential" } },
-  fmt: { vize: { printWidth: 100 } },
-  typecheck: { strict: true },
+  linter: { preset: "essential" },
+  formatter: { printWidth: 100 },
 });
 ```
 
-| Location | Controls | Run |
-| --- | --- | --- |
-| `compiler` | Vue compilation | `vp dev`, `vp build` |
-| `lint.vize` | Vue lint rules | `vp run lint` |
-| `fmt.vize` | Vue formatting | `vp run fmt:check` |
-| `typecheck` | Vue type checking | `vp run typecheck` |
-| `pack.vize` | Library declarations | `vp run pack` |
+`withVue` keeps the existing Vite+ options, plugins and hooks. Config objects,
+functions, promises and async functions are supported. An inline `vue: { ... }`
+section is equivalent. See [Shared Vue configuration](./vue-configuration.md) for
+paths, scoped entries and composition.
 
-Use `vp run check` for combined Vize tasks. Built-in `vp check`, `vp lint`, and `vp fmt` retain Vite+'s own behavior. Existing scripts can rename generated tasks to `vize:<name>`; see [task names and overrides](./vite-plus.md#tasks).
+## TypeScript and Vue template checking
 
-## Change one rule
+Keep the existing TypeScript project, including its standard `extends` and
+`references`. Put Vue template compiler options in `vueCompilerOptions`:
 
-Put Vue rules in `lint.vize.rules` and Oxlint rules in `lint.rules`. Use [Rule Options](../rules/options.md) for option objects and [the rule catalogue](../rules/all.md) for complete examples.
-
-```ts
-export default defineConfig({
-  lint: {
-    vize: { rules: { "vue/no-v-html": "error" } },
-    rules: { "no-debugger": "error" },
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "jsx": "preserve"
   },
-});
+  "vueCompilerOptions": {
+    "strictTemplates": true
+  },
+  "include": ["src/**/*"]
+}
 ```
 
-### Lint Rule Options
-
-Use [Rule Options](../rules/options.md) for the complete typed option objects and bad/good examples. Unknown option fields are rejected.
-
-## Choose which features to adopt
-
-Set `compiler`, `typecheck`, `lint.vize`, or `fmt.vize` to `false` to disable that feature. Vize formats Vue files; Oxfmt handles other files. See [ownership and conflict handling](./vite-plus.md#lint-and-formatter-ownership).
+Existing projects using `vue-tsc` can retain their TypeScript project layout.
+`compilerOptions` remains the authority for TypeScript strictness; Vue-specific
+options belong in `vueCompilerOptions`. See the [reference](./configuration-reference.md)
+for the supported Vue options and explicit Vize overrides.
 
 ## Ordinary Vite
 
-Use the plugin for compilation and a top-level `vize` object for settings shared with the CLI and editor. Importing the plugin also supplies the Vite config types.
+Keep the existing Vite configuration and replace the Vue compilation plugin:
 
 ```ts
 import { defineConfig } from "vite";
@@ -64,35 +66,44 @@ import vize from "@vizejs/vite-plugin";
 
 export default defineConfig({
   plugins: [vize()],
-  vize: {
+  vue: {
     linter: { preset: "essential" },
     formatter: { printWidth: 100 },
-    typeChecker: { strict: true },
   },
 });
 ```
 
-## Standalone CLI
+## CLI and editor
 
-Install `vize` and run commands from the target package root. The CLI reads `vite.config.*` and your TypeScript project. Vite+ `compiler`, `typecheck`, `lint.vize`, and `fmt.vize` settings are translated for native commands too. Explicit native settings in top-level `vize` take precedence over that translation.
+Run commands from the target package root. The editor resolves each document's
+project inside the selected workspace and reads its Vite and TypeScript settings.
+A monorepo package keeps its own `tsconfig.json`, references and Vite configuration.
+Use `--tsconfig` to select another TypeScript project explicitly.
 
 ```bash
-vp install -D vize
 vp exec vize check
+vp exec vize lint src
+vp exec vize fmt --check src
 ```
 
-CLI discovery stops at the nearest `package.json`, `tsconfig.json`, or `jsconfig.json`. In a monorepo, run from the target package or use `vize.entries`, and select the editor's workspace folders explicitly.
+Native relative paths in the Vite configuration use the selected Vite `root`.
+A relative `root` resolves from the configuration directory. Explicit CLI file
+arguments and `--tsconfig` remain relative to the command's working directory.
+CLI feature flags and explicit editor feature switches override shared settings.
 
-The editor assigns each document to its nearest project root within the selected workspace. A `package.json`, `tsconfig*.json`, `jsconfig.json`, `vite.config.*`, or `vize.config.*` establishes that root. Without a Vite or Vize config there, the fresh-project defaults apply; for example, `package/src/tsconfig.json` selects `package/src` as a separate project. Invalid config retains the editor's historical defaults. An explicit CLI `--config` remains an error if the selected file is missing or invalid.
+## Migrate removed configuration
 
-With Vite config, `build`, `lint`, `fmt`, and `check` without an input argument use the selected Vite `root`. A relative `root` resolves from the config directory. Vite-owned `typeChecker` paths and scoped `basePath` resolve from that root; dedicated-config paths retain their config-directory base. Explicit CLI file/glob arguments and `--tsconfig` remain relative to the directory where you run the command.
+`vize.config.*` and top-level `vize:` configuration are no longer supported.
+Move their native settings to `vue:` in `vite.config.*`, and TypeScript project
+options to `tsconfig.json`. Remove dedicated configuration files after migrating
+and checking the result. A stale dedicated file alongside a Vite config is ignored;
+a project with only a dedicated config receives a migration error. `vize init` and
+`vize setup` preserve the original files and explain the migration.
 
-Shared global ignores exclude files from CLI discovery and editor lint. An ignored file opened in the editor still receives parser, type and navigation diagnostics. Ordered ignore patterns, including `!` negation, retain their authored meaning.
+There is no Vize-specific `extends`. Import ordinary JavaScript objects and pass
+them to `defineConfig(vpConfig).withVue(vueConfig)` to reuse settings. Standard
+TypeScript `extends` and project `references` continue to work.
 
-## Optional dedicated configuration
-
-An existing `vize.config.*` remains supported and takes priority over Vite config in the same directory. CLI `--config` selects a file explicitly. Direct plugin options and explicit editor feature switches override shared settings; `config: false` disables automatic plugin config loading.
-
-## Detailed reference
-
-The [shared configuration reference](./configuration-reference.md) covers file discovery, dedicated TypeScript/JSON/PKL examples, scoped entries, Vue type resolution, and native LSP/Musea settings. Use the [compiler reference](./compiler-configuration-reference.md) for compiler options and syntax modes, and [Experimentals](./experimentals.md) for opt-in features.
+See [Shared Vue configuration](./vue-configuration.md), the
+[configuration reference](./configuration-reference.md) and the
+[compiler reference](./compiler-configuration-reference.md) for individual options.

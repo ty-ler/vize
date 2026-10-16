@@ -1,313 +1,159 @@
 ---
-title: 共通設定のリファレンス
+title: 共有設定リファレンス
 ---
 
-<!-- Reviewed translation; source: guide/configuration-reference.md; scope: introduction and discovery -->
+<!-- Reviewed translation; source: guide/configuration-reference.md -->
 
-<span id="単独-cli-の設定リファレンス"></span>
+<span id="standalone-configuration-reference"></span>
 
-# 共通設定のリファレンス
+# 共有設定リファレンス
 
-まずは既存の `vite.config.*` と `tsconfig.json` を使ってください。[設定ガイド](./configuration.md)で導入方法を説明しています。このページでは、共通のネイティブ設定と、必要な場合に使える専用設定をまとめます。
+既存の Vite 設定の `vue:` と、TypeScript プロジェクトの `vueCompilerOptions` を
+使います。最小の例は[設定ガイド](./configuration.md)を参照してください。
 
 ## 設定ファイル
 
-最も近いプロジェクトの同じディレクトリに専用設定がない場合は、Vite の設定を読み込みます。CLI の `--config` で明示することもできます。プラグインに直接渡したオプションやエディターで明示した機能の設定が優先されます。専用設定内の相対パスは設定ファイルのディレクトリを基準に解決します。Vite の `typeChecker` 内のパスとスコープの `basePath` は、選択した Vite の `root` が基準です。CLI へ明示した入力は実行ディレクトリを基準にします。パッケージの対象範囲は `vize.entries` と、そのパッケージの TypeScript プロジェクトで指定します。
+CLI とエディタは、最も近いプロジェクトの `vite.config.ts`、`.mts`、`.cts`、
+`.js`、`.mjs`、`.cjs` を探索します。`package.json`、`tsconfig.json`、`jsconfig.json`
+がプロジェクトの境界です。CLI では `--config` で Vite 設定を明示できます。
+`vize.config.*` は廃止しました。Vite 設定と同じ場所に残った専用ファイルは読みません。
+専用設定しかないプロジェクトでは、移行エラーになります。
 
-npm コマンドと `@vizejs/vite-plugin` は、プロジェクトのルートで次の設定ファイルを探します。
-複数ある場合の優先順位は次のとおりです。
+Vite 内の相対パスは、選択された Vite の `root` を基準にします。相対指定の `root`
+自体は設定ファイルのディレクトリから解決します。CLI に直接渡した入力と `--tsconfig`
+はコマンドの作業ディレクトリを基準にします。直接渡したプラグインのオプションと
+明示的なエディタの機能スイッチは、共有設定を上書きします。
 
-- `vize.config.pkl`
-- `vize.config.ts`
-- `vize.config.js`
-- `vize.config.mjs`
-- `vize.config.json`
-
-Rust CLIは、次のようなコマンドネイティブ設定に対して、同じ構成ファイル名を上記の順序で読み取ります。
-`check`、`lint`、`lsp`、および `fmt`。
-
-## TypeScript 設定
+## TypeScript の設定
 
 ```ts
-import { defineConfig } from "vize";
+// vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
-export default defineConfig(({ command, mode, isSsrBuild }) => ({
-  compiler: {
-    sourceMap: mode !== "production",
-    ssr: isSsrBuild,
-    vapor: false,
-    customRenderer: false,
-    templateSyntax: "standard",
-  },
-  vite: {
-    include: [/\.vue$/],
-    exclude: [/node_modules/],
-    scanPatterns: ["src/**/*.vue"],
-    ignorePatterns: ["node_modules/**", "dist/**", ".git/**"],
-  },
-  linter: {
-    enabled: command !== "build",
-    preset: "happy-path",
-  },
-  typeChecker: {
-    enabled: true,
-    strict: true,
-  },
-  formatter: {
-    printWidth: 100,
-    singleQuote: false,
-  },
-  lsp: {
-    lint: true,
-    typecheck: false,
-    editor: false,
-    formatting: false,
-  },
-  musea: {
-    include: ["src/**/*.art.vue"],
-    basePath: "/__musea__",
-  },
-}));
+export default defineConfig({
+  server: { port: 3000 },
+}).withVue({
+  compiler: { sourceMap: true, vapor: false, templateSyntax: "standard" },
+  linter: { preset: "happy-path" },
+  formatter: { printWidth: 100 },
+  languageServer: { hover: true },
+});
 ```
 
-## Vue タイプの解決
+`vue` は `version`、`compiler`、`typeChecker`、`linter`、`formatter`、
+`languageServer`、`globalTypes`、`files`、`ignores`、`basePath`、`lib`、`vite`、
+`musea`、`experimentals`、`dialect`、`name`、`entries` を受け付けます。ネイティブのオプション名を使い、未知のキーは
+エラーになります。コンパイルモードは[コンパイラのリファレンス](./compiler-configuration-reference.md)、
+Lint の型付きオプションは[ルールオプション](../rules/options.md)を参照してください。
 
-`vize check`、言語サーバー、npm コマンドは、解析対象のプロジェクトから `vue`、`@vue/compiler-sfc`、関連するアンビエント型を解決します。Vue の型を、公開された `vize` パッケージや Vize のビルド時のバージョンに固定することはありません。Vue 3 のパッチ版・マイナー版・プレリリース版は、利用するプロジェクト側で選べます。
+## Vue の型解決
 
-結果を再現できるよう、利用する Vue のバージョンを自分のプロジェクトに明示し、`vue`、`@vue/compiler-sfc`、Nuxt などの統合を対応するバージョンにそろえてください。`vize check` はプロジェクトのルートから実行するか、`typeChecker.tsconfig` で対象パッケージの設定を指定します。`typeChecker.corsaPath` は型チェッカーの実行ファイルを選ぶ設定であり、Vue の型のバージョンを変更する設定ではありません。
+`vize check` と言語サーバーは、解析対象プロジェクトから Vue の型を解決します。
+使う Vue のバージョンを対象プロジェクトで宣言し、`vue`、`@vue/compiler-sfc`、
+フレームワーク連携のバージョンを揃えてください。Vize 自体のビルド依存で利用者の
+Vue のバージョンが決まることはありません。
 
-複数の Vue バージョンをサポートするプロジェクトでは、各バージョンをパッケージのテスト行列で検証してください。Vize は固定された型ファイルのパスではなく、その検証環境で有効な依存関係をたどります。
+ambient 宣言、自動 import の生成ファイル、パスエイリアス、Vue の
+`ComponentCustomProperties` はプロジェクトの `tsconfig.json` に置きます。
+TypeScript 標準の `extends`（パッケージと配列の形式を含む）と `references` を使えます。
 
-## 試験的なフラット エントリ
+```json
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": { "strict": true, "noEmit": true },
+  "vueCompilerOptions": {
+    "target": 3.5,
+    "strictTemplates": true,
+    "checkUnknownComponents": true
+  },
+  "include": ["src/**/*"]
+}
+```
 
-モノレポでは、`entries` でルートの既定値とパッケージごとの上書きを指定できます。通常のオブジェクト形式の設定は、内部で1つのエントリーに正規化されます。`defineConfig` は配列のエクスポートにも対応するため、ESLint の flat config のように設定を書けます。
+対応する Vue オプションは `target`、`strictTemplates`、`checkUnknownProps`、
+`checkUnknownComponents`、`checkUnknownEvents`、`checkUnknownDirectives`、
+`strictVModel`、`strictCssModules`、`jsxSlots`、`inferComponentDollarEl`、
+`inferComponentDollarRefs`、`inferTemplateDollarEl`、`inferTemplateDollarRefs`、
+`inferTemplateSlots`、`inferTemplateAttrs`、`fallthroughAttributes`、
+`checkRequiredFallthroughAttributes`、`resolveStyleImports`、`resolveStyleClassNames`、
+`vapor` です。`vue-tsc` の全オプションに対応するという意味ではありません。
+
+`target` は 2.7 までの Vue 2.x、Vue 3.x、`99`、`"auto"` を受け付けます。
+自動選択はプロジェクトにインストールされた Vue に従い、Vite の明示的な `vue.version`
+を優先します。未対応の値は設定エラーになります。TypeScript の厳密さは
+`compilerOptions` で指定し、Vize の明示的な型チェック設定は対応する既定値を上書きします。
+
+## 実験的なフラットエントリ
+
+モノレポの型チェックには対象パッケージの TypeScript プロジェクトを使います。
+スコープごとの Vue Lint は `vue.entries` に置けます。
 
 ```ts
 export default defineConfig({
-  formatter: {
-    printWidth: 100,
-  },
-  entries: [
-    {
-      name: "web app",
-      basePath: "apps/web",
-      files: ["src/**/*.vue"],
-      typeChecker: {
-        tsconfig: "tsconfig.app.json",
+  root: "apps/web",
+  vue: {
+    entries: [
+      {
+        files: ["src/trusted/**/*.vue"],
+        linter: { rules: { "vue/no-v-html": "off" } },
       },
-    },
-    {
-      name: "ui package",
-      basePath: "packages/ui",
-      files: ["src/**/*.vue"],
-      formatter: {
-        singleQuote: true,
-      },
-    },
-  ],
+    ],
+  },
 });
 ```
 
-## `extends` で共通の設定を継承する
+entry には `basePath`、`files`、`ignores`、`linter` を指定できます。
+その他はプロジェクト全体の設定です。TypeScript のプロジェクト参照は移さないでください。
 
-専用の設定ファイルは、ほかの設定ファイルを土台にできます。`extends` には指定子を1つ、または配列で複数指定します。
+## 共有設定と extends
 
-```json
-{
-  "extends": ["../../vize.base.json", "@acme/vize-config/strict"],
-  "linter": {
-    "rules": {
-      "vue/no-v-html": "off"
-    }
-  }
-}
-```
-
-- `./`、`../`、絶対パスは、`extends` を書いたファイルの場所から解決します。ディレクトリを指定すると、[設定ファイルの優先順](#設定ファイル)でその中の `vize.config.*` を読みます。
-- それ以外の指定子はパッケージとして、`extends` を書いたファイルから Node の解決方法で探します。`@scope/pkg/subpath` はパッケージの `exports` に従います。
-- 継承元は順番に適用され、`extends` を書いたファイルの設定が最後に優先されます。オブジェクトはキーごとにマージし、`entries` は継承元のエントリーの後ろに追加します。それ以外の値（文字列、数値、`files` などの配列）は置き換えます。
-- `entries` の各項目も、`entries` を持たない継承元を `extends` できます。継承元の設定がそのエントリーに加わり、`name`、`basePath`、`files`、`ignores` はエントリー自身の値のままです。
-- 循環参照、存在しない継承元、文字列以外の値はエラーになります。空の設定として扱われることはありません。
-
-継承元には JSON、JavaScript、TypeScript、PKL を使えます。`extends` を合成するのは `vize` CLI（`check`、`lint`、`fmt`、`lsp`）と言語サーバーです。言語サーバーは `vize.config.*` の変更で再読み込みしますが、継承元ファイルの変更では再読み込みしません。Vite プラグインはまだ `extends` を読みません。共通の設定オブジェクトを TypeScript で import し、スプレッドしてください。
-
-## PKL 構成
-
-```pkl
-amends "node_modules/vize/pkl/vize.pkl"
-
-compiler {
-  sourceMap = true
-  vapor = false
-  customRenderer = false
-  templateSyntax = "standard"
-}
-
-vite {
-  scanPatterns = new Listing {
-    "src/**/*.vue"
-  }
-}
-
-linter {
-  preset = "happy-path"
-}
-
-typeChecker {
-  enabled = true
-  strict = true
-}
-
-entries = new Listing {
-  new ConfigEntry {
-    name = "web app"
-    basePath = "apps/web"
-    files = new Listing { "src/**/*.vue" }
-    typeChecker {
-      tsconfig = "tsconfig.app.json"
-    }
-  }
-}
-
-lsp {
-  lint = true
-  typecheck = false
-  editor = false
-  formatting = false
-}
-```
-
-## JSON 構成
-
-```json
-{
-  "$schema": "./node_modules/vize/schemas/vize.config.schema.json",
-  "compiler": {
-    "sourceMap": true,
-    "vapor": false,
-    "customRenderer": false,
-    "templateSyntax": "standard"
-  },
-  "vite": {
-    "scanPatterns": ["src/**/*.vue"]
-  },
-  "linter": {
-    "preset": "happy-path"
-  },
-  "typeChecker": {
-    "enabled": true,
-    "strict": true
-  },
-  "musea": {
-    "include": ["src/**/*.art.vue"],
-    "basePath": "/__musea__"
-  }
-}
-```
-
-## コンパイラの詳細
-
-[コンパイラオプションと構文](./compiler-configuration-reference.md)に全オプション、
-テンプレート構文、JSX/TSX の出力モード、単独 HTML の方言検出をまとめています。
-
-## 静的解析オプション
-
-npm lint パスには `linter` を使用します。
+Vize 独自の `extends` はありません。通常の JavaScript オブジェクトを共有します。
 
 ```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+import vpConfig from "./build-options.ts";
+import vueConfig from "./vue-options.ts";
+
+export default defineConfig(vpConfig).withVue(vueConfig);
+```
+
+TypeScript 標準の `extends` と Vite の設定関数は引き続き利用できます。
+
+## 静的解析のオプション
+
+Vue Lint は `vue.linter`、言語サーバーは `vue.languageServer` に設定します。
+Vue のルールは `vue.linter.rules`、Oxlint のルールは従来どおり `lint.rules` に置きます。
+クロスファイル解析と型付き Lint は[Lint の実行](./lint-execution.md)、
+型付きルールオプションは[ルールオプション](../rules/options.md)を参照してください。
+未知のルールオプションはエラーになります。
+
+`vue.typeChecker.tsconfig` で別の TypeScript プロジェクトを選べます。
+`vue.typeChecker.corsaPath` は型チェッカーの実行ファイルを選ぶためだけに使います。
+`vue.typeChecker.servers` は並列プロセス数の上限（`1`〜`32`）です。省略時は
+プロジェクトと CPU に応じて並列度を調整します。
+
+## Musea の共有設定
+
+探索、ルート、VRT は `vue.musea` にまとめます。`musea()` に直接渡すオプションは
+対応する共有値を上書きします。
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+import { musea } from "@vizejs/vite-plugin-musea";
+
 export default defineConfig({
-  linter: {
-    enabled: true,
-    preset: "opinionated",
-    rules: {
-      "vue/require-v-for-key": "error",
-      "vue/no-v-html": "warn",
+  plugins: [musea()],
+  vue: {
+    musea: {
+      include: ["src/**/*.art.vue"],
+      exclude: ["node_modules/**", "dist/**"],
+      basePath: "/__musea__",
+      inlineArt: false,
     },
   },
 });
 ```
 
-### Lint Rule Options
-
-一部のルールは、`linter.ruleOptions` で型付きの設定を受け取ります。全項目は
-[ルール オプション](../rules/options.md)を参照してください。診断の重大度は
-引き続き `linter.rules` で指定します。
-
-npm チェック パスには `typeChecker` を使用します。
-
-```ts
-export default defineConfig({
-  typeChecker: {
-    enabled: true,
-    strict: true,
-    checkProps: true,
-    checkEmits: true,
-    checkTemplateBindings: true,
-    // Vue 3 Options API template bindings; default-on (matches vue-tsc).
-    optionsApi: true,
-  },
-});
-```
-
-`typeChecker.optionsApi` は、Vue 3 の Options API を使ったコンポーネントのテンプレートで、`data`・`computed`・`methods`・`inject`・`setup`・`props` のバインディングを解決します。通常の `<script> export default { ... }` が対象です。標準ビルドに含まれ、`vue-tsc` と同じく **デフォルトで有効**です。`<script setup>` のコンポーネントではこの処理を実行しないため、その経路に追加のコストはかかりません。無効にするには `optionsApi: false` を設定します。
-
-Vue 2.7・Nuxt 2 への対応は、別途 `legacy` ビルドで有効にする機能です。`typeChecker.legacyVue2` によって Nuxt 2 のテンプレートグローバルが追加されます。
-
-`typeChecker.tsconfig` と `typeChecker.corsaPath` は共有スキーマに含まれます。プロジェクトの型情報を使う Corsa の実行経路は、現在の Rust CLI で利用できます。`corsaPath` は `vize check`、型情報を使う `vize lint`、`vize lsp` で共有します。`typeChecker.tsgoPath` は非推奨の別名です。実行時は TypeScript 7 のネイティブプラットフォームパッケージ（`typescript` / `@typescript/typescript-*`）と、Corsa / corsa-bind の API を使います。
-
-インストール済みの特定の `lib/tsc` 実行ファイルを指定する必要がなければ、`corsaPath` は省略してください。アンビエント宣言、自動生成された auto-import ファイル、パスエイリアス、Vue の `ComponentCustomProperties` の宣言は、プロジェクトの `tsconfig.json` に残します。`--tsconfig` や `--corsa-path` をコマンドで上書きする場合は、`vize:check:app` などのパッケージスクリプトにまとめます。
-
-```json
-{
-  "typeChecker": {
-    "servers": 1
-  }
-}
-```
-
-`typeChecker.servers` は、将来の Corsa ワーカープールのために予約された設定です。現在のプロジェクトセッションの直接実行では `1` のみをサポートします。より大きい値を指定すると、並列数が増えるのではなく、エラーになります。
-
-<span id="美術館のオプション"></span>
-
-## Musea のオプション
-
-共有構成は現在、ギャラリー ファイル セットとルートをカバーしています。
-
-```ts
-export default defineConfig({
-  musea: {
-    include: ["src/**/*.art.vue"],
-    exclude: ["node_modules/**", "dist/**"],
-    basePath: "/__musea__",
-    storybookCompat: false,
-    inlineArt: false,
-  },
-});
-```
-
-`previewCss`、`previewSetup`、`tokensPath`、`theme`、`storybookOutDir` など、表示に関する設定は `vite.config.ts` の `musea()` に直接渡してください。
-
-## 既存の専用設定を使うワークフロー
-
-専用の `vize.config.*` をすでに使っているプロジェクトでは、次の設定例を引き続き利用できます。新しく導入する場合は、[日常の開発ワークフロー](./workflows.md)にある既存の Vite 設定を使います。公開済みリリースの対応状況は[設定ガイド](./configuration.md)を参照してください。
-
-```ts
-import { defineConfig } from "vize";
-
-export default defineConfig({
-  formatter: {
-    printWidth: 100,
-  },
-  linter: {
-    preset: "happy-path",
-  },
-  typeChecker: {
-    enabled: true,
-    strict: true,
-    tsconfig: "tsconfig.json",
-  },
-  vite: {
-    scanPatterns: ["src/**/*.vue"],
-  },
-});
-```
+`previewCss`、`previewSetup`、`tokensPath`、`theme`、`storybookOutDir` などの表示用設定は
+`musea()` のオプションに置きます。`musea-vrt` も同じ Vite 設定の `include`、`exclude`、
+`vrt` を読みます。`vize musea new` は専用設定を作らず、ストーリーの例を生成します。

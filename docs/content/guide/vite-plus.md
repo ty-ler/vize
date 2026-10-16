@@ -39,7 +39,7 @@ export default defineConfig({
   compiler: { sourceMap: true },
   typecheck: { strict: true },
   lint: {
-    vize: {
+    vue: {
       preset: "essential",
       rules: { "vue/no-v-html": "error" },
       typecheck: true,
@@ -50,7 +50,7 @@ export default defineConfig({
     ignorePatterns: ["dist/**"],
   },
   fmt: {
-    vize: { singleQuote: true },
+    vue: { singleQuote: true },
     ignorePatterns: ["dist/**"],
   },
   server: { port: 3000 },
@@ -61,16 +61,16 @@ export default defineConfig({
 | --- | --- |
 | `compiler` | Vize compiler and plugin options; `false` keeps the existing Vue compiler |
 | `typecheck` | Native typechecker options; `false` disables native checks |
-| `lint.vize` | Native lint rules, optional `typecheck`, `locale`, and `helpLevel`; `false` disables native lint |
+| `lint.vue` | Native lint rules, optional `typecheck`, `locale`, and `helpLevel`; `false` disables native lint |
 | Other `lint` fields | The installed Vite+ / Oxlint configuration |
-| `fmt.vize` | Native Vue formatter options; `false` returns Vue formatting to Oxfmt |
+| `fmt.vue` | Native Vue formatter options; `false` returns Vue formatting to Oxfmt |
 | Other `fmt` fields | The installed Vite+ / Oxfmt configuration; `ignorePatterns` also excludes native Vue formatting |
-| `pack.vize` | Native declaration and map options |
+| `pack.vue` | Native declaration and map options |
 | Other `pack` fields | The installed Vite+ / tsdown configuration |
 | `vize` | Shared native config, including scopes, globals, and language-server settings |
 
 `vize.lint.typecheck` is also supported. When both spellings are provided,
-`lint.vize` wins for overlapping properties. The typechecker runs once per task,
+`lint.vue` wins for overlapping properties. The typechecker runs once per task,
 including `check` when lint also requests it.
 
 The helper removes Vize-specific fields before passing config to Vite+.
@@ -141,12 +141,12 @@ rules are disabled in Oxlint by default, using the installed tool's rule catalog
 Explicit `lint.rules` and overrides can re-enable a rule.
 
 Vize formats `**/*.vue`, which is excluded from Oxfmt by default. Other files stay
-with Oxfmt. Set `lint.vize: false` or `fmt.vize: false` to return the corresponding
+with Oxfmt. Set `lint.vue: false` or `fmt.vue: false` to return the corresponding
 responsibility to Vite+. The integration option `conflicts: false` disables
 automatic overlap handling.
 
 `fmt.ignorePatterns` applies to both formatters, so generated or vendored Vue files
-stay untouched. `lint.vize.locale` (`en`, `ja`, or `zh`) and `helpLevel` (`full`,
+stay untouched. `lint.vue.locale` (`en`, `ja`, or `zh`) and `helpLevel` (`full`,
 `short`, or `none`) control native diagnostics without passing unsupported flags
 to Oxlint.
 
@@ -162,7 +162,7 @@ export default defineConfig({
     entry: ["src/index.ts"],
     outDir: "dist",
     format: ["esm"],
-    vize: {
+    vue: {
       dts: true,
       declarationMap: true,
       sourcemap: true,
@@ -171,7 +171,7 @@ export default defineConfig({
 });
 ```
 
-Vue library bundling uses Vize's Rolldown integration. Providing `pack.vize`
+Vue library bundling uses Vize's Rolldown integration. Providing `pack.vue`
 enables native declaration generation by default; `dts: false` opts out.
 Declarations are emitted after a successful bundle, and type errors fail the
 pack command. Native declaration generation replaces tsdown's declaration pass
@@ -181,7 +181,7 @@ for that pack entry, so it understands Vue SFCs.
 `tsconfig` selects a TypeScript project. `declarationMap` overrides that project's
 map setting without modifying authored tsconfig files. `sourcemap` controls
 compiler and bundle maps. Each entry in a `pack` array can configure `vize`
-independently; `pack.vize: false` leaves that entry with Vite+.
+independently; `pack.vue: false` leaves that entry with Vite+.
 
 ## Editor setup
 

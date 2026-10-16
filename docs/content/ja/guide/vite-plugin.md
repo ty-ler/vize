@@ -95,20 +95,17 @@ Vite+ のプロジェクトでは、既存の Vite+ のクライアント型を�
 
 Vite+ では統合用の helper の `compiler` フィールドに設定します。
 通常の Vite では、`vize({ ... })` にオプションを直接渡します。
-CLI やエディターと共有するネイティブ設定は、同じ Vite 設定のトップレベルの `vize` にまとめます。
+CLI やエディターと共有するネイティブ設定は、同じ Vite 設定のトップレベルの `vue` にまとめます。
 [設定ガイド](./configuration.md)に、対応する記法、設定ファイルの検索方法、リリース状況をまとめています。
 
-専用の `vize.config.*` ファイルも、必要に応じて使えます。
-`"vize"` から `defineConfig` を import する場合は、`vize` を直接の依存関係に追加してください。
-[単独設定リファレンス](./configuration-reference.md)に、ファイルの検索方法、TypeScript/JSON/PKL の例、スコープ別の設定をまとめています。
-Vite+ の統合タスクでは、`vite.config.ts` の helper を使います。
+共有するネイティブ設定は `vue:` に置いてください。[設定リファレンス](./configuration-reference.md)に対応するオプションをまとめています。
 
 <span id="compiler-options"></span>
 
 ## コンパイラ オプション
 
 `vize()` に直接渡したオプションが優先され、次にインラインの `config`、検索で見つかったプロジェクト設定、既定値の順に適用します。
-同じディレクトリに両方ある場合は、`vize.config.*` が Vite 設定より優先されます。
+専用の `vize.config.*` は廃止しました。`vite.config.*` の `vue:` に移してください。
 `config: false` で設定ファイルの自動検索を無効にできます。
 
 ```ts
@@ -279,7 +276,7 @@ Nuxt と連携できるよう、プラグインは Vite の環境ごとに `defi
 // nuxt.config.ts — using the dedicated Nuxt module
 export default defineNuxtConfig({
   modules: ["@vizejs/nuxt"],
-  vize: {
+  vue: {
     compiler: true,
   },
 });

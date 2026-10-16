@@ -99,13 +99,15 @@ Vize compiles `.jsx`/`.tsx` Vue components to either Virtual DOM or
 default** for components that do not opt in explicitly; it defaults to `"vdom"`.
 
 ```ts
-// vize.config.ts
-import { defineConfig } from "@vizejs/vite-plugin";
+// vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  compiler: {
-    // Default every .jsx/.tsx component to Vapor output.
-    jsxMode: "vapor",
+  vue: {
+    compiler: {
+      // Default every .jsx/.tsx component to Vapor output.
+      jsxMode: "vapor",
+    },
   },
 });
 ```
@@ -136,7 +138,7 @@ const Classic = () => {
 Because each component is routed independently, a **single module can mix both backends**:
 
 ```tsx
-// vize.config: { compiler: { jsxMode: "vapor" } }
+// vite.config.ts: { vue: { compiler: { jsxMode: "vapor" } } }
 
 // No directive -> takes the configured default (Vapor here).
 export const Dashboard = () => <main>{/* ... */}</main>;

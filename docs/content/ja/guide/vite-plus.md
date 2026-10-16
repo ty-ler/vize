@@ -20,7 +20,7 @@ export default defineConfig({});
 
 既存の Vue plugin の import と `vue()` を削除します。
 [移行ガイド](./migration.md)にそのまま使える差分を記載しています。
-統合のタスクだけを使う場合、別の `vize.config.ts` は不要です。
+CLI、エディタ、統合タスクは `vite.config.*` と `tsconfig.json` を共有します。
 
 ## 設定
 
@@ -31,7 +31,7 @@ export default defineConfig({
   compiler: { sourceMap: true },
   typecheck: { strict: true },
   lint: {
-    vize: {
+    vue: {
       preset: "essential",
       rules: { "vue/no-v-html": "error" },
       locale: "ja",
@@ -44,8 +44,8 @@ export default defineConfig({
 });
 ```
 
-Vue の compiler 設定は `compiler`、Vize のルールは `lint.vize`、Vue のフォーマットは
-`fmt.vize`、型チェックは `typecheck` に設定します。その他の `lint`・`fmt` は Vite+ の
+Vue の compiler 設定は `compiler`、Vize のルールは `lint.vue`、Vue のフォーマットは
+`fmt.vue`、型チェックは `typecheck` に設定します。その他の `lint`・`fmt` は Vite+ の
 Oxlint・Oxfmt 設定です。[設定ガイド](./configuration.md)に対応表をまとめています。
 
 <span id="tasks"></span>
@@ -88,12 +88,12 @@ Vue ルールの重複はデフォルトで調整され、明示的な `lint.rul
 
 Vize は Vue ファイル、Oxfmt はその他のファイルをフォーマットします。
 `fmt.ignorePatterns` は両方に適用されます。
-`lint.vize: false` または `fmt.vize: false` で、その担当を Vite+ に戻せます。
+`lint.vue: false` または `fmt.vue: false` で、その担当を Vite+ に戻せます。
 `compiler: false` なら既存の Vue compiler plugin を保持します。
 
 ## 次の設定
 
 - [移行](./migration.md) — 既存の import・plugin・script から置き換える。
 - [設定](./configuration.md) — 必要な設定場所を選ぶ。
-- [型宣言・共有設定・editor の詳細（英語）](../../guide/vite-plus.md) — `pack.vize`、`extends` と高度なオプション。
+- [型宣言・共有設定・editor の詳細（英語）](../../guide/vite-plus.md) — `pack.vue`、`extends` と高度なオプション。
 - [エディター設定（英語）](../../guide/vite-plus-editor.md) — エディターと統合設定の役割。

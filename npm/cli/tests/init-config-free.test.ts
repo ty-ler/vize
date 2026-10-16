@@ -78,22 +78,29 @@ test("setup scaffolds a strict TypeScript project and preserves its project refe
   }
 });
 
-test("init and setup preserve every supported dedicated config byte-for-byte", async () => {
+test("init and setup preserve removed dedicated files beside a shared Vite config", async () => {
   for (const filename of VIZE_CONFIG_FILES) {
     const root = temporaryProject(`preserve-${path.extname(filename).slice(1)}`);
     try {
       writeManifest(root, { name: "fixture", private: true });
       const source = "// User-owned configuration; never replace or parse during init.\n";
       write(root, filename, source);
+      write(root, "vite.config.mjs", "export default { vue: {} };\n");
       const tsconfig = '{"files":[],"references":[{"path":"./app"}]}\n';
       write(root, "tsconfig.json", tsconfig);
 
-      await runInit(root, TYPECHECK_ARGS);
+      const init = await runInit(root, TYPECHECK_ARGS);
+      assert.match(init.output, /removed config:.*not read/u);
       const setup = setupProject({ root, install: false });
 
       assert.equal(read(root, filename), source, filename);
       assert.equal(read(root, "tsconfig.json"), tsconfig, filename);
       assert.ok(setup.preservedFiles.includes(filename), filename);
+      assert.ok(
+        setup.migrationWarnings.some((warning) =>
+          warning.includes(`${filename} is no longer read`),
+        ),
+      );
       assert.deepEqual(
         fs.readdirSync(root).filter((name) => name.startsWith("vize.config.")),
         [filename],
@@ -150,5 +157,29 @@ test("the packed init command configures Vite+ without a dedicated Vize config",
     assert.doesNotMatch(output, /will create vize\.config/u);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("init and setup reject dedicated-only projects before changing any files", async () => {
+  for (const filename of VIZE_CONFIG_FILES) {
+    const root = temporaryProject("removed-config");
+    try {
+      writeManifest(root, { name: "fixture", private: true });
+      write(root, filename, "// Keep user settings intact.\n");
+      const manifest = read(root, "package.json");
+      await assert.rejects(
+        runInit(root, TYPECHECK_ARGS),
+        /no longer supported; move Vue settings to vue:/u,
+      );
+      assert.throws(
+        () => setupProject({ root, install: false }),
+        /no longer supported; move Vue settings to vue:/u,
+      );
+      assert.equal(read(root, "package.json"), manifest);
+      assert.equal(read(root, filename), "// Keep user settings intact.\n");
+      assert.equal(fs.existsSync(path.join(root, "tsconfig.json")), false);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   }
 });
