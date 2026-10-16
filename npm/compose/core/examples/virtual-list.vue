@@ -4,7 +4,7 @@ import { useVirtualList } from "@vizejs/composable/virtual-list";
 
 const query = ref("");
 const searchId = useId();
-const helpId = useId();
+const scrollHelpId = useId();
 const guides = Array.from({ length: 1_000 }, (_, index) => ({
   id: index + 1,
   title: `Guide ${String(index + 1).padStart(4, "0")}`,
@@ -38,14 +38,14 @@ watch(query, () => scrollTo(0), { flush: "post" });
       </button>
     </div>
     <output aria-live="polite">{{ matches.length }} matching guides</output>
-    <p :id="helpId">Focus the list and use Arrow keys, Page Down, Home or End.</p>
+    <p :id="scrollHelpId">Focus the list and use Arrow keys, Page Down, Home or End.</p>
     <div
       v-bind="containerProps"
       role="region"
       aria-label="Guide catalogue"
-      :aria-describedby="helpId"
+      :aria-describedby="scrollHelpId"
       tabindex="0"
-      class="virtual-list-container"
+      class="guide-catalogue"
     >
       <div v-bind="wrapperProps" role="list" aria-label="Matching guides">
         <div
@@ -54,7 +54,7 @@ watch(query, () => scrollTo(0), { flush: "post" });
           role="listitem"
           :aria-posinset="row.index + 1"
           :aria-setsize="matches.length"
-          class="virtual-list-row"
+          class="guide-row"
         >
           {{ row.data.title }}
         </div>
@@ -71,13 +71,12 @@ watch(query, () => scrollTo(0), { flush: "post" });
 </template>
 
 <style scoped>
-.virtual-list-container {
+.guide-catalogue {
   height: 200px;
   border: 1px solid #888;
   border-radius: 6px;
 }
-
-.virtual-list-row {
+.guide-row {
   height: 40px;
   box-sizing: border-box;
   padding: 8px 12px;
