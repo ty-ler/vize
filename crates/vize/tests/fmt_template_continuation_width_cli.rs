@@ -1,5 +1,8 @@
 //! Whole configured check/write/fixed-point custody for inline template syntax.
 #![cfg(feature = "glyph")]
+#[path = "support/vite_config.rs"]
+mod vite_config;
+
 use std::{error::Error, fs, path::Path, process::Command};
 
 fn replay(
@@ -12,7 +15,14 @@ fn replay(
     let project = tempfile::tempdir()?;
     let root = project.path();
     fs::write(root.join("Example.vue"), source)?;
-    fs::write(root.join(name), config)?;
+    let native = std::str::from_utf8(config)?;
+    let native = native
+        .strip_prefix("export default ")
+        .unwrap_or(native)
+        .trim()
+        .trim_end_matches(';');
+    let config = vite_config::source(native).into_bytes();
+    fs::write(root.join(name), &config)?;
     for (pass, mode) in ["--check", "--write", "--write", "--write", "--check"]
         .iter()
         .enumerate()
@@ -53,14 +63,14 @@ fn all_whole_vectors_and_original_json_ts_configs_keep_complete_bytes() -> Resul
         let source = fs::read(directory.join(case["input"].as_str().ok_or("missing input")?))?;
         let expected = fs::read(directory.join(case["output"].as_str().ok_or("missing output")?))?;
         let config = serde_json::to_vec(&serde_json::json!({ "formatter": case["options"] }))?;
-        replay(&source, &expected, "vize.config.json", &config, false)?;
+        replay(&source, &expected, "vite.config.mjs", &config, false)?;
     }
     let source = fs::read(directory.join("original-example.input"))?;
     let expected = fs::read(directory.join("original-example.expected"))?;
     for (name, fixture, explicit) in [
-        ("vize.config.ts", "vize.config.ts.txt", false),
-        ("explicit.ts", "vize.config.ts.txt", true),
-        ("explicit.json", "vize.config.json.txt", true),
+        ("vite.config.mjs", "vize.config.ts.txt", false),
+        ("explicit-js.mjs", "vize.config.ts.txt", true),
+        ("explicit-json.mjs", "vize.config.json.txt", true),
     ] {
         replay(
             &source,

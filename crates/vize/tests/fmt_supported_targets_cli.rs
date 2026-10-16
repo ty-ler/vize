@@ -1,6 +1,9 @@
 #![cfg(test)]
 #![expect(clippy::disallowed_macros, reason = "fixtures use std strings")]
 #![expect(clippy::disallowed_types, reason = "fixtures use std strings")]
+#[path = "support/vite_config.rs"]
+mod vite_config;
+
 use std::{
     fs,
     path::Path,
@@ -28,8 +31,9 @@ fn fmt_check_supports_root_relative_json_paths_for_config_entries() {
     let project = tempfile::tempdir().unwrap();
     write_project_file(
         project.path(),
-        "vize.config.json",
-        r#"{
+        "vite.config.mjs",
+        &vite_config::source(
+            r#"{
   "entries": [
     {
       "name": "design-system",
@@ -38,6 +42,7 @@ fn fmt_check_supports_root_relative_json_paths_for_config_entries() {
     }
   ]
 }"#,
+        ),
     );
     write_project_file(
         project.path(),
@@ -50,7 +55,7 @@ fn fmt_check_supports_root_relative_json_paths_for_config_entries() {
         .args([
             "fmt",
             "--config",
-            "vize.config.json",
+            "vite.config.mjs",
             "--check",
             "src/package.json",
         ])
