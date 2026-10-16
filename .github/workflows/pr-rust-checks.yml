@@ -193,7 +193,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(inputs.rust-plan).testMatrix }}
     env:
-      CARGO_BUILD_JOBS: "12"
+      CARGO_BUILD_JOBS: ${{ github.event_name == 'pull_request' && '24' || '12' }}
       VIZE_NUXT_CONFIG_ITERATIONS: "100"
       RUST_TEST_THREADS: "4"
       NEXTEST_PROFILE: ${{ github.event_name == 'merge_group' && 'full' || 'pr' }}
