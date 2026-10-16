@@ -119,6 +119,34 @@ fn same_range_rules_use_configured_diagnostic_identity_and_full_payload() {
 }
 
 #[test]
+fn client_projected_diagnostics_recover_the_published_rule_documentation() {
+    let (_directory, state, uri) = project();
+    for published in diagnostics() {
+        let mut projected = published.clone();
+        projected.code_description = None;
+        assert_eq!(
+            actions(&state, &uri, &[projected]),
+            expected_actions(&uri, &published, true)
+        );
+    }
+}
+
+#[test]
+fn supplied_documentation_and_client_payload_remain_unchanged() {
+    let (_directory, state, uri) = project();
+    let mut supplied = diagnostics()[0].clone();
+    supplied.code_description = Some(tower_lsp::lsp_types::CodeDescription {
+        href: Url::parse("https://example.test/client-rule-documentation").unwrap(),
+    });
+    supplied.data = Some(serde_json::json!({"client":"retained","revision":7}));
+    supplied.message = "Client explanation retained".into();
+    assert_eq!(
+        actions(&state, &uri, std::slice::from_ref(&supplied)),
+        expected_actions(&uri, &supplied, true)
+    );
+}
+
+#[test]
 fn foreign_rule_source_numeric_code_and_stale_range_do_not_select_lint_actions() {
     let (_directory, state, uri) = project();
     let original = diagnostics()[0].clone();
