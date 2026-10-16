@@ -11,6 +11,9 @@ test("prose and tooling metadata do not rebuild product apps", () => {
     apps: false,
   });
   assert.equal(planCheckInputs(["tests/tooling/plan-source-checks.test.ts"]).apps, false);
+  assert.equal(planCheckInputs(["npm/compose/core/examples/README.md"]).apps, false);
+  assert.equal(planCheckInputs(["npm/compose/core/fixtures/invalid.vue"]).apps, false);
+  assert.equal(planCheckInputs(["npm/compose/core/examples/invalid.fixture.vue"]).apps, false);
 });
 
 test("product, compiled documentation and cache changes retain app checks", () => {
@@ -21,6 +24,10 @@ test("product, compiled documentation and cache changes retain app checks", () =
     "npm/builder/vite/src/index.ts",
     "npm/cli/schemas/vize.config.schema.json",
     "playground/src/App.vue",
+    "npm/compose/core/examples/virtual-list.vue",
+    "npm/compose/core/src/virtual-list.ts",
+    "docs/theme/components/Guide.vue",
+    "examples/html-conformance/src/index.html",
     "docs/davinci/plan/canonical-corpus/budgets.toml",
     "docs/davinci/plan/fact-alpha-schemas.md",
     ".github/actions/setup-rust-sticky-cache/action.yml",
@@ -54,6 +61,7 @@ test("changing selector and task definitions exercises every affected consumer",
   for (const path of [
     ".github/workflows/check.yml",
     "tools/support/compat/github/plan-check-inputs.ts",
+    "tools/support/github/opinionated-source-inputs.ts",
     "tools/config/vite-plus/tasks/check.ts",
   ]) {
     const plan = planCheckInputs([path]);
