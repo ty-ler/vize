@@ -114,12 +114,13 @@
     "event": "pull_request",
     "needs": {
       "pr-source-plan": { "result": "success" },
-      "wit-contracts": { "result": "skipped" }
+      "wit-contracts": { "result": "skipped" },
+      "nuxt-module-qualification": { "result": "skipped" }
     },
     "expected": {
       "result": {
         "exitCode": 0,
-        "message": "test-report gate: all 2 needed jobs are accounted for. 1 succeeded; 1 skipped on a pull request by design: wit-contracts."
+        "message": "test-report gate: all 3 needed jobs are accounted for. 1 succeeded; 2 skipped on a pull request by design: nuxt-module-qualification, wit-contracts."
       }
     }
   },
@@ -129,12 +130,41 @@
     "event": "merge_group",
     "needs": {
       "pr-source-plan": { "result": "success" },
-      "wit-contracts": { "result": "skipped" }
+      "wit-contracts": { "result": "skipped" },
+      "nuxt-module-qualification": { "result": "success" }
     },
     "expected": {
       "result": {
         "exitCode": 1,
-        "message": "test-report gate: 1 of 2 needed jobs did not succeed.\n  - wit-contracts: skipped\ntest-report is a required status check, so it must not pass while a job it aggregates is red.\nOnly these jobs may skip on a pull request: ."
+        "message": "test-report gate: 1 of 3 needed jobs did not succeed.\n  - wit-contracts: skipped\ntest-report is a required status check, so it must not pass while a job it aggregates is red.\nOnly these jobs may skip on a pull request: ."
+      }
+    }
+  },
+  {
+    "name": "check-queue-nuxt-cannot-skip",
+    "mode": "check",
+    "event": "merge_group",
+    "needs": {
+      "pr-source-plan": { "result": "success" },
+      "wit-contracts": { "result": "success" },
+      "nuxt-module-qualification": { "result": "skipped" }
+    },
+    "expected": {
+      "result": {
+        "exitCode": 1,
+        "message": "test-report gate: 1 of 3 needed jobs did not succeed.\n  - nuxt-module-qualification: skipped\ntest-report is a required status check, so it must not pass while a job it aggregates is red.\nOnly these jobs may skip on a pull request: ."
+      }
+    }
+  },
+  {
+    "name": "check-missing-nuxt",
+    "mode": "check",
+    "event": "merge_group",
+    "needs": { "wit-contracts": { "result": "success" } },
+    "expected": {
+      "error": {
+        "name": "Error",
+        "message": "Check needs context is missing nuxt-module-qualification"
       }
     }
   },
@@ -175,7 +205,7 @@
     }
   },
   {
-    "name": "rust-queue-full-only",
+    "name": "rust-queue-requires-parallel-doctests",
     "mode": "rust",
     "event": "merge_group",
     "runRust": "true",
@@ -187,32 +217,35 @@
     },
     "expected": {
       "result": {
-        "exitCode": 0,
-        "message": "test-report gate: all 3 needed jobs are accounted for. 3 succeeded; 0 skipped on a pull request by design."
+        "exitCode": 1,
+        "message": "test-report gate: 1 of 4 needed jobs did not succeed.\n  - pr-rust-build: skipped\ntest-report is a required status check, so it must not pass while a job it aggregates is red.\nOnly these jobs may skip on a pull request: ."
       }
     }
   },
   {
-    "name": "rust-pr-false-preserves-early-return",
+    "name": "rust-pr-disabled-plan-refused",
     "mode": "rust",
     "event": "pull_request",
     "runRust": "false",
     "needs": null,
     "expected": {
-      "result": {
-        "exitCode": 0,
-        "message": "Rust source plan selects no crates; archive and shards skipped."
+      "error": {
+        "name": "Error",
+        "message": "Rust source checks must run for every pull request and merge group"
       }
     }
   },
   {
-    "name": "rust-queue-refuses-false",
+    "name": "rust-queue-disabled-plan-refused",
     "mode": "rust",
     "event": "merge_group",
     "runRust": "false",
     "needs": {},
     "expected": {
-      "error": { "name": "Error", "message": "Merge queue must select the complete Rust workspace" }
+      "error": {
+        "name": "Error",
+        "message": "Rust source checks must run for every pull request and merge group"
+      }
     }
   },
   {
@@ -229,7 +262,12 @@
     "event": "pull_request",
     "runRust": "",
     "needs": {},
-    "expected": { "error": { "name": "Error", "message": "Missing Rust source plan" } }
+    "expected": {
+      "error": {
+        "name": "Error",
+        "message": "Rust source checks must run for every pull request and merge group"
+      }
+    }
   },
   {
     "name": "rust-null-context",

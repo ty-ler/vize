@@ -1,20 +1,8 @@
 name: Level instruction counts
 
 on:
-  # The required Check aggregate calls this workflow for every PR and queue.
-  # This path-selected trigger also measures gate changes before queue entry.
-  pull_request:
-    paths:
-      - .github/workflows/level-instruction-counts.yml
-      - tools/benchmarks/crates/davinci_harness/**
-      - tools/benchmarks/scripts/instruction-counts*.mjs
-      - docs/davinci/plan/instruction-budgets.toml
-      - docs/davinci/plan/formatter-instruction-*.toml
-      - crates/vize_glyph/benches/formatter_instructions.rs
-      - crates/vize_glyph/benches/fixtures/formatter/**
-      - tests/tooling/formatter-instruction-counts.test.mjs
-      - tests/tooling/level-instruction-counts.test.mjs
-      - tests/tooling/level-instruction-workflow.test.ts
+  # Check calls the measurement once per queue candidate and scheduled run.
+  # Avoid a second standalone PR run of the same instruction campaign.
   workflow_dispatch:
   workflow_call:
 
@@ -28,6 +16,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  RUSTUP_TOOLCHAIN: "1.99.0"
 
 jobs:
   instruction-counts:
@@ -36,9 +25,8 @@ jobs:
     timeout-minutes: 45
     continue-on-error: true
     env:
-      # Reusable workflows retain the caller's workflow name. Other PRs check
-      # registry/ratchet only; every merge group measures and enforces ceilings.
-      MEASURE: ${{ github.event_name == 'merge_group' || github.event_name == 'workflow_dispatch' || github.workflow == 'Level instruction counts' }}
+      # Reusable workflows retain the caller's workflow name.
+      MEASURE: ${{ github.event_name == 'merge_group' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.workflow == 'Level instruction counts' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -47,7 +35,7 @@ jobs:
         with:
           node-version-file: package.json
           run-install: false
-      - name: Install pinned repository Rust
+      - name: Install pinned measurement Rust
         if: env.MEASURE == 'true'
         run: rustup toolchain install 1.99.0 --profile minimal
       - name: Install Callgrind and matching client request headers

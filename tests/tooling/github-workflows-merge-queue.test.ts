@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { test } from "node:test";
 import { parse } from "yaml";
 import { aggregateNeedsResults } from "../../tools/support/compat/github/require-needs-success.ts";
-import { readRepoFile, root } from "./support/github-workflows.ts";
+import { requireRustTier } from "../../tools/support/compat/github/require-rust-tier.ts";
+import { canonicalSourceReport } from "../../tools/support/compat/github/canonical-corpus-selection.mjs";
+import { rustDifferentialLanes } from "../../tools/support/compat/github/rust-differential-lanes.ts";
+import { readRepoFile } from "./support/github-workflows.ts";
 type Step = {
   name?: string;
   if?: string;
@@ -16,7 +15,15 @@ type Step = {
   with?: Record<string, string>;
   "continue-on-error"?: boolean;
 };
-type Job = { if?: string; needs?: string[] | string; steps?: Step[]; uses?: string };
+type Job = {
+  if?: string;
+  needs?: string[] | string;
+  steps?: Step[];
+  uses?: string;
+  with?: Record<string, string | boolean>;
+  env?: Record<string, string>;
+  strategy?: { matrix?: unknown };
+};
 const source = parse(readRepoFile(".github", "workflows", "pr-source-checks.yml")) as {
   jobs: Record<string, Job>;
 };
@@ -43,7 +50,7 @@ const lanes = [
   "pr-source-plan",
   "pr-rust-source",
   "pr-js-packages",
-  "pr-tooling-scripts",
+  "pr-native-runtime",
   "pr-playground-test",
 ];
 const tailCommands = [
@@ -69,16 +76,16 @@ const commands = (job: Job) =>
     .flatMap((step) => (step.uses === jsHistoryPath ? jsHistory.runs.steps : [step]))
     .map((step) => step.run ?? "")
     .join("\n");
-test("queue scope reaches the planner and every full source lane remains required", () => {
+test("queue scope reaches the planner and every selected source lane remains required", () => {
   assert.equal(
     source.jobs["pr-source-plan"].steps?.find((step) => step.name === "Plan source checks")?.run,
-    'node tools/support/compat/github/plan-source-checks.ts "$BASE_SHA" "$GITHUB_SHA" "$GITHUB_EVENT_NAME"',
+    'node tools/support/compat/github/plan-pr-checks.ts "$BASE_SHA" "$GITHUB_SHA" "$GITHUB_EVENT_NAME"',
   );
   assert.deepEqual(source.jobs["source-report"].needs, [
     ...lanes,
     "wit-contracts",
+    "nuxt-module-qualification",
     "canonical-corpus",
-    "pr-source-cli",
   ]);
   assert.equal(
     source.jobs["source-report"].if,
@@ -87,6 +94,7 @@ test("queue scope reaches the planner and every full source lane remains require
   assert.match(commands(source.jobs["source-report"]), /canonical-corpus-selection\.mjs/);
   assert.ok(check.jobs["test-report"].needs?.includes("pr-source-checks"));
   for (const required of [
+    "iteration-plan",
     "fmt-rust",
     "check-js",
     "security-audit",
@@ -104,16 +112,24 @@ test("queue scope reaches the planner and every full source lane remains require
   assert.equal(jsHistory.runs.using, "composite");
   assert.equal(jsHistory.runs.steps[0].if, "${{ success() && job.status == 'success' }}");
   assert.ok(check.jobs["test-js-packages"].steps?.some((step) => step.uses === jsHistoryPath));
-  assert.match(commands(source.jobs["pr-tooling-scripts"]), /vp run --workspace-root test:scripts/);
-  const cli = parse(readRepoFile(".github", "workflows", "pr-source-cli.yml")) as {
-    jobs: Record<string, Job>;
-  };
-  assert.match(commands(cli.jobs.cli), /cargo build --profile ci -p vize/);
-  assert.ok(
-    source.jobs["pr-tooling-scripts"].steps?.some(
-      (step) => step.uses === "./.github/actions/restore-source-cli",
-    ),
-  );
+  const nativeRuntime = source.jobs["pr-native-runtime"];
+  assert.equal(nativeRuntime.needs, "pr-source-plan");
+  assert.equal(nativeRuntime.if, undefined, "unaffected runtime inputs still report success");
+  for (const [lane, action] of [
+    ["canon", "test-native-canon"],
+    ["lsp", "test-native-lsp"],
+    ["ssr", "test-native-ssr"],
+    ["scoped-css", "test-native-scoped-css"],
+    ["setup", "test-native-js-setup"],
+    ["vapor", "test-native-vapor"],
+    ["attributes", "test-native-attribute-values-7502"],
+    ["selected-template", "test-native-selected-template"],
+  ]) {
+    const step = nativeRuntime.steps?.find((step) => step.uses === `./.github/actions/${action}`);
+    assert.ok(step, lane);
+    assert.equal(step.if, `\${{ matrix.lane == '${lane}' }}`);
+    assert.notEqual(step["continue-on-error"], true);
+  }
   assert.match(commands(source.jobs["pr-playground-test"]), /test:browser/);
   assert.match(commands(source.jobs["pr-playground-test"]), /test:vrt/);
   const vrtFailure = source.jobs["pr-playground-test"].steps?.find(
@@ -122,26 +138,49 @@ test("queue scope reaches the planner and every full source lane remains require
   assert.match(vrtFailure?.if ?? "", /steps\.vrt\.outcome == 'failure'/);
   assert.equal(vrtFailure?.run, "exit 1");
 });
-test("queue Rust retains full doctests and the unchanged feature tail beside required workspace shards", () => {
+test("queue Rust keeps affected doctests beside archive builds and the differential feature tail", () => {
   assert.equal(source.jobs["pr-rust-source"].uses, "./.github/workflows/pr-rust-checks.yml");
-  const steps = rust.jobs["merge-rust-source"].steps ?? [];
-  const pkl = steps.findIndex((step) => step.name === "Install Pkl CLI");
-  const workspace = steps.findIndex((step) =>
-    /cargo test --workspace --profile ci --doc(?:;|$)/m.test(step.run ?? ""),
+  assert.equal(source.jobs["pr-rust-source"].with?.["run-rust"], true);
+  const build = rust.jobs["pr-rust-build"];
+  assert.equal(build.needs, undefined, "Clippy and doctests must start beside the test archive");
+  assert.equal(build.if, "${{ inputs.run-rust }}");
+  assert.match(commands(build), /run-affected-rust\.ts[^\n]*cargo clippy @packages@/);
+  assert.match(
+    commands(build),
+    /run-affected-rust\.ts[^\n]*cargo test @packages@ --profile ci --doc/,
   );
-  const sibling = differential.jobs["differential"].steps ?? [];
-  const tail = sibling.findIndex((step) => step.uses === actionPath);
-  const coverage = sibling.findIndex((step) => step.name === "Check fixture coverage");
-  assert.ok(pkl >= 0 && pkl < workspace && tail >= 0 && tail < coverage);
-  assert.equal(steps[workspace].env?.VIZE_TEST_REQUIRE_TSGO, "1");
+  const buildSteps = build.steps ?? [];
+  const runtime = buildSteps.findIndex(
+    (step) => step.name === "Select Clippy and doctest runtime envelope",
+  );
+  assert.ok(
+    runtime >= 0 &&
+      runtime < buildSteps.findIndex((step) => step.name === "Clippy affected crates"),
+  );
+  assert.match(buildSteps[runtime].run ?? "", /merge_group\) printf 'VIZE_TEST_REQUIRE_TSGO=1/);
+  assert.ok(rust.jobs["rust-source-report"].needs?.includes("pr-rust-build"));
+  const differentialJob = differential.jobs["differential"];
+  const sibling = differentialJob.steps ?? [];
+  const selected = sibling.find(
+    (step) => step.name === "Run affected feature and production corpora",
+  );
+  assert.equal(
+    differentialJob.strategy?.matrix,
+    "${{ fromJSON(inputs.rust-plan).differentialMatrix }}",
+  );
+  assert.equal(differentialJob.if, "${{ github.event_name == 'merge_group' && inputs.run-rust }}");
+  assert.equal(differentialJob.env?.VIZE_TEST_REQUIRE_TSGO, "1");
+  assert.equal(selected?.if, "${{ matrix.lane != 'navigation' && matrix.lane != 'none' }}");
+  assert.equal(
+    selected?.run,
+    'node tools/support/compat/github/rust-differential-lanes.ts "$DIFFERENTIAL_LANE" "$RUNNER_TEMP/rust-plan.json"',
+  );
+  assert.notEqual(selected?.["continue-on-error"], true);
   assert.equal(rust.jobs["merge-rust-differential"].needs, undefined);
   assert.equal(
     rust.jobs["merge-rust-differential"].uses,
     "./.github/workflows/pr-rust-differential.yml",
   );
-  assert.equal(sibling[tail].if, "${{ github.event_name == 'merge_group' && inputs.run-rust }}");
-  assert.equal(sibling[tail].with?.["workspace-already-tested"], "true");
-  assert.notEqual(sibling[tail]["continue-on-error"], true);
   const manual = check.jobs["clippy-and-test"].steps?.find((step) => step.name === "Test");
   assert.equal(manual?.uses, actionPath);
   assert.equal(manual?.with?.["workspace-already-tested"], undefined);
@@ -162,6 +201,18 @@ test("queue Rust retains full doctests and the unchanged feature tail beside req
     assert.equal(step.env?.VIZE_TEST_REQUIRE_TSGO, "1");
     assert.notEqual(step["continue-on-error"], true);
   }
+  // Batched --test flags may combine processes, but every prior feature target
+  // must remain selected once with its package, feature set and test arguments.
+  const partitioned = rustDifferentialLanes.flatMap((lane) => lane.steps);
+  for (const command of tailCommands) {
+    const expected = command.slice(command.indexOf("cargo ") + 6).split(" ");
+    const matches = partitioned.filter((step) => {
+      let position = 0;
+      for (const argument of step.args) if (argument === expected[position]) position += 1;
+      return position === expected.length;
+    });
+    assert.equal(matches.length, 1, command);
+  }
 });
 test("both queue reports reject failed, cancelled, skipped and missing actual dependencies", () => {
   for (const job of [source.jobs["source-report"], check.jobs["test-report"]]) {
@@ -178,60 +229,57 @@ test("both queue reports reject failed, cancelled, skipped and missing actual de
     }
   }
 });
-test("the shared bash recipe stops at a failed feature command (simulated cargo)", () => {
-  const differentialStep = recipe.runs.steps.find(
-    (step) => step.name === "Test feature-enabled differential corpora",
-  );
-  assert.ok(differentialStep);
-  const cwd = mkdtempSync(join(tmpdir(), "vize-queue-recipe-"));
-  try {
-    const log = join(cwd, "commands.log");
-    const argvLog = join(cwd, "arguments.log");
-    writeFileSync(
-      join(cwd, "cargo"),
-      '#!/bin/sh\nprintf "%s|%s|%s\\n" "$*" "$VIZE_TEST_REQUIRE_TSGO" "${VIZE_DAVINCI_DIFFERENTIAL_CORPUS-}" >> "$VIZE_GATE_TEST_LOG"\nprintf "%s\\0" "$@" >> "$VIZE_GATE_TEST_ARGV_LOG"\nprintf "\\n" >> "$VIZE_GATE_TEST_ARGV_LOG"\ncase "$*" in *"$VIZE_GATE_TEST_FAIL"*) exit 42;; esac\n',
-      { mode: 0o755 },
-    );
-    for (const [failure, count, status] of [
-      ["surface_corpus", 1, 42],
-      ["davinci_remarks_corpus", 4, 42],
-      ["no-such-command", 12, 0],
-    ] as const) {
-      writeFileSync(log, "");
-      writeFileSync(argvLog, "");
-      const run = spawnSync(
-        "/bin/bash",
-        ["--noprofile", "--norc", "-eo", "pipefail", "-c", differentialStep.run!],
-        {
-          cwd: root,
-          encoding: "utf8",
-          env: {
-            PATH: cwd,
-            VIZE_TEST_REQUIRE_TSGO: "1",
-            VIZE_GATE_TEST_LOG: log,
-            VIZE_GATE_TEST_ARGV_LOG: argvLog,
-            VIZE_GATE_TEST_FAIL: failure,
-          },
-        },
-      );
-      assert.equal(run.status, status, run.stderr);
-      const lines = readFileSync(log, "utf8").trim().split("\n");
-      assert.equal(lines.length, count);
-      const actualArguments = readFileSync(argvLog, "utf8")
-        .trimEnd()
-        .split("\n")
-        .map((line) => line.split("\0").slice(0, -1));
-      const expectedArguments = tailCommands
-        .slice(0, count)
-        .map((command) => command.slice(command.indexOf("cargo ") + 6).split(" "));
-      assert.deepEqual(actualArguments, expectedArguments);
-      assert.ok(lines.every((line) => line.includes("|1|")));
-      if (status === 0) {
-        assert.ok(lines[6].endsWith(`|${root}`));
-        assert.ok(lines[11].endsWith(`|${root}`));
+void test("a failed or disabled Rust tier cannot reach a green required Check report", () => {
+  const success = (
+    job: Job,
+  ): Record<string, { result: string; outputs?: Record<string, string> }> => {
+    assert.ok(Array.isArray(job.needs));
+    return Object.fromEntries(job.needs.map((name) => [name, { result: "success" }]));
+  };
+  for (const event of ["pull_request", "merge_group"]) {
+    const rustNeeds = success(rust.jobs["rust-source-report"]);
+    const propagate = (runRust: string, results: unknown) => {
+      let rustResult = "failure";
+      try {
+        if (requireRustTier(event, runRust, results).exitCode === 0) rustResult = "success";
+      } catch {
+        // A thrown CLI refusal fails its report step in Actions.
       }
+      const sourceNeeds = success(source.jobs["source-report"]);
+      sourceNeeds["pr-source-plan"].outputs = { "canonical-corpus": "false" };
+      sourceNeeds["canonical-corpus"].result = "skipped";
+      sourceNeeds["wit-contracts"].result = event === "merge_group" ? "success" : "skipped";
+      sourceNeeds["nuxt-module-qualification"].result =
+        event === "merge_group" ? "success" : "skipped";
+      sourceNeeds["pr-rust-source"].result = rustResult;
+      const sourceResult = canonicalSourceReport(sourceNeeds, event);
+      const topNeeds = success(check.jobs["test-report"]);
+      topNeeds["pr-source-checks"].result = sourceResult.exitCode === 0 ? "success" : "failure";
+      return aggregateNeedsResults(topNeeds).exitCode;
+    };
+    assert.equal(propagate("true", rustNeeds), 0);
+    assert.equal(propagate("false", rustNeeds), 1);
+    assert.equal(propagate("", rustNeeds), 1);
+    for (const job of ["pr-rust-build", "pr-rust-shard"]) {
+      for (const result of ["failure", "cancelled", "skipped"])
+        assert.equal(propagate("true", { ...rustNeeds, [job]: { result } }), 1);
+      const omitted = { ...rustNeeds };
+      delete omitted[job];
+      assert.equal(propagate("true", omitted), 1);
     }
-  } finally {
-    rmSync(cwd, { recursive: true, force: true });
   }
+});
+test("full qualification invokes the same feature runner once with mandatory runtime checks", () => {
+  const shared = recipe.runs.steps.filter((step) =>
+    step.run?.includes("rust-differential-lanes.ts"),
+  );
+  assert.equal(shared.length, 1);
+  assert.equal(shared[0].run, "node tools/support/compat/github/rust-differential-lanes.ts --all");
+  assert.equal(shared[0].env?.VIZE_TEST_REQUIRE_TSGO, "1");
+  assert.equal(shared[0].if, undefined);
+  assert.notEqual(shared[0]["continue-on-error"], true);
+  assert.ok(
+    recipe.runs.steps.every((step) => !step.run?.includes("cargo test")),
+    "feature commands have one source of truth; CLI failure propagation is exercised by ci-iteration-plans",
+  );
 });

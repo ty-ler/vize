@@ -89,7 +89,7 @@ await test("selection covers pinned inputs, drivers and real producers in both c
     ".github/workflows/pr-source-checks.yml",
     ".github/workflows/check.yml",
     ".github/actions/setup-rust-script/action.yml",
-    ".github/actions/setup-rust-sticky-cache/cache-policy.mjs",
+    ".github/actions/setup-rust-sticky-cache/cache-policy.ts",
     "davinci/vize_l1/src/lib.rs",
     "crates/vize_atelier_ssr/src/lib.rs",
     "crates/vize_armature/src/lib.rs",
@@ -124,6 +124,7 @@ const needs = (required: string, result: string, event = "pull_request") => ({
   "pr-tooling-scripts": { result: "success" },
   "pr-playground-test": { result: "success" },
   "wit-contracts": { result: event === "merge_group" ? "success" : "skipped" },
+  "nuxt-module-qualification": { result: event === "merge_group" ? "success" : "skipped" },
   "canonical-corpus": { result },
 });
 

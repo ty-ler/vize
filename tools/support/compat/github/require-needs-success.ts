@@ -22,8 +22,8 @@ function formatNames(names: string[]): string {
 /**
  * Decides whether the `test-report` aggregator may report success.
  *
- * `test-report` runs with `if: always()` so that it still collects the test
- * inventory when a dependency fails. Without this check its own steps succeed
+ * `test-report` runs with `if: always()` so that it reports failed dependencies.
+ * Without this check its own steps succeed
  * and the required status check reports success while any of the jobs it
  * aggregates is red, which makes the whole check suite advisory.
  *
@@ -86,7 +86,7 @@ export function aggregateNeedsResults(
   };
 }
 
-/** The queue-only guest job must succeed before the existing Check report. */
+/** Queue-only product qualifications must succeed before the required Check report. */
 export function aggregateCheckNeedsResults(needs: unknown, eventName: unknown): GateReport {
   const nonqueue = ["pull_request", "push", "schedule", "workflow_dispatch"];
   if (
@@ -99,14 +99,20 @@ export function aggregateCheckNeedsResults(needs: unknown, eventName: unknown): 
       throw new TypeError("Cannot convert a Symbol value to a string");
     throw new Error(`Unsupported Check event: ${String(eventName)}`);
   }
-  if (
-    !needs ||
-    (typeof needs !== "object" && typeof needs !== "function") ||
-    !Object.hasOwn(needs, "wit-contracts")
-  ) {
-    throw new Error("Check needs context is missing wit-contracts");
+  const queueOnly = ["wit-contracts", "nuxt-module-qualification"];
+  for (const job of queueOnly) {
+    if (
+      !needs ||
+      (typeof needs !== "object" && typeof needs !== "function") ||
+      !Object.hasOwn(needs, job)
+    ) {
+      throw new Error(`Check needs context is missing ${job}`);
+    }
   }
-  const skippable = eventName === "merge_group" ? {} : { "wit-contracts": "queue-only" };
+  const skippable =
+    eventName === "merge_group"
+      ? {}
+      : Object.fromEntries(queueOnly.map((job) => [job, "queue-only"]));
   return aggregateNeedsResults(needs, skippable);
 }
 
@@ -118,7 +124,7 @@ function main(): void {
   const raw = process.env.NEEDS_JSON;
   if (!raw) {
     console.error(
-      "NEEDS_JSON is required: pass ${{ toJSON(needs) }} to tools/support/compat/github/require-needs-success.mjs",
+      "NEEDS_JSON is required: pass ${{ toJSON(needs) }} to tools/support/compat/github/require-needs-success.ts",
     );
     process.exitCode = 1;
     return;

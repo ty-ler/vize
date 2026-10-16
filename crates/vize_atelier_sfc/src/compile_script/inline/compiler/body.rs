@@ -217,6 +217,7 @@ pub(super) fn compile_script_setup_inline_body(
         },
         is_ts,
         is_vapor,
+        is_prod,
         vapor_render_alias.as_deref(),
         &ctx,
     );
