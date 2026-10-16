@@ -206,15 +206,15 @@ impl ServerState {
         let loaded = snapshot
             .cloned()
             .unwrap_or_else(|| vize_carton::config::load_lsp_config_snapshot(Some(root)));
-        if !state.apply_workspace_config_snapshot(root, loaded) {
-            if let Some(previous) = previous {
-                state.apply_retained_workspace_config(root, previous.applied.clone());
-                *state.project_contexts.loaded_config.write() = Some(previous.authored.clone());
-                state
-                    .project_contexts
-                    .config_reload_failed
-                    .store(true, Ordering::Release);
-            }
+        if !state.apply_workspace_config_snapshot(root, loaded)
+            && let Some(previous) = previous
+        {
+            state.apply_retained_workspace_config(root, previous.applied.clone());
+            *state.project_contexts.loaded_config.write() = Some(previous.authored.clone());
+            state
+                .project_contexts
+                .config_reload_failed
+                .store(true, Ordering::Release);
         }
         if snapshot_failed {
             state
