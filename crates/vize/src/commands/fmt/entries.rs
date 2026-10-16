@@ -245,10 +245,17 @@ fn strip_prefix_text(path: &Path, base: &Path) -> Option<String> {
 }
 
 fn join_pattern(base: &Path, pattern: &str) -> String {
-    if pattern == "." {
-        return normalize_path_text(base);
+    let path = if pattern == "." {
+        base.to_path_buf()
+    } else {
+        base.join(pattern)
+    };
+    if let Ok(cwd) = std::env::current_dir()
+        && let Ok(relative) = path.strip_prefix(&cwd)
+    {
+        return normalize_path_text(relative);
     }
-    normalize_path_text(&base.join(pattern))
+    normalize_path_text(&path)
 }
 
 fn normalize_pattern_text(pattern: &str) -> String {
