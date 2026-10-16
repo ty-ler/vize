@@ -548,6 +548,10 @@ export interface LanguageServerConfig {
    */
   ecosystem?: boolean;
   /**
+   * Enable workspace-wide cross-file diagnostic groups (disabled by default)
+   */
+  crossFile?: boolean;
+  /**
    * Enable Vue 2.7 / Nuxt 2 editor and type-checking compatibility
    */
   legacyVue2?: boolean;

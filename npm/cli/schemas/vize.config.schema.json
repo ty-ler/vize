@@ -922,6 +922,10 @@
           "description": "Enable Vue ecosystem lint and editor helpers",
           "type": "boolean"
         },
+        "crossFile": {
+          "description": "Enable workspace-wide cross-file diagnostic groups (disabled by default)",
+          "type": "boolean"
+        },
         "legacyVue2": {
           "description": "Enable Vue 2.7 / Nuxt 2 editor and type-checking compatibility",
           "type": "boolean"

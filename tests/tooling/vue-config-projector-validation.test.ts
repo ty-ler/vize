@@ -331,3 +331,27 @@ test("evaluated fluent output retains native policy without evaluating Vite plug
   };
   assert.deepEqual(await resolveViteConfigExport(processed), await resolveViteConfigExport(source));
 });
+
+test("every native language-server boolean survives canonical projection, including crossFile opt-outs", async () => {
+  const model = await readFile(
+    new URL("../../davinci/vize_l0/src/config/model/language_server.rs", import.meta.url),
+    "utf8",
+  );
+  const fields = [...model.matchAll(/pub ([a-z_]+): Option<bool>/gu)].map((match) =>
+    match[1].replace(/_([a-z])/gu, (_, letter) => letter.toUpperCase()),
+  );
+  assert.ok(fields.includes("crossFile"));
+  assert.ok(fields.includes("ecosystem"));
+  assert.ok(fields.includes("signatureHelp"));
+  for (const enabled of [true, false]) {
+    const languageServer = Object.fromEntries(fields.map((field) => [field, enabled]));
+    assert.deepEqual(await projectViteConfigSource({ vue: { languageServer } }), {
+      typeChecker: { jsxTypecheck: true },
+      languageServer,
+    });
+  }
+  await assert.rejects(
+    projectViteConfigSource({ vue: { languageServer: { crossFileAnalysis: true } } }),
+    /vue\.languageServer: unknown option crossFileAnalysis/u,
+  );
+});

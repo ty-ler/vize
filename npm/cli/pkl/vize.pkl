@@ -252,6 +252,8 @@ class LspConfig {
   typecheck: Boolean? = null
   editor: Boolean? = null
   ecosystem: Boolean? = null
+  /// Enable workspace-wide cross-file diagnostic groups (disabled by default).
+  crossFile: Boolean? = null
   legacyVue2: Boolean? = null
   completion: Boolean? = null
   signatureHelp: Boolean? = null
