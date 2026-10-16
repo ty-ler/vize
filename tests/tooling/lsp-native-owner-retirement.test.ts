@@ -204,3 +204,9 @@ test(
   },
   async () => retiredOwnerWitness(directNativeChildren),
 );
+
+test(
+  "killed old native owner retains its fault receipt before healthy replacement shutdown",
+  { skip: process.platform !== "linux", timeout: 30000 },
+  async () => retiredOwnerWitness(directNativeChildren, "killed"),
+);

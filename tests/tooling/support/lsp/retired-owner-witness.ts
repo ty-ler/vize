@@ -49,7 +49,16 @@ function actualProbe(identity: Witness) {
   }
 }
 
-export async function retiredOwnerWitness(children: ChildObserver) {
+export async function retiredOwnerWitness(
+  children: ChildObserver,
+  mode: "held" | "killed" = "held",
+) {
+  assert.equal(
+    process.env.VIZE_LSP_REQUIRE_SOURCE_BUILD,
+    "1",
+    "complete source-bound raw wire/stderr capture is required",
+  );
+  assert.ok(process.env.VIZE_LSP_BIN, "this proof uses the action's prebuilt attested CLI");
   const manifest = createRequire(import.meta.url).resolve(
     "@typescript/typescript-linux-x64/package.json",
   );
@@ -89,6 +98,7 @@ export async function retiredOwnerWitness(children: ChildObserver) {
   const record = (name: string, value: unknown = null) =>
     events.push({ name, at: Date.now(), value });
   const observation: Record<string, unknown> = {
+    mode,
     workspace,
     source,
     native,
@@ -214,96 +224,166 @@ export async function retiredOwnerWitness(children: ChildObserver) {
         error: { code: -32800, message: "Canceled" },
       },
     );
+    const oldLsp = oldGraph.find((entry) => entry.role === "editor-lsp")!;
+    if (mode === "killed") {
+      const proxy = children(session.processId, node).find(
+        (entry) => entry.pid === oldLsp.proxy.pid && entry.birth_ticks === oldLsp.proxy.birth_ticks,
+      );
+      assert.ok(proxy, "the fault target's proxy is still a direct Vize child");
+      const target = children(proxy.pid, native).find(
+        (entry) =>
+          entry.pid === oldLsp.native.pid && entry.birth_ticks === oldLsp.native.birth_ticks,
+      );
+      assert.ok(
+        target,
+        "the injected fault must target the exact previously witnessed native life",
+      );
+      assert.equal(target.executableSha256, nativeSha256);
+      const last = actualProbe(target);
+      assert.equal(last.current?.birth_ticks, target.birth_ticks);
+      assert.notEqual(last.current?.state, "Z");
+      assert.equal(fs.realpathSync(`/proc/${target.pid}/exe`), native);
+      observation.faultControl = {
+        purpose: "injected backend fault, never successful shutdown cleanup",
+        signal: "SIGKILL",
+        target,
+        proxy,
+        beforeSignal: last,
+      };
+      // No await separates this final PID/birth/image verification from the deliberate fault.
+      const delivered = process.kill(target.pid, "SIGKILL");
+      Object.assign(observation.faultControl as object, { signalDelivered: delivered });
+      record("old-native-explicit-fault", observation.faultControl);
+    }
     fs.writeFileSync(configPath, JSON.stringify(config(gates[1].proxy)));
     session.notify("workspace/didChangeWatchedFiles", {
       changes: [{ uri: pathToFileURL(configPath).href, type: 2 }],
     });
     record("configuration-retirement-notified");
+    let newQueryId = 0;
     observation.newOwnerQuery = {
       method: "textDocument/hover",
       params,
-      result: await session.request("textDocument/hover", params, 10000),
+      result: await session.request("textDocument/hover", params, 10000, (id) => {
+        newQueryId = id;
+        return [];
+      }),
     };
     assert.deepEqual((observation.newOwnerQuery as { result: unknown }).result, expected);
+    assert.deepEqual(
+      responses.find((response) => (response as { id?: number }).id === newQueryId),
+      {
+        jsonrpc: "2.0",
+        id: newQueryId,
+        result: expected,
+      },
+    );
     const newGraph = graph(gates[1]);
     observation.newOwnerGraph = newGraph;
     assert.deepEqual(newGraph.map((entry) => entry.role).sort(), ["editor-lsp", "project-api"]);
-    const oldLsp = oldGraph.find((entry) => entry.role === "editor-lsp")!;
-    const heldLive = children(oldLsp.proxy.pid, native).find(
-      (child) => child.pid === oldLsp.native.pid && child.birth_ticks === oldLsp.native.birth_ticks,
-    );
-    observation.oldStillInflightAfterNewOwner = heldLive;
-    assert.ok(
-      heldLive,
-      "the retired old native owner must remain genuinely in flight after new-owner admission",
-    );
-    assert.ok(!fs.existsSync(path.join(gates[0].root, "release")));
-    const deadline = Date.now() + 5_000;
-    record("shutdown-started");
-    const shutdown = session.request("shutdown", undefined, 5000).then(
-      (response) => {
-        record("shutdown-response", response);
-        return { kind: "response" as const, response };
-      },
-      (error: unknown) => {
-        record("shutdown-error", String(error));
-        return { kind: "error" as const, error };
-      },
-    );
-    const probes: unknown[] = [];
-    observation.newOwnerClosureProbes = probes;
-    const newIdentities = newGraph.flatMap((entry) => [entry.proxy, entry.native]);
-    const newClosure = (async () => {
-      while (polling) {
-        const observed = newIdentities.map(actualProbe);
-        probes.push({ at: Date.now(), observed });
-        if (observed.every((entry) => isReaped(entry, entry.current)))
-          return { kind: "reaped" as const };
-        assert.ok(
-          Date.now() < deadline,
-          "new-owner closure shares the original five-second shutdown deadline",
-        );
-        await pause(25);
-      }
-      return { kind: "aborted" as const };
-    })();
-    const frontier = await Promise.race([newClosure, shutdown]);
-    observation.newOwnerClosureFrontier = frontier;
-    polling = false;
-    await newClosure;
-    assert.equal(
-      frontier.kind,
-      "reaped",
-      "shutdown ACK must not bypass the still-held retired owner",
-    );
-    record("new-owner-actually-reaped");
-    observation.vizeAtHeldFrontier = {
-      wholeStat: fs.readFileSync(`/proc/${session.processId}/stat`, "utf8"),
-      executable: fs.realpathSync(`/proc/${session.processId}/exe`),
-    };
-    observation.oldStillInflightAfterNewClosure = children(oldLsp.proxy.pid, native);
-    assert.ok(
-      (observation.oldStillInflightAfterNewClosure as Witness[]).some(
+    if (mode === "held") {
+      const heldLive = children(oldLsp.proxy.pid, native).find(
         (child) =>
           child.pid === oldLsp.native.pid && child.birth_ticks === oldLsp.native.birth_ticks,
-      ),
-    );
-    const pending = await Promise.race([
-      shutdown,
-      pause(100).then(() => ({ kind: "pending" as const })),
-    ]);
-    observation.heldShutdownFrontier = pending;
-    assert.equal(
-      pending.kind,
-      "pending",
-      "new-owner closure cannot hide an omitted retired-owner join",
-    );
-    assert.ok(Date.now() < deadline);
-    record("old-native-response-release");
-    fs.writeFileSync(path.join(gates[0].root, "release"), "");
-    const terminal = await shutdown;
-    observation.shutdownTerminal = terminal;
-    assert.deepEqual(terminal, { kind: "response", response: null });
+      );
+      observation.oldStillInflightAfterNewOwner = heldLive;
+      assert.ok(
+        heldLive,
+        "the retired old native owner must remain genuinely in flight after new-owner admission",
+      );
+      assert.ok(!fs.existsSync(path.join(gates[0].root, "release")));
+      const deadline = Date.now() + 5_000;
+      record("shutdown-started");
+      const shutdown = session.request("shutdown", undefined, 5000).then(
+        (response) => {
+          record("shutdown-response", response);
+          return { kind: "response" as const, response };
+        },
+        (error: unknown) => {
+          record("shutdown-error", String(error));
+          return { kind: "error" as const, error };
+        },
+      );
+      const probes: unknown[] = [];
+      observation.newOwnerClosureProbes = probes;
+      const newIdentities = newGraph.flatMap((entry) => [entry.proxy, entry.native]);
+      const newClosure = (async () => {
+        while (polling) {
+          const observed = newIdentities.map(actualProbe);
+          probes.push({ at: Date.now(), observed });
+          if (observed.every((entry) => isReaped(entry, entry.current)))
+            return { kind: "reaped" as const };
+          assert.ok(
+            Date.now() < deadline,
+            "new-owner closure shares the original five-second shutdown deadline",
+          );
+          await pause(25);
+        }
+        return { kind: "aborted" as const };
+      })();
+      const frontier = await Promise.race([newClosure, shutdown]);
+      observation.newOwnerClosureFrontier = frontier;
+      polling = false;
+      await newClosure;
+      assert.equal(
+        frontier.kind,
+        "reaped",
+        "shutdown ACK must not bypass the still-held retired owner",
+      );
+      record("new-owner-actually-reaped");
+      observation.vizeAtHeldFrontier = {
+        wholeStat: fs.readFileSync(`/proc/${session.processId}/stat`, "utf8"),
+        executable: fs.realpathSync(`/proc/${session.processId}/exe`),
+      };
+      observation.oldStillInflightAfterNewClosure = children(oldLsp.proxy.pid, native);
+      assert.ok(
+        (observation.oldStillInflightAfterNewClosure as Witness[]).some(
+          (child) =>
+            child.pid === oldLsp.native.pid && child.birth_ticks === oldLsp.native.birth_ticks,
+        ),
+      );
+      const pending = await Promise.race([
+        shutdown,
+        pause(100).then(() => ({ kind: "pending" as const })),
+      ]);
+      observation.heldShutdownFrontier = pending;
+      assert.equal(
+        pending.kind,
+        "pending",
+        "new-owner closure cannot hide an omitted retired-owner join",
+      );
+      assert.ok(Date.now() < deadline);
+      record("old-native-response-release");
+      fs.writeFileSync(path.join(gates[0].root, "release"), "");
+      const terminal = await shutdown;
+      observation.shutdownTerminal = terminal;
+      assert.deepEqual(terminal, { kind: "response", response: null });
+    } else {
+      record("recovered-owner-shutdown-started");
+      let shutdownId = 0;
+      observation.shutdownTerminal = await session.request("shutdown", undefined, 5000, (id) => {
+        shutdownId = id;
+        return [];
+      });
+      assert.equal(observation.shutdownTerminal, null);
+      assert.deepEqual(
+        responses.find((response) => (response as { id?: number }).id === shutdownId),
+        {
+          jsonrpc: "2.0",
+          id: shutdownId,
+          result: null,
+        },
+      );
+      const atAck = [...oldGraph, ...newGraph]
+        .flatMap((entry) => [entry.proxy, entry.native])
+        .map(actualProbe);
+      observation.allOwnerIdentitiesAtShutdownAck = atAck;
+      assert.ok(
+        atAck.every((entry) => isReaped(entry, entry.current)),
+        "a null recovered shutdown ACK requires both exact API/editor owner lives already reaped; same-birth zombies fail",
+      );
+      record("all-recovered-owner-identities-absent-at-ack");
+    }
     observation.serverExit = await session.finishInput("exit");
     assert.deepEqual(observation.serverExit, { exitCode: 0, signal: null });
     const all = [...oldGraph, ...newGraph].flatMap((entry) => [entry.proxy, entry.native]);
@@ -320,12 +400,22 @@ export async function retiredOwnerWitness(children: ChildObserver) {
         .split("\n")
         .map((line) => JSON.parse(line));
       assert.ok(exits.length >= 2);
-      for (const exit of exits)
-        assert.deepEqual(
-          exit,
-          { code: 0, signal: null },
-          "the actual native exits cleanly; a kill is never success",
-        );
+      if (mode === "killed" && gate.role === "old") {
+        const killed = exits.filter((exit) => exit.code === null && exit.signal === "SIGKILL");
+        assert.equal(killed.length, 1, "retain exactly the explicitly injected old native fault");
+        for (const exit of exits.filter((exit) => exit.signal !== "SIGKILL"))
+          assert.deepEqual(
+            exit,
+            { code: 0, signal: null },
+            "the other old API owner and probes must exit cleanly",
+          );
+      } else
+        for (const exit of exits)
+          assert.deepEqual(
+            exit,
+            { code: 0, signal: null },
+            "the actual native exits cleanly; a kill is never success",
+          );
     }
     success = true;
   } catch (error) {
@@ -347,7 +437,10 @@ export async function retiredOwnerWitness(children: ChildObserver) {
     if (capture) {
       fs.mkdirSync(capture, { recursive: true });
       fs.writeFileSync(
-        path.join(capture, "retired-owner-inflight.json"),
+        path.join(
+          capture,
+          mode === "held" ? "retired-owner-inflight.json" : "retired-owner-killed.json",
+        ),
         `${JSON.stringify(observation, null, 2)}\n`,
       );
     }
