@@ -385,3 +385,98 @@ fn document_selection_terminates_after_the_primary_owner_is_shut_down() {
     );
     worker.join().unwrap();
 }
+
+#[test]
+fn invalid_leaf_reload_keeps_the_last_valid_dialect_until_the_config_is_fixed() {
+    let fixture = ReferenceFixture::new("export default {};");
+    let state = &fixture.state;
+    let uri = &fixture.legacy;
+    let source = fixture.open_dirty(uri, "unsavedDuringReload", 11);
+    let mut previous = state.document_project_state(uri).unwrap();
+    let modern = state.document_project_state(&fixture.modern).unwrap();
+    assert_dialect(&previous, VueVersion::V2_7);
+    for (target, expected, failed) in [(4.0, VueVersion::V2_7, true), (3.5, VueVersion::V3, false)]
+    {
+        let pending = previous.corsa_request_stamp();
+        ReferenceFixture::write_leaf(&fixture.root, "legacy", "legacy", target);
+        assert_eq!(
+            state.observe_project_config_events(&[fixture.event("legacy")]),
+            vec![(uri.clone(), 11)]
+        );
+        let current = state.document_project_state(uri).unwrap();
+        assert!(!Arc::ptr_eq(&previous, &current));
+        assert!(previous.project_context_retired());
+        assert!(!pending.is_current(&previous));
+        assert_dialect(&current, expected);
+        assert_eq!(
+            current
+                .project_contexts
+                .config_reload_failed
+                .load(Ordering::Acquire),
+            failed
+        );
+        assert!(Arc::ptr_eq(
+            &modern,
+            &state.document_project_state(&fixture.modern).unwrap()
+        ));
+        assert!(!modern.project_context_retired());
+        assert_eq!(
+            current.documents.text(uri).as_deref(),
+            Some(source.as_str())
+        );
+        assert_eq!(current.documents.version(uri), Some(11));
+        assert_projection(&current, uri, "unsavedDuringReload");
+        previous = current;
+    }
+}
+
+#[test]
+fn invalid_vite_reload_keeps_the_last_valid_policy_until_the_config_is_fixed() {
+    let (fixture, state, a, b) = tests::fixture();
+    let source = "<script>export const unsavedViteReload = 1;</script><template><div /></template>";
+    state
+        .documents
+        .open(a.clone(), source.into(), 12, "vue".into());
+    let mut previous = state.document_project_state(&a).unwrap();
+    let sibling = state.document_project_state(&b).unwrap();
+    let config = fixture.path().join("packages/a/vite.config.mjs");
+    assert!(!previous.lsp_features().hover);
+    for (contents, hover, failed) in [
+        ("export default { vue:", false, true),
+        (
+            "export default { vue: { languageServer: { hover: true } } };",
+            true,
+            false,
+        ),
+    ] {
+        let pending = previous.corsa_request_stamp();
+        std::fs::write(&config, contents).unwrap();
+        assert_eq!(
+            state.observe_project_config_events(&[FileEvent {
+                uri: Url::from_file_path(&config).unwrap(),
+                typ: FileChangeType::CHANGED,
+            }]),
+            vec![(a.clone(), 12)]
+        );
+        let current = state.document_project_state(&a).unwrap();
+        assert!(!Arc::ptr_eq(&previous, &current));
+        assert!(previous.project_context_retired());
+        assert!(!pending.is_current(&previous));
+        assert_eq!(current.lsp_features().hover, hover);
+        assert_eq!(
+            current
+                .project_contexts
+                .config_reload_failed
+                .load(Ordering::Acquire),
+            failed
+        );
+        assert!(Arc::ptr_eq(
+            &sibling,
+            &state.document_project_state(&b).unwrap()
+        ));
+        assert_eq!(current.documents.text(&a).as_deref(), Some(source));
+        assert_eq!(current.documents.version(&a), Some(12));
+        assert_projection(&current, &a, "unsavedViteReload");
+        previous = current;
+    }
+}
