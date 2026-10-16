@@ -57,6 +57,30 @@ Comparing the parsed TOML before and after confirmed that removing the one new
 PR override restores the entire original configuration. No selection
 expression, original override or `full` setting changed.
 
-Fresh Actions must verify the same complete test identities, all four ordinary
-Rust companions and all required PR checks, then report actual test-phase and
-whole-PR wall time. No extra cohort or duplicated Cargo build is introduced.
+## Measured Actions result
+
+The first attempt at `986d6cdb14d866bf23786099acbc4f57dff5c824` passed all
+7,154 Compiler tests with exactly the same binary-and-test identities as
+`9f435f0`: no additions, omissions or duplicates. The priority case started
+8 milliseconds after nextest started, rather than near the end of the suite.
+
+| Source and Compiler job                                                                                        | Nextest wall | Case start | Case duration |
+| -------------------------------------------------------------------------------------------------------------- | -----------: | ---------: | ------------: |
+| [`9f435f0`, job 116936990526](https://github.com/ubugeeei-prod/vize/actions/runs/38889929446/job/116936990526) |    137.955 s |   87.398 s |      50.556 s |
+| [`986d6cd`, job 116948362881](https://github.com/ubugeeei-prod/vize/actions/runs/38893209547/job/116948362881) |    110.749 s |    0.008 s |      54.341 s |
+
+The artifacts are `rust-test-cohort-compiler-38889929446-1` and
+`rust-test-cohort-compiler-38893209547-1`. These are observed results from
+different runs, not a controlled causal comparison. They directly verify the
+changed start order and preserved coverage. The observed nextest reduction is
+27.206 seconds; changes in Cargo compilation time are separate and are not
+attributed to test priority. The fixed-duration estimates above remain
+simulations.
+
+All five Rust cohorts, the required reports and all nine ordinary PR workflows
+passed. The complete observed PR interval was **8 minutes 8 seconds**, so this
+run did not meet the five-minute target. [Check itself](https://github.com/ubugeeei-prod/vize/actions/runs/38893209547)
+took 8 minutes 2 seconds, including 144 seconds waiting for the preceding
+run's cancellation to finish. From its first job starting to its final report,
+Check still took 5 minutes 38 seconds. No extra cohort or duplicated Cargo
+build was introduced by the priority change.

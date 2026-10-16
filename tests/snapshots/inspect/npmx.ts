@@ -6,23 +6,30 @@ describe("npmx.dev inspector parity with Vue compiler", () => {
   before(requireVizeBin);
 
   it("tracks DOM and SSR compiler diff budgets for every app Vue file", () => {
-    assertInspectorCompareBudgets(npmxApp, [
+    assertInspectorCompareBudgets(
+      npmxApp,
+      [
+        {
+          target: "dom",
+          changedFiles: 220,
+          additions: 17_122,
+          removals: 23_081,
+          officialErrors: 0,
+          vizeErrors: 0,
+        },
+        {
+          target: "ssr",
+          changedFiles: 220,
+          additions: 14_510,
+          removals: 36_627,
+          officialErrors: 0,
+          vizeErrors: 0,
+        },
+      ],
       {
-        target: "dom",
-        changedFiles: 220,
-        additions: 17_122,
-        removals: 23_081,
-        officialErrors: 0,
-        vizeErrors: 0,
+        fileCount: 220,
+        pathsSha256: "1414645911bc91961dd8bd248a08e6cb2eec188695ae8cdbb5ae1672cb3f4bec",
       },
-      {
-        target: "ssr",
-        changedFiles: 220,
-        additions: 14_510,
-        removals: 36_627,
-        officialErrors: 0,
-        vizeErrors: 0,
-      },
-    ]);
+    );
   });
 });

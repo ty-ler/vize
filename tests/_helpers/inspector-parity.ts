@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -40,9 +41,15 @@ interface InspectorCompareReport {
   }>;
 }
 
+interface InspectorSourceIdentity {
+  fileCount: number;
+  pathsSha256: string;
+}
+
 export function assertInspectorCompareBudgets(
   app: AppConfig,
   budgets: InspectorDiffBudget[],
+  inputs: InspectorSourceIdentity,
 ): void {
   requireVizeBin();
 
@@ -50,10 +57,42 @@ export function assertInspectorCompareBudgets(
     const report = runInspectorCompare(app, budget.target);
     assert.equal(report.schema, "vize.inspector.compare");
     assert.equal(report.target, budget.target);
-    assert.ok(report.summary.fileCount > 0, `${app.name}:${budget.target} should inspect files`);
     writeInspectorReport(app.name, budget.target, report);
+    assert.ok(app.check, `${app.name} should define check fixtures`);
+    assertInspectorFileCoverage(app.check, report, inputs);
     assertBudget(report, budget, app.name);
   }
+}
+
+/** Require exactly one comparison for every original input selected by the app. */
+export function assertInspectorFileCoverage(
+  check: NonNullable<AppConfig["check"]>,
+  report: { summary: { fileCount: number }; files: ReadonlyArray<{ path: string }> },
+  inputs: InspectorSourceIdentity,
+): void {
+  const expected = [
+    ...new Set(
+      fs
+        .globSync(check.patterns, { cwd: check.cwd })
+        .filter((file) => fs.statSync(path.join(check.cwd, file)).isFile())
+        .map((file) => file.replaceAll("\\", "/")),
+    ),
+  ].sort();
+  assert.ok(expected.length > 0, "inspector fixtures must contain original source inputs");
+  assert.equal(expected.length, inputs.fileCount, "pinned original source count");
+  assert.equal(
+    createHash("sha256")
+      .update(`${expected.join("\n")}\n`)
+      .digest("hex"),
+    inputs.pathsSha256,
+    "pinned original source paths",
+  );
+  assert.deepEqual(
+    report.files.map((file) => file.path.replaceAll("\\", "/")).sort(),
+    expected,
+    "inspector must compare every original source exactly once",
+  );
+  assert.equal(report.summary.fileCount, expected.length, "inspector source count");
 }
 
 function runInspectorCompare(app: AppConfig, target: "dom" | "ssr"): InspectorCompareReport {

@@ -651,6 +651,7 @@ async function compileOfficialVue(file, target, compiler, formatter) {
         scoped,
         isProd: true,
         ssr: officialTarget === "ssr",
+        ssrCssVars: descriptor.cssVars,
         compilerOptions: {
           bindingMetadata,
           expressionPlugins: isTypeScript ? ["typescript"] : undefined,
@@ -660,7 +661,6 @@ async function compileOfficialVue(file, target, compiler, formatter) {
       warnings.push(...normalizeCompilerMessages(template.errors));
       warnings.push(...normalizeCompilerMessages(template.tips));
     }
-
     const code = [scriptCode, templateCode].filter(Boolean).join("\n\n");
     return {
       code,
