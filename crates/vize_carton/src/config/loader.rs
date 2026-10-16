@@ -15,7 +15,6 @@ pub use formatter::{
 mod discovery;
 #[cfg(test)]
 mod experimental_tests;
-mod extends;
 #[cfg(test)]
 mod extends_tests;
 mod js;
@@ -89,7 +88,7 @@ struct LoadedRawConfig {
 impl LoadedRawConfig {
     fn project_root(&self) -> Option<PathBuf> {
         let path = self.source_path.as_deref()?;
-        if !CONFIG_FILE_NAMES[5..]
+        if !CONFIG_FILE_NAMES
             .iter()
             .any(|name| path.file_name().is_some_and(|file| file == *name))
         {
@@ -162,7 +161,7 @@ pub fn validate_explicit_config_path(path: &Path) -> Result<(), std::string::Str
                     });
             }
         }
-        return Err(crate::cstr!("no vize config file found under {display}").into());
+        return Err(crate::cstr!("no Vite config file found under {display}").into());
     }
 
     Err(crate::cstr!("config path is neither a file nor a directory: {display}").into())

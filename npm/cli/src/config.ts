@@ -26,13 +26,9 @@ type NativeConfigHelpers = {
 
 const require = createRequire(import.meta.url);
 
-export const CONFIG_FILE_NAMES = [
-  "vize.config.pkl",
-  "vize.config.ts",
-  "vize.config.js",
-  "vize.config.mjs",
-  "vize.config.json",
-] as const;
+export const CONFIG_FILE_NAMES = VITE_CONFIG_FILE_NAMES;
+const RETIRED_CONFIG = /^vize\.config\.(?:pkl|[cm]?[jt]s|json)$/;
+const CONFIG_MIGRATION = "vize.config.* is no longer supported; move Vue settings to vue: in vite.config.* and TypeScript settings to tsconfig.json";
 
 const DEFAULT_CONFIG_ENV: ConfigEnv = {
   mode: "development",
@@ -67,7 +63,7 @@ export async function resolveViteConfigExport(
 }
 
 /**
- * Load project settings from a compatible dedicated config or `vite.config.*`.
+ * Load project settings from `vite.config.*`; TypeScript settings stay in tsconfig.json.
  */
 export async function loadConfig(
   root: string,
@@ -99,7 +95,7 @@ async function loadConfigFromDir(
   env?: ConfigEnv,
   viteConfig = true,
 ): Promise<ResolvedVizeConfig | null> {
-  for (const name of [...CONFIG_FILE_NAMES, ...(viteConfig ? VITE_CONFIG_FILE_NAMES : [])]) {
+  for (const name of viteConfig ? CONFIG_FILE_NAMES : []) {
     const filePath = path.join(dir, name);
     if (!fs.existsSync(filePath)) {
       continue;
@@ -109,6 +105,9 @@ async function loadConfigFromDir(
     if (config !== null) {
       return config;
     }
+  }
+  if (viteConfig && fs.existsSync(dir) && fs.readdirSync(dir).some((name) => RETIRED_CONFIG.test(name))) {
+    throw new Error(CONFIG_MIGRATION);
   }
   return null;
 }
@@ -147,6 +146,7 @@ async function loadConfigFile(
   env?: ConfigEnv,
 ): Promise<ResolvedVizeConfig | null> {
   const absolutePath = path.resolve(filePath);
+  if (RETIRED_CONFIG.test(path.basename(absolutePath))) throw new Error(CONFIG_MIGRATION);
   if (!fs.existsSync(absolutePath)) {
     return null;
   }

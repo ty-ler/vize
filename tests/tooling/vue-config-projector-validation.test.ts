@@ -117,6 +117,7 @@ test("canonical namespaces refuse unknown roots, entries, native fields and mism
     { entries: [{ lib: { dir: "scoped" } }] },
     { entries: [{ unknown: true }] },
     { entries: [{ version: "4" }] },
+    { entries: [{ extends: "./old.json" }] },
     { entries: [{ files: [undefined] }] },
     { lib: { registries: { invalidNamespace: "npm:somewhere" } } },
     { lib: { registries: { "@team": { dir: "components" } } } },
@@ -182,21 +183,18 @@ test("all documented canonical native sections accept their original field value
   });
 });
 
-test("canonical validation never invokes legacy or Vite hooks and legacy unknown shapes stay permissive", async () => {
+test("retired namespaces fail without invoking any legacy or Vite hooks", async () => {
   let calls = 0;
   const vize = () => {
     calls++;
     return {};
   };
   assert.equal(vueConfigOptions({ vize }), undefined);
-  await assert.rejects(projectViteConfigSource({ vue: { compiler: false }, vize }), TypeError);
+  await assert.rejects(projectViteConfigSource({ vue: { compiler: false }, vize }), /vize: configuration is no longer supported/);
   assert.equal(calls, 0);
-  assert.deepEqual(
-    await projectViteConfigSource({ vize: { packageLocalUnknown: { active: true } } }),
-    {
-      typeChecker: { jsxTypecheck: true },
-      packageLocalUnknown: { active: true },
-    },
+  await assert.rejects(
+    projectViteConfigSource({ vize: { packageLocalUnknown: { active: true } } }),
+    /move Vue settings to vue:/,
   );
   assert.equal(calls, 0);
 });
@@ -243,11 +241,11 @@ test("canonical entries admit only real native linter scopes while all other nat
         return {};
       },
     }),
-    /vue\.entries\[0\]: unknown option version/u,
+    /vize: configuration is no longer supported/u,
   );
   assert.equal(callbacks, 0);
 
-  // Narrowing canonical admission does not reinterpret old flat/scoped ingress.
+  // Preserve the old fixture as history; retired ingress now requires migration.
   const original = await readFile(
     new URL(
       "../_fixtures/differential/config/vue-options/original-vite-runtime.mjs.fixture",
@@ -256,7 +254,8 @@ test("canonical entries admit only real native linter scopes while all other nat
   );
   const legacy = await import("data:text/javascript;base64," + original.toString("base64"));
   const old = { vize: { entries: [{ ...scoped, ...rootOptions, unknownScopedOwner: true }] } };
-  assert.deepEqual(await projectViteConfigSource(old), await legacy.resolveViteConfigExport(old));
+  assert.ok(await legacy.resolveViteConfigExport(old));
+  await assert.rejects(projectViteConfigSource(old), /move Vue settings to vue:/);
 });
 
 test("new public numeric Vue 0.10 ingress projects native enums and respects canonical version leaves", async () => {
