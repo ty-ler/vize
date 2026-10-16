@@ -5,13 +5,7 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type LintPreset =
-  | "happy-path"
-  | "opinionated"
-  | "essential"
-  | "incremental"
-  | "ecosystem"
-  | "nuxt";
+export type LintPreset = NonNullable<LinterConfig["preset"]>;
 
 export type RuleSeverity = "off" | "warn" | "error";
 
@@ -196,9 +190,24 @@ export interface LinterConfig {
    */
   enabled?: boolean;
   /**
-   * Built-in lint preset
+   * Built-in lint preset (happy-path is the recommended canonical name; native aliases are accepted)
    */
-  preset?: "happy-path" | "opinionated" | "essential" | "incremental" | "ecosystem" | "nuxt";
+  preset?:
+    | "general-recommended"
+    | "general_recommended"
+    | "generalRecommended"
+    | "happy-path"
+    | "happy_path"
+    | "happy"
+    | "default"
+    | "recommended"
+    | "opinionated"
+    | "strict"
+    | "all"
+    | "essential"
+    | "incremental"
+    | "ecosystem"
+    | "nuxt";
   /**
    * Enable native type-aware lint rules from the active lint configuration
    */

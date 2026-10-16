@@ -406,7 +406,10 @@ for (const withVite of [true, false]) {
           loaded.dependencies.includes(helper),
           "runtime-imported policy must invalidate the snapshot",
         );
-        assert.deepEqual([...loaded.dependencies].sort(), [selected, helper].sort());
+        assert.deepEqual(
+          [...loaded.dependencies].sort((left: string, right: string) => left.localeCompare(right)),
+          [selected, helper].sort((left, right) => left.localeCompare(right)),
+        );
         assert.ok(
           loaded.dependencies.every((file: string) => !file.includes("vize-config-module-")),
         );

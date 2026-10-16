@@ -200,10 +200,26 @@
           "type": "boolean"
         },
         "preset": {
-          "description": "Built-in lint preset",
+          "description": "Built-in lint preset (happy-path is the recommended canonical name; native aliases are accepted)",
           "default": "happy-path",
           "type": "string",
-          "enum": ["happy-path", "opinionated", "essential", "incremental", "ecosystem", "nuxt"]
+          "enum": [
+            "general-recommended",
+            "general_recommended",
+            "generalRecommended",
+            "happy-path",
+            "happy_path",
+            "happy",
+            "default",
+            "recommended",
+            "opinionated",
+            "strict",
+            "all",
+            "essential",
+            "incremental",
+            "ecosystem",
+            "nuxt"
+          ]
         },
         "typeAware": {
           "description": "Enable native type-aware lint rules from the active lint configuration",

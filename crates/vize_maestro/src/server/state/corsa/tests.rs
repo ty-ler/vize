@@ -1,7 +1,6 @@
 //! Retain the actual startup lane across cancellation, without a retry storm.
 #![expect(
     clippy::disallowed_types,
-    clippy::disallowed_methods,
     clippy::unwrap_used,
     reason = "full owned IPC process fixture"
 )]

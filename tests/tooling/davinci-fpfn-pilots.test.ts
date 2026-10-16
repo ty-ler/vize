@@ -307,3 +307,31 @@ test("suppression telemetry reports the mapped FP candidate and the unmapped nam
       "rules-mapped=127 mapped-seen=1 unmapped-seen=1 fp-candidates=1",
   );
 });
+
+// This exercises the JavaScript compatibility writer with synthetic diagnostic
+// hooks. The real current-recall oracle above retains its unchanged 0/3 + 4/4 law.
+test("compatibility seeded assertion carries the same opt-in policy through canonical Vite", async () => {
+  const { assertSeededTree } =
+    await import("../../tools/support/compat/davinci/lib/fpfn-seed-assert.mjs");
+  const { baseline, seeded } = syntheticTrees();
+  const baselineLintJson = path.join(seedOut, "compatibility-baseline.json");
+  const seededLintJson = path.join(seedOut, "compatibility-seeded.json");
+  fs.writeFileSync(baselineLintJson, JSON.stringify(baseline));
+  fs.writeFileSync(seededLintJson, JSON.stringify(seeded));
+  const report = assertSeededTree({
+    manifest: readJson(path.join(seedOut, "manifest.json")),
+    outDir: seedOut,
+    hooks: { baselineLintJson, seededLintJson },
+  });
+  assert.equal(report.verdict, "pass");
+  assert.equal(report.classB.expected, 4);
+  assert.equal(report.classB.detected, 4);
+  assert.deepEqual(report.classB.misses, []);
+  for (const tree of ["original", "seeded"]) {
+    const config = path.join(seedOut, "class-b", tree, "vite.config.mjs");
+    assert.deepEqual((await import(pathToFileURL(config).href)).default, {
+      vue: { linter: { rules: { "vue/no-unused-setup-bindings": "warn" } } },
+    });
+    assert.equal(fs.existsSync(path.join(path.dirname(config), "vize.config.json")), false);
+  }
+});
