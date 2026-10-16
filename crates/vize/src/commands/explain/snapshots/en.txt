@@ -4102,7 +4102,7 @@ tier: exact
 domain: elements and Vue directive syntax of SFC templates as parsed: names, arguments, modifiers, expressions and placement
 severity: error
 category: essential
-autofix: no
+autofix: yes
 docs: docs/content/rules/vue.md
 
 invalid:
@@ -5354,7 +5354,7 @@ valid:
   <button @click="handleClick">Click</button>
 
 help:
-  Why: @click fires even when Ctrl/Shift/Alt/Meta is pressed. Use .exact to only fire when no system modifiers are active.
+  Why: Handlers can overlap when additional Ctrl/Shift/Alt/Meta keys are held. .exact allows the declared system modifiers and rejects additional ones.
   Fix:
     <!-- Before -->
     <button @click="onClick" @click.ctrl="onCtrlClick" />
