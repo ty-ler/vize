@@ -67,7 +67,13 @@ impl ServerState {
                 .entry(key.clone())
                 .or_insert_with(|| Arc::new(registry::ProjectContext::new(key.clone())))
                 .clone();
-            context.provide_snapshot(snapshot);
+            context.provide_snapshot(
+                snapshot,
+                state
+                    .project_contexts
+                    .config_reload_failed
+                    .load(super::Ordering::Acquire),
+            );
             context
         };
         self.project_contexts.routes.insert(uri.clone(), key);
