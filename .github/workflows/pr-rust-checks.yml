@@ -8,6 +8,13 @@ on:
       rust-plan:
         type: string
         required: true
+    outputs:
+      jobs-json:
+        description: Actual Rust job results for the final PR report
+        value: ${{ toJSON(jobs) }}
+      run-rust:
+        description: Whether the caller enabled the mandatory Rust tier
+        value: ${{ inputs.run-rust }}
 permissions:
   contents: read
 env:
@@ -280,8 +287,8 @@ jobs:
   rust-source-report:
     name: Rust source report
     permissions: { contents: read, actions: read }
-    # A superseded run reports nothing: its required check fails in test-report.
-    if: ${{ always() && !contains(needs.*.result, 'cancelled') }}
+    # PR results go directly to test-report; the queue also verifies worker evidence here.
+    if: ${{ always() && github.event_name == 'merge_group' && !contains(needs.*.result, 'cancelled') }}
     needs: [merge-rust-source, merge-rust-differential, pr-rust-build, pr-rust-shard]
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 10
