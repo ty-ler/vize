@@ -5,7 +5,6 @@ import { defineConfig, withVue } from "../vite-plus.ts";
 import { resolveConfigExport } from "../config.ts";
 import { projectViteConfigSource } from "../../../../cli/src/config/vite-runtime.mjs";
 import { normalizeConfig, resolveConfig } from "./config.ts";
-import { resolveVitePlus } from "./runtime.ts";
 import { taskConfigKey, type ConfigWithVizeTasks, type VueConfigObject } from "./types.ts";
 
 const env: ConfigEnv = {
@@ -53,7 +52,7 @@ void test("withVue preserves the real Vite Plus injection and evaluates each sup
             ? callback
             : async (context) => callback(context),
     );
-    const wrapped = withVue({}, original, integration);
+    const wrapped = defineConfig(original, integration).withVue({});
     assert.equal(calls, 0, `${shape} must not be evaluated eagerly`);
     const result = await wrapped(env);
     assert.equal(calls, shape === "function" || shape === "async" ? 1 : 0);
@@ -82,7 +81,8 @@ void test("withVue preserves the real Vite Plus injection and evaluates each sup
 void test("canonical sections reach the same native normalizer as the selected Vite source", async () => {
   const source: VueConfigObject = {
     root: "packages/app",
-    vize: { formatter: { printWidth: 70, singleQuote: true }, typeChecker: { strict: true } },
+    fmt: { vue: { printWidth: 70, singleQuote: true } },
+    typecheck: { strict: true },
     vue: {
       version: "3",
       formatter: { singleQuote: false },
@@ -112,51 +112,62 @@ void test("canonical sections reach the same native normalizer as the selected V
   assert.ok(!("vue" in result));
 });
 
-void test("Vite fields keep consumer merge semantics while canonical arrays replace", async () => {
-  const a = { name: "a" },
-    b = { name: "b" };
-  const first: VueConfigObject = {
-    plugins: [a],
+void test("fluent Vue settings merge native leaves and replace canonical arrays immutably", async () => {
+  const plugin = { name: "consumer" };
+  const source: VueConfigObject = {
+    plugins: [plugin],
     server: { port: 4321 },
     vue: {
       files: ["old.vue"],
-      formatter: { attributeGroups: [["old"]], singleQuote: true },
+      formatter: { printWidth: 80, attributeGroups: [["old"]], singleQuote: true },
       entries: [{ files: ["old/**/*.vue"] }],
     },
   };
-  const own: VueConfigObject = {
-    extends: [first],
-    plugins: [b],
-    server: { host: true },
-    vue: { files: [], formatter: { attributeGroups: [], singleQuote: false }, entries: [] },
-  };
-  const result = await resolveConfig(own, env);
-  assert.deepEqual(result.plugins, [a, b]);
-  const { mergeConfig } = resolveVitePlus().require("vite-plus") as typeof import("vite-plus");
-  const consumer = mergeConfig(mergeConfig({}, { plugins: first.plugins, server: first.server }), {
-    plugins: own.plugins,
-    server: own.server,
-  });
-  assert.deepEqual(result.server, consumer.server);
-  assert.equal(result.server?.port, 4321);
-  assert.equal(result.server?.host, true);
-  assert.deepEqual(first.server, { port: 4321 });
-  assert.deepEqual(own.server, { host: true });
-  assert.deepEqual(result.vue, {
+  const base = defineConfig(source, integration);
+  const fluent = base.withVue({
     files: [],
     formatter: { attributeGroups: [], singleQuote: false },
     entries: [],
   });
-  assert.deepEqual(first.vue?.files, ["old.vue"]);
-  assert.deepEqual(first.vue?.entries, [{ files: ["old/**/*.vue"] }]);
+  const result = await resolveConfig(fluent, env);
+  assert.deepEqual(result.plugins, [plugin]);
+  assert.equal(result.plugins?.[0], plugin);
+  assert.equal(result.server, source.server);
+  assert.deepEqual(result.vue, {
+    files: [],
+    formatter: { printWidth: 80, attributeGroups: [], singleQuote: false },
+    entries: [],
+  });
+  assert.deepEqual((await resolveConfig(base, env)).vue, source.vue);
+  assert.deepEqual(source.vue?.files, ["old.vue"]);
+  assert.deepEqual(source.vue?.entries, [{ files: ["old/**/*.vue"] }]);
+  const chained = fluent.withVue({ formatter: { tabWidth: 4 } });
+  assert.deepEqual((await resolveConfig(chained, env)).vue?.formatter, {
+    printWidth: 80,
+    attributeGroups: [],
+    singleQuote: false,
+    tabWidth: 4,
+  });
+  assert.equal((await resolveConfig(fluent, env)).vue?.formatter?.tabWidth, undefined);
+});
+
+void test("the standalone helper delegates to fluent Vue composition", async () => {
+  const source = { server: { host: true } };
+  assert.deepEqual(
+    await resolveConfig(withVue({ formatter: { tabWidth: 4 } }, source, integration), env),
+    await resolveConfig(
+      defineConfig(source, integration).withVue({ formatter: { tabWidth: 4 } }),
+      env,
+    ),
+  );
 });
 
 void test("canonical native leaves retain disabled flags and explicit compiler/formatter presence", () => {
   const legacy: VueConfigObject = {
     compiler: false,
     typecheck: false,
-    lint: { vize: false },
-    fmt: { vize: false },
+    lint: { vue: false },
+    fmt: { vue: false },
   };
   const inherited = normalizeConfig(
     { ...legacy, vue: { version: "3", typeChecker: {}, linter: {} } },
@@ -202,7 +213,7 @@ void test("canonical version chooses the exact existing native dialect vocabular
   }
 });
 
-void test("rejections and cycles remain errors without re-evaluating a source", async () => {
+void test("rejections remain errors without re-evaluating a source", async () => {
   let calls = 0;
   const rejected = withVue(
     {},
@@ -214,11 +225,30 @@ void test("rejections and cycles remain errors without re-evaluating a source", 
   );
   await assert.rejects(rejected(env), /original rejection/);
   assert.equal(calls, 1);
-  const cyclic: VueConfigObject = { vue: {} };
-  cyclic.extends = cyclic;
-  await assert.rejects(defineConfig(cyclic, integration)(env), /Circular extends/);
   await assert.rejects(
     withVue({ formatter: { enabled: false } } as never, {}, integration)(env),
     /unknown option enabled/,
   );
+});
+
+void test("fluent composition preserves caller tasks and explicit tool conflict ownership", async () => {
+  const tasks = { check: "custom-check", lint: "custom-lint" };
+  const lint = { rules: { "vue/valid-define-props": "warn" as const } };
+  const result = await defineConfig(
+    { run: { tasks }, lint },
+    { plugin: false, conflicts: false },
+  ).withVue({ typeChecker: { enabled: false }, linter: { enabled: false } })(env);
+  assert.equal(result.run?.tasks?.check, "custom-check");
+  assert.equal(result.run?.tasks?.lint, "custom-lint");
+  assert.deepEqual(result.lint, lint);
+  assert.deepEqual(tasks, { check: "custom-check", lint: "custom-lint" });
+  assert.equal((result as ConfigWithVizeTasks)[taskConfigKey]?.options.check, false);
+  assert.equal((result as ConfigWithVizeTasks)[taskConfigKey]?.options.lint, false);
+});
+
+void test("pack.vue is consumed without forwarding native settings to Vite+", async () => {
+  const source = { pack: [{ outDir: "lib", vue: false as const }] };
+  const result = await defineConfig(source, integration).withVue({})(env);
+  assert.deepEqual(result.pack, [{ outDir: "lib" }]);
+  assert.deepEqual(source.pack, [{ outDir: "lib", vue: false }]);
 });
