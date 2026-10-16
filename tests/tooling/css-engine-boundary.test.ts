@@ -165,6 +165,49 @@ void test("original CSS bytes and whole healthy/fallback CLI authorities remain 
   }
 });
 
+void test("canonical CSS cell transport retains every frozen whole-output oracle", () => {
+  const authority = JSON.parse(
+    fs.readFileSync(
+      path.join(root, "tests/_fixtures/differential/css-engine-vendor-exit/finite-successors.json"),
+      "utf8",
+    ),
+  );
+  for (const cell of authority.cliCells) {
+    const [surface, id, passText] = cell.id.split("/");
+    const pass = Number(passText);
+    const entry = (surface === "formatter" ? corpus.formatterCases : corpus.linterCases).find(
+      (entry) => entry.id === id,
+    )!;
+    assert(entry);
+    const before = surface === "formatter" && pass > 2 ? cell.wholeFileAfter : entry.source;
+    const row = {
+      id: cell.id,
+      args: cell.args.map((arg: string) => (arg === "vize.config.json" ? "vite.config.mjs" : arg)),
+      config: vueConfigFixtureSource(cell.sourceOptions),
+      status: cell.status,
+      signal: cell.signal,
+      error: cell.processError,
+      readError: cell.readError,
+      before,
+      after: cell.wholeFileAfter,
+      stdout: cell.wholeStdout,
+      stderr: cell.wholeStderr,
+      beforeBase64: Buffer.from(before).toString("base64"),
+      afterBase64: Buffer.from(cell.wholeFileAfter).toString("base64"),
+      stdoutBase64: Buffer.from(cell.wholeStdout).toString("base64"),
+      stderrBase64: Buffer.from(cell.wholeStderr).toString("base64"),
+    };
+    const verify = (value: typeof row) =>
+      surface === "formatter"
+        ? assertWholeFormatterCell(value, entry, pass, cell.wholeFileAfter)
+        : assertWholeLinterCell(value, entry, pass, cell.wholeStdout);
+    verify(row);
+    assert.throws(() => verify({ ...row, config: vueConfigFixtureSource({}) }));
+    assert.throws(() => verify({ ...row, stdout: row.stdout + "extra" }));
+  }
+  assert.equal(authority.cliCells.length, 26);
+});
+
 await test("source-built CSS consumers survive exact originals and preserve whole healthy outputs", async (t) => {
   const build = expectedBuildIdentity(root);
   const receipt = JSON.parse(
