@@ -71,7 +71,7 @@ test("scheduled and dispatched full tooling retains failed observations after it
   assert.deepEqual(full.jobs["test-scripts"].needs, ["full-source-cli", "tooling-plan"]);
   assert.equal(
     full.jobs["test-scripts"].if,
-    "${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}",
+    "${{ !cancelled() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}",
   );
   assert.equal(full.jobs["full-source-cli"].uses, "./.github/workflows/full-source-cli.yml");
   const call = full.jobs["test-scripts"].steps.find(
