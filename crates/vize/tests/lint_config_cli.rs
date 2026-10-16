@@ -47,6 +47,7 @@ fn lint_honors_config_ignores_for_directory_inputs() {
         &vite_config::source(
             r#"{
   "ignores": [
+    "vite.config.mjs",
     "design-system/**",
     "node_modules/**"
   ]
