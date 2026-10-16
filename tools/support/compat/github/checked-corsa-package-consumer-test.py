@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""Small refusal tests; real builds run only in checked-corsa-package-consumer.py."""
+
+import copy
+import importlib.util
+import io
+from pathlib import Path
+import tarfile
+import tempfile
+import unittest
+
+SPEC = importlib.util.spec_from_file_location("consumer", Path(__file__).with_name("checked-corsa-package-consumer.py"))
+consumer = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(consumer)
+
+
+class ArchiveSafety(unittest.TestCase):
+    def archive(self, members):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        archive = Path(directory.name) / "package.crate"
+        with tarfile.open(archive, "w:gz") as stream:
+            for name, kind in members:
+                member = tarfile.TarInfo(name)
+                member.type = kind
+                member.size = 4 if kind == tarfile.REGTYPE else 0
+                stream.addfile(member, io.BytesIO(b"body") if member.size else None)
+        return archive
+
+    def test_regular_package_members_are_read(self):
+        archive = self.archive([("crate-1/src/lib.rs", tarfile.REGTYPE)])
+        self.assertEqual(consumer.archive_members(archive, "crate-1"), {"src/lib.rs": b"body"})
+
+    def test_tar_paths_and_links_cannot_escape_or_replace_files(self):
+        for names in [[("crate-1/../escape", tarfile.REGTYPE)], [("foreign/src/lib.rs", tarfile.REGTYPE)],
+                      [("crate-1/src/link", tarfile.SYMTYPE)], [("crate-1/src/link", tarfile.LNKTYPE)],
+                      [("crate-1/src/lib.rs", tarfile.REGTYPE)] * 2]:
+            with self.subTest(names=names), self.assertRaises(ValueError):
+                consumer.archive_members(self.archive(names), "crate-1")
+
+
+class GraphIsolation(unittest.TestCase):
+    def setUp(self):
+        self.providers = {name: (Path("/consumer") / name / "Cargo.toml", None) for name in consumer.OWNED}
+        self.metadata = {"packages": [{"id": name, "name": name, "version": "0.999.0", "source": None,
+                                      "manifest_path": str(self.providers[name][0])} for name in sorted(consumer.OWNED)],
+                         "resolve": {"nodes": [{"id": name, "features": []} for name in sorted(consumer.OWNED)]}}
+        self.metadata["packages"].append({"id": "runtime", "name": "corsa_runtime", "version": consumer.RUNTIME_VERSION,
+                                          "source": consumer.REGISTRY})
+
+    def check(self, metadata, distributed=False):
+        return consumer.verify_graph(metadata, "0.999.0", self.providers, distributed)
+
+    def test_shared_graph_and_requested_distributed_feature(self):
+        self.assertEqual(len(self.check(self.metadata)), 6)
+        for node in self.metadata["resolve"]["nodes"]:
+            if node["id"] in {"vize_corsa", "vize_corsa_orchestrator"}:
+                node["features"] = ["experimental-distributed"]
+        self.assertEqual(len(self.check(self.metadata, True)), 6)
+        with self.assertRaisesRegex(ValueError, "experimental feature"):
+            self.check(self.metadata)
+
+    def test_rejects_upstream_duplicate_wrong_path_version_and_runtime_downgrade(self):
+        mutations = [lambda data: data["packages"].append({"name": "corsa_core"}),
+                     lambda data: data["packages"].append(copy.deepcopy(data["packages"][0])),
+                     lambda data: data["packages"][0].update(manifest_path="/unexpected/Cargo.toml"),
+                     lambda data: data["packages"][0].update(version="0.998.0"),
+                     lambda data: data["packages"][-1].update(version="1.14.0"),
+                     lambda data: data["packages"][-1].update(source=None)]
+        for mutation in mutations:
+            data = copy.deepcopy(self.metadata)
+            mutation(data)
+            with self.subTest(data=data), self.assertRaises(ValueError):
+                self.check(data)
+
+
+class PackageInventory(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.directory = Path(temporary.name)
+        source = {"Cargo.toml": b'[package]\nname="package"\nexclude=["Cargo.toml.orig", ".cargo_vcs_info.json"]\n',
+                  "Cargo.toml.orig": b"upstream manifest", ".cargo_vcs_info.json": b"upstream receipt",
+                  "Cargo.lock": b"source lock", "LICENSE": b"MIT license text\n", "README.md": b"docs\n",
+                  "src/lib.rs": b"pub fn api() {}\n", "tests/fixture.txt": b"retained fixture\n"}
+        for relative, body in source.items():
+            path = self.directory / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(body)
+        self.bodies = {name: body for name, body in source.items() if name not in consumer.GENERATED}
+        self.bodies.update({"Cargo.toml": b"normalized manifest", "Cargo.toml.orig": source["Cargo.toml"],
+                            ".cargo_vcs_info.json": b"current receipt"})
+
+    def test_full_source_inventory_allows_only_regenerated_reserved_files(self):
+        self.assertEqual(consumer.verify_packaged_source(self.directory, self.bodies),
+                         ["LICENSE", "README.md", "src/lib.rs", "tests/fixture.txt"])
+
+    def test_omitted_source_test_or_extra_member_is_refused(self):
+        for missing in ["src/lib.rs", "tests/fixture.txt", "README.md", "Cargo.toml.orig"]:
+            bodies = self.bodies.copy()
+            del bodies[missing]
+            with self.subTest(missing=missing), self.assertRaisesRegex(ValueError, "inventory differs"):
+                consumer.verify_packaged_source(self.directory, bodies)
+        with self.assertRaisesRegex(ValueError, "inventory differs"):
+            consumer.verify_packaged_source(self.directory, {**self.bodies, "Cargo.lock": b"unexpected lock"})
+
+    def test_missing_or_changed_license_is_refused_explicitly(self):
+        missing = self.bodies.copy()
+        del missing["LICENSE"]
+        with self.assertRaisesRegex(ValueError, "preserve LICENSE"):
+            consumer.verify_packaged_source(self.directory, missing)
+        with self.assertRaisesRegex(ValueError, "LICENSE bytes changed"):
+            consumer.verify_packaged_source(self.directory, {**self.bodies, "LICENSE": b"different license"})
+
+    def test_manifest_cannot_hide_source_exclusions(self):
+        (self.directory / "Cargo.toml").write_text('[package]\nexclude=["src/lib.rs"]\n')
+        with self.assertRaisesRegex(ValueError, "reserved Cargo"):
+            consumer.verify_packaged_source(self.directory, self.bodies)
+
+
+if __name__ == "__main__":
+    unittest.main()
