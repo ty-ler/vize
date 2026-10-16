@@ -342,3 +342,34 @@ fn invalid_solution_target_does_not_override_valid_source_projects_or_vite_polic
     assert!(!legacy.lsp_features().hover);
     assert!(!modern.lsp_features().hover);
 }
+
+#[test]
+fn document_selection_terminates_after_the_primary_owner_is_shut_down() {
+    let fixture = ReferenceFixture::new("export default {};");
+    fixture.state.retire_project_contexts();
+    let state = fixture.state.clone();
+    let uri = fixture.legacy.clone();
+    let (sender, receiver) = std::sync::mpsc::channel();
+    let worker = std::thread::spawn(move || {
+        sender
+            .send(crate::runtime::block_on(
+                state.document_project_state_async(&uri),
+            ))
+            .unwrap()
+    });
+    let completed = receiver.recv_timeout(std::time::Duration::from_secs(3));
+    if completed.is_err() {
+        // Release a regressed routing loop so the test does not strand a worker.
+        fixture
+            .state
+            .project_contexts
+            .retired
+            .store(false, Ordering::Release);
+    }
+    assert!(
+        completed
+            .expect("shutdown must stop foreground routing")
+            .is_none()
+    );
+    worker.join().unwrap();
+}

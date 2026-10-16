@@ -88,6 +88,9 @@ impl ServerState {
             return owner.document_project_state(uri).or(Some(owner));
         }
         loop {
+            if self.project_routing_shutting_down() {
+                return None;
+            }
             let context = self.document_project_context(uri);
             let state = match context {
                 Some(context) => match context.initialize(self) {
