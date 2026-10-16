@@ -204,11 +204,13 @@ test("--budget-mode record-only reports an unusable baseline as a warning", () =
   const fixture = setup({ vizeDiagnostics: [], baselineOutput: "", baselineFiles: [] });
   try {
     const result = run(fixture, {}, ["--budget-mode", "record-only"]);
+    const observationsPath = path.join(fixture.reportDir, "fixture-typecheck-observations.json");
     assert.equal(result.status, 0);
     assert.equal(result.stderr, "");
     assert.equal(
       result.stdout,
       [
+        `Wrote ${path.relative(root, observationsPath)}`,
         `Wrote ${path.relative(root, artifactPath(fixture, "json"))}`,
         `Wrote ${path.relative(root, artifactPath(fixture, "md"))}`,
         "::warning title=Typecheck divergence budget not enforced::" +
@@ -216,7 +218,16 @@ test("--budget-mode record-only reports an unusable baseline as a warning", () =
         "",
       ].join("\n"),
     );
-    assert.equal(readJson(artifactPath(fixture, "json")).budget.passed, false);
+    const artifact = readJson(artifactPath(fixture, "json"));
+    const observations = readJson(observationsPath);
+    assert.equal(observations.schema, "vize.fixtureTypecheckObservations");
+    assert.deepEqual(observations.vize, readJson(fixture.outputPath));
+    assert.equal(sha256(observations.baseline.stdout), artifact.baseline.stdoutSha256);
+    assert.equal(sha256(observations.baseline.stderr), artifact.baseline.stderrSha256);
+    assert.equal(sha256(observations.coverage.stdout), artifact.baseline.coverageStdoutSha256);
+    assert.equal(sha256(observations.coverage.stderr), artifact.baseline.coverageStderrSha256);
+    assert.equal(artifact.budget.verdict, "unusable");
+    assert.equal(artifact.budget.passed, false);
   } finally {
     cleanup(fixture);
   }

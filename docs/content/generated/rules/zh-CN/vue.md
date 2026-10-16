@@ -1166,7 +1166,7 @@ vp run lint
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L53) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L56) · [全部规则](all.md)
 
 ### `vue/no-deprecated-functional-template`
 
@@ -1801,9 +1801,13 @@ vp run lint
 
 默认严重程度: `error`  
 预设: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
-自动修复: 无；请检查建议的修改  
+自动修复: 适用于已支持的诊断  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
+
+**数字修饰符的选择和修复**
+
+第一个带十进制数字前缀的修饰符决定诊断。`@keyup.13.27="submit"` 只报告 `13`，并建议改为 `@keyup.enter.27="submit"`；下一次修复可将 `27` 替换为 `escape`。`@keyup.13suffix="submit"` 也会改为 `@keyup.enter="submit"`。0–9 不在检查范围内，因此 `@keyup.0.13="submit"` 不会触发此规则。`999` 等未知值会被报告，但不提供修复。Vue 2 和 petite-vue 仍不受此规则影响。
 
 **配置（Vite+）**
 
@@ -3172,7 +3176,9 @@ p Notice
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
 
-当前检查比较嵌套的 v-for 绑定。单个 v-for 绑定仅与脚本绑定同名时，不会因此被报告。
+此检查比较模板中的 `v-for`、`v-slot`（包括 `#name`）和旧式作用域插槽绑定。它报告遮蔽先前绑定的标识符，也按属性顺序检查同一元素上的声明。兄弟元素具有独立作用域。属性键和默认值中的引用不属于声明，`v-pre` 会使其子树不参与检查。
+
+当前检查不包含 script 和组件属性名：单个模板绑定不会仅因与 script 中的绑定同名而产生警告。诊断范围覆盖实际书写的标识符，包括转义写法和 HTML 实体。
 
 **配置（Vite+）**
 
@@ -5357,7 +5363,7 @@ vp run lint
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [全部规则](all.md)
 
 ### `vue/use-unique-element-ids`
 
@@ -5440,6 +5446,14 @@ const emailId = useId();
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
 
+**处理器重叠时**
+
+此规则比较原生元素上同一事件的监听器。除非两个监听器都使用 `.native`，否则会忽略自定义组件事件。不同的事件名或没有交集的键盘过滤条件不会冲突。
+
+系统修饰符表示必须按下的键，因此 `@keydown.alt.shift` 也接受 Ctrl+Alt+Shift。若另一个处理器使用 `@keydown.alt.ctrl.shift`，请为条件更宽的处理器添加 `.exact`，以区分这些操作。`.exact` 允许声明的系统修饰符，并拒绝额外的 Ctrl、Shift、Alt 或 Meta 键。
+
+多个键盘修饰符表示任选其一：`@keydown.up.down` 接受上下任一方向键。在 Ctrl+ArrowDown 时，它可能与 `@keydown.ctrl.down` 重叠。此规则报告需要 `.exact` 的指令键，不包含其处理器表达式。
+
 **配置（Vite+）**
 
 ```ts
@@ -5495,7 +5509,7 @@ vp run lint
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L28) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L31) · [全部规则](all.md)
 
 ### `vue/v-bind-style`
 
@@ -6589,7 +6603,13 @@ vp run lint
 预设: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
-选项: 没有规则专属选项。可以配置严重程度和预设。
+选项: 参见[类型化选项和默认值](/rules/options.md)。
+
+**修饰符验证**
+
+不受支持的修饰符会在各自的名称处分别报告，长形式、动态参数和对象形式的监听器也适用。接受的名称与 `eslint-plugin-vue` 10.9.2 一致：Vue 事件修饰符、键盘别名、单个 Unicode 码点，以及可解析为有限十进制整数的前缀（`Number.parseInt(name, 10)`）。因此 `.13suffix` 也被接受；数字键和 `.native` 的迁移由单独的规则处理。只有 `.stop` 和 `.prevent` 无需处理器；`.once`、`.enter` 和自定义名称仍需要处理器表达式。
+
+`modifiers` 添加区分大小写、完全匹配的名称，但不会启用规则。下面的 Vite+ 配置接受 `@click.custom="handler"`；独立配置使用 `linter.ruleOptions`。有作用域的配置会替换列表；`[]` 可重置列表。键盘表来自采用 MIT 许可证的 [eslint-plugin-vue 别名](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json)，其源代码和许可证与实现一同保留。
 
 **配置（Vite+）**
 
@@ -6602,6 +6622,13 @@ export default defineConfig({
       "preset": "incremental",
       "rules": {
         "vue/valid-v-on": "error"
+      },
+      "ruleOptions": {
+        "vue/valid-v-on": {
+          "modifiers": [
+            "custom"
+          ]
+        }
       }
     },
   },
@@ -6616,13 +6643,16 @@ vp run lint
 
 **错误示例**
 
-监听器形式缺少事件参数，或缺少所需的处理器或对象表达式。
+监听器缺少必需的事件或表达式，或使用了 .sync、.nativeish 等不受支持的修饰符。
 
-```vue annotate="remove:2,3,4"
+```vue annotate="remove:2,3,4,5,6,7"
 <template>
   <div v-on></div>
   <div @></div>
   <div @click></div>
+  <div @click.sync="handleClick"></div>
+  <div @click.nativeish="handleClick"></div>
+  <div @click.once></div>
 </template>
 ```
 
@@ -6630,11 +6660,14 @@ vp run lint
 
 **正确示例**
 
-提供事件及其处理器，或将监听器对象传给无参数的 `v-on`。
+使用处理器、无需处理器的动作修饰符、受支持的键盘修饰符，或将监听器对象传给无参数的 `v-on`。
 
-```vue annotate="add:2,3"
+```vue annotate="add:2,3,4,5,6"
 <template>
   <div @click="handleClick"></div>
+  <form @submit.prevent></form>
+  <input @keyup.page-down="handlePageDown" />
+  <input @keyup.あ="handleKey" />
   <div v-on="{ click: handleClick }"></div>
 </template>
 ```

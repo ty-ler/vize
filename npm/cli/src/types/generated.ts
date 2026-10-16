@@ -293,6 +293,9 @@ export interface LintRuleOptions {
   };
   "vue/v-on-event-hyphenation"?: "always" | "never";
   "vue/attribute-hyphenation"?: "always" | "never";
+  "vue/valid-v-on"?: {
+    modifiers?: string[];
+  };
   "vue/valid-v-slot"?: {
     allowModifiers?: boolean;
   };
@@ -396,7 +399,7 @@ export interface TypeCheckerConfig {
    */
   globalsFile?: string;
   /**
-   * Reserved Corsa server count. The direct project-session runner currently supports only 1.
+   * Parallel Corsa CLI server count (1-32). Omit to auto-tune; 1 disables sharding.
    */
   servers?: number;
   /**
