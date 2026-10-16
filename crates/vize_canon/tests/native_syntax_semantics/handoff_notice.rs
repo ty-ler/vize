@@ -19,6 +19,10 @@ fn required_semantic_completion_does_not_report_runtime_degradation() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(output.status.success(), "{output:?}");
     assert!(
+        String::from_utf8_lossy(&output.stdout).contains("running 1 test"),
+        "the native corpus filter must execute its test: {output:?}"
+    );
+    assert!(
         !stderr.contains("Corsa CLI fast path unavailable"),
         "required same-config completion was reported as degradation: {stderr}"
     );
