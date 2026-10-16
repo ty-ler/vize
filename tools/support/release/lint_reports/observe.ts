@@ -5,6 +5,7 @@ import path from "node:path";
 import { assertLoadedBinary } from "../typed_defaults/distribution.mjs";
 import { sha256 } from "../typed_defaults/custody.mjs";
 import { inputObservation } from "../typed_defaults/packet.mjs";
+import { vueConfigFixtureSource } from "../../../../tests/tooling/support/vue-config-fixture.ts";
 
 export function verifyReportPacket(scenario, packet) {
   assert.equal(packet.error, null);
@@ -64,7 +65,9 @@ export function observeReports(fixtures, distribution, consumer, output, assertD
     fs.writeFileSync(path.join(directory, "package.json"), '{"private":true}\n');
     const inputs = [
       [scenario.filename, scenario.source],
-      ["vize.config.json", scenario.config],
+      // Preserve the frozen native document as evidence; execute its Vue carrier.
+      ["vize.config.json.fixture", scenario.config],
+      ["vite.config.mjs", vueConfigFixtureSource(scenario.config)],
       ["tsconfig.json", scenario.tsconfig],
     ];
     for (const [name, bytes] of inputs)

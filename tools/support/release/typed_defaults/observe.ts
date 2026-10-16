@@ -5,6 +5,10 @@ import path from "node:path";
 import { assertLoadedBinary } from "./distribution.mjs";
 import { sha256 } from "./custody.mjs";
 import { inputObservation, verifyPacket } from "./packet.mjs";
+import {
+  vueConfigFixtureSource,
+  writeVueConfigFixture,
+} from "../../../../tests/tooling/support/vue-config-fixture.ts";
 
 export function observePackets(fixtures, distribution, consumer, output) {
   const observations = [];
@@ -15,12 +19,17 @@ export function observePackets(fixtures, distribution, consumer, output) {
     const directory = path.join(consumer, "cases", String(index).padStart(3, "0"));
     fs.mkdirSync(directory, { recursive: true });
     const filename = path.join(directory, entry.filename);
-    const configFile = path.join(directory, "vize.config.json");
+    const configFile = path.join(directory, "vize.config.json.fixture");
+    const vueConfig = config ? vueConfigFixtureSource(config) : null;
     fs.writeFileSync(filename, entry.source, { flag: "wx" });
-    if (config) fs.writeFileSync(configFile, config, { flag: "wx" });
+    if (config) {
+      // Retain the original bytes and hash separately from the active carrier.
+      fs.writeFileSync(configFile, config, { flag: "wx" });
+      writeVueConfigFixture(directory, config);
+    }
     const argv = [
       "lint",
-      ...(config ? ["-c", "vize.config.json"] : ["--no-config"]),
+      ...(config ? ["-c", "vite.config.mjs"] : ["--no-config"]),
       ...(preset ? ["--preset", preset] : []),
       "--format",
       "json",
@@ -50,6 +59,9 @@ export function observePackets(fixtures, distribution, consumer, output) {
       binary: distribution.member,
       input: inputObservation(filename, entry.source),
       configuration: config ? inputObservation(configFile, config) : null,
+      vueConfiguration: config
+        ? inputObservation(path.join(directory, "vite.config.mjs"), vueConfig)
+        : null,
       status: run.status,
       signal: run.signal,
       error: run.error ? { name: run.error.name, message: run.error.message } : null,
@@ -66,6 +78,11 @@ export function observePackets(fixtures, distribution, consumer, output) {
     };
     try {
       verifyPacket(packet, stdout, stderr);
+      if (packet.vueConfiguration) {
+        assert.equal(packet.vueConfiguration.readError, null, "Vue carrier disappeared");
+        assert.equal(packet.vueConfiguration.afterText, packet.vueConfiguration.text);
+        assert.equal(packet.vueConfiguration.afterSha256, packet.vueConfiguration.sha256);
+      }
       assertLoadedBinary(distribution.member.binary, distribution.member, consumer);
       packet.passed = true;
     } catch (error) {
