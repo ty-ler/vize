@@ -211,7 +211,7 @@ export class LspSession {
   }> {
     const exited = this.waitForExit(timeoutMs);
     if (mode === "exit") this.notify("exit", undefined);
-    this.process.stdin.end();
+    else this.process.stdin.end();
     assert.ok(
       await exited,
       `vize lsp did not finish ${mode} within ${timeoutMs}ms\n${this.stderr}`,
