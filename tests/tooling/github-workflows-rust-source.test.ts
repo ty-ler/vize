@@ -67,7 +67,7 @@ void test("required source reports include selected product gates and mandatory 
   assert.equal(source.jobs["pr-js-packages"].uses, "./.github/workflows/pr-js-checks.yml");
   assert.equal(
     source.jobs["source-report"].if,
-    "${{ always() && !contains(needs.*.result, 'cancelled') }}",
+    "${{ always() && github.event_name == 'merge_group' && !contains(needs.*.result, 'cancelled') }}",
   );
   assert.match(commands(source.jobs["source-report"]), /canonical-corpus-selection\.mjs --check/);
   for (const [name, job] of [
