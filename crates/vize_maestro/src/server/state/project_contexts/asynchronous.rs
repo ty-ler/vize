@@ -19,6 +19,9 @@ impl ServerState {
             .and_then(Weak::upgrade);
         let root = owner.as_ref().unwrap_or(self);
         loop {
+            if root.project_routing_shutting_down() {
+                return None;
+            }
             let state = match root.document_project_context(uri) {
                 Some(context) => match context.initialize_async(root).await {
                     Some(state) => state,
