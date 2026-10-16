@@ -42,12 +42,12 @@ fn refuses_absent_foreign_duplicate_and_every_changed_typed_descriptor_field() {
     assert!(matching_project(&[], config, &selected).is_none());
     let foreign = foreign_config();
     let aliased = config.parent().unwrap().join(".").join("tsconfig.json");
-    let nul = format!("{}\0", config.display());
+    let nul = vize_l0::cstr!("{}\0", config.display());
     for path in [
         Path::new("tsconfig.json"),
         foreign.as_path(),
         aliased.as_path(),
-        Path::new(&nul),
+        Path::new(nul.as_str()),
     ] {
         assert!(matching_project(std::slice::from_ref(&selected), path, &selected).is_none());
     }

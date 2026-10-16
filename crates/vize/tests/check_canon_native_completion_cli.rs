@@ -275,9 +275,13 @@ fn native_completion_cli_refuses_denied_transport_instead_of_reporting_clean() {
         output.stdout.is_empty(),
         "no successful diagnostic vector from a denied owner"
     );
-    let stderr = std::string::String::from_utf8_lossy(&output.stderr);
+    let refusal = b"native transport denied";
     assert!(
-        stderr.contains("native transport denied"),
-        "raw refusal must remain observable: {stderr}"
+        output
+            .stderr
+            .windows(refusal.len())
+            .any(|bytes| bytes == refusal),
+        "raw refusal must remain observable: {:?}",
+        output.stderr
     );
 }

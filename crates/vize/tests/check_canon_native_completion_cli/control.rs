@@ -44,7 +44,7 @@ pub(super) fn assert_control(root: &Path, native: &Path, mode: &str) {
     let exit_text = if wrapper_exit.is_null() {
         "None".into()
     } else {
-        wrapper_exit.to_string()
+        cstr!("{wrapper_exit}")
     };
     assert_eq!(fs::read_to_string(root.join("native-child.txt")).unwrap(), cstr!("wrapper-pid={wrapper_pid}\nnative-pid={native_pid}\nnative-exit=0\nwrapper-exit={exit_text}\n").as_str());
     assert_eq!(receipt["mode"], mode);
