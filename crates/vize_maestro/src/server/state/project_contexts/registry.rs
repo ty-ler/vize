@@ -15,8 +15,7 @@ type Initialization = Shared<BoxFuture<'static, Option<Arc<ServerState>>>>;
 
 pub(super) struct ProjectContext {
     key: ProjectContextKey,
-    snapshot: OnceLock<vize_carton::config::LoadedLspConfig>,
-    snapshot_failed: AtomicBool,
+    snapshot: OnceLock<(vize_carton::config::LoadedLspConfig, bool)>,
     previous: Option<RetainedConfiguration>,
     state: OnceLock<Arc<ServerState>>,
     #[cfg(feature = "experimental-source-navigation")]
@@ -30,7 +29,6 @@ impl ProjectContext {
         Self {
             key: key.into(),
             snapshot: OnceLock::new(),
-            snapshot_failed: AtomicBool::new(false),
             previous: None,
             state: OnceLock::new(),
             #[cfg(feature = "experimental-source-navigation")]
@@ -45,9 +43,7 @@ impl ProjectContext {
         snapshot: vize_carton::config::LoadedLspConfig,
         failed: bool,
     ) {
-        if self.snapshot.set(snapshot).is_ok() {
-            self.snapshot_failed.store(failed, Ordering::Release);
-        }
+        let _ = self.snapshot.set((snapshot, failed));
     }
 
     pub(super) fn replacement(&self) -> Self {
@@ -116,9 +112,9 @@ impl ProjectContext {
             .get_or_init(|| {
                 owner.new_project_state(
                     &self.key,
-                    self.snapshot.get(),
+                    self.snapshot.get().map(|(snapshot, _)| snapshot),
                     self.previous.as_ref(),
-                    self.snapshot_failed.load(Ordering::Acquire),
+                    self.snapshot.get().is_some_and(|(_, failed)| *failed),
                 )
             })
             .clone();
