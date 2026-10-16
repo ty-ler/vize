@@ -3,11 +3,6 @@ description: Exercise editor features, authored config and project navigation wi
 runs:
   using: composite
   steps:
-    - name: Build the same-source CLI and record its identity
-      shell: bash
-      run: |
-        cargo build --locked --profile ci -p vize
-        node tests/differential/build-receipt.ts
     - name: Test same-source CLI completion and observable transport failures
       shell: bash
       env:
@@ -26,6 +21,11 @@ runs:
         set -euo pipefail
         unset VIZE_TEST_DISABLE_TSGO
         cargo test --locked --profile ci -p vize_maestro --lib corsa_session_tests -- --nocapture --test-threads=1
+    - name: Build the same-source CLI and record its identity
+      shell: bash
+      run: |
+        cargo build --locked --profile ci -p vize
+        node tests/differential/build-receipt.ts
     - name: Install the original Vue provider once
       shell: bash
       run: npm install --prefix "$RUNNER_TEMP/native-lsp-provider" --ignore-scripts --no-package-lock --no-audit --no-fund vue@3.5.43
