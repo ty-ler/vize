@@ -189,3 +189,73 @@ impl Drop for AsyncChildGuard {
 fn process_guard_poisoned() -> CorsaError {
     CorsaError::Join(CompactString::from("process guard lock poisoned"))
 }
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+    use std::{
+        os::unix::process::ExitStatusExt,
+        process::{Command, Stdio},
+        sync::Arc,
+    };
+
+    #[test]
+    fn poisoned_owned_process_lock_still_kills_waits_and_reaps_with_explicit_poison_error() {
+        let child = Command::new("sh")
+            .args(["-c", "exec cat"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("actual owned process");
+        let pid = child.id();
+        let process = Arc::new(AsyncChildGuard::new(child));
+        let poisoned = Arc::clone(&process);
+        assert!(
+            std::thread::spawn(move || {
+                let _owned = poisoned.child.lock().unwrap();
+                panic!("poison the actual owned process lock");
+            })
+            .join()
+            .is_err()
+        );
+        let mut packets = Vec::new();
+        for attempt in 0..2 {
+            let error = process
+                .abort_receipt()
+                .expect_err("poison stays explicit after real reaping");
+            let raw_error = error.to_string();
+            match error {
+                CorsaError::Join(message) => assert_eq!(message, "process guard lock poisoned"),
+                other => panic!("wrong process lock failure: {other:?}"),
+            }
+            let observation = process.terminal_observer().snapshot();
+            assert!(observation.custody_complete());
+            assert_eq!(observation.expected_pid, pid);
+            let terminal = observation.terminal.unwrap();
+            assert_eq!(terminal.pid, pid);
+            assert_eq!(terminal.status.signal(), Some(9));
+            assert!(terminal.kill_requested && terminal.reaped && !terminal.timed_out);
+            let owned = process
+                .child
+                .lock()
+                .expect_err("actual mutex remains poisoned")
+                .into_inner();
+            assert!(owned.is_none(), "waited Child was actually removed");
+            let packet = serde_json::json!({"attempt":attempt,"expectedPid":pid,"poisonError":raw_error,"childRemoved":owned.is_none(),"terminal":{"pid":terminal.pid,"status":format!("{:?}",terminal.status),"exitCode":terminal.status.code(),"signal":terminal.status.signal(),"killRequested":terminal.kill_requested,"timedOut":terminal.timed_out,"reaped":terminal.reaped}});
+            eprintln!("actual poisoned owned process terminal: {packet}");
+            packets.push(packet);
+        }
+        #[cfg(target_os = "linux")]
+        assert!(!std::path::Path::new(&format!("/proc/{pid}")).exists());
+        if let Some(capture) = std::env::var_os("VIZE_SNAPSHOT_SOURCE_CAPTURE_DIR") {
+            let capture = std::path::PathBuf::from(capture);
+            std::fs::create_dir_all(&capture).unwrap();
+            std::fs::write(
+                capture.join("poisoned-owned-process-lock.json"),
+                serde_json::to_vec_pretty(&packets).unwrap(),
+            )
+            .unwrap();
+        }
+    }
+}

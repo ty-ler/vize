@@ -307,23 +307,3 @@ fn handle_callback(
         ),
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::lock_unpoisoned;
-    use std::sync::{Arc, Mutex};
-
-    #[test]
-    fn process_lock_recovers_after_poisoning() {
-        let lock = Arc::new(Mutex::new(1_u8));
-        let poisoned = Arc::clone(&lock);
-        let _ = std::thread::spawn(move || {
-            let _guard = poisoned.lock().unwrap();
-            panic!("poison msgpack process lock");
-        })
-        .join();
-
-        *lock_unpoisoned(&lock) = 2;
-        assert_eq!(*lock_unpoisoned(&lock), 2);
-    }
-}
