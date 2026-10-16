@@ -4,6 +4,7 @@
 import copy
 import importlib.util
 import io
+import json
 from pathlib import Path
 import tarfile
 import tempfile
@@ -116,6 +117,48 @@ class PackageInventory(unittest.TestCase):
         (self.directory / "Cargo.toml").write_text('[package]\nexclude=["src/lib.rs"]\n')
         with self.assertRaisesRegex(ValueError, "reserved Cargo"):
             consumer.verify_packaged_source(self.directory, self.bodies)
+
+
+class ConsumerCacheIsolation(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.directory = Path(temporary.name)
+        self.manifest = '[package]\nname = "checked-corsa-consumer"\nversion = "0.0.0"\n[workspace]\n'
+        (self.directory / "Cargo.toml").write_text(consumer.isolated_manifest(self.manifest, "archive-consumer"))
+        self.artifact = {"reason": "compiler-artifact", "manifest_path": str(self.directory / "Cargo.toml"),
+                         "package_id": "generated-root", "fresh": False, "features": [], "filenames": ["consumer.rlib"],
+                         "target": {"kind": ["lib"], "name": "checked_corsa_consumer_archive_consumer",
+                                    "src_path": str(self.directory / "src/lib.rs")}}
+
+    def test_sibling_consumers_cannot_share_package_identity(self):
+        names = [consumer.tomllib.loads(consumer.isolated_manifest(self.manifest, name))["package"]["name"]
+                 for name in ["path-consumer", "archive-consumer", "default-feature-negative"]]
+        self.assertEqual(len(set(names)), 3)
+
+    def test_build_requires_compilation_of_the_correct_root_source(self):
+        self.assertFalse(consumer.verify_consumer_build(json.dumps(self.artifact), self.directory)["fresh"])
+        for fields in [{"fresh": True}, {"target": {**self.artifact["target"], "src_path": "/sibling/src/lib.rs"}},
+                       {"manifest_path": "/sibling/Cargo.toml"}]:
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                consumer.verify_consumer_build(json.dumps({**self.artifact, **fields}), self.directory)
+
+    def test_each_mode_clears_only_its_generated_root_before_compiling(self):
+        runner = consumer.Acceptance.__new__(consumer.Acceptance)
+        runner.consumer_builds = []
+        commands = []
+
+        def command(label, args, directory):
+            commands.append(args)
+            return json.dumps(self.artifact) if args[1] == "build" else ""
+
+        runner.command = command
+        runner.builds("archive", self.directory)
+        self.assertEqual([args[1] for args in commands], ["clean", "build", "test", "clean", "build", "test"])
+        for args in commands[::3]:
+            self.assertEqual(args[args.index("--package") + 1], "checked-corsa-consumer-archive-consumer")
+            self.assertNotIn("--workspace", args)
+        self.assertEqual(len(runner.consumer_builds), 2)
 
 
 if __name__ == "__main__":

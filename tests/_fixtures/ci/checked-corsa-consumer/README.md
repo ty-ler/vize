@@ -20,6 +20,12 @@ reuse dependency builds. Archives must retain every source member and the exact
 `LICENSE` bytes; only Cargo's generated manifest/VCS files and the explicitly
 omitted package lock are exempt from source-byte comparison.
 
+Generated consumers have distinct package names. Before each build, the harness
+cleans only that generated root package and requires a `fresh: false` compiler
+artifact identifying its exact source file. Provider/dependency artifacts remain
+shared. This prevents Cargo from treating a sibling consumer's earlier output
+as proof that a different source compiled, including the default-feature refusal.
+
 The fixture checks shared errors, process receipts and command ownership across
 all six libraries. It also preserves current client source-file/content-mapper/
 semantic-query APIs and checks local/default versus experimental orchestration.

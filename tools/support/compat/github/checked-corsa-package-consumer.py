@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
+import re
 import shutil
 import subprocess
 import tarfile
@@ -36,6 +37,28 @@ def require(condition, message):
 
 def digest(body):
     return hashlib.sha256(body).hexdigest()
+
+
+def isolated_manifest(manifest, name):
+    """Distinct root names prevent Cargo reusing a sibling root's cached crate."""
+    require(re.fullmatch(r"[a-z0-9-]+", name), "invalid consumer identity")
+    original = tomllib.loads(manifest)["package"]["name"]
+    before = 'name = ' + json.dumps(original)
+    require(manifest.count(before) == 1, "ambiguous consumer package name")
+    return manifest.replace(before, 'name = ' + json.dumps(original + "-" + name))
+
+
+def verify_consumer_build(stdout, directory):
+    manifest = directory / "Cargo.toml"
+    name = tomllib.loads(manifest.read_text())["package"]["name"].replace("-", "_")
+    artifacts = [row for line in stdout.splitlines() if (row := json.loads(line)).get("reason") == "compiler-artifact"
+                 and Path(row["manifest_path"]).resolve() == manifest.resolve() and row["target"]["kind"] == ["lib"]]
+    require(len(artifacts) == 1, "build must report exactly one consumer library artifact")
+    artifact = artifacts[0]
+    require(artifact["fresh"] is False, "consumer root must actually compile, not reuse another cached root")
+    require(artifact["target"]["name"] == name and Path(artifact["target"]["src_path"]).resolve() == (directory / "src/lib.rs").resolve(),
+            "compiled consumer source identity mismatch")
+    return {key: artifact[key] for key in ["package_id", "manifest_path", "target", "fresh", "features", "filenames"]}
 
 
 def archive_members(archive, prefix):
@@ -103,6 +126,7 @@ class Acceptance:
     def __init__(self, root, output, source_sha):
         self.root, self.output, self.source_sha = root, output, source_sha
         self.commands = []
+        self.consumer_builds = []
         require(Path(os.environ.get("CARGO_TARGET_DIR", "")).is_absolute(),
                 "set an absolute shared CARGO_TARGET_DIR to avoid duplicate native builds")
         output.mkdir(parents=True, exist_ok=False)
@@ -125,7 +149,7 @@ class Acceptance:
     def consumer(self, name, manifest, source):
         directory = self.output / name
         (directory / "src").mkdir(parents=True)
-        (directory / "Cargo.toml").write_text(manifest)
+        (directory / "Cargo.toml").write_text(isolated_manifest(manifest, name))
         (directory / "src/lib.rs").write_bytes(source)
         shutil.copyfile(self.root / "Cargo.lock", directory / "Cargo.lock")
         return directory
@@ -134,10 +158,18 @@ class Acceptance:
         flags = ["--locked"] if locked else []
         return json.loads(self.command(label, ["cargo", "metadata", "--offline", "--format-version", "1", *flags, *features], directory))
 
+    def clean_consumer(self, label, directory):
+        name = tomllib.loads((directory / "Cargo.toml").read_text())["package"]["name"]
+        # Clear only this tiny generated root, preserving every provider/dependency.
+        # This also makes fresh:false evidence reliable on sticky-worker reruns.
+        self.command(label + "-clean-root", ["cargo", "clean", "--locked", "--offline", "--package", name, *PROFILE], directory)
+
     def builds(self, label, directory):
         # Match the native worker's ci profile so registry dependencies reuse its cache.
         for mode, features in [("default", []), ("distributed", ["--features", "distributed"])]:
-            self.command(label + "-" + mode + "-build", ["cargo", "build", "--locked", "--offline", "--lib", *PROFILE, *features], directory)
+            self.clean_consumer(label + "-" + mode, directory)
+            output = self.command(label + "-" + mode + "-build", ["cargo", "build", "--locked", "--offline", "--lib", "--message-format=json", *PROFILE, *features], directory)
+            self.consumer_builds.append({"provider": label, "mode": mode, "artifact": verify_consumer_build(output, directory)})
             self.command(label + "-" + mode + "-test", ["cargo", "test", "--locked", "--offline", "--lib", *PROFILE, *features], directory)
 
     def run(self):
@@ -238,14 +270,18 @@ class Acceptance:
                 self.metadata("archive-" + mode + "-metadata", packaged, features), version, archive_providers, bool(features))})
         self.builds("archive", packaged)
         verify_graph(self.metadata("negative-default-metadata", negative), version, archive_providers, False)
+        self.clean_consumer("negative-default", negative)
         diagnostics = self.command("default-experimental-import-refused", ["cargo", "build", "--locked", "--offline", "--lib", "--message-format=json", *PROFILE], negative, 101)
         errors = [row["message"] for line in diagnostics.splitlines() if (row := json.loads(line)).get("reason") == "compiler-message" and row["message"]["level"] == "error"]
         require(len(errors) == 1 and errors[0].get("code", {}).get("code") == "E0432"
                 and "corsa::orchestrator::RaftConfig" in errors[0]["message"], "default build failed for a reason other than gated RaftConfig")
+        require(any(span["is_primary"] and (negative / span["file_name"]).resolve() == (negative / "src/lib.rs").resolve()
+                    for span in errors[0]["spans"]), "negative diagnostic must originate in the independent refusal consumer")
         require(not self.command("final-source-status", ["git", "status", "--porcelain", "--untracked-files=no"]), "acceptance mutated tracked source")
         require(self.command("final-source-head", ["git", "rev-parse", "HEAD"]).strip() == self.source_sha, "source identity changed")
         receipt = {"sourceSha": self.source_sha, "version": version, "fixtureSha256": digest(source), "commands": self.commands,
-                   "graphs": graphs, "cliMetadata": cli_graphs, "archives": archives, "pathDefaultAndDistributedBuilt": True,
+                   "graphs": graphs, "cliMetadata": cli_graphs, "archives": archives, "consumerBuilds": self.consumer_builds,
+                   "pathDefaultAndDistributedBuilt": True,
                    "archiveDefaultAndDistributedBuilt": True, "consumerTestsPassed": True, "defaultExperimentalImportRefused": True,
                    "consumerPatches": False, "publicRegistryAcceptance": False, "cliVariantsCompiled": False}
         (self.output / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
