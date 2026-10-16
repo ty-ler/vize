@@ -31,6 +31,7 @@ await test("product, compiled documentation and cache changes retain app checks"
     "playground/src/App.vue",
     "npm/compose/core/examples/virtual-list.vue",
     "npm/compose/core/src/virtual-list.ts",
+    "npm/ui/scripts/reference-docs/composable-examples.ts",
     "docs/theme/components/Guide.vue",
     "examples/html-conformance/src/index.html",
     "docs/davinci/plan/canonical-corpus/budgets.toml",
@@ -78,11 +79,11 @@ await test("npm Vue examples select the current-source opinionated lint consumer
   }
 });
 
-await test("npm prose and non-SFC composable edits do not select extra native app builds", () => {
+await test("npm prose and intentional fixtures stay outside authored source lint", () => {
   for (const path of [
     "npm/compose/core/examples/README.md",
-    "npm/compose/core/src/virtual-list.ts",
-    "npm/ui/scripts/reference-docs/composable-examples.ts",
+    "npm/compose/core/fixtures/invalid.vue",
+    "npm/compose/core/examples/invalid.fixture.vue",
   ]) {
     assert.equal(planCheckInputs([path]).apps, false, path);
   }

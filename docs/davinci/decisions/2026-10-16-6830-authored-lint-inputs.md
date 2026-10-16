@@ -33,3 +33,10 @@ example, package source, theme component and HTML input paths, with prose and
 intentional fixtures still excluded. Scoped formatting and lint pass. The
 current-source CLI and example behavior are checked by the next Actions run;
 the dependency-graph fix alone is not a claim that main is fully qualified.
+
+Integration with #9260 retains its equivalent example fix and actual event
+planner control. Its narrower selector expectation for package TypeScript is
+updated to the command's real input set: both composable implementations and
+package scripts are already linted. Prose and intentional fixture exclusions
+remain unchanged. The combined planner and package-group suites pass all 13
+tests, including #9261's production Vue fixture installation contract.
