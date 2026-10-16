@@ -12,6 +12,7 @@ import {
 } from "../performance/support/warm-type-backed-processes.ts";
 import { hoverToText } from "./support/lsp/assertions.ts";
 import { LspSession } from "./support/lsp/session.ts";
+import { retiredOwnerWitness } from "./support/lsp/retired-owner-witness.ts";
 
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
@@ -66,6 +67,15 @@ function directNativeChildren(parent: number, executable: string) {
   }
   return children;
 }
+
+test(
+  "retired in-flight native owner remains joined across configuration replacement and final shutdown",
+  {
+    skip: process.platform !== "linux",
+    timeout: 30000,
+  },
+  async () => retiredOwnerWitness(directNativeChildren),
+);
 
 for (const mode of ["shutdown-exit", "exit", "eof"] as const) {
   test(
