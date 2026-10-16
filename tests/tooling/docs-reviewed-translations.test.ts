@@ -168,7 +168,7 @@ void test("Japanese rule options retain the complete authored review and origina
   );
   assert.deepEqual(
     [...modifierRow.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)].map((match) => match[1]),
-    ["./reference/vue-valid-v-on.md#修飾子の検証"],
+    ["./reference/vue-valid-v-on.md"],
   );
   assert.match(
     readFileSync(resolve(root, "docs/content/ja/rules/reference/vue-valid-v-on.md"), "utf8"),

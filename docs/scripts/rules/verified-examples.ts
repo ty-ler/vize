@@ -135,18 +135,6 @@ export const verifiedOverrides: Record<string, RuleExample> = {
     template("{{ capitalize(message) }}"),
     "vue/no_deprecated_filter.rs",
   ),
-  "vue/no-deprecated-v-on-number-modifiers": {
-    ...pair(
-      template(
-        '<input @keyup.13="submit" />\n<input v-on:keyup.27="cancel" />\n<input @keyup.13.stop="submit" />',
-      ),
-      template('<input @keyup.enter="submit" />\n<input @keyup.esc="cancel" />'),
-      "vue/no_deprecated_v_on_number_modifiers.rs",
-    ),
-    note: '## Numeric selection and fixes\n\nThe first decimal-prefix numeric modifier determines the finding. `@keyup.13.27="submit"` reports only `13` and offers `@keyup.enter.27="submit"`; another fix pass can replace `27` with `escape`. `@keyup.13suffix="submit"` also becomes `@keyup.enter="submit"`. Values 0–9 are exempt, so `@keyup.0.13="submit"` is clean under this rule. Unknown values such as `999` report without a fix. Vue 2 and petite-vue remain exempt.',
-    noteJa:
-      '## 数値修飾子の選択と修正\n\n最初に十進整数として読み取れる修飾子だけを判定します。`@keyup.13.27="submit"` では `13` を報告し、`@keyup.enter.27="submit"` に修正します。次の修正で `27` を `escape` にできます。`@keyup.13suffix="submit"` も `@keyup.enter="submit"` に修正します。0〜9 は対象外のため、`@keyup.0.13="submit"` はこのルールでは報告しません。`999` など未知のコードは報告だけ行います。Vue 2 と petite-vue では従来どおり報告しません。',
-  },
   "vue/attribute-hyphenation": pair(
     template('<UserCard firstName="Ada" />'),
     template('<UserCard first-name="Ada" />'),
