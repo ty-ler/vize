@@ -65,7 +65,10 @@ test("source planning is required before product builds and a failed plan cannot
   }
   const report = source.jobs["source-report"];
   const dependencies = typeof report.needs === "string" ? [report.needs] : (report.needs ?? []);
-  assert.equal(report.if, "${{ always() && !contains(needs.*.result, 'cancelled') }}");
+  assert.equal(
+    report.if,
+    "${{ always() && github.event_name == 'merge_group' && !contains(needs.*.result, 'cancelled') }}",
+  );
   assert.ok(dependencies.includes("pr-source-plan"));
   assert.equal(
     report.steps?.at(-1)?.run,
