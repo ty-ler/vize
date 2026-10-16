@@ -28,7 +28,10 @@ fn exact_host_candidate_resolves_after_unchanged_sibling_diagnostics() {
 }
 
 fn hash(bytes: &[u8]) -> vize_l0::String {
-    vize_l0::cstr!("{:x}", Sha256::digest(bytes))
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| vize_l0::cstr!("{byte:02x}"))
+        .collect()
 }
 
 fn run(intervention: &str) {
