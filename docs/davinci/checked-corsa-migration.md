@@ -40,8 +40,8 @@ reaping. Only an authenticated native 7.0.2 executable and complete initialize
 contract select shutdown followed by stdin EOF. Foreign servers retain standard
 shutdown/exit. No stderr bytes, including the historical EOF line, are discarded.
 A clean result requires one completed successful terminal receipt and an
-acknowledged graceful shutdown. Startup failure and discard retain raw evidence. Final LSP shutdown freezes
-cache admission and waits for the actual queued client close, including an
+acknowledged graceful shutdown. Startup failure and discard retain raw evidence.
+Final LSP shutdown freezes cache admission and waits for the actual queued client close, including an
 unfinished or abandoned startup. The same finalizer runs after Exit or stdin EOF.
 Failed owners and the first error survive retries; neither an empty cache slot
 nor a timeout produces a successful shutdown response. Ordinary configuration
@@ -117,8 +117,14 @@ After source and package/native Actions pass:
    Preserve full upstream notices and archive provenance. Verify each exact
    published package/version and owner configuration.
 4. Build a fresh registry-only consumer with no paths, patches or workspace
-   dependency source. Require default and distributed builds/tests, CLI feature
-   parity and one runtime provider. Archive/path acceptance cannot satisfy this.
+   dependency source. Require default and distributed builds/tests, Canon's
+   default native API and one runtime provider. The optional
+   `checked-corsa-public-consumer.py` records downloaded archive checksums,
+   complete source/license membership and release identity alongside those
+   builds. It never publishes packages. The CLI package is not publishable;
+   its five feature builds remain independent source acceptance, and the
+   installed release binary needs its own qualification. Archive/path
+   acceptance cannot satisfy public-registry acceptance.
 5. Run the release's unchanged original performance and application/editor
    qualification against the immutable release identity, then verify public
    installations. Keep the original #8675 failure evidence until every claimed
