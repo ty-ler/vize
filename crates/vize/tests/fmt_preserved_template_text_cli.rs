@@ -23,8 +23,8 @@ fn discovered_and_explicit_compiler_whitespace_survives_three_cli_writes() {
     for (config_name, config, explicit) in [
         ("vite.config.mjs", JSON, false),
         ("vite.config.mjs", TS, false),
-        ("explicit-json.mjs", JSON, true),
-        ("explicit-js.mjs", TS, true),
+        ("vite.config.mts", JSON, true),
+        ("vite.config.ts", TS, true),
     ] {
         let project = tempfile::tempdir().unwrap();
         let config = if let Some(native) = config.strip_prefix("export default ") {

@@ -142,7 +142,7 @@ impl Fixture {
             vite_config::source(serde_json::to_vec(&json!({
                 "experimentals": { "patternedTemplate": enabled },
                 "typeChecker": { "corsaPath": runtime, "checkFallthroughAttrs": false, "optionsApi": options_api },
-                "lsp": { "lint": false, "typecheck": true, "hover": true, "crossFile": cross_file }
+                "languageServer": { "lint": false, "typecheck": true, "hover": true, "crossFile": cross_file }
             }))
             .unwrap()),
         )
