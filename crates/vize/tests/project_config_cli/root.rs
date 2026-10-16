@@ -119,7 +119,7 @@ fn omitted_format_inputs_follow_vite_root_without_writing_siblings() {
 }
 
 #[test]
-fn native_vite_arrays_keep_global_settings_and_root_relative_scoped_entries() {
+fn canonical_vite_scopes_keep_global_settings_and_root_relative_entries() {
     let project = project();
     let root = project.path();
     write(root, "vite.config.mjs", ARRAY);
@@ -252,4 +252,42 @@ fn omitted_check_inputs_use_vite_tsconfig_and_explicit_tsconfig_stays_local() {
         r#"{"typeChecker":{"tsconfig":"tsconfig.json"}}"#
     );
     assert_configuration(root, &SETTINGS, false, None);
+}
+
+#[test]
+fn malformed_discovered_vue_settings_refuse_build_before_writing_outputs() {
+    let project = tempfile::tempdir().unwrap();
+    let root = project.path();
+    let source = "<template><p>unchanged authored source</p></template>\n";
+    let config = "export default {vue:{compiler:{whitespace:'unsupported'}}};\n";
+    write(root, "App.vue", source);
+    write(root, "vite.config.mjs", config);
+    write(
+        root,
+        "vite.config.cts",
+        "throw new Error('lower-priority config evaluated');",
+    );
+    let refused = run(root, &["build", "App.vue", "-o", "refused"]);
+    assert_eq!(refused.status.code(), Some(1), "{refused:?}");
+    let stderr = std::str::from_utf8(&refused.stderr).unwrap();
+    assert!(stderr.contains("vite.config.mjs"), "{stderr}");
+    assert!(
+        stderr.contains("unsupported native option value"),
+        "{stderr}"
+    );
+    assert!(
+        !stderr.contains("lower-priority config evaluated"),
+        "{stderr}"
+    );
+    assert!(!root.join("refused").exists());
+    assert_eq!(fs::read_to_string(root.join("App.vue")).unwrap(), source);
+    assert_eq!(
+        fs::read_to_string(root.join("vite.config.mjs")).unwrap(),
+        config
+    );
+    assert_success(&run(
+        root,
+        &["build", "App.vue", "--no-config", "-o", "defaults"],
+    ));
+    assert!(root.join("defaults").is_dir());
 }

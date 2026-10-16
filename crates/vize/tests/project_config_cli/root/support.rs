@@ -14,7 +14,7 @@ pub(super) const IMAGE: &str =
 pub(super) const TSCONFIG: &str = include_str!(
     "../../../../../tests/_fixtures/differential/config/vite-root-8371/tsconfig.json.txt"
 );
-pub(super) const ARRAY: &str = "export default {root:'app',__vizeProjectRoot:'decoy',vue:[{linter:{preset:'essential',rules:{'a11y/alt-text':'off'}}},{files:['src/**/*.vue'],ignores:['src/Ignored.vue'],linter:{rules:{'a11y/alt-text':'error'}}}]};";
+pub(super) const ARRAY: &str = "export default {root:'app',__vizeProjectRoot:'decoy',vue:{linter:{preset:'essential',rules:{'a11y/alt-text':'off'}},entries:[{files:['src/**/*.vue'],ignores:['src/Ignored.vue'],linter:{rules:{'a11y/alt-text':'error'}}}]}};";
 pub(super) const DEDICATED: &str =
     r#"{"linter":{"preset":"essential","rules":{"a11y/alt-text":"off"}}}"#;
 pub(super) static IGNORE_SETTINGS: LazyLock<String> = LazyLock::new(|| {
