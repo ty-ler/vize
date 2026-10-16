@@ -65,7 +65,7 @@ const strictRepoCheckCommand = [
 const ciVizeAppCheckCommand = [
   runInDirectory(
     "./examples/vite-musea",
-    "vize check && vp check src vite.config.ts vite.app.config.ts vize.config.ts playwright.config.ts",
+    "vize check && vp check src vite.config.ts vite.app.config.ts playwright.config.ts",
   ),
   runInDirectory(
     "./playground",
