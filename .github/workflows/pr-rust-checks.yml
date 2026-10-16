@@ -173,7 +173,7 @@ jobs:
       - name: Run affected Rust doctests
         run: node tools/support/compat/github/run-affected-rust.ts "$RUNNER_TEMP/rust-plan.json" cargo test @packages@ --profile ci --doc
 
-  # Named cohorts build the same affected test binaries from the warm read-only
+  # Named cohorts build their affected test targets from the warm read-only
   # `nextest-ci` clone and start beside Clippy, instead of moving a multi-GB
   # archive. The merge queue keeps its archive: its receipts bind the evidence.
   pr-rust-shard:
@@ -243,12 +243,12 @@ jobs:
           printf 'VIZE_TEST_FIX_HISTORY_CAPTURE_DIR=%s\nVIZE_TEST_FIX_HISTORY_ARCHIVE_RECEIPT=%s\n' "$GITHUB_WORKSPACE/target/nextest/full/typechecker-fixtures" "$GITHUB_WORKSPACE/.artifacts/rust-test-archive/receipt.json" >> "$GITHUB_ENV"
       - name: Build and run the affected Rust test cohort
         if: ${{ github.event_name == 'pull_request' }}
-        # Preserve affected package feature unification; the shared cohort
-        # registry partitions test binaries by their actual product surface.
+        # Keep every affected package root and its feature unification. Narrow
+        # Cargo targets when safe; the existing filter still selects all tests.
         run: |
           node -e 'require("node:fs").writeFileSync(process.env.RUNNER_TEMP + "/rust-plan.json", process.env.RUST_PLAN_JSON)'
           phase_started=$SECONDS
-          if node tools/support/compat/github/run-affected-rust.ts "$RUNNER_TEMP/rust-plan.json" cargo nextest run @packages@ --cargo-profile ci --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass; then phase_exit=0; else phase_exit=$?; fi
+          if node tools/support/compat/github/run-rust-test-cohort.ts "$RUNNER_TEMP/rust-plan.json" "$COHORT" --cargo-profile ci --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass; then phase_exit=0; else phase_exit=$?; fi
           mkdir -p "target/nextest/$NEXTEST_PROFILE"
           printf '{"phase":"workspace-cohort","cohort":"%s","elapsed_seconds":%d,"exit_code":%d}\n' "$COHORT" "$((SECONDS - phase_started))" "$phase_exit" > "target/nextest/$NEXTEST_PROFILE/timing.json"
           exit "$phase_exit"
