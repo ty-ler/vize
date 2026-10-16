@@ -2,14 +2,35 @@ use super::ServerState;
 use vize_l0::config::TypeCheckerConfig;
 
 #[test]
-fn native_checker_snapshot_retains_raw_values_and_separate_origin_on_reload() {
+fn native_checker_snapshot_retains_resolved_values_and_separate_origin_on_reload() {
     let directory = tempfile::tempdir().unwrap();
     let config_path = directory.path().join("vite.config.mjs");
     let config = TypeCheckerConfig {
         strict: true,
-        tsconfig: Some("app/tsconfig.json".into()),
-        tsgo_path: Some("tools/corsa".into()),
-        globals_file: Some("globals.d.ts".into()),
+        tsconfig: Some(
+            directory
+                .path()
+                .join("app/tsconfig.json")
+                .to_str()
+                .unwrap()
+                .into(),
+        ),
+        tsgo_path: Some(
+            directory
+                .path()
+                .join("tools/corsa")
+                .to_str()
+                .unwrap()
+                .into(),
+        ),
+        globals_file: Some(
+            directory
+                .path()
+                .join("globals.d.ts")
+                .to_str()
+                .unwrap()
+                .into(),
+        ),
         servers: Some(2),
         ..TypeCheckerConfig::default()
     };
