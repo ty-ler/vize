@@ -194,7 +194,7 @@ fn inherited_vue_targets_preserve_complete_checker_reports_and_vite_precedence()
     write(
         root,
         "vite.config.mjs",
-        &support::SETTINGS.replace("vue: {", "vue: { vue: { version: '3' },"),
+        &support::SETTINGS.replace("vue: {", "vue: { version: '3',"),
     );
     let (overridden, overridden_report) = check(root, &corsa);
     assert_eq!(overridden.status.code(), Some(1), "{overridden:?}");

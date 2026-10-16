@@ -188,7 +188,6 @@ pub struct RemoveArgs {
 /// Shared state for one `vize lib` invocation.
 pub struct LibContext {
     pub root: PathBuf,
-    pub config_path: Option<PathBuf>,
     pub lock_path: PathBuf,
     pub config: crate::config::LibConfig,
     pub resolver: Resolver,
@@ -240,7 +239,6 @@ impl LibContext {
         }
         Ok(Self {
             root,
-            config_path: loaded.source_path,
             lock_path,
             config,
             resolver,
