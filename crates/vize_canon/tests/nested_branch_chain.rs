@@ -36,7 +36,9 @@ fn nested_else_keeps_real_prop_type_errors() {
         (
             "cmd?: string",
             "cmd?: number",
-            vec!["src/Command.vue(12,24): error TS2322: Type 'string' is not assignable to type 'number'."],
+            vec![
+                "src/Command.vue(12,24): error TS2322: Type 'string' is not assignable to type 'number'.",
+            ],
         ),
         (
             "notification?: Notification",
@@ -49,7 +51,9 @@ fn nested_else_keeps_real_prop_type_errors() {
         (
             "user?: User",
             "user?: number",
-            vec!["src/User.vue(9,30): error TS2322: Type 'User' is not assignable to type 'number'."],
+            vec![
+                "src/User.vue(9,30): error TS2322: Type 'User' is not assignable to type 'number'.",
+            ],
         ),
     ] {
         let child = fixture("Child.vue").replace(before, after);
