@@ -3,7 +3,7 @@
     clippy::disallowed_types,
     reason = "registry cells retain their isolated native owner"
 )]
-use super::{Arc, AtomicBool, Ordering, PathBuf, ServerState};
+use super::{Arc, AtomicBool, Ordering, ProjectContextKey, ServerState};
 #[cfg(feature = "experimental-source-navigation")]
 use crate::source_project::{SourceQueryProject, navigation::NativeNavigationProject};
 use futures::{
@@ -14,7 +14,8 @@ use std::sync::OnceLock;
 type Initialization = Shared<BoxFuture<'static, Option<Arc<ServerState>>>>;
 
 pub(super) struct ProjectContext {
-    root: PathBuf,
+    key: ProjectContextKey,
+    snapshot: Option<vize_carton::config::LoadedLspConfig>,
     state: OnceLock<Arc<ServerState>>,
     #[cfg(feature = "experimental-source-navigation")]
     navigation: OnceLock<Arc<NativeNavigationProject<'static>>>,
@@ -23,14 +24,25 @@ pub(super) struct ProjectContext {
 }
 
 impl ProjectContext {
-    pub(super) fn new(root: PathBuf) -> Self {
+    pub(super) fn new(key: impl Into<ProjectContextKey>) -> Self {
         Self {
-            root,
+            key: key.into(),
+            snapshot: None,
             state: OnceLock::new(),
             #[cfg(feature = "experimental-source-navigation")]
             navigation: OnceLock::new(),
             retired: AtomicBool::new(false),
             initialization: super::Mutex::new(None),
+        }
+    }
+
+    pub(super) fn with_snapshot(
+        key: ProjectContextKey,
+        snapshot: vize_carton::config::LoadedLspConfig,
+    ) -> Self {
+        Self {
+            snapshot: Some(snapshot),
+            ..Self::new(key)
         }
     }
 
@@ -78,7 +90,7 @@ impl ProjectContext {
         }
         let state = self
             .state
-            .get_or_init(|| owner.new_project_state(&self.root))
+            .get_or_init(|| owner.new_project_state(&self.key, self.snapshot.as_ref()))
             .clone();
         if self.retired.load(Ordering::Acquire) {
             state.retire_project_owner();

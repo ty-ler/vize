@@ -1,7 +1,7 @@
 //! Same-directory TypeScript references retain independent editor dialects.
 use super::*;
 use tower_lsp::lsp_types::{FileChangeType, FileEvent, TextDocumentContentChangeEvent};
-use vize_l0::config::VueVersion;
+use vize_l0::{config::VueVersion, cstr};
 
 struct ReferenceFixture {
     _directory: tempfile::TempDir,
@@ -49,11 +49,11 @@ impl ReferenceFixture {
 
     fn write_leaf(root: &Path, name: &str, source: &str, target: f64) {
         let config = serde_json::json!({
-            "include": [format!("src/{source}/**/*.vue")],
+            "include": [cstr!("src/{source}/**/*.vue")],
             "vueCompilerOptions": {"target": target},
         });
         std::fs::write(
-            root.join(format!("tsconfig.{name}.json")),
+            root.join(cstr!("tsconfig.{name}.json").as_str()),
             serde_json::to_vec(&config).unwrap(),
         )
         .unwrap();
@@ -61,15 +61,17 @@ impl ReferenceFixture {
 
     fn event(&self, leaf: &str) -> FileEvent {
         FileEvent {
-            uri: Url::from_file_path(self.root.join(format!("tsconfig.{leaf}.json"))).unwrap(),
+            uri: Url::from_file_path(self.root.join(cstr!("tsconfig.{leaf}.json").as_str()))
+                .unwrap(),
             typ: FileChangeType::CHANGED,
         }
     }
 
     fn open_dirty(&self, uri: &Url, marker: &str, version: i32) -> String {
-        let source = format!(
+        let source: String = cstr!(
             "<script lang=\"ts\">export const {marker} = 1;</script><template><div /></template>"
-        );
+        )
+        .into();
         self.state
             .documents
             .open(uri.clone(), source.clone(), version, "vue".into());
@@ -110,7 +112,14 @@ fn same_directory_references_isolate_dialects_and_reuse_the_effective_project() 
     assert_dialect(&legacy, VueVersion::V2_7);
     assert_dialect(&modern, VueVersion::V3);
     assert!(!Arc::ptr_eq(&legacy, &modern));
-    assert!(Arc::ptr_eq(&legacy.documents, &modern.documents));
+    fixture.state.documents.open(
+        fixture.modern.clone(),
+        "<template>shared mutation</template>".into(),
+        9,
+        "vue".into(),
+    );
+    assert_eq!(legacy.documents.version(&fixture.modern), Some(9));
+    assert_eq!(modern.documents.version(&fixture.modern), Some(9));
     assert_eq!(modern.documents.text(&fixture.legacy), Some(source));
     assert_eq!(modern.documents.version(&fixture.legacy), Some(7));
     assert_projection(&legacy, &fixture.legacy, "unsavedLegacy");
@@ -278,4 +287,58 @@ fn reference_membership_changes_move_dirty_sources_to_their_new_owners() {
     assert_projection(&new_modern, &fixture.modern, "modernBuffer");
     assert!(new_legacy.get_virtual_docs(&fixture.modern).is_none());
     assert!(new_modern.get_virtual_docs(&fixture.legacy).is_none());
+}
+
+#[test]
+fn referenced_owners_reuse_the_already_evaluated_vite_snapshot() {
+    let fixture = ReferenceFixture::new(
+        "import { appendFileSync } from 'node:fs';\n\
+         appendFileSync(new URL('./evaluations', import.meta.url), '1');\n\
+         export default {};",
+    );
+    let evaluations = fixture.root.join("evaluations");
+    assert_eq!(std::fs::read_to_string(&evaluations).unwrap(), "1");
+    let legacy = fixture
+        .state
+        .document_project_state(&fixture.legacy)
+        .unwrap();
+    let modern = fixture
+        .state
+        .document_project_state(&fixture.modern)
+        .unwrap();
+    assert_dialect(&legacy, VueVersion::V2_7);
+    assert_dialect(&modern, VueVersion::V3);
+    assert_eq!(std::fs::read_to_string(evaluations).unwrap(), "1");
+}
+
+#[test]
+fn invalid_solution_target_does_not_override_valid_source_projects_or_vite_policy() {
+    let mut fixture =
+        ReferenceFixture::new("export default { vue: { languageServer: { hover: false } } };");
+    std::fs::write(
+        fixture.root.join("tsconfig.json"),
+        r#"{"files":[],"vueCompilerOptions":{"target":4},"references":[{"path":"./tsconfig.legacy.json"},{"path":"./tsconfig.modern.json"}]}"#,
+    )
+    .unwrap();
+    // Start a fresh editor after writing the invalid solution-only target, so
+    // a failed configuration load cannot retain the previous Vite policy.
+    fixture.state = Arc::new(ServerState::new());
+    fixture.state.set_workspace_root(fixture.root.clone());
+    fixture
+        .state
+        .set_workspace_folders(vec![fixture.root.clone()]);
+    fixture.state.load_workspace_config(&fixture.root);
+    assert!(!fixture.state.lsp_features().hover);
+    let legacy = fixture
+        .state
+        .document_project_state(&fixture.legacy)
+        .unwrap();
+    let modern = fixture
+        .state
+        .document_project_state(&fixture.modern)
+        .unwrap();
+    assert_dialect(&legacy, VueVersion::V2_7);
+    assert_dialect(&modern, VueVersion::V3);
+    assert!(!legacy.lsp_features().hover);
+    assert!(!modern.lsp_features().hover);
 }

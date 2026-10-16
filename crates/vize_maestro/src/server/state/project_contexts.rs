@@ -18,6 +18,21 @@ use vize_l0::FxHashMap;
 
 use super::{LspFeatureConfig, ServerState};
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(super) struct ProjectContextKey {
+    pub(super) root: PathBuf,
+    pub(super) tsconfig: Option<PathBuf>,
+}
+
+impl From<PathBuf> for ProjectContextKey {
+    fn from(root: PathBuf) -> Self {
+        Self {
+            root,
+            tsconfig: None,
+        }
+    }
+}
+
 #[derive(Default)]
 pub(super) struct ProjectContexts {
     owner: RwLock<Option<Weak<ServerState>>>,
@@ -27,8 +42,11 @@ pub(super) struct ProjectContexts {
     routing_changes: AtomicUsize,
     boundary: RwLock<Option<PathBuf>>,
     pub(super) config_dependencies: RwLock<Vec<PathBuf>>,
-    contexts: Mutex<FxHashMap<PathBuf, Arc<registry::ProjectContext>>>,
-    routes: DashMap<Url, PathBuf>,
+    pub(super) key: RwLock<Option<ProjectContextKey>>,
+    pub(super) loaded_config: RwLock<Option<vize_carton::config::LoadedLspConfig>>,
+    reference_ownership: Mutex<vize_canon::batch::TsconfigOwnershipCache>,
+    contexts: Mutex<FxHashMap<ProjectContextKey, Arc<registry::ProjectContext>>>,
+    routes: DashMap<Url, ProjectContextKey>,
     initialization_options: RwLock<Option<serde_json::Value>>,
     client_capabilities: RwLock<ClientCapabilities>,
 }
@@ -70,9 +88,26 @@ impl ServerState {
             return owner.document_project_state(uri).or(Some(owner));
         }
         loop {
-            let context = self.document_project_context(uri)?;
-            if let Some(state) = context.initialize(self) {
-                return Some(state);
+            let context = self.document_project_context(uri);
+            let state = match context {
+                Some(context) => match context.initialize(self) {
+                    Some(state) => state,
+                    None => continue,
+                },
+                None => self.clone(),
+            };
+            if state.project_context_retired() {
+                continue;
+            }
+            if let Some(reference) = self.document_reference_context(uri, &state) {
+                if let Some(state) = reference.initialize(self) {
+                    return Some(state);
+                }
+            } else {
+                if state.project_context_retired() {
+                    continue;
+                }
+                return (!Arc::ptr_eq(&state, self)).then_some(state);
             }
         }
     }
@@ -94,14 +129,15 @@ impl ServerState {
                 if let Some(context) = cached {
                     return Some(context);
                 }
-                if self.is_primary_boundary(&root) {
+                let root = ProjectContextKey::from(root.root);
+                if self.is_primary_boundary(&root.root) {
                     return None;
                 }
                 root
             }
             None => {
                 let path = uri.to_file_path().ok()?;
-                let root = self.document_context_root(&path)?;
+                let root = ProjectContextKey::from(self.document_context_root(&path)?);
                 self.project_contexts
                     .routes
                     .insert(uri.clone(), root.clone());
@@ -110,7 +146,10 @@ impl ServerState {
         };
         let context = {
             let mut contexts = self.project_contexts.contexts.lock();
-            if !contexts.contains_key(&root) && self.is_primary_boundary(&root) {
+            if !contexts.contains_key(&root)
+                && root.tsconfig.is_none()
+                && self.is_primary_boundary(&root.root)
+            {
                 return None;
             }
             contexts
@@ -139,13 +178,22 @@ impl ServerState {
             .or_else(|| self.project_contexts.boundary.read().clone())
     }
 
-    fn new_project_state(self: &Arc<Self>, root: &Path) -> Arc<ServerState> {
+    fn new_project_state(
+        self: &Arc<Self>,
+        key: &ProjectContextKey,
+        snapshot: Option<&vize_carton::config::LoadedLspConfig>,
+    ) -> Arc<ServerState> {
+        let root = &key.root;
         let mut state = ServerState::new();
         state.documents = self.documents.clone();
         *state.project_contexts.owner.write() = Some(Arc::downgrade(self));
+        *state.project_contexts.key.write() = Some(key.clone());
         state.record_client_capabilities(&self.project_contexts.client_capabilities.read());
         state.set_workspace_root(root.to_path_buf());
-        state.load_workspace_config(root);
+        match snapshot {
+            Some(snapshot) => state.apply_workspace_config_snapshot(root, snapshot.clone()),
+            None => state.load_workspace_config(root),
+        }
         state.apply_lsp_initialization_options(
             self.project_contexts.initialization_options.read().as_ref(),
         );
@@ -154,7 +202,7 @@ impl ServerState {
         for uri in state.documents.uris() {
             if uri
                 .to_file_path()
-                .is_ok_and(|path| self.document_context_root(&path).as_deref() == Some(root))
+                .is_ok_and(|path| self.document_belongs_to_context(&uri, &path, key))
                 && let Some(source) = state.documents.text(&uri)
             {
                 state.update_virtual_docs(&uri, &source);
@@ -210,7 +258,7 @@ impl ServerState {
         let roots = self.workspace_root_paths();
         let mut retired = Vec::new();
         self.project_contexts.contexts.lock().retain(|root, state| {
-            let retained = roots.iter().any(|folder| root.starts_with(folder));
+            let retained = roots.iter().any(|folder| root.root.starts_with(folder));
             if !retained {
                 state.mark_retired();
                 retired.push(state.clone());
@@ -313,6 +361,9 @@ mod lock_order_tests;
 mod navigation;
 mod paths;
 mod pool;
+#[cfg(test)]
+mod reference_tests;
+mod references;
 mod registry;
 #[cfg(test)]
 mod tests;
