@@ -43,10 +43,6 @@ export interface VizeConfig {
    */
   ignores?: string[];
   /**
-   * Base config files or presets to compose
-   */
-  extends?: string | string[];
-  /**
    * Vue dialect profile for standalone HTML documents; when absent the dialect is detected structurally per document
    */
   dialect?: "vue" | "petite-vue";
@@ -792,10 +788,6 @@ export interface VizeConfigEntry {
    * Glob patterns this entry excludes
    */
   ignores?: string[];
-  /**
-   * Base config files or presets to compose
-   */
-  extends?: string | string[];
   /**
    * Vue dialect profile for standalone HTML documents; when absent the dialect is detected structurally per document
    */

@@ -24,7 +24,6 @@ typealias HyphenationStyle = "always" | "never"
 typealias TrailingComma = "all" | "none" | "es5"
 typealias FilterPattern = String | Listing<String>
 typealias GlobalTypeValue = String | GlobalTypeDeclaration
-typealias ConfigExtends = String | Listing<String>
 class CompilerCompatibilityConfig {
   vueVersion: ("3" | "2.7" | "2" | "1" | "0.11" | "0.10")? = null
   hostCompiler: Boolean? = null
@@ -318,7 +317,6 @@ class ConfigEntry {
   basePath: String? = null
   files: Listing<String>? = null
   ignores: Listing<String>? = null
-  `extends`: ConfigExtends? = null
   compiler: CompilerConfig?
   experimentals: ExperimentalsConfig?
   vite: VitePluginConfig?
@@ -336,7 +334,6 @@ name: String? = null
 basePath: String? = null
 files: Listing<String>? = null
 ignores: Listing<String>? = null
-`extends`: ConfigExtends? = null
 compiler: CompilerConfig?
 experimentals: ExperimentalsConfig?
 vite: VitePluginConfig?

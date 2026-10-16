@@ -174,3 +174,21 @@ test("postprocess-types reports missing roots, unreadable and unwritable declara
     assert.equal(fs.readFileSync(generatedTypesPath(root), "utf8"), "MuseaA11YConfig");
   }
 });
+
+test("public config schemas and generated declarations omit custom config inheritance", () => {
+  const schema = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, "npm/cli/schemas/vize.config.schema.json"), "utf8"),
+  );
+  for (const config of [schema, schema.definitions.VizeConfigEntry]) {
+    assert.equal(config.additionalProperties, false);
+    assert.ok(!Object.hasOwn(config.properties, "extends"));
+    assert.ok(Object.hasOwn(config.properties, "compiler"));
+    assert.ok(Object.hasOwn(config.properties, "typeChecker"));
+  }
+  const declarations = fs.readFileSync(generatedTypesPath(repoRoot), "utf8");
+  assert.doesNotMatch(declarations, /extends\??:/);
+  for (const file of ["VizeConfig.pkl", "vize.pkl", "jsonschema/generate.pkl"]) {
+    const source = fs.readFileSync(path.join(repoRoot, "npm/cli/pkl", file), "utf8");
+    assert.doesNotMatch(source, /ConfigExtends|configExtendsDef|`extends`:/);
+  }
+});

@@ -10,13 +10,6 @@ local stringListDef: JsonSchema = new JsonSchema {
   type = "array"
   items = new JsonSchema { type = "string" }
 }
-local configExtendsDef: JsonSchema = new JsonSchema {
-  description = "Base config files or presets to compose"
-  oneOf = new Listing {
-    new JsonSchema { type = "string" }
-    stringListDef
-  }
-}
 local vitePluginConfigDef: JsonSchema = new JsonSchema {
   type = "object"
   properties {
@@ -352,7 +345,6 @@ local configEntryDef: JsonSchema = new JsonSchema {
       items = new JsonSchema { type = "string" }
       description = "Glob patterns this entry excludes"
     }
-    ["extends"] = configExtendsDef
     ["dialect"] = new JsonSchema {
       type = "string"
       enum = new Listing { "vue"; "petite-vue" }
@@ -428,7 +420,6 @@ output {
         items = new JsonSchema { type = "string" }
         description = "Glob patterns this config excludes"
       }
-      ["extends"] = configExtendsDef
       ["dialect"] = new JsonSchema {
         type = "string"
         enum = new Listing { "vue"; "petite-vue" }

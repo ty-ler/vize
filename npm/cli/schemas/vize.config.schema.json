@@ -1234,20 +1234,6 @@
             "type": "string"
           }
         },
-        "extends": {
-          "description": "Base config files or presets to compose",
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          ]
-        },
         "dialect": {
           "description": "Vue dialect profile for standalone HTML documents; when absent the dialect is detected structurally per document",
           "type": "string",
@@ -1330,20 +1316,6 @@
       "items": {
         "type": "string"
       }
-    },
-    "extends": {
-      "description": "Base config files or presets to compose",
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      ]
     },
     "dialect": {
       "description": "Vue dialect profile for standalone HTML documents; when absent the dialect is detected structurally per document",
