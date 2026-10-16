@@ -321,3 +321,8 @@ test("Helix formatting opt-in supports absent and existing initialization option
     assert.deepEqual(after, before);
   }
 });
+
+test("Helix explicitly sends the complete scenario initialization profile", () => {
+  const configured = parseToml(userLanguages(undefined, scenario.initializationOptions)) as any;
+  assert.deepEqual(configured["language-server"].vize.config, scenario.initializationOptions);
+});
