@@ -59,9 +59,12 @@ Concurrent rename sessions verify their actual child termination.
 and checks complete source membership and licenses. Archive assembly with
 `--no-verify` is explicitly not compilation acceptance. Separate independent
 consumers build and test both path providers and sealed archive providers with
-default and distributed features. They do not patch dependencies. CLI feature
-metadata checks isolate default, minimal, Glyph, Maestro and all features from
-workspace-wide feature unification. All compilation uses the worker's shared
+default and distributed features. They do not patch dependencies. An independent Canon-only
+consumer compiles its default native public API. Five separate CLI library
+consumers compile default, minimal, Glyph, Maestro and all features, isolated
+from workspace-wide feature unification. Each root must actually compile from
+its exact source; only that tiny generated root is cleaned between modes, while
+provider and dependency compilation share the worker cache. All compilation uses the worker's shared
 `ci` target. The archive consumer is offline and is not a public-registry test.
 
 The original 400-module performance source-pair mode retains both full
