@@ -48,6 +48,8 @@ use oxc_ast_visit::{Visit, walk::walk_call_expression};
 use oxc_span::Span;
 use vize_l0::cstr;
 
+mod authored;
+
 static META: ScriptRuleMeta = ScriptRuleMeta {
     name: "script/no-deprecated-events-api",
     description: "Disallow the removed Vue 2 events API ($on / $off / $once)",
@@ -86,7 +88,12 @@ impl ScriptRule for NoDeprecatedEventsApi {
         {
             return;
         }
-        let mut visitor = NoDeprecatedEventsApiVisitor { offset, result };
+        let owned_calls = authored::owned_calls(program, source);
+        let mut visitor = NoDeprecatedEventsApiVisitor {
+            offset,
+            result,
+            owned_calls: &owned_calls,
+        };
         visitor.visit_program(program);
     }
 }
@@ -94,11 +101,14 @@ impl ScriptRule for NoDeprecatedEventsApi {
 struct NoDeprecatedEventsApiVisitor<'result> {
     offset: usize,
     result: &'result mut ScriptLintResult,
+    owned_calls: &'result [Span],
 }
 
 impl<'a> Visit<'a> for NoDeprecatedEventsApiVisitor<'_> {
     fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
-        if let Some((span, method)) = removed_event_callee(&it.callee) {
+        if !self.owned_calls.contains(&it.span)
+            && let Some((span, method)) = removed_event_callee(&it.callee)
+        {
             self.push_diagnostic(span, method);
         }
 
