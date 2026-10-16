@@ -3,6 +3,17 @@ description: Require native snapshot ownership, projection ranges and syntax/sem
 runs:
   using: composite
   steps:
+    - name: Verify complete checked source and independent package consumers
+      shell: bash
+      env:
+        CARGO_TARGET_DIR: ${{ github.workspace }}/target
+      run: |
+        set -euo pipefail
+        python3 tools/support/compat/github/checked-corsa-source.py
+        python3 tools/support/compat/github/checked-corsa-package-consumer-test.py
+        cargo fetch --locked
+        export SOURCE_SHA="$(git rev-parse HEAD)"
+        python3 tools/support/compat/github/checked-corsa-package-consumer.py --output "$RUNNER_TEMP/checked-corsa-package-consumer"
     - name: Test complete native snapshot text and owner refusals
       shell: bash
       env:
@@ -32,6 +43,16 @@ runs:
         set -euo pipefail
         unset VIZE_TEST_DISABLE_TSGO
         cargo test --locked --profile ci -p vize_canon --test native_syntax_semantics -- --nocapture --test-threads=1
+    - name: Test frozen semantic completion and the same native snapshot owner
+      shell: bash
+      env:
+        VIZE_TEST_REQUIRE_TSGO: "1"
+        VIZE_SEMANTIC_COMPLETION_CAPTURE_DIR: ${{ runner.temp }}/native-semantic-completion
+      run: |
+        set -euo pipefail
+        unset VIZE_TEST_DISABLE_TSGO
+        cargo test --locked --profile ci -p vize_canon --lib batch::executor::session::native_test_receipt::native_semantic_completion::native_semantic_completion_keeps_frozen_full_vector_and_actual_terminal_owner -- --exact --nocapture --test-threads=1 | tee "$RUNNER_TEMP/native-semantic-completion-test.log"
+        grep -F "test result: ok. 1 passed" "$RUNNER_TEMP/native-semantic-completion-test.log"
     - name: Preserve actual native inputs and responses
       if: ${{ always() }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -40,5 +61,10 @@ runs:
         path: |
           ${{ runner.temp }}/native-snapshot-source
           ${{ runner.temp }}/native-syntax-semantics
+          ${{ runner.temp }}/native-semantic-completion
+          ${{ runner.temp }}/checked-corsa-package-consumer/*.json
+          ${{ runner.temp }}/checked-corsa-package-consumer/*.stdout
+          ${{ runner.temp }}/checked-corsa-package-consumer/*.stderr
+          ${{ runner.temp }}/checked-corsa-package-consumer/package-target/package/*.crate
         if-no-files-found: ignore
         retention-days: 7
