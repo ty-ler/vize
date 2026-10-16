@@ -103,7 +103,7 @@ test("publish_npm_package computes the tag and forwards provenance to vp", () =>
       [versionPath, "/%40vizejs%2Fexample"].sort(),
     );
     const visibilityVersion = registryUrls.slice(1).find((url) => url.pathname === versionPath)!;
-    const visibilityTag = registryUrls.find((url) => url.pathname !== versionPath)!;
+    const visibilityTag = registryUrls.slice(1).find((url) => url.pathname !== versionPath)!;
     assert.notEqual(
       registryUrls[0].searchParams.get("vize-publish-check"),
       visibilityVersion.searchParams.get("vize-publish-check"),

@@ -52,9 +52,17 @@ misses, baseline mapping failures or unexpected diagnostics.
 
 ## Acceptance
 
-This is a measured compilation fix, not a completed five-minute claim.
-The next exact-head Actions run must pass the unchanged full recall and record
-the entire PR's last finishing workflow. PR and full merge-queue Rust test
+The [first repaired run](https://github.com/ubugeeei-prod/vize/actions/runs/38889361409)
+on `99a36285bc978bd30c66ca1cf3adcf5a3c3f2b29` passed in 160 seconds, down from
+491 seconds (67.4%). The independent specs took 56 seconds, including 34.89
+seconds of Patina compilation; the CLI step took 54 seconds. All six L0,
+seven Croquis and six Patina tests passed, together with the unchanged 90
+matrix and 130 corpus mutation checks. The run used Rust 1.99.0 and mounted
+the prepared target read-only; it did not write a PR cache.
+
+This improvement does not establish the five-minute whole-PR target. The next
+ordinary run on `9f435f0` passed every workflow but took 7m03s overall, with
+slower native builds in the JS jobs. PR and full merge-queue Rust test
 inventories are compared at the same source head separately.
 
 Evidence: [initial job](https://github.com/ubugeeei-prod/vize/actions/runs/38882495106/job/116912317210),

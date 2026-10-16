@@ -1165,7 +1165,7 @@ capitalize を適用するために、廃止されたフィルターのパイプ
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L53) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L56) · [全ルール](all.md)
 
 ### `vue/no-deprecated-functional-template`
 
@@ -1800,9 +1800,13 @@ v-on の削除済みの数値 keyCode 修飾子を検出します。
 
 既定の重大度: `error`  
 プリセット: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
-自動修正: なし。修正内容を確認してください  
+自動修正: 対応している診断で利用できます  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
+
+**数値修飾子の選択と修正**
+
+最初に十進整数として読み取れる修飾子だけを判定します。`@keyup.13.27="submit"` では `13` を報告し、`@keyup.enter.27="submit"` に修正します。次の修正で `27` を `escape` にできます。`@keyup.13suffix="submit"` も `@keyup.enter="submit"` に修正します。0〜9 は対象外のため、`@keyup.0.13="submit"` はこのルールでは報告しません。`999` など未知のコードは報告だけ行います。Vue 2 と petite-vue では従来どおり報告しません。
 
 **設定（Vite+）**
 
@@ -3174,7 +3178,9 @@ lang を取り除き、通常の HTML の p を直接記述します。規約の
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
 
-現在の検査は入れ子になった v-for の変数を比較します。script 内の名前と同じという理由だけで単独の v-for を検出するものではありません。
+テンプレート内の `v-for`、`v-slot`（`#name` を含む）、旧形式のスコープ付きスロットの変数を比較します。先行する変数を隠す識別子を報告し、同じ要素の宣言も属性順に検査します。兄弟要素のスコープは独立しています。プロパティのキーや既定値内の参照は宣言ではなく、`v-pre` の配下は検査しません。
+
+現在の検査は script やコンポーネントのプロパティ名を対象にしません。script の変数と同名という理由だけで単独のテンプレート変数を警告することはありません。診断範囲は、エスケープ表記や HTML エンティティを含む、実際に記述された識別子を示します。
 
 **設定（Vite+）**
 
@@ -5359,7 +5365,7 @@ vp run lint
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [全ルール](all.md)
 
 ### `vue/use-unique-element-ids`
 
@@ -5442,6 +5448,14 @@ const emailId = useId();
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
 
+**ハンドラーが重なる場合**
+
+ネイティブ要素の同じイベントに対するリスナーを比較します。カスタムコンポーネントのイベントは、両方のリスナーが `.native` を使う場合だけ検査します。イベント名が違う場合や、キーの条件が重ならない場合は競合しません。
+
+システム修飾子は押されている必要があるキーを指定するため、`@keydown.alt.shift` は Ctrl+Alt+Shift にも反応します。別のハンドラーが `@keydown.alt.ctrl.shift` を使う場合は、条件の広い方に `.exact` を追加して処理を分けます。`.exact` は指定したシステム修飾子だけを許可し、追加の Ctrl・Shift・Alt・Meta キーを拒否します。
+
+複数のキー修飾子はいずれかのキーに対応します。`@keydown.up.down` は上下どちらの矢印キーにも反応するため、Ctrl+ArrowDown では `@keydown.ctrl.down` と重なります。診断範囲は `.exact` が必要なディレクティブのキーで、ハンドラー式は含みません。
+
 **設定（Vite+）**
 
 ```ts
@@ -5497,7 +5511,7 @@ vp run lint
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L28) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L31) · [全ルール](all.md)
 
 ### `vue/v-bind-style`
 
@@ -6591,7 +6605,13 @@ v-on のイベント名・式・修飾子を検査します。
 プリセット: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
-オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
+オプション: [型付きオプションと既定値](options.md)を参照してください。
+
+**修飾子の検証**
+
+未対応の修飾子は、その名前の位置で個別に報告します。長い形式・動的引数・オブジェクト形式のリスナーも対象です。`eslint-plugin-vue` 10.9.2 と同じく、Vue のイベント修飾子、キーの別名、単一の Unicode コードポイント、十進整数として有限の値を読み取れる接頭辞（`Number.parseInt(name, 10)`）を許可します。そのため `.13suffix` も有効です。数値キーと `.native` の移行は別のルールで検査します。ハンドラーなしで動作するのは `.stop` と `.prevent` だけで、`.once`・`.enter`・独自の名前には式が必要です。
+
+`modifiers` は大文字と小文字を区別する完全一致の名前を追加します。ルールは別に有効にしてください。以下の Vite+ 設定は `@click.custom="handler"` を許可します。単独の設定では `linter.ruleOptions` を使います。スコープ付きの設定はリストを置き換え、`[]` でリセットできます。キーの表は MIT ライセンスの [eslint-plugin-vue の別名一覧](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json)に由来し、実装とともに元のソースとライセンスを保持しています。
 
 **設定（Vite+）**
 
@@ -6604,6 +6624,13 @@ export default defineConfig({
       "preset": "incremental",
       "rules": {
         "vue/valid-v-on": "error"
+      },
+      "ruleOptions": {
+        "vue/valid-v-on": {
+          "modifiers": [
+            "custom"
+          ]
+        }
       }
     },
   },
@@ -6618,13 +6645,16 @@ vp run lint
 
 **悪い**
 
-イベント引数または必要なハンドラー・オブジェクト式がありません。
+必要なイベントや式がないか、.sync や .nativeish など未対応の修飾子を使っています。
 
-```vue annotate="remove:2,3,4"
+```vue annotate="remove:2,3,4,5,6,7"
 <template>
   <div v-on></div>
   <div @></div>
   <div @click></div>
+  <div @click.sync="handleClick"></div>
+  <div @click.nativeish="handleClick"></div>
+  <div @click.once></div>
 </template>
 ```
 
@@ -6632,11 +6662,14 @@ vp run lint
 
 **良い**
 
-イベントとハンドラーを指定するか、引数なしの `v-on` にリスナーのオブジェクトを渡します。
+ハンドラー、式を省略できる動作修飾子、対応するキー修飾子、または引数なしの `v-on` に渡すリスナーのオブジェクトを使います。
 
-```vue annotate="add:2,3"
+```vue annotate="add:2,3,4,5,6"
 <template>
   <div @click="handleClick"></div>
+  <form @submit.prevent></form>
+  <input @keyup.page-down="handlePageDown" />
+  <input @keyup.あ="handleKey" />
   <div v-on="{ click: handleClick }"></div>
 </template>
 ```

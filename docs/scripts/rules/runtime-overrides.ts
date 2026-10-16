@@ -88,9 +88,9 @@ export const runtimeOverrides: Record<string, RuleExample> = {
     ),
     "crates/vize_patina/src/rules/opinionated/vue/no_template_shadow.rs",
     {
-      note: "The current check compares nested v-for bindings. It does not report a single v-for binding merely because it shares a script binding's name.",
+      note: "The check compares `v-for`, `v-slot` (including `#name`), and legacy scoped-slot bindings within the template. It reports the identifier that hides an earlier binding, including declarations on the same element in attribute order. Sibling elements have independent scopes. Property keys and default-value references are not declarations, and `v-pre` makes its subtree inert.\n\nScript and component property names are outside the current check: a single template binding does not produce a warning merely because a script binding has the same name. Diagnostic ranges cover the authored identifier, including escaped spellings and HTML entities.",
       noteJa:
-        "現在の検査は入れ子になった v-for の変数を比較します。script 内の名前と同じという理由だけで単独の v-for を検出するものではありません。",
+        "テンプレート内の `v-for`、`v-slot`（`#name` を含む）、旧形式のスコープ付きスロットの変数を比較します。先行する変数を隠す識別子を報告し、同じ要素の宣言も属性順に検査します。兄弟要素のスコープは独立しています。プロパティのキーや既定値内の参照は宣言ではなく、`v-pre` の配下は検査しません。\n\n現在の検査は script やコンポーネントのプロパティ名を対象にしません。script の変数と同名という理由だけで単独のテンプレート変数を警告することはありません。診断範囲は、エスケープ表記や HTML エンティティを含む、実際に記述された識別子を示します。",
     },
   ),
   "vue/no-useless-template-attributes": pair(

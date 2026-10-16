@@ -33,7 +33,7 @@ jobs:
         if: ${{ inputs.run-rust }}
         with:
           components: clippy
-          toolchain: "1.99.0"
+          toolchain: "1.99.1"
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
         if: ${{ inputs.run-rust }}
         with:
@@ -142,7 +142,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
         with:
           components: clippy
-          toolchain: "1.99.0"
+          toolchain: "1.99.1"
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
         with:
           wild-version: "0.9.0"
@@ -197,7 +197,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
         with:
-          toolchain: "1.99.0"
+          toolchain: "1.99.1"
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
         if: ${{ github.event_name == 'pull_request' }}
         with:
@@ -212,7 +212,10 @@ jobs:
         with:
           node-version-file: "package.json"
           cache: true
-          run-install: true
+          run-install: false
+      - uses: ./.github/actions/cache-pnpm-verification
+      - name: Install JS dependencies
+        run: vp install
       - uses: taiki-e/install-action@184183c2401be73c3bf42c2e61268aa5855379c1 # v2
         with:
           tool: cargo-nextest@0.9.146
@@ -247,11 +250,8 @@ jobs:
         # Cargo targets when safe; the existing filter still selects all tests.
         run: |
           node -e 'require("node:fs").writeFileSync(process.env.RUNNER_TEMP + "/rust-plan.json", process.env.RUST_PLAN_JSON)'
-          phase_started=$SECONDS
-          if node tools/support/compat/github/run-rust-test-cohort.ts "$RUNNER_TEMP/rust-plan.json" "$COHORT" --cargo-profile ci --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass; then phase_exit=0; else phase_exit=$?; fi
-          mkdir -p "target/nextest/$NEXTEST_PROFILE"
-          printf '{"phase":"workspace-cohort","cohort":"%s","elapsed_seconds":%d,"exit_code":%d}\n' "$COHORT" "$((SECONDS - phase_started))" "$phase_exit" > "target/nextest/$NEXTEST_PROFILE/timing.json"
-          exit "$phase_exit"
+          export VIZE_RUST_COHORT_TIMING_PATH="target/nextest/$NEXTEST_PROFILE/timing.json"
+          exec node tools/support/compat/github/run-rust-test-cohort.ts "$RUNNER_TEMP/rust-plan.json" "$COHORT" --cargo-profile ci --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass
       - name: Run Rust test cohort without rebuilding
         if: ${{ github.event_name == 'merge_group' }}
         # Baked env! paths still occur in tests. Extract to the original workspace
@@ -287,11 +287,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - uses: ./.github/actions/cache-vp-bootstrap
-      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: "package.json"
-          run-install: false
+          package-manager-cache: false
       - name: Require the complete Rust tier
         env:
           RUN_RUST: ${{ inputs.run-rust }}
@@ -318,7 +317,7 @@ jobs:
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           node tools/support/compat/github/select-rust-workers.mjs verify target/differential/typechecker/worker-selection.json .artifacts/typechecker-workers
-          vp node tests/differential/typechecker-shards.ts aggregate .artifacts/typechecker-workers target/differential/typechecker
+          node tests/differential/typechecker-shards.ts aggregate .artifacts/typechecker-workers target/differential/typechecker
       - name: Upload typechecker shared corpus evidence
         if: ${{ !cancelled() && github.event_name == 'merge_group' && inputs.run-rust && needs.pr-rust-shard.result == 'success' && contains(fromJSON(inputs.rust-plan).packages, 'vize_canon') }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
