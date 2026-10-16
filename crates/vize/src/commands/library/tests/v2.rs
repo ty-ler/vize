@@ -153,13 +153,15 @@ fn rejects_unknown_namespaces_and_invalid_third_party_registries() {
         "vite.config.mjs",
         r#"export default { vue: { "lib": { "registries": { "acme": "./x" } } } };"#,
     );
+    let invalid_name = bad_key.run(&["list"]).unwrap_err();
     assert!(
-        bad_key
-            .run(&["list"])
-            .unwrap_err()
+        invalid_name
             .message()
-            .contains("must be an @namespace")
+            .contains("vue.lib.registries: invalid native option name acme"),
+        "{invalid_name}"
     );
+    assert!(!bad_key.path("vize-lib.lock.json").exists());
+    assert!(!bad_key.path("src").exists());
 }
 
 #[test]
