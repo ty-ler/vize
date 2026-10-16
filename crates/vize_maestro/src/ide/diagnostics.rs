@@ -58,6 +58,7 @@ mod editor_typecheck_unknown_options_tests;
 mod editor_typecheck_vue_helper_tests;
 mod line_index;
 mod linter_options;
+pub(in crate::ide) use linter_options::rule_docs_url;
 #[cfg(feature = "native")]
 mod native;
 pub(in crate::ide) mod patina;
