@@ -120,7 +120,7 @@ impl LspProcess {
             let mut reader = std::io::BufReader::new(stdout);
             loop {
                 match read_message(&mut reader) {
-                    Ok(message) => {
+                    Ok(Some(message)) => {
                         evidence.record("response", &message);
                         if let Some(capture) = &capture {
                             capture.record("response", &message);
@@ -133,6 +133,9 @@ impl LspProcess {
                         }
                         let _ = messages_tx.send(Ok(message));
                     }
+                    // Closing the response channel still fails any pending wait;
+                    // EOF before a required reply cannot become a passing session.
+                    Ok(None) => break,
                     Err(error) => {
                         if let Some(capture) = &capture {
                             capture.error("stdoutError", &error);
@@ -264,6 +267,15 @@ impl LspProcess {
                 return status;
             }
             if Instant::now() >= deadline {
+                if self.passive.is_some() {
+                    let evidence = self.terminal_evidence();
+                    self.passive.as_mut().unwrap().record_exit_deadline(
+                        self.child.as_ref().unwrap().id(),
+                        PROCESS_EXIT_TIMEOUT,
+                        self.stdin.is_some(),
+                        evidence,
+                    );
+                }
                 let transport = if self.stdin.is_some() {
                     " while stdin remained open"
                 } else {
@@ -319,7 +331,9 @@ impl LspProcess {
 impl Drop for LspProcess {
     fn drop(&mut self) {
         self.shutdown();
-        if let Some(passive) = self.passive.take() {
+        if let Some(passive) = self.passive.take()
+            && passive.retains_terminal()
+        {
             passive.persist_reporting_error(self.terminal_evidence());
         }
     }

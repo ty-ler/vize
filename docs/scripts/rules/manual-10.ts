@@ -36,6 +36,22 @@ export const manual10: Record<string, RuleExample> = {
     },
     evidence: "docs/content/rules/vue-directive-validity.md",
   },
+  "vue/no-deprecated-v-on-number-modifiers": {
+    bad: {
+      language: "vue",
+      source:
+        '<template>\n<input @keyup.13="submit" />\n<input v-on:keyup.27="cancel" />\n<input @keyup.13.stop="submit" />\n</template>',
+    },
+    good: {
+      language: "vue",
+      source:
+        '<template>\n<input @keyup.enter="submit" />\n<input @keyup.esc="cancel" />\n</template>',
+    },
+    note: '## Numeric selection and fixes\n\nThe first decimal-prefix numeric modifier determines the finding. `@keyup.13.27="submit"` reports only `13` and offers `@keyup.enter.27="submit"`; another fix pass can replace `27` with `escape`. `@keyup.13suffix="submit"` also becomes `@keyup.enter="submit"`. Values 0–9 are exempt, so `@keyup.0.13="submit"` is clean under this rule. Unknown values such as `999` report without a fix. The existing Vue 2 and petite-vue exemption remains in effect.',
+    noteJa:
+      '## 数値修飾子の選択と修正\n\n最初に十進整数として読み取れる修飾子だけを判定します。`@keyup.13.27="submit"` では\n`13` を報告し、`@keyup.enter.27="submit"` に修正します。次の修正で `27` を `escape` にできます。\n`@keyup.13suffix="submit"` も `@keyup.enter="submit"` に修正します。0〜9 は対象外のため、\n`@keyup.0.13="submit"` はこのルールでは報告しません。`999` など未知のコードは報告だけ行います。\nVue 2 と petite-vue では従来どおり報告しません。',
+    evidence: "crates/vize_patina/src/rules/vue/no_deprecated_v_on_number_modifiers.rs",
+  },
   "vue/valid-v-on": {
     bad: {
       language: "vue",
@@ -47,22 +63,11 @@ export const manual10: Record<string, RuleExample> = {
       source:
         '<template>\n  <div @click="handleClick"></div>\n  <form @submit.prevent></form>\n  <input @keyup.page-down="handlePageDown" />\n  <input @keyup.あ="handleKey" />\n  <div v-on="{ click: handleClick }"></div>\n</template>',
     },
-    evidence: "docs/content/rules/vue-directive-validity.md",
+    note: '## Modifier validation\n\nUnsupported modifiers are reported individually at the modifier name, including on long-form `v-on:click`, dynamic event arguments, and object listener syntax. The accepted names match `eslint-plugin-vue` 10.9.2: Vue\'s built-in event modifiers, the complete keyboard alias table, any single Unicode code point, and names with a finite decimal integer prefix (JavaScript `Number.parseInt(name, 10)` semantics). For example, `.13suffix` is accepted by this rule. Numeric-key deprecation and `.native` migration diagnostics belong to separate rules.\n\nOnly `.stop` and `.prevent` provide behavior without a handler. A modifier such as `.once`, `.enter`, or a configured custom name still needs a handler expression.\n\nProjects with custom event handling can add names under `linter.ruleOptions`:\n\n```json\n{\n  "linter": {\n    "rules": { "vue/valid-v-on": "error" },\n    "ruleOptions": {\n      "vue/valid-v-on": { "modifiers": ["custom"] }\n    }\n  }\n}\n```\n\nThis allows `@click.custom="handler"`. Names are exact and case-sensitive; options supplement the built-in names and do not enable a disabled rule. Scoped config entries can replace inherited names with a new list or reset them with `[]`.\n\nThe keyboard table is adapted from the MIT-licensed [eslint-plugin-vue keyboard aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json). Its source and license are preserved alongside the implementation.',
+    noteJa:
+      '## 修飾子の検証\n\n未対応の修飾子は、修飾子の名前ごとに報告します。長い `v-on:click`、動的なイベント引数、オブジェクト形式も対象です。受け付ける名前は `eslint-plugin-vue` 10.9.2 に合わせ、Vue 組み込みのイベント修飾子、完全なキー別名一覧、単一の Unicode コードポイント、有限な十進整数の接頭辞を持つ名前です。整数は JavaScript の `Number.parseInt(name, 10)` と同じように読み取るため、`.13suffix` もこのルールでは有効です。数値キーの非推奨判定と `.native` の移行診断は別のルールが担当します。\n\nハンドラーなしで動作するのは `.stop` と `.prevent` だけです。`.once`、`.enter`、設定した独自の名前にもハンドラー式が必要です。\n\n独自のイベント処理で使う名前は `linter.ruleOptions` に追加できます。\n\n```json\n{\n  "linter": {\n    "rules": { "vue/valid-v-on": "error" },\n    "ruleOptions": {\n      "vue/valid-v-on": { "modifiers": ["custom"] }\n    }\n  }\n}\n```\n\nこれにより `@click.custom="handler"` を使えます。名前は大文字と小文字を区別して完全一致で比較し、組み込みの名前に追加します。ルール自体が無効な場合は有効にしません。範囲別の設定では継承した一覧を置き換え、`[]` でリセットできます。\n\nキーの一覧は、MIT ライセンスの [eslint-plugin-vue のキー別名](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json) を元にしています。出典とライセンスは実装とともに保持しています。',
     ruleOptions: { modifiers: ["custom"] },
-    note: [
-      "## Modifier validation",
-      "",
-      "Unsupported modifiers are reported individually at their names, including on long-form, dynamic and object listeners. Accepted names follow `eslint-plugin-vue` 10.9.2: Vue event modifiers, keyboard aliases, single Unicode code points, and finite decimal integer prefixes (`Number.parseInt(name, 10)`). Thus `.13suffix` is accepted; numeric-key and `.native` migrations use separate rules. Only `.stop` and `.prevent` work without handlers; `.once`, `.enter`, and custom names require one.",
-      "",
-      '`modifiers` adds exact, case-sensitive names without enabling the rule. The Vite+ configuration below accepts `@click.custom="handler"`; standalone config uses `linter.ruleOptions`. Scoped entries replace the list; `[]` resets it. The keyboard table comes from the MIT-licensed [eslint-plugin-vue aliases](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json); source and license are retained beside the implementation.',
-    ].join("\n"),
-    noteJa: [
-      "## 修飾子の検証",
-      "",
-      "未対応の修飾子は、その名前の位置で個別に報告します。長い形式・動的引数・オブジェクト形式のリスナーも対象です。`eslint-plugin-vue` 10.9.2 と同じく、Vue のイベント修飾子、キーの別名、単一の Unicode コードポイント、十進整数として有限の値を読み取れる接頭辞（`Number.parseInt(name, 10)`）を許可します。そのため `.13suffix` も有効です。数値キーと `.native` の移行は別のルールで検査します。ハンドラーなしで動作するのは `.stop` と `.prevent` だけで、`.once`・`.enter`・独自の名前には式が必要です。",
-      "",
-      '`modifiers` は大文字と小文字を区別する完全一致の名前を追加します。ルールは別に有効にしてください。以下の Vite+ 設定は `@click.custom="handler"` を許可します。単独の設定では `linter.ruleOptions` を使います。スコープ付きの設定はリストを置き換え、`[]` でリセットできます。キーの表は MIT ライセンスの [eslint-plugin-vue の別名一覧](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json)に由来し、実装とともに元のソースとライセンスを保持しています。',
-    ].join("\n"),
+    evidence: "crates/vize_patina/src/rules/vue/valid_v_on.rs",
   },
   "vue/valid-v-show": {
     bad: {
