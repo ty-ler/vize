@@ -303,7 +303,17 @@ process.stdin.once('data', ack => {{
             "specificreason 日本語\n".as_bytes()
         );
         assert_eq!(failure.cause.kind(), std::io::ErrorKind::UnexpectedEof);
-        assert!(error.to_string().contains("specificreason 日本語"));
+        let status = if cfg!(windows) {
+            "exit code: 17"
+        } else {
+            "exit status: 17"
+        };
+        assert_eq!(
+            error.to_string(),
+            format!(
+                "node failed to load config: specificreason 日本語 ({status}; observation transport: failed to fill whole buffer)"
+            )
+        );
     }
 
     #[test]

@@ -110,6 +110,20 @@ impl LoadedLspConfig {
 #[cfg(test)]
 mod tests {
     use super::{load_lsp_config_snapshot, load_lsp_config_snapshot_observed};
+    use std::path::{Path, PathBuf};
+
+    fn discovery_paths(root: &Path) -> Vec<PathBuf> {
+        [
+            "vite.config.ts",
+            "vite.config.js",
+            "vite.config.mjs",
+            "vite.config.cjs",
+            "vite.config.mts",
+            "vite.config.cts",
+        ]
+        .map(|name| root.join(name))
+        .to_vec()
+    }
 
     #[test]
     fn observes_explicit_policy_before_reading_without_observing_directory_mtimes() {
@@ -130,8 +144,12 @@ mod tests {
             observed.extend_from_slice(paths);
         });
         assert!(absent.valid);
-        assert!(observed.contains(&root.path().join("vite.config.ts")));
-        assert!(!observed.contains(&root.path().to_path_buf()));
+        let mut expected = discovery_paths(root.path());
+        expected.extend(
+            ["pkl", "ts", "mts", "cts", "js", "mjs", "cjs", "json"]
+                .map(|extension| root.path().join(format!("vize.config.{extension}"))),
+        );
+        assert_eq!(observed, expected);
     }
 
     #[test]
@@ -146,8 +164,18 @@ mod tests {
         let snapshot = load_lsp_config_snapshot_observed(Some(root.path()), &mut |_| {});
         assert!(!snapshot.valid);
         let error = snapshot.error.unwrap();
-        assert!(error.contains("authored-specificreason"), "{error}");
-        assert!(error.contains("17"), "{error}");
+        let status = if cfg!(windows) {
+            "exit code: 17"
+        } else {
+            "exit status: 17"
+        };
+        assert_eq!(
+            error,
+            format!(
+                "failed to parse {}: node failed to load config: authored-specificreason ({status}; observation transport: failed to fill whole buffer)",
+                path.display()
+            )
+        );
         assert!(!snapshot.watch_dependencies_complete);
     }
 
@@ -158,12 +186,23 @@ mod tests {
         let missing = load_lsp_config_snapshot(Some(&path));
         assert!(!missing.valid);
         assert!(missing.watch_dependencies_complete);
-        assert!(missing.watch_dependencies.contains(&path));
+        assert_eq!(missing.watch_dependencies, vec![path.clone()]);
         std::fs::write(&path, "export default { vue: {} };").unwrap();
         let created = load_lsp_config_snapshot(Some(&path));
         assert!(created.valid, "{:?}", created.error);
         assert!(created.watch_dependencies_complete);
-        assert!(created.watch_dependencies.contains(&path));
+        let canonical = path.canonicalize().unwrap();
+        let mut expected = vec![path.clone(), canonical.clone()];
+        expected.extend(
+            canonical
+                .parent()
+                .unwrap()
+                .ancestors()
+                .map(|directory| directory.join("node_modules/vite")),
+        );
+        expected.sort();
+        expected.dedup();
+        assert_eq!(created.watch_dependencies, expected);
         assert_eq!(created.source_path, Some(path));
     }
 
@@ -180,27 +219,23 @@ mod tests {
         let rejected = load_lsp_config_snapshot(Some(root.path()));
         assert!(!rejected.valid);
         assert!(rejected.watch_dependencies_complete);
-        for path in &paths {
-            assert!(rejected.watch_dependencies.contains(path));
-        }
+        let mut expected = discovery_paths(root.path());
+        expected.extend(paths.iter().cloned());
+        expected.sort();
+        assert_eq!(rejected.watch_dependencies, expected);
         std::fs::remove_file(&paths[0]).unwrap();
         let retained = load_lsp_config_snapshot(Some(root.path()));
         assert!(!retained.valid);
-        assert!(retained.watch_dependencies.contains(&paths[1]));
+        let mut expected = discovery_paths(root.path());
+        expected.push(paths[1].clone());
+        expected.sort();
+        assert_eq!(retained.watch_dependencies, expected);
         std::fs::remove_file(&paths[1]).unwrap();
         let repaired = load_lsp_config_snapshot(Some(root.path()));
         assert!(repaired.valid, "{:?}", repaired.error);
         assert!(repaired.source_path.is_none());
-        assert!(
-            repaired
-                .watch_dependencies
-                .iter()
-                .any(|path| path.ends_with("vite.config.mjs"))
-        );
-        assert!(
-            !repaired
-                .watch_dependencies
-                .contains(&root.path().to_path_buf())
-        );
+        let mut expected = discovery_paths(root.path());
+        expected.sort();
+        assert_eq!(repaired.watch_dependencies, expected);
     }
 }
