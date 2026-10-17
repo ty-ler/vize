@@ -46,8 +46,10 @@ test("actual legacy driver qualifies a cold cut before R and retains resume and 
       .digest("hex");
     const script = path.join(root, "legacy-check.rs");
     fs.writeFileSync(script, harness(watch, contract, digest));
-    const result = spawnSync("rust-script", ["--test", script, "--nocapture"], {
+    const result = spawnSync("rust-script", ["--test", script], {
       encoding: "utf8",
+      // rust-script 0.34 uses cargo test directly and does not forward script arguments.
+      env: { ...process.env, RUST_TEST_NOCAPTURE: "1" },
       timeout: 180_000,
     });
     assert.equal(
