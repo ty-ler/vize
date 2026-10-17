@@ -11,6 +11,8 @@ use crate::ide::DiagnosticService;
 use super::MaestroServer;
 
 #[cfg(all(test, feature = "native", unix))]
+mod configuration_failure_tests;
+#[cfg(all(test, feature = "native", unix))]
 mod retry_tests;
 #[cfg(feature = "native")]
 mod sync_feedback;
