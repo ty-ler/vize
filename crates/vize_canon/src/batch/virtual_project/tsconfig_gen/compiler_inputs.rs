@@ -4,10 +4,10 @@ use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 
 use serde_json::Value;
-use vize_carton::{FxHashMap, FxHashSet, profile};
+use vize_carton::{FxHashMap, profile};
 
 use crate::batch::error::{CorsaError, CorsaResult};
-use crate::package_route::stamp::{InputStamp, InputStampReadStats};
+use crate::package_route::stamp::{InputStamp, InputStampReadStats, InputStampValidation};
 
 use super::super::tsconfig_paths::{normalize_path_lexically, parse_jsonc_value};
 
@@ -63,7 +63,7 @@ impl ConfigurationObservations {
     /// Inputs whose current physical identity differs from this observation.
     pub fn changed_paths(&self) -> Vec<PathBuf> {
         if !crate::corsa_bridge::preparation_trace::enabled() {
-            return self.collect_changed_paths(InputStamp::is_current);
+            return self.validate_current_inputs(None).0;
         }
         let started = std::time::Instant::now();
         let (paths, stats, unique) = self.observed_changed_paths();
@@ -77,15 +77,19 @@ impl ConfigurationObservations {
     }
 
     fn observed_changed_paths(&self) -> (Vec<PathBuf>, InputStampReadStats, usize) {
-        let unique = self
-            .stamps
-            .iter()
-            .map(InputStamp::observation_identity)
-            .collect::<FxHashSet<_>>()
-            .len();
         let mut stats = InputStampReadStats::default();
-        let paths = self.collect_changed_paths(|stamp| stamp.is_current_observed(&mut stats));
+        let (paths, unique) = self.validate_current_inputs(Some(&mut stats));
         (paths, stats, unique)
+    }
+
+    fn validate_current_inputs(
+        &self,
+        mut stats: Option<&mut InputStampReadStats>,
+    ) -> (Vec<PathBuf>, usize) {
+        let mut current = InputStampValidation::default();
+        let paths =
+            self.collect_changed_paths(|stamp| current.is_current(stamp, stats.as_deref_mut()));
+        (paths, current.len())
     }
 
     fn collect_changed_paths(
@@ -344,8 +348,8 @@ mod tests {
         assert!(paths.is_empty());
         assert_eq!(observed.stamps.len(), 5);
         assert_eq!(unique, 3);
-        assert_eq!(stats.reads, 4);
-        assert_eq!(stats.bytes, 20);
+        assert_eq!(stats.reads, 2);
+        assert_eq!(stats.bytes, 10);
         assert_eq!(
             paths,
             observed.collect_changed_paths(InputStamp::is_current)
@@ -353,18 +357,22 @@ mod tests {
 
         // A later validation must read disk again, even for the same paths/roles.
         std::fs::write(&file, b"omega").unwrap();
+        assert_eq!(observed.changed_paths(), vec![file.clone()]);
         let conflicting = ConfigurationObservations::capture(std::slice::from_ref(&file));
         observed.extend(&conflicting);
         let (paths, stats, unique) = observed.observed_changed_paths();
         assert_eq!(paths, vec![file.clone()]);
         assert_eq!(observed.stamps.len(), 6);
         assert_eq!(unique, 3);
-        assert_eq!(stats.reads, 5);
-        assert_eq!(stats.bytes, 25);
+        assert_eq!(stats.reads, 2);
+        assert_eq!(stats.bytes, 10);
         assert_eq!(
             paths,
             observed.collect_changed_paths(InputStamp::is_current)
         );
+        observed.stamps.reverse();
+        assert_eq!(observed.changed_paths(), paths);
+        observed.stamps.reverse();
         assert!(conflicting.observed_changed_paths().0.is_empty());
         std::fs::write(&absent, content).unwrap();
         let (paths, stats, unique) = observed.observed_changed_paths();
@@ -372,8 +380,8 @@ mod tests {
         expected.sort();
         assert_eq!(paths, expected);
         assert_eq!(unique, 3);
-        assert_eq!(stats.reads, 6);
-        assert_eq!(stats.bytes, 30);
+        assert_eq!(stats.reads, 3);
+        assert_eq!(stats.bytes, 15);
     }
 
     #[cfg(unix)]
