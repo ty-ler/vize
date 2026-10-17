@@ -70,6 +70,7 @@ function harness(watch: string, contract: string, digest: string): string {
 //! edition = "2024"
 //! \`\`\`
 #![allow(dead_code)]
+fn main() {} // Keep rust-script from wrapping module items inside an implicit main.
 use serde_json::{json, Value};
 use std::{cell::RefCell, path::Path, time::Duration};
 const SOURCE_DIGEST: &str = "${digest}";
