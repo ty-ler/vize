@@ -181,6 +181,7 @@ exec "$NODE" -e 'const fs=require("node:fs");const args=process.argv.slice(1);if
       for (const file of [
         "run-affected-rust.ts",
         "run-rust-test-cohort.ts",
+        "rust-test-default-features.ts",
         "rust-test-cohorts.ts",
         "plan-affected-rust.ts",
         "plan-source-checks.ts",

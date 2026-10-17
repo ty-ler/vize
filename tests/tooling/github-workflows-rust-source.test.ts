@@ -102,6 +102,38 @@ void test("Clippy and doctests start beside affected cohort execution and stay r
     /cargo clippy @packages@ --profile ci -- -D warnings -D clippy::wildcard_imports/,
   );
   assert.match(validation, /cargo test @packages@ --profile ci --doc/);
+  const steps = parallel.steps ?? [];
+  const doctests = steps.findIndex((step) =>
+    /cargo test @packages@ --profile ci --doc/.test(step.run ?? ""),
+  );
+  const examples = steps.filter((step) =>
+    /cargo build @packages@ --profile ci --examples/.test(step.run ?? ""),
+  );
+  assert.equal(examples.length, 1);
+  assert.equal(steps.indexOf(examples[0]), doctests + 1);
+  assert.equal(examples[0].if, "${{ github.event_name == 'pull_request' }}");
+  assert.match(examples[0].run ?? "", /rust-build-evidence\.ts before "\$evidence"/);
+  assert.ok(
+    examples[0].run?.includes(
+      'node tools/support/compat/github/run-affected-rust.ts "$RUNNER_TEMP/rust-plan.json" cargo build @packages@ --profile ci --examples --timings --message-format=json-render-diagnostics > "$evidence/cargo.jsonl"',
+    ),
+  );
+  const evidence = steps[steps.indexOf(examples[0]) + 1];
+  assert.equal(evidence.if, "${{ always() && github.event_name == 'pull_request' }}");
+  assert.equal(
+    evidence.run,
+    'node tools/support/compat/github/rust-build-evidence.ts collect "$RUNNER_TEMP/rust-example-build-evidence"',
+  );
+  const upload = steps[steps.indexOf(examples[0]) + 2];
+  assert.equal(upload.if, evidence.if);
+  assert.ok(upload.uses?.startsWith("actions/upload-artifact@"));
+  assert.equal(
+    upload.with?.name,
+    "rust-build-evidence-examples-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}",
+  );
+  assert.equal(upload.with?.path, "${{ runner.temp }}/rust-example-build-evidence/");
+  assert.equal(upload.with?.["if-no-files-found"], "error");
+  assert.doesNotMatch(validation, /cargo test[^\n]*--examples/);
   assert.doesNotMatch(validation, /nextest archive/);
   const producer = rust.jobs["merge-rust-source"];
   assert.match(producer.if ?? "", /github\.event_name == 'merge_group'/);
