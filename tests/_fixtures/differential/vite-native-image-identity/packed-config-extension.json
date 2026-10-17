@@ -335,9 +335,6 @@
       "witnessSha256": "93d803b205eb6608d2f9e2c71dc323d378720db1235462ef0b02cfc9f5714241",
       "workflowSha256": "3fa236d39dfe3fef0e0b9919290e88ba4ab00c92ce4b43808c127bf8b0790dfb"
     },
-    "cargoInputs": [
-      "Cargo.lock",
-      "Cargo.toml"
-    ]
+    "cargoInputs": ["Cargo.lock", "Cargo.toml"]
   }
 }
