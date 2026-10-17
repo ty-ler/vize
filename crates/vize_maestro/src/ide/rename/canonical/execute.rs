@@ -141,6 +141,9 @@ pub(super) async fn rename_strict_inner(
         .rename(&document.request_uri, line, character, &semantic_name)
         .await
         .map_err(CanonicalFailure::FallbackBridge)?;
+    if super::observation_enabled() {
+        tracing::info!(uri = %ctx.uri, offset = ctx.offset, request_uri = %document.request_uri, line, character, ?response, "rename observation: primary native response");
+    }
     if response.is_none() {
         record(&mut trace, || CanonicalRenameStage::PrimaryNull);
     }
@@ -156,7 +159,13 @@ pub(super) async fn rename_strict_inner(
         .transpose()?;
     if response
         .as_ref()
-        .is_some_and(|edit| !scope.admits_native(&document, edit))
+        .is_some_and(|edit| {
+            let admitted = scope.admits_native(&document, edit);
+            if super::observation_enabled() {
+                tracing::info!(uri = %ctx.uri, admitted, ?edit, "rename observation: primary native ownership");
+            }
+            !admitted
+        })
     {
         return Ok(Answer::Available(None));
     }
@@ -188,6 +197,9 @@ pub(super) async fn rename_strict_inner(
     let mapped_primary = response.and_then(|response| {
         corsa_support::map_canonical_corsa_workspace_edit(ctx, &document, response)
     });
+    if super::observation_enabled() {
+        tracing::info!(uri = %ctx.uri, ?mapped_primary, ?linked, "rename observation: primary mapping and linked positions");
+    }
     if mapped_primary.is_some() {
         record(&mut trace, || CanonicalRenameStage::PrimaryMapped);
     } else if had_primary_response {
@@ -212,6 +224,9 @@ pub(super) async fn rename_strict_inner(
         .rename_batch(&linked_queries, &semantic_name)
         .await
         .map_err(CanonicalFailure::AuthoritativeBridge)?;
+    if super::observation_enabled() {
+        tracing::info!(uri = %ctx.uri, ?linked, ?linked_responses, "rename observation: linked native responses");
+    }
     for (position, extra) in linked.into_iter().zip(linked_responses) {
         record(&mut trace, || CanonicalRenameStage::LinkedQuery {
             request_uri: position.request_uri.clone(),
@@ -231,7 +246,11 @@ pub(super) async fn rename_strict_inner(
                 operation: "linked rename",
                 message: cstr!("{error}"),
             })?;
-        if !scope.admits_native(&document, &extra) {
+        let admitted = scope.admits_native(&document, &extra);
+        if super::observation_enabled() {
+            tracing::info!(uri = %ctx.uri, ?position, admitted, ?extra, "rename observation: linked native ownership");
+        }
+        if !admitted {
             return Ok(Answer::Available(None));
         }
         let component_prop_query = component_prop_positions.contains(&position);

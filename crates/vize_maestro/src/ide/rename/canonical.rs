@@ -37,7 +37,30 @@ pub(in crate::ide::rename) async fn rename<'a>(
     bridge: Option<&CorsaBridge>,
 ) -> (CanonicalRename, corsa_support::RenameScope<'a>) {
     let mut scope = corsa_support::RenameScope::native(ctx);
-    let answer = match execute::rename_strict_inner(ctx, new_name, bridge, None, &mut scope).await {
+    let observing = observation_enabled();
+    let mut trace = Vec::new();
+    let result = execute::rename_strict_inner(
+        ctx,
+        new_name,
+        bridge,
+        observing.then_some(&mut trace),
+        &mut scope,
+    )
+    .await;
+    if observing {
+        match &result {
+            Ok(Answer::Unavailable) => {
+                tracing::info!(uri = %ctx.uri, offset = ctx.offset, new_name, ?trace, "rename observation: unavailable")
+            }
+            Ok(Answer::Available(edit)) => {
+                tracing::info!(uri = %ctx.uri, offset = ctx.offset, new_name, ?trace, ?edit, "rename observation: canonical answer")
+            }
+            Err(error) => {
+                tracing::info!(uri = %ctx.uri, offset = ctx.offset, new_name, ?trace, ?error, "rename observation: canonical error")
+            }
+        }
+    }
+    let answer = match result {
         Ok(Answer::Unavailable) | Err(_)
             if crate::ide::template_scope::needs_patterned_navigation(ctx) =>
         {
@@ -52,6 +75,10 @@ pub(in crate::ide::rename) async fn rename<'a>(
         Answer::Available(Some(edit)) => CanonicalRename::Owned(edit),
     };
     (answer, scope)
+}
+
+fn observation_enabled() -> bool {
+    std::env::var_os("VIZE_TRACE_CANONICAL_RENAME").is_some_and(|value| value == "1")
 }
 
 pub(super) async fn prepare(

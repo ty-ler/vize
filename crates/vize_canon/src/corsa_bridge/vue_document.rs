@@ -153,6 +153,16 @@ impl CorsaBridge {
             session_config_path,
             materialized_changes,
         } = project;
+        if std::env::var_os("VIZE_TRACE_CANONICAL_RENAME").is_some_and(|value| value == "1") {
+            tracing::info!(?source_path, source_text = ?content, ?options, ?overlays, ?requested_sources, ?session_project_root, query_uri = %host.request_uri, query_code = ?host.code, query_mapping = ?host.mapping, query_import_source_map = ?host.import_source_map, ?documents, "rename observation: canonical native project");
+            for (uri, _) in &documents {
+                if let Some(source) = crate::file_uri::file_uri_to_path(uri)
+                    .and_then(|path| host.source_catalog.get(&path))
+                {
+                    tracing::info!(%uri, source_path = ?source.source_path, source_text = ?source.source, code = ?source.code, mapping = ?source.mapping, import_source_map = ?source.import_source_map, mapping_kind = ?source.mapping_kind, "rename observation: admitted catalog leaf");
+                }
+            }
+        }
         self.open_canon_project_documents(
             documents,
             session_project_root,
