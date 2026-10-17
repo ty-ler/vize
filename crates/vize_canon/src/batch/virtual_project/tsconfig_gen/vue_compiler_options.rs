@@ -108,7 +108,10 @@ impl VirtualProject {
 
     pub(in super::super) fn refresh_vue_compiler_options(&mut self) {
         let path = self.resolved_tsconfig_path();
-        let options = load_vue_compiler_options(path.as_deref()).ok();
+        let options = self.compiler_configuration.as_ref().map_or_else(
+            || load_vue_compiler_options(path.as_deref()).ok(),
+            |snapshot| Some(snapshot.vue_options.clone()),
+        );
         self.typed_router.root =
             super::super::typed_router::configured_root(self, options.as_ref(), path.as_deref());
         self.virtual_ts_check_options.check_unknown_props = if path.is_none() {
@@ -251,7 +254,7 @@ impl VirtualProject {
 }
 
 #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
-fn load_vue_compiler_options(
+pub(super) fn load_vue_compiler_options(
     tsconfig_path: Option<&Path>,
 ) -> CorsaResult<Map<std::string::String, Value>> {
     let Some(tsconfig_path) = tsconfig_path else {

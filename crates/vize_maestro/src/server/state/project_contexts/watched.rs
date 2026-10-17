@@ -197,9 +197,10 @@ impl ServerState {
             } else {
                 let mut applied = raw.clone();
                 Self::prepare_tsconfig_config_snapshot(&key.root, Some(&key), &mut applied).map(
-                    |()| RetainedConfiguration {
+                    |compiler| RetainedConfiguration {
                         authored: raw.clone(),
                         applied,
+                        compiler,
                     },
                 )
             };

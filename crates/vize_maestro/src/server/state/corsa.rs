@@ -99,9 +99,10 @@ impl ServerState {
         let corsa_path = config.corsa_path.clone();
         let existing = { self.corsa_bridge.read().clone() };
         let bridge = existing.unwrap_or_else(|| {
-            Arc::new(CorsaBridge::with_config_and_package_routes(
+            Arc::new(CorsaBridge::with_compiler_configuration(
                 config,
                 self.package_route_resolver.lock().clone(),
+                self.project_contexts.compiler_configuration.read().clone(),
             ))
         });
         // Keep a cancelled startup's worker/session owner. Until it drains,

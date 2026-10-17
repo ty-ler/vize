@@ -40,6 +40,7 @@ impl From<PathBuf> for ProjectContextKey {
 pub(super) struct RetainedConfiguration {
     authored: LoadedLspConfig,
     applied: LoadedLspConfig,
+    compiler: Arc<vize_canon::CompilerConfigurationSnapshot>,
 }
 
 #[derive(Default)]
@@ -54,6 +55,8 @@ pub(super) struct ProjectContexts {
     pub(super) key: RwLock<Option<ProjectContextKey>>,
     pub(super) loaded_config: RwLock<Option<LoadedLspConfig>>,
     pub(super) applied_config: RwLock<Option<LoadedLspConfig>>,
+    pub(super) compiler_configuration:
+        RwLock<Option<Arc<vize_canon::CompilerConfigurationSnapshot>>>,
     pub(super) config_reload_failed: AtomicBool,
     reference_ownership: Mutex<vize_canon::batch::TsconfigOwnershipCache>,
     contexts: Mutex<FxHashMap<ProjectContextKey, Arc<registry::ProjectContext>>>,
@@ -211,6 +214,8 @@ impl ServerState {
         if let Some(prepared) = prepared {
             // This pair was already validated for this complete context key.
             // Raw dependency files can change before lazy initialization.
+            *state.project_contexts.compiler_configuration.write() =
+                Some(prepared.compiler.clone());
             state.apply_retained_workspace_config(root, prepared.applied.clone());
             *state.project_contexts.loaded_config.write() = Some(prepared.authored.clone());
         } else {

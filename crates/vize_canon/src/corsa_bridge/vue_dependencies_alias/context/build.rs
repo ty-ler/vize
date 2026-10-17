@@ -66,10 +66,16 @@ pub(super) fn build(
     // The workspace root selects the mirror's filesystem scope, not the
     // compiler options for every package beneath it. Anchor the source to its
     // nearest config before resolving a solution-style project's references.
-    if let Some(tsconfig) = configured_tsconfig.or(discovered_config) {
-        project.set_tsconfig_path(Some(tsconfig));
+    if let Some(snapshot) = environment.editor_session.compiler_configuration() {
+        project
+            .set_compiler_configuration_snapshot(std::sync::Arc::clone(snapshot))
+            .map_err(bridge_error)?;
+    } else {
+        if let Some(tsconfig) = configured_tsconfig.or(discovered_config) {
+            project.set_tsconfig_path(Some(tsconfig));
+        }
+        project.use_effective_tsconfig_for_source(source_path);
     }
-    project.use_effective_tsconfig_for_source(source_path);
     let namespace_identity = super::namespace::editor_namespace_identity(
         options,
         environment.virtual_ts_options,

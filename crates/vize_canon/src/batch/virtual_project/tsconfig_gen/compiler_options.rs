@@ -69,7 +69,7 @@ struct ChainLoad {
 
 /// Flattened options plus the effective `baseUrl` (#3886).
 #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in super::super) struct FlattenedCompilerOptions {
     pub(in super::super) options: Map<std::string::String, Value>,
     /// The effective `baseUrl` rebased the way `paths` targets are: relative to
@@ -99,6 +99,11 @@ impl VirtualProject {
         let Some(tsconfig_path) = tsconfig_path else {
             return Ok(Map::new());
         };
+        if let Some(snapshot) = self.compiler_configuration.as_ref()
+            && snapshot.tsconfig_path() == Some(tsconfig_path)
+        {
+            return Ok(snapshot.verbatim.clone());
+        }
         let mut load = ChainLoad::default();
         Ok(self
             .load_compiler_options_inner(tsconfig_path, &mut load, PathOptions::Verbatim)?
@@ -112,6 +117,11 @@ impl VirtualProject {
         &self,
         tsconfig_path: Option<&Path>,
     ) -> CorsaResult<FlattenedCompilerOptions> {
+        if let Some(snapshot) = self.compiler_configuration.as_ref()
+            && tsconfig_path == snapshot.tsconfig_path()
+        {
+            return Ok(snapshot.flattened.clone());
+        }
         let Some(tsconfig_path) = tsconfig_path else {
             return Ok(FlattenedCompilerOptions {
                 options: Map::new(),

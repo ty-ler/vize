@@ -323,6 +323,9 @@ impl VirtualProject {
     }
 
     pub(super) fn resolved_tsconfig_path(&self) -> Option<PathBuf> {
+        if let Some(snapshot) = self.compiler_configuration.as_ref() {
+            return snapshot.tsconfig_path().map(Path::to_path_buf);
+        }
         if let Some(ref tsconfig_path) = self.tsconfig_path {
             return Some(tsconfig_path.clone());
         }
@@ -335,6 +338,9 @@ impl VirtualProject {
     /// anchored tsconfig plus, for a solution-style shell, everything it
     /// references (#3923 cache invalidation).
     pub fn governing_config_paths(&self) -> Vec<PathBuf> {
+        if let Some(snapshot) = self.compiler_configuration.as_ref() {
+            return snapshot.dependencies().to_vec();
+        }
         let Some(anchored) = self.resolved_tsconfig_path() else {
             return Vec::new();
         };

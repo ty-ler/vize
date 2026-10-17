@@ -1,5 +1,10 @@
 //! TypeScript project authority complements the shared Vite snapshot.
 use std::path::Path;
+#[expect(
+    clippy::disallowed_types,
+    reason = "immutable snapshots are shared by editor owners"
+)]
+use std::sync::Arc;
 
 use super::{ServerState, host::LoadedLspConfig};
 
@@ -11,9 +16,10 @@ impl ServerState {
     ) -> bool {
         let key = self.project_contexts.key.read().clone();
         match Self::prepare_tsconfig_config_snapshot(directory, key.as_ref(), loaded) {
-            Ok(()) => {
+            Ok(compiler) => {
                 *self.project_contexts.config_dependencies.write() =
                     loaded.project.dependencies.clone();
+                *self.project_contexts.compiler_configuration.write() = Some(compiler);
                 true
             }
             Err(error) => {
@@ -27,7 +33,7 @@ impl ServerState {
         directory: &Path,
         key: Option<&super::super::project_contexts::ProjectContextKey>,
         loaded: &mut LoadedLspConfig,
-    ) -> Result<(), vize_l0::String> {
+    ) -> Result<Arc<vize_canon::CompilerConfigurationSnapshot>, vize_l0::String> {
         let root = loaded.project.project_root.as_deref().unwrap_or(directory);
         let base = loaded
             .source_path
@@ -65,22 +71,16 @@ impl ServerState {
             ));
         }
         let mut dependencies = loaded.project.dependencies.clone();
+        let compiler;
         if selected.is_file() {
             // Keep the checker on the same TS project when Vite moves the source root.
             loaded.config.type_checker.tsconfig =
                 Some(selected.to_string_lossy().into_owned().into());
-            match vize_canon::VirtualProject::new(root) {
-                Ok(mut project) => {
-                    project.set_tsconfig_path(Some(selected.clone()));
-                    dependencies.extend(
-                        project
-                            .checked_config_chain_paths()
-                            .map_err(|error| vize_l0::cstr!("{error}"))?,
-                    );
-                    dependencies.extend(project.governing_config_paths());
-                }
-                Err(error) => return Err(vize_l0::cstr!("{error}")),
-            }
+            let snapshot =
+                vize_canon::CompilerConfigurationSnapshot::capture(root, Some(&selected))
+                    .map_err(|error| vize_l0::cstr!("{error}"))?;
+            dependencies.extend(snapshot.dependencies().iter().cloned());
+            compiler = Arc::new(snapshot);
             // Authored Vite dialects, including Vue 3, take precedence.
             let source_owner = key.is_some_and(|key| key.tsconfig.is_some());
             let solution_shell = !source_owner
@@ -100,11 +100,16 @@ impl ServerState {
                     }
                 }
             }
+        } else {
+            compiler = Arc::new(
+                vize_canon::CompilerConfigurationSnapshot::capture(root, None)
+                    .map_err(|error| vize_l0::cstr!("{error}"))?,
+            );
         }
         dependencies.push(selected);
         dependencies.sort();
         dependencies.dedup();
         loaded.project.dependencies = dependencies;
-        Ok(())
+        Ok(compiler)
     }
 }
