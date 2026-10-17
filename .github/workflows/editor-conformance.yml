@@ -130,7 +130,7 @@ jobs:
       - name: Stabilize Ubuntu package archive
         if: matrix.client == 'vscode'
         uses: ./.github/actions/setup-ubuntu-archive
-      - name: Prepare pinned VS Code and the packaged extension
+      - name: Prepare pinned VS Code
         if: matrix.client == 'vscode'
         env:
           VIZE_TEST_VSCODE_VERSION: "1.107.1"
@@ -141,13 +141,17 @@ jobs:
             vize-ci-apt-retry sudo apt-get install -y xvfb
           fi
           timeout --signal=TERM --kill-after=10s 300s vp run --workspace-root test:vscode-extension:download
-          vp run --workspace-root test:vscode-extension:vsix
 
       - name: Exercise existing VS Code configuration and lifecycle contracts
         if: matrix.client == 'vscode'
         env:
           VIZE_TEST_VSCODE_VERSION: "1.107.1"
         run: xvfb-run -a vp run --workspace-root test:vscode-extension:host
+      - name: Package the validated VS Code extension
+        if: matrix.client == 'vscode'
+        env:
+          VIZE_TEST_VSCODE_VERSION: "1.107.1"
+        run: vp run --workspace-root test:vscode-extension:vsix
       - name: Retain VS Code configuration and lifecycle evidence
         if: ${{ always() && matrix.client == 'vscode' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -156,6 +160,8 @@ jobs:
           path: |
             editors/vscode/.vscode-test/host-smoke/failure/
             editors/vscode/.vscode-test/host-smoke/output-channel/
+            editors/vscode/.vscode-test/host-smoke/fake-server/events.jsonl
+            editors/vscode/.vscode-test/host-smoke/fake-server/existing-config-events/
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
