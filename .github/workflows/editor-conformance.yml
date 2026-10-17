@@ -33,6 +33,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
+          # Diagnostic harness changes are separate from the measured product.
+          ref: 06a51573858160eca1dfe4d54a06f90812f0f6b9
       # The runner's rustup installs the toolchain pinned in rust-toolchain.toml.
       - name: Install the repository Rust toolchain
         run: |
@@ -47,11 +49,24 @@ jobs:
           key: editor-conformance
           cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
       - name: Build vize CLI
-        run: cargo build --profile ci -p vize
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 06a51573858160eca1dfe4d54a06f90812f0f6b9
+          cargo build --profile ci -p vize
+          {
+            echo "producer=$(git rev-parse HEAD)"
+            echo "harness=${GITHUB_SHA}"
+            echo 'recipe=cargo build --profile ci -p vize'
+            rustc --version --verbose
+            cargo --version
+            sha256sum rust-toolchain.toml Cargo.lock target/ci/vize
+          } > target/ci/vize-producer.txt
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: vize-server
-          path: target/ci/vize
+          path: |
+            target/ci/vize
+            target/ci/vize-producer.txt
           retention-days: 1
 
   conformance:
@@ -147,17 +162,42 @@ jobs:
         env:
           VIZE_TEST_VSCODE_VERSION: "1.107.1"
         run: xvfb-run -a vp run --workspace-root test:vscode-extension:host
-      - name: Package the validated VS Code extension
+      - name: Hydrate pinned create-vue fixture for the original real host suite
+        if: matrix.client == 'vscode'
+        run: |
+          git submodule update --init --force --depth 1 -- tests/_fixtures/_git/create-vue
+          test "$(git rev-parse HEAD:tests/_fixtures/_git/create-vue)" = \
+            "$(git -C tests/_fixtures/_git/create-vue rev-parse HEAD)"
+      - name: Observe the unchanged real VS Code rich authoring contract
         if: matrix.client == 'vscode'
         env:
           VIZE_TEST_VSCODE_VERSION: "1.107.1"
-        run: vp run --workspace-root test:vscode-extension:vsix
+          VIZE_LSP_TRACE_NATIVE_SCOPE: "1"
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/rich-host-evidence"
+          cp "${RUNNER_TEMP}/vize-server/vize-producer.txt" "${RUNNER_TEMP}/rich-host-evidence/"
+          sha256sum "${VIZE_SERVER_PATH}" > "${RUNNER_TEMP}/rich-host-evidence/consumed-server.sha256"
+          git rev-parse HEAD > "${RUNNER_TEMP}/rich-host-evidence/harness-sha.txt"
+          git diff --exit-code
+          cat > "${RUNNER_TEMP}/rich-host-tap" <<'TAP'
+          #!/bin/sh
+          exec node "$GITHUB_WORKSPACE/tests/editor-conformance/lsp-tap.mjs" "$VIZE_REAL_SERVER_PATH" "$@"
+          TAP
+          chmod +x "${RUNNER_TEMP}/rich-host-tap"
+          VIZE_REAL_SERVER_PATH="${VIZE_SERVER_PATH}" \
+            VIZE_SERVER_PATH="${RUNNER_TEMP}/rich-host-tap" \
+            VIZE_CONFORMANCE_TRANSCRIPT="${RUNNER_TEMP}/rich-host-evidence/protocol.jsonl" \
+            VIZE_RICH_CUSTODY_OUTPUT="${RUNNER_TEMP}/rich-host-evidence/public-api.json" \
+            xvfb-run -a vp run --workspace-root test:vscode-extension:host-real
       - name: Retain VS Code configuration and lifecycle evidence
         if: ${{ always() && matrix.client == 'vscode' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: vscode-configuration-lifecycle
           path: |
+            ${{ runner.temp }}/rich-host-evidence/
+            editors/vscode/.vscode-test/host-smoke-real/failure/
             editors/vscode/.vscode-test/host-smoke/failure/
             editors/vscode/.vscode-test/host-smoke/output-channel/
             editors/vscode/.vscode-test/host-smoke/fake-server/events.jsonl

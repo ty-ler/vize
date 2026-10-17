@@ -282,12 +282,26 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
   assert.ok(lifecycle > steps.findIndex((step) => step.name === "Prepare pinned VS Code"));
   assert.ok(lifecycle < steps.findIndex((step) => step.name === "Play the TS-45 scenario"));
   const packageExtension = steps.findIndex(
-    (step) => step.name === "Package the validated VS Code extension",
+    (step) => step.name === "Observe the unchanged real VS Code rich authoring contract",
   );
   assert.ok(packageExtension > lifecycle);
   assert.ok(packageExtension < steps.findIndex((step) => step.name === "Play the TS-45 scenario"));
   assert.equal(steps[packageExtension].if, "matrix.client == 'vscode'");
-  assert.equal(steps[packageExtension].run, "vp run --workspace-root test:vscode-extension:vsix");
+  const observation = steps[packageExtension].run;
+  assert.match(
+    observation.trim(),
+    /xvfb-run -a vp run --workspace-root test:vscode-extension:host-real$/u,
+  );
+  assert.match(observation, /tests\/editor-conformance\/lsp-tap\.mjs/);
+  assert.match(observation, /VIZE_REAL_SERVER_PATH="\$\{VIZE_SERVER_PATH\}"/);
+  assert.match(observation, /VIZE_CONFORMANCE_TRANSCRIPT=.*protocol\.jsonl/);
+  assert.match(observation, /VIZE_RICH_CUSTODY_OUTPUT=.*public-api\.json/);
+  const producer = workflow.jobs.server.steps;
+  assert.equal(producer[0].with.ref, "06a51573858160eca1dfe4d54a06f90812f0f6b9");
+  assert.match(
+    producer.find((step: { name?: string }) => step.name === "Build vize CLI").run,
+    /cargo build --profile ci -p vize/,
+  );
   assert.equal(steps[lifecycle].if, "matrix.client == 'vscode'");
   assert.equal(
     steps[lifecycle].run,
@@ -301,6 +315,8 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
   assert.equal(lifecycleEvidence?.with?.["include-hidden-files"], true);
   assert.equal(lifecycleEvidence?.with?.["if-no-files-found"], "error");
   assert.deepEqual(String(lifecycleEvidence?.with?.path).trim().split("\n"), [
+    "${{ runner.temp }}/rich-host-evidence/",
+    "editors/vscode/.vscode-test/host-smoke-real/failure/",
     "editors/vscode/.vscode-test/host-smoke/failure/",
     "editors/vscode/.vscode-test/host-smoke/output-channel/",
     "editors/vscode/.vscode-test/host-smoke/fake-server/events.jsonl",
