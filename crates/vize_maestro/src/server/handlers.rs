@@ -72,6 +72,11 @@ impl LanguageServer for MaestroServer {
 
         // Load format config from workspace root (always, regardless of feature)
         if let Some(ref path) = workspace_path {
+            #[cfg(feature = "native")]
+            if !self.state.load_workspace_config_async(path).await {
+                return Err(tower_lsp::jsonrpc::Error::internal_error());
+            }
+            #[cfg(not(feature = "native"))]
             self.state.load_workspace_config(path);
         }
         // Record every workspace folder so per-document features resolve their own folder's config in multi-root sessions (#3240).

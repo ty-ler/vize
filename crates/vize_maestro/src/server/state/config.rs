@@ -220,6 +220,19 @@ impl ServerState {
         tracing::info!("Loaded LSP config from {}: {:?}", source, features);
     }
 
+    /// Keep the observed child transport on the existing bounded config workers.
+    #[cfg(feature = "native")]
+    pub(crate) async fn load_workspace_config_async(
+        self: &std::sync::Arc<Self>,
+        dir: &Path,
+    ) -> bool {
+        let state = self.clone();
+        let directory = dir.to_path_buf();
+        Self::project_background(move || state.load_workspace_config(&directory))
+            .await
+            .is_some()
+    }
+
     /// Load workspace options from the shared Vite/TypeScript project snapshot.
     pub fn load_workspace_config(&self, dir: &Path) {
         #[cfg(feature = "native")]
