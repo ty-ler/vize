@@ -336,6 +336,9 @@ fn closing_and_reopening_a_package_owner_removes_and_restores_its_support_facts(
         .unwrap();
     assert_eq!(closed.session_project_root.as_ref(), Some(project_root));
     assert_eq!(closed.session_config_path.as_ref(), Some(config_path));
+    let closed_documents = vec![(closed.host.request_uri.clone(), baseline.host.code.clone())];
+    assert_eq!(closed.host.code, baseline.host.code);
+    assert_eq!(closed.documents, closed_documents);
     let closed_config: serde_json::Value =
         serde_json::from_slice(&fs::read(config_path).unwrap()).unwrap();
     assert_eq!(closed_config["compilerOptions"], baseline_options);
@@ -353,7 +356,12 @@ fn closing_and_reopening_a_package_owner_removes_and_restores_its_support_facts(
     let reopened = fixture.build(&session, &fixture.host, APP);
     assert_eq!(reopened.host.request_uri, host.host.request_uri);
     assert_eq!(reopened.host.code, host.host.code);
-    assert_eq!(reopened.documents, host.documents);
+    // A new overlay epoch refreshes the still-open Other document alongside
+    // the reopened importer. Retain the complete original importer vector and
+    // the independently generated import-free document, in host-first order.
+    let mut reopened_documents = host.documents.clone();
+    reopened_documents.extend(closed_documents);
+    assert_eq!(reopened.documents, reopened_documents);
     let restored_config: serde_json::Value =
         serde_json::from_slice(&fs::read(config_path).unwrap()).unwrap();
     assert_eq!(restored_config["compilerOptions"], required_options);
