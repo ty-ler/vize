@@ -1,12 +1,12 @@
 name: Config dependency source qualification
-run-name: Config dependency laws at 6341361ac5
+run-name: Config dependency laws at 12b7583f8a
 on:
   push:
     branches: [ci/config-dependency-source-qualification]
 permissions:
   contents: read
 env:
-  SOURCE_SHA: 6341361ac5804cc455b257b22f006bcf086924fa
+  SOURCE_SHA: 12b7583f8aa26527a01a7b02656bbfc74c27ebde
   CARGO_BUILD_JOBS: "12"
   CARGO_TERM_COLOR: always
   RUST_TEST_THREADS: "4"
@@ -114,6 +114,31 @@ jobs:
             tests/tooling/native-config-preload-observations.test.ts \
             tests/tooling/native-config-module-loader.test.ts \
             tests/tooling/support/davinci-host-imports.ts \
+            .github/workflows/editor-conformance.yml \
+            crates/vize_maestro/src/server/native_requests.rs \
+            crates/vize_maestro/src/server/native_requests/tests.rs \
+            editors/emacs/README.md \
+            editors/emacs/test/vize-test.el \
+            editors/emacs/vize.el \
+            editors/nvim/README.md \
+            editors/nvim/lua/vize/config.lua \
+            editors/nvim/test/vize_spec.lua \
+            editors/vim/README.md \
+            editors/vim/autoload/vize.vim \
+            editors/vim/test/vize_spec.vim \
+            editors/zed/README.md \
+            tests/editor-conformance/named-profiles.ts \
+            tests/tooling/editor-integrations-emacs.test.ts \
+            tests/tooling/editor-integrations-neovim.test.ts \
+            tests/tooling/editor-lsp-adapters.test.ts \
+            tests/tooling/editor-profiles-consistency.test.ts \
+            crates/vize/tests/lsp_canceled_hover_cli.rs \
+            crates/vize/tests/lsp_canceled_hover_cli/project.rs \
+            tests/_fixtures/differential/lsp/canceled-native-hover/held-native.js \
+            tests/_fixtures/differential/lsp/canceled-native-hover/SlotAuthoring.vue.txt \
+            tests/_fixtures/differential/lsp/canceled-native-hover/tsconfig.json \
+            crates/vize/tests/support/lsp_process.rs \
+            crates/vize/tests/support/lsp_process/passive.rs \
             > target/config-dependency-qualification/inputs.sha256
       - name: Check config host boundaries and actual loader repair observation laws
         run: |
@@ -156,6 +181,12 @@ jobs:
           set -euo pipefail
           cargo test --locked --profile ci -p vize_maestro --lib server::state::project_contexts:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/project-contexts.log
           grep -E 'test result: ok\. [1-9][0-9]* passed; 0 failed; 0 ignored;' target/config-dependency-qualification/project-contexts.log
+      - name: Retain authored revisions across actual asynchronous policy admission
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_maestro --lib server::native_requests::tests:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/authored-requests.log
+          grep -F '7 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/authored-requests.log
       - name: Retain every workspace folder policy after invalid primary admission
         if: ${{ !cancelled() }}
         run: |
@@ -207,6 +238,18 @@ jobs:
           cp target/ci/vize.differential-build.json target/config-dependency-qualification/
           VIZE_LSP_BIN=target/ci/vize VIZE_LSP_REQUIRE_SOURCE_BUILD=1 node --test --test-reporter=tap tests/tooling/lsp-config-bundle-repair.test.ts 2>&1 | tee target/config-dependency-qualification/vite-bundle-repair.log
           grep -F '# pass 1' target/config-dependency-qualification/vite-bundle-repair.log
+      - name: Require every original canceled native hover and current revision oracle
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          set +e
+          VIZE_LSP_PASSIVE_EVIDENCE=target/config-dependency-qualification/canceled-hover cargo test --locked --profile ci -p vize --features profiling --test lsp_canceled_hover_cli -- --nocapture 2>&1 | tee target/config-dependency-qualification/canceled-native-hover.log
+          native_case_status=${PIPESTATUS[0]}
+          set -e
+          sha256sum target/ci/vize > target/config-dependency-qualification/canceled-native-cli.sha256
+          file target/ci/vize > target/config-dependency-qualification/canceled-native-cli.elf.txt
+          test "$native_case_status" -eq 0
+          grep -F '1 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/canceled-native-hover.log
       - name: Run all eighteen CLI input scope unit laws
         if: ${{ !cancelled() }}
         run: |
