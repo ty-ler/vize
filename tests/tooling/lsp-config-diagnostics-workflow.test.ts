@@ -46,6 +46,12 @@ test("startup diagnostics retain the production producer and unchanged scale-one
     steps.find((step) => step.name === "Hydrate only the original pinned Vben fixture")?.run,
     "git submodule update --init --depth 1 tests/_fixtures/_git/vue-vben-admin",
   );
+  assert.equal(
+    steps.find((step) => step.name === "Verify native preparation and request freshness laws")?.run,
+    "cargo test --locked --profile ci -p vize_maestro --features legacy --lib server::initial_diagnostics::\n" +
+      "cargo test --locked --profile ci -p vize_maestro --features legacy --lib server::native_requests::\n" +
+      "cargo clippy --locked --profile ci -p vize_maestro --features legacy --all-targets -- -D warnings\n",
+  );
   const upload = steps.find((step) => step.uses?.startsWith("actions/upload-artifact@"))!;
   assert.equal(upload.if, "always()");
   for (const evidence of [
