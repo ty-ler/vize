@@ -1,8 +1,16 @@
 //! Retained compiler authority remains executable without its live config chain.
+#[expect(
+    clippy::disallowed_types,
+    reason = "these fixtures verify shared immutable compiler snapshot ownership"
+)]
 use super::{Arc, CompilerConfigurationSnapshot, VirtualProject};
 use serde_json::json;
 
 #[test]
+#[expect(
+    clippy::disallowed_types,
+    reason = "the fixture shares admitted immutable snapshots between native project owners"
+)]
 fn admitted_options_keep_package_path_anchors_vue_options_and_live_source_rebuilds() {
     let root = tempfile::tempdir().unwrap();
     let package = root.path().join("node_modules/@fixture/policy");
@@ -77,6 +85,10 @@ fn admitted_options_keep_package_path_anchors_vue_options_and_live_source_rebuil
 }
 
 #[test]
+#[expect(
+    clippy::disallowed_types,
+    reason = "the fixture shares admitted immutable snapshots between native project owners"
+)]
 fn admitted_absence_does_not_adopt_a_new_invalid_live_config() {
     let root = tempfile::tempdir().unwrap();
     let snapshot = Arc::new(CompilerConfigurationSnapshot::capture(root.path(), None).unwrap());
@@ -98,6 +110,10 @@ fn admitted_absence_does_not_adopt_a_new_invalid_live_config() {
 }
 
 #[test]
+#[expect(
+    clippy::disallowed_types,
+    reason = "the fixture shares admitted immutable snapshots between native project owners"
+)]
 fn same_directory_selected_reference_snapshots_stay_independent_and_recover() {
     let root = tempfile::tempdir().unwrap();
     std::fs::write(
