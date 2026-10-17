@@ -104,7 +104,7 @@ fn check_workspace_server_deps(vue_files: usize) {
     for name in 0..vue_files {
         write_file(
             root,
-            vize_carton::cstr!("app/src/{name}.vue").as_str(),
+            vize_l0::cstr!("app/src/{name}.vue").as_str(),
             "<template><div /></template>",
         );
     }
