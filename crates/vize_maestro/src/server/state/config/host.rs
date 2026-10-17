@@ -25,10 +25,13 @@ pub(in crate::server::state) struct ObservedLspConfig {
 pub(in crate::server::state) fn load_observed_lsp_config_snapshot(
     path: Option<&std::path::Path>,
 ) -> ObservedLspConfig {
+    let phase =
+        vize_canon::corsa_bridge::EditorPreparationPhase::start("public_configuration_capture", 1);
     let mut before = vize_canon::ConfigurationObservations::default();
     let loaded = load_lsp_config_snapshot_observed(path, &mut |paths| {
         before.extend(&vize_canon::ConfigurationObservations::capture(paths));
     });
+    phase.finish();
     ObservedLspConfig {
         loaded,
         before,
