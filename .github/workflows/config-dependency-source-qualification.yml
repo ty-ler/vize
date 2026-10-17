@@ -1,12 +1,12 @@
 name: Config dependency source qualification
-run-name: Config dependency laws at 12b7583f8a
+run-name: Config dependency laws at 36e66d11cf
 on:
   push:
     branches: [ci/config-dependency-source-qualification]
 permissions:
   contents: read
 env:
-  SOURCE_SHA: 12b7583f8aa26527a01a7b02656bbfc74c27ebde
+  SOURCE_SHA: 36e66d11cffbc9598d1bfda0cf4ede012043a091
   CARGO_BUILD_JOBS: "12"
   CARGO_TERM_COLOR: always
   RUST_TEST_THREADS: "4"
@@ -243,7 +243,7 @@ jobs:
         run: |
           set -euo pipefail
           set +e
-          VIZE_LSP_PASSIVE_EVIDENCE=target/config-dependency-qualification/canceled-hover cargo test --locked --profile ci -p vize --features profiling --test lsp_canceled_hover_cli -- --nocapture 2>&1 | tee target/config-dependency-qualification/canceled-native-hover.log
+          VIZE_LSP_PASSIVE_EVIDENCE="$GITHUB_WORKSPACE/target/config-dependency-qualification/canceled-hover" cargo test --locked --profile ci -p vize --features profiling --test lsp_canceled_hover_cli abandoned_real_native_hover_preserves_original_markdown_and_current_revision -- --exact --nocapture 2>&1 | tee target/config-dependency-qualification/canceled-native-hover.log
           native_case_status=${PIPESTATUS[0]}
           set -e
           sha256sum target/ci/vize > target/config-dependency-qualification/canceled-native-cli.sha256
