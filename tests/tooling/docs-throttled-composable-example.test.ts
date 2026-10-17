@@ -53,7 +53,14 @@ const originalNames = [
 ];
 
 void test("the throttled preview appends one public example and retains original enrollment", () => {
-  const names = composableExamples.map(({ name }) => name);
+  const currentNames = composableExamples.map(({ name }) => name);
+  // These two reviewed demos precede the frozen 123-example enrollment.
+  const successors = ["async-resource", "virtual-list"];
+  assert.deepEqual(currentNames.slice(0, successors.length), successors);
+  assert.equal(currentNames.length, 125);
+  assert.equal(new Set(currentNames).size, 125);
+  const names = currentNames.slice(successors.length);
+  assert.equal(names.length, 123);
   assert.deepEqual(names.slice(0, 36), originalNames);
   assert.deepEqual(names.slice(36, 37), ["use-throttled"]);
   // Later examples append after the throttled preview.
