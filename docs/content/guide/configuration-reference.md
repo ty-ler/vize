@@ -107,6 +107,12 @@ These options come from the TypeScript project that owns the source file, includ
 
 `optionsWrapper` is unsupported. In Vue tooling it describes code prefix/suffix wrapping, not an Options API switch. Vize's existing Options API checking is controlled separately by `vue.typeChecker.optionsApi`. The mapping above is bounded support, not complete `vue-tsc` option parity.
 
+### Options API and legacy Vue
+
+`vue.typeChecker.optionsApi` resolves Vue 3 Options API template bindings from `data`, `computed`, `methods`, `inject`, `setup`, and `props` in ordinary `<script> export default { ... }` components. It is enabled by default in the standard build, matching `vue-tsc`. Script-setup components skip this path. Set `optionsApi: false` to disable it.
+
+Vue 2.7 and Nuxt 2 compatibility require the separate `legacy` build. `vue.typeChecker.legacyVue2` supplies the Nuxt 2 template globals. Keep the target Vue dependencies and ambient declarations in the owning package; choosing a Corsa executable does not select a Vue type version.
+
 ## Experimental Flat Entries
 
 Use the target package's TypeScript project for monorepo checking. Scoped Vue lint
