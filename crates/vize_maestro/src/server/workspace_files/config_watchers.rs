@@ -311,8 +311,12 @@ fn watcher(path: &Path) -> Option<FileSystemWatcher> {
             '}' => pattern.push_str("[}]"),
             '?' => pattern.push_str("[?]"),
             '*' => pattern.push_str("[*]"),
-            // VS Code trims the complete glob before parsing it.
-            ' ' => pattern.push_str("[ ]"),
+            // VS Code applies ECMAScript String.trim before parsing the glob.
+            character if glob_trim_character(character) => {
+                pattern.push('[');
+                pattern.push(character);
+                pattern.push(']');
+            }
             _ => pattern.push(character),
         }
     }
@@ -323,6 +327,12 @@ fn watcher(path: &Path) -> Option<FileSystemWatcher> {
         }),
         kind: Some(WatchKind::Create | WatchKind::Change | WatchKind::Delete),
     })
+}
+
+fn glob_trim_character(character: char) -> bool {
+    matches!(character, '\t'..='\r' | ' ' | '\u{00a0}' | '\u{1680}'
+        | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' | '\u{202f}'
+        | '\u{205f}' | '\u{3000}' | '\u{feff}')
 }
 
 #[cfg(test)]

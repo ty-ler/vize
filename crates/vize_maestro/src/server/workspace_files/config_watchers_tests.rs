@@ -266,7 +266,7 @@ fn whole_relative_pattern_packet_escapes_literal_glob_filename_and_encoded_paren
     let mut host = Harness::supported();
     let root = tempfile::tempdir().unwrap();
     let parent = root.path().join("project #[] 中文");
-    let path = parent.join(" policy[]{}?* space 日本.json ");
+    let path = parent.join("\t policy[]{}?* space 日本.json \u{00a0}\u{feff}");
     host.control.update(vec![path]);
     let request = host.next();
     assert_eq!(request.method(), "client/registerCapability");
@@ -277,7 +277,7 @@ fn whole_relative_pattern_packet_escapes_literal_glob_filename_and_encoded_paren
         request.params(),
         Some(&json!({"registrations":[{"id":id,"method":METHOD,
         "registerOptions":{"watchers":[{"globPattern":{"baseUri":base,
-            "pattern":"[ ]policy[[][]][{][}][?][*][ ]space[ ]日本.json[ ]"},"kind":7}]}}]}))
+            "pattern":"[\t][ ]policy[[][]][{][}][?][*][ ]space[ ]日本.json[ ][\u{00a0}][\u{feff}]"},"kind":7}]}}]}))
     );
     host.reply(&request, true);
 }
@@ -349,8 +349,6 @@ async fn protocol_send<S: LanguageServer>(
 
 #[test]
 fn held_external_watch_ack_does_not_delay_real_document_hover() {
-    use futures::{SinkExt, StreamExt};
-
     block_on(crate::runtime::timeout(Duration::from_secs(10), async {
         let root = tempfile::tempdir().unwrap();
         std::fs::write(root.path().join("package.json"), "{}").unwrap();
@@ -477,4 +475,21 @@ fn held_external_watch_ack_does_not_delay_real_document_hover() {
         }
     }))
     .expect("watch ACK independence completes with the original local request budget");
+}
+
+#[test]
+fn every_ecmascript_trim_character_is_a_literal_at_both_filename_edges() {
+    let root = tempfile::tempdir().unwrap();
+    for character in "\t\n\u{b}\u{c}\r \u{a0}\u{1680}\u{2000}\u{2001}\u{2002}\u{2003}\u{2004}\u{2005}\u{2006}\u{2007}\u{2008}\u{2009}\u{200a}\u{2028}\u{2029}\u{202f}\u{205f}\u{3000}\u{feff}".chars() {
+        let filename = cstr!("{character}policy.json{character}");
+        let watcher = watcher(&root.path().join(filename.as_str())).unwrap();
+        let GlobPattern::Relative(relative) = watcher.glob_pattern else { panic!("exact relative pattern") };
+        assert_eq!(relative.pattern, cstr!("[{character}]policy.json[{character}]"));
+    }
+    for character in ['\u{85}', '\u{200b}', 'a'] {
+        assert!(
+            !glob_trim_character(character),
+            "do not confuse Rust Unicode whitespace with ECMAScript trim"
+        );
+    }
 }
