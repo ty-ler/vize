@@ -104,7 +104,7 @@ function matches(actual: any, pattern: any): boolean {
 }
 
 /** Code actions echo client diagnostics; published diagnostics remain server-owned. */
-function actionExpectation(expected: any, request: Message, published: any[]): unknown | undefined {
+function actionExpectation(expected: any, request: Message, published: any[]): unknown[] | undefined {
   const supplied = request.params?.context?.diagnostics;
   if (!Array.isArray(expected) || !Array.isArray(supplied)) return undefined;
   const actions = [];
