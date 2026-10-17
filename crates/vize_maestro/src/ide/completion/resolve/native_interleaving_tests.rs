@@ -209,7 +209,7 @@ fn run(intervention: &str) {
                 state.update_virtual_docs(&slot_uri, &slot_source);
                 vec![]
             }
-            _ => unreachable!(),
+            _ => panic!("unknown completion intervention: {intervention}"),
         };
         receipt["interveningDiagnostics"] = json!(diagnostics);
         save(&receipt);
