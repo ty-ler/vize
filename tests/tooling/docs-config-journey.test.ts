@@ -126,8 +126,13 @@ void test("every locale publishes the same complete Vite setup and native config
     assert.ok(startup.source.includes("> [!NOTE]"), `${locale}: publication scope stays visible`);
     assert.ok(config.source.includes("> [!NOTE]"), `${locale}: migration scope stays visible`);
     assert.match(config.source, /`vize\.config\.\*`/);
+    assert.match(startup.source, /Vize 0\.457\.0/, `${locale}: released setup baseline`);
+    assert.doesNotMatch(
+      config.source,
+      /Vize 0\.457\.0/,
+      `${locale}: configuration migration must not claim the released setup baseline`,
+    );
     for (const document of [startup, config]) {
-      assert.match(document.source, /Vize 0\.457\.0/, `${locale}: released setup baseline`);
       assert.doesNotMatch(
         document.source,
         /next release|次(?:の|回)リリース|prochaine version|próxima versão|下一个版本/u,
