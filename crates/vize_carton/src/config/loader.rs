@@ -36,6 +36,9 @@ mod vapor;
 
 use std::path::{Path, PathBuf};
 
+/// Borrowed for one checked load; the callback may retain caller-owned observations.
+type BeforeConfigRead<'a> = Option<&'a mut (dyn FnMut(&[PathBuf]) + 'a)>;
+
 use checked::load_raw_config_checked;
 use discovery::{CONFIG_FILE_NAMES, resolve_dir_path, resolve_file_path, search_directories};
 use parse::{parse_raw_config_file, try_parse_raw_candidate};

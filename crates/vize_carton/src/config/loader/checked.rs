@@ -2,7 +2,7 @@
 use std::path::{Path, PathBuf};
 
 use super::{
-    LoadedRawConfig,
+    BeforeConfigRead, LoadedRawConfig,
     discovery::{
         CONFIG_FILE_NAMES, CONFIG_MIGRATION, retired_config_paths, search_directories_observed,
     },
@@ -35,7 +35,7 @@ pub(super) fn load_raw_editor_config_attempt(path: Option<&Path>) -> EditorConfi
 
 pub(super) fn load_raw_editor_config_attempt_observed(
     path: Option<&Path>,
-    mut before_read: Option<&mut dyn FnMut(&[PathBuf])>,
+    mut before_read: BeforeConfigRead<'_>,
 ) -> EditorConfigAttempt {
     let mut dependencies = Vec::new();
     let mut dependencies_complete = true;
@@ -60,15 +60,15 @@ fn load_raw_checked(
     require_explicit_config: bool,
     dependencies: &mut Vec<PathBuf>,
     complete: &mut bool,
-    before_read: &mut Option<&mut dyn FnMut(&[PathBuf])>,
+    before_read: &mut BeforeConfigRead<'_>,
 ) -> Result<LoadedRawConfig, std::string::String> {
     let base = path
         .map(Path::to_path_buf)
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
-    if !base.is_dir() {
-        if let Some(observe) = before_read.as_deref_mut() {
-            observe(std::slice::from_ref(&base));
-        }
+    if !base.is_dir()
+        && let Some(observe) = before_read.as_deref_mut()
+    {
+        observe(std::slice::from_ref(&base));
     }
     dependencies.push(base.clone());
     if !base.exists() {
@@ -111,7 +111,7 @@ fn load_raw_checked(
         }
         if let Some(observe) = before_read.as_deref_mut() {
             let retired_candidates = ["pkl", "ts", "mts", "cts", "js", "mjs", "cjs", "json"]
-                .map(|extension| directory.join(format!("vize.config.{extension}")));
+                .map(|extension| directory.join(crate::cstr!("vize.config.{extension}").as_str()));
             observe(&retired_candidates);
         }
         let retired = retired_config_paths(&directory);
@@ -133,7 +133,7 @@ fn parse(
     path: &Path,
     dependencies: &mut Vec<PathBuf>,
     complete: &mut bool,
-    before_read: &mut Option<&mut dyn FnMut(&[PathBuf])>,
+    before_read: &mut BeforeConfigRead<'_>,
 ) -> Result<LoadedRawConfig, std::string::String> {
     super::parse::parse_raw_config_file_observed(path, dependencies, complete, before_read)
         .map(|config| LoadedRawConfig {

@@ -14,12 +14,14 @@ use std::{
 
 use crate::config::ConfigDocument;
 
+use super::BeforeConfigRead;
+
 /// Evaluate a JS-like config file through Node and deserialize the result.
 pub(super) fn parse_js_config_observed(
     path: &Path,
     observed: &mut Vec<PathBuf>,
     complete: &mut bool,
-    before_read: &mut Option<&mut dyn FnMut(&[PathBuf])>,
+    before_read: &mut BeforeConfigRead<'_>,
 ) -> Result<ConfigDocument, Box<dyn std::error::Error>> {
     let EvaluatedConfig {
         path: config_path,
@@ -62,7 +64,7 @@ fn evaluate_js_config_with_dependencies(
     path: &Path,
     observed: &mut Vec<PathBuf>,
     complete: &mut bool,
-    before_read: &mut Option<&mut dyn FnMut(&[PathBuf])>,
+    before_read: &mut BeforeConfigRead<'_>,
 ) -> Result<EvaluatedConfig, Box<dyn std::error::Error>> {
     *complete = false;
     let config_path = if path.is_absolute() {

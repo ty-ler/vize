@@ -6,6 +6,8 @@
 
 use std::path::{Path, PathBuf};
 
+use super::BeforeConfigRead;
+
 /// Config file names in precedence order for directory auto-discovery.
 pub(super) const CONFIG_FILE_NAMES: [&str; 6] = [
     "vite.config.ts",
@@ -52,19 +54,16 @@ pub(super) fn search_directories(base: &Path, automatic: bool) -> Vec<PathBuf> {
 pub(super) fn search_directories_observed(
     base: &Path,
     automatic: bool,
-    before_read: &mut Option<&mut dyn FnMut(&[PathBuf])>,
+    before_read: &mut BeforeConfigRead<'_>,
 ) -> Vec<PathBuf> {
     let mut directories = Vec::new();
     let mut current = base.to_path_buf();
     loop {
         directories.push(current.clone());
-        if automatic {
-            if let Some(observe) = before_read.as_deref_mut() {
-                observe(
-                    &["package.json", "tsconfig.json", "jsconfig.json"]
-                        .map(|name| current.join(name)),
-                );
-            }
+        if automatic && let Some(observe) = before_read.as_deref_mut() {
+            observe(
+                &["package.json", "tsconfig.json", "jsconfig.json"].map(|name| current.join(name)),
+            );
         }
         if !automatic
             || ["package.json", "tsconfig.json", "jsconfig.json"]

@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use crate::config::ConfigDocument;
 
 use super::{
+    BeforeConfigRead,
     discovery::{CONFIG_MIGRATION, is_retired_config},
     js::parse_js_config_observed,
     pkl,
@@ -34,7 +35,7 @@ pub(super) fn parse_raw_config_file_observed(
     path: &Path,
     dependencies: &mut Vec<PathBuf>,
     complete: &mut bool,
-    before_read: &mut Option<&mut dyn FnMut(&[PathBuf])>,
+    before_read: &mut BeforeConfigRead<'_>,
 ) -> Result<ConfigDocument, Box<dyn std::error::Error>> {
     if let Some(observe) = before_read.as_deref_mut() {
         observe(&[path.to_path_buf()]);

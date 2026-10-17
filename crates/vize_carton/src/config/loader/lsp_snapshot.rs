@@ -8,8 +8,8 @@ use crate::config::{
 };
 
 use super::{
-    LoadedProjectConfig, LoadedRawConfig, checked::load_raw_editor_config_attempt_observed,
-    project_config_snapshot,
+    BeforeConfigRead, LoadedProjectConfig, LoadedRawConfig,
+    checked::load_raw_editor_config_attempt_observed, project_config_snapshot,
 };
 
 /// All LSP config values derived from one raw config evaluation.
@@ -56,10 +56,7 @@ pub fn load_lsp_config_snapshot_observed(
     load_snapshot(path, Some(before_read))
 }
 
-fn load_snapshot(
-    path: Option<&Path>,
-    before_read: Option<&mut dyn FnMut(&[PathBuf])>,
-) -> LoadedLspConfig {
+fn load_snapshot(path: Option<&Path>, before_read: BeforeConfigRead<'_>) -> LoadedLspConfig {
     let attempt = load_raw_editor_config_attempt_observed(path, before_read);
     let (loaded, error) = match attempt.outcome {
         Ok(loaded) => (loaded, None),
