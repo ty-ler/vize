@@ -1,7 +1,7 @@
 {
   "schema": "vize.native-smoke-packed-config-extension.v1",
   "beforeSha256": "26890094723c79ee46b27c710b42feed3d5a660f98c382246cf19458000aeaa3",
-  "afterSha256": "4f9f50c2435a1589cb84d7e102559966393a18cb95b6d3ff2f51ab86abd9cefc",
+  "afterSha256": "d821c99bc60e6378d52a02e143cfed934818900c914fac135d87a4f17a848ebd",
   "scope": "exact named bounded manual extension; immutable historical recipes/hash remain independently checked",
   "hunks": [
     {
@@ -34,11 +34,11 @@
     },
     {
       "before": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n",
-      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: 9654d136f504765f0dfbdb1e17cf806e0b967878\n    steps: *fresh-install-steps\n"
+      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: c8855589af88f3804686959377d29e85e3d7a4f4\n    steps: *fresh-install-steps\n"
     }
   ],
   "producer": {
-    "head": "9654d136f504765f0dfbdb1e17cf806e0b967878",
+    "head": "c8855589af88f3804686959377d29e85e3d7a4f4",
     "composedBase": "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b",
     "priorProducer": "820bf6b5d688c77f8edea6ba18ff6f86f76bffae",
     "scope": "Reviewed source admission only; native execution and installed acceptance remain unexecuted.",
@@ -53,8 +53,8 @@
       "crates/vize_maestro/src/server/state/project_contexts.rs": "9844002b9a552a1b36620c021b4fa4999d0e7f02c8666802a9239a77fe9b170b",
       "crates/vize_maestro/src/server/state/project_contexts/asynchronous.rs": "5367ac6f3517d22a7bec5f4b66986f0103a23fc0cac46c1345e7236b8496ddc0",
       "crates/vize_maestro/src/server/state/project_contexts/config_reload.rs": "8ec6513ea0852eb0a06e246e99db7e2fbaafc0b48e149426b1331e251d62261b",
-      "crates/vize_maestro/src/server/state/project_contexts/config_reload_tests.rs": "388c10697d74490bb0a1c151ad9aaed42a333c57e7fbe6341956351333f9fb8b",
-      "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs": "27317976caeb817c147995b6ee64d06cd711dd57142c91a2357f3af7394f33c5",
+      "crates/vize_maestro/src/server/state/project_contexts/config_reload_tests.rs": "33171f7da29ff0b04c9cb4bf73aa0ed738906d2c50baea54ae284bbea43f2381",
+      "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs": "189609d732c4274229d0565414c6bd5d51652722fd29abf900da3bb218f61262",
       "crates/vize_maestro/src/server/state/project_contexts/reference_tests.rs": "d3befd23e293f59792188f9459be69ef33018c890559a129cdd3997ed6c045a1",
       "crates/vize_maestro/src/server/state/project_contexts/registry.rs": "b7d24adb27b426435b3881830e00b2e35570c99753874cea95307b1906f0a714",
       "crates/vize_maestro/src/server/state/project_contexts/watched.rs": "53ba1ce3f212576366fa2dfa6c6ca37c6f200262367121f4f0dda7240738b34b",
@@ -63,12 +63,13 @@
       "crates/vize_maestro/src/server/state/config/read/tests.rs": "572d2144384aea1d2fc763287424efa9ce304a4cecca52ab7a809ab77fdd1f3c",
       "crates/vize_maestro/src/server/state/config_tests.rs": "496fef2ddfc3d1824943391cb95d4b82e6ba126f286899b962676d0d66865b73",
       "crates/vize_maestro/src/server/state/module_links/tests/native.rs": "f3fdd2a1a9405550c60f5d5694efbdcf4c5e17a6296887493388d66691b7d0e2",
-      "crates/vize_maestro/src/server/state/project_contexts/config_reload_admission_tests.rs": "63f8f5cf63ffd1494dd2c9ccddf3a705073bbc870b663d35ec57b5876e9c4369",
-      "crates/vize_maestro/src/server/state/project_contexts/config_reload_recovery_tests.rs": "58c051eb9272e9cbe107a24154107a28f96b13d69d0d3d4b48ffaaaa9dd6b5f7",
+      "crates/vize_maestro/src/server/state/project_contexts/config_reload_admission_tests.rs": "2fb458736ceca201014862097c02c65c63f6e60e76e7fe6de8cf8bfb1f579847",
+      "crates/vize_maestro/src/server/state/project_contexts/config_reload_recovery_tests.rs": "ed18853348cc642b4835d3ed97ecc8aa36cf16b6dae0818871932eeb69de74d3",
       "crates/vize_maestro/src/server/state/project_contexts/reference_reload_tests.rs": "c4389985b3a462935b545f26656adb9282cdc31b0e93d97379d0105a9e80fab5",
       "crates/vize_maestro/src/server/state/project_contexts/tests.rs": "425ccb6158e083b9297fdca8f952e9648d948b1b035ac2bb55c10261034c84c4",
       "crates/vize_maestro/src/server/state/tests.rs": "93e18616590a48ed0a5fd08e1e713a935b652a6a87ef8d495575fa1d0f14e700",
       "crates/vize_maestro/src/server/workspace_files_tests.rs": "bd45b11ef17ad0832460f697ab12ba1f05dd5233c3c65ef3aff4958329d1c347"
-    }
+    },
+    "previousFrozenProducer": "9654d136f504765f0dfbdb1e17cf806e0b967878"
   }
 }
