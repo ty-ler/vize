@@ -23,9 +23,10 @@ const snapshot = (files) =>
 function control(loaded) {
   const workspace = path.join(os.tmpdir(), "malformed-config-contract");
   const rows = loaded.cases.map((fixture) => {
-    const initialFiles = snapshot(fixture.initialFiles);
+    const execution = fixture.execution;
+    const initialFiles = snapshot(execution.initialFiles);
     let previous = initialFiles;
-    const passes = fixture.steps.map((step) => {
+    const passes = execution.steps.map((step) => {
       const pass = {
         argv: step.argv,
         inputFiles: previous,
@@ -44,6 +45,7 @@ function control(loaded) {
     });
     return {
       id: fixture.id,
+      executionAuthority: execution.authority,
       workspace,
       initialFiles,
       state: "matched-reference",
@@ -112,6 +114,8 @@ void test("malformed admission rejects lost complete errors, bypasses and file p
   const loaded = loadSortingConfigManifest(root, manifestPath);
   for (const mutate of [
     (report) => report.rows.pop(),
+    (report) => (report.rows[0].executionAuthority.historicalArgv[0] = ["fmt"]),
+    (report) => (report.rows[0].passes[0].argv = ["fmt", "--write", "UserCard.vue"]),
     (report) => report.rows[0].passes.shift(),
     (report) => (report.rows[0].passes[0].exitStatus = 0),
     (report) => (report.rows[0].passes[1].argv = ["fmt", "--check", "UserCard.vue"]),
@@ -121,6 +125,10 @@ void test("malformed admission rejects lost complete errors, bypasses and file p
       (report.rows[0].passes[0].outputFiles["UserCard.vue"] = observation(Buffer.from("changed"))),
     (report) =>
       (report.rows[0].passes[0].outputFiles["vize.config.json"] = observation(Buffer.from("{}"))),
+    (report) =>
+      (report.rows[0].passes[0].outputFiles["serialized-config.json"] = observation(
+        Buffer.from("{}"),
+      )),
     (report) => (report.rows[0].passes[1].inputFiles = {}),
     (report) => (report.rows[0].passes[1].signal = "SIGTERM"),
     (report) => (report.rows[0].passes[1].processError = "spawn failed"),

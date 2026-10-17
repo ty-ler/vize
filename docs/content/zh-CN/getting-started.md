@@ -59,7 +59,7 @@ vp run fmt:check
 尚未翻译的指南链接指向英文版。
 
 > [!NOTE]
-> CLI、Vite 集成和编辑器共享 `vite.config.*` 的 `vue:` 设置。专用 `vize.config.*` 和顶层 `vize:` 配置已移除；迁移方式见[配置指南](./guide/configuration.md)。
+> Vize 0.457.0: CLI、Vite 集成和编辑器共享 `vite.config.*` 的 `vue:` 设置。专用 `vize.config.*` 和顶层 `vize:` 配置已移除；迁移方式见[配置指南](./guide/configuration.md)。
 
 ## 不使用 Vite+ 的场景
 

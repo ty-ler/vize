@@ -56,6 +56,8 @@ export default defineConfig({
 }
 ```
 
+> 移行用の旧形式の例です。PKL 設定は廃止され、読み込まれません。同じ値を上の JavaScript オブジェクトへ移してください。
+
 ```pkl
 amends "node_modules/vize/pkl/vize.pkl"
 
@@ -158,8 +160,10 @@ API ごとの対応範囲、最小の検証例、低レベルのネイティブ 
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    patternedTemplate: true,
+  vue: {
+    experimentals: {
+      patternedTemplate: true,
+    },
   },
 });
 ```
@@ -222,8 +226,10 @@ Canon は、機能を有効にすると、分岐ごとの型の絞り込み、�
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    inTagComment: true,
+  vue: {
+    experimentals: {
+      inTagComment: true,
+    },
   },
 });
 ```
@@ -263,8 +269,10 @@ Vize は元のテキストを、ツール向けにテンプレートのルート
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    selfComponent: true,
+  vue: {
+    experimentals: {
+      selfComponent: true,
+    },
   },
 });
 ```
@@ -310,8 +318,10 @@ TypeScript（Monaco）を有効にすると、生成した子要素の型が診�
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    strictSlotChildren: true,
+  vue: {
+    experimentals: {
+      strictSlotChildren: true,
+    },
   },
 });
 ```
@@ -361,8 +371,10 @@ Vue テンプレートをコンパイルするだけのビルドでは、検査�
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    serverScript: true,
+  vue: {
+    experimentals: {
+      serverScript: true,
+    },
   },
 });
 ```
@@ -379,8 +391,10 @@ export default defineConfig({
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    vapor: true,
+  vue: {
+    experimentals: {
+      vapor: true,
+    },
   },
 });
 ```
@@ -396,8 +410,10 @@ Vapor をプロジェクトの通常のビルド方式として使う場合は�
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    jsxVapor: true,
+  vue: {
+    experimentals: {
+      jsxVapor: true,
+    },
   },
 });
 ```

@@ -66,16 +66,16 @@ See [Musea Hosting](./musea-hosting.md) for the CLI wrapper, static deployment, 
 Use [`vue.musea` in `vite.config.*`](./configuration-reference.md#musea-shared-configuration). Direct `musea()` options override shared settings:
 
 ```ts
-// vite.config.ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+import { musea } from "@vizejs/vite-plugin-musea";
 
 export default defineConfig({
+  plugins: [musea({ storybookCompat: false })],
   vue: {
     musea: {
       include: ["src/**/*.art.vue"],
       exclude: ["node_modules/**", "dist/**"],
       basePath: "/__musea__",
-      storybookCompat: false,
       inlineArt: false,
     },
   },

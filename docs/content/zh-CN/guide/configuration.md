@@ -127,3 +127,6 @@ Vite 配置中的原生相对路径以选定的 Vite `root` 为基准；相对 `
 ## 详细参考
 
 [共享配置参考](./configuration-reference.md)介绍文件发现、作用域、Vue 类型解析以及 LSP/Musea 设置。编译选项和语法模式请参阅[编译器参考](./compiler-configuration-reference.md)，需显式启用的功能请参阅[实验性功能](/guide/experimentals.md)。
+
+> [!NOTE]
+> Vize 0.457.0: CLI 和编辑器读取现有的 Vite 与 TypeScript 项目文件。删除旧专用配置文件之前，请先迁移其中的设置。

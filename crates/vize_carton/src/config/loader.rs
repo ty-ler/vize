@@ -134,7 +134,7 @@ fn project_config_snapshot(loaded: LoadedRawConfig) -> LoadedProjectConfig {
             .config
             .config_dependencies()
             .iter()
-            .map(PathBuf::from)
+            .map(|dependency| PathBuf::from(dependency.as_str()))
             .collect(),
         document: loaded.config,
         source_path: loaded.source_path,

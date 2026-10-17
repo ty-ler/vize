@@ -272,10 +272,11 @@ fn library_init_rejects_a_removed_dedicated_config_without_changing_project_file
 
     let output = run(root, &["lib", "--json", "--offline", "init"]);
 
-    assert!(!output.status.success(), "{output:?}");
-    assert!(
-        String::from_utf8_lossy(&output.stderr).contains("no longer supported"),
-        "{output:?}"
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
+    assert_eq!(output.stdout, b"");
+    assert_eq!(
+        output.stderr,
+        b"error: vize.config.* is no longer supported; move Vue settings to vue: in vite.config.* and TypeScript settings to tsconfig.json\n",
     );
     assert_eq!(inventory(root), before);
 }

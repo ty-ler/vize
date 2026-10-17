@@ -148,7 +148,7 @@ import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 import { musea } from "@vizejs/vite-plugin-musea";
 
 export default defineConfig({
-  plugins: [musea()],
+  plugins: [musea({ storybookCompat: false })],
   vue: {
     musea: {
       include: ["src/**/*.art.vue"],
@@ -163,3 +163,156 @@ export default defineConfig({
 `previewCss`、`previewSetup`、`tokensPath`、`theme` 和 `storybookOutDir` 等展示选项属于 `musea()` 插件选项。
 
 `musea-vrt` 从同一 Vite 配置中读取共享的 `include`、`exclude` 和 `vrt` 选项。`vize musea new` 创建示例故事，不会创建专用配置文件。
+
+## 迁移示例
+
+专用 JSON/PKL 配置和 Vize 自定义 `extends` 已移除。请通过导入普通 JavaScript 对象复用配置。以下示例保留迁移前支持的设置。
+
+### 动态 Vite 配置
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig(({ command, mode, isSsrBuild }) => ({
+  vue: {
+    compiler: {
+      sourceMap: mode !== "production",
+      ssr: isSsrBuild,
+      vapor: false,
+      customRenderer: false,
+      templateSyntax: "standard",
+    },
+    vite: {
+      include: [/\.vue$/],
+      exclude: [/node_modules/],
+      scanPatterns: ["src/**/*.vue"],
+      ignorePatterns: ["node_modules/**", "dist/**", ".git/**"],
+    },
+    linter: {
+      enabled: command !== "build",
+      preset: "happy-path",
+    },
+    typeChecker: {
+      enabled: true,
+      strict: true,
+    },
+    formatter: {
+      printWidth: 100,
+      singleQuote: false,
+    },
+    languageServer: {
+      lint: true,
+      typecheck: false,
+      editor: false,
+      formatting: false,
+    },
+    musea: {
+      include: ["src/**/*.art.vue"],
+      basePath: "/__musea__",
+    },
+  },
+}));
+```
+
+### 迁移已移除的 JSON 和 PKL 设置
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  compiler: {
+    sourceMap: true,
+    vapor: false,
+    customRenderer: false,
+    templateSyntax: "standard",
+  },
+  vite: { scanPatterns: ["src/**/*.vue"] },
+  linter: { preset: "happy-path" },
+  typeChecker: { enabled: true, strict: true },
+  languageServer: { lint: true, typecheck: false, editor: false, formatting: false },
+  musea: { include: ["src/**/*.art.vue"], basePath: "/__musea__" },
+});
+```
+
+### 按包划分项目
+
+`entries` 只划分 lint 设置的作用域。每个包的检查器与格式化设置应放在该包自己的 Vite 和 TypeScript 项目中。下面两个文件属于不同的包项目。
+
+```ts
+// apps/web/vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  name: "web app",
+  files: ["src/**/*.vue"],
+  formatter: { printWidth: 100 },
+  typeChecker: { tsconfig: "tsconfig.app.json" },
+});
+```
+
+```ts
+// packages/ui/vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+export default defineConfig({}).withVue({
+  name: "ui package",
+  files: ["src/**/*.vue"],
+  formatter: { printWidth: 100, singleQuote: true },
+});
+```
+
+### 静态分析与检查进程
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  linter: {
+    enabled: true,
+    preset: "opinionated",
+    rules: {
+      "vue/require-v-for-key": "error",
+      "vue/no-v-html": "warn",
+    },
+  },
+  typeChecker: {
+    enabled: true,
+    strict: true,
+    checkProps: true,
+    checkEmits: true,
+    checkTemplateBindings: true,
+    // Vue 3 Options API template bindings; default-on (matches vue-tsc).
+    optionsApi: true,
+  },
+});
+```
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  typeChecker: { servers: 1 },
+});
+```
+
+### 现有工作流设置
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  formatter: {
+    printWidth: 100,
+  },
+  linter: {
+    preset: "happy-path",
+  },
+  typeChecker: {
+    enabled: true,
+    strict: true,
+    tsconfig: "tsconfig.json",
+  },
+  vite: {
+    scanPatterns: ["src/**/*.vue"],
+  },
+});
+```

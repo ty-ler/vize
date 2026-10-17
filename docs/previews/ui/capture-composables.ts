@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { saveScreenshot } from "./screenshot-file.ts";
+import { createPreviewReadinessWaiter } from "./wait-for-preview.ts";
 import type { Browser, Page } from "playwright";
 import { previewComposableExamples } from "./build-config.ts";
 import { asyncEffectExamples } from "../../../npm/ui/scripts/reference-docs/async-effect-examples.ts";
@@ -43,12 +44,18 @@ import {
   verifyAsyncResourceUnmount,
 } from "./interactions-async-resource.ts";
 
+import {
+  exerciseTextareaAutosizeExample,
+  verifyTextareaAutosizeUnmount,
+} from "./interactions-textarea-autosize.ts";
+
 async function activate(page: Page, label: string): Promise<void> {
   await page.getByRole("button", { name: label, exact: true }).focus();
   await page.keyboard.press("Enter");
 }
 
 async function exercise(page: Page, name: string): Promise<string[]> {
+  if (name === "textarea-autosize") return exerciseTextareaAutosizeExample(page);
   if (name === "async-resource") return exerciseAsyncResourceExample(page);
   if (name === "virtual-list") return exerciseVirtualListExample(page);
   if (asyncEffectExamples.some((example) => example.name === name))
@@ -251,6 +258,7 @@ export async function captureComposablePreviews(
       reducedMotion: "reduce",
     });
     const diagnostics: string[] = [];
+    const waitForResources = createPreviewReadinessWaiter(page);
     page.on("pageerror", (error) => diagnostics.push(error.message));
     page.on("console", (message) => {
       if (message.type() === "error" || message.type() === "warning")
@@ -265,7 +273,7 @@ export async function captureComposablePreviews(
             origin: new URL(baseUrl).origin,
           });
         const response = await page.goto(`${baseUrl}index.html?composable=${example.name}`, {
-          waitUntil: "networkidle",
+          waitUntil: "domcontentloaded",
         });
         assert.equal(response?.status(), 200, example.name);
         await page.waitForSelector(`html[data-preview-ready="${example.name}"]`);
@@ -278,6 +286,7 @@ export async function captureComposablePreviews(
           "true",
           `${example.name}: hydration preserves complete SSR markup and element identities`,
         );
+        await waitForResources();
         const screenshots = [];
         for (const state of ["initial", "interacted"] as const) {
           const interactions = state === "interacted" ? await exercise(page, example.name) : [];
@@ -299,7 +308,11 @@ export async function captureComposablePreviews(
           });
         }
         const scopeDisposalChecks =
-          example.name === "async-resource" ? await verifyAsyncResourceUnmount(page) : undefined;
+          example.name === "async-resource"
+            ? await verifyAsyncResourceUnmount(page)
+            : example.name === "textarea-autosize"
+              ? await verifyTextareaAutosizeUnmount(page)
+              : undefined;
         assert.deepEqual(diagnostics, [], `${example.name}: diagnostics after scope disposal`);
         receipts.push({
           name: example.name,

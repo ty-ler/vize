@@ -169,15 +169,19 @@ fn inherited_vue_targets_preserve_complete_checker_reports_and_vite_precedence()
     let invalid = Command::new(env!("CARGO_BIN_EXE_vize"))
         .current_dir(root)
         .env("CORSA_PATH", &corsa)
+        .env("NO_COLOR", "1")
+        .env_remove("FORCE_COLOR")
         .args(["check", "--format", "json"])
         .output()
         .unwrap();
     assert_eq!(invalid.status.code(), Some(1), "{invalid:?}");
     assert!(invalid.stdout.is_empty(), "{invalid:?}");
-    assert!(
-        std::str::from_utf8(&invalid.stderr)
-            .unwrap()
-            .contains("unsupported vueCompilerOptions.target 4"),
+    assert_eq!(
+        std::str::from_utf8(&invalid.stderr).unwrap(),
+        vize_l0::cstr!(
+            "Error: Configuration error: unsupported vueCompilerOptions.target 4 in {}; expected a numeric Vue 2.x target up to 2.7, a Vue 3.x target, 99, or \"auto\"\n",
+            root.canonicalize().unwrap().join("tsconfig.app.json").display()
+        ).as_str(),
         "{invalid:?}"
     );
 

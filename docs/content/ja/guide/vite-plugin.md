@@ -280,7 +280,7 @@ Nuxt と連携できるよう、プラグインは Vite の環境ごとに `defi
 // nuxt.config.ts — using the dedicated Nuxt module
 export default defineNuxtConfig({
   modules: ["@vizejs/nuxt"],
-  vue: {
+  vize: {
     compiler: true,
   },
 });

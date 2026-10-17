@@ -3,7 +3,10 @@
     clippy::disallowed_types,
     reason = "registry cells retain their isolated native owner"
 )]
-use super::{Arc, AtomicBool, Ordering, ProjectContextKey, RetainedConfiguration, ServerState};
+use super::{
+    Arc, AtomicBool, LoadedLspConfig, Ordering, ProjectContextKey, RetainedConfiguration,
+    ServerState,
+};
 #[cfg(feature = "experimental-source-navigation")]
 use crate::source_project::{SourceQueryProject, navigation::NativeNavigationProject};
 use futures::{
@@ -15,7 +18,7 @@ type Initialization = Shared<BoxFuture<'static, Option<Arc<ServerState>>>>;
 
 pub(super) struct ProjectContext {
     key: ProjectContextKey,
-    snapshot: OnceLock<(vize_carton::config::LoadedLspConfig, bool)>,
+    snapshot: OnceLock<(LoadedLspConfig, bool)>,
     prepared: OnceLock<RetainedConfiguration>,
     state: OnceLock<Arc<ServerState>>,
     #[cfg(feature = "experimental-source-navigation")]
@@ -59,11 +62,7 @@ impl ProjectContext {
             .unwrap_or_default()
     }
 
-    pub(super) fn provide_snapshot(
-        &self,
-        snapshot: vize_carton::config::LoadedLspConfig,
-        failed: bool,
-    ) {
+    pub(super) fn provide_snapshot(&self, snapshot: LoadedLspConfig, failed: bool) {
         let _ = self.snapshot.set((snapshot, failed));
     }
 

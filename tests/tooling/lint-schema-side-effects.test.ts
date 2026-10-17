@@ -230,7 +230,7 @@ test("source CLI preserves lint output without schema side effects and refuses r
           assert.equal(row.signal, null, scenario.id);
           assert.equal(
             row.status,
-            scenario.retired ? 2 : 0,
+            scenario.retired || scenario.obstruction === "dependencies-file" ? 2 : 0,
             `${scenario.id}: ${row.stdout}${row.stderr}`,
           );
           assert.deepEqual(Buffer.from(row.stdout), result.stdout);
@@ -244,6 +244,12 @@ test("source CLI preserves lint output without schema side effects and refuses r
               row.stderr,
               `\x1b[31mError:\x1b[0m ${context}vize.config.* is no longer supported; move Vue settings to vue: in vite.config.* and TypeScript settings to tsconfig.json\n`,
             );
+          } else if (scenario.obstruction === "dependencies-file") {
+            // A malformed nearest dependency root cannot supply a Vite runtime.
+            // Its refusal must remain read-only, including the external sentinel.
+            assert.equal(row.stdout, "");
+            assert.match(row.stderr, /ENOTDIR: not a directory/);
+            assert.ok(row.stderr.includes(path.join(configDir, "node_modules/vite")));
           } else if (scenario.check) {
             assert.equal(row.stdout, "");
             assert.equal(

@@ -74,11 +74,12 @@ fn dedicated_pkl_requires_vite_migration_before_runtime_evaluation() {
     std::fs::write(&path, "not valid PKL syntax").unwrap();
     for selected in [path.as_path(), dir.path()] {
         let error = validate_explicit_config_path(selected).unwrap_err();
-        assert!(
-            error.contains("vize.config.* is no longer supported"),
-            "{error}"
-        );
-        assert!(error.contains("vue: in vite.config.*"), "{error}");
-        assert!(error.contains("tsconfig.json"), "{error}");
+        let migration = "vize.config.* is no longer supported; move Vue settings to vue: in vite.config.* and TypeScript settings to tsconfig.json";
+        let expected = if selected.is_file() {
+            format!("failed to parse {}: {migration}", selected.display())
+        } else {
+            migration.to_owned()
+        };
+        assert_eq!(error, expected);
     }
 }

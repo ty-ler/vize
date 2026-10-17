@@ -96,7 +96,11 @@ test("vize lsp preserves the historical compiler mode through canonical Vue conf
     "canonical-historical-mode",
     { editor: true, lint: true },
     (_capabilities, packet) => assertInitializePacket(packet, EDITOR_BUNDLE_CAPABILITIES),
-    (workspaceDir) => writeVueConfigFixture(workspaceDir, "{}\n"),
+    (workspaceDir) =>
+      writeVueConfigFixture(workspaceDir, {
+        languageServer: { formatting: false },
+        typeChecker: { jsxTypecheck: false },
+      }),
   );
 });
 

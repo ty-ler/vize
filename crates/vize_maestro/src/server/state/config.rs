@@ -2,6 +2,7 @@
 
 #[cfg(feature = "glyph")]
 mod formatting;
+pub(super) mod host;
 #[cfg(feature = "native")]
 mod project;
 mod read;
@@ -15,6 +16,7 @@ use vize_l0::config::{GlobalTypesConfig, LinterConfig, TypeCheckerConfig};
 
 use super::ServerState;
 use super::features::LspConfigSection;
+use host::{LoadedLspConfig, load_lsp_config_snapshot};
 
 impl ServerState {
     /// Apply LSP initialization options sent by an editor client.
@@ -218,33 +220,26 @@ impl ServerState {
 
     /// Load workspace options from the shared Vite/TypeScript project snapshot.
     pub fn load_workspace_config(&self, dir: &Path) {
-        let _ = self.apply_workspace_config_snapshot(
-            dir,
-            vize_carton::config::load_lsp_config_snapshot(Some(dir)),
-        );
+        let _ = self.apply_workspace_config_snapshot(dir, load_lsp_config_snapshot(Some(dir)));
     }
 
     pub(super) fn apply_workspace_config_snapshot(
         &self,
         dir: &Path,
-        loaded: vize_carton::config::LoadedLspConfig,
+        loaded: LoadedLspConfig,
     ) -> bool {
         self.apply_workspace_snapshot(dir, loaded, true)
     }
 
     #[cfg(feature = "native")]
-    pub(super) fn apply_retained_workspace_config(
-        &self,
-        dir: &Path,
-        loaded: vize_carton::config::LoadedLspConfig,
-    ) {
+    pub(super) fn apply_retained_workspace_config(&self, dir: &Path, loaded: LoadedLspConfig) {
         let _ = self.apply_workspace_snapshot(dir, loaded, false);
     }
 
     fn apply_workspace_snapshot(
         &self,
         dir: &Path,
-        loaded: vize_carton::config::LoadedLspConfig,
+        loaded: LoadedLspConfig,
         refresh_tsconfig: bool,
     ) -> bool {
         #[cfg(feature = "native")]
@@ -347,7 +342,7 @@ impl ServerState {
 
     /// Load LSP options from the shared Vite/TypeScript project snapshot.
     pub fn load_lsp_config(&self, dir: &Path) {
-        let loaded = vize_carton::config::load_lsp_config_snapshot(Some(dir));
+        let loaded = load_lsp_config_snapshot(Some(dir));
         #[cfg(feature = "native")]
         let mut loaded = loaded;
         if !loaded.valid {
@@ -413,7 +408,7 @@ impl ServerState {
     /// Load format options from the shared project configuration.
     #[cfg(feature = "glyph")]
     pub fn load_format_config(&self, dir: &Path) {
-        let loaded = vize_carton::config::load_config_with_source(Some(dir));
+        let loaded = host::load_config_with_source(Some(dir));
         if let Some(source_path) = loaded.source_path {
             *self.format_options.write() =
                 (format_options_from_config(&loaded.config.formatter), false);

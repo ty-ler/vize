@@ -20,11 +20,13 @@ const vpConfig = {
   server: { port: 3000 },
 };
 
-export default defineConfig(vpConfig).withVue({
+const vueConfig = {
   compiler: { sourceMap: true },
   linter: { preset: "essential" },
   formatter: { printWidth: 100 },
-});
+};
+
+export default defineConfig(vpConfig).withVue(vueConfig);
 ```
 
 `withVue` conserve les options, les plugins et les hooks Vite+ existants. Les objets, fonctions, promesses et fonctions asynchrones sont pris en charge. Une section `vue: { ... }` en ligne est équivalente. Le [guide de configuration Vue partagée](/guide/vue-configuration.md) décrit les chemins, les périmètres et la composition.
@@ -63,6 +65,8 @@ Les projets utilisant `vue-tsc` peuvent garder leur organisation TypeScript. `co
 Placez les règles Vue dans `vue.linter.rules` et celles d’Oxlint dans `lint.rules`. Les [options des règles](/rules/options.md) décrivent les paramètres et le [catalogue](../rules/all.md) donne les exemples complets.
 
 ```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
 export default defineConfig({
   lint: { rules: { "no-debugger": "error" } },
 }).withVue({
@@ -136,3 +140,6 @@ Il n’existe pas de `extends` propre à Vize. Importez des objets JavaScript or
 ## Référence détaillée
 
 La [référence partagée](./configuration-reference.md) décrit la recherche des fichiers, les périmètres, la résolution des types Vue et les réglages LSP/Musea. Consultez la [référence du compilateur](./compiler-configuration-reference.md) et les [fonctions expérimentales](/guide/experimentals.md) pour leurs options.
+
+> [!NOTE]
+> Vize 0.457.0: La CLI et l’éditeur lisent les projets Vite et TypeScript existants. Migrez les anciens réglages dédiés avant de supprimer leurs fichiers.

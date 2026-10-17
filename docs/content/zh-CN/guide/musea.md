@@ -73,18 +73,16 @@ vp exec vize musea --build
 将共享默认值放在 `vite.config.*` 的 `vue.musea` 中。直接传给 `musea()` 的选项优先于对应的共享值。旧专用配置中的设置应迁移到 `vue.musea`。
 
 ```ts
-// vite.config.ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 import { musea } from "@vizejs/vite-plugin-musea";
 
 export default defineConfig({
-  plugins: [musea()],
+  plugins: [musea({ storybookCompat: false })],
   vue: {
     musea: {
       include: ["src/**/*.art.vue"],
       exclude: ["node_modules/**", "dist/**"],
       basePath: "/__musea__",
-      storybookCompat: false,
       inlineArt: false,
     },
   },

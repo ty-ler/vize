@@ -107,6 +107,12 @@ These options come from the TypeScript project that owns the source file, includ
 
 `optionsWrapper` is unsupported. In Vue tooling it describes code prefix/suffix wrapping, not an Options API switch. Vize's existing Options API checking is controlled separately by `vue.typeChecker.optionsApi`. The mapping above is bounded support, not complete `vue-tsc` option parity.
 
+### Options API and legacy Vue
+
+`vue.typeChecker.optionsApi` resolves Vue 3 Options API template bindings from `data`, `computed`, `methods`, `inject`, `setup`, and `props` in ordinary `<script> export default { ... }` components. It is enabled by default in the standard build, matching `vue-tsc`. Script-setup components skip this path. Set `optionsApi: false` to disable it.
+
+Vue 2.7 and Nuxt 2 compatibility require the separate `legacy` build. `vue.typeChecker.legacyVue2` supplies the Nuxt 2 template globals. Keep the target Vue dependencies and ambient declarations in the owning package; choosing a Corsa executable does not select a Vue type version.
+
 ## Experimental Flat Entries
 
 Use the target package's TypeScript project for monorepo checking. Scoped Vue lint
@@ -172,7 +178,7 @@ import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 import { musea } from "@vizejs/vite-plugin-musea";
 
 export default defineConfig({
-  plugins: [musea()],
+  plugins: [musea({ storybookCompat: false })],
   vue: {
     musea: {
       include: ["src/**/*.art.vue"],
@@ -187,3 +193,156 @@ export default defineConfig({
 `musea-vrt` reads shared `include`, `exclude` and `vrt` options from the same Vite
 configuration. `vize musea new` creates an example story without creating a
 dedicated configuration file.
+
+## Migration recipes
+
+Dedicated JSON/PKL configuration and custom `extends` are removed. Reuse ordinary imported JavaScript objects. These recipes preserve the supported settings when migrating existing projects.
+
+### Dynamic Vite settings
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig(({ command, mode, isSsrBuild }) => ({
+  vue: {
+    compiler: {
+      sourceMap: mode !== "production",
+      ssr: isSsrBuild,
+      vapor: false,
+      customRenderer: false,
+      templateSyntax: "standard",
+    },
+    vite: {
+      include: [/\.vue$/],
+      exclude: [/node_modules/],
+      scanPatterns: ["src/**/*.vue"],
+      ignorePatterns: ["node_modules/**", "dist/**", ".git/**"],
+    },
+    linter: {
+      enabled: command !== "build",
+      preset: "happy-path",
+    },
+    typeChecker: {
+      enabled: true,
+      strict: true,
+    },
+    formatter: {
+      printWidth: 100,
+      singleQuote: false,
+    },
+    languageServer: {
+      lint: true,
+      typecheck: false,
+      editor: false,
+      formatting: false,
+    },
+    musea: {
+      include: ["src/**/*.art.vue"],
+      basePath: "/__musea__",
+    },
+  },
+}));
+```
+
+### Convert retired JSON and PKL settings
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  compiler: {
+    sourceMap: true,
+    vapor: false,
+    customRenderer: false,
+    templateSyntax: "standard",
+  },
+  vite: { scanPatterns: ["src/**/*.vue"] },
+  linter: { preset: "happy-path" },
+  typeChecker: { enabled: true, strict: true },
+  languageServer: { lint: true, typecheck: false, editor: false, formatting: false },
+  musea: { include: ["src/**/*.art.vue"], basePath: "/__musea__" },
+});
+```
+
+### Separate package projects
+
+`entries` scopes lint settings only. Keep package-specific checker and formatter options in each package’s Vite and TypeScript project. The two files below belong to separate package projects.
+
+```ts
+// apps/web/vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  name: "web app",
+  files: ["src/**/*.vue"],
+  formatter: { printWidth: 100 },
+  typeChecker: { tsconfig: "tsconfig.app.json" },
+});
+```
+
+```ts
+// packages/ui/vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+export default defineConfig({}).withVue({
+  name: "ui package",
+  files: ["src/**/*.vue"],
+  formatter: { printWidth: 100, singleQuote: true },
+});
+```
+
+### Static analysis and checker processes
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  linter: {
+    enabled: true,
+    preset: "opinionated",
+    rules: {
+      "vue/require-v-for-key": "error",
+      "vue/no-v-html": "warn",
+    },
+  },
+  typeChecker: {
+    enabled: true,
+    strict: true,
+    checkProps: true,
+    checkEmits: true,
+    checkTemplateBindings: true,
+    // Vue 3 Options API template bindings; default-on (matches vue-tsc).
+    optionsApi: true,
+  },
+});
+```
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  typeChecker: { servers: 1 },
+});
+```
+
+### Existing workflow settings
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  formatter: {
+    printWidth: 100,
+  },
+  linter: {
+    preset: "happy-path",
+  },
+  typeChecker: {
+    enabled: true,
+    strict: true,
+    tsconfig: "tsconfig.json",
+  },
+  vite: {
+    scanPatterns: ["src/**/*.vue"],
+  },
+});
+```

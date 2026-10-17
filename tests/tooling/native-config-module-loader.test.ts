@@ -245,7 +245,7 @@ await test("Vite 7's real esbuild loader bundles the original module rather than
 });
 
 await test("nearest present Vite owns loading while legitimate symlinks and hoisting retain one evaluation", async () => {
-  for (const installation of ["empty", "broken", "dangling", "symlink", "hoisted"]) {
+  for (const installation of ["empty", "types-only", "broken", "dangling", "symlink", "hoisted"]) {
     await project(async (directory) => {
       const nested = join(directory, "nested");
       await mkdir(join(nested, "node_modules"), { recursive: true });
@@ -257,6 +257,10 @@ await test("nearest present Vite owns loading while legitimate symlinks and hois
       else if (installation !== "hoisted") {
         await mkdir(candidate);
         if (installation === "broken") await writeFile(join(candidate, "package.json"), "{broken");
+        if (installation === "types-only") {
+          await writeFile(join(candidate, "package.json"), '{"name":"vite","types":"client.d.ts"}');
+          await writeFile(join(candidate, "client.d.ts"), "");
+        }
       }
       const counter = join(nested, "evaluations.json");
       const selected = join(nested, "vite.config.ts");
@@ -272,7 +276,7 @@ await test("nearest present Vite owns loading while legitimate symlinks and hois
           return {vue:{formatter:{printWidth:91}}};
         };export default wrapper;`;
       await writeFile(selected, authored);
-      if (["empty", "broken", "dangling"].includes(installation)) {
+      if (["empty", "types-only", "broken", "dangling"].includes(installation)) {
         await assert.rejects(importConfigModule(selected));
         await assert.rejects(access(counter));
       } else {

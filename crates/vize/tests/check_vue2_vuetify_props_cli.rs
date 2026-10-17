@@ -60,7 +60,7 @@ fn create_project(name: &str) -> PathBuf {
     let project_root = unique_case_dir(name);
     let _ = std::fs::remove_dir_all(&project_root);
     std::fs::create_dir_all(project_root.join("src")).unwrap();
-    write_test_vite_stub(&project_root.join("node_modules")).unwrap();
+    vite_config::link_vite_runtime(&project_root).unwrap();
     std::fs::write(
         project_root.join("vite.config.mjs"),
         vite_config::source(r#"{ "vue": { "version": "2.7" } }"#),
@@ -126,18 +126,4 @@ fn resolve_test_corsa_path() -> Option<PathBuf> {
     ]
     .into_iter()
     .find(|candidate| candidate.exists())
-}
-
-fn write_test_vite_stub(target: &Path) -> std::io::Result<()> {
-    let vite_dir = target.join("vite");
-    std::fs::create_dir_all(&vite_dir)?;
-    std::fs::write(
-        vite_dir.join("package.json"),
-        r#"{
-  "name": "vite",
-  "types": "client.d.ts"
-}"#,
-    )?;
-    std::fs::write(vite_dir.join("client.d.ts"), "")?;
-    Ok(())
 }

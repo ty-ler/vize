@@ -1,6 +1,8 @@
 //! Configured cross-file checks and warning limits match their CLI counterparts.
 #![cfg(test)]
 #![expect(clippy::disallowed_types, reason = "subprocess fixture reports")]
+#[path = "support/config_refusal.rs"]
+mod config_refusal;
 #[path = "support/vite_config.rs"]
 mod vite_config;
 use serde_json::{Value, json};
@@ -29,12 +31,16 @@ fn project() -> tempfile::TempDir {
 }
 
 fn lint(root: &Path, args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_vize"))
+    lint_command(root, args).output().expect("lint")
+}
+
+fn lint_command(root: &Path, args: &[&str]) -> Command {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_vize"));
+    command
         .current_dir(root)
         .args(["lint", "--format", "json"])
-        .args(args)
-        .output()
-        .expect("lint")
+        .args(args);
+    command
 }
 
 fn report(output: &Output) -> Value {
@@ -133,12 +139,15 @@ fn invalid_discovered_vite_settings_fail_before_fix_and_no_config_can_ignore_the
     let project = project();
     let root = project.path();
     let before = fs::read(root.join("Warning.vue")).expect("source");
-    for (invalid, diagnostic) in [
+    for (invalid, exception) in [
         (
             "export default { vue: { linter: { maxWarnings: -1 } } };",
-            "vue.linter.maxWarnings",
+            "TypeError: vue.linter.maxWarnings: must be >= 0",
         ),
-        ("export default { vue: { };", "SyntaxError"),
+        (
+            "export default { vue: { };",
+            "SyntaxError: Unexpected token ';'",
+        ),
     ] {
         fs::write(root.join("vite.config.mjs"), invalid).expect("invalid Vite config");
         let discovered = root
@@ -152,14 +161,13 @@ fn invalid_discovered_vite_settings_fail_before_fix_and_no_config_can_ignore_the
                 Path::new("vite.config.mjs"),
             ),
         ] {
-            let output = lint(root, &args);
+            let output = lint_command(root, &args)
+                .env("NODE_OPTIONS", config_refusal::NODE_OPTIONS)
+                .output()
+                .expect("controlled invalid config refusal");
             assert_eq!(output.status.code(), Some(2));
             assert!(output.stdout.is_empty());
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let prefix =
-                vize_l0::cstr!("\x1b[31mError:\x1b[0m failed to parse {}:", path.display());
-            assert!(stderr.starts_with(prefix.as_str()), "{stderr}");
-            assert!(stderr.contains(diagnostic), "{stderr}");
+            config_refusal::assert_error(&output, path, discovered.parent().unwrap(), exception, 2);
             assert_eq!(
                 fs::read(root.join("Warning.vue")).expect("unchanged source"),
                 before

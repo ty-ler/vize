@@ -191,7 +191,7 @@ impl ServerState {
             result.configuration_events.extend(changed.clone());
             let raw = authored
                 .entry(key.root.clone())
-                .or_insert_with(|| vize_carton::config::load_lsp_config_snapshot(Some(&key.root)));
+                .or_insert_with(|| super::load_lsp_config_snapshot(Some(&key.root)));
             let snapshot = if let Some(error) = &raw.error {
                 Err(vize_l0::String::from(error.as_str()))
             } else {
