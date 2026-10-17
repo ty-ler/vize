@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { runConfigWorkspaceChecks } from "./smoke-release-config-workspace.ts";
 
 // @ts-expect-error -- untyped release smoke helpers
 import { CONFIG_FREE_PROJECT_SHAPES } from "./smoke-release-init-config-free.mjs";
@@ -57,7 +58,10 @@ export function runProjectLspSession(projectRoot: string): void {
 export function runWorkspacePackageCheck(context: SmokeContext): void {
   const shape = CONFIG_FREE_PROJECT_SHAPES["vite-vue-ts"];
   const manager = PACKAGE_MANAGERS.pnpm;
-  if (!shape.requires.every((name: string) => context.packed.has(name))) return;
+  assert.ok(
+    shape.requires.every((name: string) => context.packed.has(name)),
+    "the invoked workspace acceptance requires both packed public packages",
+  );
 
   const workspacePath = path.join(context.freshRoot, "pnpm workspace");
   fs.mkdirSync(workspacePath, { recursive: true });
@@ -74,6 +78,13 @@ export function runWorkspacePackageCheck(context: SmokeContext): void {
     ),
   });
   writeFiles(project, authored);
+  const control = path.join(workspace, "packages", "control");
+  const controlManifest = JSON.parse(authored["package.json"]);
+  controlManifest.name = "vize-config-control";
+  writeFiles(control, {
+    ...authored,
+    "package.json": `${JSON.stringify(controlManifest, null, 2)}\n`,
+  });
   assertFreshProject(workspace, context, []);
   runManager(manager, manager.bootstrapArgs, { cwd: workspace });
   assert.ok(fs.existsSync(path.join(workspace, manager.lockfile)), "no workspace lockfile");
@@ -90,12 +101,28 @@ export function runWorkspacePackageCheck(context: SmokeContext): void {
   const specs = shape.plannedDependencies.map(
     (name: string) => `${name}@${packedFileSpec(context.packed.get(name))}`,
   );
+  // The existing pnpm install also links the control package. It installs the
+  // same two packed dependencies; no second project install or host fallback.
+  for (const name of shape.plannedDependencies) {
+    controlManifest.devDependencies[name] = packedFileSpec(context.packed.get(name));
+  }
+  fs.writeFileSync(
+    path.join(control, "package.json"),
+    `${JSON.stringify(controlManifest, null, 2)}\n`,
+  );
   runManager(manager, [...manager.installArgs, ...specs, ...manager.installFlags], {
     cwd: project,
   });
   const vize = fs.realpathSync(path.join(project, "node_modules", "vize"));
   assert.ok(vize.startsWith(workspace), `vize resolved outside the workspace: ${vize}`);
   assert.equal(readJson(path.join(vize, "package.json")).version, context.versions.get("vize"));
+  const controlVize = fs.realpathSync(path.join(control, "node_modules", "vize"));
+  const relativeControlVize = path.relative(workspace, controlVize);
+  assert.ok(!path.isAbsolute(relativeControlVize) && !relativeControlVize.startsWith(".."));
+  assert.equal(
+    readJson(path.join(controlVize, "package.json")).version,
+    context.versions.get("vize"),
+  );
 
   const clean = checkReport(project);
   assert.equal(clean.status, 0, `clean workspace package failed vize check\n${clean.rendered}`);
@@ -114,4 +141,5 @@ export function runWorkspacePackageCheck(context: SmokeContext): void {
   assert.equal(repaired.status, 0, `repaired workspace package failed\n${repaired.rendered}`);
   runProjectLspSession(project);
   console.log("runtime: fresh pnpm workspace package (init, install, check triple, LSP)");
+  runConfigWorkspaceChecks(workspace);
 }
