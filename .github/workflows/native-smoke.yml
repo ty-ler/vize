@@ -451,5 +451,5 @@ jobs:
       PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}
       PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}
       # Updated only when the reviewed producer is deliberately frozen again.
-      PACKED_CONFIG_PRODUCER: fcc885c2d6ae7b97da467ba0075262476a3cb6b7
+      PACKED_CONFIG_PRODUCER: 92854153b932a287f441dea8a8e903c885fc2c9d
     steps: *fresh-install-steps

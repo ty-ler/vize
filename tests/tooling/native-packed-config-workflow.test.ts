@@ -96,7 +96,7 @@ void test("the actual manager version audit uses a manifest-free cwd and preserv
 });
 
 void test("the historical composed producer authenticates every whole source and moved test module", () => {
-  const producer = "fcc885c2d6ae7b97da467ba0075262476a3cb6b7";
+  const producer = "92854153b932a287f441dea8a8e903c885fc2c9d";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
