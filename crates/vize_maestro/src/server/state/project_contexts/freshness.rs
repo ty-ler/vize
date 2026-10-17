@@ -383,7 +383,7 @@ impl ServerState {
                 let changed = record.changes();
                 if !changed.is_empty() {
                     if record.stable_confirmation() {
-                        confirmations.push(key.clone());
+                        confirmations.push((key.clone(), record.input_observations().clone()));
                     }
                     affected.push(key);
                     changes.extend(

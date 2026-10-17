@@ -9,7 +9,7 @@ use vize_l0::{FxHashMap, FxHashSet};
 
 pub(super) struct ConfigEventScope {
     pub(super) affected: Vec<ProjectContextKey>,
-    pub(super) confirmations: Vec<ProjectContextKey>,
+    pub(super) confirmations: Vec<(ProjectContextKey, vize_canon::ConfigurationObservations)>,
     marker_paths: Vec<PathBuf>,
 }
 
@@ -37,7 +37,7 @@ impl ConfigEventScope {
         self.affected
             .retain(|key| physical_path(&key.root) == physical_path(root));
         self.confirmations
-            .retain(|key| physical_path(&key.root) == physical_path(root));
+            .retain(|(key, _)| physical_path(&key.root) == physical_path(root));
         self.marker_paths
             .retain(|path| path.starts_with(physical_path(root)));
     }
@@ -268,10 +268,11 @@ impl ServerState {
                     changes,
                 ));
             }
-            let confirmation_only = scope.confirmations.contains(&key)
-                && snapshot.as_ref().is_ok_and(|next| {
-                    self.configuration_authority_matches(&key, previous.as_ref(), next)
-                });
+            let confirmation_only = scope.confirmations.iter().any(|(candidate, original)| {
+                candidate == &key && original.changed_paths().is_empty()
+            }) && snapshot.as_ref().is_ok_and(|next| {
+                self.configuration_authority_matches(&key, previous.as_ref(), next)
+            });
             prepared.push((
                 key,
                 previous,
@@ -331,7 +332,11 @@ impl ServerState {
                 .insert(key.clone(), observation);
             match snapshot {
                 Ok(snapshot) => {
-                    if confirmation_only {
+                    if confirmation_only
+                        && scope.confirmations.iter().any(|(candidate, original)| {
+                            candidate == &key && original.changed_paths().is_empty()
+                        })
+                    {
                         self.project_contexts
                             .pending_config_reloads
                             .lock()
