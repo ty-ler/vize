@@ -279,10 +279,12 @@ mod vue_target_tests {
         }
         let config = root.path().join("tsconfig.invalid.json");
         std::fs::write(&config, r#"{"vueCompilerOptions":{"target":4}}"#).unwrap();
-        assert!(
-            resolve_program_dialect(None, root.path(), Some(&config))
-                .unwrap_err()
-                .contains("unsupported vueCompilerOptions.target")
+        assert_eq!(
+            resolve_program_dialect(None, root.path(), Some(&config)).unwrap_err(),
+            vize_l0::cstr!(
+                "Configuration error: unsupported vueCompilerOptions.target 4 in {}; expected a numeric Vue 2.x target up to 2.7, a Vue 3.x target, 99, or \"auto\"",
+                config.display()
+            )
         );
         assert_eq!(
             resolve_program_dialect(None, root.path(), None).unwrap(),

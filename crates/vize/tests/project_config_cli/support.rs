@@ -107,9 +107,13 @@ pub const LEGACY_CONFIG_ERROR: &str = "vize.config.* is no longer supported; mov
 pub fn assert_legacy_config_rejected(output: &Output) {
     // Invalid configuration is a usage failure, distinct from lint diagnostics.
     assert_eq!(output.status.code(), Some(2), "{output:?}");
-    assert!(
-        String::from_utf8_lossy(&output.stderr).contains(LEGACY_CONFIG_ERROR),
-        "{output:?}"
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        vize_l0::cstr!(
+            "\x1b[31mError:\x1b[0m failed to parse vize.config.json: {LEGACY_CONFIG_ERROR}\n"
+        )
+        .as_str(),
+        "{output:?}",
     );
     assert!(output.stdout.is_empty(), "{output:?}");
 }
