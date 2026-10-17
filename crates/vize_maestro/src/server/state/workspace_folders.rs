@@ -19,6 +19,7 @@ use vize_l0::config::{
 };
 
 use super::ServerState;
+use super::config::host::load_lsp_config_snapshot;
 mod config;
 
 /// Linter context resolved for one workspace folder at registration time.
@@ -34,7 +35,7 @@ pub(super) struct WorkspaceFolderConfig {
 
 impl WorkspaceFolderConfig {
     pub(super) fn load(root: PathBuf) -> Self {
-        let loaded = vize_carton::config::load_lsp_config_snapshot(Some(&root));
+        let loaded = load_lsp_config_snapshot(Some(&root));
         if !loaded.valid {
             return Self::refused(root);
         }
