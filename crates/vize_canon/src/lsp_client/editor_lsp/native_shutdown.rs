@@ -13,16 +13,41 @@ const LINUX_X64: &str = "4f2de678286401759b3fb4475bafe35b8f32b4b3a07d92642bbf37e
 const DARWIN_ARM64: &str = "a82f731365ad69d5c4c15f5e18fba4584bf3b7b839960172a76c3462b5114bf2";
 
 pub(super) fn eof_capability(executable: &Path, initialized: &Value) -> bool {
-    if !known_initialize(initialized) {
+    let phase =
+        crate::corsa_bridge::preparation_trace::Phase::start("native_shutdown_capability", 1);
+    let result = observe_eof_capability(executable, initialized);
+    if std::env::var("VIZE_TRACE_EDITOR_PREPARATION").is_ok_and(|value| value == "1") {
+        tracing::info!(target: "vize_editor_preparation",
+            phase = "native_shutdown_capability", event = "decision", accepted = result);
+    }
+    phase.finish();
+    result
+}
+
+fn observe_eof_capability(executable: &Path, initialized: &Value) -> bool {
+    let phase =
+        crate::corsa_bridge::preparation_trace::Phase::start("native_shutdown_initialize", 1);
+    let initialized = known_initialize(initialized);
+    phase.finish();
+    if !initialized {
         return false;
     }
-    let Ok(bytes) = fs::read(executable) else {
+    let phase =
+        crate::corsa_bridge::preparation_trace::Phase::start("native_shutdown_image_read", 1);
+    let bytes = fs::read(executable);
+    phase.finish();
+    let Ok(bytes) = bytes else {
         return false;
     };
+    let phase = crate::corsa_bridge::preparation_trace::Phase::start(
+        "native_shutdown_image_sha256",
+        bytes.len(),
+    );
     let digest: vize_l0::String = Sha256::digest(bytes)
         .iter()
         .map(|byte| vize_l0::cstr!("{byte:02x}"))
         .collect();
+    phase.finish();
     known_binary(digest.as_str())
 }
 
