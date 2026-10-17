@@ -115,6 +115,10 @@ test("CI runs all real-server editor scenarios from one built server binary", ()
   assert.match(action, /vp run --workspace-root test:nvim-extension:real-server/);
   assert.match(action, /vp run --workspace-root test:vim-extension:real-server/);
   assert.match(action, /vp run --workspace-root test:emacs-extension:real-server/);
+  assert.equal(
+    stepEnvironment(action, "Run real Emacs Eglot project configuration").VIZE_SERVER_PATH,
+    "${{ github.workspace }}/target/ci/vize",
+  );
   assert.match(action, /vp run --workspace-root test:zed-extension:real-server/);
   assert.match(action, /vp run --workspace-root test:helix-extension:real-server/);
 
