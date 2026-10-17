@@ -38,7 +38,7 @@ const wrapper = path.join(output, "native-server.sh");
 const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
 fs.writeFileSync(
   wrapper,
-  `#!/bin/sh\n${quote(binary)} "$@" <&0 &\nnative=$!\nprintf '%s\\n' "$native" > ${quote(pidFile)}\nwait "$native"\n`,
+  `#!/bin/sh\nexec 3<&0\n${quote(binary)} "$@" <&3 &\nnative=$!\nexec 3<&-\nprintf '%s\\n' "$native" > ${quote(pidFile)}\nwait "$native"\n`,
   { mode: 0o755 },
 );
 const result = spawnSync(
