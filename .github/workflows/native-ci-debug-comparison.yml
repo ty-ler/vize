@@ -1,0 +1,119 @@
+# Diagnostic only; excluded from the landing commit. Both variants checkout the same source.
+name: Native addon debug comparison
+run-name: Native addon debug comparison @ ${{ github.sha }}
+on:
+  push:
+    branches:
+      - diagnose/native-ci-line-tables-20261017
+permissions:
+  contents: read
+env:
+  CARGO_TERM_COLOR: always
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  pr-js-package-tests:
+    name: Native addon debug information (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - name: Full debug
+            debug: full
+            group: builders
+          - name: Line tables
+            debug: line-tables-only
+            group: builders
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 35
+    env:
+      NODE_OPTIONS: --disable-warning=DEP0040 --disable-warning=DEP0169
+      CARGO_BUILD_JOBS: "12"
+      VIZE_NATIVE_CI_DEBUG_COMPARISON: ${{ matrix.debug }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: ./.github/actions/cache-vp-bootstrap
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: false
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0
+        with:
+          toolchain: stable
+      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203
+        with:
+          wild-version: 0.9.0
+      - uses: ./.github/actions/setup-rust-sticky-cache
+        with:
+          key: test-js-packages
+          cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
+      - uses: ./.github/actions/cache-pnpm-verification
+      - name: Install JS dependencies
+        env:
+          VIZE_JS_PACKAGE_GROUP: ${{ matrix.group }}
+        run: node tools/support/compat/github/install-js-checks.ts
+          "$VIZE_JS_PACKAGE_GROUP"
+      - name: Test JS package group
+        env:
+          VIZE_JS_PACKAGE_GROUP: ${{ matrix.group }}
+        run: node .github/actions/test-js-packages-with-history/native-fault-evidence.ts
+          -- vp run --workspace-root "test:js:$VIZE_JS_PACKAGE_GROUP"
+      - name: Preserve public native formatter evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: public-native-formatter-${{ github.sha }}-${{ github.run_attempt }}-${{
+            github.job }}-${{ matrix.group }}-${{ matrix.debug }}
+          path: npm/native/.artifacts/native/formatter-history/**
+          if-no-files-found: warn
+          retention-days: 14
+        if: ${{ always() }}
+      - name: Preserve original template style fix observations
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: template-style-fixes-${{ github.sha }}-${{ github.run_attempt }}-${{
+            github.job }}-${{ matrix.group }}-${{ matrix.debug }}
+          path: target/template-style-fixes-7905.json
+          if-no-files-found: warn
+          retention-days: 14
+        if: ${{ always() }}
+      - name: Preserve original Oxlint package locations
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: oxlint-original-locations-${{ github.sha }}-${{ github.run_attempt }}-${{
+            github.job }}-${{ matrix.group }}-${{ matrix.debug }}
+          path: |
+            target/oxlint-original-locations-7904.json
+            target/oxlint-original-project-checks-7903.json
+            target/oxlint-script-safe-carrier-7903.json
+            target/oxlint-original-html-binding-7903/**
+          if-no-files-found: warn
+          retention-days: 14
+        if: ${{ always() }}
+      - name: Preserve bounded JS native fault diagnostics
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: js-native-fault-${{ github.sha }}-${{ github.run_attempt }}-${{ github.job
+            }}-${{ matrix.group }}-${{ matrix.debug }}
+          path: ${{ runner.temp }}/js-native-fault-evidence-*/**/*.json
+          if-no-files-found: warn
+          retention-days: 14
+        if: ${{ always() }}
+      - name: Install optional debugger after the unchanged workload
+        if: ${{ always() }}
+        continue-on-error: true
+        run: if ! command -v gdb >/dev/null; then sudo -n apt-get update && sudo -n
+          apt-get install -y --no-install-recommends gdb; fi
+      - name: Record complete case inventory, addon size and source-line debugger
+          observation
+        if: ${{ always() }}
+        run: node
+          .github/actions/test-js-packages-with-history/native-debug-comparison.ts
+      - name: Preserve debug comparison observation
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-debug-comparison-${{ github.sha }}-${{ matrix.debug }}
+          path: target/native-debug-comparison/
+          if-no-files-found: error
+          retention-days: 14

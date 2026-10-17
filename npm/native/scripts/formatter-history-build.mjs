@@ -15,17 +15,21 @@ export const bytes = (value) => ({ base64: value.toString("base64"), sha256: has
 
 // Only the captured Linux Actions build uses this override. Keep dev behavior
 // and useful source backtraces without embedding full type/variable DWARF.
+// Diagnostic branch only: this switch is excluded from the landing commit.
+const comparison = process.env.VIZE_NATIVE_CI_DEBUG_COMPARISON ?? "line-tables-only";
+assert(["full", "line-tables-only"].includes(comparison));
+const debugInfo = comparison === "full" ? 2 : "line-tables-only";
 export const nativeHistoryCargoOptions = [
   "--message-format=json-render-diagnostics",
   "--locked",
   "--config",
-  'profile.dev.debug="line-tables-only"',
+  `profile.dev.debug=${JSON.stringify(debugInfo)}`,
 ];
 
 export function validateNativeHistoryProfile(profile) {
   assert.equal(profile.test, false);
   assert.equal(profile.opt_level, "0");
-  assert.equal(profile.debuginfo, "line-tables-only");
+  assert.equal(profile.debuginfo, debugInfo);
   assert.equal(profile.debug_assertions, true);
   assert.equal(profile.overflow_checks, true);
 }
