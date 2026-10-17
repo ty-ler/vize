@@ -2,8 +2,19 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { isDeepStrictEqual } from "node:util";
+import type { Session } from "./smoke-release-config-lsp.ts";
 import {
+  assertLatestPublication,
+  expectedConfigReloadError,
+  type Message,
+  REFERENCE_DIAGNOSTICS,
+  REFERENCE_DIRTY_SOURCE,
+  REFERENCE_FORMATTED,
+  REFERENCE_POLICY,
+  REFERENCE_SOURCE,
+  referenceWorkspaceFiles,
   CANONICAL_VITE,
   CONFIG_PACKAGE_NAMES,
   CONFIG_SOURCES,
@@ -276,4 +287,180 @@ export function runConfigWorkspaceChecks(workspace: string): void {
   // Same-directory reference-owned dialect identity is not covered by these
   // two different package roots, nor by this installed native LSP cell alone.
   console.log("runtime: packed two-package canonical settings and native LSP reload");
+}
+
+const uri = (file: string) => pathToFileURL(file).href;
+
+/** Same installed packages/process, now distinct referenced owners beside one Vite file. */
+export async function runConfigReferenceWorkspaceLsp(session: Session): Promise<void> {
+  const { workspace, notifications, request, send, record } = session;
+  const root = path.join(workspace, "packages/app");
+  const control = path.join(workspace, "packages/control");
+  const controlSources = configSourceSnapshot(control);
+  const file = (name: string) => path.join(root, name);
+  const document = (name: "legacy" | "modern") => uri(file(`src/${name}/App.vue`));
+  const packet = (uri: string, version: number, diagnostics: unknown[]) => ({
+    jsonrpc: "2.0",
+    method: "textDocument/publishDiagnostics",
+    params: { uri, version, diagnostics },
+  });
+  const oldAppPackets = ["src/App.vue", "TypedPanel.vue", "QuotesPanel.vue"].map((name) =>
+    packet(uri(file(name)), 1, []),
+  );
+  const controlPacket = packet(uri(path.join(control, "TypedPanel.vue")), 1, []);
+  let modernVersion = 1;
+  const legacyPacket = packet(document("legacy"), 1, []);
+  const modernPacket = () => packet(document("modern"), modernVersion, REFERENCE_DIAGNOSTICS);
+  async function publication(expected: Message, since: number): Promise<void> {
+    const deadline = Date.now() + 60_000;
+    while (!notifications.slice(since).some((message) => isDeepStrictEqual(message, expected))) {
+      assert.ok(Date.now() < deadline, `no full reference publication ${JSON.stringify(expected)}`);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    record("complete reference publication", expected);
+  }
+  async function formatting(name: "legacy" | "modern", expected: unknown): Promise<void> {
+    const result = await request("textDocument/formatting", {
+      textDocument: { uri: document(name) },
+      options: { tabSize: 2, insertSpaces: true },
+    });
+    assert.deepEqual(result, expected, "whole authored Vim reference formatting result");
+    record(`reference formatting: ${name}`, result);
+  }
+  function latest(): void {
+    for (const expected of [legacyPacket, modernPacket(), controlPacket, ...oldAppPackets])
+      assertLatestPublication(notifications, expected);
+  }
+  async function barrier(modernFormatting: unknown): Promise<void> {
+    await formatting("modern", modernFormatting);
+    const controlFormatting = await request("textDocument/formatting", {
+      textDocument: { uri: uri(path.join(control, "QuotesPanel.vue")) },
+      options: { tabSize: 2, insertSpaces: true },
+    });
+    assert.deepEqual(controlFormatting, [
+      {
+        range: { start: { line: 0, character: 0 }, end: { line: 2, character: 0 } },
+        newText: DOUBLE_FORMATTED,
+      },
+    ]);
+    record("unchanged sibling complete formatting", controlFormatting);
+    record("reference request barrier", await request("workspace/symbol", { query: "" }));
+    latest();
+    assert.equal(fs.readFileSync(file("src/modern/App.vue"), "utf8"), REFERENCE_SOURCE);
+    assert.equal(fs.readFileSync(file("src/legacy/App.vue"), "utf8"), REFERENCE_SOURCE);
+    assert.deepEqual(
+      configSourceSnapshot(control),
+      controlSources,
+      "whole sibling source/config snapshot unchanged",
+    );
+  }
+  function watch(changes: { uri: string; type: number }[]): number {
+    const since = notifications.length;
+    record("reference watch input and whole source snapshots", {
+      changes,
+      app: configSourceSnapshot(root),
+      control: configSourceSnapshot(control),
+    });
+    send({ method: "workspace/didChangeWatchedFiles", params: { changes } });
+    return since;
+  }
+  const fixtures = referenceWorkspaceFiles();
+  for (const [name, source] of Object.entries(fixtures)) {
+    fs.mkdirSync(path.dirname(file(name)), { recursive: true });
+    fs.writeFileSync(file(name), source);
+  }
+  record("expected reference owner inputs (not observed private owner keys)", {
+    legacy: {
+      root,
+      tsconfig: file("tsconfig.legacy.json"),
+      documentUri: document("legacy"),
+      target: 2.7,
+    },
+    modern: {
+      root,
+      tsconfig: file("tsconfig.modern.json"),
+      documentUri: document("modern"),
+      target: 3.5,
+    },
+  });
+  let since = watch([
+    { uri: uri(file("vite.config.ts")), type: 2 },
+    { uri: uri(file("tsconfig.json")), type: 2 },
+    ...["vue-policy.mjs", "tsconfig.legacy.json", "tsconfig.modern.json"].map((name) => ({
+      uri: uri(file(name)),
+      type: 1,
+    })),
+  ]);
+  // Previously open app documents remain open: disabling typecheck must clear
+  // their complete packets instead of silently retaining the earlier TS2322.
+  for (const expected of oldAppPackets) await publication(expected, since);
+  for (const name of ["legacy", "modern"] as const) {
+    send({
+      method: "textDocument/didOpen",
+      params: {
+        textDocument: {
+          uri: document(name),
+          languageId: "vue",
+          version: 1,
+          text: REFERENCE_SOURCE,
+        },
+      },
+    });
+    await publication(name === "legacy" ? legacyPacket : modernPacket(), since);
+    await formatting(name, null);
+    const hover = await request("textDocument/hover", {
+      textDocument: { uri: document(name) },
+      position: { line: 1, character: 8 },
+    });
+    assert.deepEqual(hover, null, "authored reference policy disables hover");
+    record(`reference disabled hover: ${name}`, hover);
+  }
+  modernVersion = 2;
+  since = notifications.length;
+  send({
+    method: "textDocument/didChange",
+    params: {
+      textDocument: { uri: document("modern"), version: modernVersion },
+      contentChanges: [{ text: REFERENCE_DIRTY_SOURCE }],
+    },
+  });
+  record("unsaved modern buffer input", {
+    uri: document("modern"),
+    version: modernVersion,
+    text: REFERENCE_DIRTY_SOURCE,
+  });
+  await publication(modernPacket(), since);
+  await barrier(null);
+
+  const helper = file("vue-policy.mjs");
+  fs.writeFileSync(helper, "export default {\n");
+  since = watch([{ uri: uri(helper), type: 2 }]);
+  const expectedError = expectedConfigReloadError(uri(root), [uri(helper)]);
+  const deadline = Date.now() + 60_000;
+  while (!notifications.slice(since).some((message) => isDeepStrictEqual(message, expectedError))) {
+    assert.ok(Date.now() < deadline, "same-directory invalid helper did not notify the editor");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  record("complete reference configuration error", expectedError);
+  await publication(legacyPacket, since);
+  await publication(modernPacket(), since);
+  await barrier(null);
+  for (const message of notifications.slice(since))
+    if (message.method === "window/showMessage") assert.deepEqual(message, expectedError);
+
+  fs.writeFileSync(helper, `${REFERENCE_POLICY.replace("formatting:false", "formatting:true")}\n`);
+  since = watch([{ uri: uri(helper), type: 2 }]);
+  await publication(legacyPacket, since);
+  await publication(modernPacket(), since);
+  await barrier(REFERENCE_FORMATTED);
+  assert.deepEqual(
+    notifications.slice(since).filter((message) => message.method === "window/showMessage"),
+    [],
+    "valid reference helper recovery must not report another config error",
+  );
+  record("reference acceptance scope", {
+    covered:
+      "same-directory2.7/3.5 full authored packets and retained dirty version2 in the same installed session",
+    unproven: "observed private owner keys and actual packaged editor hosts",
+  });
 }

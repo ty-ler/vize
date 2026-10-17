@@ -1,3 +1,15 @@
+import { runInNewContext } from "node:vm";
+import { readRepoFile } from "../support/github-workflows.ts";
+import {
+  MALFORMED_CONFIG_DEPENDENCIES,
+  REFERENCE_DIAGNOSTICS,
+  REFERENCE_FORMATTED,
+  REFERENCE_POLICY,
+  REFERENCE_SOURCE,
+  tsconfigBase,
+  vueHelper,
+} from "../../../tools/support/compat/npm/smoke-release-config-fixture.ts";
+import { runConfigDependencyCell } from "../../../tools/support/compat/npm/smoke-release-config-lsp.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { spawnSync } from "node:child_process";
@@ -25,11 +37,11 @@ const fixture = () =>
     },
   }));
 
-test("both independent installed siblings use the source-built native image", () => {
+void test("both independent installed siblings use the source-built native image", () => {
   verifyInstalledImages(fixture(), expected);
 });
 
-test("an installed sibling with a stale image or outside fallback is rejected", () => {
+void test("an installed sibling with a stale image or outside fallback is rejected", () => {
   const stale = fixture();
   stale[1].native.binaries[0].sha256 = "b".repeat(64);
   assert.throws(() => verifyInstalledImages(stale, expected), /installed native image/u);
@@ -38,7 +50,7 @@ test("an installed sibling with a stale image or outside fallback is rejected", 
   assert.throws(() => verifyInstalledImages(outside, expected));
 });
 
-test("a missing sibling, duplicate sibling, or multiple loaded images cannot pass", () => {
+void test("a missing sibling, duplicate sibling, or multiple loaded images cannot pass", () => {
   const images = fixture();
   assert.throws(() => verifyInstalledImages(images.slice(0, 1), expected));
   assert.throws(() => verifyInstalledImages([images[0], images[0]], expected));
@@ -46,7 +58,7 @@ test("a missing sibling, duplicate sibling, or multiple loaded images cannot pas
   assert.throws(() => verifyInstalledImages(images, expected), /one loaded native provider/u);
 });
 
-test("a partial failed campaign saves its failure receipt and remains nonzero", () => {
+void test("a partial failed campaign saves its failure receipt and remains nonzero", () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-config-evidence-"));
   try {
     const script = fileURLToPath(
@@ -70,5 +82,84 @@ test("a partial failed campaign saves its failure receipt and remains nonzero", 
     assert.match(receipt.failure, /source\.json/u);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+await test("malformed dependency controls are syntax-invalid and differ from valid settings", async () => {
+  await assert.rejects(
+    import(
+      `data:text/javascript,${encodeURIComponent(MALFORMED_CONFIG_DEPENDENCIES["vue-settings.ts"])}`
+    ),
+    SyntaxError,
+  );
+  assert.throws(() => JSON.parse(MALFORMED_CONFIG_DEPENDENCIES["tsconfig.base.json"]), SyntaxError);
+  const valid = await import(`data:text/javascript,${encodeURIComponent(vueHelper(true))}`);
+  assert.equal(valid.default.formatter.singleQuote, true);
+  assert.equal(JSON.parse(tsconfigBase(true)).compilerOptions.strictNullChecks, true);
+});
+
+void test("installed reference controls retain the whole existing Vim authored oracle", () => {
+  const vim = readRepoFile("editors/vim/test/config_project_spec.vim");
+  function literal(name: string): unknown {
+    const prefix = `let s:${name} = `;
+    const start = vim.indexOf(prefix);
+    assert.ok(start >= 0, `missing authored Vim ${name}`);
+    const rest = vim.slice(start + prefix.length);
+    const source =
+      name === "modern_diagnostics"
+        ? rest.slice(0, rest.indexOf("\ncall ")).replace(/^\s*\\\s*/gmu, "")
+        : rest.split("\n")[0]!;
+    // These owned Vim dictionary/list/string literals use JavaScript-compatible
+    // syntax. Parse the complete authored value, without running an editor/LSP.
+    return JSON.parse(JSON.stringify(runInNewContext(`(${source})`, {}, { timeout: 1_000 })));
+  }
+  assert.equal(REFERENCE_SOURCE, `${(literal("source") as string[]).join("\n")}\n`);
+  assert.equal(REFERENCE_POLICY, literal("valid_policy"));
+  assert.deepEqual(REFERENCE_DIAGNOSTICS, literal("modern_diagnostics"));
+  assert.deepEqual(REFERENCE_FORMATTED, literal("formatted"));
+});
+
+await test("dependency restoration preserves the first scenario failure and records cleanup errors", async () => {
+  for (const [scenarioFails, restoreFails] of [
+    [true, true],
+    [true, false],
+    [false, true],
+    [false, false],
+  ]) {
+    const first = new Error("whole packet scenario assertion");
+    const cleanup = new Error("restore publication failed");
+    let restores = 0;
+    const records: { name: string; result: unknown }[] = [];
+    const run = runConfigDependencyCell({
+      dependency: "vue-settings.ts",
+      failure: "malformed",
+      run: async () => {
+        if (scenarioFails) throw first;
+      },
+      restore: async () => {
+        restores++;
+        if (restoreFails) throw cleanup;
+      },
+      record: (name, result) => records.push({ name, result }),
+    });
+    if (scenarioFails || restoreFails)
+      await assert.rejects(run, (error: unknown) => error === (scenarioFails ? first : cleanup));
+    else await run;
+    assert.equal(restores, 1, "restoration is attempted even after the scenario fails");
+    assert.deepEqual(
+      records,
+      restoreFails
+        ? [
+            {
+              name: "configuration dependency restoration failure",
+              result: {
+                dependency: "vue-settings.ts",
+                failure: "malformed",
+                error: { name: cleanup.name, message: cleanup.message, stack: cleanup.stack },
+              },
+            },
+          ]
+        : [],
+    );
   }
 });

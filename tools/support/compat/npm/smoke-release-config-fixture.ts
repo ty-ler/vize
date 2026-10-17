@@ -1,3 +1,5 @@
+import assert from "node:assert/strict";
+
 /** Whole inputs and authored output oracles for the installed #8371 workspace cell. */
 export const CONFIG_PACKAGE_NAMES = ["app", "control"] as const;
 
@@ -151,4 +153,35 @@ export function lintReport(file: string, configured: boolean) {
       warningCount: 0,
     },
   ];
+}
+
+export interface Message {
+  jsonrpc?: string;
+  method?: string;
+  params?: unknown;
+  result?: unknown;
+  error?: unknown;
+}
+
+export function assertLatestPublication(messages: Message[], expected: Message): void {
+  const expectedUri = (expected.params as { uri: string }).uri;
+  const latest = messages.findLast(
+    (message) =>
+      message.method === "textDocument/publishDiagnostics" &&
+      (message.params as { uri?: string } | undefined)?.uri === expectedUri,
+  );
+  assert.deepEqual(latest, expected, "latest complete publication after the request barrier");
+}
+
+/** Exact config_reload.rs::reload_error contract; preserve sent URI spelling. */
+export function expectedConfigReloadError(rootUri: string, changedUris: readonly string[]) {
+  const changed = [...new Set(changedUris)].sort().join(", ");
+  return {
+    jsonrpc: "2.0",
+    method: "window/showMessage",
+    params: {
+      type: 1,
+      message: `Vize could not reload project configuration for ${rootUri} after changes to ${changed}. Keeping the last good configuration.`,
+    },
+  };
 }

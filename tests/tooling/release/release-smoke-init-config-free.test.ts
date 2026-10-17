@@ -4,7 +4,6 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { runInNewContext } from "node:vm";
 
 import { CONFIG_FREE_PROJECT_SHAPES } from "../../../tools/support/compat/npm/smoke-release-init-config-free.mjs";
 import {
@@ -17,12 +16,7 @@ import { expectedInitOutput } from "../../../tools/support/compat/npm/smoke-rele
 import {
   CONFIG_SOURCES,
   DEFAULT_BUILD,
-  MALFORMED_CONFIG_DEPENDENCIES,
   PRESERVED_BUILD,
-  REFERENCE_DIAGNOSTICS,
-  REFERENCE_FORMATTED,
-  REFERENCE_POLICY,
-  REFERENCE_SOURCE,
   lintReport,
   tsconfigBase,
   typeDiagnostics,
@@ -32,7 +26,6 @@ import { runWorkspacePackageCheck } from "../../../tools/support/compat/npm/smok
 import {
   assertLatestPublication,
   expectedConfigReloadError,
-  runConfigDependencyCell,
   runConfigLspSession,
   type ConfigLspReceipt,
 } from "../../../tools/support/compat/npm/smoke-release-config-lsp.ts";
@@ -47,7 +40,7 @@ const CHANGED_FIELDS = new Set([
 ]);
 const PEERS = { typescript: "6.0.3", vite: "8.0.0", "vite-plus": "0.1.0", vue: "3.5.0" };
 
-test("current initializer changes only the declared generated-plan capability", () => {
+void test("current initializer changes only the declared generated-plan capability", () => {
   assert.deepEqual(Object.keys(CONFIG_FREE_PROJECT_SHAPES), Object.keys(PROJECT_SHAPES));
   for (const [id, historical] of Object.entries(PROJECT_SHAPES)) {
     const current = CONFIG_FREE_PROJECT_SHAPES[id];
@@ -87,7 +80,7 @@ test("current initializer changes only the declared generated-plan capability", 
   }
 });
 
-test("every original manager cell retains its entire current discovery packet", () => {
+void test("every original manager cell retains its entire current discovery packet", () => {
   for (const cell of FRESH_INIT_MATRIX) {
     const current = CONFIG_FREE_PROJECT_SHAPES[cell.shape];
     const manager = PACKAGE_MANAGERS[cell.packageManager];
@@ -114,7 +107,7 @@ test("every original manager cell retains its entire current discovery packet", 
   }
 });
 
-test("the genuine packed driver selects the named successor and checks both init passes", () => {
+void test("the genuine packed driver selects the named successor and checks both init passes", () => {
   const source = readRepoFile("tools/support/compat/npm/smoke-release-init-fresh.mjs");
   assert.ok(source.includes("CONFIG_FREE_PROJECT_SHAPES as PROJECT_SHAPES"));
   assert.equal(source.match(/assertNoDedicatedConfig\(projectRoot\);/gu)?.length, 2);
@@ -123,7 +116,7 @@ test("the genuine packed driver selects the named successor and checks both init
   assert.ok(source.includes("shape.check.brokenDiagnostics"));
 });
 
-test("the delivered Yarn cell retains its whole archive and declares three current stdout packets", () => {
+void test("the delivered Yarn cell retains its whole archive and declares three current stdout packets", () => {
   const historical = JSON.parse(
     readRepoFile("tests/tooling/fixtures/release-smoke-init-yarn-checkjs.json"),
   );
@@ -170,7 +163,7 @@ test("the delivered Yarn cell retains its whole archive and declares three curre
   assert.deepEqual(current.expected.repair, historical.expected.repair);
 });
 
-test("the packed settings cell retains whole original sources and compiler/lint oracles", () => {
+void test("the packed settings cell retains whole original sources and compiler/lint oracles", () => {
   const source = (file: string) =>
     readRepoFile(`tests/_fixtures/differential/config/project-settings-8371/${file}.vue.txt`);
   assert.equal(CONFIG_SOURCES["BuildPanel.vue"], source("App"));
@@ -228,7 +221,7 @@ await test("the contrasting helper and inherited TS controls are independent", a
   assert.deepEqual(typeDiagnostics(false), []);
 });
 
-test("an invoked required packed workspace cannot silently skip missing public artifacts", () => {
+void test("an invoked required packed workspace cannot silently skip missing public artifacts", () => {
   assert.throws(
     () =>
       runWorkspacePackageCheck({
@@ -243,7 +236,7 @@ test("an invoked required packed workspace cannot silently skip missing public a
   );
 });
 
-test("an older matching native packet cannot hide a later abnormal publication", () => {
+void test("an older matching native packet cannot hide a later abnormal publication", () => {
   const expected = {
     jsonrpc: "2.0",
     method: "textDocument/publishDiagnostics",
@@ -278,7 +271,7 @@ test("an older matching native packet cannot hide a later abnormal publication",
   );
 });
 
-test("configuration errors retain the producer's complete stable URI envelope", () => {
+void test("configuration errors retain the producer's complete stable URI envelope", () => {
   assert.deepEqual(
     expectedConfigReloadError("file:///workspace/app%20one", [
       "file:///workspace/app%20one/z-base.json",
@@ -335,9 +328,11 @@ for (const scenario of [
   "truncated frame",
   "protocol error",
   "first error",
+  "close timeout",
 ] as const) {
   await test(`config LSP custody fails and saves the whole receipt: ${scenario}`, async () => {
     const signal = scenario === "signal";
+    const timeout = scenario === "close timeout";
     const child = spawn(process.execPath, [
       "-e",
       `
@@ -346,6 +341,7 @@ for (const scenario of [
         process.stdout.write('Content-Length: 9\\r\\n\\r\\n{');
         process.stderr.write('late stderr before termination');
         ${signal ? "process.kill(process.pid, 'SIGTERM');" : `process.exitCode = ${scenario === "status" || scenario === "first error" ? 7 : 0};`}
+        ${timeout ? "setInterval(() => {}, 1000);" : ""}
       }, 20));
     `,
     ]);
@@ -362,6 +358,7 @@ for (const scenario of [
           if (scenario === "first error") throw new Error("shutdown also failed");
         },
         exit: () => child.stdin.end(),
+        closeTimeoutMs: timeout ? 2_000 : undefined,
         protocolState: () => ({
           remainder,
           ...(scenario === "protocol error"
@@ -380,7 +377,9 @@ for (const scenario of [
             ? /incomplete frame/u
             : scenario === "protocol error"
               ? /invalid LSP Content-Length/u
-              : /config LSP child exited/u,
+              : timeout
+                ? /did not close after shutdown\/exit/u
+                : /config LSP child exited/u,
         );
         return true;
       },
@@ -393,10 +392,10 @@ for (const scenario of [
       Buffer.from("Content-Length: 9\r\n\r\n{"),
     );
     assert.deepEqual(Buffer.from(receipt.incompleteFrameBase64, "base64"), remainder);
-    assert.equal(receipt.signal, signal ? "SIGTERM" : null);
+    assert.equal(receipt.signal, signal ? "SIGTERM" : timeout ? "SIGKILL" : null);
     assert.equal(
       receipt.status,
-      signal ? null : scenario === "status" || scenario === "first error" ? 7 : 0,
+      signal || timeout ? null : scenario === "status" || scenario === "first error" ? 7 : 0,
     );
     if (scenario === "first error") {
       assert.equal(receipt.failures.length, 3);
@@ -407,7 +406,7 @@ for (const scenario of [
   });
 }
 
-test("the existing general LSP observer runs without config-mode dependencies", () => {
+void test("the existing general LSP observer runs without config-mode dependencies", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-general-lsp-"));
   try {
     const session = path.join(root, "session.ts");
@@ -478,84 +477,5 @@ process.stdin.on('data', (chunk) => {
     assert.equal(receipt.custody, undefined, "general observer retains its existing lifecycle");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
-  }
-});
-
-await test("malformed dependency controls are syntax-invalid and differ from valid settings", async () => {
-  await assert.rejects(
-    import(
-      `data:text/javascript,${encodeURIComponent(MALFORMED_CONFIG_DEPENDENCIES["vue-settings.ts"])}`
-    ),
-    SyntaxError,
-  );
-  assert.throws(() => JSON.parse(MALFORMED_CONFIG_DEPENDENCIES["tsconfig.base.json"]), SyntaxError);
-  const valid = await import(`data:text/javascript,${encodeURIComponent(vueHelper(true))}`);
-  assert.equal(valid.default.formatter.singleQuote, true);
-  assert.equal(JSON.parse(tsconfigBase(true)).compilerOptions.strictNullChecks, true);
-});
-
-test("installed reference controls retain the whole existing Vim authored oracle", () => {
-  const vim = readRepoFile("editors/vim/test/config_project_spec.vim");
-  function literal(name: string): unknown {
-    const prefix = `let s:${name} = `;
-    const start = vim.indexOf(prefix);
-    assert.ok(start >= 0, `missing authored Vim ${name}`);
-    const rest = vim.slice(start + prefix.length);
-    const source =
-      name === "modern_diagnostics"
-        ? rest.slice(0, rest.indexOf("\ncall ")).replace(/^\s*\\\s*/gmu, "")
-        : rest.split("\n")[0]!;
-    // These owned Vim dictionary/list/string literals use JavaScript-compatible
-    // syntax. Parse the complete authored value, without running an editor/LSP.
-    return JSON.parse(JSON.stringify(runInNewContext(`(${source})`, {}, { timeout: 1_000 })));
-  }
-  assert.equal(REFERENCE_SOURCE, `${(literal("source") as string[]).join("\n")}\n`);
-  assert.equal(REFERENCE_POLICY, literal("valid_policy"));
-  assert.deepEqual(REFERENCE_DIAGNOSTICS, literal("modern_diagnostics"));
-  assert.deepEqual(REFERENCE_FORMATTED, literal("formatted"));
-});
-
-await test("dependency restoration preserves the first scenario failure and records cleanup errors", async () => {
-  for (const [scenarioFails, restoreFails] of [
-    [true, true],
-    [true, false],
-    [false, true],
-    [false, false],
-  ]) {
-    const first = new Error("whole packet scenario assertion");
-    const cleanup = new Error("restore publication failed");
-    let restores = 0;
-    const records: { name: string; result: unknown }[] = [];
-    const run = runConfigDependencyCell({
-      dependency: "vue-settings.ts",
-      failure: "malformed",
-      run: async () => {
-        if (scenarioFails) throw first;
-      },
-      restore: async () => {
-        restores++;
-        if (restoreFails) throw cleanup;
-      },
-      record: (name, result) => records.push({ name, result }),
-    });
-    if (scenarioFails || restoreFails)
-      await assert.rejects(run, (error: unknown) => error === (scenarioFails ? first : cleanup));
-    else await run;
-    assert.equal(restores, 1, "restoration is attempted even after the scenario fails");
-    assert.deepEqual(
-      records,
-      restoreFails
-        ? [
-            {
-              name: "configuration dependency restoration failure",
-              result: {
-                dependency: "vue-settings.ts",
-                failure: "malformed",
-                error: { name: cleanup.name, message: cleanup.message, stack: cleanup.stack },
-              },
-            },
-          ]
-        : [],
-    );
   }
 });
