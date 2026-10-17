@@ -1465,6 +1465,9 @@ importers:
       vue-language-tools-fixture-vue:
         specifier: npm:vue@3.6.0-rc.6
         version: vue@3.6.0-rc.6(typescript@6.0.3)
+      vue-legacy-compiler-core-artifact:
+        specifier: npm:@vue/compiler-core@3.5.35
+        version: '@vue/compiler-core@3.5.35'
       vue-legacy-instance-oracle:
         specifier: npm:vue@3.6.0-rc.9
         version: vue@3.6.0-rc.9(typescript@6.0.3)
