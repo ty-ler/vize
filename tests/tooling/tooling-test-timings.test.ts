@@ -12,6 +12,7 @@ import {
   selectToolingShard,
   toolingLeadSteps,
   toolingShardMatrix,
+  toolingTestFiles,
   TOOLING_TIMINGS_LOG_MARKER,
   TOOLING_TIMINGS_PATH,
   validateToolingTimings,
@@ -23,7 +24,6 @@ import {
   parseToolingTimingLog,
   parseToolingLeadLog,
 } from "../../tools/support/compat/github/update-tooling-test-timings.ts";
-import { planToolingTests } from "../../tools/support/compat/github/plan-tooling-tests.mjs";
 import { readRepoFile } from "./support/github-workflows.ts";
 
 type Step = { name?: string; if?: string; uses?: string };
@@ -90,7 +90,7 @@ void test("the full tooling caller retains shard coordinates and native lead-ste
       ],
     ],
   );
-  for (const step of lead) assert.equal(step.if, "${{ always() && inputs.shard == '1' }}");
+  for (const step of lead) assert.equal(step.if, "${{ !cancelled() && inputs.shard == '1' }}");
   const at = (second: number) => `2026-10-13T08:45:${String(second).padStart(2, "0")}Z`;
   assert.deepEqual(
     leadStepDurations(
@@ -235,8 +235,8 @@ void test("logged records, lead steps and merges refresh only what a run measure
 
 void test("all current descriptive matrix cohorts retain success, failed and cancelled raw observations", () => {
   const plan = {
-    ...planToolingTests([], { tier: "merge" }),
     tier: "merge" as const,
+    tests: toolingTestFiles(),
     leadSteps: toolingLeadSteps("merge", {}),
   };
   const matrix = toolingShardMatrix(plan).include;

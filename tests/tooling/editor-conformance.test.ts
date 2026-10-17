@@ -20,6 +20,7 @@ import { corruptExpectation, negativeControl } from "../editor-conformance/negat
 import { loadScenario, suiteRoot } from "../editor-conformance/support/context.ts";
 import { applyTextEdits, workspaceEditsFor } from "../editor-conformance/support/document.ts";
 import { readRepoFile } from "./support/github-workflows.ts";
+import { projectConfigDefaults } from "../../crates/vize_carton/src/config/loader/vite-runtime.mjs";
 
 const root = "/work/space";
 const scenario = loadScenario();
@@ -254,6 +255,8 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
     name?: string;
     env?: Record<string, string>;
     uses?: string;
+    if?: string;
+    run?: string;
     with?: Record<string, unknown>;
   }>;
   const pins = Object.assign({}, ...steps.map((step) => step.env ?? {}));
@@ -274,7 +277,59 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
   const report = workflow.jobs.report.steps.at(-1).run as string;
   assert.match(report, /report\.ts "\$\{RUNNER_TEMP\}\/ts45" --require helix,neovim,vscode,zed$/u);
   assert.equal(workflow.jobs.report.if, "always()");
-  const upload = steps.find((step) => step.uses?.startsWith("actions/upload-artifact@"));
+  const upload = steps.find((step) => step.with?.name === "ts45-${{ matrix.client }}");
+  assert.ok(upload?.uses?.startsWith("actions/upload-artifact@"));
+  const lifecycle = steps.findIndex(
+    (step) => step.name === "Exercise existing VS Code configuration and lifecycle contracts",
+  );
+  assert.ok(lifecycle > steps.findIndex((step) => step.name === "Prepare pinned VS Code"));
+  assert.ok(lifecycle < steps.findIndex((step) => step.name === "Play the TS-45 scenario"));
+  const packageExtension = steps.findIndex(
+    (step) => step.name === "Exercise original real VS Code authoring contracts",
+  );
+  assert.ok(packageExtension > lifecycle);
+  assert.ok(packageExtension < steps.findIndex((step) => step.name === "Play the TS-45 scenario"));
+  assert.equal(steps[packageExtension].if, "matrix.client == 'vscode'");
+  assert.ok(steps[packageExtension].run);
+  assert.match(
+    steps[packageExtension].run.trim(),
+    /xvfb-run -a vp run --workspace-root test:vscode-extension:host-real$/u,
+  );
+  assert.doesNotMatch(steps[packageExtension].run, /lsp-tap|rich-host-tap/);
+  assert.match(steps[packageExtension].run, /consumed-server\.sha256/);
+  const producerSteps = workflow.jobs.server.steps;
+  assert.equal(
+    producerSteps.find((step: { name?: string }) => step.name === "Build vize CLI").run,
+    "cargo build --profile ci -p vize",
+  );
+  const receipt = producerSteps.find(
+    (step: { name?: string }) =>
+      step.name === "Record the real server source and executable identity",
+  );
+  assert.match(receipt.run, /test "\$\(git rev-parse HEAD\)" = "\$\{GITHUB_SHA\}"/);
+  const verify = steps.find((step) => step.name === "Verify the source-built server")?.run;
+  assert.ok(verify);
+  assert.match(verify, /sha256sum --check vize\.sha256/);
+  assert.equal(steps[lifecycle].if, "matrix.client == 'vscode'");
+  assert.equal(
+    steps[lifecycle].run,
+    "xvfb-run -a vp run --workspace-root test:vscode-extension:host",
+  );
+  const lifecycleEvidence = steps.find(
+    (step) => step.with?.name === "vscode-configuration-lifecycle",
+  );
+  assert.ok(lifecycleEvidence?.uses?.startsWith("actions/upload-artifact@"));
+  assert.equal(lifecycleEvidence?.if, "${{ always() && matrix.client == 'vscode' }}");
+  assert.equal(lifecycleEvidence?.with?.["include-hidden-files"], true);
+  assert.equal(lifecycleEvidence?.with?.["if-no-files-found"], "error");
+  assert.deepEqual(String(lifecycleEvidence?.with?.path).trim().split("\n"), [
+    "${{ runner.temp }}/rich-host-evidence/",
+    "editors/vscode/.vscode-test/host-smoke-real/failure/",
+    "editors/vscode/.vscode-test/host-smoke/failure/",
+    "editors/vscode/.vscode-test/host-smoke/output-channel/",
+    "editors/vscode/.vscode-test/host-smoke/fake-server/events.jsonl",
+    "editors/vscode/.vscode-test/host-smoke/fake-server/existing-config-events/",
+  ]);
   // A failed-only rerun must replace its earlier result without requiring
   // fresh artifacts from the three clients GitHub does not rerun.
   assert.equal(upload?.with?.name, "ts45-${{ matrix.client }}");
@@ -422,4 +477,23 @@ test("corrupted canonical action documentation fails even when the client omits 
   const action = corrupted.steps.find((value) => value.id === "code-action")!;
   (action.expect as any[])[0].diagnostics[0].codeDescription.href = "https://corrupted.test/";
   assert.deepEqual(failures(entries, corrupted), ["code-action"]);
+});
+test("current initialization derives source-backed capabilities and canonical JSX from the complete prior vector", () => {
+  const original = JSON.parse(fs.readFileSync(`${suiteRoot}/expected/initialize.json`, "utf8"));
+  original.capabilities.codeActionProvider.codeActionKinds.push(
+    "source.organizeImports",
+    "source.sortImports",
+    "source.removeUnusedImports",
+  );
+  original.capabilities.monikerProvider = true;
+  original.capabilities.experimental.vize.jsxTypecheck =
+    projectConfigDefaults().typeChecker.jsxTypecheck;
+  assert.deepEqual(byId("initialize").expect, original);
+  const capabilities = readRepoFile("crates", "vize_maestro", "src", "server", "capabilities.rs");
+  const moniker = /moniker_provider: features\.definition\.then_some\(OneOf::Left\(true\)\)/;
+  assert.match(capabilities, moniker);
+  const kinds = readRepoFile("crates/vize_maestro/src/server/capabilities/code_action_tests.rs");
+  for (const kind of original.capabilities.codeActionProvider.codeActionKinds.slice(1)) {
+    assert.ok(kinds.includes(`CodeActionKind::from("${kind}".to_owned())`));
+  }
 });

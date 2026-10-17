@@ -18,7 +18,9 @@ use vize_l0::{FxHashMap, FxHashSet};
 
 use super::{
     LspFeatureConfig, ServerState,
-    config::host::{LoadedLspConfig, ProjectModel, load_lsp_config_snapshot},
+    config::host::{
+        LoadedLspConfig, ObservedLspConfig, ProjectModel, load_observed_lsp_config_snapshot,
+    },
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -40,6 +42,29 @@ impl From<PathBuf> for ProjectContextKey {
 pub(super) struct RetainedConfiguration {
     authored: LoadedLspConfig,
     applied: LoadedLspConfig,
+    compiler: Arc<vize_canon::CompilerConfigurationSnapshot>,
+    observation: freshness::ConfigurationObservation,
+}
+
+impl RetainedConfiguration {
+    fn same_authority(
+        &self,
+        previous: &LoadedLspConfig,
+        compiler: &vize_canon::CompilerConfigurationSnapshot,
+    ) -> bool {
+        let (Some(current), Some(previous_policy)) = (
+            self.applied.project.document.evaluated_policy(),
+            previous.project.document.evaluated_policy(),
+        ) else {
+            return false;
+        };
+        current == previous_policy
+            && self.applied.source_path == previous.source_path
+            && self.applied.project.source_path == previous.project.source_path
+            && self.applied.project.project_root == previous.project.project_root
+            && self.applied.project.dependencies == previous.project.dependencies
+            && self.compiler.same_authority(compiler)
+    }
 }
 
 #[derive(Default)]
@@ -54,7 +79,12 @@ pub(super) struct ProjectContexts {
     pub(super) key: RwLock<Option<ProjectContextKey>>,
     pub(super) loaded_config: RwLock<Option<LoadedLspConfig>>,
     pub(super) applied_config: RwLock<Option<LoadedLspConfig>>,
+    pub(super) compiler_configuration:
+        RwLock<Option<Arc<vize_canon::CompilerConfigurationSnapshot>>>,
     pub(super) config_reload_failed: AtomicBool,
+    pub(super) configuration_observation: RwLock<Option<freshness::ConfigurationObservation>>,
+    configuration_attempts:
+        Mutex<FxHashMap<ProjectContextKey, freshness::ConfigurationObservation>>,
     reference_ownership: Mutex<vize_canon::batch::TsconfigOwnershipCache>,
     contexts: Mutex<FxHashMap<ProjectContextKey, Arc<registry::ProjectContext>>>,
     reload_admission: Mutex<FxHashMap<PathBuf, Weak<futures::lock::Mutex<()>>>>,
@@ -197,7 +227,7 @@ impl ServerState {
     fn new_project_state(
         self: &Arc<Self>,
         key: &ProjectContextKey,
-        snapshot: Option<&LoadedLspConfig>,
+        snapshot: Option<&ObservedLspConfig>,
         snapshot_failed: bool,
         prepared: Option<&RetainedConfiguration>,
     ) -> Arc<ServerState> {
@@ -211,13 +241,17 @@ impl ServerState {
         if let Some(prepared) = prepared {
             // This pair was already validated for this complete context key.
             // Raw dependency files can change before lazy initialization.
+            *state.project_contexts.compiler_configuration.write() =
+                Some(prepared.compiler.clone());
+            *state.project_contexts.configuration_observation.write() =
+                Some(prepared.observation.clone());
             state.apply_retained_workspace_config(root, prepared.applied.clone());
             *state.project_contexts.loaded_config.write() = Some(prepared.authored.clone());
         } else {
             let loaded = snapshot
                 .cloned()
-                .unwrap_or_else(|| load_lsp_config_snapshot(Some(root)));
-            state.apply_workspace_config_snapshot(root, loaded);
+                .unwrap_or_else(|| load_observed_lsp_config_snapshot(Some(root)));
+            state.apply_observed_workspace_config_snapshot(root, loaded);
         }
         if snapshot_failed {
             state
@@ -291,6 +325,10 @@ impl ServerState {
             .pending_config_reloads
             .lock()
             .retain(|key| roots.iter().any(|folder| key.root.starts_with(folder)));
+        self.project_contexts
+            .configuration_attempts
+            .lock()
+            .retain(|key, _| roots.iter().any(|folder| key.root.starts_with(folder)));
         let mut retired = Vec::new();
         self.project_contexts.contexts.lock().retain(|root, state| {
             let retained = roots.iter().any(|folder| root.root.starts_with(folder));
@@ -319,6 +357,7 @@ impl ServerState {
             context.retire();
         }
         self.project_contexts.routes.clear();
+        self.project_contexts.configuration_attempts.lock().clear();
     }
 
     pub(crate) fn project_jsx_typecheck_enabled(&self) -> bool {
@@ -411,3 +450,13 @@ mod watched;
 mod config_reload;
 #[cfg(test)]
 mod config_reload_tests;
+
+pub(super) mod freshness;
+
+#[cfg(test)]
+mod freshness_tests;
+
+mod topology;
+
+#[cfg(test)]
+mod topology_tests;

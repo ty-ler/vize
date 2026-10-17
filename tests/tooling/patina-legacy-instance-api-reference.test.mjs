@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
@@ -6,6 +7,9 @@ import path from "node:path";
 import { test } from "node:test";
 import { gunzipSync } from "node:zlib";
 import { compileFunction } from "node:vm";
+import { pathToFileURL } from "node:url";
+
+import { loadFrozenTemplateCompiler } from "./support/patina-template-provider.ts";
 
 const root = path.resolve(import.meta.dirname, "../..");
 const fixture = path.join(root, "tests/_fixtures/differential/lint/legacy-instance-apis-9217");
@@ -16,6 +20,19 @@ const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 await test("legacy instance API packets preserve every pinned original source and complete reference finding", () => {
   const authored = json("independent.json");
   const original = compressed("originals/independent.json.gz");
+  const boundaries = json("template-boundaries.json");
+  assert.equal(boundaries.records.length, 42);
+  assert.deepEqual(boundaries.provider, authored.provider);
+  assert.equal(
+    boundaries.original70Sha256,
+    hash(fs.readFileSync(path.join(fixture, "independent.json"))),
+  );
+  assert.deepEqual(
+    ["qualified", "product-accuracy", "refusal"].map(
+      (kind) => boundaries.records.filter((row) => row.qualification === kind).length,
+    ),
+    [27, 5, 10],
+  );
   const sources = compressed("originals/sources.json.gz");
   const manifest = json("originals/manifest.json");
   const requireProvider = createRequire(
@@ -191,7 +208,7 @@ await test("legacy instance API packets preserve every pinned original source an
     classified[row.classification] = (classified[row.classification] ?? 0) + 1;
   }
   assert.deepEqual(classified, provenance.audit.counts);
-  for (const row of [...authored.records, ...original.records]) {
+  for (const row of [...authored.records, ...original.records, ...boundaries.records]) {
     const source =
       row.source ??
       sources.find((item) => item.project === row.project && item.path === row.path)?.source;
@@ -203,6 +220,115 @@ await test("legacy instance API packets preserve every pinned original source an
       row.id ?? `${row.project}/${row.path}`,
     );
     assert.ok(row.messages.every((message) => message.fatal !== true));
+  }
+});
+
+await test("original Vue compiler scope and TS erasure preserve explicit reference blind spots", () => {
+  const boundaries = json("template-boundaries.json");
+  const { compiler, typescript } = loadFrozenTemplateCompiler(
+    "template-boundaries.json",
+    boundaries.compilerProvider,
+    "dom",
+  );
+  for (const altered of [
+    { ...boundaries.compilerProvider, sources: [] },
+    { ...boundaries.compilerProvider, vue: "0.0.0" },
+  ]) {
+    assert.throws(
+      () => loadFrozenTemplateCompiler("template-boundaries.json", altered, "dom"),
+      assert.AssertionError,
+      "the complete authenticated provider cannot omit source custody or change versions",
+    );
+  }
+  const helper = pathToFileURL(
+    path.join(root, "tests/tooling/support/patina-template-provider.ts"),
+  );
+  const requireTests = createRequire(path.join(root, "tests/package.json"));
+  const foreignManifest = requireTests.resolve("vue-language-tools-fixture-vue/package.json");
+  const foreign = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
+import { loadFrozenTemplateCompiler } from ${JSON.stringify(helper.href)};
+const provider = JSON.parse(readFileSync(${JSON.stringify(path.join(fixture, "template-boundaries.json"))}, "utf8")).compilerProvider;
+const foreignRequire = createRequire(process.env.VIZE_LEGACY_API_VUE_MANIFEST);
+const installed = foreignRequire("vue/package.json").version;
+const runtimeVersion = foreignRequire("vue").version;
+assert.equal(runtimeVersion, installed);
+assert.notEqual(installed, provider.vue, "the control must install a genuinely different Vue");
+assert.throws(() => loadFrozenTemplateCompiler("template-boundaries.json", provider, "dom"), assert.AssertionError);
+process.stdout.write(JSON.stringify({ installed, runtimeVersion, expected: provider.vue, refused: true }));`,
+    ],
+    {
+      encoding: "utf8",
+      timeout: 10_000,
+      env: {
+        ...process.env,
+        VIZE_LEGACY_API_VUE_MANIFEST: foreignManifest,
+      },
+    },
+  );
+  assert.equal(foreign.status, 0, foreign.error?.message ?? foreign.stderr);
+  const refusal = JSON.parse(foreign.stdout);
+  assert.equal(refusal.refused, true);
+  assert.equal(refusal.installed, "3.6.0-rc.6");
+  assert.equal(refusal.runtimeVersion, refusal.installed);
+  assert.equal(refusal.expected, boundaries.compilerProvider.vue);
+  assert.notEqual(refusal.installed, refusal.expected);
+  assert.equal(boundaries.syntaxProof.length, 5);
+  for (const expected of boundaries.syntaxProof) {
+    const original = boundaries.records.find((record) => record.id === expected.id);
+    assert.equal(original.qualification, "product-accuracy");
+    assert.ok(original.nativePolicyReason.length > 80);
+    assert.equal(expected.sourceSha256, hash(original.source));
+    const diagnostics = [];
+    const compiled = compiler.compile(original.source.slice(10, -11), {
+      mode: "module",
+      prefixIdentifiers: true,
+      expressionPlugins: ["typescript"],
+      onError(error) {
+        diagnostics.push({
+          name: error.name,
+          message: error.message,
+          code: error.code,
+          loc: error.loc,
+        });
+      },
+    });
+    const erased = typescript.transpileModule(compiled.code, {
+      compilerOptions: {
+        target: typescript.ScriptTarget.ES2022,
+        module: typescript.ModuleKind.ESNext,
+      },
+      reportDiagnostics: true,
+    });
+    assert.deepEqual(
+      {
+        id: original.id,
+        sourceSha256: hash(original.source),
+        code: compiled.code,
+        preamble: compiled.preamble ?? "",
+        map: compiled.map ?? null,
+        diagnostics,
+        typescriptOutput: erased.outputText,
+        typescriptDiagnostics: (erased.diagnostics ?? []).map((diagnostic) => ({
+          code: diagnostic.code,
+          category: diagnostic.category,
+          start: diagnostic.start ?? null,
+          length: diagnostic.length ?? null,
+          messageText: diagnostic.messageText,
+        })),
+      },
+      expected,
+      original.id,
+    );
+    assert.match(erased.outputText, /_ctx\.\$listeners/);
+    assert.deepEqual(expected.diagnostics, []);
+    assert.deepEqual(expected.typescriptDiagnostics, []);
   }
 });
 

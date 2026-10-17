@@ -29,12 +29,18 @@ pub(super) async fn did_change_watched_files(
         .observe_project_config_events_async(params.changes.clone())
         .await;
     #[cfg(feature = "native")]
+    server.queue_configuration_watches();
+    #[cfg(feature = "native")]
     for error in &reconfigured.errors {
         server
             .client
             .show_message(error.typ, error.message.clone())
             .await;
     }
+    #[cfg(feature = "native")]
+    let operation = server.with_configuration_admission(&reconfigured.checked_roots);
+    #[cfg(feature = "native")]
+    let server = &operation;
     #[cfg(all(feature = "native", feature = "experimental-source-navigation"))]
     if server.state.project_context_retired()
         && let Some(navigation) = &server.navigation
@@ -59,7 +65,7 @@ pub(super) async fn did_change_watched_files(
     }
     #[cfg(feature = "native")]
     for (uri, version) in reconfigured.documents {
-        let project = server.for_document(&uri).await;
+        let project = server.for_document_admitted(&uri).await;
         if project.state.documents.version(&uri) == Some(version)
             && let Some(source) = project.state.documents.text(&uri)
         {

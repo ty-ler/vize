@@ -1,11 +1,22 @@
 #![cfg(test)]
 #![expect(clippy::disallowed_macros, reason = "fixtures use std strings")]
 #![expect(clippy::disallowed_types, reason = "fixtures use std strings")]
+use sha2::{Digest, Sha256};
 use std::{
     fs,
     path::{Path, PathBuf},
     process::Command,
 };
+
+#[path = "support/vite_config.rs"]
+mod vite_config;
+
+fn digest(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
 
 fn temp_project_dir(test_name: &str) -> PathBuf {
     let nonce = std::time::SystemTime::now()
@@ -147,4 +158,154 @@ fn lint_limits_nuxt_link_guidance_to_nuxt_preset() {
     );
 
     let _ = fs::remove_dir_all(project_root);
+}
+
+#[test]
+fn six_default_presets_preserve_38_complete_cli_warning_off_repair_and_alias_packets() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../tests/_fixtures/lint-preset-default-warnings/cases.json"
+    ))
+    .unwrap();
+    let project = tempfile::tempdir().unwrap();
+    let mut commands = 0;
+    let mut receipts = Vec::new();
+    for case in corpus["cases"].as_array().unwrap() {
+        let filename = case["filename"].as_str().unwrap();
+        for preset in [
+            "happy-path",
+            "ecosystem",
+            "opinionated",
+            "nuxt",
+            "essential",
+            "incremental",
+            "default",
+        ] {
+            let enabled = case["enabledPresets"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|name| {
+                    name == if preset == "default" {
+                        "happy-path"
+                    } else {
+                        preset
+                    }
+                });
+            for mode in ["default", "off", "repair"] {
+                if preset == "default" && mode != "default" {
+                    continue;
+                }
+                let source = case[if mode == "repair" { "repair" } else { "source" }]
+                    .as_str()
+                    .unwrap();
+                write_project_file(project.path(), filename, source);
+                let mut config = serde_json::json!({"linter": {"preset": preset}});
+                if mode == "off" {
+                    config["linter"]["rules"] =
+                        serde_json::json!({(case["rule"].as_str().unwrap()): "off"});
+                }
+                let original_config = serde_json::to_vec(&config).unwrap();
+                let carrier = vite_config::source(&original_config);
+                write_project_file(project.path(), "vite.config.mjs", &carrier);
+                let argv = [
+                    "lint",
+                    "--config",
+                    "vite.config.mjs",
+                    "--format",
+                    "json",
+                    "--locale",
+                    "en",
+                    filename,
+                ];
+                let mut historical_argv = argv;
+                historical_argv[2] = "vize.config.json";
+                let output = Command::new(env!("CARGO_BIN_EXE_vize"))
+                    .current_dir(project.path())
+                    .args(argv)
+                    .output()
+                    .unwrap();
+                commands += 1;
+                receipts.push(serde_json::json!({
+                    "case": case["id"], "preset": preset, "mode": mode,
+                    "source": source, "config": config,
+                    "sourceSha256": digest(source.as_bytes()),
+                    "argv": argv, "historicalArgv": historical_argv,
+                    "originalConfigBytes": original_config,
+                    "originalConfigSha256": digest(&original_config),
+                    "configIdentity": {"historical": "vize.config.json", "current": "vite.config.mjs"},
+                    "configBytes": carrier.as_bytes(),
+                    "configSha256": digest(carrier.as_bytes()),
+                    "configAfterBytes": fs::read(project.path().join("vite.config.mjs")).unwrap(),
+                    "status": output.status.code(),
+                    "stdoutBytes": &output.stdout, "stderrBytes": &output.stderr
+                }));
+                assert_eq!(
+                    output.status.code(),
+                    Some(0),
+                    "{} / {preset} / {mode}: {}",
+                    case["id"],
+                    output_details(&output)
+                );
+                assert!(
+                    output.stderr.is_empty(),
+                    "{} / {preset} / {mode}: {}",
+                    case["id"],
+                    output_details(&output)
+                );
+                let warning = enabled && mode == "default";
+                let mut messages = if warning {
+                    vec![case["cliMessage"].clone()]
+                } else {
+                    vec![]
+                };
+                if mode != "repair"
+                    && case["baselinePresets"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .any(|name| {
+                            name == if preset == "default" {
+                                "happy-path"
+                            } else {
+                                preset
+                            }
+                        })
+                {
+                    messages.extend(
+                        case["baselineCliMessages"]
+                            .as_array()
+                            .unwrap()
+                            .iter()
+                            .cloned(),
+                    );
+                }
+                let expected = serde_json::json!([{
+                    "file": filename, "errorCount": 0, "warningCount": messages.len(), "messages": messages
+                }]);
+                assert_eq!(
+                    serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap(),
+                    expected,
+                    "{} / {preset} / {mode}: {}",
+                    case["id"],
+                    output_details(&output)
+                );
+                assert_eq!(
+                    fs::read_to_string(project.path().join(filename)).unwrap(),
+                    source
+                );
+                assert_eq!(
+                    fs::read_to_string(project.path().join("vite.config.mjs")).unwrap(),
+                    carrier
+                );
+            }
+        }
+    }
+    assert_eq!(commands, 38);
+    println!(
+        "{}",
+        serde_json::json!({
+            "schema": "vize.lint.preset-default-warning-cli", "version": 1,
+            "commands": commands, "runs": receipts
+        })
+    );
 }

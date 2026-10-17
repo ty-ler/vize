@@ -30,7 +30,7 @@ impl VirtualProject {
     /// rewrite entirely, which avoids needless write IO and keeps mtimes stable
     /// so TypeScript's own filesystem caches are not invalidated.
     pub fn materialize(&self) -> CorsaResult<()> {
-        self.materialize_snapshot(&FxHashSet::default(), &Default::default(), None)
+        self.materialize_snapshot(&FxHashSet::default(), &Default::default(), None, false)
             .map(|_| ())
     }
 
@@ -39,10 +39,15 @@ impl VirtualProject {
         preserved_files: &FxHashSet<PathBuf>,
         preserved_package_links: &vize_carton::FxHashMap<PathBuf, PathBuf>,
         query_paths: &[PathBuf],
+        preserved_arbitrary_extensions: bool,
     ) -> CorsaResult<super::MaterializedFileSnapshot> {
         let _lock = super::super::materialize_lock::MaterializeLock::acquire(&self.virtual_root)?;
-        let package_links =
-            self.materialize_snapshot(preserved_files, preserved_package_links, Some(query_paths))?;
+        let package_links = self.materialize_snapshot(
+            preserved_files,
+            preserved_package_links,
+            Some(query_paths),
+            preserved_arbitrary_extensions,
+        )?;
         let mut expected_files = self.expected_materialized_files();
         expected_files.extend(preserved_files.iter().cloned());
         super::MaterializedFileSnapshot::capture_with_links(&expected_files, &package_links)
@@ -53,6 +58,7 @@ impl VirtualProject {
         preserved_files: &FxHashSet<PathBuf>,
         preserved_package_links: &vize_carton::FxHashMap<PathBuf, PathBuf>,
         query_paths: Option<&[PathBuf]>,
+        preserved_arbitrary_extensions: bool,
     ) -> CorsaResult<vize_carton::FxHashMap<PathBuf, PathBuf>> {
         let mut expected_files = self.expected_materialized_files();
         expected_files.extend(preserved_files.iter().cloned());
@@ -123,7 +129,19 @@ impl VirtualProject {
         // Current package links survive the runtime prune; the link pass
         // below repairs any whose target changed.
         let mut runtime_preserved = self.root_package_shadow_scope_entries();
+        // Another live member can own a generated package even when this host
+        // has no imports. Preserve its complete union-owned root scope too.
+        let root_modules = self.virtual_root.join("node_modules");
+        runtime_preserved.extend(expected_files.iter().filter_map(|path| {
+            let relative = path.strip_prefix(&root_modules).ok()?;
+            let std::path::Component::Normal(entry) = relative.components().next()? else {
+                return None;
+            };
+            Some(root_modules.join(entry))
+        }));
         runtime_preserved.extend(package_links.iter().map(|link| link.virtual_dir.clone()));
+        runtime_preserved.sort();
+        runtime_preserved.dedup();
         profile!(
             "canon.project.runtime_deps",
             materialize_runtime_dependencies(
@@ -243,6 +261,7 @@ impl VirtualProject {
                     None,
                     false,
                     Some(includes.as_slice()),
+                    preserved_arbitrary_extensions,
                 )
             } else {
                 self.write_tsconfig_file(&path, None, false)
@@ -275,6 +294,7 @@ impl VirtualProject {
                 Some(out_dir),
                 declaration_map,
                 Some(&include_paths),
+                false,
             )
         )?;
         Ok(config_path)
@@ -323,6 +343,9 @@ impl VirtualProject {
     }
 
     pub(super) fn resolved_tsconfig_path(&self) -> Option<PathBuf> {
+        if let Some(snapshot) = self.compiler_configuration.as_ref() {
+            return snapshot.tsconfig_path().map(Path::to_path_buf);
+        }
         if let Some(ref tsconfig_path) = self.tsconfig_path {
             return Some(tsconfig_path.clone());
         }
@@ -335,19 +358,33 @@ impl VirtualProject {
     /// anchored tsconfig plus, for a solution-style shell, everything it
     /// references (#3923 cache invalidation).
     pub fn governing_config_paths(&self) -> Vec<PathBuf> {
+        if let Some(snapshot) = self.compiler_configuration.as_ref() {
+            return snapshot.dependencies().to_vec();
+        }
+        self.governing_config_paths_with_inputs(None)
+    }
+
+    pub(super) fn governing_config_paths_with_inputs(
+        &self,
+        inputs: Option<&super::tsconfig_gen::compiler_inputs::CompilerInputs>,
+    ) -> Vec<PathBuf> {
         let Some(anchored) = self.resolved_tsconfig_path() else {
             return Vec::new();
         };
         let mut config_roots = vec![anchored.clone()];
-        config_roots.extend(super::tsconfig_gen::references::referenced_project_configs(
-            &anchored,
-        ));
+        config_roots.extend(
+            super::tsconfig_gen::references::referenced_project_configs_with_inputs(
+                &anchored, inputs,
+            ),
+        );
         let mut paths = config_roots.clone();
         for config in config_roots {
-            if let Ok(flattened) = self.load_compiler_options_flattened(Some(&config)) {
+            if let Ok(flattened) =
+                self.load_compiler_options_flattened_with_inputs(Some(&config), inputs)
+            {
                 paths.extend(flattened.input_paths);
             }
-            paths.extend(self.vue_target_manifest_path(&config));
+            paths.extend(self.vue_target_manifest_path_with_inputs(&config, inputs));
         }
         paths.sort();
         paths.dedup();

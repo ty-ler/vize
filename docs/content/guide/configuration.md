@@ -139,4 +139,4 @@ See [Shared Vue configuration](./vue-configuration.md), the
 See [Experimentals](./experimentals.md) for optional project features.
 
 > [!NOTE]
-> Vize 0.457.0: The CLI and editor use the existing Vite and TypeScript project files. Migrate removed dedicated configuration before deleting it.
+> The CLI and editor use the existing Vite and TypeScript project files. Migrate removed dedicated configuration before deleting it.

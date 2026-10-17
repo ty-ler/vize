@@ -73,7 +73,7 @@ test("actual historical capture composition preserves original Vue2 order and th
       "./.github/actions/test-native-vue2-scriptless-sfc",
     ],
   );
-  assert.equal(outer.runs.steps[1].if, "${{ always() }}");
+  assert.equal(outer.runs.steps[1].if, "${{ !cancelled() }}");
   for (const step of outer.runs.steps)
     assert.deepEqual(step.with, { "comparison-base": "${{ inputs.comparison-base }}" });
   const worker = workflow.jobs["test-scripts"];
@@ -88,7 +88,7 @@ test("actual historical capture composition preserves original Vue2 order and th
     (step: any) => step.uses === "./.github/actions/test-native-historical-sfc-documents",
   );
   assert.equal(hooks.length, 1);
-  assert.equal(hooks[0].if, "${{ always() && inputs.shard == '1' }}");
+  assert.equal(hooks[0].if, "${{ !cancelled() && inputs.shard == '1' }}");
   assert.deepEqual(hooks[0].with, {
     "comparison-base": "${{ github.sha }}",
   });

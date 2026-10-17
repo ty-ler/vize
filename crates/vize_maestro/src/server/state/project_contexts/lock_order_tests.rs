@@ -45,6 +45,10 @@ pub(super) fn before_config_install() {
     arrive(Phase::ConfigInstall);
 }
 
+pub(super) fn at_config_install(action: impl FnOnce() + 'static) {
+    HOOK.with(|slot| *slot.borrow_mut() = Some((Phase::ConfigInstall, Box::new(action))));
+}
+
 fn pause_at(phase: Phase) -> (mpsc::Receiver<()>, mpsc::Sender<()>, impl FnOnce()) {
     let (entered_tx, entered_rx) = mpsc::channel();
     let (resume_tx, resume_rx) = mpsc::channel();

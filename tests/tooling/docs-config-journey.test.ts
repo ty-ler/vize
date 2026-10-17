@@ -123,15 +123,30 @@ void test("every locale publishes the same complete Vite setup and native config
     assert.match(config.source, /defineConfig\(vpConfig\)\.withVue/);
     assert.match(config.source, /`--tsconfig`/);
     assert.doesNotMatch(config.html, /<strong>\s*<code>vize\.config/);
-    assert.ok(startup.source.includes("> [!NOTE]"), `${locale}: publication scope stays visible`);
+    const startupNote = startup.source.match(/^> \[!NOTE\]\n(> .+)$/m)?.[1];
+    assert.ok(startupNote, `${locale}: publication scope stays visible`);
+    for (const option of [
+      "`vue:`",
+      "`vite.config.*`",
+      "`tsconfig.json`",
+      "`vueCompilerOptions`",
+      "`vize.config.*`",
+      "`vize:`",
+    ]) {
+      assert.ok(startupNote.includes(option), `${locale}: startup migration explains ${option}`);
+    }
     assert.ok(config.source.includes("> [!NOTE]"), `${locale}: migration scope stays visible`);
     assert.match(config.source, /`vize\.config\.\*`/);
     for (const document of [startup, config]) {
-      assert.match(document.source, /Vize 0\.457\.0/, `${locale}: released setup baseline`);
+      assert.doesNotMatch(
+        document.source,
+        /0\.457\.0/,
+        `${locale}: configuration migration must not claim the released setup baseline`,
+      );
       assert.doesNotMatch(
         document.source,
         /next release|次(?:の|回)リリース|prochaine version|próxima versão|下一个版本/u,
-        `${locale}: released configuration is no longer described as pending`,
+        `${locale}: configuration instructions remain concrete`,
       );
     }
   }

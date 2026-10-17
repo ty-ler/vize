@@ -142,4 +142,4 @@ Il n’existe pas de `extends` propre à Vize. Importez des objets JavaScript or
 La [référence partagée](./configuration-reference.md) décrit la recherche des fichiers, les périmètres, la résolution des types Vue et les réglages LSP/Musea. Consultez la [référence du compilateur](./compiler-configuration-reference.md) et les [fonctions expérimentales](/guide/experimentals.md) pour leurs options.
 
 > [!NOTE]
-> Vize 0.457.0: La CLI et l’éditeur lisent les projets Vite et TypeScript existants. Migrez les anciens réglages dédiés avant de supprimer leurs fichiers.
+> La CLI et l’éditeur lisent les projets Vite et TypeScript existants. Migrez les anciens réglages dédiés avant de supprimer leurs fichiers.

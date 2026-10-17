@@ -1,12 +1,14 @@
 //! Await root-local admission before consuming a bounded config worker.
 use super::paths::physical_path;
-use super::{Arc, PathBuf, ProjectContextKey, ServerState, Url};
+use super::{Arc, Path, PathBuf, ProjectContextKey, ServerState, Url};
 use tower_lsp::lsp_types::{FileEvent, MessageType, ShowMessageParams};
 
 #[derive(Default)]
 pub(crate) struct ProjectConfigChanges {
     pub documents: Vec<(Url, i32)>,
     pub errors: Vec<ShowMessageParams>,
+    /// Roots actually checked in this operation, including rejected attempts.
+    pub(crate) checked_roots: Vec<PathBuf>,
     pub(super) rejected: Vec<(ProjectContextKey, Vec<Url>)>,
     pub(super) configuration_events: Vec<Url>,
 }
@@ -74,6 +76,10 @@ pub(super) fn reload_error(root: &std::path::Path, changes: &[Url]) -> ShowMessa
     }
 }
 
+pub(super) fn worker_unavailable_error() -> ShowMessageParams {
+    ShowMessageParams { typ: MessageType::ERROR, message: "Vize could not reload project configuration because the configuration worker is unavailable. Keeping the last good configuration.".into() }
+}
+
 impl ServerState {
     pub(super) fn config_reload_gates(
         &self,
@@ -136,6 +142,7 @@ impl ServerState {
         for next in results {
             result.documents.extend(next.documents);
             result.errors.extend(next.errors);
+            result.checked_roots.extend(next.checked_roots);
             result.rejected.extend(next.rejected);
             result
                 .configuration_events
@@ -189,7 +196,7 @@ impl ServerState {
         }
         let roots = self.workspace_root_paths();
         let mut result = ProjectConfigChanges {
-            errors: vec![ShowMessageParams { typ: MessageType::ERROR, message: "Vize could not reload project configuration because the configuration worker is unavailable. Keeping the last good configuration.".into() }],
+            errors: vec![worker_unavailable_error()],
             ..Default::default()
         };
         for (key, dependencies) in keys {
@@ -272,4 +279,28 @@ impl ServerState {
     ) -> ProjectConfigChanges {
         self.apply_project_config_events(changes, self.project_config_event_scope(changes))
     }
+}
+
+pub(super) fn known_config_events(
+    root: &Path,
+    dependencies: &[PathBuf],
+    markers: &[PathBuf],
+    changes: &[Url],
+) -> Vec<Url> {
+    let mut changed = changes
+        .iter()
+        .filter(|change| {
+            change.to_file_path().is_ok_and(|path| {
+                let path = physical_path(&path);
+                dependencies
+                    .iter()
+                    .any(|dependency| physical_path(dependency) == path)
+                    || (markers.contains(&path) && path.starts_with(physical_path(root)))
+            })
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    changed.sort();
+    changed.dedup();
+    changed
 }

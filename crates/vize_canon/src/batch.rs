@@ -10,7 +10,7 @@ mod declaration_path;
 mod error;
 mod executor;
 mod import_rewriter;
-pub(crate) use import_rewriter::declaration_module_path;
+pub(crate) use import_rewriter::{ModuleSpecifierFactsCache, declaration_module_path};
 pub(crate) mod import_rewriter_alias;
 #[cfg(test)]
 mod import_rewriter_authored_vue_ts_tests;
@@ -43,14 +43,15 @@ pub use type_checker::{
 };
 pub use virtual_project::{
     BatchTopologyMetrics, CONTENT_MAPPER_GENERATED_DIAGNOSTIC_CODE,
-    CONTENT_MAPPER_SFC_PARSE_ERROR_CODE, CONTENT_MAPPER_VIRTUAL_EXTENSION, ContentMapperDiagnostic,
-    ContentMapperDiagnosticDirective, ContentMapperDiagnosticDirectives, ContentMapperSemanticLink,
-    ContentMapperSpan, ContentMapperTransform, ContentMapperTransformOptions,
-    ContentMapperUnusedExpectDiagnostic, JsxDocumentVirtualTs, OriginalPosition,
-    PACKAGE_REACHABILITY_BUDGET_REVISION, PackageRouteReachability, ReachabilityOutcome,
-    ReachabilityWork, TsconfigOwnershipCache, TsconfigOwnershipOptions, TsconfigSourceKind,
-    VirtualFile, VirtualProject, VueDocumentVirtualTs, VueDocumentVirtualTsOptions,
-    external_mirror_original_path, generate_jsx_document_virtual_ts,
+    CONTENT_MAPPER_SFC_PARSE_ERROR_CODE, CONTENT_MAPPER_VIRTUAL_EXTENSION,
+    CompilerConfigurationAttempt, CompilerConfigurationSnapshot, ConfigurationObservations,
+    ContentMapperDiagnostic, ContentMapperDiagnosticDirective, ContentMapperDiagnosticDirectives,
+    ContentMapperSemanticLink, ContentMapperSpan, ContentMapperTransform,
+    ContentMapperTransformOptions, ContentMapperUnusedExpectDiagnostic, JsxDocumentVirtualTs,
+    OriginalPosition, PACKAGE_REACHABILITY_BUDGET_REVISION, PackageRouteReachability,
+    ReachabilityOutcome, ReachabilityWork, TsconfigOwnershipCache, TsconfigOwnershipOptions,
+    TsconfigSourceKind, VirtualFile, VirtualProject, VueDocumentVirtualTs,
+    VueDocumentVirtualTsOptions, external_mirror_original_path, generate_jsx_document_virtual_ts,
     generate_vue_content_mapper_transform, generate_vue_content_mapper_transform_with_options,
     generate_vue_document_virtual_ts, generate_vue_document_virtual_ts_with_options,
     is_vue_runtime_support_specifier, legacy_project_virtual_roots, project_virtual_lock_paths,

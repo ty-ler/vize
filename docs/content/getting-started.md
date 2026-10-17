@@ -56,7 +56,7 @@ Apply fixes with `vp run check -- --fix`. Use `vp run` for Vize's generated task
 - [Use the JavaScript APIs through JSR](./guide/jsr.md) from Node, Deno or Bun.
 
 > [!NOTE]
-> Vize 0.457.0 supports shared Vite configuration in the native CLI and `init` without a dedicated Vize file. Keep the CLI, Vite integration and editor extension up to date to use the shared configuration workflow. The [reference](./guide/configuration-reference.md) covers discovery, precedence and migration from removed dedicated formats.
+> The CLI, Vite integration and editor share `vue:` settings in `vite.config.*` and use the TypeScript project and `vueCompilerOptions` from `tsconfig.json`. Dedicated `vize.config.*` files and top-level `vize:` settings are no longer supported; see the [configuration guide](./guide/configuration.md) for migration.
 
 ## Use Vize without Vite+
 

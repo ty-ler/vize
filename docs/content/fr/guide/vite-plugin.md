@@ -65,7 +65,7 @@ Pour les projets Vite Plus, gardez le type de client Vite Plus et ajoutez le pac
 
 ## Partager les réglages natifs
 
-Placez les réglages partagés sous `vue:` dans `vue.vite.config.*`. Avec Vite+, utilisez `defineConfig(vpConfig).withVue(vueConfig)` depuis `@vizejs/vite-plugin/vite-plus`. Les options du compilateur se placent sous `vue.compiler` ; les réglages TypeScript restent dans `compilerOptions` et les options de templates dans `vueCompilerOptions` de `tsconfig.json`. Le [guide de configuration](./configuration.md) décrit la recherche et la migration.
+Placez les réglages partagés sous `vue:` dans `vite.config.*`. Avec Vite+, utilisez `defineConfig(vpConfig).withVue(vueConfig)` depuis `@vizejs/vite-plugin/vite-plus`. Les options du compilateur se placent sous `vue.compiler` ; les réglages TypeScript restent dans `compilerOptions` et les options de templates dans `vueCompilerOptions` de `tsconfig.json`. Le [guide de configuration](./configuration.md) décrit la recherche et la migration.
 
 <span id="compiler-options"></span>
 

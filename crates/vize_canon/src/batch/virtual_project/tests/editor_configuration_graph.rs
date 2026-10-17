@@ -132,10 +132,13 @@ fn absent_implicit_config_keeps_defaults_but_an_explicit_missing_config_is_named
     ] {
         let message = cstr!("{error}");
         assert!(
-            message.starts_with(&cstr!(
-                "Configuration error: cannot read tsconfig {}:",
-                config.display()
-            )),
+            message.starts_with(
+                cstr!(
+                    "Configuration error: cannot read tsconfig {}:",
+                    config.display()
+                )
+                .as_str()
+            ),
             "{message}"
         );
     }

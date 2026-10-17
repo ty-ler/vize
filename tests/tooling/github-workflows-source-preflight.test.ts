@@ -1,12 +1,10 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import { parse } from "yaml";
-
-import {
-  planToolingTests,
-  toolingTestFiles,
-} from "../../tools/support/compat/github/plan-tooling-tests.mjs";
 
 import { readRepoFile, root } from "./support/github-workflows.ts";
 
@@ -120,10 +118,45 @@ test("full checks retain required inventory preflights and exhaustive tooling be
   assert.equal(worker.runs.steps[execute].run, "vp run --workspace-root test:scripts:planned");
   assert.equal(worker.runs.steps[execute].env.VIZE_TOOLING_TEST_TIER, "merge");
   assert.equal(worker.runs.steps[execute]["continue-on-error"], undefined);
-  const plan = planToolingTests([], { tier: "merge" });
-  assert.deepEqual(plan.tests, toolingTestFiles());
-  for (const file of ["davinci-module-layout.test.ts", "retired-tooling-languages.test.ts"]) {
-    assert.ok(plan.tests.includes(`tests/tooling/${file}`), `${file} must remain in full health`);
+  const temporary = mkdtempSync(join(tmpdir(), "full-tooling-inventory-"));
+  try {
+    const output = join(temporary, "plan.json");
+    const result = spawnSync(
+      process.execPath,
+      [
+        "tools/support/compat/github/plan-tooling-tests.mjs",
+        "0".repeat(40),
+        "1".repeat(40),
+        "--tier",
+        "merge",
+        "--output",
+        output,
+      ],
+      {
+        cwd: root,
+        encoding: "utf8",
+        env: { ...process.env, GITHUB_OUTPUT: "", GITHUB_STEP_SUMMARY: "" },
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const plan: unknown = JSON.parse(readFileSync(output, "utf8"));
+    assert.ok(plan !== null && typeof plan === "object" && "tests" in plan);
+    assert.ok(Array.isArray(plan.tests));
+    const selected: unknown[] = plan.tests;
+    assert.ok(selected.every((file): file is string => typeof file === "string"));
+    const inventory = ["tests/tooling", "tests/tooling/davinci", "tests/tooling/release"]
+      .flatMap((directory) =>
+        readdirSync(join(root, directory))
+          .filter((name) => /\.test\.(?:ts|mjs)$/.test(name))
+          .map((name) => `${directory}/${name}`),
+      )
+      .sort();
+    assert.deepEqual(selected, inventory);
+    for (const file of ["davinci-module-layout.test.ts", "retired-tooling-languages.test.ts"]) {
+      assert.ok(selected.includes(`tests/tooling/${file}`), `${file} must remain in full health`);
+    }
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
   }
   assert.deepEqual(check.jobs["test-scripts-gate"].needs, [
     "full-source-cli",
