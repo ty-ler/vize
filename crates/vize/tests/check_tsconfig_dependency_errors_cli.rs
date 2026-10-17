@@ -37,7 +37,10 @@ fn run(root: &Path, args: &[&str], code: i32, expected_stderr: &str) {
 
 fn error(config: &Path, malformed: bool) -> String {
     let reason = if malformed {
-        "JSON parse error: key must be a string at line 1 column 2".to_owned()
+        format!(
+            "Configuration error: cannot parse tsconfig {}: JSON parse error: key must be a string at line 1 column 2",
+            config.with_file_name("tsconfig.base.json").display()
+        )
     } else {
         format!(
             "Configuration error: cannot resolve tsconfig extends \"./tsconfig.base.json\" from {}",

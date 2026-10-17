@@ -111,7 +111,7 @@ impl CompilerInputs {
             return Ok(parsed.clone());
         }
         let content = self.read_content(&path)?;
-        let parsed = profile!("canon.tsconfig.parse", parse_jsonc_value(&content))?;
+        let parsed = parse_jsonc_at_path(&path, &content)?;
         self.parsed.borrow_mut().insert(path, parsed.clone());
         Ok(parsed)
     }
@@ -236,12 +236,22 @@ pub(in super::super) fn read_jsonc(
                 path.display()
             ))
         })?;
-    profile!("canon.tsconfig.parse", parse_jsonc_value(&content))
+    parse_jsonc_at_path(path, &content)
+}
+
+fn parse_jsonc_at_path(path: &Path, content: &str) -> CorsaResult<Value> {
+    profile!("canon.tsconfig.parse", parse_jsonc_value(content)).map_err(|error| {
+        CorsaError::Configuration(vize_carton::cstr!(
+            "cannot parse tsconfig {}: {error}",
+            path.display()
+        ))
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{CompilerInputs, ConfigurationObservations};
+    use super::{CompilerInputs, ConfigurationObservations, read_jsonc};
+    use crate::{CompilerConfigurationSnapshot, CorsaError, snapshot_tsconfig_compiler_options};
 
     #[test]
     fn owned_observations_preserve_original_read_and_absent_candidate_identity() {
@@ -272,5 +282,82 @@ mod tests {
         inputs.mark_changed();
         assert!(inputs.observations().changed_paths().is_empty());
         assert!(inputs.observations().needs_confirmation());
+    }
+
+    #[test]
+    fn cached_and_live_parse_errors_keep_the_consumed_file_and_complete_parser_reason() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = vize_carton::path::canonicalize_non_verbatim(directory.path());
+        let path = root.join("tsconfig.base.json");
+        std::fs::write(&path, "{\n").unwrap();
+        let expected = vize_carton::cstr!(
+            "Configuration error: cannot parse tsconfig {}: JSON parse error: EOF while parsing a value at line 2 column 0",
+            path.display()
+        );
+        let inputs = CompilerInputs::default();
+        for error in [
+            read_jsonc(&path, Some(&inputs)).unwrap_err(),
+            read_jsonc(&path, None).unwrap_err(),
+        ] {
+            assert!(matches!(error, CorsaError::Configuration(_)));
+            assert_eq!(vize_carton::cstr!("{error}"), expected);
+        }
+        std::fs::write(
+            &path,
+            "{/* repaired */ \"compilerOptions\": {\"strict\": true,},}\n",
+        )
+        .unwrap();
+        // A capture keeps its original consumed revision even after physical repair.
+        let error = read_jsonc(&path, Some(&inputs)).unwrap_err();
+        assert_eq!(vize_carton::cstr!("{error}"), expected);
+        assert!(inputs.observations().needs_confirmation());
+        let repaired = serde_json::json!({"compilerOptions": {"strict": true}});
+        assert_eq!(read_jsonc(&path, None).unwrap(), repaired);
+        assert_eq!(
+            CompilerInputs::default().read_jsonc(&path).unwrap(),
+            repaired
+        );
+    }
+
+    #[test]
+    fn malformed_inherited_file_is_named_by_both_admitted_and_live_compiler_consumers() {
+        let directory = tempfile::tempdir().unwrap();
+        let root = vize_carton::path::canonicalize_non_verbatim(directory.path());
+        let app = root.join("app");
+        std::fs::create_dir(&app).unwrap();
+        let config = app.join("tsconfig.json");
+        let base = root.join("tsconfig.base.json");
+        let source =
+            r#"{"extends":"../tsconfig.base.json","compilerOptions":{"strictNullChecks":false}}"#;
+        std::fs::write(&config, source).unwrap();
+        std::fs::write(&base, "{invalid").unwrap();
+        let expected = vize_carton::cstr!(
+            "Configuration error: cannot parse tsconfig {}: JSON parse error: key must be a string at line 1 column 2",
+            base.display()
+        );
+        let attempt = CompilerConfigurationSnapshot::capture_attempt(&app, Some(&config));
+        assert!(attempt.dependencies.contains(&base));
+        for error in [
+            attempt.outcome.err().unwrap(),
+            snapshot_tsconfig_compiler_options(&app, &config).unwrap_err(),
+        ] {
+            assert!(matches!(error, CorsaError::Configuration(_)));
+            assert_eq!(vize_carton::cstr!("{error}"), expected);
+        }
+        std::fs::write(
+            &base,
+            "{/* inherited */ \"compilerOptions\": {\"strict\": true,},}\n",
+        )
+        .unwrap();
+        let admitted = CompilerConfigurationSnapshot::capture(&app, Some(&config)).unwrap();
+        assert!(admitted.dependencies().contains(&base));
+        assert_eq!(
+            snapshot_tsconfig_compiler_options(&app, &config).unwrap(),
+            serde_json::json!({"strict":true,"strictNullChecks":false})
+                .as_object()
+                .unwrap()
+                .clone()
+        );
+        assert_eq!(std::fs::read_to_string(&config).unwrap(), source);
     }
 }
