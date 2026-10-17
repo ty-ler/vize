@@ -89,14 +89,12 @@ fn run(layout: Layout, open_other: bool, reverse: bool, original_wait: bool) {
     publication(&mut process, &probe, 2, json!([]));
     fixture.assert_authored_unchanged();
     if original_wait {
-        // The exact reporter awaits any reply, without asserting success.
-        // Pinned tower-lsp rejects present params for a no-params request.
+        // Preserve the reporter's null lifecycle parameters. The editor
+        // boundary accepts them as the canonical no-params shutdown request.
         process.send(json!({ "jsonrpc": "2.0", "id": 9, "method": "shutdown", "params": null }));
         assert_eq!(
             receive(&mut process, |message| message["id"] == 9),
-            json!({ "jsonrpc": "2.0", "id": 9, "error": {
-                "code": -32602, "message": "Unexpected params: null"
-            } })
+            json!({ "jsonrpc": "2.0", "id": 9, "result": null })
         );
         process.send(json!({ "jsonrpc": "2.0", "method": "exit", "params": null }));
     } else {
