@@ -49,6 +49,10 @@ async fn assert_typed_hover(bridge: &CorsaBridge, source: &Path, text: &str, typ
 
 #[test]
 #[cfg(unix)]
+#[expect(
+    clippy::disallowed_types,
+    reason = "cold and warm native owners share immutable admitted compiler snapshots"
+)]
 fn admitted_compiler_configuration_survives_deleted_extends_before_first_native_request_and_rebuilds()
  {
     let native = resolve_test_tsgo_binary();
