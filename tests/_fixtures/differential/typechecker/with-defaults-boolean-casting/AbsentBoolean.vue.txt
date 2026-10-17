@@ -1,9 +1,0 @@
-<script setup lang="ts">
-import { flag } from './expect';
-
-withDefaults(defineProps<{ open?: boolean; label?: string }>(), { label: 'Menu' });
-</script>
-
-<template>
-  <p>{{ label }} {{ flag(open) }}</p>
-</template>

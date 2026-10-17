@@ -1,3 +1,0 @@
-import Child from './Child.vue';
-type Props = InstanceType<typeof Child>['$props'];
-export const args: Props = { code: 'y' };

@@ -1,1 +1,0 @@
-<template><div v-bind:[keys['name]']].camel.stop="literal" v-pre><Child is="vue:Child"/></div><p :id="active"/></template>

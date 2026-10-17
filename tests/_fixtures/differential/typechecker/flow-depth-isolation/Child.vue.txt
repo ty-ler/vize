@@ -1,7 +1,0 @@
-<script setup lang="ts">
-defineProps<{ label: string; title?: string }>();
-</script>
-
-<template>
-  <span :title="title">{{ label }}</span>
-</template>

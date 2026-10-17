@@ -1,4 +1,0 @@
-<script setup lang="ts">
-import { type Ref, ref } from '@vue/reactivity'
-</script>
-<template><div>ok</div></template>
