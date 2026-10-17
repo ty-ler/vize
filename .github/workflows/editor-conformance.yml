@@ -33,8 +33,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
-          # Diagnostic harness changes are separate from the measured product.
-          ref: 06a51573858160eca1dfe4d54a06f90812f0f6b9
+          # Diagnostic producer adds only reviewed guard observations to product06a.
+          ref: 279d0a12095aa1e04de0a7114c210d39aab83242
       # The runner's rustup installs the toolchain pinned in rust-toolchain.toml.
       - name: Install the repository Rust toolchain
         run: |
@@ -51,7 +51,7 @@ jobs:
       - name: Build vize CLI
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 06a51573858160eca1dfe4d54a06f90812f0f6b9
+          test "$(git rev-parse HEAD)" = 279d0a12095aa1e04de0a7114c210d39aab83242
           cargo build --profile ci -p vize
           {
             echo "producer=$(git rev-parse HEAD)"

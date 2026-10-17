@@ -297,7 +297,7 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
   assert.match(observation, /VIZE_CONFORMANCE_TRANSCRIPT=.*protocol\.jsonl/);
   assert.match(observation, /VIZE_RICH_CUSTODY_OUTPUT=.*public-api\.json/);
   const producer = workflow.jobs.server.steps;
-  assert.equal(producer[0].with.ref, "06a51573858160eca1dfe4d54a06f90812f0f6b9");
+  assert.equal(producer[0].with.ref, "279d0a12095aa1e04de0a7114c210d39aab83242");
   assert.match(
     producer.find((step: { name?: string }) => step.name === "Build vize CLI").run,
     /cargo build --profile ci -p vize/,
