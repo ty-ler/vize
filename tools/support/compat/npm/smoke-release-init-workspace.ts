@@ -120,15 +120,21 @@ export function runWorkspacePackageCheck(context: SmokeContext): void {
   assert.equal(init(["--no-install"]), expectedInitOutput(shape, project, manager, "apply"));
   const generatedManifest = readJson(path.join(project, "package.json"));
   assert.deepEqual(generatedManifest.scripts, shape.expectedScripts);
+  // --no-install writes the integrations and scripts; the printed dependency
+  // plan is applied by the root install below, leaving authored specs intact here.
   assert.deepEqual(
-    Object.keys(generatedManifest.devDependencies).sort(),
-    shape.expectedDevDependencies,
+    generatedManifest.devDependencies,
+    JSON.parse(authored["package.json"]).devDependencies,
   );
 
   // Init's complete generated plan was checked above. Redirect only its named
   // dependencies to this campaign's tarballs, then link the entire workspace:
   // an app-scoped pnpm add does not install an edited sibling manifest.
   installPackedWorkspaceDependencies(workspace, shape.plannedDependencies, context.packed);
+  assert.deepEqual(
+    Object.keys(readJson(path.join(project, "package.json")).devDependencies).sort(),
+    shape.expectedDevDependencies,
+  );
   const vize = fs.realpathSync(path.join(project, "node_modules", "vize"));
   assert.ok(vize.startsWith(workspace), `vize resolved outside the workspace: ${vize}`);
   assert.equal(readJson(path.join(vize, "package.json")).version, context.versions.get("vize"));
