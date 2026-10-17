@@ -8,7 +8,7 @@ use crate::config::{
 };
 
 use super::{
-    LoadedProjectConfig, LoadedRawConfig, checked::load_raw_editor_config_checked,
+    LoadedProjectConfig, LoadedRawConfig, checked::load_raw_editor_config_attempt,
     project_config_snapshot,
 };
 
@@ -19,6 +19,9 @@ pub struct LoadedLspConfig {
     pub valid: bool,
     /// Evaluation failure retained for an editor-visible reload error.
     pub error: Option<std::string::String>,
+    /// Last attempt's actual inputs and missing candidates, for repair watching
+    /// only. These paths never make a failed configuration authoritative.
+    pub watch_dependencies: Vec<PathBuf>,
     /// The same raw evaluation retains ordered lint scopes and selected root.
     pub project: LoadedProjectConfig,
     pub config: VizeConfig,
@@ -35,7 +38,8 @@ pub struct LoadedLspConfig {
 /// Evaluate JS/TS/PKL only once so the editor timeout and type checker
 /// settings always come from the same config snapshot.
 pub fn load_lsp_config_snapshot(path: Option<&Path>) -> LoadedLspConfig {
-    let (loaded, error) = match load_raw_editor_config_checked(path) {
+    let attempt = load_raw_editor_config_attempt(path);
+    let (loaded, error) = match attempt.outcome {
         Ok(loaded) => (loaded, None),
         Err(error) => {
             eprintln!("Warning: Failed to load editor project configuration: {error}");
@@ -51,6 +55,7 @@ pub fn load_lsp_config_snapshot(path: Option<&Path>) -> LoadedLspConfig {
     let mut snapshot = LoadedLspConfig::from_project(project_config_snapshot(loaded));
     snapshot.valid = error.is_none();
     snapshot.error = error;
+    snapshot.watch_dependencies = attempt.dependencies;
     snapshot
 }
 
@@ -67,6 +72,7 @@ impl LoadedLspConfig {
         Self {
             valid: true,
             error: None,
+            watch_dependencies: Vec::new(),
             project,
             config,
             source_path,

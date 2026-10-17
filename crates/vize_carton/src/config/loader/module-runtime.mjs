@@ -4,7 +4,14 @@ import { mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { createRequire, globalPaths } from "node:module";
 import * as nodeModule from "node:module";
 import { tmpdir } from "node:os";
-import { dirname as moduleConfigDirectory, isAbsolute, join, relative, sep } from "node:path";
+import {
+  dirname as moduleConfigDirectory,
+  extname,
+  isAbsolute,
+  join,
+  relative,
+  sep,
+} from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 export function configModuleImportPath(configURL, windows = process.platform === "win32") {
@@ -17,6 +24,38 @@ export async function importConfigModule(configPath, withoutVite) {
   ).namespace;
 }
 
+/** Observe real failed requests, without choosing a replacement resolution. */
+export function failedConfigModuleRequests(error) {
+  const paths = new Set();
+  if (error?.code === "ERR_MODULE_NOT_FOUND" && typeof error.url === "string") {
+    try {
+      const url = new URL(error.url);
+      if (url.protocol === "file:") paths.add(fileURLToPath(url));
+    } catch {}
+  }
+  for (const diagnostic of Array.isArray(error?.errors) ? error.errors : []) {
+    if (
+      diagnostic?.code !== "UNRESOLVED_IMPORT" ||
+      typeof diagnostic.id !== "string" ||
+      !isAbsolute(diagnostic.id) ||
+      typeof diagnostic.exporter !== "string"
+    )
+      continue;
+    paths.add(diagnostic.id);
+    const request = diagnostic.exporter;
+    // Public bundle diagnostics expose the requested importer/specifier, not
+    // extension or package search candidates. Observe only explicit file paths.
+    if (!(isAbsolute(request) || request.startsWith("./") || request.startsWith("../"))) continue;
+    try {
+      const url = isAbsolute(request)
+        ? pathToFileURL(request)
+        : new URL(request, pathToFileURL(diagnostic.id));
+      if (url.protocol === "file:" && extname(url.pathname)) paths.add(fileURLToPath(url));
+    } catch {}
+  }
+  return [...paths];
+}
+
 /** Keep runtime imports observable until the optional export evaluator settles. */
 async function captureConfigEvaluation(
   load,
@@ -24,6 +63,7 @@ async function captureConfigEvaluation(
   registerModuleHooks,
   evaluate,
   privateDirectory,
+  observeDependencies,
 ) {
   const files = new Set([configPath]);
   const owners = new Set([pathToFileURL(configPath).href]);
@@ -55,8 +95,16 @@ async function captureConfigEvaluation(
     for (const path of dependencies) if (!isPrivate(path)) files.add(path);
     const value = evaluate ? await evaluate(namespace) : namespace;
     return { namespace, value, dependencies: [...files] };
+  } catch (error) {
+    // User code may throw arbitrary objects, including getters that throw.
+    // Observation must never replace the loader's original exception.
+    try {
+      for (const path of failedConfigModuleRequests(error)) if (!isPrivate(path)) files.add(path);
+    } catch {}
+    throw error;
   } finally {
     hooks?.deregister();
+    observeDependencies?.([...files]);
   }
 }
 
@@ -66,6 +114,7 @@ export async function importConfigModuleWithDependencies(
   registerModuleHooks = nodeModule.registerHooks,
   withoutVite,
   evaluate,
+  observeDependencies,
 ) {
   const configURL = pathToFileURL(configPath);
   const require = createRequire(configURL);
@@ -96,6 +145,8 @@ export async function importConfigModuleWithDependencies(
       configPath,
       registerModuleHooks,
       evaluate,
+      undefined,
+      observeDependencies,
     );
   }
   const viteDirectory = realpathSync(candidate);
@@ -133,6 +184,7 @@ export async function importConfigModuleWithDependencies(
       registerModuleHooks,
       evaluate,
       temporary,
+      observeDependencies,
     );
   } finally {
     await rm(temporary, { recursive: true, force: true });
