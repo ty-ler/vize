@@ -147,6 +147,7 @@ impl MaestroServer {
     }
 
     /// Route a continuation only after its governing root was explicitly checked.
+    #[cfg(feature = "native")]
     pub(super) async fn for_document_admitted(&self, uri: &Url) -> DocumentServer<'_> {
         #[cfg(feature = "native")]
         {

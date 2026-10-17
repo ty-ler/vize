@@ -82,7 +82,7 @@ fn assert_initialized(initialized: Initialization) {
 #[test]
 fn incomplete_config_failure_evaluates_once_for_did_change_and_two_same_root_importers() {
     let dir = tempfile::tempdir().unwrap();
-    let root = vize_carton::path::canonicalize_non_verbatim(dir.path());
+    let root = vize_l0::path::canonicalize_non_verbatim(dir.path());
     let counter = root.join("count.txt");
     std::fs::write(&counter, "").unwrap();
     let config = root.join("vite.config.mjs");
@@ -159,7 +159,7 @@ fn incomplete_config_failure_evaluates_once_for_did_change_and_two_same_root_imp
 #[test]
 fn importer_fanout_checks_each_other_root_once_and_applies_its_actual_new_policy() {
     let dir = tempfile::tempdir().unwrap();
-    let root = vize_carton::path::canonicalize_non_verbatim(dir.path());
+    let root = vize_l0::path::canonicalize_non_verbatim(dir.path());
     let a = root.join("a");
     let b = root.join("b");
     for package in [&a, &b] {

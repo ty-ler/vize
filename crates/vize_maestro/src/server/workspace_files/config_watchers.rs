@@ -12,7 +12,7 @@ use tower_lsp::lsp_types::{
     ClientCapabilities, DidChangeWatchedFilesRegistrationOptions, FileSystemWatcher, GlobPattern,
     OneOf, Registration, RelativePattern, Unregistration, Url, WatchKind,
 };
-use vize_carton::{String, cstr};
+use vize_l0::{String, cstr};
 
 const METHOD: &str = "workspace/didChangeWatchedFiles";
 
