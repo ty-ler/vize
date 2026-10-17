@@ -11,7 +11,7 @@ static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
 /// Disabled sessions do not read clocks or record inputs, paths or payloads.
 /// A dropped unfinished phase also records cancellation/error unwinding.
-pub(crate) struct Phase {
+pub struct Phase {
     name: &'static str,
     id: u64,
     started: Option<Instant>,
@@ -19,7 +19,8 @@ pub(crate) struct Phase {
 }
 
 impl Phase {
-    pub(crate) fn start(name: &'static str, items: usize) -> Self {
+    /// Observe an existing operation only when editor preparation tracing is enabled.
+    pub fn start(name: &'static str, items: usize) -> Self {
         let enabled = *ENABLED.get_or_init(|| {
             std::env::var("VIZE_TRACE_EDITOR_PREPARATION").is_ok_and(|value| value == "1")
         });
@@ -40,7 +41,8 @@ impl Phase {
         }
     }
 
-    pub(crate) fn finish(mut self) {
+    /// Record that the observed operation returned, including a returned error.
+    pub fn finish(mut self) {
         self.completed = true;
     }
 }

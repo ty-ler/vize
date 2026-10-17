@@ -124,6 +124,10 @@ impl CompilerConfigurationSnapshot {
         tsconfig_path: Option<&Path>,
         after_flattened: impl FnOnce(),
     ) -> CompilerConfigurationAttempt {
+        let phase = crate::corsa_bridge::preparation_trace::Phase::start(
+            "compiler_configuration_capture",
+            1,
+        );
         let inputs = super::compiler_inputs::CompilerInputs::default();
         let normalized = tsconfig_path
             .map(|path| vize_carton::path::normalize_windows_verbatim_path(path.to_path_buf()));
@@ -209,11 +213,13 @@ impl CompilerConfigurationSnapshot {
         }
         dependencies.sort();
         dependencies.dedup();
-        CompilerConfigurationAttempt {
+        let attempt = CompilerConfigurationAttempt {
             outcome,
             dependencies,
             observations: inputs.observations(),
-        }
+        };
+        phase.finish();
+        attempt
     }
 
     /// The actual inputs checked during this capture, not a later reread.

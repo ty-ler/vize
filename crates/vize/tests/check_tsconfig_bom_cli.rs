@@ -115,7 +115,8 @@ fn expected_malformed(root: &Path, forced_color: bool) -> Value {
         "exitCode": 2,
         "stdout": "{\n  \"files\": [],\n  \"programs\": [],\n  \"errorCount\": 0,\n  \"warningCount\": 0,\n  \"fileCount\": 0\n}\n",
         "stderr": cstr!(
-            "{prefix} Failed to resolve TypeScript configuration `{}`: JSON parse error: EOF while parsing a value at line 1 column 20\n",
+            "{prefix} Failed to resolve TypeScript configuration `{}`: Configuration error: cannot parse tsconfig {}: JSON parse error: EOF while parsing a value at line 1 column 20\n",
+            root.join("tsconfig.json").display(),
             root.join("tsconfig.json").display()
         ),
     })
