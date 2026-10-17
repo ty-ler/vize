@@ -163,6 +163,7 @@ impl MaestroServer {
 
     /// An explicit configuration event requires its complete retained answer,
     /// even when a rejected reload keeps the same version, owner and payload.
+    #[cfg(feature = "native")]
     pub(super) async fn publish_configuration_diagnostics_if_version(
         &self,
         uri: &Url,
