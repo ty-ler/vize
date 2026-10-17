@@ -1,12 +1,12 @@
 name: Config dependency source qualification
-run-name: Config dependency laws at f61cd9b70d
+run-name: Config dependency laws at a4dacab27e
 on:
   push:
     branches: [ci/config-dependency-source-qualification]
 permissions:
   contents: read
 env:
-  SOURCE_SHA: f61cd9b70d06a7b9de14041858e1f0baf673b528
+  SOURCE_SHA: a4dacab27e2d310c0cb759f8f4c5f5f4e490fce9
   CARGO_BUILD_JOBS: "12"
   CARGO_TERM_COLOR: always
   RUST_TEST_THREADS: "4"
@@ -56,6 +56,18 @@ jobs:
           set -euo pipefail
           cargo test --locked --profile ci -p vize_canon --lib compiler_snapshot::tests -- --nocapture 2>&1 | tee target/config-dependency-qualification/snapshots.log
           grep -F '9 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/snapshots.log
+      - name: Run the complete existing Canon tsconfig generator module laws
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_canon --lib batch::virtual_project::tsconfig_gen:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/tsconfig-generator.log
+          grep -E 'test result: ok\. [1-9][0-9]* passed; 0 failed; 0 ignored;' target/config-dependency-qualification/tsconfig-generator.log
+      - name: Run all editor project context reload and reference ownership laws
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_maestro --lib server::state::project_contexts:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/project-contexts.log
+          grep -E 'test result: ok\. [1-9][0-9]* passed; 0 failed; 0 ignored;' target/config-dependency-qualification/project-contexts.log
       - name: Retain live union members and unsaved source authority
         if: ${{ !cancelled() }}
         run: |
