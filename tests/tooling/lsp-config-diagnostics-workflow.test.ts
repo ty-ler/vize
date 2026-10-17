@@ -67,7 +67,16 @@ test("startup diagnostics retain the production producer and unchanged scale-one
   const symlinkControls = steps.findIndex(
     (step) => step.name === "Observe the original six symlink workspace layouts",
   );
-  assert.ok(symlinkControls > controls);
+  const unionControls = steps.findIndex(
+    (step) => step.name === "Verify real union ownership and reverse open-order regressions",
+  );
+  assert.ok(unionControls > controls);
+  assert.ok(symlinkControls > unionControls);
+  assert.equal(
+    steps[unionControls].run,
+    "cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_document_package_tests::symlink_workspace::\n" +
+      "cargo test --locked --profile ci -p vize_canon --features legacy --lib batch::virtual_project::tests::editor_union_alias_transition::\n",
+  );
   assert.equal(
     steps[symlinkControls].run,
     "cargo test --locked --profile ci -p vize --features legacy --test lsp_symlink_workspace_staging_cli original_include_and_open_order_controls_keep_all_authored_bytes -- --nocapture",

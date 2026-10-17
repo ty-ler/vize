@@ -79,6 +79,11 @@ jobs:
           cargo test --locked --profile ci -p vize_maestro --features legacy --lib server::initial_diagnostics::
           cargo test --locked --profile ci -p vize_maestro --features legacy --lib server::native_requests::
           cargo clippy --locked --profile ci -p vize_maestro --features legacy --all-targets -- -D warnings
+      - name: Verify real union ownership and reverse open-order regressions
+        if: ${{ !cancelled() && steps.producer.outcome == 'success' }}
+        run: |
+          cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_document_package_tests::symlink_workspace::
+          cargo test --locked --profile ci -p vize_canon --features legacy --lib batch::virtual_project::tests::editor_union_alias_transition::
       - name: Observe the original six symlink workspace layouts
         if: ${{ !cancelled() && steps.producer.outcome == 'success' }}
         env:
