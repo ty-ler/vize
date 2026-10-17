@@ -12,43 +12,47 @@ use tower_lsp::{ClientSocket, LanguageServer, LspService};
 fn initialize(
     service: &mut LspService<MaestroServer>,
     socket: &mut ClientSocket,
-    root: &std::path::Path,
-) {
+    root_uri: Url,
+) -> Result<(), Box<dyn std::error::Error>> {
     crate::runtime::block_on(async {
         let operation = async {
             for value in [
                 json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{
-                    "rootUri":Url::from_file_path(root).unwrap(),"capabilities":{},
+                    "rootUri":root_uri,"capabilities":{},
                     "initializationOptions":{"lint":true,"typecheck":false,"ecosystem":false}
                 }}),
                 json!({"jsonrpc":"2.0","method":"initialized","params":{}}),
             ] {
-                futures::future::poll_fn(|cx| service.poll_ready(cx))
-                    .await
-                    .unwrap();
-                let response = service
-                    .call(serde_json::from_value(value).unwrap())
-                    .await
-                    .unwrap();
+                futures::future::poll_fn(|cx| service.poll_ready(cx)).await?;
+                let response = service.call(serde_json::from_value(value)?).await?;
                 if let Some(response) = response {
-                    let response = serde_json::to_value(response).unwrap();
-                    assert_eq!(response["id"], 1);
-                    assert!(response["result"]["capabilities"].is_object());
+                    let response = serde_json::to_value(response)?;
+                    assert_eq!(response.get("id"), Some(&json!(1)));
+                    assert!(
+                        response
+                            .get("result")
+                            .and_then(|value| value.get("capabilities"))
+                            .is_some_and(Value::is_object)
+                    );
                     assert!(response.get("error").is_none());
                 }
             }
+            Ok::<(), Box<dyn std::error::Error>>(())
         }
         .fuse();
         futures::pin_mut!(operation);
         let mut messages = Vec::<Value>::new();
         loop {
             futures::select! {
-                () = operation => break,
-                message = socket.next().fuse() => messages.push(serde_json::to_value(message.unwrap()).unwrap()),
+                result = operation => { result?; break; },
+                message = socket.next().fuse() => {
+                    let message = message.ok_or_else(|| std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "client socket closed during initialization"))?;
+                    messages.push(serde_json::to_value(message)?);
+                },
             }
         }
         while let Some(Some(message)) = socket.next().now_or_never() {
-            messages.push(serde_json::to_value(message).unwrap());
+            messages.push(serde_json::to_value(message)?);
         }
         assert_eq!(
             messages,
@@ -57,7 +61,8 @@ fn initialize(
                 "params":{"type":3,"message":"vize_maestro LSP server initialized"}
             })]
         );
-    });
+        Ok(())
+    })
 }
 
 #[test]
@@ -74,7 +79,12 @@ fn incomplete_config_failure_evaluates_once_for_did_change_and_two_same_root_imp
         server.configuration_watchers = None;
         server
     });
-    initialize(&mut service, &mut socket, &root);
+    initialize(
+        &mut service,
+        &mut socket,
+        Url::from_file_path(&root).unwrap(),
+    )
+    .unwrap();
     let server = service.inner();
     let leaf = Url::from_file_path(root.join("Leaf.vue")).unwrap();
     let importers =
@@ -122,7 +132,7 @@ fn incomplete_config_failure_evaluates_once_for_did_change_and_two_same_root_imp
     let root_uri = Url::from_file_path(&root).unwrap();
     let config_uri = Url::from_file_path(&config).unwrap();
     let mut expected = vec![
-        json!({"jsonrpc":"2.0","method":"window/showMessage","params":{"type":1,"message":format!("Vize could not reload project configuration for {root_uri} after changes to {config_uri}. Keeping the last good configuration.")}}),
+        json!({"jsonrpc":"2.0","method":"window/showMessage","params":{"type":1,"message":vize_l0::cstr!("Vize could not reload project configuration for {root_uri} after changes to {config_uri}. Keeping the last good configuration.")}}),
     ];
     for (uri, version) in std::iter::once((&leaf, 2)).chain(importers.iter().map(|uri| (uri, 1))) {
         expected.push(json!({"jsonrpc":"2.0","method":"textDocument/publishDiagnostics","params":{"uri":uri,"version":version,"diagnostics":[]}}));
@@ -148,7 +158,12 @@ fn importer_fanout_checks_each_other_root_once_and_applies_its_actual_new_policy
         server.configuration_watchers = None;
         server
     });
-    initialize(&mut service, &mut socket, &root);
+    initialize(
+        &mut service,
+        &mut socket,
+        Url::from_file_path(&root).unwrap(),
+    )
+    .unwrap();
     let server = service.inner();
     let leaf = Url::from_file_path(a.join("Leaf.vue")).unwrap();
     let importers = [&a, &b]
@@ -231,7 +246,7 @@ fn importer_fanout_checks_each_other_root_once_and_applies_its_actual_new_policy
     let root_uri = Url::from_file_path(&a).unwrap();
     let config_uri = Url::from_file_path(a.join("vite.config.mjs")).unwrap();
     let mut expected = vec![
-        json!({"jsonrpc":"2.0","method":"window/showMessage","params":{"type":1,"message":format!("Vize could not reload project configuration for {root_uri} after changes to {config_uri}. Keeping the last good configuration.")}}),
+        json!({"jsonrpc":"2.0","method":"window/showMessage","params":{"type":1,"message":vize_l0::cstr!("Vize could not reload project configuration for {root_uri} after changes to {config_uri}. Keeping the last good configuration.")}}),
     ];
     for (uri, version) in std::iter::once((&leaf, 2)).chain(importers.iter().map(|uri| (uri, 1))) {
         expected.push(json!({"jsonrpc":"2.0","method":"textDocument/publishDiagnostics","params":{"uri":uri,"version":version,"diagnostics":[]}}));

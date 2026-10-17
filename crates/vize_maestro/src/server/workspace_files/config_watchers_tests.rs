@@ -5,7 +5,6 @@ use crate::runtime::block_on;
 use futures::{SinkExt, StreamExt};
 use serde_json::{Value, json};
 use std::time::{Duration, Instant};
-use tower::Service;
 use tower_lsp::lsp_types::{InitializeParams, InitializeResult, InitializedParams};
 use tower_lsp::{
     ClientSocket, LanguageServer, LspService,
