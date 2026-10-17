@@ -97,22 +97,22 @@ fn vite_factory_runs_once_per_attempt_and_stable_or_failed_boundaries_do_not_eva
     current(&state, &a);
     assert_eq!(std::fs::read_to_string(&counter).unwrap(), "x");
     assert!(refresh(&state, &a).errors.is_empty());
-    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xx");
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "x");
     let stable = current(&state, &a);
     assert!(refresh(&state, &a).errors.is_empty());
-    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xx");
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "x");
     assert!(Arc::ptr_eq(&stable, &current(&state, &a)));
 
     let tsconfig = root.join("tsconfig.json");
     std::fs::write(&tsconfig, r#"{"extends":"./missing-base.json"}"#).unwrap();
     assert_eq!(refresh(&state, &a).errors.len(), 1);
-    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xxx");
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xx");
     assert!(refresh(&state, &a).errors.is_empty());
-    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xxx");
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xx");
     assert!(Arc::ptr_eq(&stable, &current(&state, &a)));
     std::fs::write(&tsconfig, "{}").unwrap();
     assert!(refresh(&state, &a).errors.is_empty());
-    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xxxx");
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xxx");
     assert!(!Arc::ptr_eq(&stable, &current(&state, &a)));
 }
 
@@ -148,9 +148,57 @@ fn incomplete_failed_package_resolution_retries_next_operation_without_repeating
     assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xxx");
     assert!(current(&state, &a).lsp_features().hover);
     assert!(!Arc::ptr_eq(&retained, &current(&state, &a)));
-    // The newly reported installed graph is confirmed at one later boundary.
+    // The newly reported installed graph is confirmed without retiring an
+    // unchanged semantic owner or invalidating its in-flight native requests.
+    let confirmed = current(&state, &a);
+    let pending = confirmed.corsa_request_stamp();
     assert!(refresh(&state, &a).errors.is_empty());
     assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xxxx");
+    assert!(Arc::ptr_eq(&confirmed, &current(&state, &a)));
+    assert!(pending.is_current(&confirmed));
     assert!(refresh(&state, &a).errors.is_empty());
     assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xxxx");
+}
+
+#[test]
+fn a_known_input_edit_after_confirmation_preparation_still_replaces_the_owner() {
+    let (fixture, state, a, _) = tests::fixture();
+    let root = fixture.path().join("packages/a");
+    let config = root.join("vite.config.mjs");
+    std::fs::write(
+        root.join("policy.mjs"),
+        "export default {languageServer:{hover:false}};",
+    )
+    .unwrap();
+    std::fs::write(
+        &config,
+        "import vue from './policy.mjs'; export default {vue};",
+    )
+    .unwrap();
+    let previous = current(&state, &a);
+    let stamp = previous.corsa_request_stamp();
+    let key = super::ProjectContextKey::from(root.clone());
+    let record = state
+        .configuration_records()
+        .into_iter()
+        .find(|(candidate, _)| candidate == &key)
+        .unwrap()
+        .1;
+    assert!(record.stable_confirmation());
+    let mut scope = super::watched::ConfigEventScope::for_owners(vec![key.clone()]);
+    scope
+        .confirmations
+        .push((key, record.input_observations().clone()));
+    let edited = config.clone();
+    super::lock_order_tests::at_config_install(move || {
+        let mut bytes = std::fs::read(&edited).unwrap();
+        bytes.extend_from_slice(b"\n// a real edit after checked evaluation\n");
+        std::fs::write(edited, bytes).unwrap();
+    });
+    let result = state.apply_project_config_paths(&[Url::from_file_path(config).unwrap()], scope);
+    assert!(result.errors.is_empty());
+    let next = current(&state, &a);
+    assert!(!Arc::ptr_eq(&previous, &next));
+    assert!(!stamp.is_current(&previous));
+    assert!(!next.lsp_features().hover);
 }

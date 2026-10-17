@@ -38,7 +38,7 @@ fn incomplete_config_failure_evaluates_once_for_did_change_and_two_same_root_imp
         let project = crate::runtime::block_on(server.for_document(uri));
         project.state.update_virtual_docs(uri, source);
     }
-    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xx");
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "x");
     std::fs::write(&config, "import {appendFileSync} from 'node:fs'; export default async () => { appendFileSync(new URL('./count.txt',import.meta.url),'x'); await import('never-installed-editor-plugin'); return {vue:{}}; };").unwrap();
     let changed = "<template><div>after</div></template>";
     let messages = crate::runtime::block_on(async {
@@ -68,7 +68,7 @@ fn incomplete_config_failure_evaluates_once_for_did_change_and_two_same_root_imp
         }
         messages
     });
-    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xxx");
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xx");
     assert_eq!(server.state.documents.text(&leaf).as_deref(), Some(changed));
     assert_eq!(server.state.documents.version(&leaf), Some(2));
     let root_uri = Url::from_file_path(&root).unwrap();
@@ -133,7 +133,7 @@ fn importer_fanout_checks_each_other_root_once_and_applies_its_actual_new_policy
     for package in [&a, &b] {
         assert_eq!(
             std::fs::read_to_string(package.join("count.txt")).unwrap(),
-            "xx"
+            "x"
         );
     }
     std::fs::write(a.join("vite.config.mjs"), "import {appendFileSync} from 'node:fs'; export default async () => { appendFileSync(new URL('./count.txt',import.meta.url),'x'); await import('never-installed-editor-plugin'); return {vue:{}}; };").unwrap();
@@ -169,7 +169,7 @@ fn importer_fanout_checks_each_other_root_once_and_applies_its_actual_new_policy
     for package in [&a, &b] {
         assert_eq!(
             std::fs::read_to_string(package.join("count.txt")).unwrap(),
-            "xxx"
+            "xx"
         );
     }
     for uri in importers
