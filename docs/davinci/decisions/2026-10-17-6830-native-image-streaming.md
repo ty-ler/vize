@@ -26,14 +26,42 @@ short reads and interruptions; reject an error after a complete buffer; and
 detect corruption beyond the first buffer. Existing complete-initialize and
 shutdown transcript controls remain in place.
 The four new controls pass in a small local Cargo harness containing the exact
-helper and test bodies with `sha2:0.11.1`; full Canon integration remains an
-Actions check. Rust formatting and whitespace checks pass.
+helper and test bodies with `sha2:0.11.1`. All six native authentication and
+shutdown controls also passed in the actual Canon module after the Actions
+workload below. Rust formatting and whitespace checks pass.
 
 The earlier same-fixture [38929265536](https://github.com/ubugeeei-prod/vize/actions/runs/38929265536)
 at `a00fb6cff9268e1371ba260739d905050e2a2573` passed at 133.37 MiB, but several
-product changes separate those sources. Allocator retention of temporary
-image bytes is a hypothesis, not a measured attribution. Acceptance still
-requires an Actions run of the original incremental and churn tests against
-the failed source plus this patch, retaining original metrics, complete
-authentication evidence and the unchanged 136 MiB budget. No RSS improvement
-or full-qualification result is claimed by this change alone.
+product changes separate those sources. It is a workload reference, not an
+isolated attribution of a product change.
+
+The single approved [run 38994698499](https://github.com/ubugeeei-prod/vize/actions/runs/38994698499)
+at `8cb5a680cd9adec97ec251a32a9d35305fffc20b` passed on its first attempt.
+That source is the failed `2b0cf6c` source plus only this production patch,
+its controls and a temporary diagnostic workflow. The unchanged Vue parity
+action ran in its original order on Blacksmith 32 vCPU, Node 24.14.0 and
+Rust 1.99.1, with the original CI profile and budget scale 1.
+
+Misskey churn peak server RSS measured **140.94 → 128.69 MiB**, passing the
+unchanged **136 MiB** limit. Both peaks occurred at the first file-lifecycle
+cycle. All 40 edit cycles, 20 file-lifecycle cycles and 63 RSS samples remain.
+All 287 complete publish records match both original runs after replacing
+only their temporary workspace prefix. The original 186 Node cases retain
+185 passes and the same one GoGoCode-fixture skip; all 43 process-budget
+cycle output hashes also match. All incremental lanes, thresholds and batch
+reuse counters remain unchanged.
+
+The retained source-build receipt identifies this exact diagnostic source.
+After measurement, the provider image still measured 24,101,026 bytes with
+SHA-256 `4f2de678286401759b3fb4475bafe35b8f32b4b3a07d92642bbf37eadc9b34a4`.
+The artifact retains original metrics and 19 complete source-bound snapshot
+sessions. Original churn does not capture raw wires or individual native
+capability decisions; no instrumentation or capture environment was added
+to its measurement.
+
+Separately, observed median edit-cycle time was 234.29 → 230.42 ms and Vben
+second-app cold open was 1,334.98 → 1,308.41 ms. A single run establishes no
+stable latency gain, accumulating-leak diagnosis or allocator-page ownership.
+The bounded allocation is established by the code; the RSS result is the
+same-workload observation above. Combined full qualification with subsequent
+main changes remains separate, and the diagnostic workflow does not land.
