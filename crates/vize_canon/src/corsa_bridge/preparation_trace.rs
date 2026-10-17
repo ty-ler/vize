@@ -9,6 +9,12 @@ use std::time::Instant;
 static ENABLED: OnceLock<bool> = OnceLock::new();
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
+pub(crate) fn enabled() -> bool {
+    *ENABLED.get_or_init(|| {
+        std::env::var("VIZE_TRACE_EDITOR_PREPARATION").is_ok_and(|value| value == "1")
+    })
+}
+
 /// Disabled sessions do not read clocks or record inputs, paths or payloads.
 /// A dropped unfinished phase also records cancellation/error unwinding.
 pub struct Phase {
@@ -21,9 +27,7 @@ pub struct Phase {
 impl Phase {
     /// Observe an existing operation only when editor preparation tracing is enabled.
     pub fn start(name: &'static str, items: usize) -> Self {
-        let enabled = *ENABLED.get_or_init(|| {
-            std::env::var("VIZE_TRACE_EDITOR_PREPARATION").is_ok_and(|value| value == "1")
-        });
+        let enabled = enabled();
         let id = if enabled {
             NEXT_ID.fetch_add(1, Ordering::Relaxed)
         } else {

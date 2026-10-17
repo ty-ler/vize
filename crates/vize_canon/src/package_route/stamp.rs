@@ -1,6 +1,7 @@
 //! Filesystem identity for self-invalidating package-route caches.
 
 use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
 
 use vize_carton::FxHashMap;
 
@@ -21,6 +22,15 @@ enum InputKind {
     Directory,
     Symlink,
     Other,
+}
+
+/// Local counters for one opt-in validation; never shared across calls.
+#[derive(Default)]
+pub(crate) struct InputStampReadStats {
+    pub(crate) reads: usize,
+    pub(crate) bytes: u64,
+    pub(crate) read_time: Duration,
+    pub(crate) digest_time: Duration,
 }
 
 #[derive(Default)]
@@ -75,6 +85,15 @@ impl InputStamp {
     }
 
     fn capture_input(path: PathBuf, content: Option<&[u8]>, source_content: bool) -> Self {
+        Self::capture_input_observed(path, content, source_content, None)
+    }
+
+    fn capture_input_observed(
+        path: PathBuf,
+        content: Option<&[u8]>,
+        source_content: bool,
+        stats: Option<&mut InputStampReadStats>,
+    ) -> Self {
         let metadata = std::fs::symlink_metadata(&path).ok();
         let modified = metadata
             .as_ref()
@@ -100,7 +119,7 @@ impl InputStamp {
             ((matches!(kind, Some(InputKind::File))
                 && !super::graph_inputs::is_large_lockfile(&path))
                 || (source_content && matches!(kind, Some(InputKind::Symlink))))
-            .then(|| std::fs::read(&path).ok().map(|content| digest(&content)))
+            .then(|| read_digest(&path, stats))
             .flatten()
         });
         let symlink_target = matches!(kind, Some(InputKind::Symlink))
@@ -123,6 +142,20 @@ impl InputStamp {
 
     pub(crate) fn is_current(&self) -> bool {
         *self == Self::capture_input(self.path.clone(), None, self.source_content)
+    }
+
+    pub(crate) fn observation_identity(&self) -> (&Path, bool) {
+        (&self.path, self.source_content)
+    }
+
+    pub(crate) fn is_current_observed(&self, stats: &mut InputStampReadStats) -> bool {
+        *self
+            == Self::capture_input_observed(
+                self.path.clone(),
+                None,
+                self.source_content,
+                Some(stats),
+            )
     }
 
     pub(crate) fn is_current_with_cache(&self, cache: &mut InputStampCache) -> bool {
@@ -163,6 +196,22 @@ pub(crate) fn canonicalize_changed_path(path: &Path) -> PathBuf {
         }
     }
     vize_carton::path::normalize_windows_verbatim_path(path.to_path_buf())
+}
+
+fn read_digest(path: &Path, stats: Option<&mut InputStampReadStats>) -> Option<u64> {
+    let Some(stats) = stats else {
+        return std::fs::read(path).ok().map(|content| digest(&content));
+    };
+    let started = Instant::now();
+    let content = std::fs::read(path);
+    stats.read_time += started.elapsed();
+    stats.reads += 1;
+    let content = content.ok()?;
+    stats.bytes += content.len() as u64;
+    let started = Instant::now();
+    let result = digest(&content);
+    stats.digest_time += started.elapsed();
+    Some(result)
 }
 
 fn digest(content: &[u8]) -> u64 {
