@@ -54,7 +54,7 @@ for (const installedVite of [false, true]) {
         assert.equal("config" in observed, false, "failed options must not become a configuration");
         assert.ok(observed.dependencies.includes(selected));
         assert.ok(observed.dependencies.includes(policy));
-        assert.equal(observed.watchDependenciesComplete, true);
+        assert.equal(observed.watchDependenciesComplete, !installedVite);
         await writeFile(policy, "export default { formatter: { printWidth: 91 } };");
         const repaired = invoke();
         assert.equal(repaired.status, 0, repaired.stderr);
@@ -227,6 +227,60 @@ test("actual loader selection watches nearer installation and broken-present rep
       await readFile(counter, "utf8"),
       "evaluation\nevaluation\nevaluation\n",
       "each successful attempt evaluates once; broken-present selection never evaluates or falls through",
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("failed real Vite bundles retain repair targets without claiming their hidden intermediate graph", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "vize-partial-config-")));
+  try {
+    const app = join(root, "app");
+    await mkdir(join(app, "node_modules"), { recursive: true });
+    await symlink(vite, join(app, "node_modules/vite"), "junction");
+    const selected = join(app, "vite.config.mjs");
+    const bridge = join(root, "bridge.mjs");
+    const leaf = join(root, "leaf.mjs");
+    const missing = join(root, "missing.mjs");
+    const counter = join(root, "factory.txt");
+    await writeFile(
+      selected,
+      `import vue from '../bridge.mjs'; import { appendFileSync } from 'node:fs';
+      export default () => { appendFileSync(${JSON.stringify(counter)}, 'evaluation\\n'); return { vue }; };`,
+    );
+    await writeFile(bridge, "export { default } from './leaf.mjs';");
+    await writeFile(leaf, "export { default } from './missing.mjs';");
+    const invoke = () =>
+      spawnSync(process.execPath, ["--input-type=module", "-e", embedded, selected], {
+        cwd: app,
+        encoding: "utf8",
+      });
+    const failed = invoke();
+    assert.equal(failed.status, 1, failed.stderr);
+    const observed = JSON.parse(failed.stdout);
+    assert.equal("config" in observed, false);
+    assert.equal(observed.watchDependenciesComplete, false);
+    assert.ok(observed.dependencies.includes(leaf));
+    assert.ok(observed.dependencies.includes(missing));
+    assert.equal(
+      observed.dependencies.includes(bridge),
+      false,
+      "the real bundle diagnostic does not expose the intermediate bridge",
+    );
+    const authored = await readFile(selected);
+    const leafBytes = await readFile(leaf);
+    await writeFile(bridge, "export default { formatter: { printWidth: 93 } };");
+    const repaired = invoke();
+    assert.equal(repaired.status, 0, repaired.stderr);
+    assert.equal(JSON.parse(repaired.stdout).config.formatter.printWidth, 93);
+    assert.deepEqual(await readFile(selected), authored);
+    assert.deepEqual(await readFile(leaf), leafBytes);
+    await assert.rejects(readFile(missing), { code: "ENOENT" });
+    assert.equal(
+      await readFile(counter, "utf8"),
+      "evaluation\n",
+      "only the repaired attempt executes its original factory, exactly once",
     );
   } finally {
     await rm(root, { recursive: true, force: true });

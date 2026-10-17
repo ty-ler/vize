@@ -93,6 +93,7 @@ async function captureConfigEvaluation(
 ) {
   const files = new Set([configPath]);
   let complete = true;
+  let moduleGraphLoaded = false;
   const owners = new Set([pathToFileURL(configPath).href]);
   const isPrivate = (path) => {
     if (!privateDirectory) return false;
@@ -120,6 +121,7 @@ async function captureConfigEvaluation(
   try {
     const { namespace, dependencies = [] } = await load();
     for (const path of dependencies) if (!isPrivate(path)) files.add(path);
+    moduleGraphLoaded = true;
     const value = evaluate ? await evaluate(namespace) : namespace;
     return { namespace, value, dependencies: [...files] };
   } catch (error) {
@@ -128,7 +130,10 @@ async function captureConfigEvaluation(
     // Observation must never replace the loader's original exception.
     try {
       const observed = failedConfigModuleObservation(error);
-      complete = observed.complete;
+      // A failed bundle reports its failing importer/request, but can omit
+      // intermediate modules read by the build engine. Keep useful targets
+      // without treating that partial graph as enough to suppress repair.
+      complete = observed.complete && (privateDirectory === undefined || moduleGraphLoaded);
       for (const path of observed.paths) if (!isPrivate(path)) files.add(path);
     } catch {}
     throw error;
