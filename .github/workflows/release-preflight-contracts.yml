@@ -39,8 +39,7 @@ jobs:
           path: |
             ~/.cache/rust-script
             ~/.cargo/registry
-          key: release-preflight-tool-${{ runner.os }}-${{ runner.arch }}-1.99.1-${{ hashFiles('tools/commands/ci/github/release-preflight.rs', 'tools/support/release/preflight*.rs', 'tools/support/common.rs') }}
-          restore-keys: release-preflight-tool-${{ runner.os }}-${{ runner.arch }}-1.99.1-
+          key: release-preflight-tool-${{ runner.os }}-${{ runner.arch }}-1.99.1-${{ hashFiles('tools/commands/ci/github/release-preflight.rs', 'tools/commands/release/pr.rs', 'tools/support/release/*.rs', 'tools/support/common.rs', 'tests/_fixtures/tooling/release/**') }}
       - uses: ./.github/actions/cache-vp-bootstrap
       - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
         with: { node-version-file: package.json, cache: true, run-install: true }
