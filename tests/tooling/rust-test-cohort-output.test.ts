@@ -68,8 +68,11 @@ function fixture(t: TestContext, mode: string) {
   const directory = mkdtempSync(join(tmpdir(), "vize-rust-output-"));
   const ready = join(directory, "ready.json");
   t.after(() => {
-    if (existsSync(ready))
-      signalIfPresent(-JSON.parse(readFileSync(ready, "utf8")).child, "SIGKILL");
+    if (existsSync(ready)) {
+      const owned = JSON.parse(readFileSync(ready, "utf8"));
+      signalIfPresent(-owned.child, "SIGKILL");
+      if (owned.escaped) signalIfPresent(-owned.grandchild, "SIGKILL");
+    }
     rmSync(directory, { recursive: true, force: true });
   });
   const plan = join(directory, "plan.json");
@@ -117,16 +120,16 @@ if (process.argv[2] === "metadata") {
   fs.writeFileSync(path.join(dir, "invocation.json"), JSON.stringify({ argv: process.argv.slice(2), cwd: process.cwd(), env: process.env }));
   process.stderr.write("cargo stderr\\n");
   const bytes = fs.readFileSync(path.join(dir, "payload"));
-  if (mode === "0" || mode === "7") {
+  if (mode === "0" || mode === "7" || mode === "17") {
     process.stdout.write(bytes.subarray(0, 13));
     process.stdout.write(bytes.subarray(13), () => process.exit(Number(mode)));
   } else {
-    const grandchild = spawn(process.execPath, [__filename, "grandchild"], { stdio: ["ignore", "inherit", "inherit", "ipc"] });
+    const grandchild = spawn(process.execPath, [__filename, "grandchild"], { detached: mode === "escaped-pipe", stdio: ["ignore", "inherit", "inherit", "ipc"] });
     process.on("SIGINT", () => log("child SIGINT"));
-    process.on("SIGTERM", () => log("child SIGTERM"));
+    process.on("SIGTERM", () => { log("child SIGTERM"); if (mode === "escaped-pipe") process.exit(0); });
     grandchild.once("exit", () => process.stdout.write("stopped\\n", () => process.exit(0)));
     grandchild.once("message", () => {
-      const ready = () => fs.writeFileSync(path.join(dir, "ready.json"), JSON.stringify({ child: process.pid, grandchild: grandchild.pid, runner: process.ppid }));
+      const ready = () => fs.writeFileSync(path.join(dir, "ready.json"), JSON.stringify({ child: process.pid, grandchild: grandchild.pid, runner: process.ppid, ...(mode === "escaped-pipe" ? { escaped: true } : {}) }));
       if (mode === "sink-error") {
         ready();
         const timer = setInterval(() => {
@@ -170,8 +173,11 @@ function launch(t: TestContext, f: ReturnType<typeof fixture>) {
   );
   const observation = observe(child);
   t.after(async () => {
-    if (existsSync(f.ready))
-      signalIfPresent(-JSON.parse(readFileSync(f.ready, "utf8")).child, "SIGKILL");
+    if (existsSync(f.ready)) {
+      const owned = JSON.parse(readFileSync(f.ready, "utf8"));
+      signalIfPresent(-owned.child, "SIGKILL");
+      if (owned.escaped) signalIfPresent(-owned.grandchild, "SIGKILL");
+    }
     if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
     await observation.close;
   });
@@ -348,6 +354,92 @@ void test(
       "child SIGTERM",
       "grandchild SIGTERM",
     ]);
+    receipt(f, 1);
+  },
+);
+
+for (const status of [0, 17]) {
+  await test(
+    `a late signal during capture finish preserves the earlier child failure ${status}`,
+    posix,
+    async (t) => {
+      const f = fixture(t, String(status));
+      const preload = join(f.directory, "slow-final-flush.mjs");
+      writeFileSync(
+        preload,
+        `
+import fs from "node:fs";
+import cp from "node:child_process";
+import { syncBuiltinESMExports } from "node:module";
+for (const name of ["write", "writev"]) {
+  const original = fs[name];
+  fs[name] = (...args) => setTimeout(() => original(...args), 100);
+}
+const original = cp.spawn;
+cp.spawn = (...args) => {
+  const child = original(...args);
+  child.once("close", () => setImmediate(() => process.emit("SIGTERM")));
+  return child;
+};
+syncBuiltinESMExports();
+`,
+      );
+      f.argv.unshift("--import", preload);
+      const result = launch(t, f);
+      const expected = status === 0 ? 143 : status;
+      assert.deepEqual(await result.exit, { code: expected, signal: null }, result.stderr());
+      await result.close;
+      assert.deepEqual(
+        readFileSync(f.env.VIZE_RUST_BUILD_STDOUT_PATH),
+        Buffer.concat([banner, payload]),
+      );
+      assert.deepEqual(result.stdout(), Buffer.concat([banner, payload]));
+      receipt(f, expected);
+    },
+  );
+}
+
+await test(
+  "the bounded drain failure releases an escaped stdout holder and retains accepted bytes",
+  posix,
+  async (t) => {
+    const f = fixture(t, "escaped-pipe");
+    const preload = join(f.directory, "drain-clock.mjs");
+    // Exercise the unchanged 1/4/6-second decisions without spending six real
+    // seconds. Only this wrapper fixture receives the accelerated clock.
+    writeFileSync(preload, "let clock=0; performance.now=()=>clock+=1000;\n");
+    f.argv.unshift("--import", preload);
+    const result = launch(t, f);
+    await waitFor(() => existsSync(f.ready), "escaped descendant readiness");
+    const owned = JSON.parse(readFileSync(f.ready, "utf8"));
+    assert.equal(owned.escaped, true);
+    result.child.kill("SIGTERM");
+    const timeout = new AbortController();
+    const exit = await Promise.race([
+      result.exit,
+      delay(3000, null, { signal: timeout.signal }),
+    ]).finally(() => timeout.abort());
+    assert.notEqual(
+      exit,
+      null,
+      "the wrapper must exit after its bounded drain failure, without a ref'ed stdout pipe",
+    );
+    assert.deepEqual(exit, { code: 1, signal: null }, result.stderr());
+    assert.equal(
+      signalIfPresent(owned.grandchild, 0),
+      true,
+      "the test controls the separate fixture group",
+    );
+    signalIfPresent(-owned.grandchild, "SIGKILL");
+    await result.close;
+    assert.match(
+      result.stderr(),
+      /owned Cargo process group did not drain after cancellation and SIGKILL/,
+    );
+    assert.deepEqual(
+      readFileSync(f.env.VIZE_RUST_BUILD_STDOUT_PATH),
+      Buffer.concat([banner, payload]),
+    );
     receipt(f, 1);
   },
 );

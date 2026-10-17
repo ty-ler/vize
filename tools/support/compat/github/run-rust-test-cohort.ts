@@ -198,6 +198,8 @@ async function runCargo(
     child.stdout.pipe(capture.stream, { end: false });
   }
   let closed = false;
+  let cancelled: "SIGINT" | "SIGTERM" | undefined;
+  let firstChildFailure: number | undefined;
   const completion = new Promise<{ status: number | null; error?: Error }>((resolve) => {
     child.once("error", (error) => {
       closed = true;
@@ -205,6 +207,8 @@ async function runCargo(
     });
     child.once("close", (status) => {
       closed = true;
+      if (status !== null && status !== 0 && !cancelled && !capture?.error)
+        firstChildFailure = status;
       resolve({ status });
     });
   });
@@ -220,7 +224,6 @@ async function runCargo(
       throw error;
     }
   }
-  let cancelled: "SIGINT" | "SIGTERM" | undefined;
   let interrupted!: () => void;
   const cancellation = new Promise<void>((resolve) => {
     interrupted = resolve;
@@ -268,6 +271,9 @@ async function runCargo(
         await delay(25);
       }
       await capture?.finish();
+      // Preserve a failure already observed before a later signal/write error
+      // during final flush. Cleanup must not replace Cargo's original status.
+      if (firstChildFailure !== undefined) return firstChildFailure;
       if (!cancelled) throw capture!.error;
       // A child may catch a cancellation signal and exit zero. Cancellation
       // must still fail the step and its required Rust aggregate.
