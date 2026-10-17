@@ -115,8 +115,13 @@ fn check_workspace_server_deps(vue_files: usize) {
     std::os::windows::fs::symlink_dir(root.join("lib"), root.join("app/node_modules/lib")).unwrap();
 
     let app = root.join("app");
+    let pristine = run_check(&app, &corsa, Some("1"));
     for servers in [Some("1"), Some("2"), None] {
         let result = run_check(&app, &corsa, servers);
+        assert_eq!(
+            result, pristine,
+            "servers={servers:?}: complete clean report"
+        );
         assert_eq!(result["errorCount"], 0, "servers={servers:?}: {result}");
         assert_eq!(
             result["fileCount"],
@@ -132,10 +137,27 @@ fn check_workspace_server_deps(vue_files: usize) {
         "lib/src/index.ts",
         "import { createThing } from 'private-dep'\nexport const thing: number = createThing()\n",
     );
-    let expected = run_check(&app, &corsa, Some("1"));
-    assert_eq!(expected["errorCount"], 1, "{expected}");
-    assert!(expected.to_string().contains("TS2322"), "{expected}");
-    for servers in [Some("2"), None] {
+    // The authored error changes exactly one diagnostic in the otherwise
+    // unchanged complete program graph, independent of the server mode.
+    let dependency = root.join("lib/src/index.ts").canonicalize().unwrap();
+    let mut expected = pristine;
+    expected["errorCount"] = serde_json::json!(1);
+    let imported = expected["files"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|file| {
+            app.join(file["file"].as_str().unwrap())
+                .canonicalize()
+                .unwrap()
+                == dependency
+        })
+        .expect("clean report must retain the imported private dependency source");
+    assert_eq!(imported["diagnostics"], serde_json::json!([]));
+    imported["diagnostics"] = serde_json::json!([
+        "error:2:14 [TS2322] Type 'string' is not assignable to type 'number'."
+    ]);
+    for servers in [Some("1"), Some("2"), None] {
         assert_eq!(
             run_check(&app, &corsa, servers),
             expected,
