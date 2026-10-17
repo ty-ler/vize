@@ -37,9 +37,25 @@ overrides, Cargo config and environment overrides remain refused. The actual
 manifest and mutated copies exercise this boundary; source-file digests and
 complete inventory/execution receipt checks remain unchanged.
 
-Local validation parses the workspace and checks the exact dependency pin
-without compiling. Optimized hosted acceptance is pending: retain the same
-physical image digest, inspect emitted dependency/product profiles, and run
-the complete original incremental tests against their existing budgets.
-The diagnostic phases are excluded from this change. No optimized latency
-result is claimed by the baseline measurement.
+The optimized [run 38990649880](https://github.com/ubugeeei-prod/vize/actions/runs/38990649880)
+at `60e3c12b99926916f31359eddfd3593c74f9ec85` passed both original incremental
+tests once, including all fourteen Vben and nine Misskey observation stages.
+Vben second-app cold open measured 1,365.77 ms against the unchanged 1,500 ms
+limit. Its two SHA-256 phases took 9.28 and 8.84 ms (18.12 ms total), with
+22.70 ms for both enclosing authentication decisions. All six Vben and three
+Misskey decisions accepted the same complete native image recorded above.
+
+Verbose build output confirms opt3 and `debug-assertions=on` for `sha2:0.11.1`;
+Canon and Vize remain opt0. Cargo retains explicit `overflow-checks = true`;
+rustc omits a redundant flag because overflow checks follow enabled debug
+assertions by [default](https://doc.rust-lang.org/rustc/codegen-options/index.html#overflow-checks).
+Both server processes exited 0. Full raw streams preserve the original
+synthetic-fixture configuration warnings and passive phase traces.
+
+The optimized run retains the baseline's instrumentation and original workload,
+with only the reviewed Cargo override and diagnostic guards changed. This is
+an instrumented paired observation; combined, uninstrumented Full Check remains
+required. Diagnostic code is excluded from this change, and no source-coverage
+speedup is claimed because that job uses a different Cargo profile. Local
+validation covers the actual manifest, exact dependency pin and narrow profile
+refusal controls without a product build.
