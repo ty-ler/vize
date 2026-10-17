@@ -368,7 +368,7 @@ fn first_failed_admission_observations_route_external_base_creation_to_primary_a
         );
         std::fs::write(
             root.join("tsconfig.json"),
-            serde_json::json!({"extends":base}).to_string(),
+            serde_json::to_vec(&serde_json::json!({"extends":base})).unwrap(),
         )
         .unwrap();
         std::fs::write(uri.to_file_path().unwrap(), "<template>disk</template>").unwrap();

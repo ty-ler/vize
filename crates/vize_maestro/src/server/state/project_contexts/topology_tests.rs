@@ -188,11 +188,15 @@ fn watched_marker_transfers_to_checked_full_key_without_reloading_or_retiring_si
         let primary_counter = root.join("evaluations.txt");
         let nested_counter = nested.join("evaluations.txt");
         let config_source = |hover| {
-            format!(
+            vize_l0::cstr!(
                 "import {{appendFileSync}} from 'node:fs'; export default () => {{ appendFileSync(new URL('./evaluations.txt', import.meta.url), 'x'); return {{vue:{{languageServer:{{hover:{hover}}}}}}}; }};"
             )
         };
-        std::fs::write(root.join("vite.config.mjs"), config_source(false)).unwrap();
+        std::fs::write(
+            root.join("vite.config.mjs"),
+            config_source(false).as_bytes(),
+        )
+        .unwrap();
         std::fs::write(sibling_root.join("package.json"), "{}").unwrap();
         std::fs::write(
             sibling_root.join("vite.config.mjs"),
@@ -244,7 +248,7 @@ fn watched_marker_transfers_to_checked_full_key_without_reloading_or_retiring_si
         assert!(previous.get_virtual_docs(&probe).is_some());
         assert!(!nested_counter.exists());
 
-        std::fs::write(&marker, config_source(true)).unwrap();
+        std::fs::write(&marker, config_source(true).as_bytes()).unwrap();
         let accepted =
             state.observe_project_config_events_checked(&[event(FileChangeType::CHANGED)]);
         assert!(accepted.errors.is_empty());
