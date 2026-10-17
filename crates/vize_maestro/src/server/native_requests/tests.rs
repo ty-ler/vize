@@ -30,7 +30,19 @@ fn local_responses_keep_the_complete_reply_without_waiting_for_the_native_scope(
 
 #[test]
 fn local_responses_refuse_source_close_configuration_and_retirement_changes() {
-    for mutation in ["source", "close", "configuration", "retirement"] {
+    #[derive(Debug)]
+    enum Mutation {
+        Source,
+        Close,
+        Configuration,
+        Retirement,
+    }
+    for mutation in [
+        Mutation::Source,
+        Mutation::Close,
+        Mutation::Configuration,
+        Mutation::Retirement,
+    ] {
         let (service, _socket) = build_lsp_service();
         let server = service.inner();
         let uri = Url::parse("file:///project/src/App.vue").unwrap();
@@ -40,24 +52,23 @@ fn local_responses_refuse_source_close_configuration_and_retirement_changes() {
             .open(uri.clone(), APP.into(), 1, "vue".into());
         let response = server.local_request(|| {
             match mutation {
-                "source" => {
+                Mutation::Source => {
                     server
                         .state
                         .documents
                         .open(uri.clone(), TOAST.into(), 2, "vue".into());
                 }
-                "close" => {
+                Mutation::Close => {
                     server.state.documents.close(&uri);
                 }
-                "configuration" => server
+                Mutation::Configuration => server
                     .state
                     .apply_lsp_initialization_options(Some(&json!({"hover":false}))),
-                "retirement" => server.state.retire_project_contexts(),
-                _ => unreachable!(),
+                Mutation::Retirement => server.state.retire_project_contexts(),
             }
             Ok(pending_native_reply())
         });
-        assert_eq!(response, Err(Error::content_modified()), "{mutation}");
+        assert_eq!(response, Err(Error::content_modified()), "{mutation:?}");
     }
 }
 
