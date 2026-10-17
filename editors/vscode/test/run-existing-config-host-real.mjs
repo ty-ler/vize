@@ -105,8 +105,11 @@ function prepareExternalConfigHost(directory, workspace, options) {
     }),
   );
   write(
-    path.join(a, "tsconfig.relaxed.json"),
-    '{"extends":"./tsconfig.json","compilerOptions":{"strictNullChecks":false}}',
+    path.join(a, "tsconfig.text.json"),
+    JSON.stringify({
+      extends: "./tsconfig.json",
+      compilerOptions: { paths: { "@policy": [path.join(directory, "types/string.ts")] } },
+    }),
   );
   write(
     path.join(directory, "policy-package/package.json"),

@@ -210,12 +210,21 @@ exports.run = async function run() {
     for (const [file, bytes] of authored) assert.deepEqual(fs.readFileSync(file), bytes);
   }
 
-  const policySource = (enabled, relaxed = false) =>
-    `export default ${JSON.stringify({ languageServer: { hover: enabled }, typeChecker: relaxed ? { tsconfig: "./tsconfig.relaxed.json" } : {}, linter: { enabled: false } })};\n`;
-  await change(policy, () => fs.writeFileSync(policy, policySource(true, true)), []);
+  const policySource = (enabled, textPolicy = false) =>
+    `export default ${JSON.stringify({ languageServer: { hover: enabled }, typeChecker: textPolicy ? { tsconfig: "./tsconfig.text.json" } : {}, linter: { enabled: false } })};\n`;
+  await change(
+    policy,
+    () => fs.writeFileSync(policy, policySource(true, true)),
+    expected(true, true),
+  );
   const enabled = await policyHover();
   assert.notEqual(enabled, null, "the imported outside helper changes actual native hover policy");
-  await change(policy, () => fs.writeFileSync(policy, "export default {"), [], true);
+  await change(
+    policy,
+    () => fs.writeFileSync(policy, "export default {"),
+    expected(true, true),
+    true,
+  );
   assert.deepEqual(
     await policyHover(),
     enabled,
@@ -246,7 +255,11 @@ exports.run = async function run() {
     true,
   );
   await registered(pending, missingStart);
-  await change(pending, () => fs.writeFileSync(pending, policySource(true)), []);
+  await change(
+    pending,
+    () => fs.writeFileSync(pending, policySource(true, true)),
+    expected(true, false),
+  );
   assert.notEqual(
     await policyHover(),
     null,
