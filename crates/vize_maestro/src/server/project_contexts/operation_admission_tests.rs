@@ -2,11 +2,63 @@
 use super::super::MaestroServer;
 use futures::{FutureExt, StreamExt};
 use serde_json::{Value, json};
+use tower::Service;
 use tower_lsp::lsp_types::{
     DidChangeTextDocumentParams, TextDocumentContentChangeEvent, Url,
     VersionedTextDocumentIdentifier,
 };
-use tower_lsp::{LanguageServer, LspService};
+use tower_lsp::{ClientSocket, LanguageServer, LspService};
+
+fn initialize(
+    service: &mut LspService<MaestroServer>,
+    socket: &mut ClientSocket,
+    root: &std::path::Path,
+) {
+    crate::runtime::block_on(async {
+        let operation = async {
+            for value in [
+                json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{
+                    "rootUri":Url::from_file_path(root).unwrap(),"capabilities":{},
+                    "initializationOptions":{"lint":true,"typecheck":false,"ecosystem":false}
+                }}),
+                json!({"jsonrpc":"2.0","method":"initialized","params":{}}),
+            ] {
+                futures::future::poll_fn(|cx| service.poll_ready(cx))
+                    .await
+                    .unwrap();
+                let response = service
+                    .call(serde_json::from_value(value).unwrap())
+                    .await
+                    .unwrap();
+                if let Some(response) = response {
+                    let response = serde_json::to_value(response).unwrap();
+                    assert_eq!(response["id"], 1);
+                    assert!(response["result"]["capabilities"].is_object());
+                    assert!(response.get("error").is_none());
+                }
+            }
+        }
+        .fuse();
+        futures::pin_mut!(operation);
+        let mut messages = Vec::<Value>::new();
+        loop {
+            futures::select! {
+                () = operation => break,
+                message = socket.next().fuse() => messages.push(serde_json::to_value(message.unwrap()).unwrap()),
+            }
+        }
+        while let Some(Some(message)) = socket.next().now_or_never() {
+            messages.push(serde_json::to_value(message).unwrap());
+        }
+        assert_eq!(
+            messages,
+            vec![json!({
+                "jsonrpc":"2.0","method":"window/logMessage",
+                "params":{"type":3,"message":"vize_maestro LSP server initialized"}
+            })]
+        );
+    });
+}
 
 #[test]
 fn incomplete_config_failure_evaluates_once_for_did_change_and_two_same_root_importers() {
@@ -16,18 +68,14 @@ fn incomplete_config_failure_evaluates_once_for_did_change_and_two_same_root_imp
     std::fs::write(&counter, "").unwrap();
     let config = root.join("vite.config.mjs");
     std::fs::write(&config, "import {appendFileSync} from 'node:fs'; export default () => { appendFileSync(new URL('./count.txt',import.meta.url),'x'); return {vue:{}}; };").unwrap();
-    let (service, mut socket) = LspService::new(|client| {
+    let (mut service, mut socket) = LspService::new(|client| {
         let mut server = MaestroServer::new(client);
         server.initial_diagnostics = None;
         server.configuration_watchers = None;
         server
     });
+    initialize(&mut service, &mut socket, &root);
     let server = service.inner();
-    server.state.set_workspace_root(root.clone());
-    server.state.load_workspace_config(&root);
-    server.state.apply_lsp_initialization_options(Some(
-        &json!({"lint":true,"typecheck":false,"ecosystem":false}),
-    ));
     let leaf = Url::from_file_path(root.join("Leaf.vue")).unwrap();
     let importers =
         ["Alpha.vue", "Beta.vue"].map(|name| Url::from_file_path(root.join(name)).unwrap());
@@ -94,19 +142,14 @@ fn importer_fanout_checks_each_other_root_once_and_applies_its_actual_new_policy
         std::fs::write(package.join("count.txt"), "").unwrap();
         std::fs::write(package.join("vite.config.mjs"), "import {appendFileSync} from 'node:fs'; export default () => { appendFileSync(new URL('./count.txt',import.meta.url),'x'); return {vue:{languageServer:{hover:false}}}; };").unwrap();
     }
-    let (service, mut socket) = LspService::new(|client| {
+    let (mut service, mut socket) = LspService::new(|client| {
         let mut server = MaestroServer::new(client);
         server.initial_diagnostics = None;
         server.configuration_watchers = None;
         server
     });
+    initialize(&mut service, &mut socket, &root);
     let server = service.inner();
-    server.state.set_workspace_root(root.clone());
-    server.state.set_workspace_folders(vec![root.clone()]);
-    server.state.load_workspace_config(&root);
-    server.state.apply_lsp_initialization_options(Some(
-        &json!({"lint":true,"typecheck":false,"ecosystem":false}),
-    ));
     let leaf = Url::from_file_path(a.join("Leaf.vue")).unwrap();
     let importers = [&a, &b]
         .into_iter()
