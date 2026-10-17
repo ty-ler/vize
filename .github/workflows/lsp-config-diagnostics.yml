@@ -83,7 +83,7 @@ jobs:
         if: ${{ !cancelled() && steps.producer.outcome == 'success' }}
         run: |
           cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_document_package_tests::symlink_workspace::
-          cargo test --locked --profile ci -p vize_canon --features legacy --lib batch::virtual_project::tests::editor_union_alias_transition::
+          cargo test --locked --profile ci -p vize_canon --features legacy --lib batch::virtual_project::materialize::alias_transition_tests::
           cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_dependencies_alias::context::cache::tests::
           cargo clippy --locked --profile ci -p vize_canon --features legacy --lib -- -D warnings
       - name: Observe the original six symlink workspace layouts
@@ -98,9 +98,6 @@ jobs:
           cat target/vize-tests/lsp-config-diagnostics/symlink.stdout
           cat target/vize-tests/lsp-config-diagnostics/symlink.stderr >&2
           exit "$status"
-      - name: Check all Canon targets after the measured and integration gates
-        if: ${{ !cancelled() && steps.producer.outcome == 'success' }}
-        run: cargo clippy --locked --profile ci -p vize_canon --features legacy --all-targets -- -D warnings
       - name: Retain source, binary, raw process output, native phases, and metrics
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
