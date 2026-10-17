@@ -1,8 +1,4 @@
 //! Actual initialize packets and ClientSocket registration/ACK lifecycle.
-#![expect(
-    clippy::disallowed_types,
-    reason = "the fixture retains the root controller and its real client"
-)]
 
 use super::*;
 use futures::{SinkExt, StreamExt};
@@ -15,9 +11,15 @@ use tower_lsp::{
     jsonrpc::{Request, Response},
 };
 
+#[expect(
+    clippy::disallowed_types,
+    reason = "the fixture needs Weak observers to prove the real root owner is released"
+)]
+type RootOwner = std::sync::Arc<Control>;
+
 struct Host {
     client: Client,
-    control: Arc<Control>,
+    control: RootOwner,
 }
 
 #[tower_lsp::async_trait]
@@ -41,13 +43,13 @@ impl LanguageServer for Host {
 struct Harness {
     service: LspService<Host>,
     socket: ClientSocket,
-    control: Arc<Control>,
+    control: RootOwner,
 }
 
 impl Harness {
     fn new(watched: Value) -> Self {
-        let control = Arc::new(Control::default());
-        let root = Arc::clone(&control);
+        let control = RootOwner::new(Control::default());
+        let root = RootOwner::clone(&control);
         let (service, socket) = LspService::new(move |client| Host {
             client,
             control: root,
@@ -175,7 +177,7 @@ fn real_client_coalesces_deduplicates_and_retires_only_after_replacement_ack() {
     retired(&retire, &replacement_id);
     host.reply(&retire, true);
     host.control.shutdown();
-    until(|| Arc::strong_count(&host.control.shared) == 1);
+    until(|| SharedQueue::strong_count(&host.control.shared) == 1);
 }
 
 #[test]
@@ -236,11 +238,11 @@ fn shutdown_cancels_held_ack_releases_worker_and_does_not_capture_root_control()
         host.control.update(vec![root.path().join("latest.json")]);
         if explicit {
             host.control.shutdown();
-            until(|| Arc::strong_count(&host.control.shared) == 1);
+            until(|| SharedQueue::strong_count(&host.control.shared) == 1);
             assert!(host.control.shared.queue.lock().latest.is_none());
         }
-        let root_owner = Arc::downgrade(&host.control);
-        let queue = Arc::downgrade(&host.control.shared);
+        let root_owner = RootOwner::downgrade(&host.control);
+        let queue = SharedQueue::downgrade(&host.control.shared);
         drop(host);
         assert!(
             root_owner.upgrade().is_none(),
@@ -262,7 +264,7 @@ fn incomplete_or_unsupported_capabilities_never_start_worker_or_send_rpc() {
         host.control
             .update(vec![std::env::temp_dir().join("policy.json")]);
         assert!(!host.control.shared.queue.lock().started);
-        assert_eq!(Arc::strong_count(&host.control.shared), 1);
+        assert_eq!(SharedQueue::strong_count(&host.control.shared), 1);
         assert!(host.socket.next().now_or_never().is_none());
     }
 }

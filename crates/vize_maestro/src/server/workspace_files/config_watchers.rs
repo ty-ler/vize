@@ -1,12 +1,7 @@
 //! Root-owned, coalesced configuration watches; no server state enters the worker.
-#![expect(
-    clippy::disallowed_types,
-    reason = "the root and its one OS worker share only a bounded queue"
-)]
 
 use std::future::Future;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use futures::FutureExt;
 use futures::channel::oneshot;
@@ -36,10 +31,16 @@ struct Shared {
     ready: Condvar,
 }
 
+#[expect(
+    clippy::disallowed_types,
+    reason = "the root and its OS worker require a shared queue; Carton exports no Arc"
+)]
+type SharedQueue = std::sync::Arc<Shared>;
+
 /// Foreground operations only replace desired paths or signal the single worker.
 #[derive(Default)]
 pub(in crate::server) struct Control {
-    shared: Arc<Shared>,
+    shared: SharedQueue,
 }
 
 impl Control {
@@ -63,7 +64,7 @@ impl Control {
             queue.started = true;
             queue.stop = Some(stop);
         }
-        let shared = Arc::clone(&self.shared);
+        let shared = SharedQueue::clone(&self.shared);
         if let Err(error) = std::thread::Builder::new()
             .name("vize-config-watch".into())
             .spawn(move || {
@@ -139,7 +140,7 @@ impl Worker {
         }
     }
 
-    fn run(mut self, shared: Arc<Shared>) {
+    fn run(mut self, shared: SharedQueue) {
         loop {
             let paths = {
                 let mut queue = shared.queue.lock();
