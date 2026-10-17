@@ -157,7 +157,7 @@ process.stdin.on('end', () => {
     ] as const) {
       assert.deepEqual(
         events.filter((event) => event.kind === "frame" && event.direction === direction),
-        packets.map((packet) => ({
+        packets.map((packet): Event => ({
           kind: "frame",
           direction,
           pid: identity.pid,

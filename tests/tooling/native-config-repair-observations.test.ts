@@ -155,7 +155,8 @@ test("incomplete failed observations preserve the original exception and require
         ),
         (actual) => actual === error,
       );
-      assert.ok(observation?.paths.includes(selected));
+      assert.ok(observation);
+      assert.ok(observation.paths.includes(selected));
       assert.equal(observation.complete, false);
     }
   } finally {
