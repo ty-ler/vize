@@ -11,6 +11,8 @@ use std::fs;
 #[path = "root/support.rs"]
 mod support;
 use support::*;
+#[path = "../support/config_refusal.rs"]
+mod config_refusal;
 #[path = "root/ignore_syntax.rs"]
 mod ignore_syntax;
 
@@ -267,17 +269,22 @@ fn malformed_discovered_vue_settings_refuse_build_before_writing_outputs() {
         "vite.config.cts",
         "throw new Error('lower-priority config evaluated');",
     );
-    let refused = run(root, &["build", "App.vue", "-o", "refused"]);
+    let refused = std::process::Command::new(env!("CARGO_BIN_EXE_vize"))
+        .current_dir(root)
+        .env("RAYON_NUM_THREADS", "1")
+        .env("NODE_OPTIONS", config_refusal::NODE_OPTIONS)
+        .args(["build", "App.vue", "-o", "refused"])
+        .output()
+        .unwrap();
     assert_eq!(refused.status.code(), Some(1), "{refused:?}");
-    let stderr = std::str::from_utf8(&refused.stderr).unwrap();
-    assert!(stderr.contains("vite.config.mjs"), "{stderr}");
-    assert!(
-        stderr.contains("unsupported native option value"),
-        "{stderr}"
-    );
-    assert!(
-        !stderr.contains("lower-priority config evaluated"),
-        "{stderr}"
+    assert_eq!(refused.stdout, b"");
+    let directory = root.canonicalize().unwrap();
+    config_refusal::assert_error(
+        &refused,
+        &directory.join("vite.config.mjs"),
+        &directory,
+        "TypeError: vue.compiler.whitespace: unsupported native option value",
+        1,
     );
     assert!(!root.join("refused").exists());
     assert_eq!(fs::read_to_string(root.join("App.vue")).unwrap(), source);
