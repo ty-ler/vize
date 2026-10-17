@@ -243,6 +243,8 @@ await test("original Vue compiler scope and TS erasure preserve explicit referen
   const helper = pathToFileURL(
     path.join(root, "tests/tooling/support/patina-template-provider.ts"),
   );
+  const requireTests = createRequire(path.join(root, "tests/package.json"));
+  const foreignManifest = requireTests.resolve("vue-language-tools-fixture-vue/package.json");
   const foreign = spawnSync(
     process.execPath,
     [
@@ -253,22 +255,28 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { loadFrozenTemplateCompiler } from ${JSON.stringify(helper.href)};
 const provider = JSON.parse(readFileSync(${JSON.stringify(path.join(fixture, "template-boundaries.json"))}, "utf8")).compilerProvider;
-const installed = createRequire(process.env.VIZE_LEGACY_API_VUE_MANIFEST)("vue/package.json").version;
+const foreignRequire = createRequire(process.env.VIZE_LEGACY_API_VUE_MANIFEST);
+const installed = foreignRequire("vue/package.json").version;
+const runtimeVersion = foreignRequire("vue").version;
+assert.equal(runtimeVersion, installed);
 assert.notEqual(installed, provider.vue, "the control must install a genuinely different Vue");
 assert.throws(() => loadFrozenTemplateCompiler("template-boundaries.json", provider, "dom"), assert.AssertionError);
-process.stdout.write(JSON.stringify({ installed, expected: provider.vue, refused: true }));`,
+process.stdout.write(JSON.stringify({ installed, runtimeVersion, expected: provider.vue, refused: true }));`,
     ],
     {
       encoding: "utf8",
+      timeout: 10_000,
       env: {
         ...process.env,
-        VIZE_LEGACY_API_VUE_MANIFEST: path.join(root, "tools/benchmarks/scripts/package.json"),
+        VIZE_LEGACY_API_VUE_MANIFEST: foreignManifest,
       },
     },
   );
-  assert.equal(foreign.status, 0, foreign.stderr);
+  assert.equal(foreign.status, 0, foreign.error?.message ?? foreign.stderr);
   const refusal = JSON.parse(foreign.stdout);
   assert.equal(refusal.refused, true);
+  assert.equal(refusal.installed, "3.6.0-rc.6");
+  assert.equal(refusal.runtimeVersion, refusal.installed);
   assert.equal(refusal.expected, boundaries.compilerProvider.vue);
   assert.notEqual(refusal.installed, refusal.expected);
   assert.equal(boundaries.syntaxProof.length, 5);
