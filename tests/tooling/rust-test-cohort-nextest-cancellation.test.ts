@@ -108,6 +108,11 @@ setInterval(() => {}, 1000);
 `,
     );
     const runner = join(root, "tools/support/compat/github/run-rust-test-cohort.ts");
+    for (const name of ["rust-build-evidence.ts", "compare-unused-bindings-profiles.ts"])
+      writeFileSync(
+        join(directory, "tools/support/compat/github", name),
+        readFileSync(join(root, "tools/support/compat/github", name)),
+      );
     writeFileSync(
       join(directory, "tools/support/compat/github/run-rust-test-cohort.ts"),
       `import { main } from ${JSON.stringify(pathToFileURL(runner).href)}; await main();\n`,

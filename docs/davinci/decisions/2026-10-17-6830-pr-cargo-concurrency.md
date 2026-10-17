@@ -64,3 +64,18 @@ artifacts. Report unknown or changed cache state and absent memory evidence.
 The comparison is observational. Keep the strict test/Clippy gates and revert
 this trial if it causes OOM or meaningful regression; do not change assertions,
 budgets or retries to obtain a passing result.
+
+## Later combined-source observation
+
+The corrected [first attempt](https://github.com/ubugeeei-prod/vize/actions/runs/38988047444)
+at `ccc1b26018d185b41636125e9dad2980df8fd4cf` passed the required report in
+4m07s and all twelve observed workflow instances in 4m10s from the first event.
+All 18,512 Rust identities match the preceding failed attempt exactly, with no
+duplicates, failures or executed skips. Affected Clippy, native-feature Clippy
+and doctests all completed. Its synthetic checkout is
+`840528cc679f26cfd65d25a3e93f7664a528fa40`, including main `8d3ca7bb`.
+The earlier attempt failed feature Clippy and never reached doctests; its short
+duration is not a successful qualification. This later observation includes
+other native-build improvements and changed main inputs, so it still does not
+isolate Cargo concurrency or guarantee future latency. Full qualification is
+separate from these ordinary PR results.

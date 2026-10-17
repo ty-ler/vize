@@ -7,7 +7,7 @@
 //! [package]
 //! edition = "2024"
 //! ```
-//! Driver source pin: published-consumer-supplement-v17.
+//! Driver source pin: release-bot-envelope-variants-v16.
 
 #[path = "../../support/release/pr_budget.rs"]
 mod pr_budget;
@@ -82,10 +82,6 @@ fn run() -> Result<(), String> {
             tag,
             run_id.parse().map_err(|_| "Invalid release run number")?,
             &root,
-        ),
-        ["published-history", number, head, tag, run] => pr_pin::published_history(
-            number.parse().map_err(|_| "Invalid source PR")?, head, tag,
-            run.parse().map_err(|_| "Invalid original Release run")?, &root,
         ),
         ["verify-integration-candidate", number, candidate, base, head] => pr_pin::verify_candidate(
             number.parse().map_err(|_| "Invalid integration PR number")?, candidate, base, head, &root,

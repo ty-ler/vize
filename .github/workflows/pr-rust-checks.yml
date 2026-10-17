@@ -292,7 +292,21 @@ jobs:
         run: |
           node -e 'require("node:fs").writeFileSync(process.env.RUNNER_TEMP + "/rust-plan.json", process.env.RUST_PLAN_JSON)'
           export VIZE_RUST_COHORT_TIMING_PATH="target/nextest/$NEXTEST_PROFILE/timing.json"
-          exec node tools/support/compat/github/run-rust-test-cohort.ts "$RUNNER_TEMP/rust-plan.json" "$COHORT" --cargo-profile ci --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass
+          evidence="$RUNNER_TEMP/rust-build-evidence"
+          node tools/support/compat/github/rust-build-evidence.ts before "$evidence"
+          export VIZE_RUST_BUILD_STDOUT_PATH="$evidence/cargo.jsonl"
+          exec node tools/support/compat/github/run-rust-test-cohort.ts "$RUNNER_TEMP/rust-plan.json" "$COHORT" --cargo-profile ci --timings --cargo-message-format=json-render-diagnostics --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass
+      - name: Preserve actual PR Rust build units and fresh timing HTML
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        run: node tools/support/compat/github/rust-build-evidence.ts collect "$RUNNER_TEMP/rust-build-evidence"
+      - name: Upload PR Rust build evidence
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rust-build-evidence-${{ matrix.cohort }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: ${{ runner.temp }}/rust-build-evidence/
+          if-no-files-found: error
+          retention-days: 7
       - name: Run Rust test cohort without rebuilding
         if: ${{ github.event_name == 'merge_group' }}
         # Baked env! paths still occur in tests. Extract to the original workspace

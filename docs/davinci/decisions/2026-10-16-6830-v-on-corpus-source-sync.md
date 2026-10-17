@@ -33,3 +33,14 @@ TSV shards only. All 15 existing tests in `davinci-v-on-storage.test.ts` and
 `davinci-matrices.test.ts` passed, including whole-inventory equality, unchanged
 two-entry maxima and the matrix mutation controls. Full Actions qualification
 remains the integration acceptance.
+
+Full run [38988499789](https://github.com/ubugeeei-prod/vize/actions/runs/38988499789)
+at `e2b883eed6378eb7ada73bf0220d89a185a3d6fd` found one later stale shard.
+[#9274](https://github.com/ubugeeei-prod/vize/pull/9274) added five complete
+numeric-key autofix outputs to `lint-deprecation-source-composition.test.mjs`.
+The unchanged generator records their five natural spellings in
+`tests--tooling.tsv`, preserving every previous row. Regenerate that shard from
+the actual source fixtures; the classifier, two-entry maxima, original packets
+and whole-inventory assertions remain unchanged.
+Both existing test files pass all 15 controls again, including the unchanged
+capacity and mutation checks. Exact-source Actions remain the integration gate.

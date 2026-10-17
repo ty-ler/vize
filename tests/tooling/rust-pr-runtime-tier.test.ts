@@ -185,6 +185,8 @@ exec "$NODE" -e 'const fs=require("node:fs");const args=process.argv.slice(1);if
         "plan-affected-rust.ts",
         "plan-source-checks.ts",
         "rust-differential-lanes.ts",
+        "rust-build-evidence.ts",
+        "compare-unused-bindings-profiles.ts",
       ]) {
         copyFileSync(
           fileURLToPath(new URL(`../../tools/support/compat/github/${file}`, import.meta.url)),
@@ -234,6 +236,8 @@ exec "$NODE" -e 'const fs=require("node:fs");const args=process.argv.slice(1);if
           "--lib",
           "--cargo-profile",
           "ci",
+          "--timings",
+          "--cargo-message-format=json-render-diagnostics",
           ...filter,
         ]);
       }
