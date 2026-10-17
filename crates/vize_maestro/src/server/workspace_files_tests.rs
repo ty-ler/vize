@@ -246,14 +246,14 @@ fn output_filter_checks_authored_and_physical_symlink_paths_for_absent_children(
     }
 }
 
-fn watched_project() -> (
+fn watched_project() -> std::io::Result<(
     tempfile::TempDir,
     tower_lsp::LspService<super::MaestroServer>,
     Url,
-) {
-    let root = tempfile::tempdir().unwrap();
+)> {
+    let root = tempfile::tempdir()?;
     let package = root.path().join("package");
-    std::fs::create_dir_all(package.join(".vize")).unwrap();
+    std::fs::create_dir_all(package.join(".vize"))?;
     for (name, content) in [
         ("package.json", "{}"),
         (
@@ -277,7 +277,7 @@ fn watched_project() -> (
             "<script setup>const total = 1</script><template>{{ total }}</template>",
         ),
     ] {
-        std::fs::write(package.join(name), content).unwrap();
+        std::fs::write(package.join(name), content)?;
     }
     let (service, _socket) = tower_lsp::LspService::new(super::MaestroServer::new);
     service.inner().state.set_workspace_root(root.path().into());
@@ -285,8 +285,9 @@ fn watched_project() -> (
         .inner()
         .state
         .set_workspace_folders(vec![root.path().into()]);
-    let uri = Url::from_file_path(package.join("App.vue")).unwrap();
-    (root, service, uri)
+    let uri = Url::from_file_path(package.join("App.vue"))
+        .map_err(|()| std::io::Error::other("watched project path must form a file URI"))?;
+    Ok((root, service, uri))
 }
 
 #[test]
@@ -295,7 +296,7 @@ fn owned_json_notification_preserves_pending_semantic_response_and_project_gener
     use tower_lsp::LanguageServer;
     use tower_lsp::lsp_types::{DidChangeWatchedFilesParams, SemanticTokensParams};
 
-    let (root, service, uri) = watched_project();
+    let (root, service, uri) = watched_project().unwrap();
     let server = service.inner();
     let state = server.state.document_project_state(&uri).unwrap();
     let source = std::fs::read_to_string(uri.to_file_path().unwrap()).unwrap();
@@ -358,7 +359,7 @@ fn helper_tsconfig_and_authored_dot_vize_json_notifications_still_reconfigure() 
             r#"{"vueCompilerOptions":{"target":3.5}}"#,
         ),
     ] {
-        let (root, service, uri) = watched_project();
+        let (root, service, uri) = watched_project().unwrap();
         let server = service.inner();
         let previous = server.state.document_project_state(&uri).unwrap();
         let stamp = previous.corsa_request_stamp();
