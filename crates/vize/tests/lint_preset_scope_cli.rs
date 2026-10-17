@@ -11,6 +11,13 @@ use std::{
 #[path = "support/vite_config.rs"]
 mod vite_config;
 
+fn digest(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
 fn temp_project_dir(test_name: &str) -> PathBuf {
     let nonce = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -221,13 +228,13 @@ fn six_default_presets_preserve_38_complete_cli_warning_off_repair_and_alias_pac
                 receipts.push(serde_json::json!({
                     "case": case["id"], "preset": preset, "mode": mode,
                     "source": source, "config": config,
-                    "sourceSha256": format!("{:x}", Sha256::digest(source.as_bytes())),
+                    "sourceSha256": digest(source.as_bytes()),
                     "argv": argv, "historicalArgv": historical_argv,
                     "originalConfigBytes": original_config,
-                    "originalConfigSha256": format!("{:x}", Sha256::digest(&original_config)),
+                    "originalConfigSha256": digest(&original_config),
                     "configIdentity": {"historical": "vize.config.json", "current": "vite.config.mjs"},
                     "configBytes": carrier.as_bytes(),
-                    "configSha256": format!("{:x}", Sha256::digest(carrier.as_bytes())),
+                    "configSha256": digest(carrier.as_bytes()),
                     "configAfterBytes": fs::read(project.path().join("vite.config.mjs")).unwrap(),
                     "status": output.status.code(),
                     "stdoutBytes": &output.stdout, "stderrBytes": &output.stderr
