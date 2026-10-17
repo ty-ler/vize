@@ -76,9 +76,70 @@
                        :position (:line 1 :character 8))
                      :timeout 15)))
 
-(defun vize-real--record (name legacy modern hover)
+(defun vize-real--watch-ready (server)
+  "Require actual Eglot capability advertisement and native watch installation."
+  (let* ((initialize
+          (seq-find (lambda (entry)
+                      (equal (plist-get (plist-get entry :msg) :method) "initialize"))
+                    (vize-real--entries)))
+         (capabilities (plist-get (plist-get (plist-get initialize :msg) :params)
+                                  :capabilities)))
+    (should (eq (plist-get (plist-get (plist-get capabilities :workspace)
+                                     :didChangeWatchedFiles)
+                          :dynamicRegistration) t)))
+  (vize-real--wait "native watcher registration in the actual Eglot host"
+                   (lambda () (> (hash-table-count (eglot--file-watches server)) 0))))
+
+(defun vize-real--change-config (name source)
+  "Save configuration and wait for Eglot's own file-notify notification."
+  (let* ((file (expand-file-name name (getenv "VIZE_EMACS_WORKSPACE")))
+         (uri (eglot--path-to-uri file))
+         (before (length (vize-real--entries))))
+    (with-temp-file file (insert source))
+    (vize-real--wait
+     (format "Eglot file notification for %s" name)
+     (lambda ()
+       (seq-some
+        (lambda (entry)
+          (let ((message (plist-get entry :msg)))
+            (and (equal (plist-get entry :dir) "c2s")
+                 (equal (plist-get message :method) "workspace/didChangeWatchedFiles")
+                 (seq-some (lambda (change) (equal (plist-get change :uri) uri))
+                           (plist-get (plist-get message :params) :changes)))))
+        (nthcdr before (vize-real--entries)))))
+    (list :file name :source source)))
+
+(defun vize-real--touch (buffer)
+  "Make a real saved editor change and return its Eglot document version."
+  (with-current-buffer buffer
+    (goto-char (point-max))
+    (insert "\n")
+    (save-buffer)
+    eglot--versioned-identifier))
+
+(defun vize-real--case (name legacy modern deprecated hover-enabled &optional config)
+  "Observe fresh complete native packets after ordinary editor saves."
+  (let* ((legacy-version (vize-real--touch legacy))
+         (modern-version (vize-real--touch modern))
+         (legacy-packet (vize-real--diagnostics legacy deprecated legacy-version))
+         (modern-packet (vize-real--diagnostics modern t modern-version))
+         (hover (vize-real--wait
+                 (format "%s native hover feature state" name)
+                 (lambda ()
+                   (condition-case nil
+                       (let ((value (vize-real--hover modern)))
+                         (when (eq (not (null value)) hover-enabled)
+                           (list value)))
+                     ;; A native owner can retire while a watched reload is pending.
+                     ;; Preserve that wire error, then require the final feature state.
+                     (jsonrpc-error nil))))))
+    (vize-real--record name legacy-packet modern-packet (car hover) config)))
+
+(defun vize-real--record (name legacy modern hover &optional config)
   "Keep complete case observations in addition to the unmodified wire packets."
-  (push (list :phase name :legacy legacy :modern modern :hover hover) vize-real--cases)
+  (push (list :phase name :legacy legacy :modern modern :hover hover
+              :authoredConfig config :wireCount (length (vize-real--entries)))
+        vize-real--cases)
   (with-temp-file (getenv "VIZE_EMACS_CASES")
     (insert (json-serialize (vconcat (reverse vize-real--cases))
                             :null-object nil :false-object :json-false))))
@@ -97,12 +158,32 @@
           (setq server (with-current-buffer legacy (eglot-current-server)))
           (setq modern (vize-real--open "Modern.vue"))
           (should (eq server (with-current-buffer modern (eglot-current-server))))
+          (vize-real--watch-ready server)
           (let ((legacy-packet (vize-real--diagnostics legacy nil))
                 (modern-packet (vize-real--diagnostics modern t))
                 (hover (vize-real--hover modern)))
             (should-not hover)
             (vize-real--record "initial-reference-targets-and-vite-hover"
-                               legacy-packet modern-packet hover)))
+                               legacy-packet modern-packet hover))
+          (let* ((vite-file (expand-file-name "vite.config.mjs" (getenv "VIZE_EMACS_WORKSPACE")))
+                 (legacy-file (expand-file-name "tsconfig.legacy.json" (getenv "VIZE_EMACS_WORKSPACE")))
+                 (vite-source (with-temp-buffer (insert-file-contents vite-file) (buffer-string)))
+                 (legacy-source (with-temp-buffer (insert-file-contents legacy-file) (buffer-string)))
+                 (enabled-source (replace-regexp-in-string "\"hover\":false" "\"hover\":true" vite-source)))
+            (vize-real--case "vite-valid-hover-enabled" legacy modern nil t
+                              (vize-real--change-config "vite.config.mjs" enabled-source))
+            (vize-real--case "vite-invalid-retains-hover-enabled" legacy modern nil t
+                              (vize-real--change-config "vite.config.mjs" "export default { vue:"))
+            (vize-real--case "vite-valid-hover-recovery" legacy modern nil nil
+                              (vize-real--change-config "vite.config.mjs" vite-source))
+            (vize-real--case "reference-valid-target-3" legacy modern t nil
+                              (vize-real--change-config
+                               "tsconfig.legacy.json"
+                               (replace-regexp-in-string "2\\.7" "3" legacy-source)))
+            (vize-real--case "reference-invalid-retains-target-3" legacy modern t nil
+                              (vize-real--change-config "tsconfig.legacy.json" "{\"vueCompilerOptions\":"))
+            (vize-real--case "reference-valid-target-recovery" legacy modern nil nil
+                              (vize-real--change-config "tsconfig.legacy.json" legacy-source))))
       (when server (ignore-errors (eglot-shutdown server nil 10)))
       (dolist (buffer (list legacy modern))
         (when (buffer-live-p buffer)
