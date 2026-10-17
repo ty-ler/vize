@@ -122,11 +122,13 @@ impl Session {
     ) -> TestResult {
         let expected = json!({"jsonrpc":"2.0","method":"textDocument/publishDiagnostics",
             "params":{"uri":uri,"version":version,"diagnostics":diagnostics}});
-        // This target disables prompt lint feedback. Initial [] is withheld,
-        // and didChange's versioned [] can only follow the awaited native
-        // collection. Match the whole final result and retain all earlier
-        // publications in the unchanged shared transport's terminal evidence.
-        let response = self.process.recv_matching(|m| m == &expected);
+        // This target disables prompt lint feedback. Initial [] is withheld;
+        // the versioned native result may include actual authored errors.
+        // Match the whole final result and retain all earlier publications in
+        // the unchanged shared transport's terminal evidence.
+        let response = self
+            .process
+            .recv_matching(|message| matches_publication(message, &expected));
         check(response, expected)
     }
 
@@ -166,4 +168,48 @@ impl Session {
         );
         Ok(())
     }
+}
+
+/// The reopen barrier accepts the entire versioned publication, including every
+/// diagnostic. Close's unversioned empty acknowledgment cannot satisfy it.
+fn matches_publication(message: &Value, expected: &Value) -> bool {
+    message == expected
+}
+
+#[test]
+fn reopen_diagnostic_barrier_rejects_missing_or_different_native_errors() {
+    let expected = json!({"jsonrpc":"2.0","method":"textDocument/publishDiagnostics",
+    "params":{"uri":"file:///project/src/Unicode.js","version":1,"diagnostics":[{
+        "range":{"start":{"line":2,"character":23},"end":{"line":2,"character":27}},
+        "severity":1,"code":7006,"source":"vize/types",
+        "message":"Parameter 'café' implicitly has an 'any' type."
+    }]}});
+    assert!(matches_publication(&expected, &expected));
+    for (pointer, replacement) in [
+        ("/params/diagnostics", json!([])),
+        ("/params/diagnostics/0/code", json!(2322)),
+        ("/params/diagnostics/0/severity", json!(2)),
+        (
+            "/params/diagnostics/0/message",
+            json!("different native error"),
+        ),
+        ("/params/diagnostics/0/range/start/character", json!(22)),
+        ("/params/diagnostics/0/source", json!("ts")),
+        ("/params/version", json!(2)),
+        ("/params/uri", json!("file:///project/src/Other.js")),
+    ] {
+        let mut different = expected.clone();
+        *different.pointer_mut(pointer).unwrap() = replacement;
+        assert!(!matches_publication(&different, &expected), "{pointer}");
+    }
+    let mut close = expected.clone();
+    close["params"].as_object_mut().unwrap().remove("version");
+    close["params"]["diagnostics"] = json!([]);
+    assert!(!matches_publication(&close, &expected));
+    let mut extra = expected.clone();
+    extra["params"]["diagnostics"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({"code":7006}));
+    assert!(!matches_publication(&extra, &expected));
 }
