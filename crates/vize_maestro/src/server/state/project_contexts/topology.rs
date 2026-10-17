@@ -254,11 +254,15 @@ impl ServerState {
         }
         match snapshot {
             Ok(snapshot) => {
+                let _routing_change = self.project_routing_change();
                 let replacement = Arc::new(registry::ProjectContext::with_prepared(
                     key.clone(),
                     snapshot,
                 ));
                 let retired = contexts.insert(key.clone(), replacement);
+                if let Some(retired) = &retired {
+                    retired.mark_retired();
+                }
                 self.project_contexts
                     .configuration_attempts
                     .lock()
