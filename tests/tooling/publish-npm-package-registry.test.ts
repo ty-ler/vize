@@ -11,6 +11,57 @@ import { runReleaseCommand } from "./support/release-command.ts";
 import { writeFakeCommand } from "./support/fake-command.ts";
 import { writeFakeNpmRegistry } from "./support/fake-npm-registry.ts";
 
+const versionUrl = "https://registry.npmjs.org/%40vizejs%2Fexample/1.2.3-beta.1";
+const metadataUrl = "https://registry.npmjs.org/%40vizejs%2Fexample";
+const probeQuery = "?vize-publish-check=registry-phase-test-1-";
+const preflight = `${versionUrl}${probeQuery}0`;
+const visibleVersion = `${versionUrl}${probeQuery}1`;
+const visibleTag = `${metadataUrl}${probeQuery}1`;
+const published = "publish succeeded";
+
+function assertPublicationTrace(events: readonly string[]): void {
+  assert.equal(events.length, 4, "one preflight, one publish and exactly two visibility probes");
+  assert.equal(events[0], preflight, "the absent version must be checked before publishing");
+  assert.equal(events[1], published, "visibility probes must follow successful publishing");
+  // waitForRegistryVisibility starts these independent reads with Promise.all.
+  // Preserve both exact requests without imposing an order on their child processes.
+  const visibility = events.slice(2);
+  assert.equal(visibility.filter((event) => event === visibleVersion).length, 1);
+  assert.equal(visibility.filter((event) => event === visibleTag).length, 1);
+}
+
+test("registry publication trace preserves phases and both exact parallel probes", () => {
+  assertPublicationTrace([preflight, published, visibleVersion, visibleTag]);
+  assertPublicationTrace([preflight, published, visibleTag, visibleVersion]);
+  const invalidTraces = {
+    "premature visibility": [preflight, visibleTag, published, visibleVersion],
+    "late preflight": [published, preflight, visibleVersion, visibleTag],
+    "duplicate version": [preflight, published, visibleVersion, visibleVersion],
+    "duplicate metadata": [preflight, published, visibleTag, visibleTag],
+    "missing probe": [preflight, published, visibleVersion],
+    "extra probe": [preflight, published, visibleVersion, visibleTag, visibleTag],
+    "missing publish": [preflight, visibleVersion, visibleTag],
+    "wrong version": [preflight, published, visibleVersion.replace("beta.1", "beta.2"), visibleTag],
+    "wrong package": [preflight, published, visibleVersion, visibleTag.replace("example", "other")],
+    "wrong registry": [
+      preflight,
+      published,
+      visibleVersion.replace("npmjs.org", "example.com"),
+      visibleTag,
+    ],
+    "reused probe token": [preflight, published, preflight, visibleTag],
+    "foreign run token": [
+      preflight,
+      published,
+      visibleVersion,
+      visibleTag.replace("phase-test", "other"),
+    ],
+  };
+  for (const [name, events] of Object.entries(invalidTraces)) {
+    assert.throws(() => assertPublicationTrace(events), assert.AssertionError, name);
+  }
+});
+
 test("parallel registry provider probes preserve every counter and expose only whole JSON state", async () => {
   const directory = mkdtempSync(path.join(tmpdir(), "release-registry-state-"));
   const statePath = path.join(directory, "state.json");
@@ -95,7 +146,30 @@ test("publish_npm_package computes the tag and forwards provenance to vp", () =>
   try {
     fs.mkdirSync(packageDir, { recursive: true });
     fs.mkdirSync(binDir, { recursive: true });
-    writeFakeNpmRegistry(binDir);
+    // Only vp publishes state. Concurrent registry reads must not rewrite the
+    // same JSON file merely to count requests; the append-only trace counts them.
+    writeFakeCommand(
+      binDir,
+      "curl",
+      [
+        "const fs = require('node:fs');",
+        "const url = process.argv.at(-1);",
+        "const name = decodeURIComponent(new URL(url).pathname.split('/')[1]);",
+        "const version = process.env.NPM_FAKE_VERSION;",
+        "const statePath = process.env.NPM_FAKE_STATE_PATH;",
+        "const state = fs.existsSync(statePath)",
+        "  ? JSON.parse(fs.readFileSync(statePath, 'utf8')) : {};",
+        "fs.appendFileSync(process.env.NPM_FAKE_URL_LOG, `${url}\\n`);",
+        "if (state.published !== true) {",
+        "  process.stdout.write('{}VIZE_HTTP_STATUS:404');",
+        "  process.exit(0);",
+        "}",
+        "const body = url.includes(`/${version}?`)",
+        "  ? { name, version }",
+        "  : { name, 'dist-tags': { latest: version, beta: version, rc: version } };",
+        "process.stdout.write(`${JSON.stringify(body)}VIZE_HTTP_STATUS:200`);",
+      ].join("\n"),
+    );
     writeFileSync(
       path.join(packageDir, "package.json"),
       `${JSON.stringify({ name: "@vizejs/example", version: "1.2.3-beta.1" }, null, 2)}\n`,
@@ -114,6 +188,7 @@ test("publish_npm_package computes the tag and forwards provenance to vp", () =>
         "  fs.writeFileSync(process.env.VP_CWD_LOG, process.cwd());",
         "  state.published = true;",
         "  fs.writeFileSync(process.env.VP_STATE_PATH, JSON.stringify(state));",
+        `  fs.appendFileSync(process.env.NPM_FAKE_URL_LOG, ${JSON.stringify(`${published}\n`)});`,
         "  process.exit(0);",
         "}",
         "if (args[0] === 'pm' && args[1] === 'view' && args[3] === 'version') {",
@@ -143,6 +218,8 @@ test("publish_npm_package computes the tag and forwards provenance to vp", () =>
         NPM_FAKE_STATE_PATH: statePath,
         NPM_FAKE_VERSION: "1.2.3-beta.1",
         NPM_FAKE_URL_LOG: registryUrlLogPath,
+        GITHUB_RUN_ID: "registry-phase-test",
+        GITHUB_RUN_ATTEMPT: "1",
         PUBLISH_RESOLUTION_RETRY_LIMIT: "1",
         PUBLISH_RESOLUTION_RETRY_DELAY: "1",
       },
@@ -160,26 +237,8 @@ test("publish_npm_package computes the tag and forwards provenance to vp", () =>
       "--provenance",
     ]);
     assert.equal(fs.realpathSync(fs.readFileSync(cwdLogPath, "utf8")), fs.realpathSync(packageDir));
-    const registryUrls = fs
-      .readFileSync(registryUrlLogPath, "utf8")
-      .trim()
-      .split("\n")
-      .map((url) => new URL(url));
-    assert.equal(registryUrls[0].pathname, "/%40vizejs%2Fexample/1.2.3-beta.1");
-    // Version and tag probes share one poll but can finish in either order.
-    assert.deepEqual(
-      registryUrls
-        .slice(1)
-        .map((url) => url.pathname)
-        .sort(),
-      ["/%40vizejs%2Fexample", "/%40vizejs%2Fexample/1.2.3-beta.1"],
-    );
-    const initialProbe = registryUrls[0].searchParams.get("vize-publish-check");
-    const pollProbe = registryUrls[1].searchParams.get("vize-publish-check");
-    assert.ok(initialProbe);
-    assert.ok(pollProbe);
-    assert.notEqual(initialProbe, pollProbe);
-    assert.equal(pollProbe, registryUrls[2].searchParams.get("vize-publish-check"));
+    assertPublicationTrace(fs.readFileSync(registryUrlLogPath, "utf8").trim().split("\n"));
+    assert.equal(fs.readFileSync(statePath, "utf8"), JSON.stringify({ published: true }));
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }

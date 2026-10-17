@@ -17,7 +17,7 @@ const expected = [
   "vue/v-on-style",
   "vue/v-slot-style",
   "vue/warn-custom-directive",
-].toSorted();
+].sort();
 const read = (path: string) => readFileSync(join(repoRoot, path), "utf8");
 const blocks = (text: string) =>
   [...text.matchAll(/^```(\w+)[^\n]*\n([\s\S]*?)^```[^\n]*$/gm)].map((match) => [
