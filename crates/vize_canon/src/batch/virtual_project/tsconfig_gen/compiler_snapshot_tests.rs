@@ -321,3 +321,26 @@ fn captured_auto_vue_target_and_solution_shell_do_not_reread_live_configuration(
     );
     assert!(!repaired.is_solution_shell());
 }
+
+#[test]
+fn admitted_absence_rejects_primary_or_fallback_configuration_creation_during_capture() {
+    for name in ["tsconfig.json", "jsconfig.json"] {
+        let root = tempfile::tempdir().unwrap();
+        let candidate = root.path().join(name);
+        let result =
+            CompilerConfigurationSnapshot::capture_with_observer(root.path(), None, || {
+                std::fs::write(&candidate, "{}").unwrap();
+            });
+        assert!(
+            vize_carton::cstr!("{}", result.err().unwrap())
+                .contains("configuration changed while it was being read")
+        );
+        let result = CompilerConfigurationSnapshot::capture(root.path(), None);
+        assert!(
+            vize_carton::cstr!("{}", result.err().unwrap())
+                .contains("appeared while admitting configuration absence")
+        );
+        std::fs::remove_file(candidate).unwrap();
+        assert!(CompilerConfigurationSnapshot::capture(root.path(), None).is_ok());
+    }
+}

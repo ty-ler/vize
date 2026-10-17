@@ -54,6 +54,21 @@ impl CompilerConfigurationSnapshot {
             .map(|path| vize_carton::path::normalize_windows_verbatim_path(path.to_path_buf()));
         let tsconfig_path = normalized.as_deref();
         let project = VirtualProject::new(project_root)?;
+        let implicit_candidates = [
+            project.project_root().join("tsconfig.json"),
+            project.project_root().join("jsconfig.json"),
+        ];
+        if tsconfig_path.is_none() {
+            for path in &implicit_candidates {
+                inputs.observe(path);
+                if path.is_file() {
+                    return Err(CorsaError::Configuration(vize_carton::cstr!(
+                        "TypeScript configuration {} appeared while admitting configuration absence",
+                        path.display()
+                    )));
+                }
+            }
+        }
         let flattened =
             project.load_compiler_options_flattened_with_inputs(tsconfig_path, Some(&inputs))?;
         after_flattened();
@@ -84,16 +99,8 @@ impl CompilerConfigurationSnapshot {
         let mut dependencies = if tsconfig_path.is_some() {
             configured.governing_config_paths_with_inputs(Some(&inputs))
         } else {
-            vec![
-                configured.project_root().join("tsconfig.json"),
-                configured.project_root().join("jsconfig.json"),
-            ]
+            implicit_candidates.to_vec()
         };
-        if tsconfig_path.is_none() {
-            for path in &dependencies {
-                inputs.observe(path);
-            }
-        }
         dependencies.extend(inputs.paths());
         dependencies.sort();
         dependencies.dedup();
