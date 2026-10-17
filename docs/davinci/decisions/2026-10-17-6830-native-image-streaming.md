@@ -65,3 +65,10 @@ stable latency gain, accumulating-leak diagnosis or allocator-page ownership.
 The bounded allocation is established by the code; the RSS result is the
 same-workload observation above. Combined full qualification with subsequent
 main changes remains separate, and the diagnostic workflow does not land.
+
+The first ordinary Check at `346308a3e2` rejected unchecked buffer slicing
+under the repository's `clippy::indexing_slicing` rule. The reader now uses a
+checked slice and rejects an invalid reported read length with `InvalidData`;
+a controlled reader verifies that rejection. Complete-file hashing and the
+64 KiB storage bound remain unchanged. Fresh Actions must validate this final
+source; the diagnostic measurement above predates this boundary-check fix.
