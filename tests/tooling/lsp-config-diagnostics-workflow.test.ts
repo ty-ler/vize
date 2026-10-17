@@ -184,10 +184,13 @@ test("startup diagnostics retain the production producer and unchanged scale-one
   // its original workloads; capturing only the old main pipeline hides drift.
   for (const sourcePath of [
     "crates/vize_carton/src/config/loader/js.rs",
+    "crates/vize_carton/src/config/loader/failure_identity.rs",
     "crates/vize_carton/src/config/loader/js_observation.rs",
     "crates/vize_carton/src/config/loader/module-runtime.mjs",
     "crates/vize_carton/src/config/loader/vite-runtime.mjs",
     "crates/vize_maestro/src/server/project_contexts/operation_admission_tests.rs",
+    "crates/vize_maestro/src/server/diagnostic_publishing/configuration_failure_tests.rs",
+    "crates/vize_maestro/src/server/workspace_files/config_watchers_lifecycle_tests.rs",
     "crates/vize_maestro/src/server/state/project_contexts/freshness.rs",
     "crates/vize_maestro/src/server/state/project_contexts/config_reload.rs",
     "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs",

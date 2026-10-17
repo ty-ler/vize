@@ -94,7 +94,7 @@ void test("the actual manager version audit uses a manifest-free cwd and preserv
 });
 
 void test("the refrozen composed producer binds every whole source and moved test module", () => {
-  const producer = "a9dec43c406c7afd1d2ce8067fc563678e28ac64";
+  const producer = "f20955968e08de71cd37f0d1db52ad72a2c4ead0";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -107,7 +107,7 @@ void test("the refrozen composed producer binds every whole source and moved tes
   const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
   const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
   const files = Object.keys(witness.producer.files);
-  assert.equal(files.length, 197);
+  assert.equal(files.length, 210);
   assert.equal(new Set(files).size, files.length);
   const changedRust = git(
     "diff",
@@ -120,7 +120,7 @@ void test("the refrozen composed producer binds every whole source and moved tes
     .trim()
     .split("\n")
     .filter((file) => file.endsWith(".rs"));
-  assert.equal(changedRust.length, 193);
+  assert.equal(changedRust.length, 206);
   const historicalAbsences = witness.producer.historicalRenames.map(
     (rename: { from: string }) => rename.from,
   );
@@ -147,7 +147,7 @@ void test("the refrozen composed producer binds every whole source and moved tes
   assert.equal(deletion.from, "crates/vize/src/commands/check/runner/input_scope/tests.rs");
   assert.equal(deletion.to, "crates/vize/src/commands/check/runner/input_scope_tests.rs");
   assert.equal(deletion.fromSource, witness.producer.composedBase);
-  assert.equal(deletion.toSource, producer);
+  assert.equal(deletion.toSource, "a9dec43c406c7afd1d2ce8067fc563678e28ac64");
   assert.equal(digest(git("show", deletion.fromSource + ":" + deletion.from)), deletion.fromSha256);
   assert.equal(digest(git("show", producer + ":" + deletion.to)), deletion.toSha256);
   const removedRust = git(
@@ -188,6 +188,22 @@ void test("the refrozen composed producer binds every whole source and moved tes
     digest(git("show", original.source + ":.github/workflows/native-smoke.yml")),
     original.workflowSha256,
   );
+  const prior = witness.producer.priorAdmission;
+  assert.equal(prior.source, "35d5b71d364a59accfa7f64dcfc23fa3667be417");
+  assert.equal(prior.producer, "a9dec43c406c7afd1d2ce8067fc563678e28ac64");
+  assert.equal(prior.witnessPath, witnessPath);
+  const priorBytes = git("show", prior.source + ":" + witnessPath);
+  assert.equal(digest(priorBytes), prior.witnessSha256);
+  const priorWitness = JSON.parse(priorBytes.toString());
+  assert.equal(
+    digest(git("show", prior.source + ":.github/workflows/native-smoke.yml")),
+    prior.workflowSha256,
+  );
+  assert.equal(Object.keys(priorWitness.producer.files).length, 197);
+  for (const file of Object.keys(priorWitness.producer.files))
+    assert.ok(files.includes(file), file);
+  for (const field of ["previousFreeze", "absentFiles", "historicalRenames", "netRustDeletions"])
+    assert.deepEqual(witness.producer[field], priorWitness.producer[field], field);
   const historicalBase = "85b7c8d4b12226b67eaf23dd7b84fb14b616c832";
   const prefix = "crates/vize_croquis/src/drawer/helpers/identifiers/ast/walk/";
   const renames = git(
@@ -203,7 +219,7 @@ void test("the refrozen composed producer binds every whole source and moved tes
     const record = witness.producer.historicalRenames[index];
     assert.equal(record.status, "R100");
     assert.equal(record.fromSource, historicalBase);
-    assert.equal(record.toSource, producer);
+    assert.equal(record.toSource, "a9dec43c406c7afd1d2ce8067fc563678e28ac64");
     assert.equal(record.from, from);
     assert.equal(record.to, to);
     assert.ok(renames.split("\n").includes(["R100", from, to].join("\t")));
