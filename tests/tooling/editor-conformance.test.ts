@@ -282,12 +282,31 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
   assert.ok(lifecycle > steps.findIndex((step) => step.name === "Prepare pinned VS Code"));
   assert.ok(lifecycle < steps.findIndex((step) => step.name === "Play the TS-45 scenario"));
   const packageExtension = steps.findIndex(
-    (step) => step.name === "Package the validated VS Code extension",
+    (step) => step.name === "Exercise original real VS Code authoring contracts",
   );
   assert.ok(packageExtension > lifecycle);
   assert.ok(packageExtension < steps.findIndex((step) => step.name === "Play the TS-45 scenario"));
   assert.equal(steps[packageExtension].if, "matrix.client == 'vscode'");
-  assert.equal(steps[packageExtension].run, "vp run --workspace-root test:vscode-extension:vsix");
+  assert.match(
+    steps[packageExtension].run.trim(),
+    /xvfb-run -a vp run --workspace-root test:vscode-extension:host-real$/u,
+  );
+  assert.doesNotMatch(steps[packageExtension].run, /lsp-tap|rich-host-tap/);
+  assert.match(steps[packageExtension].run, /consumed-server\.sha256/);
+  const producerSteps = workflow.jobs.server.steps;
+  assert.equal(
+    producerSteps.find((step: { name?: string }) => step.name === "Build vize CLI").run,
+    "cargo build --profile ci -p vize",
+  );
+  const receipt = producerSteps.find(
+    (step: { name?: string }) =>
+      step.name === "Record the real server source and executable identity",
+  );
+  assert.match(receipt.run, /test "\$\(git rev-parse HEAD\)" = "\$\{GITHUB_SHA\}"/);
+  assert.match(
+    steps.find((step) => step.name === "Make the server executable").run,
+    /sha256sum --check vize\.sha256/,
+  );
   assert.equal(steps[lifecycle].if, "matrix.client == 'vscode'");
   assert.equal(
     steps[lifecycle].run,
@@ -301,6 +320,8 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
   assert.equal(lifecycleEvidence?.with?.["include-hidden-files"], true);
   assert.equal(lifecycleEvidence?.with?.["if-no-files-found"], "error");
   assert.deepEqual(String(lifecycleEvidence?.with?.path).trim().split("\n"), [
+    "${{ runner.temp }}/rich-host-evidence/",
+    "editors/vscode/.vscode-test/host-smoke-real/failure/",
     "editors/vscode/.vscode-test/host-smoke/failure/",
     "editors/vscode/.vscode-test/host-smoke/output-channel/",
     "editors/vscode/.vscode-test/host-smoke/fake-server/events.jsonl",
