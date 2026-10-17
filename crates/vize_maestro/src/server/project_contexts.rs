@@ -149,27 +149,19 @@ impl MaestroServer {
     /// Route a continuation only after its governing root was explicitly checked.
     #[cfg(feature = "native")]
     pub(super) async fn for_document_admitted(&self, uri: &Url) -> DocumentServer<'_> {
-        #[cfg(feature = "native")]
-        {
-            let authored_revision = self.state.documents.stable_revision();
-            if uri.to_file_path().is_err() {
-                return DocumentServer::primary(self);
-            }
-            let state = self
-                .state
-                .document_project_state_async(uri)
-                .await
-                .unwrap_or_else(|| self.state.clone());
-            self.queue_configuration_watches();
-            DocumentServer {
-                owner: DocumentOwner::Project(self.with_project_state(state)),
-                authored_revision,
-            }
+        let authored_revision = self.state.documents.stable_revision();
+        if uri.to_file_path().is_err() {
+            return DocumentServer::primary(self);
         }
-        #[cfg(not(feature = "native"))]
-        {
-            let _ = uri;
-            DocumentServer::primary(self)
+        let state = self
+            .state
+            .document_project_state_async(uri)
+            .await
+            .unwrap_or_else(|| self.state.clone());
+        self.queue_configuration_watches();
+        DocumentServer {
+            owner: DocumentOwner::Project(self.with_project_state(state)),
+            authored_revision,
         }
     }
 }
