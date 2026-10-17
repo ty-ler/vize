@@ -143,6 +143,23 @@ jobs:
           timeout --signal=TERM --kill-after=10s 300s vp run --workspace-root test:vscode-extension:download
           vp run --workspace-root test:vscode-extension:vsix
 
+      - name: Exercise existing VS Code configuration and lifecycle contracts
+        if: matrix.client == 'vscode'
+        env:
+          VIZE_TEST_VSCODE_VERSION: "1.107.1"
+        run: xvfb-run -a vp run --workspace-root test:vscode-extension:host
+      - name: Retain VS Code configuration and lifecycle evidence
+        if: ${{ always() && matrix.client == 'vscode' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vscode-configuration-lifecycle
+          path: |
+            editors/vscode/.vscode-test/host-smoke/failure/
+            editors/vscode/.vscode-test/host-smoke/output-channel/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Play the TS-45 scenario
         env:
           VIZE_TEST_VSCODE_VERSION: "1.107.1"

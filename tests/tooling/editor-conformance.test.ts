@@ -246,6 +246,8 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
     name?: string;
     env?: Record<string, string>;
     uses?: string;
+    if?: string;
+    run?: string;
     with?: Record<string, unknown>;
   }>;
   const pins = Object.assign({}, ...steps.map((step) => step.env ?? {}));
@@ -266,7 +268,32 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
   const report = workflow.jobs.report.steps.at(-1).run as string;
   assert.match(report, /report\.ts "\$\{RUNNER_TEMP\}\/ts45" --require helix,neovim,vscode,zed$/u);
   assert.equal(workflow.jobs.report.if, "always()");
-  const upload = steps.find((step) => step.uses?.startsWith("actions/upload-artifact@"));
+  const upload = steps.find((step) => step.with?.name === "ts45-${{ matrix.client }}");
+  assert.ok(upload?.uses?.startsWith("actions/upload-artifact@"));
+  const lifecycle = steps.findIndex(
+    (step) => step.name === "Exercise existing VS Code configuration and lifecycle contracts",
+  );
+  assert.ok(
+    lifecycle >
+      steps.findIndex((step) => step.name === "Prepare pinned VS Code and the packaged extension"),
+  );
+  assert.ok(lifecycle < steps.findIndex((step) => step.name === "Play the TS-45 scenario"));
+  assert.equal(steps[lifecycle].if, "matrix.client == 'vscode'");
+  assert.equal(
+    steps[lifecycle].run,
+    "xvfb-run -a vp run --workspace-root test:vscode-extension:host",
+  );
+  const lifecycleEvidence = steps.find(
+    (step) => step.with?.name === "vscode-configuration-lifecycle",
+  );
+  assert.ok(lifecycleEvidence?.uses?.startsWith("actions/upload-artifact@"));
+  assert.equal(lifecycleEvidence?.if, "${{ always() && matrix.client == 'vscode' }}");
+  assert.equal(lifecycleEvidence?.with?.["include-hidden-files"], true);
+  assert.equal(lifecycleEvidence?.with?.["if-no-files-found"], "error");
+  assert.deepEqual(String(lifecycleEvidence?.with?.path).trim().split("\n"), [
+    "editors/vscode/.vscode-test/host-smoke/failure/",
+    "editors/vscode/.vscode-test/host-smoke/output-channel/",
+  ]);
   // A failed-only rerun must replace its earlier result without requiring
   // fresh artifacts from the three clients GitHub does not rerun.
   assert.equal(upload?.with?.name, "ts45-${{ matrix.client }}");
