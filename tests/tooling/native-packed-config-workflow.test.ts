@@ -94,7 +94,7 @@ void test("the actual manager version audit uses a manifest-free cwd and preserv
 });
 
 void test("the refrozen composed producer binds every whole source and moved test module", () => {
-  const producer = "f20955968e08de71cd37f0d1db52ad72a2c4ead0";
+  const producer = "c45e0901fc05cfa51c50d167ac97a34ec466dd18";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -107,7 +107,7 @@ void test("the refrozen composed producer binds every whole source and moved tes
   const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
   const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
   const files = Object.keys(witness.producer.files);
-  assert.equal(files.length, 210);
+  assert.equal(files.length, 212);
   assert.equal(new Set(files).size, files.length);
   const changedRust = git(
     "diff",
@@ -132,10 +132,13 @@ void test("the refrozen composed producer binds every whole source and moved tes
   assert.deepEqual(
     files.filter((file) => !file.endsWith(".rs")),
     [
+      "Cargo.lock",
+      "Cargo.toml",
       "crates/vize_carton/src/config/loader/module-runtime.d.mts",
       "crates/vize_carton/src/config/loader/module-runtime.mjs",
     ],
   );
+  assert.deepEqual(witness.producer.cargoInputs, ["Cargo.lock", "Cargo.toml"]);
   git("merge-base", "--is-ancestor", producer, "HEAD");
   assert.deepEqual(witness.producer.absentFiles, [
     "crates/vize/src/commands/check/runner/input_scope/tests.rs",

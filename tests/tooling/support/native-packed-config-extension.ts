@@ -58,7 +58,7 @@ export function verifyPackedProducerPreflight(script: string): void {
     assert.ok(match);
     const sourceFiles = runInNewContext(match[1]) as string[];
     const producerFiles = Object.keys(witness.producer.files);
-    assert.equal(producerFiles.length, 210);
+    assert.equal(producerFiles.length, 212);
     const fixtureBytes = "reviewed synthetic fixture bytes\n";
     for (const name of [...sourceFiles, ...producerFiles]) {
       if (witness.producer.absentFiles.includes(name)) continue;
@@ -164,6 +164,7 @@ export function verifyPackedProducerPreflight(script: string): void {
       "crates/vize_carton/src/config/loader/module-runtime.mjs",
       "crates/vize_carton/src/config/loader/failure_identity.rs",
       "crates/vize_maestro/src/server/workspace_files/config_watchers_lifecycle_tests.rs",
+      "Cargo.toml",
     ]) {
       assert.ok(producerFiles.includes(file));
       const target = path.join(repository, file);

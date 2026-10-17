@@ -1,7 +1,7 @@
 {
   "schema": "vize.native-smoke-packed-config-extension.v1",
   "beforeSha256": "26890094723c79ee46b27c710b42feed3d5a660f98c382246cf19458000aeaa3",
-  "afterSha256": "95968dfb519585194a4f8fc865e53bd40972c9d2c4d2780ce893890fb7b18251",
+  "afterSha256": "93b6b2bb3f11ec6c7902cc6669e5f8c63e2bc25d9f2df880e79917e7122208ef",
   "scope": "exact named bounded manual extension; immutable historical recipes/hash remain independently checked",
   "hunks": [
     {
@@ -34,15 +34,17 @@
     },
     {
       "before": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n",
-      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: f20955968e08de71cd37f0d1db52ad72a2c4ead0\n    steps: *fresh-install-steps\n"
+      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: c45e0901fc05cfa51c50d167ac97a34ec466dd18\n    steps: *fresh-install-steps\n"
     }
   ],
   "producer": {
-    "head": "f20955968e08de71cd37f0d1db52ad72a2c4ead0",
+    "head": "c45e0901fc05cfa51c50d167ac97a34ec466dd18",
     "composedBase": "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b",
     "priorProducer": "820bf6b5d688c77f8edea6ba18ff6f86f76bffae",
-    "scope": "Reviewed complete finite Rust and JS source admission; composed successor native/editor/performance/Full campaigns remain unexecuted.",
+    "scope": "Reviewed finite Rust, module-runtime, and Cargo workspace source admission; composed successor native/editor/performance/Full campaigns remain unexecuted.",
     "files": {
+      "Cargo.lock": "2ab0ae7ad501b06801640a33ba83ad0efb4fe3a3f7d3d140ef8b7785779950f5",
+      "Cargo.toml": "84303d10d57b8b0e928dc3a15c3d2560b539bc37d2af674c208ccac053dae456",
       "crates/vize/src/commands/check/runner.rs": "8e0d8309966f3c20d5a7374c9bbec25336d815c42d8ecc6585e6286b37843dcf",
       "crates/vize/src/commands/check/runner/direct.rs": "9577282e75a357e095dedf3a898fd3ac417a04bc5e1677b19da7c36b02acd903",
       "crates/vize/src/commands/check/runner/input_scope.rs": "a6790000390033bdf883e126ca251704d89694852271ad79ed4a1f7491825a0d",
@@ -178,7 +180,7 @@
       "crates/vize_maestro/src/lib.rs": "049890ccf1e9941736c0bf98df4869a3b5e4ce6ed89db0cf9d18b91b1372e9d8",
       "crates/vize_maestro/src/server.rs": "f472023f00e093a0941db68fc06de6d0f2d44c2595d8ea7f91b15d8af8d35bb3",
       "crates/vize_maestro/src/server/diagnostic_publishing.rs": "c18f56e6d8bde3d4f4611f7fe569365c2f4772d675011dbcc7f7584f8d75c104",
-      "crates/vize_maestro/src/server/diagnostic_publishing/configuration_failure_tests.rs": "73b2cec80f670c141ad9ef1ca7a66b4d14d428e4f956767770969a01ebf901cd",
+      "crates/vize_maestro/src/server/diagnostic_publishing/configuration_failure_tests.rs": "37a73cc614ac8eeb4e8d4a653b6abbd5797c11840f8845c40c108704579cb1f1",
       "crates/vize_maestro/src/server/diagnostic_publishing/retry_tests/publication_tests.rs": "b3aabb173324dceaca99ec97c72e3892d5d96e473bea652c8d49c0b3b13d9b4b",
       "crates/vize_maestro/src/server/handlers.rs": "b90bb7be027ca442b198d4c5e8285c0caedd7c243028156178e5e40ab6a4fddc",
       "crates/vize_maestro/src/server/handlers/typed.rs": "8b8953c39903d5272a9fa719b0ae92582b84832c04175a997a75277ed1f4e349",
@@ -186,9 +188,9 @@
       "crates/vize_maestro/src/server/initial_diagnostics.rs": "e22821c0d64136e603755d07eec2839e88d2b8b79e75568fd8f434fa377ab402",
       "crates/vize_maestro/src/server/initial_diagnostics/preparation.rs": "8364c220e76f4c5a77c57b128965b14582b9934cfd82ffa6a53d9b5f0e54761d",
       "crates/vize_maestro/src/server/native_requests.rs": "921413607f5ebdac7c9793e885105b221f5b2d769a8ea6a15d71ed31f725c670",
-      "crates/vize_maestro/src/server/native_requests/tests.rs": "1b62903d49139d86561afca4517e92257fed97d75090e3f0236917c16fcfaec8",
+      "crates/vize_maestro/src/server/native_requests/tests.rs": "048f5d5074d011e47d08c46ed183a169ee57581603a0bca1ee968af619334023",
       "crates/vize_maestro/src/server/project_contexts.rs": "75e4581f3987b15f6eb7382520d9e230140c4212cbcfc69a839746499ecf0f2e",
-      "crates/vize_maestro/src/server/project_contexts/operation_admission_tests.rs": "8d440975c22e34b2760aa779d5b0a40e261ced4f780c9f57ef33f64f48baac6e",
+      "crates/vize_maestro/src/server/project_contexts/operation_admission_tests.rs": "19e041fb9f70de3300646729bcde1d9142e1eeb6abb3b51bc83f587cfd17ae12",
       "crates/vize_maestro/src/server/project_contexts/reload_protocol_tests.rs": "b20f663752e404591931af54f619750243f1ea76f685ef3c833df3094b9457ef",
       "crates/vize_maestro/src/server/project_contexts/tests.rs": "55ec5bfbbf38d83a493ec52cd4dd3741a023226111b3f457bb23d6cf10cccb55",
       "crates/vize_maestro/src/server/state/config.rs": "0d83363dd2f51e54e0b260e39227e4eac99f5e05ef5874f3fab9a5a444de21d2",
@@ -216,11 +218,11 @@
       "crates/vize_maestro/src/server/state/project_contexts/tests.rs": "425ccb6158e083b9297fdca8f952e9648d948b1b035ac2bb55c10261034c84c4",
       "crates/vize_maestro/src/server/state/project_contexts/topology.rs": "251a9512f467e4867dc7eac7c9c658f6b550e8441dff2bdc93461eab36f33859",
       "crates/vize_maestro/src/server/state/project_contexts/topology_tests.rs": "0f7318352231388077b4fe98c9d775f1f2adeeefffde0476e6cd79e892c07185",
-      "crates/vize_maestro/src/server/state/project_contexts/watched.rs": "e6adc9951b4dbce1fa694deb48e7fd69a2d3a2a965d4e1f4e59a7485a82e4972",
+      "crates/vize_maestro/src/server/state/project_contexts/watched.rs": "ba7d1b9fc5c49ec3ceb4dcc4e4f9c62c96b5538428943ac80a7784e285a017fb",
       "crates/vize_maestro/src/server/state/tests.rs": "93e18616590a48ed0a5fd08e1e713a935b652a6a87ef8d495575fa1d0f14e700",
       "crates/vize_maestro/src/server/state/workspace_folders/tests.rs": "f526fdd86b1029e253ae118c653c347b65bb4e6b438562b98c3992c81cc0226e",
       "crates/vize_maestro/src/server/workspace_files.rs": "8f8cac47d335d4bc0eda12fbb5b291c8dd5dbc6ad38484e4e81f77ce2d757160",
-      "crates/vize_maestro/src/server/workspace_files/config_watchers.rs": "f72bbc5693c9ed378292048b7a98d887b879a0fa1ffabcd9f436b249592afea4",
+      "crates/vize_maestro/src/server/workspace_files/config_watchers.rs": "e143fd871eb794d3dc88f624f608bac998d70e54c908e79a6631b02d420d5186",
       "crates/vize_maestro/src/server/workspace_files/config_watchers_lifecycle_tests.rs": "df98c4d373fd616d54c00b79b1d50847268f8e2465e701284c5b5f38ad36fa02",
       "crates/vize_maestro/src/server/workspace_files/config_watchers_protocol_tests.rs": "4172c042f4ae5186b46b82499fb9eecb68733090db936f50f6a4c5733b8177ff",
       "crates/vize_maestro/src/server/workspace_files/config_watchers_tests.rs": "52cfe93ff80853199d633042edd02aa6c3c06a47d190982058beb197ab3ad52e",
@@ -332,6 +334,10 @@
       "witnessPath": "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json",
       "witnessSha256": "93d803b205eb6608d2f9e2c71dc323d378720db1235462ef0b02cfc9f5714241",
       "workflowSha256": "3fa236d39dfe3fef0e0b9919290e88ba4ab00c92ce4b43808c127bf8b0790dfb"
-    }
+    },
+    "cargoInputs": [
+      "Cargo.lock",
+      "Cargo.toml"
+    ]
   }
 }
