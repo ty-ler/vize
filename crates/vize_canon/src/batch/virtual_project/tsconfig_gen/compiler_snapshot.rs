@@ -32,6 +32,15 @@ pub struct CompilerConfigurationSnapshot {
     solution_shell: bool,
 }
 
+/// One capture result plus the exact paths observed while attempting it.
+/// Failed attempts expose watch-only repair inputs, never admitted options.
+pub struct CompilerConfigurationAttempt {
+    /// Only a successful capture contains a snapshot eligible for admission.
+    pub outcome: CorsaResult<CompilerConfigurationSnapshot>,
+    /// Attempted reads and resolution candidates for watching, not compiler authority.
+    pub dependencies: Vec<PathBuf>,
+}
+
 #[cfg(test)]
 #[path = "compiler_snapshot_tests.rs"]
 mod tests;
@@ -44,77 +53,114 @@ impl CompilerConfigurationSnapshot {
         Self::capture_with_observer(project_root, tsconfig_path, || {})
     }
 
+    /// Retain watch-only dependency observations even when strict capture fails.
+    pub fn capture_attempt(
+        project_root: &Path,
+        tsconfig_path: Option<&Path>,
+    ) -> CompilerConfigurationAttempt {
+        Self::capture_attempt_with_observer(project_root, tsconfig_path, || {})
+    }
+
     fn capture_with_observer(
         project_root: &Path,
         tsconfig_path: Option<&Path>,
         after_flattened: impl FnOnce(),
     ) -> CorsaResult<Self> {
+        Self::capture_attempt_with_observer(project_root, tsconfig_path, after_flattened).outcome
+    }
+
+    fn capture_attempt_with_observer(
+        project_root: &Path,
+        tsconfig_path: Option<&Path>,
+        after_flattened: impl FnOnce(),
+    ) -> CompilerConfigurationAttempt {
         let inputs = super::compiler_inputs::CompilerInputs::default();
         let normalized = tsconfig_path
             .map(|path| vize_carton::path::normalize_windows_verbatim_path(path.to_path_buf()));
         let tsconfig_path = normalized.as_deref();
-        let project = VirtualProject::new(project_root)?;
+        let implicit_root = vize_carton::path::canonicalize_non_verbatim(project_root);
         let implicit_candidates = [
-            project.project_root().join("tsconfig.json"),
-            project.project_root().join("jsconfig.json"),
+            implicit_root.join("tsconfig.json"),
+            implicit_root.join("jsconfig.json"),
         ];
-        if tsconfig_path.is_none() {
+        if let Some(path) = tsconfig_path {
+            inputs.observe(path);
+        } else {
             for path in &implicit_candidates {
                 inputs.observe(path);
-                if path.is_file() {
-                    return Err(CorsaError::Configuration(vize_carton::cstr!(
-                        "TypeScript configuration {} appeared while admitting configuration absence",
-                        path.display()
-                    )));
-                }
             }
         }
-        let flattened =
-            project.load_compiler_options_flattened_with_inputs(tsconfig_path, Some(&inputs))?;
-        after_flattened();
-        let verbatim =
-            project.load_compiler_options_verbatim_with_inputs(tsconfig_path, Some(&inputs))?;
-        let vue_options = super::vue_compiler_options::load_vue_compiler_options_with_inputs(
-            tsconfig_path,
-            Some(&inputs),
-        )?;
-        let vue_target = tsconfig_path
-            .map_or(Ok(None), |path| {
-                super::vue_compiler_options::vue_target_from_options(
-                    project_root,
-                    path,
-                    &vue_options,
-                    Some(&inputs),
-                )
+        let outcome = (|| {
+            let project = VirtualProject::new(&implicit_root)?;
+            if tsconfig_path.is_none() {
+                for path in &implicit_candidates {
+                    inputs.observe(path);
+                    if path.is_file() {
+                        return Err(CorsaError::Configuration(vize_carton::cstr!(
+                            "TypeScript configuration {} appeared while admitting configuration absence",
+                            path.display()
+                        )));
+                    }
+                }
+            }
+            let flattened = project
+                .load_compiler_options_flattened_with_inputs(tsconfig_path, Some(&inputs))?;
+            after_flattened();
+            let verbatim =
+                project.load_compiler_options_verbatim_with_inputs(tsconfig_path, Some(&inputs))?;
+            let vue_options = super::vue_compiler_options::load_vue_compiler_options_with_inputs(
+                tsconfig_path,
+                Some(&inputs),
+            )?;
+            let vue_target = tsconfig_path
+                .map_or(Ok(None), |path| {
+                    super::vue_compiler_options::vue_target_from_options(
+                        project_root,
+                        path,
+                        &vue_options,
+                        Some(&inputs),
+                    )
+                })
+                .map_err(|error| vize_carton::cstr!("{error}"));
+            let solution_shell = tsconfig_path.is_some_and(|path| {
+                super::references::graph::collect_project_paths_with_inputs(path, Some(&inputs))
+                    .len()
+                    > 1
+            });
+            let mut configured = project;
+            // Dependency traversal uses the same input cache; avoid the live-policy
+            // refresh performed by the public setter during ordinary source loading.
+            configured.tsconfig_path = tsconfig_path.map(Path::to_path_buf);
+            let mut dependencies = if tsconfig_path.is_some() {
+                configured.governing_config_paths_with_inputs(Some(&inputs))
+            } else {
+                implicit_candidates.to_vec()
+            };
+            dependencies.extend(inputs.paths());
+            dependencies.sort();
+            dependencies.dedup();
+            inputs.validate()?;
+            Ok(Self {
+                project_root: configured.project_root().to_path_buf(),
+                tsconfig_path: tsconfig_path.map(Path::to_path_buf),
+                flattened,
+                verbatim,
+                vue_options,
+                dependencies,
+                vue_target,
+                solution_shell,
             })
-            .map_err(|error| vize_carton::cstr!("{error}"));
-        let solution_shell = tsconfig_path.is_some_and(|path| {
-            super::references::graph::collect_project_paths_with_inputs(path, Some(&inputs)).len()
-                > 1
-        });
-        let mut configured = project;
-        // Dependency traversal uses the same input cache; avoid the live-policy
-        // refresh performed by the public setter during ordinary source loading.
-        configured.tsconfig_path = tsconfig_path.map(Path::to_path_buf);
-        let mut dependencies = if tsconfig_path.is_some() {
-            configured.governing_config_paths_with_inputs(Some(&inputs))
-        } else {
-            implicit_candidates.to_vec()
-        };
-        dependencies.extend(inputs.paths());
+        })();
+        let mut dependencies = inputs.paths();
+        if let Ok(snapshot) = &outcome {
+            dependencies.extend(snapshot.dependencies().iter().cloned());
+        }
         dependencies.sort();
         dependencies.dedup();
-        inputs.validate()?;
-        Ok(Self {
-            project_root: configured.project_root().to_path_buf(),
-            tsconfig_path: tsconfig_path.map(Path::to_path_buf),
-            flattened,
-            verbatim,
-            vue_options,
+        CompilerConfigurationAttempt {
+            outcome,
             dependencies,
-            vue_target,
-            solution_shell,
-        })
+        }
     }
 
     /// The dialect resolved from these same captured options and Vue manifest.

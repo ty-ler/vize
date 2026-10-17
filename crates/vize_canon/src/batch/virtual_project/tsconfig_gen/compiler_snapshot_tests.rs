@@ -360,3 +360,122 @@ fn admitted_absence_rejects_primary_or_fallback_configuration_creation_during_ca
         assert!(CompilerConfigurationSnapshot::capture(root.path(), None).is_ok());
     }
 }
+
+#[test]
+fn failed_capture_retains_new_external_extends_candidates_until_repaired() {
+    let workspace = tempfile::tempdir().unwrap();
+    let workspace = vize_carton::path::canonicalize_non_verbatim(workspace.path());
+    let root = workspace.join("app");
+    let outside = workspace.join("shared");
+    std::fs::create_dir_all(&root).unwrap();
+    std::fs::create_dir_all(&outside).unwrap();
+    let config = root.join("tsconfig.json");
+    std::fs::write(&config, r#"{"extends":"../shared/new-base"}"#).unwrap();
+    let crate::CompilerConfigurationAttempt {
+        outcome,
+        dependencies,
+    } = CompilerConfigurationSnapshot::capture_attempt(&root, Some(&config));
+    let error = outcome
+        .err()
+        .expect("missing config must never admit options");
+    let strict = CompilerConfigurationSnapshot::capture(&root, Some(&config))
+        .err()
+        .unwrap();
+    assert_eq!(
+        vize_carton::cstr!("{error}"),
+        vize_carton::cstr!("{strict}")
+    );
+    for candidate in [
+        config.clone(),
+        outside.join("new-base"),
+        outside.join("new-base.json"),
+        outside.join("new-base/tsconfig.json"),
+    ] {
+        assert!(dependencies.contains(&candidate), "{}", candidate.display());
+    }
+    assert!(dependencies.windows(2).all(|pair| pair[0] < pair[1]));
+    let base = outside.join("new-base.json");
+    let ancestor = outside.join("ancestor.json");
+    std::fs::write(
+        &base,
+        r#"{"extends":"./ancestor.json","compilerOptions":{"strict":true}}"#,
+    )
+    .unwrap();
+    std::fs::write(&ancestor, r#"{"vueCompilerOptions":{"jsxSlots":true}}"#).unwrap();
+    let repaired = CompilerConfigurationSnapshot::capture_attempt(&root, Some(&config));
+    let snapshot = repaired.outcome.unwrap();
+    assert_eq!(repaired.dependencies, snapshot.dependencies());
+    assert!(repaired.dependencies.contains(&base));
+    assert!(repaired.dependencies.contains(&ancestor));
+    assert_eq!(snapshot.flattened.options["strict"], json!(true));
+    assert_eq!(snapshot.vue_options["jsxSlots"], json!(true));
+    std::fs::remove_file(&ancestor).unwrap();
+    let removed = CompilerConfigurationSnapshot::capture_attempt(&root, Some(&config));
+    assert!(removed.outcome.is_err());
+    assert!(removed.dependencies.contains(&ancestor));
+    assert!(CompilerConfigurationSnapshot::capture(&root, Some(&config)).is_err());
+    std::fs::write(&ancestor, "{}").unwrap();
+    assert!(CompilerConfigurationSnapshot::capture(&root, Some(&config)).is_ok());
+}
+
+#[cfg(unix)]
+#[test]
+fn failed_package_capture_retains_missing_manifest_and_symlink_ancestor() {
+    let workspace = tempfile::tempdir().unwrap();
+    let workspace = vize_carton::path::canonicalize_non_verbatim(workspace.path());
+    let root = workspace.join("app");
+    let outside = workspace.join("policy");
+    let scope = root.join("node_modules/@fixture");
+    std::fs::create_dir_all(&scope).unwrap();
+    std::fs::create_dir_all(&outside).unwrap();
+    let linked = scope.join("policy");
+    std::os::unix::fs::symlink(&outside, &linked).unwrap();
+    let config = root.join("tsconfig.json");
+    std::fs::write(&config, r#"{"extends":"@fixture/policy"}"#).unwrap();
+    let attempted = CompilerConfigurationSnapshot::capture_attempt(&root, Some(&config));
+    assert!(attempted.outcome.is_err());
+    assert!(attempted.dependencies.contains(&linked));
+    assert!(
+        attempted
+            .dependencies
+            .contains(&linked.join("package.json"))
+    );
+    assert!(
+        attempted
+            .dependencies
+            .contains(&linked.join("tsconfig.json"))
+    );
+    std::fs::write(outside.join("package.json"), r#"{"tsconfig":"base.json"}"#).unwrap();
+    std::fs::write(
+        outside.join("base.json"),
+        r#"{"compilerOptions":{"strict":true}}"#,
+    )
+    .unwrap();
+    let repaired = CompilerConfigurationSnapshot::capture_attempt(&root, Some(&config));
+    let snapshot = repaired.outcome.unwrap();
+    assert_eq!(repaired.dependencies, snapshot.dependencies());
+    assert!(repaired.dependencies.contains(&linked));
+    assert!(repaired.dependencies.contains(&linked.join("package.json")));
+    assert!(repaired.dependencies.contains(&outside.join("base.json")));
+    assert_eq!(snapshot.flattened.options["strict"], json!(true));
+}
+
+#[test]
+fn rejected_absence_attempt_retains_both_default_config_candidates() {
+    let root = tempfile::tempdir().unwrap();
+    let root = vize_carton::path::canonicalize_non_verbatim(root.path());
+    let config = root.join("tsconfig.json");
+    let expected = vec![root.join("jsconfig.json"), config.clone()];
+    let absent = CompilerConfigurationSnapshot::capture_attempt(&root, None);
+    assert!(absent.outcome.is_ok());
+    assert_eq!(absent.dependencies, expected);
+    let raced = CompilerConfigurationSnapshot::capture_attempt_with_observer(&root, None, || {
+        std::fs::write(&config, "{}").unwrap();
+    });
+    assert!(raced.outcome.is_err());
+    assert_eq!(raced.dependencies, expected);
+    let existing = CompilerConfigurationSnapshot::capture_attempt(&root, None);
+    assert!(existing.outcome.is_err());
+    assert_eq!(existing.dependencies, expected);
+    assert!(CompilerConfigurationSnapshot::capture(&root, None).is_err());
+}
