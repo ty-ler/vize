@@ -58,6 +58,7 @@ const result = spawnSync(
     cwd: workspace,
     encoding: "utf8",
     timeout: 180_000,
+    killSignal: "SIGKILL",
     env: {
       ...process.env,
       VIZE_E2E_PLUGIN_ROOT: path.join(repositoryRoot, "editors/vim"),
