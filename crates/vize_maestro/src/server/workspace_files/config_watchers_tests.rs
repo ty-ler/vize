@@ -272,7 +272,7 @@ fn whole_relative_pattern_packet_escapes_literal_glob_filename_and_encoded_paren
     let mut host = Harness::supported();
     let root = tempfile::tempdir().unwrap();
     let parent = root.path().join("project #[] 中文");
-    let path = parent.join("policy[]{}?* space 日本.json");
+    let path = parent.join(" policy[]{}?* space 日本.json ");
     host.control.update(vec![path]);
     let request = host.next();
     assert_eq!(request.method(), "client/registerCapability");
@@ -283,7 +283,7 @@ fn whole_relative_pattern_packet_escapes_literal_glob_filename_and_encoded_paren
         request.params(),
         Some(&json!({"registrations":[{"id":id,"method":METHOD,
         "registerOptions":{"watchers":[{"globPattern":{"baseUri":base,
-            "pattern":"policy[[][]][{][}][?][*] space 日本.json"},"kind":7}]}}]}))
+            "pattern":"[ ]policy[[][]][{][}][?][*][ ]space[ ]日本.json[ ]"},"kind":7}]}}]}))
     );
     host.reply(&request, true);
 }
@@ -295,7 +295,8 @@ fn windows_drive_and_unc_parents_use_native_url_conversion() {
         PathBuf::from(r"C:\settings dir\vue.json"),
         PathBuf::from(r"\\server\share\settings dir\vue.json"),
     ] {
-        let watches = watchers(std::slice::from_ref(&path)).unwrap();
+        let (represented, watches) = watchers(std::slice::from_ref(&path));
+        assert_eq!(represented, [path.clone()]);
         let expected = Url::from_directory_path(path.parent().unwrap()).unwrap();
         assert_eq!(
             watches[0].glob_pattern,
@@ -305,4 +306,35 @@ fn windows_drive_and_unc_parents_use_native_url_conversion() {
             })
         );
     }
+}
+
+#[cfg(unix)]
+#[test]
+fn unrepresentable_root_and_non_utf8_targets_preserve_valid_watches_without_churn() {
+    use std::os::unix::ffi::OsStringExt;
+
+    let mut host = Harness::supported();
+    let root = tempfile::tempdir().unwrap();
+    let first_path = root.path().join("a.json");
+    let next_path = root.path().join("b.json");
+    let filesystem_root = PathBuf::from("/");
+    let non_utf8 = root
+        .path()
+        .join(std::ffi::OsString::from_vec(vec![b'p', 0xff]));
+    host.control
+        .update(vec![filesystem_root.clone(), non_utf8, first_path.clone()]);
+    let first = host.next();
+    let first_id = registration(&first, std::slice::from_ref(&first_path));
+    host.reply(&first, true);
+    // Only invalid observations change: the valid ACKed subset is unchanged.
+    host.control.update(vec![filesystem_root, first_path]);
+    host.idle();
+    host.control.update(vec![next_path.clone()]);
+    let replacement = host.next();
+    let replacement_id = registration(&replacement, &[next_path]);
+    assert_ne!(first_id, replacement_id);
+    host.reply(&replacement, true);
+    let retire = host.next();
+    retired(&retire, &first_id);
+    host.reply(&retire, true);
 }

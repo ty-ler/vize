@@ -5,7 +5,7 @@
 )]
 
 use std::future::Future;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use futures::FutureExt;
@@ -187,6 +187,7 @@ impl Worker {
             Some(false) => return true,
             Some(true) => {}
         }
+        let (paths, watchers) = watchers(&paths);
         if self
             .active
             .as_ref()
@@ -198,12 +199,6 @@ impl Worker {
             self.obsolete = self.active.take().map(|active| active.id);
             return self.cleanup().is_some();
         }
-        let Some(watchers) = watchers(&paths) else {
-            tracing::warn!(
-                "configuration watch paths must have absolute file parents and UTF-8 names"
-            );
-            return true;
-        };
         self.sequence += 1;
         let id = cstr!("vize-config-watch-{}", self.sequence);
         let options = DidChangeWatchedFilesRegistrationOptions { watchers };
@@ -283,34 +278,50 @@ fn unregistration(id: &str) -> Unregistration {
     }
 }
 
-fn watchers(paths: &[PathBuf]) -> Option<Vec<FileSystemWatcher>> {
-    paths
-        .iter()
-        .map(|path| {
-            let parent = path.parent()?;
-            let filename = path.file_name()?.to_str()?;
-            let base_uri = Url::from_directory_path(parent).ok()?;
-            let mut pattern = String::new();
-            for character in filename.chars() {
-                match character {
-                    '[' => pattern.push_str("[[]"),
-                    ']' => pattern.push_str("[]]"),
-                    '{' => pattern.push_str("[{]"),
-                    '}' => pattern.push_str("[}]"),
-                    '?' => pattern.push_str("[?]"),
-                    '*' => pattern.push_str("[*]"),
-                    _ => pattern.push(character),
-                }
-            }
-            Some(FileSystemWatcher {
-                glob_pattern: GlobPattern::Relative(RelativePattern {
-                    base_uri: OneOf::Right(base_uri),
-                    pattern: pattern.into(),
-                }),
-                kind: Some(WatchKind::Create | WatchKind::Change | WatchKind::Delete),
-            })
-        })
-        .collect()
+/// Keep valid targets even when another observation cannot be represented.
+/// The ACKed identity is this representable subset, never a claim of full coverage.
+fn watchers(paths: &[PathBuf]) -> (Vec<PathBuf>, Vec<FileSystemWatcher>) {
+    let mut represented = Vec::new();
+    let mut watchers = Vec::new();
+    for path in paths {
+        if let Some(watcher) = watcher(path) {
+            represented.push(path.clone());
+            watchers.push(watcher);
+        } else {
+            tracing::warn!(
+                "cannot watch configuration target {}: requires an absolute file parent and UTF-8 filename; coverage is incomplete",
+                path.display()
+            );
+        }
+    }
+    (represented, watchers)
+}
+
+fn watcher(path: &Path) -> Option<FileSystemWatcher> {
+    let parent = path.parent()?;
+    let filename = path.file_name()?.to_str()?;
+    let base_uri = Url::from_directory_path(parent).ok()?;
+    let mut pattern = String::new();
+    for character in filename.chars() {
+        match character {
+            '[' => pattern.push_str("[[]"),
+            ']' => pattern.push_str("[]]"),
+            '{' => pattern.push_str("[{]"),
+            '}' => pattern.push_str("[}]"),
+            '?' => pattern.push_str("[?]"),
+            '*' => pattern.push_str("[*]"),
+            // VS Code trims the complete glob before parsing it.
+            ' ' => pattern.push_str("[ ]"),
+            _ => pattern.push(character),
+        }
+    }
+    Some(FileSystemWatcher {
+        glob_pattern: GlobPattern::Relative(RelativePattern {
+            base_uri: OneOf::Right(base_uri),
+            pattern: pattern.into(),
+        }),
+        kind: Some(WatchKind::Create | WatchKind::Change | WatchKind::Delete),
+    })
 }
 
 #[cfg(test)]
