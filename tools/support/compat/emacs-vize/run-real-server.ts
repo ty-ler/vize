@@ -53,12 +53,14 @@ function prepareWorkspace(workspace: string) {
   fs.writeFileSync(path.join(workspace, "package.json"), '{"private":true}\n');
   fs.writeFileSync(
     path.join(workspace, "vite.config.mjs"),
+    'import vue from "./vue-policy.mjs";\nexport default { vue };\n',
+  );
+  fs.writeFileSync(
+    path.join(workspace, "vue-policy.mjs"),
     `export default ${JSON.stringify({
-      vue: {
-        typeChecker: { enabled: false },
-        languageServer: { typecheck: false, ecosystem: false, hover: false, lint: true },
-        linter: { preset: "essential", rules: { [rule]: "error" } },
-      },
+      typeChecker: { enabled: false },
+      languageServer: { typecheck: false, ecosystem: false, hover: false, lint: true },
+      linter: { preset: "essential", rules: { [rule]: "error" } },
     })};\n`,
   );
   fs.writeFileSync(
@@ -207,10 +209,10 @@ async function main() {
       (entry) => entry.dir === "c2s" && entry.msg?.method === "initialize",
     );
     assert.ok(initial, "Eglot must initialize the real server");
-    assert.deepEqual(
-      initial.msg!.params?.initializationOptions,
-      {},
-      "The packaged default must leave feature ownership to project configuration",
+    const initializationOptions = initial.msg!.params?.initializationOptions;
+    assert.ok(
+      initializationOptions == null || isDeepStrictEqual(initializationOptions, {}),
+      "Command-only Eglot may send no initialization overrides, null, or an empty object",
     );
     const cases = JSON.parse(fs.readFileSync(casesFile, "utf8")) as Observation[];
     const expected = [
@@ -278,7 +280,16 @@ async function main() {
           `${name}: case must preserve a complete native publication`,
         );
       }
-      if (observation.authoredConfig) {
+      if (index > 0) {
+        assert.ok(
+          observation.authoredConfig,
+          `${name}: the authored config change must be retained`,
+        );
+        assert.equal(
+          observation.authoredConfig.file,
+          index <= 3 ? "vue-policy.mjs" : "tsconfig.legacy.json",
+          `${name}: mutate the imported helper or referenced TS project, not the root Vite config`,
+        );
         const uri = new URL(observation.authoredConfig.file, `${pathToFileURL(workspace).href}/`)
           .href;
         assert.ok(
