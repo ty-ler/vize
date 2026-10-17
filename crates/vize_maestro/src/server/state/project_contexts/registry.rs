@@ -21,6 +21,7 @@ pub(super) struct ProjectContext {
     #[cfg(feature = "experimental-source-navigation")]
     navigation: OnceLock<Arc<NativeNavigationProject<'static>>>,
     retired: AtomicBool,
+    reload_failed: AtomicBool,
     initialization: super::Mutex<Option<Initialization>>,
 }
 
@@ -34,6 +35,7 @@ impl ProjectContext {
             #[cfg(feature = "experimental-source-navigation")]
             navigation: OnceLock::new(),
             retired: AtomicBool::new(false),
+            reload_failed: AtomicBool::new(false),
             initialization: super::Mutex::new(None),
         }
     }
@@ -63,6 +65,16 @@ impl ProjectContext {
         failed: bool,
     ) {
         let _ = self.snapshot.set((snapshot, failed));
+    }
+
+    pub(super) fn record_reload_failure(&self) {
+        self.reload_failed.store(true, Ordering::Release);
+        if let Some(state) = self.state.get() {
+            state
+                .project_contexts
+                .config_reload_failed
+                .store(true, Ordering::Release);
+        }
     }
 
     pub(super) async fn initialize_async(
@@ -118,6 +130,14 @@ impl ProjectContext {
                 )
             })
             .clone();
+        // Recheck after publishing initialization: a rejection can occur after
+        // new_project_state captured its snapshot but before the cell was set.
+        if self.reload_failed.load(Ordering::Acquire) {
+            state
+                .project_contexts
+                .config_reload_failed
+                .store(true, Ordering::Release);
+        }
         if self.retired.load(Ordering::Acquire) {
             state.retire_project_owner();
             return None;
@@ -179,6 +199,14 @@ impl ProjectContext {
                 ))
             })
             .clone();
+        // Recheck after publishing initialization: a rejection can occur after
+        // new_project_state captured its snapshot but before the cell was set.
+        if self.reload_failed.load(Ordering::Acquire) {
+            state
+                .project_contexts
+                .config_reload_failed
+                .store(true, Ordering::Release);
+        }
         if self.retired.load(Ordering::Acquire) {
             navigation.retire();
             return None;

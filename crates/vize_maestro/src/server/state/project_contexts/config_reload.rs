@@ -159,6 +159,10 @@ impl ServerState {
         root: &std::path::Path,
         changes: &[FileEvent],
     ) -> ProjectConfigChanges {
+        let affected = self.project_config_event_scope(changes).affected;
+        if !affected.iter().any(|key| key.root == root) {
+            return ProjectConfigChanges::default();
+        }
         let contexts = self.project_contexts.contexts.lock();
         let registered = contexts.keys().any(|key| key.root == root);
         if self.project_routing_shutting_down()
@@ -168,10 +172,13 @@ impl ServerState {
         }
         let mut keys = contexts
             .iter()
-            .filter(|(key, _)| key.root == root)
+            .filter(|(key, _)| key.root == root && affected.contains(key))
             .map(|(key, context)| (key.clone(), context.config_dependencies()))
             .collect::<Vec<_>>();
-        if self.is_primary_boundary(root) && !keys.iter().any(|(key, _)| key.tsconfig.is_none()) {
+        if self.is_primary_boundary(root)
+            && affected.contains(&ProjectContextKey::from(root.to_path_buf()))
+            && !keys.iter().any(|(key, _)| key.tsconfig.is_none())
+        {
             keys.push((
                 root.to_path_buf().into(),
                 self.project_contexts.config_dependencies.read().clone(),
@@ -194,7 +201,8 @@ impl ServerState {
                         dependencies
                             .iter()
                             .any(|dependency| physical_path(dependency) == path)
-                            || (super::is_config_marker(&path)
+                            || (key.tsconfig.is_none()
+                                && super::is_config_marker(&path)
                                 && path.starts_with(physical_path(root))
                                 && !super::watched::excluded_config_path(&path, &roots))
                     })
@@ -203,6 +211,13 @@ impl ServerState {
                 .collect::<Vec<_>>();
             rejected.sort();
             rejected.dedup();
+            if let Some(context) = contexts.get(&key) {
+                context.record_reload_failure();
+            } else if key.tsconfig.is_none() && self.is_primary_boundary(root) {
+                self.project_contexts
+                    .config_reload_failed
+                    .store(true, super::Ordering::Release);
+            }
             self.project_contexts
                 .pending_config_reloads
                 .lock()

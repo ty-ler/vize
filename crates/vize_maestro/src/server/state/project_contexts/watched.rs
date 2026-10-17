@@ -182,8 +182,12 @@ impl ServerState {
                 .as_ref()
                 .map(|context| context.config_dependencies())
                 .unwrap_or_else(|| self.project_contexts.config_dependencies.read().clone());
-            let changed =
-                known_config_events(&key.root, &dependencies, &scope.marker_paths, changes);
+            let markers = if key.tsconfig.is_none() {
+                scope.marker_paths.as_slice()
+            } else {
+                &[]
+            };
+            let changed = known_config_events(&key.root, &dependencies, markers, changes);
             result.configuration_events.extend(changed.clone());
             let raw = authored
                 .entry(key.root.clone())
@@ -265,14 +269,8 @@ impl ServerState {
                         .pending_config_reloads
                         .lock()
                         .insert(key.clone());
-                    if let Some(state) = previous
-                        .as_ref()
-                        .and_then(|context| context.initialized_state())
-                    {
-                        state
-                            .project_contexts
-                            .config_reload_failed
-                            .store(true, Ordering::Release);
+                    if let Some(previous) = &previous {
+                        previous.record_reload_failure();
                     } else if key.tsconfig.is_none() && self.is_primary_boundary(&key.root) {
                         self.project_contexts
                             .config_reload_failed

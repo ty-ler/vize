@@ -483,3 +483,101 @@ fn typescript_only_references_select_the_same_checker_and_editor_project() {
         fixture.root.join("tsconfig.modern.json").to_str()
     );
 }
+
+#[test]
+fn unavailable_reload_worker_retains_retry_only_for_affected_reference_keys() {
+    let fixture = ReferenceFixture::new("export default {};");
+    fixture.open_dirty(&fixture.legacy, "retainedLegacy", 5);
+    fixture.open_dirty(&fixture.modern, "unaffectedModern", 6);
+    let legacy = fixture
+        .state
+        .document_project_state(&fixture.legacy)
+        .unwrap();
+    let modern = fixture
+        .state
+        .document_project_state(&fixture.modern)
+        .unwrap();
+    let changes = [fixture.event("legacy")];
+    let failure = fixture
+        .state
+        .config_worker_unavailable(&fixture.root, &changes);
+    assert_eq!(failure.errors.len(), 1);
+    assert!(failure.accepted_file_events(&legacy, &changes).is_empty());
+    assert!(failure.accepted_file_events(&modern, &changes).is_empty());
+    assert!(
+        legacy
+            .project_contexts
+            .config_reload_failed
+            .load(Ordering::Acquire)
+    );
+    assert!(
+        !modern
+            .project_contexts
+            .config_reload_failed
+            .load(Ordering::Acquire)
+    );
+    let pending = fixture.state.project_contexts.pending_config_reloads.lock();
+    assert!(pending.contains(legacy.project_contexts.key.read().as_ref().unwrap()));
+    assert!(!pending.contains(modern.project_contexts.key.read().as_ref().unwrap()));
+}
+
+#[test]
+fn failed_reference_retry_preserves_source_import_authority_for_a_sibling_marker() {
+    let fixture = ReferenceFixture::new("export default {};");
+    std::fs::write(
+        fixture.root.join("tsconfig.legacy.json"),
+        r#"{"compilerOptions":{"resolveJsonModule":true},"include":["src/legacy/**/*.vue"],"vueCompilerOptions":{"target":2.7}}"#,
+    ).unwrap();
+    let source = "<script lang=\"ts\">import modern from '../../tsconfig.modern.json'; export const keepImport = modern;</script><template><div /></template>";
+    fixture
+        .state
+        .documents
+        .open(fixture.legacy.clone(), source.into(), 7, "vue".into());
+    let legacy = fixture
+        .state
+        .document_project_state(&fixture.legacy)
+        .unwrap();
+    fixture
+        .state
+        .document_project_state(&fixture.modern)
+        .unwrap();
+    // JSON imports arrive through Canon's resolved dependency graph rather
+    // than the script-only syntactic fallback index. Use its production
+    // revision-guarded recording path for this real, explicitly enabled import.
+    let revision = legacy.documents.get(&fixture.legacy).unwrap().revision();
+    legacy.record_typecheck_dependencies(
+        &fixture.legacy,
+        revision,
+        &[fixture.root.join("tsconfig.modern.json")],
+    );
+    assert_eq!(
+        legacy.open_importers(&fixture.event("modern").uri),
+        vec![fixture.legacy.clone()]
+    );
+    ReferenceFixture::write_leaf(&fixture.root, "legacy", "legacy", 4.0);
+    let initial = fixture
+        .state
+        .observe_project_config_events_checked(&[fixture.event("legacy")]);
+    assert_eq!(initial.errors.len(), 1);
+    let changes = [fixture.event("modern")];
+    // A remains invalid and pending, but B's marker is an ordinary imported
+    // source for A, not an inherited configuration dependency of A.
+    let fallback = fixture
+        .state
+        .config_worker_unavailable(&fixture.root, &changes);
+    assert_eq!(fallback.accepted_file_events(&legacy, &changes), changes);
+    let retry = fixture
+        .state
+        .observe_project_config_events_checked(&changes);
+    assert!(retry.errors.is_empty());
+    assert_eq!(retry.accepted_file_events(&legacy, &changes), changes);
+    assert!(Arc::ptr_eq(
+        &legacy,
+        &fixture
+            .state
+            .document_project_state(&fixture.legacy)
+            .unwrap()
+    ));
+    assert_dialect(&legacy, VueVersion::V2_7);
+    assert_projection(&legacy, &fixture.legacy, "keepImport");
+}

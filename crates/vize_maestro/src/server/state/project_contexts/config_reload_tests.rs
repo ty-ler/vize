@@ -226,6 +226,13 @@ fn prepared_snapshot_is_used_once_and_remains_watchable_before_lazy_initializati
     );
     assert!(!Arc::ptr_eq(&original, &prepared));
     assert!(!prepared.project_context_retired());
+    assert!(
+        prepared
+            .project_contexts
+            .config_reload_failed
+            .load(Ordering::Acquire)
+    );
+    assert!(prepared.linter_settings_for_uri(&a).is_some());
 }
 
 #[test]
