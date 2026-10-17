@@ -206,3 +206,68 @@ test("closing the observation ACK channel rejects the same child before authored
     await assert.rejects(readFile(counter), { code: "ENOENT" });
   });
 });
+
+for (const installedVite of [false, true]) {
+  test(`an authored exit before the native finally retains its actual status and diagnostic (Vite: ${installedVite})`, async () => {
+    await project(async (root) => {
+      if (installedVite) {
+        await mkdir(join(root, "node_modules"));
+        await symlink(vite, join(root, "node_modules/vite"), "junction");
+      }
+      const selected = join(root, "vite.config.mjs");
+      const counter = join(root, "factory.txt");
+      await writeFile(
+        selected,
+        `import { appendFileSync } from 'node:fs'; export default () => {
+          appendFileSync(${JSON.stringify(counter)}, 'once\\n');
+          console.error('authored-specificreason 日本語'); process.exit(17);
+        };`,
+      );
+      const child = spawn(
+        process.execPath,
+        ["--input-type=module", "-e", embedded, selected, "--observe-config-inputs"],
+        {
+          cwd: root,
+          stdio: ["pipe", "pipe", "pipe"],
+        },
+      );
+      const exited = new Promise<number | null>((resolve, reject) => {
+        child.on("error", reject);
+        child.on("close", resolve);
+      });
+      const stderr: Buffer[] = [];
+      child.stderr.on("data", (part: Buffer) => stderr.push(part));
+      let buffered = Buffer.alloc(0);
+      let phases = 0;
+      try {
+        for await (const chunk of child.stdout) {
+          buffered = Buffer.concat([buffered, chunk]);
+          for (;;) {
+            const newline = buffered.indexOf(10);
+            if (newline === -1) break;
+            const header = buffered.subarray(0, newline).toString();
+            assert.match(header, /^B\d+$/, "the process exit must bypass the final R/JSON frame");
+            const length = Number(header.slice(1));
+            if (buffered.length < newline + 1 + length) break;
+            const paths = JSON.parse(
+              buffered.subarray(newline + 1, newline + 1 + length).toString(),
+            );
+            assert.ok(paths.every((path: unknown) => typeof path === "string"));
+            buffered = buffered.subarray(newline + 1 + length);
+            phases++;
+            child.stdin.write(Buffer.from([6]));
+          }
+        }
+        assert.equal(await exited, 17);
+        assert.equal(Buffer.concat(stderr).toString(), "authored-specificreason 日本語\n");
+        assert.equal(buffered.length, 0);
+        assert.ok(phases > 0);
+        assert.equal(await readFile(counter, "utf8"), "once\n");
+      } finally {
+        child.stdin.end();
+        if (child.exitCode === null) child.kill();
+        await exited;
+      }
+    });
+  });
+}

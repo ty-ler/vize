@@ -138,6 +138,23 @@ mod tests {
     }
 
     #[test]
+    fn observed_config_exit_before_finally_preserves_authored_diagnostic() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("vite.config.mjs");
+        std::fs::write(
+            &path,
+            "console.error('authored-specificreason'); process.exit(17);",
+        )
+        .unwrap();
+        let snapshot = load_lsp_config_snapshot_observed(Some(root.path()), &mut |_| {});
+        assert!(!snapshot.valid);
+        let error = snapshot.error.unwrap();
+        assert!(error.contains("authored-specificreason"), "{error}");
+        assert!(error.contains("17"), "{error}");
+        assert!(!snapshot.watch_dependencies_complete);
+    }
+
+    #[test]
     fn missing_explicit_vite_file_remains_a_watch_input_until_created() {
         let root = tempfile::tempdir().unwrap();
         let path = root.path().join("vite.config.mjs");
