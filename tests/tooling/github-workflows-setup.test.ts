@@ -303,7 +303,9 @@ test("pkg.pr.new workflow publishes built npm packages from the lockfile", () =>
   );
   const rustChannel = /^channel = "([^"]+)"$/m.exec(readRepoFile("rust-toolchain.toml"))?.[1];
   assert.ok(rustChannel, "repository must pin its Rust toolchain");
-  assert.ok(job.includes(`rustup toolchain install ${rustChannel} --profile minimal --no-self-update`));
+  assert.ok(
+    job.includes(`rustup toolchain install ${rustChannel} --profile minimal --no-self-update`),
+  );
   assert.ok(job.includes(`rustup default ${rustChannel}\n`));
   assert.match(job, /grep -Eq '\(\^\|\[\[:space:\]\]\)0\\\.34\\\.0\(\[\[:space:\]\]\|\$\)'/);
   assert.match(job, /cargo install rust-script --version 0\.34\.0 --locked/);
