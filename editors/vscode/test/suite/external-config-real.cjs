@@ -94,7 +94,7 @@ exports.run = async function run() {
 
   async function registered(file, start = 0) {
     const parent = vscode.Uri.file(path.dirname(file)).toString();
-    const escaped = [...path.basename(file)]
+    const escaped = Array.from(path.basename(file))
       .map(
         (character) =>
           ({
