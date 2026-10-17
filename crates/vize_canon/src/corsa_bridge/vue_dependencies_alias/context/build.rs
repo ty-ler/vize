@@ -346,7 +346,7 @@ pub(super) fn build_with_import_facts(
     })
 }
 
-fn bridge_error(error: crate::batch::error::CorsaError) -> CorsaBridgeError {
+fn bridge_error(error: crate::CorsaError) -> CorsaBridgeError {
     CorsaBridgeError::from(error)
 }
 

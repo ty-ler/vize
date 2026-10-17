@@ -309,7 +309,7 @@ process.stdin.once('data', ack => {{
             "exit status: 17"
         };
         assert_eq!(
-            error.to_string(),
+            crate::cstr!("{error}"),
             format!(
                 "node failed to load config: specificreason 日本語 ({status}; observation transport: failed to fill whole buffer)"
             )
@@ -369,9 +369,12 @@ process.stdin.once('data', ack => {{
         assert_eq!(failure.status.as_ref().unwrap(), &baseline.status);
         assert_eq!(failure.stderr.as_ref().unwrap(), &baseline.stderr);
         assert_eq!(failure.cause.kind(), std::io::ErrorKind::UnexpectedEof);
-        assert_eq!(failure.cause.to_string(), "failed to fill whole buffer");
         assert_eq!(
-            error.to_string(),
+            crate::cstr!("{}", failure.cause),
+            "failed to fill whole buffer"
+        );
+        assert_eq!(
+            crate::cstr!("{error}"),
             format!(
                 "node failed to load config: {} ({}; observation transport: failed to fill whole buffer)",
                 stderr.strip_suffix('\n').unwrap(),
