@@ -68,7 +68,7 @@ void test("compiler file counterparts retain the complete snapshots with exactly
   }
 });
 
-void test("real pinned pnpm links both edited siblings only through workspace graph installation", () => {
+void test("real pinned pnpm updates a nonempty authored lock and links both edited siblings in CI", () => {
   // This is an offline package-linker control, not a native Vize runtime claim.
   const directory = fs.realpathSync(
     fs.mkdtempSync(path.join(os.tmpdir(), "vize-workspace-link-law-")),
@@ -107,8 +107,9 @@ void test("real pinned pnpm links both edited siblings only through workspace gr
       "true",
     );
     const dependencies = ["vize", "@vizejs/vite-plugin"];
+    const peer = "vize-fixture-authored-peer";
     const packed = new Map<string, string>();
-    for (const [index, name] of dependencies.entries()) {
+    for (const [index, name] of [peer, ...dependencies].entries()) {
       const provider = path.join(directory, `provider-${index}`);
       fs.mkdirSync(provider);
       fs.writeFileSync(
@@ -127,19 +128,35 @@ void test("real pinned pnpm links both edited siblings only through workspace gr
         name,
         private: true,
         description: `${name} sentinel`,
-        devDependencies: {},
+        devDependencies: { [peer]: packedFileSpec(packed.get(peer)!) },
       };
       manifests.set(name, manifest);
       fs.writeFileSync(path.join(project, "package.json"), JSON.stringify(manifest) + "\n");
     }
     runManager(manager, manager.bootstrapArgs, { cwd: workspace });
     const bootstrapLock = fs.readFileSync(path.join(workspace, manager.lockfile));
+    assert.ok(
+      bootstrapLock.includes(Buffer.from(peer)),
+      "bootstrap lock retains its authored peer",
+    );
+    for (const name of ["app", "control"]) {
+      const installedPeer = fs.realpathSync(
+        path.join(workspace, "packages", name, "node_modules", peer),
+      );
+      assert.equal(
+        fs.readFileSync(path.join(installedPeer, "identity.txt"), "utf8"),
+        `${peer}: independent local packet\n`,
+      );
+    }
     const control = path.join(workspace, "packages/control");
     const controlManifest = {
       ...manifests.get("control"),
-      devDependencies: Object.fromEntries(
-        dependencies.map((name) => [name, packedFileSpec(packed.get(name)!)]),
-      ),
+      devDependencies: {
+        [peer]: packedFileSpec(packed.get(peer)!),
+        ...Object.fromEntries(
+          dependencies.map((name) => [name, packedFileSpec(packed.get(name)!)]),
+        ),
+      },
     };
     fs.writeFileSync(path.join(control, "package.json"), JSON.stringify(controlManifest) + "\n");
     runManager(
@@ -181,7 +198,7 @@ void test("real pinned pnpm links both edited siblings only through workspace gr
         ...manifests.get(name),
         devDependencies: controlManifest.devDependencies,
       });
-      for (const dependency of dependencies) {
+      for (const dependency of [peer, ...dependencies]) {
         const installed = fs.realpathSync(path.join(project, "node_modules", dependency));
         const relative = path.relative(workspace, installed);
         assert.ok(relative !== "" && !path.isAbsolute(relative) && !relative.startsWith(".."));

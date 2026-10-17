@@ -111,6 +111,9 @@ export function runWorkspacePackageCheck(context: SmokeContext): void {
   runManager(manager, manager.bootstrapArgs, { cwd: workspace });
   assert.ok(fs.existsSync(path.join(workspace, manager.lockfile)), "no workspace lockfile");
   assert.ok(!fs.existsSync(path.join(project, manager.lockfile)), "the package has a lockfile");
+  const authoredManifest = JSON.parse(authored["package.json"]);
+  assert.deepEqual(readJson(path.join(project, "package.json")), authoredManifest);
+  assert.deepEqual(readJson(path.join(control, "package.json")), controlManifest);
 
   const init = (flags: readonly string[]): string =>
     run(process.execPath, [context.vizeBin, "init", project, ...shape.initFlags, ...flags], {
@@ -118,20 +121,34 @@ export function runWorkspacePackageCheck(context: SmokeContext): void {
       env: projectEnv(),
     });
   assert.equal(init(["--dry-run"]), expectedInitOutput(shape, project, manager, "dry"));
+  assert.deepEqual(readJson(path.join(project, "package.json")), authoredManifest);
+  assert.deepEqual(readJson(path.join(control, "package.json")), controlManifest);
   assert.equal(init(["--no-install"]), expectedInitOutput(shape, project, manager, "apply"));
-  const generatedManifest = readJson(path.join(project, "package.json"));
-  assert.deepEqual(generatedManifest.scripts, shape.expectedScripts);
   // --no-install writes the integrations and scripts; the printed dependency
-  // plan is applied by the root install below, leaving authored specs intact here.
-  assert.deepEqual(
-    generatedManifest.devDependencies,
-    JSON.parse(authored["package.json"]).devDependencies,
-  );
+  // plan is applied below. Every other complete authored manifest field stays.
+  const configuredManifest = { ...authoredManifest, scripts: shape.expectedScripts };
+  assert.deepEqual(readJson(path.join(project, "package.json")), configuredManifest);
+  assert.deepEqual(readJson(path.join(control, "package.json")), controlManifest);
 
   // Init's complete generated plan was checked above. Redirect only its named
   // dependencies to this campaign's tarballs, then link the entire workspace:
   // an app-scoped pnpm add does not install an edited sibling manifest.
   installPackedWorkspaceDependencies(workspace, shape.plannedDependencies, context.packed);
+  const plannedSpecs = Object.fromEntries(
+    shape.plannedDependencies.map((name: string) => [
+      name,
+      packedFileSpec(context.packed.get(name)),
+    ]),
+  );
+  for (const [root, before] of [
+    [project, configuredManifest],
+    [control, controlManifest],
+  ] as const) {
+    assert.deepEqual(readJson(path.join(root, "package.json")), {
+      ...before,
+      devDependencies: { ...before.devDependencies, ...plannedSpecs },
+    });
+  }
   assert.deepEqual(
     Object.keys(readJson(path.join(project, "package.json")).devDependencies).sort(),
     shape.expectedDevDependencies,
