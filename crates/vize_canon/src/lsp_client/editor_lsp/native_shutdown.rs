@@ -36,7 +36,7 @@ fn image_digest(mut image: impl Read) -> io::Result<[u8; 32]> {
     loop {
         match image.read(&mut buffer) {
             Ok(0) => return Ok(hasher.finalize().into()),
-            Ok(count) => hasher.update(&buffer[..count]),
+            Ok(count) => hasher.update(buffer.get(..count).ok_or(io::ErrorKind::InvalidData)?),
             Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
             Err(error) => return Err(error),
         }

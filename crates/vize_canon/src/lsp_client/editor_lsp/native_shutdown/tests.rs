@@ -61,6 +61,20 @@ fn streamed_image_digest_rejects_read_errors_after_a_complete_buffer() {
 }
 
 #[test]
+fn streamed_image_digest_rejects_invalid_read_lengths() {
+    struct InvalidRead;
+    impl Read for InvalidRead {
+        fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+            Ok(buffer.len() + 1)
+        }
+    }
+    assert_eq!(
+        image_digest(InvalidRead).unwrap_err().kind(),
+        io::ErrorKind::InvalidData
+    );
+}
+
+#[test]
 fn streamed_image_digest_authenticates_bytes_after_the_first_buffer() {
     let mut bytes = vec![42; 2 * 65_536 + 11];
     let original = image_digest(bytes.as_slice()).unwrap();
