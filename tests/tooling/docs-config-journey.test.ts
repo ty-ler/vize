@@ -4,6 +4,13 @@ import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { test } from "node:test";
+import {
+  configRecipe,
+  nativeOptions,
+  includesOptions,
+  retiredPklOptions,
+} from "./support/docs-config-semantics.ts";
+import { currentConfigExample } from "./support/docs-config-successor.ts";
 import { renderReferenceDocs } from "../../npm/ui/scripts/generate-reference-docs.ts";
 
 const root = resolve(import.meta.dirname, "../..");
@@ -197,4 +204,80 @@ void test("the archived dedicated workflow has a complete canonical successor in
     const workflow = render(`docs/content/${locale}guide/workflows.md`);
     assert.ok(fences(workflow.source).some((code) => code.includes("// vite.config.ts")));
   }
+});
+
+void test("canonical recipe successors retain complete option values and actual package ownership", () => {
+  const archived = original.documents.find((document) => document.code.length > 0)!.code;
+  const envs = [
+    { command: "serve", mode: "development", isSsrBuild: false },
+    { command: "build", mode: "production", isSsrBuild: true },
+  ];
+  for (const env of envs) {
+    assert.deepEqual(
+      configRecipe(successor.recipes[0].code, env).vue,
+      nativeOptions(configRecipe(archived[0], env)),
+      `dynamic config: ${env.command}/${env.mode}/SSR=${env.isSsrBuild}`,
+    );
+    for (const index of [4, 6, 9, 10, 11, 12]) {
+      const current = configRecipe(successor.recipes[index].code, env);
+      const before = nativeOptions(configRecipe(archived[index], env));
+      includesOptions(index === 4 ? current : current.vue, before, `recipe ${index}`);
+    }
+    // The gallery setting keeps its plugin owner; discovery/VRT stay shared.
+    const gallery = configRecipe(successor.recipes[13].code, env);
+    const beforeGallery = configRecipe(archived[13], env).musea as Record<string, unknown>;
+    const { storybookCompat, ...shared } = beforeGallery;
+    assert.deepEqual(gallery.vue, { musea: shared });
+    assert.deepEqual(gallery.plugins, [{ musea: { storybookCompat } }]);
+    const currentWorkflow = configRecipe(successor.workflow, env).vue;
+    const oldWorkflow = JSON.parse(
+      readFileSync(
+        resolve(import.meta.dirname, "fixtures/docs-workflow-dedicated-config.json"),
+        "utf8",
+      ),
+    ) as { code: string };
+    assert.deepEqual(currentWorkflow, configRecipe(oldWorkflow.code, env));
+  }
+  const env = envs[0];
+  const legacyProjects = configRecipe(archived[1], env);
+  const projects = [successor.recipes[1].code, ...successor.recipes[1].additionalCode!];
+  const entries = legacyProjects.entries as Record<string, unknown>[];
+  for (const [index, source] of projects.entries()) {
+    const { basePath, ...settings } = entries[index];
+    assert.ok(source.startsWith(`// ${String(basePath)}/vite.config.ts`));
+    assert.deepEqual(configRecipe(source, env).vue, {
+      ...settings,
+      formatter: { ...(legacyProjects.formatter as object), ...(settings.formatter as object) },
+    });
+  }
+  includesOptions(
+    configRecipe(successor.recipes[3].code, env).vue,
+    nativeOptions(configRecipe(archived[3], env)),
+    "retired JSON values",
+  );
+  const { entries: pklEntries, ...pklShared } = retiredPklOptions(archived[2]);
+  includesOptions(
+    configRecipe(successor.recipes[2].code, env).vue,
+    pklShared,
+    "retired PKL values",
+  );
+  const [{ basePath, ...pklWeb }] = pklEntries as Record<string, unknown>[];
+  assert.ok(
+    successor.recipes[2].additionalCode![0].startsWith(`// ${String(basePath)}/vite.config.ts`),
+  );
+  includesOptions(configRecipe(successor.recipes[2].additionalCode![0], env).vue, pklWeb);
+  for (const index of [5, 7]) assert.equal(successor.recipes[index].code, archived[index]);
+  assert.equal(
+    successor.recipes[8].code.split("\n").slice(1).join("\n"),
+    archived[8].split("\n").slice(1).join("\n"),
+  );
+});
+
+void test("config succession preserves Nuxt module and Oxlint settings namespaces", () => {
+  for (const source of [
+    'export default defineNuxtConfig({\n  modules: ["@vizejs/nuxt"],\n  vize: { compiler: true },\n});',
+    'export default defineConfig({\n  settings: {\n    vize: { nativePath: "./native.node" },\n  },\n});',
+    "export default {\n  vize: { compiler: true },\n};",
+  ])
+    assert.equal(currentConfigExample(source), source);
 });
