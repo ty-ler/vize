@@ -47,9 +47,21 @@ void test("real pinned pnpm links both edited siblings only through workspace gr
     fs.mkdtempSync(path.join(os.tmpdir(), "vize-workspace-link-law-")),
   );
   const manager = PACKAGE_MANAGERS.pnpm;
-  const previousCI = process.env.CI;
+  const isolatedVariables = [
+    "CI",
+    "XDG_CONFIG_HOME",
+    "npm_config_userconfig",
+    "NPM_CONFIG_USERCONFIG",
+  ];
+  const previousEnvironment = new Map(isolatedVariables.map((name) => [name, process.env[name]]));
   try {
     process.env.CI = "true";
+    process.env.XDG_CONFIG_HOME = path.join(directory, "config");
+    fs.mkdirSync(process.env.XDG_CONFIG_HOME);
+    const userconfig = path.join(directory, "empty-user.npmrc");
+    fs.writeFileSync(userconfig, "");
+    process.env.npm_config_userconfig = userconfig;
+    process.env.NPM_CONFIG_USERCONFIG = userconfig;
     assert.equal(
       runManager(manager, ["--version"], { cwd: directory }).trim(),
       manager.corepackSpec.split("@")[1],
@@ -59,8 +71,14 @@ void test("real pinned pnpm links both edited siblings only through workspace gr
     fs.mkdirSync(packs);
     fs.mkdirSync(workspace);
     fs.writeFileSync(path.join(workspace, "package.json"), '{"private":true}\n');
-    fs.writeFileSync(path.join(workspace, "pnpm-workspace.yaml"), 'packages:\n  - "packages/*"\n');
-    fs.writeFileSync(path.join(workspace, ".npmrc"), "offline=true\nignore-scripts=true\n");
+    fs.writeFileSync(
+      path.join(workspace, "pnpm-workspace.yaml"),
+      'packages:\n  - "packages/*"\noffline: true\nignoreScripts: true\n',
+    );
+    assert.equal(
+      runManager(manager, ["config", "get", "offline"], { cwd: workspace }).trim(),
+      "true",
+    );
     const dependencies = ["vize", "@vizejs/vite-plugin"];
     const packed = new Map<string, string>();
     for (const [index, name] of dependencies.entries()) {
@@ -121,6 +139,14 @@ void test("real pinned pnpm links both edited siblings only through workspace gr
     ]) {
       fs.rmSync(path.join(directory, "node_modules"), { recursive: true, force: true });
     }
+    // Make the runner's CI default explicit, independent of host pnpm config.
+    fs.appendFileSync(path.join(workspace, "pnpm-workspace.yaml"), "frozenLockfile: true\n");
+    assert.throws(
+      () => runManager(manager, manager.bootstrapArgs, { cwd: workspace }),
+      /ERR_PNPM_OUTDATED_LOCKFILE/u,
+      "a changed dependency plan cannot reuse the original frozen bootstrap lock",
+    );
+    assert.deepEqual(fs.readFileSync(path.join(workspace, manager.lockfile)), bootstrapLock);
     installPackedWorkspaceDependencies(workspace, dependencies, packed);
     for (const name of ["app", "control"]) {
       const project = path.join(workspace, "packages", name);
@@ -143,8 +169,10 @@ void test("real pinned pnpm links both edited siblings only through workspace gr
       }
     }
   } finally {
-    if (previousCI === undefined) delete process.env.CI;
-    else process.env.CI = previousCI;
+    for (const [name, value] of previousEnvironment) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
     fs.rmSync(directory, { recursive: true, force: true });
   }
 });

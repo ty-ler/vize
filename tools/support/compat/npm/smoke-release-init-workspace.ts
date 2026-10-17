@@ -73,7 +73,8 @@ export function installPackedWorkspaceDependencies(
     fs.writeFileSync(filename, `${JSON.stringify(manifest, null, 2)}\n`);
   }
   const manager = PACKAGE_MANAGERS.pnpm;
-  runManager(manager, manager.bootstrapArgs, { cwd: workspace });
+  // This install intentionally applies a new dependency plan after bootstrap.
+  runManager(manager, [...manager.bootstrapArgs, "--no-frozen-lockfile"], { cwd: workspace });
 }
 
 export function runWorkspacePackageCheck(context: SmokeContext): void {
