@@ -9,6 +9,11 @@ Keep Vue tooling settings in `vue:` in `vite.config.*` and TypeScript settings i
 `tsconfig.json`. The CLI, Vite integration and editor extension read these project
 files. No dedicated Vize configuration is needed.
 
+<span id="vite-configuration"></span>
+<span id="choose-which-features-to-adopt"></span>
+
+See [Shared Vue configuration](./vue-configuration.md) for complete project examples.
+
 ## Keep your Vite+ configuration
 
 Use the Vize helper around your existing configuration:
@@ -20,17 +25,20 @@ const vpConfig = {
   server: { port: 3000 },
 };
 
-export default defineConfig(vpConfig).withVue({
+const vueConfig = {
   compiler: { sourceMap: true },
   linter: { preset: "essential" },
   formatter: { printWidth: 100 },
-});
+};
+
+export default defineConfig(vpConfig).withVue(vueConfig);
 ```
 
 `withVue` keeps the existing Vite+ options, plugins and hooks. Config objects,
 functions, promises and async functions are supported. An inline `vue: { ... }`
 section is equivalent. See [Shared Vue configuration](./vue-configuration.md) for
 paths, scoped entries and composition.
+
 
 ## TypeScript and Vue template checking
 
@@ -56,6 +64,22 @@ Existing projects using `vue-tsc` can retain their TypeScript project layout.
 options belong in `vueCompilerOptions`. See the [reference](./configuration-reference.md)
 for the supported Vue options and explicit Vize overrides.
 
+<span id="change-one-rule"></span>
+
+## Lint Rule Options
+
+Change individual rules with `vue.linter.rules`. See [Rule Options](../rules/options.md) for complete typed options.
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  lint: { rules: { "no-debugger": "error" } },
+}).withVue({
+  linter: { rules: { "vue/no-v-html": "error" } },
+});
+```
+
 ## Ordinary Vite
 
 Keep the existing Vite configuration and replace the Vue compilation plugin:
@@ -72,6 +96,8 @@ export default defineConfig({
   },
 });
 ```
+
+<span id="standalone-cli"></span>
 
 ## CLI and editor
 
@@ -107,3 +133,10 @@ TypeScript `extends` and project `references` continue to work.
 See [Shared Vue configuration](./vue-configuration.md), the
 [configuration reference](./configuration-reference.md) and the
 [compiler reference](./compiler-configuration-reference.md) for individual options.
+
+<span id="detailed-reference"></span>
+
+See [Experimentals](./experimentals.md) for optional project features.
+
+> [!NOTE]
+> Vize 0.457.0: The CLI and editor use the existing Vite and TypeScript project files. Migrate removed dedicated configuration before deleting it.

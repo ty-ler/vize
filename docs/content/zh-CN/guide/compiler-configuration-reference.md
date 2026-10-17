@@ -131,7 +131,7 @@ const Classic = () => {
 由于每个组件独立路由，**单个模块可以混合两个后端**：
 
 ```tsx
-// vite.config.ts: vue: { compiler: { jsxMode: "vapor" } }
+// vite.config.ts : vue: { compiler: { jsxMode: "vapor" } }
 
 // No directive -> takes the configured default (Vapor here).
 export const Dashboard = () => <main>{/* ... */}</main>;
@@ -163,6 +163,7 @@ export const LegacyWidget = () => {
 `vue.dialect` 为独立 HTML 文档（`.html`/`.htm`）选择 Vue 方言：
 
 ```ts
+// vite.config.ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({}).withVue({

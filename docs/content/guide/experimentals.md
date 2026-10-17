@@ -49,6 +49,8 @@ The same option values can be represented as JSON data inside a shared JavaScrip
 }
 ```
 
+> Historical migration example: PKL configuration has been removed and is not loaded. Move the same values into the JavaScript object above.
+
 ```pkl
 amends "node_modules/vize/pkl/vize.pkl"
 

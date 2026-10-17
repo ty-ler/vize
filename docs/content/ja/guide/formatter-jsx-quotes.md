@@ -5,7 +5,7 @@
 JSX 属性の引用符を、通常の JavaScript 文字列とは別に選びます。
 JSX/TSX のコードや Vue のスクリプトブロックで、文字列と属性に異なる規則を使いたいときに設定します。
 
-共通の設定は `vite.config.*` の `vue.formatter` に置きます。CLI とエディターは同じ設定を読み込みます。[設定](./configuration.md)を参照してください。
+共通の設定は `vite.config.*` の `vue.formatter` に置きます。CLI とエディターは同じ設定を読み込みます。[Vue 設定ガイド](./configuration.md)を参照してください。
 
 ## JSX の引用符を設定する
 

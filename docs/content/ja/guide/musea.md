@@ -86,18 +86,16 @@ CLI ラッパー、静的ホスト、テストの要件は [Musea のホステ�
 共有の既定値は `vite.config.*` のトップレベルの `vue.musea` にまとめます。`musea()` に直接渡したオプションが、その項目の共有設定より優先されます。専用設定は廃止したため、`vue.musea` へ移行してください。
 
 ```ts
-// vite.config.ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 import { musea } from "@vizejs/vite-plugin-musea";
 
 export default defineConfig({
-  plugins: [musea()],
+  plugins: [musea({ storybookCompat: false })],
   vue: {
     musea: {
       include: ["src/**/*.art.vue"],
       exclude: ["node_modules/**", "dist/**"],
       basePath: "/__musea__",
-      storybookCompat: false,
       inlineArt: false,
     },
   },

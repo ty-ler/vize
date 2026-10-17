@@ -73,18 +73,16 @@ vp exec vize musea --build
 Coloque os valores compartilhados em `vue.musea` no `vite.config.*`. As opções passadas diretamente a `musea()` substituem os valores correspondentes. Mova as opções das configurações específicas removidas para `vue.musea`.
 
 ```ts
-// vite.config.ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 import { musea } from "@vizejs/vite-plugin-musea";
 
 export default defineConfig({
-  plugins: [musea()],
+  plugins: [musea({ storybookCompat: false })],
   vue: {
     musea: {
       include: ["src/**/*.art.vue"],
       exclude: ["node_modules/**", "dist/**"],
       basePath: "/__musea__",
-      storybookCompat: false,
       inlineArt: false,
     },
   },

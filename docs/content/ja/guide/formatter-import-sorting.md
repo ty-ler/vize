@@ -5,7 +5,7 @@
 Vue スクリプトの import を、Vite+ プロジェクト内のほかのファイルと同じ規則で並べ替えます。
 import のグループをそろえたいときに使います。副作用のある import の初期化順は、明示的に変更する場合を除き保たれます。
 
-共通の設定は `vite.config.*` の `vue.formatter` に置きます。CLI とエディターは同じ設定を読み込みます。[設定](./configuration.md)を参照してください。
+共通の設定は `vite.config.*` の `vue.formatter` に置きます。CLI とエディターは同じ設定を読み込みます。[Vue 設定ガイド](./configuration.md)を参照してください。
 
 ## import の並べ替えを設定する
 

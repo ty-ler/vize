@@ -161,7 +161,7 @@ import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 import { musea } from "@vizejs/vite-plugin-musea";
 
 export default defineConfig({
-  plugins: [musea()],
+  plugins: [musea({ storybookCompat: false })],
   vue: {
     musea: {
       include: ["src/**/*.art.vue"],
@@ -176,3 +176,156 @@ export default defineConfig({
 `previewCss`、`previewSetup`、`tokensPath`、`theme`、`storybookOutDir` などの表示用設定は
 `musea()` のオプションに置きます。`musea-vrt` も同じ Vite 設定の `include`、`exclude`、
 `vrt` を読みます。`vize musea new` は専用設定を作らず、ストーリーの例を生成します。
+
+## 移行レシピ
+
+専用の JSON・PKL と独自の `extends` は廃止されています。通常の JavaScript オブジェクトをインポートして再利用します。以下は既存設定の移行例です。
+
+### 動的な Vite 設定
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig(({ command, mode, isSsrBuild }) => ({
+  vue: {
+    compiler: {
+      sourceMap: mode !== "production",
+      ssr: isSsrBuild,
+      vapor: false,
+      customRenderer: false,
+      templateSyntax: "standard",
+    },
+    vite: {
+      include: [/\.vue$/],
+      exclude: [/node_modules/],
+      scanPatterns: ["src/**/*.vue"],
+      ignorePatterns: ["node_modules/**", "dist/**", ".git/**"],
+    },
+    linter: {
+      enabled: command !== "build",
+      preset: "happy-path",
+    },
+    typeChecker: {
+      enabled: true,
+      strict: true,
+    },
+    formatter: {
+      printWidth: 100,
+      singleQuote: false,
+    },
+    languageServer: {
+      lint: true,
+      typecheck: false,
+      editor: false,
+      formatting: false,
+    },
+    musea: {
+      include: ["src/**/*.art.vue"],
+      basePath: "/__musea__",
+    },
+  },
+}));
+```
+
+### 廃止された JSON・PKL 設定の移行
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  compiler: {
+    sourceMap: true,
+    vapor: false,
+    customRenderer: false,
+    templateSyntax: "standard",
+  },
+  vite: { scanPatterns: ["src/**/*.vue"] },
+  linter: { preset: "happy-path" },
+  typeChecker: { enabled: true, strict: true },
+  languageServer: { lint: true, typecheck: false, editor: false, formatting: false },
+  musea: { include: ["src/**/*.art.vue"], basePath: "/__musea__" },
+});
+```
+
+### パッケージごとのプロジェクト
+
+`entries` は lint のスコープだけを扱います。型チェッカーとフォーマッタのパッケージ別設定は、それぞれのパッケージの Vite・TypeScript プロジェクトに置きます。以下の 2 ファイルは別々に作成します。
+
+```ts
+// apps/web/vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  name: "web app",
+  files: ["src/**/*.vue"],
+  formatter: { printWidth: 100 },
+  typeChecker: { tsconfig: "tsconfig.app.json" },
+});
+```
+
+```ts
+// packages/ui/vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+export default defineConfig({}).withVue({
+  name: "ui package",
+  files: ["src/**/*.vue"],
+  formatter: { printWidth: 100, singleQuote: true },
+});
+```
+
+### 静的解析とチェッカープロセス
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  linter: {
+    enabled: true,
+    preset: "opinionated",
+    rules: {
+      "vue/require-v-for-key": "error",
+      "vue/no-v-html": "warn",
+    },
+  },
+  typeChecker: {
+    enabled: true,
+    strict: true,
+    checkProps: true,
+    checkEmits: true,
+    checkTemplateBindings: true,
+    // Vue 3 Options API template bindings; default-on (matches vue-tsc).
+    optionsApi: true,
+  },
+});
+```
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  typeChecker: { servers: 1 },
+});
+```
+
+### 既存ワークフローの設定
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  formatter: {
+    printWidth: 100,
+  },
+  linter: {
+    preset: "happy-path",
+  },
+  typeChecker: {
+    enabled: true,
+    strict: true,
+    tsconfig: "tsconfig.json",
+  },
+  vite: {
+    scanPatterns: ["src/**/*.vue"],
+  },
+});
+```

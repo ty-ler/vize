@@ -274,7 +274,7 @@ The plugin exposes a compatibility shim for tools that probe for `@vitejs/plugin
 // nuxt.config.ts — using the dedicated Nuxt module
 export default defineNuxtConfig({
   modules: ["@vizejs/nuxt"],
-  vue: {
+  vize: {
     compiler: true,
   },
 });

@@ -56,6 +56,8 @@ export default defineConfig({
 }
 ```
 
+> 移行用の旧形式の例です。PKL 設定は廃止され、読み込まれません。同じ値を上の JavaScript オブジェクトへ移してください。
+
 ```pkl
 amends "node_modules/vize/pkl/vize.pkl"
 

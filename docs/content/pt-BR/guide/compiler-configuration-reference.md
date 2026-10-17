@@ -132,7 +132,7 @@ const Classic = () => {
 Como cada componente é roteado de forma independente, um **único módulo pode misturar ambos os backends**:
 
 ```tsx
-// vite.config.ts: vue: { compiler: { jsxMode: "vapor" } }
+// vite.config.ts : vue: { compiler: { jsxMode: "vapor" } }
 
 // No directive -> takes the configured default (Vapor here).
 export const Dashboard = () => <main>{/* ... */}</main>;
@@ -164,6 +164,7 @@ diagnosticadas. Prólogos não relacionados, como `"use strict"`, ficam intocado
 `vue.dialect` seleciona o dialeto Vue para documentos HTML independentes (`.html`/`.htm`):
 
 ```ts
+// vite.config.ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({}).withVue({

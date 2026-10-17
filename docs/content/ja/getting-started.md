@@ -62,6 +62,6 @@ vp run fmt:check
 
 ## Vite+ なしで利用する
 
-[単独 CLI](./guide/cli.md)では `vize lint`・`vize fmt`・`vize check` を実行できます。対象パッケージのルートから実行し、TypeScript のプロジェクト設定は `tsconfig.json` に残します。ネイティブコマンドも `vite.config.*` のトップレベルの `vize` 設定を共有できます。検索規則と現在の範囲は [CLI の設定](./guide/configuration.md#standalone-cli)を参照してください。
+[単独 CLI](./guide/cli.md)では `vize lint`・`vize fmt`・`vize check` を実行できます。対象パッケージのルートから実行し、TypeScript のプロジェクト設定は `tsconfig.json` に残します。ネイティブコマンドも `vite.config.*` のトップレベルの `vue` 設定を共有できます。検索規則と現在の範囲は [CLI の設定](./guide/configuration.md#standalone-cli)を参照してください。
 
 対話形式で導入する場合は、`vpx vize init --dry-run` で変更予定を確認し、`vpx vize init` で機能を選びます。[プロジェクトの初期設定](./guide/init.md)に、プロジェクトの検出方法と、設定を自動編集できない場合の対応をまとめています。init は既存のプロジェクト設定と既定値を使い、専用の Vize 設定ファイルは作成しません。
