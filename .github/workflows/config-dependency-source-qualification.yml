@@ -1,12 +1,12 @@
 name: Config dependency source qualification
-run-name: Config dependency laws at 5867788786
+run-name: Config dependency laws at f61cd9b70d
 on:
   push:
     branches: [ci/config-dependency-source-qualification]
 permissions:
   contents: read
 env:
-  SOURCE_SHA: 5867788786f5a1681aff7163f872b17a5dd30500
+  SOURCE_SHA: f61cd9b70d06a7b9de14041858e1f0baf673b528
   CARGO_BUILD_JOBS: "12"
   CARGO_TERM_COLOR: always
   RUST_TEST_THREADS: "4"
@@ -44,18 +44,18 @@ jobs:
           mkdir -p target/config-dependency-qualification
           git rev-parse HEAD HEAD^{tree} > target/config-dependency-qualification/source.txt
           git ls-files -s > target/config-dependency-qualification/source-index.txt
-          sha256sum Cargo.lock crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs crates/vize_canon/src/batch/virtual_project/tests/editor_configuration_graph.rs crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot_tests.rs crates/vize_canon/tests/lsp_import_resolution/compiler_snapshot.rs crates/vize_maestro/src/server/state/project_contexts/config_reload_tests.rs crates/vize/src/commands/check/runner/input_scope_tests.rs crates/vize/tests/check_tsconfig_dependency_errors_cli.rs > target/config-dependency-qualification/inputs.sha256
+          sha256sum Cargo.lock crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs crates/vize_canon/src/batch/virtual_project/tests/editor_configuration_graph.rs crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot_tests.rs crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_inputs.rs crates/vize_canon/src/batch/virtual_project/tsconfig_paths.rs crates/vize_canon/src/package_route/search.rs crates/vize_maestro/src/server/state/config/project.rs crates/vize_canon/tests/lsp_import_resolution/compiler_snapshot.rs crates/vize_maestro/src/server/state/project_contexts/config_reload_tests.rs crates/vize/src/commands/check/runner/input_scope_tests.rs crates/vize/tests/check_tsconfig_dependency_errors_cli.rs > target/config-dependency-qualification/inputs.sha256
       - name: Run all three original and four added configuration graph laws
         run: |
           set -euo pipefail
           cargo test --locked --profile ci -p vize_canon --lib editor_configuration_graph_tests -- --nocapture 2>&1 | tee target/config-dependency-qualification/laws.log
           grep -F '7 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/laws.log
-      - name: Run all three immutable compiler snapshot laws
+      - name: Run all nine immutable compiler snapshot and consistency laws
         if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
           cargo test --locked --profile ci -p vize_canon --lib compiler_snapshot::tests -- --nocapture 2>&1 | tee target/config-dependency-qualification/snapshots.log
-          grep -F '3 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/snapshots.log
+          grep -F '9 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/snapshots.log
       - name: Retain live union members and unsaved source authority
         if: ${{ !cancelled() }}
         run: |
