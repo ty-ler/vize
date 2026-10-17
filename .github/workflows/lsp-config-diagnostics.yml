@@ -78,7 +78,7 @@ jobs:
         run: |
           cargo test --locked --profile ci -p vize_maestro --features legacy --lib server::initial_diagnostics::
           cargo test --locked --profile ci -p vize_maestro --features legacy --lib server::native_requests::
-          cargo clippy --locked --profile ci -p vize_maestro --features legacy --lib -- -D warnings
+          cargo clippy --locked --profile ci -p vize_maestro --features legacy --all-targets -- -D warnings
       - name: Retain source, binary, raw process output, native phases, and metrics
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
