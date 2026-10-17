@@ -232,6 +232,16 @@ jobs:
             'crates/vize_maestro/src/server/state/project_contexts/registry.rs',
             'crates/vize_maestro/src/server/state/project_contexts/watched.rs',
             'crates/vize_maestro/src/server/workspace_files/watched.rs',
+            'crates/vize_maestro/src/server/project_contexts/reload_protocol_tests.rs',
+            'crates/vize_maestro/src/server/state/config/read/tests.rs',
+            'crates/vize_maestro/src/server/state/config_tests.rs',
+            'crates/vize_maestro/src/server/state/module_links/tests/native.rs',
+            'crates/vize_maestro/src/server/state/project_contexts/config_reload_admission_tests.rs',
+            'crates/vize_maestro/src/server/state/project_contexts/config_reload_recovery_tests.rs',
+            'crates/vize_maestro/src/server/state/project_contexts/reference_reload_tests.rs',
+            'crates/vize_maestro/src/server/state/project_contexts/tests.rs',
+            'crates/vize_maestro/src/server/state/tests.rs',
+            'crates/vize_maestro/src/server/workspace_files_tests.rs',
           ];
           const toolchain = /^channel\s*=\s*"([^"]+)"/mu.exec(fs.readFileSync('rust-toolchain.toml', 'utf8'))?.[1];
           assert.match(toolchain ?? '', /^\d+\.\d+\.\d+$/u);
@@ -252,6 +262,11 @@ jobs:
           assert.equal(process.env.PACKED_CONFIG_HOST_ONLY, 'false');
           execFileSync('git', ['diff', '--exit-code', 'HEAD']);
           execFileSync('git', ['merge-base', '--is-ancestor', receipt.producer, source]);
+          assert.match(receipt.producer ?? "", /^[0-9a-f]{40}$/u);
+          receipt.producerFiles = Object.fromEntries(producerFiles.map(file => [file,
+            createHash('sha256').update(execFileSync('git', ['show', `${receipt.producer}:${file}`])).digest('hex')]));
+          fs.writeFileSync(path.join(process.env.PACKED_CONFIG_OUTPUT, 'source.json'), JSON.stringify(receipt, null, 2) + '\n');
+          for (const file of producerFiles) assert.equal(receipt.files[file], receipt.producerFiles[file], file);
           execFileSync('git', ['diff', '--exit-code', '--name-status', receipt.producer, source, '--', ...producerFiles]);
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `toolchain=${toolchain}\n`);
           JS
@@ -395,5 +410,5 @@ jobs:
       PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}
       PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}
       # Updated only when the reviewed producer is deliberately frozen again.
-      PACKED_CONFIG_PRODUCER: 820bf6b5d688c77f8edea6ba18ff6f86f76bffae
+      PACKED_CONFIG_PRODUCER: 9654d136f504765f0dfbdb1e17cf806e0b967878
     steps: *fresh-install-steps

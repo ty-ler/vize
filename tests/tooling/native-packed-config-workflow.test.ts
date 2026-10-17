@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { spawnSync, execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -14,7 +15,56 @@ const source = fs.readFileSync(path.join(root, ".github/workflows/native-smoke.y
 const workflow = parse(source);
 const steps = workflow.jobs["packed-config-acceptance"].steps;
 
-test("the bounded mode has one Linux Node24 job and reuses every fresh-install step", () => {
+void test("the refrozen composed producer binds every whole source and moved test module", () => {
+  const producer = "9654d136f504765f0dfbdb1e17cf806e0b967878";
+  const witness = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        root,
+        "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json",
+      ),
+      "utf8",
+    ),
+  );
+  assert.equal(workflow.jobs["packed-config-acceptance"].env.PACKED_CONFIG_PRODUCER, producer);
+  assert.equal(witness.producer.head, producer);
+  assert.equal(witness.producer.composedBase, "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b");
+  assert.equal(witness.producer.priorProducer, "820bf6b5d688c77f8edea6ba18ff6f86f76bffae");
+  const script = steps.find(
+    (step: { name?: string }) => step.name === "Authenticate selected packed configuration source",
+  ).run as string;
+  const match = /const producerFiles = (\[[\s\S]*?\]);/u.exec(script);
+  assert.ok(match);
+  const files = [...(runInNewContext(match[1]) as string[])];
+  assert.equal(files.length, 26);
+  assert.equal(new Set(files).size, files.length);
+  assert.deepEqual(files, Object.keys(witness.producer.files));
+  const composedFiles = execFileSync(
+    "git",
+    ["diff", "--name-only", witness.producer.composedBase, producer],
+    { cwd: root, encoding: "utf8" },
+  )
+    .trim()
+    .split("\n");
+  assert.deepEqual(
+    [...files].sort(),
+    composedFiles.sort(),
+    "the complete finite composition is authenticated",
+  );
+  execFileSync("git", ["merge-base", "--is-ancestor", producer, "HEAD"], { cwd: root });
+  const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
+  for (const file of files) {
+    const authenticated = execFileSync("git", ["show", `${producer}:${file}`], { cwd: root });
+    assert.equal(digest(authenticated), witness.producer.files[file], file);
+    assert.equal(
+      digest(fs.readFileSync(path.join(root, file))),
+      witness.producer.files[file],
+      file,
+    );
+  }
+});
+
+void test("the bounded mode has one Linux Node24 job and reuses every fresh-install step", () => {
   assert.equal(steps, workflow.jobs["fresh-install-smoke"].steps);
   const job = workflow.jobs["packed-config-acceptance"];
   assert.equal(job["runs-on"], "ubuntu-22.04");
@@ -35,7 +85,7 @@ test("the bounded mode has one Linux Node24 job and reuses every fresh-install s
       }
 });
 
-test("the complete old and new recipes reject unknown, missing, or altered commands", () => {
+void test("the complete old and new recipes reject unknown, missing, or altered commands", () => {
   withoutPackedConfigExtension(source);
   for (const command of [
     "cargo build --profile ci -p vize",
@@ -49,7 +99,7 @@ test("the complete old and new recipes reject unknown, missing, or altered comma
   assert.throws(() => withoutPackedConfigExtension(source + "\n# unreviewed extension\n"));
 });
 
-test("the actual source preflight refuses a wrong immutable SHA and retains its receipt", () => {
+void test("the actual source preflight refuses a wrong immutable SHA and retains its receipt", () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-config-source-"));
   try {
     const current = execFileSync("git", ["rev-parse", "HEAD"], {
@@ -88,7 +138,7 @@ test("the actual source preflight refuses a wrong immutable SHA and retains its 
   }
 });
 
-test("the actual packed runtime shell retains the full packet without hiding exit17", () => {
+void test("the actual packed runtime shell retains the full packet without hiding exit17", () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-config-shell-"));
   try {
     const binary = path.join(directory, "rust-script");
@@ -135,7 +185,7 @@ test("the actual packed runtime shell retains the full packet without hiding exi
 });
 
 // Execute the real preflight in a tiny isolated repository, without builds or installs.
-test("all sixteen reviewed producer files are bound, including a non-protocol source", () => {
+void test("all sixteen reviewed producer files are bound, including a non-protocol source", () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-config-producer-"));
   try {
     const repository = path.join(directory, "repo");
@@ -150,7 +200,7 @@ test("all sixteen reviewed producer files are bound, including a non-protocol so
       return runInNewContext(match[1]) as string[];
     };
     const producerFiles = array("producerFiles");
-    assert.equal(producerFiles.length, 16);
+    assert.equal(producerFiles.length, 26);
     const nonProtocol = "crates/vize_canon/src/batch/virtual_project/materialize.rs";
     assert.ok(producerFiles.includes(nonProtocol));
     for (const name of [...array("files"), ...producerFiles]) {
@@ -182,7 +232,7 @@ test("all sixteen reviewed producer files are bound, including a non-protocol so
     git("add", ".");
     git("commit", "--quiet", "-m", "test: retain producer fixture");
     const producer = git("rev-parse", "HEAD");
-    const execute = () => {
+    const execute = (selectedProducer = producer) => {
       const current = git("rev-parse", "HEAD");
       return spawnSync("bash", ["-e", "-o", "pipefail", "-c", script], {
         cwd: repository,
@@ -193,7 +243,7 @@ test("all sixteen reviewed producer files are bound, including a non-protocol so
           PACKED_CONFIG_OUTPUT: path.join(directory, "evidence"),
           PACKED_CONFIG_EXPECTED_SOURCE: current,
           PACKED_CONFIG_HOST_ONLY: "false",
-          PACKED_CONFIG_PRODUCER: producer,
+          PACKED_CONFIG_PRODUCER: selectedProducer,
           GITHUB_SHA: current,
           GITHUB_WORKFLOW_SHA: current,
           GITHUB_OUTPUT: path.join(directory, "outputs"),
@@ -201,6 +251,28 @@ test("all sixteen reviewed producer files are bound, including a non-protocol so
       });
     };
     assert.equal(execute().status, 0, "unchanged complete producer passes source preflight");
+    const unrelated = git(
+      "commit-tree",
+      git("rev-parse", "HEAD^{tree}"),
+      "-m",
+      "test: unrelated same-tree producer",
+    );
+    assert.notEqual(execute(unrelated).status, 0, "identical bytes cannot replace source ancestry");
+    const moved =
+      "crates/vize_maestro/src/server/state/project_contexts/config_reload_recovery_tests.rs";
+    assert.ok(producerFiles.includes(moved));
+    fs.writeFileSync(path.join(repository, moved), "changed complete migrated test module\n");
+    git("add", moved);
+    git("commit", "--quiet", "-m", "test: alter moved producer test module");
+    assert.notEqual(execute().status, 0);
+    const movedReceipt = JSON.parse(
+      fs.readFileSync(path.join(directory, "evidence/source.json"), "utf8"),
+    );
+    assert.notEqual(movedReceipt.files[moved], movedReceipt.producerFiles[moved]);
+    fs.writeFileSync(path.join(repository, moved), "reviewed fixture bytes\n");
+    git("add", moved);
+    git("commit", "--quiet", "-m", "test: restore moved producer test module");
+    assert.equal(execute().status, 0, "restoring all producer bytes recovers admission");
     fs.writeFileSync(
       path.join(repository, nonProtocol),
       "changed outside the three protocol files\n",
