@@ -109,16 +109,31 @@ impl Fixture {
         source: &Path,
         content: &str,
     ) -> Result<CorsaVueVirtualProject, crate::corsa_bridge::types::CorsaBridgeError> {
-        let routes = crate::PackageRouteResolver::default();
-        let virtual_ts = crate::virtual_ts::VirtualTsOptions::default();
         // Both didOpen notifications can arrive before asynchronous diagnostics
         // prepare the first document. Their original complete buffers share one
         // editor revision; the first host has not imported the package yet.
+        self.try_build_with_overlays(
+            session,
+            source,
+            content,
+            &[(self.other.clone(), OTHER), (self.host.clone(), APP)],
+        )
+    }
+
+    fn try_build_with_overlays(
+        &self,
+        session: &EditorMirrorSession,
+        source: &Path,
+        content: &str,
+        overlays: &[(PathBuf, &str)],
+    ) -> Result<CorsaVueVirtualProject, crate::corsa_bridge::types::CorsaBridgeError> {
+        let routes = crate::PackageRouteResolver::default();
+        let virtual_ts = crate::virtual_ts::VirtualTsOptions::default();
         build_vue_virtual_project_with_overlays_and_options_and_package_routes(
             source,
             content,
             Default::default(),
-            &[(self.other.clone(), OTHER), (self.host.clone(), APP)],
+            overlays,
             CorsaProjectEnvironment {
                 virtual_ts_options: &virtual_ts,
                 package_routes: &routes,
@@ -266,6 +281,89 @@ fn reverse_open_order_preserves_the_complete_linked_package_until_session_cleanu
         }
         fixture.assert_authored_unchanged();
     }
+}
+
+#[test]
+fn closing_and_reopening_a_package_owner_removes_and_restores_its_support_facts() {
+    let fixture = Fixture::new(false);
+    let other_only = [(fixture.other.clone(), OTHER)];
+    // A separate real session gives the complete generated options for the
+    // authored project when only the import-free document is open.
+    let baseline_session = EditorMirrorSession::new();
+    let baseline = fixture
+        .try_build_with_overlays(&baseline_session, &fixture.other, OTHER, &other_only)
+        .unwrap();
+    let baseline_config: serde_json::Value =
+        serde_json::from_slice(&fs::read(baseline.session_config_path.unwrap()).unwrap()).unwrap();
+    let baseline_options = baseline_config["compilerOptions"].clone();
+    assert!(baseline_options.get("allowArbitraryExtensions").is_none());
+    baseline_session.clear();
+    fixture.assert_authored_unchanged();
+
+    let session = EditorMirrorSession::new();
+    let host = fixture.build(&session, &fixture.host, APP);
+    let project_root = host.session_project_root.as_ref().unwrap();
+    let config_path = host.session_config_path.as_ref().unwrap();
+    let config: serde_json::Value =
+        serde_json::from_slice(&fs::read(config_path).unwrap()).unwrap();
+    let required_options = config["compilerOptions"].clone();
+    assert_eq!(required_options["allowArbitraryExtensions"], true);
+    let query = crate::file_uri::file_uri_to_path(&host.host.request_uri).unwrap();
+    let package = project_root.join("node_modules/ui");
+    let retained = [
+        query.clone(),
+        package.join("UiButton.vue.ts"),
+        package.join("UiButton.d.vue.ts"),
+        package.join("package.json"),
+    ]
+    .into_iter()
+    .map(|path| {
+        let bytes = fs::read(&path).unwrap();
+        (path, bytes)
+    })
+    .collect::<BTreeMap<_, _>>();
+    fixture.assert_authored_unchanged();
+
+    let other = fixture.build(&session, &fixture.other, OTHER);
+    assert_eq!(other.session_config_path.as_ref(), Some(config_path));
+    let both_open: serde_json::Value =
+        serde_json::from_slice(&fs::read(config_path).unwrap()).unwrap();
+    assert_eq!(both_open["compilerOptions"], required_options);
+    fixture.assert_authored_unchanged();
+
+    let closed = fixture
+        .try_build_with_overlays(&session, &fixture.other, OTHER, &other_only)
+        .unwrap();
+    assert_eq!(closed.session_project_root.as_ref(), Some(project_root));
+    assert_eq!(closed.session_config_path.as_ref(), Some(config_path));
+    let closed_config: serde_json::Value =
+        serde_json::from_slice(&fs::read(config_path).unwrap()).unwrap();
+    assert_eq!(closed_config["compilerOptions"], baseline_options);
+    assert!(!query.exists());
+    for name in ["UiButton.vue.ts", "UiButton.d.vue.ts"] {
+        assert!(!package.join(name).exists());
+    }
+    // The ordinary import-free mirror may restore its original external
+    // package link, but must remove the earlier private generated directory.
+    if let Ok(metadata) = fs::symlink_metadata(&package) {
+        assert!(metadata.file_type().is_symlink());
+    }
+    fixture.assert_authored_unchanged();
+
+    let reopened = fixture.build(&session, &fixture.host, APP);
+    assert_eq!(reopened.host.request_uri, host.host.request_uri);
+    assert_eq!(reopened.host.code, host.host.code);
+    assert_eq!(reopened.documents, host.documents);
+    let restored_config: serde_json::Value =
+        serde_json::from_slice(&fs::read(config_path).unwrap()).unwrap();
+    assert_eq!(restored_config["compilerOptions"], required_options);
+    for (path, bytes) in &retained {
+        assert_eq!(fs::read(path).unwrap(), *bytes, "{}", path.display());
+    }
+    fixture.assert_authored_unchanged();
+    session.clear();
+    assert!(!project_root.exists());
+    fixture.assert_authored_unchanged();
 }
 
 #[test]
