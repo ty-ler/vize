@@ -66,7 +66,7 @@ for the supported Vue options and explicit Vize overrides.
 
 <span id="change-one-rule"></span>
 
-## Lint Rule Options
+### Lint Rule Options
 
 Change individual rules with `vue.linter.rules`. See [Rule Options](../rules/options.md) for complete typed options.
 

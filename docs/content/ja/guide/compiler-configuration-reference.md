@@ -138,7 +138,7 @@ const Classic = () => {
 各コンポーネントの出力先は個別に決まるため、**同じモジュール内で両方のバックエンドを使えます**。
 
 ```tsx
-// vite.config.ts : vue: { compiler: { jsxMode: "vapor" } }
+// vite.config.ts: { vue: { compiler: { jsxMode: "vapor" } } }
 
 // No directive -> takes the configured default (Vapor here).
 export const Dashboard = () => <main>{/* ... */}</main>;

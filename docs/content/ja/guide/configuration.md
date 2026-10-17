@@ -70,9 +70,11 @@ TypeScript の厳密さは `compilerOptions`、Vue 固有の設定は `vueCompil
 
 <span id="ルールを1つ変更する"></span>
 
-## Lint Rule Options
+<span id="lint-rule-options"></span>
 
-ルールを変更するには `vue.linter.rules` を使います。ルールごとのオプションは[ルールオプション](../rules/options.md)を参照してください。
+### ルールのオプション
+
+ルールを変更するには `vue.linter.rules` を使います。ルールごとのオプションは[ルールのオプション](../rules/options.md)を参照してください。
 
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
@@ -140,7 +142,7 @@ TypeScript 標準の `extends` とプロジェクトの `references` は引き�
 
 <span id="詳細リファレンス"></span>
 
-追加の機能は[実験的機能](./experimentals.md)を参照してください。
+追加の機能は[Experimentals](./experimentals.md)を参照してください。
 
 > [!NOTE]
 > Vize 0.457.0: CLI とエディターは既存の Vite・TypeScript プロジェクト設定を読み込みます。廃止された専用設定は移行してから削除してください。

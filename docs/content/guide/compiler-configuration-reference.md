@@ -136,7 +136,7 @@ const Classic = () => {
 Because each component is routed independently, a **single module can mix both backends**:
 
 ```tsx
-// vite.config.ts : vue: { compiler: { jsxMode: "vapor" } }
+// vite.config.ts: { vue: { compiler: { jsxMode: "vapor" } } }
 
 // No directive -> takes the configured default (Vapor here).
 export const Dashboard = () => <main>{/* ... */}</main>;
