@@ -11,7 +11,7 @@ use super::{
 pub(super) fn load_raw_config_checked(
     path: Option<&Path>,
 ) -> Result<LoadedRawConfig, std::string::String> {
-    load_raw_checked(path, true, &mut Vec::new())
+    load_raw_checked(path, true, &mut Vec::new(), &mut true)
 }
 
 /// An editor workspace directory can legitimately have no dedicated config.
@@ -25,16 +25,19 @@ pub(super) fn load_raw_editor_config_checked(
 pub(super) struct EditorConfigAttempt {
     pub outcome: Result<LoadedRawConfig, std::string::String>,
     pub dependencies: Vec<PathBuf>,
+    pub dependencies_complete: bool,
 }
 
 pub(super) fn load_raw_editor_config_attempt(path: Option<&Path>) -> EditorConfigAttempt {
     let mut dependencies = Vec::new();
-    let outcome = load_raw_checked(path, false, &mut dependencies);
+    let mut dependencies_complete = true;
+    let outcome = load_raw_checked(path, false, &mut dependencies, &mut dependencies_complete);
     dependencies.sort();
     dependencies.dedup();
     EditorConfigAttempt {
         outcome,
         dependencies,
+        dependencies_complete,
     }
 }
 
@@ -42,6 +45,7 @@ fn load_raw_checked(
     path: Option<&Path>,
     require_explicit_config: bool,
     dependencies: &mut Vec<PathBuf>,
+    complete: &mut bool,
 ) -> Result<LoadedRawConfig, std::string::String> {
     let base = path
         .map(Path::to_path_buf)
@@ -51,7 +55,7 @@ fn load_raw_checked(
         return Err(crate::cstr!("config file not found: {}", base.display()).into());
     }
     if base.is_file() {
-        return parse(&base, dependencies);
+        return parse(&base, dependencies, complete);
     }
     // The directory's children are the actual discovery inputs. Keeping its
     // mtime would turn unrelated source-file creation into config changes.
@@ -63,7 +67,7 @@ fn load_raw_checked(
             if !candidate.exists() {
                 continue;
             }
-            match parse_raw_config_file_with_dependencies(&candidate, dependencies) {
+            match parse_raw_config_file_with_dependencies(&candidate, dependencies, complete) {
                 Ok(config) => {
                     return Ok(LoadedRawConfig {
                         config,
@@ -95,8 +99,9 @@ fn load_raw_checked(
 fn parse(
     path: &Path,
     dependencies: &mut Vec<PathBuf>,
+    complete: &mut bool,
 ) -> Result<LoadedRawConfig, std::string::String> {
-    parse_raw_config_file_with_dependencies(path, dependencies)
+    parse_raw_config_file_with_dependencies(path, dependencies, complete)
         .map(|config| LoadedRawConfig {
             config,
             source_path: Some(path.to_path_buf()),

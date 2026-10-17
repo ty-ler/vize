@@ -7,7 +7,10 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { pathToFileURL } from "node:url";
 
-import { failedConfigModuleRequests } from "../../crates/vize_carton/src/config/loader/module-runtime.mjs";
+import {
+  failedConfigModuleRequests,
+  importConfigModuleWithDependencies,
+} from "../../crates/vize_carton/src/config/loader/module-runtime.mjs";
 
 const require = createRequire(import.meta.url);
 const vite = dirname(require.resolve("vite/package.json"));
@@ -51,11 +54,13 @@ for (const installedVite of [false, true]) {
         assert.equal("config" in observed, false, "failed options must not become a configuration");
         assert.ok(observed.dependencies.includes(selected));
         assert.ok(observed.dependencies.includes(policy));
+        assert.equal(observed.watchDependenciesComplete, true);
         await writeFile(policy, "export default { formatter: { printWidth: 91 } };");
         const repaired = invoke();
         assert.equal(repaired.status, 0, repaired.stderr);
         const loaded = JSON.parse(repaired.stdout);
         assert.equal(loaded.config.formatter.printWidth, 91);
+        assert.equal(loaded.watchDependenciesComplete, true);
         assert.ok(loaded.dependencies.includes(policy));
         await rm(policy);
         const deleted = invoke();
@@ -113,5 +118,47 @@ test("failed request observations use native structured fields without guessing 
     { code: "ERR_MODULE_NOT_FOUND", url: "https://example.com/policy.mjs" },
   ]) {
     assert.deepEqual(failedConfigModuleRequests(error), []);
+  }
+});
+
+test("incomplete failed observations preserve the original exception and require another repair attempt", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "vize-config-incomplete-")));
+  try {
+    const selected = join(root, "vite.config.mjs");
+    await writeFile(selected, "export default {};");
+    const unresolved = (exporter: string) => ({
+      errors: [{ code: "UNRESOLVED_IMPORT", id: selected, exporter }],
+    });
+    for (const error of [
+      new Error("authored factory failure"),
+      { code: "ERR_MODULE_NOT_FOUND" },
+      unresolved("policy"),
+      unresolved("../policy"),
+      unresolved("../hash#policy.mjs"),
+      unresolved("../query?policy.mjs"),
+      unresolved("../percent%25policy.mjs"),
+      { errors: [{ text: "esbuild has no structured requested path" }] },
+      { errors: [...unresolved("../policy.mjs").errors, ...unresolved("policy").errors] },
+    ]) {
+      let observation: { paths: string[]; complete: boolean } | undefined;
+      await assert.rejects(
+        importConfigModuleWithDependencies(
+          selected,
+          undefined,
+          undefined,
+          () => {
+            throw error;
+          },
+          (paths, complete) => {
+            observation = { paths, complete };
+          },
+        ),
+        (actual) => actual === error,
+      );
+      assert.ok(observation?.paths.includes(selected));
+      assert.equal(observation.complete, false);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });

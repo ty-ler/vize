@@ -16,7 +16,7 @@ export function importConfigModuleWithDependencies<
   registerModuleHooks?: typeof import("node:module").registerHooks | null,
   withoutVite?: (configURL: URL) => Fallback | Promise<Fallback>,
   evaluate?: (namespace: ConfigModule | Awaited<Fallback>) => Value | Promise<Value>,
-  observeDependencies?: (dependencies: string[]) => void,
+  observeDependencies?: (dependencies: string[], complete: boolean) => void,
 ): Promise<{
   namespace: ConfigModule | Awaited<Fallback>;
   value: Awaited<Value>;

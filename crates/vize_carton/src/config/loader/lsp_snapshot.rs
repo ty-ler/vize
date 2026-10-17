@@ -22,6 +22,9 @@ pub struct LoadedLspConfig {
     /// Last attempt's actual inputs and missing candidates, for repair watching
     /// only. These paths never make a failed configuration authoritative.
     pub watch_dependencies: Vec<PathBuf>,
+    /// False when the loader cannot expose all failed resolution candidates.
+    /// Unchanged observations alone must not suppress the next repair attempt.
+    pub watch_dependencies_complete: bool,
     /// The same raw evaluation retains ordered lint scopes and selected root.
     pub project: LoadedProjectConfig,
     pub config: VizeConfig,
@@ -56,6 +59,7 @@ pub fn load_lsp_config_snapshot(path: Option<&Path>) -> LoadedLspConfig {
     snapshot.valid = error.is_none();
     snapshot.error = error;
     snapshot.watch_dependencies = attempt.dependencies;
+    snapshot.watch_dependencies_complete = attempt.dependencies_complete;
     snapshot
 }
 
@@ -73,6 +77,7 @@ impl LoadedLspConfig {
             valid: true,
             error: None,
             watch_dependencies: Vec::new(),
+            watch_dependencies_complete: true,
             project,
             config,
             source_path,
@@ -96,10 +101,12 @@ mod tests {
         let path = root.path().join("vite.config.mjs");
         let missing = load_lsp_config_snapshot(Some(&path));
         assert!(!missing.valid);
+        assert!(missing.watch_dependencies_complete);
         assert!(missing.watch_dependencies.contains(&path));
         std::fs::write(&path, "export default { vue: {} };").unwrap();
         let created = load_lsp_config_snapshot(Some(&path));
         assert!(created.valid, "{:?}", created.error);
+        assert!(created.watch_dependencies_complete);
         assert!(created.watch_dependencies.contains(&path));
         assert_eq!(created.source_path, Some(path));
     }
@@ -116,6 +123,7 @@ mod tests {
         }
         let rejected = load_lsp_config_snapshot(Some(root.path()));
         assert!(!rejected.valid);
+        assert!(rejected.watch_dependencies_complete);
         for path in &paths {
             assert!(rejected.watch_dependencies.contains(path));
         }

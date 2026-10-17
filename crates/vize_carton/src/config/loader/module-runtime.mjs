@@ -26,37 +26,60 @@ export async function importConfigModule(configPath, withoutVite) {
 
 /** Observe real failed requests, without choosing a replacement resolution. */
 export function failedConfigModuleRequests(error) {
+  return failedConfigModuleObservation(error).paths;
+}
+
+function failedConfigModuleObservation(error) {
   const paths = new Set();
+  let complete = false;
   if (error?.code === "ERR_MODULE_NOT_FOUND" && typeof error.url === "string") {
     try {
       const url = new URL(error.url);
-      if (url.protocol === "file:") paths.add(fileURLToPath(url));
+      if (url.protocol === "file:") {
+        paths.add(fileURLToPath(url));
+        complete = true;
+      }
     } catch {}
   }
-  for (const diagnostic of Array.isArray(error?.errors) ? error.errors : []) {
+  const diagnostics = Array.isArray(error?.errors) ? error.errors : [];
+  if (diagnostics.length) complete = true;
+  for (const diagnostic of diagnostics) {
+    let requested = false;
     if (
       diagnostic?.code !== "UNRESOLVED_IMPORT" ||
       typeof diagnostic.id !== "string" ||
       !isAbsolute(diagnostic.id) ||
       typeof diagnostic.exporter !== "string"
-    )
+    ) {
+      complete = false;
       continue;
+    }
     paths.add(diagnostic.id);
     const request = diagnostic.exporter;
     // Public bundle diagnostics expose the requested importer/specifier, not
     // extension or package search candidates. Observe only explicit file paths.
-    if (!(isAbsolute(request) || request.startsWith("./") || request.startsWith("../"))) continue;
+    if (!(isAbsolute(request) || request.startsWith("./") || request.startsWith("../"))) {
+      complete = false;
+      continue;
+    }
     // Bundle specifiers may treat these characters as literal filenames or URL
     // syntax. Its diagnostic does not expose which interpretation won.
-    if (/[%#?]/.test(request)) continue;
+    if (/[%#?]/.test(request)) {
+      complete = false;
+      continue;
+    }
     try {
       const url = isAbsolute(request)
         ? pathToFileURL(request)
         : new URL(request, pathToFileURL(diagnostic.id));
-      if (url.protocol === "file:" && extname(url.pathname)) paths.add(fileURLToPath(url));
+      if (url.protocol === "file:" && extname(url.pathname)) {
+        paths.add(fileURLToPath(url));
+        requested = true;
+      }
     } catch {}
+    complete &&= requested;
   }
-  return [...paths];
+  return { paths: [...paths], complete };
 }
 
 /** Keep runtime imports observable until the optional export evaluator settles. */
@@ -69,6 +92,7 @@ async function captureConfigEvaluation(
   observeDependencies,
 ) {
   const files = new Set([configPath]);
+  let complete = true;
   const owners = new Set([pathToFileURL(configPath).href]);
   const isPrivate = (path) => {
     if (!privateDirectory) return false;
@@ -99,15 +123,18 @@ async function captureConfigEvaluation(
     const value = evaluate ? await evaluate(namespace) : namespace;
     return { namespace, value, dependencies: [...files] };
   } catch (error) {
+    complete = false;
     // User code may throw arbitrary objects, including getters that throw.
     // Observation must never replace the loader's original exception.
     try {
-      for (const path of failedConfigModuleRequests(error)) if (!isPrivate(path)) files.add(path);
+      const observed = failedConfigModuleObservation(error);
+      complete = observed.complete;
+      for (const path of observed.paths) if (!isPrivate(path)) files.add(path);
     } catch {}
     throw error;
   } finally {
     hooks?.deregister();
-    observeDependencies?.([...files]);
+    observeDependencies?.([...files], complete);
   }
 }
 

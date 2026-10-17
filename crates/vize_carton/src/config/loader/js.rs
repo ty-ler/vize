@@ -1,6 +1,6 @@
 //! JavaScript and TypeScript config evaluation.
 //!
-//! Native CLI commands still need to support `vize.config.ts` / `.mjs`. Rather
+//! Native CLI commands support the existing Vite JS/TS configuration. Rather
 //! than embed a JS runtime, the loader shells out to the local Node runtime,
 //! loads the config with the project's Vite bundle loader when installed,
 //! calls function exports with the default env, and
@@ -18,12 +18,13 @@ use crate::config::ConfigDocument;
 pub(super) fn parse_js_config_with_dependencies(
     path: &Path,
     observed: &mut Vec<PathBuf>,
+    complete: &mut bool,
 ) -> Result<ConfigDocument, Box<dyn std::error::Error>> {
     let EvaluatedConfig {
         path: config_path,
         json,
         dependencies,
-    } = evaluate_js_config_with_dependencies(path, observed)?;
+    } = evaluate_js_config_with_dependencies(path, observed, complete)?;
 
     // Public Vite settings permit flat entry arrays. Normalize only that shape
     // with the same pure Rust projection used by vize/config; ordinary objects
@@ -55,7 +56,9 @@ struct EvaluatedConfig {
 fn evaluate_js_config_with_dependencies(
     path: &Path,
     observed: &mut Vec<PathBuf>,
+    complete: &mut bool,
 ) -> Result<EvaluatedConfig, Box<dyn std::error::Error>> {
+    *complete = false;
     let config_path = if path.is_absolute() {
         path.to_path_buf()
     } else {
@@ -72,6 +75,7 @@ import { dirname } from "node:path";
 const configPath = process.argv[1];
 console.log = (...args) => console.error(...args);
 let attemptedDependencies = [configPath];
+let attemptedComplete = false;
 let evaluated;
 try {
 const { value: config, dependencies } = await importConfigModuleWithDependencies(
@@ -83,11 +87,11 @@ const { value: config, dependencies } = await importConfigModuleWithDependencies
       ? await exported({ mode: "development", command: "serve" })
       : exported;
   },
-  (paths) => { attemptedDependencies = paths; },
+  (paths, complete) => { attemptedDependencies = paths; attemptedComplete = complete; },
 );
-evaluated = { config: config ?? {}, dependencies };
+evaluated = { config: config ?? {}, dependencies, watchDependenciesComplete: true };
 } finally {
-  process.stdout.write(JSON.stringify(evaluated ?? { dependencies: attemptedDependencies }));
+  process.stdout.write(JSON.stringify(evaluated ?? { dependencies: attemptedDependencies, watchDependenciesComplete: attemptedComplete }));
 }
 "#,
     ]
@@ -104,10 +108,13 @@ evaluated = { config: config ?? {}, dependencies };
     struct Evaluation {
         #[serde(default)]
         config: serde_json::Value,
+        #[serde(default, rename = "watchDependenciesComplete")]
+        complete: bool,
         dependencies: Vec<std::string::String>,
     }
     let evaluated = serde_json::from_slice::<Evaluation>(&output.stdout);
     if let Ok(evaluated) = &evaluated {
+        *complete = evaluated.complete;
         observed.extend(evaluated.dependencies.iter().map(PathBuf::from));
     }
 

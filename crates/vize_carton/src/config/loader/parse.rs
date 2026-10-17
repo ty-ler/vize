@@ -19,12 +19,13 @@ use super::{
 pub(super) fn parse_raw_config_file(
     path: &Path,
 ) -> Result<ConfigDocument, Box<dyn std::error::Error>> {
-    parse_raw_config_file_with_dependencies(path, &mut Vec::new())
+    parse_raw_config_file_with_dependencies(path, &mut Vec::new(), &mut true)
 }
 
 pub(super) fn parse_raw_config_file_with_dependencies(
     path: &Path,
     dependencies: &mut Vec<PathBuf>,
+    complete: &mut bool,
 ) -> Result<ConfigDocument, Box<dyn std::error::Error>> {
     dependencies.push(path.to_path_buf());
     if is_retired_config(path) {
@@ -33,7 +34,7 @@ pub(super) fn parse_raw_config_file_with_dependencies(
     let mut config = match path.extension().and_then(|ext| ext.to_str()) {
         Some("pkl") => pkl::parse_pkl_config(path)?,
         Some("ts" | "js" | "mjs" | "cjs" | "mts" | "cts") => {
-            parse_js_config_with_dependencies(path, dependencies)?
+            parse_js_config_with_dependencies(path, dependencies, complete)?
         }
         Some("json") => {
             let content = std::fs::read_to_string(path)?;
