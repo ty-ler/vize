@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::{runtime::block_on, server::MaestroServer};
-use futures::{SinkExt, StreamExt};
+use futures::{FutureExt, SinkExt, StreamExt};
 use serde_json::{Value, json};
 use std::time::{Duration, Instant};
 use tower::Service;
@@ -272,7 +272,11 @@ fn whole_relative_pattern_packet_escapes_literal_glob_filename_and_encoded_paren
     assert_eq!(request.method(), "client/registerCapability");
     let id = request.params().unwrap()["registrations"][0]["id"].clone();
     let base = Url::from_directory_path(&parent).unwrap();
-    assert!(base.as_str().contains("project%20%23%5B%5D%20"));
+    assert!(
+        base.as_str()
+            .contains("project%20%23[]%20%E4%B8%AD%E6%96%87/")
+    );
+    assert_eq!(base.to_file_path().unwrap(), parent);
     assert_eq!(
         request.params(),
         Some(&json!({"registrations":[{"id":id,"method":METHOD,
@@ -363,6 +367,49 @@ fn held_external_watch_ack_does_not_delay_real_document_hover() {
                 server.initial_diagnostics = None;
                 server
             });
+            let (observed, held_request) = futures::channel::oneshot::channel();
+            let (release, released) = futures::channel::oneshot::channel();
+            let (acknowledged, ack) = futures::channel::oneshot::channel();
+            // Drain the real bounded ClientSocket throughout the operation.
+            // Only the configuration registration ACK is intentionally held.
+            let client = async move {
+                let mut observed = Some(observed);
+                let mut held: Option<Request> = None;
+                let mut packets = Vec::new();
+                let released = released.fuse();
+                futures::pin_mut!(released);
+                loop {
+                    futures::select! {
+                        _ = released => {
+                            assert_eq!(held.is_some(), supported);
+                            if let Some(request) = held {
+                                socket.send(Response::from_ok(request.id().unwrap().clone(), Value::Null)).await.unwrap();
+                            }
+                            acknowledged.send(()).unwrap();
+                            return packets;
+                        },
+                        request = socket.next().fuse() => {
+                            let request = request.unwrap();
+                            eprintln!("real held-watch client packet: {request:?}");
+                            if request.method() == "client/registerCapability" {
+                                let id = &request.params().unwrap()["registrations"][0]["id"];
+                                if id.as_str().unwrap().starts_with("vize-config-watch-") && observed.is_some() {
+                                    assert!(supported);
+                                    held = Some(request);
+                                    observed.take().unwrap().send(()).unwrap();
+                                } else {
+                                    assert!(id == "vize-typecheck-dependencies" || id.as_str().unwrap().starts_with("vize-config-watch-"));
+                                    socket.send(Response::from_ok(request.id().unwrap().clone(), Value::Null)).await.unwrap();
+                                }
+                            } else {
+                                assert!(request.id().is_none(), "unexpected client request");
+                                packets.push(request);
+                            }
+                        }
+                    }
+                }
+            };
+            let server = async {
             let response = protocol_send(
                 &mut service,
                 json!({
@@ -378,52 +425,8 @@ fn held_external_watch_ack_does_not_delay_real_document_hover() {
             .await
             .unwrap();
             assert!(response.get("error").is_none());
-            let held = if supported {
-                let registrations = async {
-                    let mut held = None;
-                    let mut generic = false;
-                    while held.is_none() || !generic {
-                        let request = socket.next().await.unwrap();
-                        if request.method() != "client/registerCapability" {
-                            continue;
-                        }
-                        let id = &request.params().unwrap()["registrations"][0]["id"];
-                        if id == "vize-typecheck-dependencies" {
-                            socket
-                                .send(tower_lsp::jsonrpc::Response::from_ok(
-                                    request.id().unwrap().clone(),
-                                    Value::Null,
-                                ))
-                                .await
-                                .unwrap();
-                            generic = true;
-                        } else {
-                            assert!(id.as_str().unwrap().starts_with("vize-config-watch-"));
-                            held = Some(request);
-                        }
-                    }
-                    held
-                };
-                let (notification, held) = futures::join!(
-                    protocol_send(
-                        &mut service,
-                        json!({"jsonrpc":"2.0","method":"initialized","params":{}})
-                    ),
-                    registrations
-                );
-                assert_eq!(notification, None);
-                held
-            } else {
-                assert_eq!(
-                    protocol_send(
-                        &mut service,
-                        json!({"jsonrpc":"2.0","method":"initialized","params":{}})
-                    )
-                    .await,
-                    None
-                );
-                None
-            };
+            assert_eq!(protocol_send(&mut service, json!({"jsonrpc":"2.0","method":"initialized","params":{}})).await, None);
+            if supported { held_request.await.unwrap(); }
             assert_eq!(
                 protocol_send(
                     &mut service,
@@ -458,20 +461,17 @@ fn held_external_watch_ack_does_not_delay_real_document_hover() {
             }
             assert!(!service.inner().state.has_corsa_bridge());
             assert!(service.inner().state.corsa_init_failure().is_none());
-            if let Some(held) = held {
-                socket
-                    .send(tower_lsp::jsonrpc::Response::from_ok(
-                        held.id().unwrap().clone(),
-                        Value::Null,
-                    ))
-                    .await
-                    .unwrap();
-            }
+            release.send(()).unwrap();
+            ack.await.unwrap();
             protocol_send(
                 &mut service,
                 json!({"jsonrpc":"2.0","id":30,"method":"shutdown","params":null}),
             )
             .await;
+            };
+            let (_, packets) = futures::join!(server, client);
+            assert!(packets.iter().any(|packet| packet.method() == "window/logMessage"));
+            assert!(packets.iter().any(|packet| packet.method() == "textDocument/publishDiagnostics"));
         }
     }))
     .expect("watch ACK independence completes with the original local request budget");
