@@ -212,6 +212,11 @@ for (const [signal, mode, escalated] of [
       assert.ok(step?.run);
       const helperDirectory = join(directory, "tools/support/compat/github");
       mkdirSync(helperDirectory, { recursive: true });
+      for (const name of ["rust-build-evidence.ts", "compare-unused-bindings-profiles.ts"])
+        writeFileSync(
+          join(helperDirectory, name),
+          readFileSync(new URL(name, pathToFileURL(runner))),
+        );
       writeFileSync(
         join(helperDirectory, "run-rust-test-cohort.ts"),
         `import { main } from ${JSON.stringify(pathToFileURL(runner).href)}; await main();\n`,

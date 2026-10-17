@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createWriteStream, mkdirSync, openSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { finished } from "node:stream/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 import { readCargoMetadata } from "./plan-affected-rust.ts";
@@ -127,16 +128,75 @@ export function rustTestTargetProjection(
   return projections.get(cohort)!;
 }
 
-async function runCargo(executable: string, args: string[]): Promise<number> {
+function captureStdout(filename: string) {
+  // Open before spawning Cargo: an invalid destination must not leave a child.
+  const stream = createWriteStream(filename, { fd: openSync(filename, "w") });
+  let error: Error | undefined;
+  let failed!: () => void;
+  const failure = new Promise<void>((resolve) => {
+    failed = resolve;
+  });
+  const fail = (cause: Error) => {
+    error ??= cause;
+    failed();
+  };
+  stream.on("error", fail);
+  process.stdout.on("error", fail);
+  const drained = finished(stream).catch(fail);
+  let finishing: Promise<void> | undefined;
+  return {
+    stream,
+    failure,
+    fail,
+    get error() {
+      return error;
+    },
+    write(chunk: string) {
+      process.stdout.write(chunk);
+      stream.write(chunk);
+    },
+    finish() {
+      finishing ??= (async () => {
+        stream.end();
+        await Promise.all([
+          drained,
+          new Promise<void>((resolve) => {
+            process.stdout.write("", (cause) => {
+              if (cause) fail(cause);
+              resolve();
+            });
+          }),
+        ]);
+      })();
+      return finishing;
+    },
+    dispose() {
+      process.stdout.removeListener("error", fail);
+    },
+  };
+}
+
+async function runCargo(
+  executable: string,
+  args: string[],
+  capture?: ReturnType<typeof captureStdout>,
+): Promise<number> {
   // Only this child and descendants inherit this new POSIX process group.
   // Keep the event loop live: spawnSync prevents cancellation handlers running
   // while nextest/Cargo are compiling, leaving their children for runner cleanup.
   const grouped = process.platform !== "win32";
   const child = spawn(executable, args, {
     detached: grouped,
-    stdio: "inherit",
+    stdio: capture ? ["inherit", "pipe", "inherit"] : "inherit",
     shell: false,
   });
+  if (capture && child.stdout) {
+    // Both destinations receive the same bytes with stream backpressure. Keep
+    // stdout open, and finish the file only after the child's output closes.
+    child.stdout.on("error", capture.fail);
+    child.stdout.pipe(process.stdout, { end: false });
+    child.stdout.pipe(capture.stream, { end: false });
+  }
   let closed = false;
   const completion = new Promise<{ status: number | null; error?: Error }>((resolve) => {
     child.once("error", (error) => {
@@ -174,11 +234,16 @@ async function runCargo(executable: string, args: string[]): Promise<number> {
   process.on("SIGINT", onInterrupt);
   process.on("SIGTERM", onTerminate);
   try {
-    await Promise.race([completion, cancellation]);
-    if (cancelled) {
+    const flushed = completion.then(() => capture?.finish());
+    await Promise.race([flushed, cancellation, ...(capture ? [capture.failure] : [])]);
+    if (cancelled || capture?.error) {
       const started = performance.now();
-      process.stderr.write(`Rust cohort received ${cancelled}; stopping its owned Cargo group.\n`);
-      signalOwned(cancelled);
+      process.stderr.write(
+        cancelled
+          ? `Rust cohort received ${cancelled}; stopping its owned Cargo group.\n`
+          : "Rust cohort stdout capture failed; stopping its owned Cargo group.\n",
+      );
+      signalOwned(cancelled ?? "SIGTERM");
       let repeated = false;
       let killed = false;
       // The group can outlive the direct Cargo child. Do not stop draining when
@@ -202,6 +267,8 @@ async function runCargo(executable: string, args: string[]): Promise<number> {
         }
         await delay(25);
       }
+      await capture?.finish();
+      if (!cancelled) throw capture!.error;
       // A child may catch a cancellation signal and exit zero. Cancellation
       // must still fail the step and its required Rust aggregate.
       return cancelled === "SIGINT" ? 130 : 143;
@@ -219,15 +286,18 @@ export async function main(argv = process.argv.slice(2)) {
   const started = performance.now();
   const [planPath, cohort, ...options] = argv;
   let status = 1;
+  let capture: ReturnType<typeof captureStdout> | undefined;
   try {
     if (!planPath || !cohort) throw new Error("expected Rust plan path and semantic cohort");
     const plan = JSON.parse(readFileSync(planPath, "utf8"));
     // Validate the unchanged package roots before reading metadata or launching Cargo.
     rustCommand(plan, ["cargo", "nextest", "run", "@packages@"]);
     const projection = rustTestTargetProjection(readCargoMetadata(), plan.packages, cohort);
-    process.stdout.write(
-      `Cargo targets (${cohort}): ${projection.reason ?? `${projection.args.filter((arg) => arg === "--test").length} integration targets and shared unit targets`}\n`,
-    );
+    const stdoutPath = process.env.VIZE_RUST_BUILD_STDOUT_PATH;
+    if (stdoutPath) capture = captureStdout(stdoutPath);
+    const banner = `Cargo targets (${cohort}): ${projection.reason ?? `${projection.args.filter((arg) => arg === "--test").length} integration targets and shared unit targets`}\n`;
+    if (capture) capture.write(banner);
+    else process.stdout.write(banner);
     const [executable, ...args] = rustCommand(plan, [
       "cargo",
       "nextest",
@@ -236,9 +306,11 @@ export async function main(argv = process.argv.slice(2)) {
       ...projection.args,
       ...options,
     ]);
-    status = await runCargo(executable, args);
+    status = await runCargo(executable, args, capture);
     process.exitCode = status;
   } finally {
+    await capture?.finish();
+    capture?.dispose();
     // The workflow execs this CLI so Actions signals Node directly. Keep its
     // existing receipt here instead of leaving a waiting Bash process in front.
     const timingPath = process.env.VIZE_RUST_COHORT_TIMING_PATH;

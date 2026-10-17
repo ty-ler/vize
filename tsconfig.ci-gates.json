@@ -6,8 +6,6 @@
   },
   "include": [],
   "files": [
-    "tools/commands/release/verify-published-0.457.0.ts",
-    "tests/tooling/release/release-published-consumer.test.ts",
     "tools/support/compat/github/rust-archive-download.ts",
     "tests/tooling/rust-archive-download.test.ts",
     "tests/tooling/github-workflows-rust-source.test.ts",

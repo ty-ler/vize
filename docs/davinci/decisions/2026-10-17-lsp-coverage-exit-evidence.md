@@ -6,6 +6,19 @@ A separate, temporary [instrumented probe](https://github.com/ubugeeei-prod/vize
 
 The probe used Rust 1.99.1, cargo-llvm-cov 0.8.7, nextest 0.9.146, the full workspace feature graph/profile and eight test threads. Both native require/disable variables remained unset, as in the original coverage lane; the original test independently requires the native runtime. Compilation took 18m36s, tests 16.337s, and coverage export about 129s. The read-only source cache had no mtime manifest, so this is not warm-build evidence. The temporary workflow and successful-process timing files are excluded from this change.
 
+Full Check [38988499789](https://github.com/ubugeeei-prod/vize/actions/runs/38988499789)
+at `e2b883eed6378eb7ada73bf0220d89a185a3d6fd` passed source coverage:
+18,532 tests passed, 44 were explicitly excluded, and line coverage was
+85.5701%. Its native syntax artifact `12085125811` records the actual handoff
+shutdown as `Clean`, with complete empty stderr; the child packet records
+exit 0 and complete broken/repaired diagnostics. The original five-second
+exit deadline did not fail. This broader non-reproduction still does not
+identify the earlier hang's cause. The single case present in uninstrumented
+Full but absent from coverage has an existing `cfg_attr(coverage, ignore)`
+for unstable TS2589 output and passed uninstrumented; no new test exclusion
+was added. The overall Full Check failed independent docs/tooling/performance
+jobs, and subsequent combined source still requires qualification.
+
 Full source coverage now opts into `VIZE_LSP_EXIT_FAILURE_EVIDENCE`, forwarded through the existing VP task environment contract. This enables the existing in-memory decoded-protocol ownership. Successful teardown does not build a terminal JSON packet or write files. Existing `VIZE_LSP_PASSIVE_EVIDENCE` consumers retain their previous full-packet behavior.
 
 Only after the unchanged five-second exit deadline, before the existing kill, the helper writes the already-owned protocol and bounded, non-atomic Linux process/thread state and FD links. Reads retain raw bytes and explicit errors/truncation. Each packet keeps the existing 4 MiB cap and hash/completeness manifest. The deadline packet explicitly says stderr is unavailable until the unchanged reader reaches EOF; the terminal packet then retains all owned stderr after the original kill/reap and reader joins. Observation errors do not replace the original failure. The failure decision remains at five seconds; synchronous reads/writes have byte/count limits, not a wall-clock bound, so observation may delay the ensuing kill.

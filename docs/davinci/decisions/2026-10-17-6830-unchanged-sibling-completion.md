@@ -103,3 +103,13 @@ from the unchanged native/Unix condition, matching existing test modules.
 Unknown fixture interventions still fail explicitly with their name. No lint
 is suppressed and no product or fixture assertion is removed; fresh Actions
 must verify the complete feature lane again.
+
+Full Check [38988499789](https://github.com/ubugeeei-prod/vize/actions/runs/38988499789)
+at `e2b883eed6378eb7ada73bf0220d89a185a3d6fd` passed the physical editor host
+in 262 seconds. The original `ownSlots.header` and `$slots.header` operations,
+complete Markdown and TypeScript fence, Header text, and exact same-URI
+navigation assertions passed. The retained native completion packets also
+contain complete Header Markdown for immediate, same-document and sibling
+resolution. Feature Clippy passed. Other docs, tooling and performance jobs
+failed in this Full Check, so this establishes these host contracts only;
+fresh combined-source qualification is still required.

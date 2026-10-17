@@ -310,21 +310,6 @@ pub fn verify_published(
     delivery::published_identity(&source, run_id, root)
 }
 
-/// Read-only historical custody for a separately authenticated recovery proof.
-pub fn published_history(
-    number: u64,
-    head: &str,
-    tag: &str,
-    run: u64,
-    root: &Path,
-) -> Result<(), String> {
-    retire_guard::no_replacements(root)?;
-    let repository = github::repository(root)?;
-    let source = source(&repository, number, head, tag, true, root)?;
-    println!("{}", delivery::published_history(&source, run, root)?);
-    Ok(())
-}
-
 pub fn wait_for_promotion(number: u64, head: &str, tag: &str, root: &Path) -> Result<(), String> {
     let repository = github::repository(root)?;
     let run_id = env::var("GITHUB_RUN_ID")
