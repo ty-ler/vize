@@ -1,7 +1,7 @@
 mod alias_rewrite_policy;
 mod base_url;
-pub(super) mod compiler_options;
 pub(super) mod compiler_inputs;
+pub(super) mod compiler_options;
 mod compiler_options_snapshot;
 mod compiler_snapshot;
 pub use compiler_snapshot::CompilerConfigurationSnapshot;
