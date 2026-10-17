@@ -207,23 +207,36 @@ await test("legacy instance API packets preserve every pinned original source an
 });
 
 await test("Vue 3 keeps removed APIs unavailable on public instances and Options-returning factories", () => {
-  const requireVue = createRequire(
-    process.env.VIZE_LEGACY_API_VUE_MANIFEST ??
-      path.join(root, "tools/benchmarks/scripts/package.json"),
-  );
-  const requireTypeScript = createRequire(
+  const vueManifest = process.env.VIZE_LEGACY_API_VUE_MANIFEST;
+  const requireVue = createRequire(vueManifest ?? path.join(root, "tests/package.json"));
+  // The immutable runtime packet owns an exact dependency, independently of
+  // the benchmark's moving Vue track. External replays still supply plain Vue.
+  const vuePackage = vueManifest ? "vue" : "vue-legacy-instance-oracle";
+  const requireScriptParser = createRequire(
     process.env.VIZE_LEGACY_API_SCRIPT_PARSER_MANIFEST ??
       path.join(root, "tools/benchmarks/scripts/package.json"),
   );
   const runtime = json("runtime.json");
-  const { createRenderer, h, version } = requireVue("vue");
-  const requireDom = createRequire(requireVue.resolve("@vue/runtime-dom/package.json"));
+  if (!vueManifest) {
+    assert.equal(
+      requireVue("./package.json").devDependencies[vuePackage],
+      `npm:vue@${runtime.provider.vue}`,
+    );
+  }
+  const { createRenderer, h, version } = requireVue(vuePackage);
+  // Follow the actual Vue package dependency graph under isolated installs.
+  // runtime-dom is Vue's dependency, not a direct benchmark dependency.
+  const requireVuePackage = createRequire(requireVue.resolve(`${vuePackage}/package.json`));
+  const requireDom = createRequire(requireVuePackage.resolve("@vue/runtime-dom/package.json"));
   const runtimePath = path.join(
     path.dirname(requireDom.resolve("@vue/runtime-core/package.json")),
     runtime.provider.source.path,
   );
   assert.equal(version, runtime.provider.vue);
   assert.equal(hash(fs.readFileSync(runtimePath)), runtime.provider.source.sha256);
+  const requireTypeScript = createRequire(
+    requireScriptParser.resolve("@typescript-eslint/parser/package.json"),
+  );
   const typescript = requireTypeScript("typescript");
   assert.equal(typescript.version, runtime.provider.typescript);
   const { transpileModule, ModuleKind, ScriptTarget } = typescript;
