@@ -1,0 +1,138 @@
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import {
+  expectedBuildIdentity,
+  LEGACY_BUILD_RECIPE,
+  validateBuildReceipt,
+} from "../../../../tests/differential/build-receipt.ts";
+import { sha256 } from "../../../../tests/differential/sha256.ts";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
+const directory = path.join(root, "target/vize-tests/lsp-config-diagnostics");
+const sourcePaths = [
+  "tests/performance/vben-lsp-incremental.test.ts",
+  "tests/performance/support/incremental-metrics.ts",
+  "tests/_helpers/realworld-patch.ts",
+  "tests/_fixtures/vue-ecosystem-fixtures.json",
+  "tests/differential/build-receipt.ts",
+  "tests/tooling/lsp-startup-local-interactive.test.ts",
+  "crates/vize_maestro/src/server/initial_diagnostics.rs",
+  "crates/vize_maestro/src/ide.rs",
+  "crates/vize_maestro/src/server/initial_diagnostics/preparation.rs",
+  "crates/vize_maestro/src/server/state/corsa_requests.rs",
+  "crates/vize_maestro/src/server/native_requests.rs",
+  "crates/vize_maestro/src/server/handlers.rs",
+  "crates/vize_maestro/src/server/handlers/typed.rs",
+  ".github/workflows/lsp-config-diagnostics.yml",
+  "tools/support/compat/github/run-lsp-config-diagnostics.ts",
+];
+
+function git(...args: string[]): string {
+  const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout.trim();
+}
+
+export function retainNativeLog(source: string, destination: string): boolean {
+  if (!fs.existsSync(source)) return false;
+  // The native server logs at its repository cwd, outside the mutable fixture
+  // directory removed by the unchanged test. Preserve its complete raw bytes.
+  fs.copyFileSync(source, destination);
+  return true;
+}
+
+export function runDiagnostics(): number {
+  fs.mkdirSync(directory, { recursive: true });
+  const identity = expectedBuildIdentity(root);
+  assert.equal(identity.sourceRevision, process.env.EXPECTED_SOURCE);
+  assert.equal(process.env.VIZE_LSP_BIN, identity.binaryPath);
+  assert.equal(process.env.RAYON_NUM_THREADS, "4");
+  assert.equal(process.env.VIZE_PERF_BUDGET_SCALE, "1");
+  assert.equal(process.env.VIZE_TRACE_EDITOR_PREPARATION, "1");
+  const receiptPath = `${identity.binaryPath}.differential-build.json`;
+  const receipt = JSON.parse(fs.readFileSync(path.join(root, receiptPath), "utf8"));
+  validateBuildReceipt(receipt, identity, LEGACY_BUILD_RECIPE);
+  const registry = JSON.parse(
+    fs.readFileSync(path.join(root, "tests/_fixtures/vue-ecosystem-fixtures.json"), "utf8"),
+  );
+  const projects = registry.projects.filter(
+    (project: { id: string }) => project.id === "vue-vben-admin",
+  );
+  assert.equal(projects.length, 1);
+  const fixture = projects[0];
+  const gitlink = git("ls-tree", "HEAD", "--", fixture.fixturePath).split(/\s+/);
+  assert.equal(gitlink[0], "160000");
+  assert.equal(gitlink[2], fixture.revision);
+  assert.equal(git("-C", fixture.fixturePath, "rev-parse", "HEAD"), fixture.revision);
+  const command = [
+    process.execPath,
+    "--test",
+    "--test-concurrency=1",
+    "tests/performance/vben-lsp-incremental.test.ts",
+  ];
+  const nativeLog = path.join(root, "node_modules/.vize/lsp.log");
+  const nativeLogBefore = fs.existsSync(nativeLog) ? fs.readFileSync(nativeLog) : Buffer.alloc(0);
+  const sources = sourcePaths.map((relative) => {
+    const bytes = fs.readFileSync(path.join(root, relative));
+    const destination = path.join(directory, "source", relative);
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    fs.writeFileSync(destination, bytes);
+    return { path: relative, sha256: sha256(bytes) };
+  });
+  const metadata = {
+    schema: "vize.lsp-config-diagnostics",
+    sourceRevision: identity.sourceRevision,
+    sourceTree: git("rev-parse", "HEAD^{tree}"),
+    fixture: { path: fixture.fixturePath, revision: fixture.revision },
+    buildReceipt: receipt,
+    command,
+    cwd: root,
+    runtime: { node: process.version, executable: process.execPath },
+    environment: Object.fromEntries(
+      [
+        "RAYON_NUM_THREADS",
+        "VIZE_PERF_BUDGET_SCALE",
+        "VIZE_TRACE_EDITOR_PREPARATION",
+        "VIZE_LSP_BIN",
+      ].map((name) => [name, process.env[name]]),
+    ),
+    sources,
+    nativeLogBefore: { bytes: nativeLogBefore.length, sha256: sha256(nativeLogBefore) },
+    scope:
+      "One instrumented original Vben performance case only; no full Check or paired performance qualification.",
+  };
+  fs.writeFileSync(path.join(directory, "command.json"), `${JSON.stringify(metadata, null, 2)}\n`);
+  const stdout = fs.openSync(path.join(directory, "test.stdout"), "w");
+  const stderr = fs.openSync(path.join(directory, "test.stderr"), "w");
+  let result;
+  try {
+    result = spawnSync(command[0], command.slice(1), {
+      cwd: root,
+      env: process.env,
+      stdio: ["ignore", stdout, stderr],
+    });
+  } finally {
+    fs.closeSync(stdout);
+    fs.closeSync(stderr);
+    retainNativeLog(nativeLog, path.join(directory, "native-lsp.log"));
+  }
+  const output = ["test.stdout", "test.stderr", "native-lsp.log"].flatMap((name) => {
+    const source = path.join(directory, name);
+    return fs.existsSync(source) ? [{ path: name, sha256: sha256(fs.readFileSync(source)) }] : [];
+  });
+  fs.writeFileSync(
+    path.join(directory, "result.json"),
+    `${JSON.stringify({ exitStatus: result.status, signal: result.signal, processError: result.error?.message ?? null, output }, null, 2)}\n`,
+  );
+  process.stdout.write(fs.readFileSync(path.join(directory, "test.stdout")));
+  process.stderr.write(fs.readFileSync(path.join(directory, "test.stderr")));
+  return result.status ?? 1;
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  process.exitCode = runDiagnostics();
+}
