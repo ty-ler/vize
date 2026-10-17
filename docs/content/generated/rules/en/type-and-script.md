@@ -704,7 +704,7 @@ Disallow deeply nested destructuring in defineProps
 [Bad](#script-no-deep-destructure-in-props-bad) · [Good](#script-no-deep-destructure-in-props-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -734,7 +734,7 @@ vp run lint
 
 **Bad**
 
-This sole inline `<script setup>` has a top-level compiler macro binding that destructures `name` through `user`, exceeding the default depth of one. Arrays nested inside object bindings also increase depth. This opt-in warning enforces a depth policy: it does not read the compiler's `propsDestructure` setting, and `withDefaults` can compile despite the warning.
+This sole inline `<script setup>` has a top-level compiler macro binding that destructures `name` through `user`, exceeding the default depth of one. Arrays nested inside object bindings also increase depth. Opinionated and Nuxt enable this depth-policy warning; other presets require explicit opt-in: it does not read the compiler's `propsDestructure` setting, and `withDefaults` can compile despite the warning.
 
 ```vue annotate="remove:2"
 <script setup lang="ts">
@@ -928,7 +928,7 @@ vp run lint
 
 **Bad**
 
-The script reads the removed `$listeners` property. This rule currently diagnoses scripts only; the template line illustrates migration and is not yet enforced (Draft follow-up #9251).
+The script reads the removed `$listeners` property. The template also forwards the removed component-context `$listeners` value; proven setup values and template-local bindings with that name are separate values.
 
 ```vue annotate="remove:4,5,9"
 <script>
@@ -946,7 +946,7 @@ export default {
 
 **Good**
 
-The script uses `$attrs`. Forwarding with `v-bind="$attrs"` illustrates Vue 3 migration; template enforcement is deferred to #9251. Script warnings retain their existing broad receiver/reference coverage.
+The script uses `$attrs`, and `v-bind="$attrs"` forwards Vue 3 attributes and listeners. Script warnings retain their existing broad receiver/reference coverage.
 
 ```vue annotate="add:4,8"
 <script>

@@ -2,6 +2,8 @@
 //! overlays and the materialized project. Mixing two producers under one URI
 //! makes references query offsets from a different program than diagnostics.
 
+use crate::batch::import_rewriter::ModuleSpecifierFactsCache;
+
 use super::{VirtualProject, VueDocumentVirtualTs, VueDocumentVirtualTsOptions};
 use std::path::{Path, PathBuf};
 
@@ -29,6 +31,21 @@ impl VirtualProject {
     /// Include failed probes: creating a previously missing dependency, or a
     /// higher-priority TypeScript companion, changes native module identity.
     pub(crate) fn editor_resolution_inputs(&self) -> Vec<PathBuf> {
+        self.editor_resolution_inputs_inner(None)
+    }
+
+    /// Reuse syntax from this preparation, while resolving every probe again.
+    pub(crate) fn editor_resolution_inputs_with_import_facts(
+        &self,
+        facts: &mut ModuleSpecifierFactsCache,
+    ) -> Vec<PathBuf> {
+        self.editor_resolution_inputs_inner(Some(facts))
+    }
+
+    fn editor_resolution_inputs_inner(
+        &self,
+        mut facts: Option<&mut ModuleSpecifierFactsCache>,
+    ) -> Vec<PathBuf> {
         let aliases = self.dependency_alias_map();
         let mut inputs = Vec::new();
         for file in self.virtual_files_sorted() {
@@ -45,10 +62,13 @@ impl VirtualProject {
             let Some(source_type) = super::build::source_type_for_path(&file.virtual_path) else {
                 continue;
             };
-            for (specifier, _) in self
-                .rewriter
-                .collect_all_specifier_occurrences(source, source_type)
-            {
+            let occurrences = match facts.as_deref_mut() {
+                Some(facts) => facts.collect_occurrences(source, source_type),
+                None => self
+                    .rewriter
+                    .collect_all_specifier_occurrences(source, source_type),
+            };
+            for (specifier, _) in occurrences {
                 inputs.extend(
                     super::dependency_scan::resolve_dependency_with_inputs(
                         &specifier,
@@ -95,6 +115,17 @@ impl VirtualProject {
     /// registered. Out-of-root modules have private mirror identities, so an
     /// authored `../shared` cannot be left relative to the generated host.
     pub(crate) fn finalize_editor_imports(&mut self) {
+        self.finalize_editor_imports_inner(None);
+    }
+
+    pub(crate) fn finalize_editor_imports_with_import_facts(
+        &mut self,
+        facts: &mut ModuleSpecifierFactsCache,
+    ) {
+        self.finalize_editor_imports_inner(Some(facts));
+    }
+
+    fn finalize_editor_imports_inner(&mut self, mut facts: Option<&mut ModuleSpecifierFactsCache>) {
         if self.editor_document_options.is_none() {
             return;
         }
@@ -123,15 +154,27 @@ impl VirtualProject {
                     Some(path.to_string_lossy().replace('\\', "/"))
                 };
                 let source_type = super::build::source_type_for_path(&file.virtual_path)?;
-                let rewritten = self
-                    .rewriter
-                    .rewrite_with_alias_resolver_and_missing_vue_policy(
-                        source,
-                        source_type,
-                        file.original_path.parent(),
-                        &resolver,
-                        true,
-                    );
+                let rewritten = match facts.as_deref_mut() {
+                    Some(facts) => self
+                        .rewriter
+                        .rewrite_with_alias_resolver_and_missing_vue_policy_cached(
+                            source,
+                            source_type,
+                            file.original_path.parent(),
+                            &resolver,
+                            true,
+                            facts,
+                        ),
+                    None => self
+                        .rewriter
+                        .rewrite_with_alias_resolver_and_missing_vue_policy(
+                            source,
+                            source_type,
+                            file.original_path.parent(),
+                            &resolver,
+                            true,
+                        ),
+                };
                 Some((file.virtual_path.clone(), rewritten))
             })
             .collect::<Vec<_>>();
