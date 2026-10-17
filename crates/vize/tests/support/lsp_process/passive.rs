@@ -66,6 +66,9 @@ impl Passive {
         let stored = bytes.len().min(MAX_PERSISTED_BYTES);
         let complete = stored == bytes.len();
         std::fs::create_dir_all(&self.root)?;
+        if std::env::var_os("VIZE_TRACE_CANONICAL_RENAME").is_some_and(|value| value == "1") {
+            std::fs::write(self.root.join("complete-evidence.json"), &bytes)?;
+        }
         std::fs::write(self.root.join("evidence.json"), &bytes[..stored])?;
         std::fs::write(
             self.root.join("manifest.json"),
