@@ -30,6 +30,13 @@ new provider. The original shutdown behavior, test fixtures and budgets are
 unchanged. The dependency and its consumers need an initial Cargo rebuild;
 normal profile fingerprints govern subsequent reuse.
 
+Workspace qualification accepts only this exact version-scoped CI package
+override, with all three fields present and both runtime checks enabled, or
+no package override. Other package/version keys, extra fields, global or build
+overrides, Cargo config and environment overrides remain refused. The actual
+manifest and mutated copies exercise this boundary; source-file digests and
+complete inventory/execution receipt checks remain unchanged.
+
 Local validation parses the workspace and checks the exact dependency pin
 without compiling. Optimized hosted acceptance is pending: retain the same
 physical image digest, inspect emitted dependency/product profiles, and run
