@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use super::{
     LoadedRawConfig,
-    discovery::{CONFIG_FILE_NAMES, CONFIG_MIGRATION, has_retired_config, search_directories},
+    discovery::{CONFIG_FILE_NAMES, CONFIG_MIGRATION, retired_config_paths, search_directories},
     parse::parse_raw_config_file_with_dependencies,
     project_defaults,
 };
@@ -46,12 +46,16 @@ fn load_raw_checked(
     let base = path
         .map(Path::to_path_buf)
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+    dependencies.push(base.clone());
     if !base.exists() {
         return Err(crate::cstr!("config file not found: {}", base.display()).into());
     }
     if base.is_file() {
         return parse(&base, dependencies);
     }
+    // The directory's children are the actual discovery inputs. Keeping its
+    // mtime would turn unrelated source-file creation into config changes.
+    dependencies.pop();
     for directory in search_directories(&base, path.is_none()) {
         for name in CONFIG_FILE_NAMES {
             let candidate = directory.join(name);
@@ -73,7 +77,9 @@ fn load_raw_checked(
                 }
             }
         }
-        if has_retired_config(&directory) {
+        let retired = retired_config_paths(&directory);
+        if !retired.is_empty() {
+            dependencies.extend(retired);
             return Err(CONFIG_MIGRATION.into());
         }
     }

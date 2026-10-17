@@ -31,11 +31,19 @@ pub(super) fn is_retired_config(path: &Path) -> bool {
 }
 
 pub(super) fn has_retired_config(directory: &Path) -> bool {
-    std::fs::read_dir(directory).is_ok_and(|entries| {
-        entries
-            .filter_map(Result::ok)
-            .any(|entry| is_retired_config(&entry.path()))
-    })
+    !retired_config_paths(directory).is_empty()
+}
+
+pub(super) fn retired_config_paths(directory: &Path) -> Vec<PathBuf> {
+    let mut paths = std::fs::read_dir(directory)
+        .into_iter()
+        .flatten()
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| is_retired_config(path))
+        .collect::<Vec<_>>();
+    paths.sort();
+    paths
 }
 
 /// Automatic CLI discovery stops at the nearest package/TypeScript boundary.

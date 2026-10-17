@@ -46,6 +46,9 @@ export function failedConfigModuleRequests(error) {
     // Public bundle diagnostics expose the requested importer/specifier, not
     // extension or package search candidates. Observe only explicit file paths.
     if (!(isAbsolute(request) || request.startsWith("./") || request.startsWith("../"))) continue;
+    // Bundle specifiers may treat these characters as literal filenames or URL
+    // syntax. Its diagnostic does not expose which interpretation won.
+    if (/[%#?]/.test(request)) continue;
     try {
       const url = isAbsolute(request)
         ? pathToFileURL(request)

@@ -23,48 +23,53 @@ const embedded =
   ).join("") + [...rust.matchAll(/r#"([\s\S]*?)"#/g)][0][1];
 
 for (const installedVite of [false, true]) {
-  test(`native loader retains an explicit outside failed request and repairs without replacing its loader (Vite: ${installedVite})`, async () => {
-    const root = await realpath(await mkdtemp(join(tmpdir(), "vize-config-repair-")));
-    try {
-      const app = join(root, "app");
-      await mkdir(app);
-      await writeFile(join(app, "package.json"), '{"type":"module"}');
-      if (installedVite) {
-        await mkdir(join(app, "node_modules"));
-        await symlink(vite, join(app, "node_modules/vite"), "junction");
+  for (const policyName of ["shared-policy.mjs", "共有 policy.mjs"]) {
+    test(`native loader retains an explicit outside failed request and repairs without replacing its loader (Vite: ${installedVite}, path: ${policyName})`, async () => {
+      const root = await realpath(await mkdtemp(join(tmpdir(), "vize-config-repair-")));
+      try {
+        const app = join(root, "app");
+        await mkdir(app);
+        await writeFile(join(app, "package.json"), '{"type":"module"}');
+        if (installedVite) {
+          await mkdir(join(app, "node_modules"));
+          await symlink(vite, join(app, "node_modules/vite"), "junction");
+        }
+        const selected = join(app, "vite.config.mjs");
+        const policy = join(root, policyName);
+        await writeFile(
+          selected,
+          `import vue from ${JSON.stringify(`../${policyName}`)}; export default { vue };`,
+        );
+        const invoke = () =>
+          spawnSync(process.execPath, ["--input-type=module", "-e", embedded, selected], {
+            cwd: app,
+            encoding: "utf8",
+          });
+        const missing = invoke();
+        assert.equal(missing.status, 1, missing.stderr);
+        const observed = JSON.parse(missing.stdout);
+        assert.equal("config" in observed, false, "failed options must not become a configuration");
+        assert.ok(observed.dependencies.includes(selected));
+        assert.ok(observed.dependencies.includes(policy));
+        await writeFile(policy, "export default { formatter: { printWidth: 91 } };");
+        const repaired = invoke();
+        assert.equal(repaired.status, 0, repaired.stderr);
+        const loaded = JSON.parse(repaired.stdout);
+        assert.equal(loaded.config.formatter.printWidth, 91);
+        assert.ok(loaded.dependencies.includes(policy));
+        await rm(policy);
+        const deleted = invoke();
+        assert.equal(deleted.status, 1, deleted.stderr);
+        assert.deepEqual(JSON.parse(deleted.stdout), observed);
+        await writeFile(policy, "export default { formatter: { printWidth: 87 } };");
+        const recreated = invoke();
+        assert.equal(recreated.status, 0, recreated.stderr);
+        assert.equal(JSON.parse(recreated.stdout).config.formatter.printWidth, 87);
+      } finally {
+        await rm(root, { recursive: true, force: true });
       }
-      const selected = join(app, "vite.config.mjs");
-      const policy = join(root, "shared-policy.mjs");
-      await writeFile(selected, "import vue from '../shared-policy.mjs'; export default { vue };");
-      const invoke = () =>
-        spawnSync(process.execPath, ["--input-type=module", "-e", embedded, selected], {
-          cwd: app,
-          encoding: "utf8",
-        });
-      const missing = invoke();
-      assert.equal(missing.status, 1, missing.stderr);
-      const observed = JSON.parse(missing.stdout);
-      assert.equal("config" in observed, false, "failed options must not become a configuration");
-      assert.ok(observed.dependencies.includes(selected));
-      assert.ok(observed.dependencies.includes(policy));
-      await writeFile(policy, "export default { formatter: { printWidth: 91 } };");
-      const repaired = invoke();
-      assert.equal(repaired.status, 0, repaired.stderr);
-      const loaded = JSON.parse(repaired.stdout);
-      assert.equal(loaded.config.formatter.printWidth, 91);
-      assert.ok(loaded.dependencies.includes(policy));
-      await rm(policy);
-      const deleted = invoke();
-      assert.equal(deleted.status, 1, deleted.stderr);
-      assert.deepEqual(JSON.parse(deleted.stdout), observed);
-      await writeFile(policy, "export default { formatter: { printWidth: 87 } };");
-      const recreated = invoke();
-      assert.equal(recreated.status, 0, recreated.stderr);
-      assert.equal(JSON.parse(recreated.stdout).config.formatter.printWidth, 87);
-    } finally {
-      await rm(root, { recursive: true, force: true });
-    }
-  });
+    });
+  }
 }
 
 test("failed request observations use native structured fields without guessing package or extension resolution", () => {
@@ -88,6 +93,9 @@ test("failed request observations use native structured fields without guessing 
     "@scope/policy",
     "../policy",
     "https://example.com/policy.mjs",
+    "../hash#policy.mjs",
+    "../query?policy.mjs",
+    "../percent%25policy.mjs",
   ]) {
     assert.deepEqual(
       failedConfigModuleRequests({

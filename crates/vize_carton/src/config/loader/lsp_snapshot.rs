@@ -85,3 +85,58 @@ impl LoadedLspConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::load_lsp_config_snapshot;
+
+    #[test]
+    fn missing_explicit_vite_file_remains_a_watch_input_until_created() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("vite.config.mjs");
+        let missing = load_lsp_config_snapshot(Some(&path));
+        assert!(!missing.valid);
+        assert!(missing.watch_dependencies.contains(&path));
+        std::fs::write(&path, "export default { vue: {} };").unwrap();
+        let created = load_lsp_config_snapshot(Some(&path));
+        assert!(created.valid, "{:?}", created.error);
+        assert!(created.watch_dependencies.contains(&path));
+        assert_eq!(created.source_path, Some(path));
+    }
+
+    #[test]
+    fn every_encountered_retired_file_remains_observable_until_deletion_repairs_discovery() {
+        let root = tempfile::tempdir().unwrap();
+        let paths = [
+            root.path().join("vize.config.json"),
+            root.path().join("vize.config.ts"),
+        ];
+        for path in &paths {
+            std::fs::write(path, "historical bytes are never evaluated").unwrap();
+        }
+        let rejected = load_lsp_config_snapshot(Some(root.path()));
+        assert!(!rejected.valid);
+        for path in &paths {
+            assert!(rejected.watch_dependencies.contains(path));
+        }
+        std::fs::remove_file(&paths[0]).unwrap();
+        let retained = load_lsp_config_snapshot(Some(root.path()));
+        assert!(!retained.valid);
+        assert!(retained.watch_dependencies.contains(&paths[1]));
+        std::fs::remove_file(&paths[1]).unwrap();
+        let repaired = load_lsp_config_snapshot(Some(root.path()));
+        assert!(repaired.valid, "{:?}", repaired.error);
+        assert!(repaired.source_path.is_none());
+        assert!(
+            repaired
+                .watch_dependencies
+                .iter()
+                .any(|path| path.ends_with("vite.config.mjs"))
+        );
+        assert!(
+            !repaired
+                .watch_dependencies
+                .contains(&root.path().to_path_buf())
+        );
+    }
+}
