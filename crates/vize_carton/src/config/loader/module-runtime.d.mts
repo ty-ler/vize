@@ -17,6 +17,7 @@ export function importConfigModuleWithDependencies<
   withoutVite?: (configURL: URL) => Fallback | Promise<Fallback>,
   evaluate?: (namespace: ConfigModule | Awaited<Fallback>) => Value | Promise<Value>,
   observeDependencies?: (dependencies: string[], complete: boolean) => void,
+  beforeRead?: (paths: string[]) => void | Promise<void>,
 ): Promise<{
   namespace: ConfigModule | Awaited<Fallback>;
   value: Awaited<Value>;

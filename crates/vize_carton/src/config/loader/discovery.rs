@@ -46,10 +46,26 @@ pub(super) fn retired_config_paths(directory: &Path) -> Vec<PathBuf> {
 /// Explicit workspace roots remain shallow so multi-root LSP folders never
 /// inherit a sibling or parent project's policy.
 pub(super) fn search_directories(base: &Path, automatic: bool) -> Vec<PathBuf> {
+    search_directories_observed(base, automatic, &mut None)
+}
+
+pub(super) fn search_directories_observed(
+    base: &Path,
+    automatic: bool,
+    before_read: &mut Option<&mut dyn FnMut(&[PathBuf])>,
+) -> Vec<PathBuf> {
     let mut directories = Vec::new();
     let mut current = base.to_path_buf();
     loop {
         directories.push(current.clone());
+        if automatic {
+            if let Some(observe) = before_read.as_deref_mut() {
+                observe(
+                    &["package.json", "tsconfig.json", "jsconfig.json"]
+                        .map(|name| current.join(name)),
+                );
+            }
+        }
         if !automatic
             || ["package.json", "tsconfig.json", "jsconfig.json"]
                 .iter()

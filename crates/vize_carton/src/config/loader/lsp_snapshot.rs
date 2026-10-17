@@ -8,7 +8,7 @@ use crate::config::{
 };
 
 use super::{
-    LoadedProjectConfig, LoadedRawConfig, checked::load_raw_editor_config_attempt,
+    LoadedProjectConfig, LoadedRawConfig, checked::load_raw_editor_config_attempt_observed,
     project_config_snapshot,
 };
 
@@ -41,7 +41,26 @@ pub struct LoadedLspConfig {
 /// Evaluate JS/TS/PKL only once so the editor timeout and type checker
 /// settings always come from the same config snapshot.
 pub fn load_lsp_config_snapshot(path: Option<&Path>) -> LoadedLspConfig {
-    let attempt = load_raw_editor_config_attempt(path);
+    load_snapshot(path, None)
+}
+
+/// Observe actual discovery and loader inputs before their selection or load.
+///
+/// Runs synchronously on the caller's configuration worker. Newly discovered
+/// imported helpers remain post-load dependencies; this is not an atomic file
+/// snapshot or a replacement for the selected engine's resolution.
+pub fn load_lsp_config_snapshot_observed(
+    path: Option<&Path>,
+    before_read: &mut dyn FnMut(&[PathBuf]),
+) -> LoadedLspConfig {
+    load_snapshot(path, Some(before_read))
+}
+
+fn load_snapshot(
+    path: Option<&Path>,
+    before_read: Option<&mut dyn FnMut(&[PathBuf])>,
+) -> LoadedLspConfig {
+    let attempt = load_raw_editor_config_attempt_observed(path, before_read);
     let (loaded, error) = match attempt.outcome {
         Ok(loaded) => (loaded, None),
         Err(error) => {
@@ -93,7 +112,30 @@ impl LoadedLspConfig {
 
 #[cfg(test)]
 mod tests {
-    use super::load_lsp_config_snapshot;
+    use super::{load_lsp_config_snapshot, load_lsp_config_snapshot_observed};
+
+    #[test]
+    fn observes_explicit_policy_before_reading_without_observing_directory_mtimes() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("serialized-config.json");
+        std::fs::write(&path, r#"{"formatter":{"printWidth":91}}"#).unwrap();
+        let mut observed = Vec::new();
+        let snapshot = load_lsp_config_snapshot_observed(Some(&path), &mut |paths| {
+            observed.extend_from_slice(paths);
+            std::fs::write(&path, r#"{"formatter":{"printWidth":93}}"#).unwrap();
+        });
+        assert!(snapshot.valid);
+        assert_eq!(snapshot.config.formatter.print_width, 93);
+        assert!(observed.iter().all(|input| input == &path));
+
+        observed.clear();
+        let absent = load_lsp_config_snapshot_observed(Some(root.path()), &mut |paths| {
+            observed.extend_from_slice(paths);
+        });
+        assert!(absent.valid);
+        assert!(observed.contains(&root.path().join("vite.config.ts")));
+        assert!(!observed.contains(&root.path().to_path_buf()));
+    }
 
     #[test]
     fn missing_explicit_vite_file_remains_a_watch_input_until_created() {

@@ -18,6 +18,7 @@ mod experimental_tests;
 #[cfg(test)]
 mod extends_tests;
 mod js;
+mod js_observation;
 mod jsx;
 mod language_server;
 #[cfg(test)]
@@ -45,7 +46,9 @@ use super::{
 };
 pub use compiler_keys::*;
 pub use library::{LoadedLibConfig, load_lib_config_with_source};
-pub use lsp_snapshot::{LoadedLspConfig, load_lsp_config_snapshot};
+pub use lsp_snapshot::{
+    LoadedLspConfig, load_lsp_config_snapshot, load_lsp_config_snapshot_observed,
+};
 pub use {jsx::load_compiler_jsx_compat, vapor::load_compiler_vapor};
 pub use {language_server::*, lint_features::*};
 

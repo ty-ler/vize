@@ -171,6 +171,7 @@ export async function importConfigModuleWithDependencies(
   withoutVite,
   evaluate,
   observeDependencies,
+  beforeRead,
 ) {
   const watchInputs = new Set([configPath]);
   let complete = false;
@@ -186,6 +187,7 @@ export async function importConfigModuleWithDependencies(
     for (const directory of searchPaths.filter((path) => !globalPaths.includes(path))) {
       const requested = join(directory, "vite");
       watchInputs.add(requested);
+      await beforeRead?.([requested]);
       if (lstatSync(requested, { throwIfNoEntry: false }) !== undefined) {
         candidate = requested;
         watchInputs.add(join(candidate, "package.json"));
@@ -207,6 +209,7 @@ export async function importConfigModuleWithDependencies(
       }
     }
     if (candidate === undefined) {
+      await beforeRead?.([configPath]);
       return await captureConfigEvaluation(
         async () => ({
           namespace: await (withoutVite ? withoutVite(configURL) : import(configURL.href)),
@@ -220,6 +223,7 @@ export async function importConfigModuleWithDependencies(
     }
     const viteDirectory = realpathSync(candidate);
     watchInputs.add(join(viteDirectory, "package.json"));
+    await beforeRead?.([join(candidate, "package.json"), join(viteDirectory, "package.json")]);
     const resolvedEntry = require.resolve("vite");
     watchInputs.add(resolvedEntry);
     const viteEntry = realpathSync(resolvedEntry);
@@ -230,6 +234,7 @@ export async function importConfigModuleWithDependencies(
         `Resolved loader escapes selected project Vite: ${candidate} -> ${viteEntry}`,
       );
     }
+    await beforeRead?.([resolvedEntry, viteEntry]);
     const { loadConfigFromFile } = await import(pathToFileURL(viteEntry).href);
     const temporary = await realpath(await mkdtemp(join(tmpdir(), "vize-config-module-")));
     try {
@@ -241,6 +246,7 @@ export async function importConfigModuleWithDependencies(
       );
       return await captureConfigEvaluation(
         async () => {
+          await beforeRead?.([configPath]);
           const loaded = await loadConfigFromFile(
             { mode: "development", command: "serve" },
             adapter,
