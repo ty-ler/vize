@@ -20,6 +20,8 @@ import {
 import {
   assertRequiredWorkflowJobs,
   requiredReleaseWorkflows,
+  requiredWorkflowJobNames,
+  summarizeRequiredWorkflowJobFailures,
   selectRequiredWorkflowRuns,
   workflowRequiresJobEvidence,
 } from "./release-preflight-evidence.mjs";
@@ -351,9 +353,7 @@ export async function verifyReleasePreflight(
     baseSha,
   });
   let selectedRuns;
-  if (requiredReleaseWorkflows.length === 0) {
-    selectedRuns = new Map();
-  } else if (bootstrap) {
+  if (bootstrap) {
     let previousWaitState = "";
     selectedRuns = await bootstrapRequiredWorkflowRuns({
       sha,
@@ -370,6 +370,22 @@ export async function verifyReleasePreflight(
           method: "POST",
           body: { ref: plan.ref, inputs: plan.inputs },
         });
+      },
+      requiredJobFailure: async (workflowName, run) => {
+        const jobs = await githubApiPages({
+          apiUrl,
+          repository,
+          token,
+          resource: `actions/runs/${run.id}/jobs`,
+          collection: "jobs",
+        });
+        const required = new Set(requiredWorkflowJobNames(workflowName, run));
+        return jobs.some(
+          (job) =>
+            required.has(job.name) && job.status === "completed" && job.conclusion !== "success",
+        )
+          ? summarizeRequiredWorkflowJobFailures(workflowName, jobs, run)
+          : undefined;
       },
       onWait: ({ missing, pending }) => {
         const state = JSON.stringify({ missing, pending });
