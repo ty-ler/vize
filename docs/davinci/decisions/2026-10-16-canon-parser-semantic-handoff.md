@@ -68,3 +68,20 @@ Other probe traces exposed real watcher panics and are retained as failures,
 not accepted shutdown variants. Hosted unframed stderr alone cannot establish
 the phase of that specific cancellation. This test changes no product error
 handling and makes no claim that native shutdown is healthy.
+
+## Reconcile the authenticated clean-shutdown law
+
+Main #9271 now authenticates the native image and initialize response before
+requiring Shutdown's null ACK followed by EOF. Its original two-Batch child
+retains every diagnostic/stdout byte, all eight historical stderr/image
+classification controls, and the final required `Clean` outcome. Historical
+EOF warnings remain classified evidence and cannot satisfy that assertion.
+
+The structured fallback signal runs in a separately named child test: required
+semantic completion emits no fallback event, while the real degraded-runtime
+control still emits the exact structured event and human warning. The
+cancelled/failed semantic controls and their failure-only peer remain unchanged.
+Both child stdout contracts now require one pass and six filtered tests, the
+exact seven-test combined inventory. No native stderr is filtered or accepted
+in place of main's clean-shutdown requirement. Fresh combined-source native
+Actions remain required; this merge reconciliation is not runtime evidence.
