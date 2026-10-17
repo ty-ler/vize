@@ -7,6 +7,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { isDeepStrictEqual } from "node:util";
+import { pathToFileURL } from "node:url";
 
 import { resolveRealServerPath } from "../editor-e2e/real-vue-workspace.mjs";
 
@@ -17,7 +19,18 @@ const rule = "vue/no-deprecated-v-bind-sync";
 
 type Packet = {
   dir?: string;
-  msg?: { method?: string; params?: { initializationOptions?: unknown } };
+  session?: number;
+  msg?: {
+    id?: number | string;
+    method?: string;
+    result?: unknown;
+    params?: {
+      initializationOptions?: unknown;
+      capabilities?: { workspace?: { didChangeWatchedFiles?: { dynamicRegistration?: boolean } } };
+      changes?: Array<{ uri: string; type: number }>;
+      registrations?: Array<{ method: string }>;
+    };
+  };
   event?: string;
   code?: number;
 };
@@ -26,7 +39,14 @@ type Publication = {
   version?: number;
   diagnostics: Array<{ code?: string | number }>;
 };
-type Observation = { phase: string; legacy: Publication; modern: Publication; hover: unknown };
+type Observation = {
+  phase: string;
+  legacy: Publication;
+  modern: Publication;
+  hover: unknown;
+  wireCount: number;
+  authoredConfig: { file: string; source: string } | null;
+};
 
 function prepareWorkspace(workspace: string) {
   fs.mkdirSync(workspace, { recursive: true });
@@ -193,12 +213,88 @@ async function main() {
       "The packaged default must leave feature ownership to project configuration",
     );
     const cases = JSON.parse(fs.readFileSync(casesFile, "utf8")) as Observation[];
-    assert.equal(cases.length, 1);
-    const observation = cases[0];
-    assert.equal(observation.phase, "initial-reference-targets-and-vite-hover");
-    assert.ok(!observation.legacy.diagnostics.some((item) => item.code === rule));
-    assert.ok(observation.modern.diagnostics.some((item) => item.code === rule));
-    assert.equal(observation.hover, null);
+    const expected = [
+      ["initial-reference-targets-and-vite-hover", false, false],
+      ["vite-valid-hover-enabled", false, true],
+      ["vite-invalid-retains-hover-enabled", false, true],
+      ["vite-valid-hover-recovery", false, false],
+      ["reference-valid-target-3", true, false],
+      ["reference-invalid-retains-target-3", true, false],
+      ["reference-valid-target-recovery", false, false],
+    ] as const;
+    assert.equal(cases.length, expected.length);
+    assert.equal(
+      initial.msg!.params?.capabilities?.workspace?.didChangeWatchedFiles?.dynamicRegistration,
+      true,
+      "The actual Eglot host must advertise file watching",
+    );
+    const registration = packets.find(
+      (entry) =>
+        entry.dir === "s2c" &&
+        entry.msg?.method === "client/registerCapability" &&
+        entry.msg.params?.registrations?.some(
+          (item) => item.method === "workspace/didChangeWatchedFiles",
+        ),
+    );
+    assert.ok(registration, "The native server must register actual client watchers");
+    assert.ok(
+      packets.some(
+        (entry) =>
+          entry.dir === "c2s" &&
+          entry.session === registration.session &&
+          entry.msg?.id === registration.msg?.id &&
+          Object.hasOwn(entry.msg ?? {}, "result"),
+      ),
+      "The genuine Eglot registration must be acknowledged",
+    );
+    let previousWireCount = 0;
+    for (const [index, [name, deprecated, hoverEnabled]] of expected.entries()) {
+      const observation = cases[index];
+      assert.equal(observation.phase, name);
+      assert.equal(
+        observation.legacy.diagnostics.some((item) => item.code === rule),
+        deprecated,
+        name,
+      );
+      assert.ok(
+        observation.modern.diagnostics.some((item) => item.code === rule),
+        name,
+      );
+      assert.deepEqual(
+        observation.modern.diagnostics,
+        cases[0].modern.diagnostics,
+        `${name}: the modern sibling's complete diagnostics stay stable`,
+      );
+      assert.equal(observation.hover !== null, hoverEnabled, name);
+      const seen = packets.slice(0, observation.wireCount);
+      for (const publication of [observation.legacy, observation.modern]) {
+        assert.ok(
+          seen.some(
+            (entry) =>
+              entry.dir === "s2c" &&
+              entry.msg?.method === "textDocument/publishDiagnostics" &&
+              isDeepStrictEqual(entry.msg.params, publication),
+          ),
+          `${name}: case must preserve a complete native publication`,
+        );
+      }
+      if (observation.authoredConfig) {
+        const uri = new URL(observation.authoredConfig.file, `${pathToFileURL(workspace).href}/`)
+          .href;
+        assert.ok(
+          packets
+            .slice(previousWireCount, observation.wireCount)
+            .some(
+              (entry) =>
+                entry.dir === "c2s" &&
+                entry.msg?.method === "workspace/didChangeWatchedFiles" &&
+                entry.msg.params?.changes?.some((change) => change.uri === uri),
+            ),
+          `${name}: Eglot itself must send the corresponding file notification`,
+        );
+      }
+      previousWireCount = observation.wireCount;
+    }
     assert.ok(
       packets.some((entry) => entry.event === "spawn"),
       "A real server must start behind the tap",
