@@ -16,6 +16,7 @@ import {
   fixture,
   failureLogArguments,
   integrationReference,
+  integrationIdentity,
   object,
   positive,
   repository,
@@ -256,6 +257,21 @@ export function verifyIntegration(github: Json, expected: Identity, read = api) 
   );
   return { integration, merge, gates };
 }
+export function verifyStoredIntegration(github: Json, expected: Identity, value: unknown) {
+  const snapshot = object(value);
+  const identity = integrationIdentity(snapshot);
+  const responses: Record<string, Json> = {
+    [`pulls/${identity.integration.number}`]: object(snapshot.integration),
+    [`commits/${identity.merge.sha}`]: object(snapshot.merge),
+    [`actions/workflows/check.yml/runs?head_sha=${identity.merge.sha}&per_page=100`]: object(
+      snapshot.gates,
+    ),
+  };
+  return verifyIntegration(github, expected, (endpoint) => {
+    assert.ok(Object.hasOwn(responses, endpoint), "stored integration endpoint identity mismatch");
+    return responses[endpoint];
+  });
+}
 export function files(directory: string) {
   const found: { file: string; sha256: string; bytes: number }[] = [];
   let total = 0;
@@ -285,7 +301,12 @@ export function files(directory: string) {
 export async function verifiedRecovery(
   expected: Identity,
   recoveryRun: string,
-): Promise<{ admission: Admission; receipt: Json; directory: string }> {
+): Promise<{
+  admission: Admission;
+  receipt: Json;
+  directory: string;
+  integration: ReturnType<typeof verifyIntegration>;
+}> {
   positive(recoveryRun);
   const run = api(`actions/runs/${recoveryRun}`);
   recoveryRunIdentity(run, recoveryRun);
@@ -361,6 +382,19 @@ export async function verifiedRecovery(
   );
   same(receipt.authority, policyAuthority, "replacement policy changed");
   same(receipt.files, files(directory), "complete raw replacement observations changed");
+  const integration = (name: string, publication: string) =>
+    integrationIdentity(
+      verifyStoredIntegration(
+        object(object(JSON.parse(readFileSync(path.join(directory, publication), "utf8"))).github),
+        expected,
+        JSON.parse(readFileSync(path.join(directory, name), "utf8")),
+      ),
+    );
+  same(
+    integration("integration.json", "publication-before.json"),
+    integration("integration-after.json", "publication-after.json"),
+    "original signed integration changed after requalification",
+  );
   const original = JSON.parse(
     readFileSync(path.join(directory, "original.json"), "utf8"),
   ) as Original;
@@ -385,11 +419,23 @@ export async function verifiedRecovery(
   }
   const live = await collectOriginal(expected, policySha);
   sameOriginalSnapshot(original, live, "after requalification");
+  const currentIntegration = verifyIntegration(
+    object(
+      object(JSON.parse(readFileSync(path.join(directory, "publication-after.json"), "utf8")))
+        .github,
+    ),
+    expected,
+  );
+  same(
+    integrationIdentity(currentIntegration),
+    integration("integration-after.json", "publication-after.json"),
+    "original signed integration changed since requalification",
+  );
   sameRunSnapshot(
     api(`actions/runs/${recoveryRun}`),
     run,
     "replacement attempt changed during verification",
   );
   assert.ok(realpathSync(directory) === directory, "replacement root redirected");
-  return { admission: admitted, receipt, directory };
+  return { admission: admitted, receipt, directory, integration: currentIntegration };
 }

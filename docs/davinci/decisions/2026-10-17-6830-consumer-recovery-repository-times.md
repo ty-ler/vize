@@ -1,4 +1,4 @@
-# Consumer recovery repository timestamps (#6830)
+# Consumer recovery authority and run timestamps (#6830)
 
 Recovery run `38990889311`, attempt 2, at
 `78b75fb151c115ab8f5043e99424c0e55a562081` completed all six consumer replays.
@@ -15,23 +15,37 @@ fresh response that failed comparison was not separately saved. The log records
 `01:25:44Z` to `01:33:25Z`, all on 2026-10-17. A timestamp-mutated copy of the
 retained packet is a regression control, not a recovered final API response.
 
-Use comparison-only copies that ignore the string values of exactly those two
-repository fields. Their presence and types remain exact. The only recognized
-locations are a run's `repository` and `head_repository`, the integration PR's
-`head.repo` and `base.repo`, and each retained Check run's two repository
-objects. There is no recursive field-name filter; run, PR, job and other
-timestamps still compare exactly. Unknown repository metadata also stays exact.
+Main change #9325 at `d57cf724d2caea6cf47f814250d18801f6b75e15` supersedes
+the initial integration timestamp comparison. Use its canonical
+`integrationIdentity` and authenticate both stored and current observations
+against the original tag with `verifyStoredIntegration`/`verifyIntegration`.
+The compared authority includes PR/repository/head/base identities, exact pin
+markers, merge SHA/tree/parents/signature, and every qualifying exact-main push
+Check's identity, attempt and terminal result. The latest such Check must pass.
+PR prose, repository activity metadata and unrelated Check runs are not delivery
+authority. This is an explicit integration policy, not a general field filter.
 
-Apply the same narrow comparison to the original Release and replacement run
-rechecks. Preserve the raw packets, their file hashes, the signing input, the
-existing original-custody field set, and all admission, C/H/R/attempt/event,
-job, artifact, tag, signature and public-archive checks. No publication or source
-closure behavior changes, and the original Release remains failed.
+Keep main's complete raw before/after observations, including
+`integration-after.json`, in the signed file inventory. Verification checks
+those stored packets and the freshly fetched integration again. Main's policy,
+retained drift fixture and integration negative-control suite stay byte-exact;
+the fixture labels its later packet as an independent live follow-up, not the
+un-emitted failed-job response. Remove the superseded integration comparison
+helper and its redundant assertions, including obsolete expectations that
+non-authority PR prose or timestamps must compare exactly.
 
-Validation: the new snapshot controls and existing recovery, archive, public
-identity, JSR and installed-acceptance suites pass (133 tests). Controls reject
-changed or missing identities, repository field presence/types, non-repository
-timestamps, signed merge data, jobs, artifacts, tags and proof fields; frozen
-input objects and serialized raw bytes remain unchanged. The original
-500-line recovery test and its retained fixtures are unchanged. Hosted
-finalization and signing still require qualification after this fix lands.
+Original Release and replacement run rechecks retain the narrow comparison-only
+copies: ignore only string values of `pushed_at`/`updated_at` directly inside a
+run's `repository` and `head_repository`. Presence, types, all other repository
+fields and non-repository timestamps remain exact. Run/source/attempt/event,
+jobs, failed-job details, logs, policy, artifacts, tags and source receipts keep
+their existing checks. Neither comparison rewrites raw custody packets or their
+file hashes. No publication or source closure behavior changes; the original
+Release remains failed.
+
+The focused integration, run-custody, original recovery, archive, public identity,
+JSR and installed-acceptance suites pass (187 tests), as do both hosted-operator
+controls. Strict TypeScript and scoped formatting/lint checks pass. The original
+500-line recovery test and its retained fixtures remain unchanged. Hosted
+finalization and signing still require qualification after the merge lands;
+the already-running Full Check at `2b0cf6c` is evidence for that earlier source.

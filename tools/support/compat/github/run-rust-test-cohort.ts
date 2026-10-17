@@ -8,6 +8,8 @@ import { readCargoMetadata } from "./plan-affected-rust.ts";
 import type { CargoMetadata } from "./plan-affected-rust.ts";
 import { rustCommand } from "./run-affected-rust.ts";
 import { isRustTestCohort, rustTestCohortForBinary, rustTestMatrix } from "./rust-test-cohorts.ts";
+import { prDefaultFeatures } from "./rust-test-default-features.ts";
+import type { PrDefaultFeatures } from "./rust-test-default-features.ts";
 
 type Target = {
   name: string;
@@ -59,6 +61,7 @@ export function rustTestTargetProjection(
   metadata: CargoMetadata,
   selected: readonly string[],
   cohort: string,
+  features?: PrDefaultFeatures,
 ): Projection {
   const matrix = rustTestMatrix(metadata, selected).include;
   if (!isRustTestCohort(cohort) || !matrix.some((entry) => entry.cohort === cohort)) {
@@ -94,19 +97,29 @@ export function rustTestTargetProjection(
           ),
         ),
       ].sort();
-      // Cargo resolves --test names across every selected package. A duplicate
-      // name must not force a disabled target or an unavailable required feature.
-      // Retain Cargo's own resolver rather than guessing which features are active.
-      const gated = targets.some(
-        (target) =>
-          target.kind.includes("test") &&
-          names.includes(target.name) &&
-          (!target.test || Boolean(target["required-features"]?.length)),
-      );
+      // --test names apply across all selected packages. Every same-name target
+      // must be active, or every instance inactive, before projecting that name.
+      let gated = false;
+      const active = names.filter((name) => {
+        const states = packages.flatMap((pkg) =>
+          pkg.targets
+            .filter((target) => target.kind.includes("test") && target.name === name)
+            .map((target) =>
+              !target.test
+                ? "unknown"
+                : target["required-features"]?.length
+                  ? (features?.requiredFeatures(pkg.name, target["required-features"]) ?? "unknown")
+                  : "active",
+            ),
+        );
+        if (states.every((state) => state === "inactive")) return false;
+        if (states.some((state) => state !== "active")) gated = true;
+        return true;
+      });
       const args = [
         ...(targets.some(isLibrary) ? ["--lib"] : []),
         ...(targets.some((target) => target.kind.includes("bin")) ? ["--bins"] : []),
-        ...names.flatMap((name) => ["--test", name]),
+        ...active.flatMap((name) => ["--test", name]),
       ];
       const projection: Projection = gated
         ? defaultTargets("feature-gated or disabled integration targets")
@@ -116,10 +129,10 @@ export function rustTestTargetProjection(
       return [entry.cohort, projection] as const;
     }),
   );
-  // Default cargo test also compiles test=false examples. Keep that coverage
-  // once, on an existing full-build cohort or the first selected cohort. No
-  // extra job/command and no conversion of examples into runnable test harnesses.
+  // The ordinary full-workspace PR recipe explicitly builds normal examples in the
+  // required Clippy/doctest job. Other invocations retain the original fallback.
   if (
+    !features &&
     targets.some((target) => target.kind.includes("example")) &&
     ![...projections.values()].some((projection) => projection.reason)
   ) {
@@ -292,7 +305,14 @@ export async function main(argv = process.argv.slice(2)) {
     const plan = JSON.parse(readFileSync(planPath, "utf8"));
     // Validate the unchanged package roots before reading metadata or launching Cargo.
     rustCommand(plan, ["cargo", "nextest", "run", "@packages@"]);
-    const projection = rustTestTargetProjection(readCargoMetadata(), plan.packages, cohort);
+    const metadata = readCargoMetadata();
+    const features = prDefaultFeatures(
+      metadata,
+      plan.packages,
+      options,
+      process.env.GITHUB_EVENT_NAME,
+    );
+    const projection = rustTestTargetProjection(metadata, plan.packages, cohort, features);
     const stdoutPath = process.env.VIZE_RUST_BUILD_STDOUT_PATH;
     if (stdoutPath) capture = captureStdout(stdoutPath);
     const banner = `Cargo targets (${cohort}): ${projection.reason ?? `${projection.args.filter((arg) => arg === "--test").length} integration targets and shared unit targets`}\n`;

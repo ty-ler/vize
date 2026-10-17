@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { object, same, type Json } from "./policy.ts";
 
-// GitHub embeds current repository clocks in historical API responses. Only
+// GitHub embeds current repository clocks in historical run responses. Only
 // these values are mutable here; presence, type and every other field remain exact.
 // Comparison views never rewrite the retained raw evidence or signed receipt.
 function repositoryView(value: unknown): Json {
@@ -26,26 +26,6 @@ function runView(value: unknown): Json {
 
 export function sameRunSnapshot(actual: unknown, expected: unknown, message: string) {
   same(runView(actual), runView(expected), message);
-}
-
-function integrationView(value: unknown): Json {
-  const view = { ...object(value) };
-  const integration = { ...object(view.integration) };
-  for (const side of ["head", "base"]) {
-    const branch = object(integration[side]);
-    integration[side] = { ...branch, repo: repositoryView(branch.repo) };
-  }
-  const gates = object(view.gates);
-  assert.ok(Array.isArray(gates.workflow_runs), "complete integration runs required");
-  return {
-    ...view,
-    integration,
-    gates: { ...gates, workflow_runs: gates.workflow_runs.map(runView) },
-  };
-}
-
-export function sameIntegrationSnapshot(actual: unknown, expected: unknown, message: string) {
-  same(integrationView(actual), integrationView(expected), message);
 }
 
 export function sameOriginalSnapshot(actual: Json, expected: Json, phase: string) {
