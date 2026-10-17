@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { test } from "node:test";
 
 import { CONFIG_FREE_PROJECT_SHAPES } from "../../../tools/support/compat/npm/smoke-release-init-config-free.mjs";
@@ -396,3 +399,77 @@ for (const scenario of [
     }
   });
 }
+
+test("the existing general LSP observer runs without config-mode dependencies", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-general-lsp-"));
+  try {
+    const session = path.join(root, "session.ts");
+    const logs = path.join(root, "logs");
+    fs.writeFileSync(
+      session,
+      readRepoFile("tools/support/compat/npm/smoke-release-lsp-session.ts"),
+    );
+    fs.mkdirSync(path.join(root, "src/components"), { recursive: true });
+    fs.mkdirSync(path.join(root, "node_modules/vize/bin"), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, "src/App.vue"),
+      `
+<script setup>
+import HelloWorld from './components/HelloWorld.vue';
+const title = 'ready';
+</script>
+<template><HelloWorld :msg="title" /></template>
+`,
+    );
+    // This transport fixture answers the four historical feature contracts.
+    // There is deliberately no config module, package manifest, or semver.
+    fs.writeFileSync(
+      path.join(root, "node_modules/vize/bin/vize"),
+      `
+const {pathToFileURL} = require('node:url');
+const path = require('node:path');
+let buffer = Buffer.alloc(0);
+process.stdin.on('data', (chunk) => {
+  buffer = Buffer.concat([buffer, chunk]);
+  for (;;) {
+    const header = buffer.indexOf('\\r\\n\\r\\n');
+    if (header < 0) return;
+    const length = Number(/Content-Length: (\\d+)/i.exec(buffer.subarray(0,header).toString())[1]);
+    if (buffer.length < header + 4 + length) return;
+    const message = JSON.parse(buffer.subarray(header+4,header+4+length).toString());
+    buffer = buffer.subarray(header+4+length);
+    if (message.method === 'exit') process.exit(0);
+    if (message.id === undefined) continue;
+    const app = pathToFileURL(path.join(process.cwd(),'src/App.vue')).href;
+    const component = pathToFileURL(path.join(process.cwd(),'src/components/HelloWorld.vue')).href;
+    const result = message.method === 'initialize' ? {capabilities:{}}
+      : message.method === 'textDocument/hover' ? {contents:'title: string'}
+      : message.method === 'textDocument/definition' ? {uri:component}
+      : message.method === 'textDocument/completion' ? [{label:'title'}]
+      : message.method === 'textDocument/rename' ? {changes:{[app]:[]}}
+      : null;
+    const body = JSON.stringify({jsonrpc:'2.0',id:message.id,result});
+    process.stdout.write('Content-Length: '+Buffer.byteLength(body)+'\\r\\n\\r\\n'+body);
+  }
+});
+`,
+    );
+    const result = spawnSync(process.execPath, [session, root], {
+      cwd: root,
+      env: { ...process.env, VIZE_SMOKE_LSP_LOG_DIR: logs },
+      encoding: "utf8",
+      timeout: 15_000,
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.signal, null);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /hover, definition, completion, rename/u);
+    const receiptFile = fs.readdirSync(logs).find((file) => file.endsWith(".results.json"));
+    assert.ok(receiptFile);
+    const receipt = JSON.parse(fs.readFileSync(path.join(logs, receiptFile), "utf8"));
+    assert.equal(receipt.results.length, 4);
+    assert.equal(receipt.custody, undefined, "general observer retains its existing lifecycle");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

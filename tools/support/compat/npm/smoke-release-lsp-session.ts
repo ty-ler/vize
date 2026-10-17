@@ -13,7 +13,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { runConfigLspSession, type ConfigLspReceipt } from "./smoke-release-config-lsp.ts";
+import type { ConfigLspReceipt } from "./smoke-release-config-lsp.ts";
 
 const [projectRoot, mode, workspaceRoot] = process.argv.slice(2);
 assert.ok(projectRoot, "Usage: smoke-release-lsp-session.ts <project-root>");
@@ -21,6 +21,10 @@ assert.ok(mode === undefined || mode === "--config-workspace", "unknown installe
 const root = fs.realpathSync(projectRoot);
 if (mode === "--config-workspace") assert.ok(workspaceRoot, "workspace root is required");
 const workspace = workspaceRoot === undefined ? root : fs.realpathSync(workspaceRoot);
+// Load config-only dependencies before spawning, so general public observers
+// remain dependency-free and config custody still sees every child byte.
+const configSession =
+  mode === "--config-workspace" ? await import("./smoke-release-config-lsp.ts") : undefined;
 const appPath = path.join(root, "src", "App.vue");
 const app = pathToFileURL(appPath).href;
 const componentPath = path.join(root, "src", "components", "HelloWorld.vue");
@@ -187,12 +191,11 @@ function mentions(result: unknown, file: string): boolean {
   return uris.some((uri) => samePath(path.resolve(fileURLToPath(uri)), file));
 }
 
-if (mode === "--config-workspace") {
-  await runConfigLspSession(server, {
+if (configSession) {
+  await configSession.runConfigLspSession(server, {
     run: async () => {
-      const { runConfigWorkspaceLsp } = await import("./smoke-release-config-lsp.ts");
       await initialize();
-      await runConfigWorkspaceLsp({
+      await configSession.runConfigWorkspaceLsp({
         workspace,
         notifications,
         request,
