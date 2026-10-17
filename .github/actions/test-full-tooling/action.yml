@@ -44,7 +44,7 @@ runs:
       if: ${{ !cancelled() && inputs.shard == '1' }}
       uses: ./.github/actions/test-native-attribute-values-7502
     - name: Join original historical Vue documents to pinned whole goldens
-      if: ${{ always() && inputs.shard == '1' }}
+      if: ${{ !cancelled() && inputs.shard == '1' }}
       uses: ./.github/actions/test-native-historical-sfc-documents
       with: { comparison-base: "${{ github.sha }}" }
     - name: Install CSS formatter reference browser
