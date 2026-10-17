@@ -1,14 +1,11 @@
 //! Find or dispatch only the exact immutable source run.
 use super::super::{
     pr_budget::{self, Budget},
-    pr_github as github,
+    pr_ci, pr_github as github,
 };
 use super::{Source, delivery, lock, run_identity};
 use serde_json::Value;
-use std::{
-    path::Path,
-    process::{Command, Stdio},
-};
+use std::path::Path;
 
 pub(super) fn find_or_dispatch(
     source: &Source,
@@ -54,24 +51,14 @@ pub(super) fn find_or_dispatch(
     // Full source qualification is outside the publication workflow's ten-minute
     // preflight. Existing immutable R resumes above retain their original evidence.
     operator.verify()?;
-    let mut qualification = Command::new("node");
-    qualification
-        .args([
-            "tools/support/release/qualify_check/main.ts",
-            &candidate.repository,
-            &candidate.branch,
-            &candidate.head,
-            &source.cut,
-        ])
-        .current_dir(root)
-        .stdin(Stdio::null());
-    pr_budget::child_command(&mut qualification, budget)?;
-    let status = qualification
-        .status()
-        .map_err(|error| format!("Could not start exact-source Check qualification: {error}"))?;
-    if !status.success() {
-        return Err("Exact-source full Check qualification failed; no Release was dispatched. Preserve H and its pin.".into());
-    }
+    pr_ci::qualify_check(
+        &candidate.repository,
+        &candidate.branch,
+        &candidate.head,
+        &source.cut,
+        budget,
+        root,
+    )?;
     pr_budget::check(budget)?;
     operator.verify()?;
     let current = super::source(
