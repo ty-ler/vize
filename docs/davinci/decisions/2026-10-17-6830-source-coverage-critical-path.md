@@ -7,13 +7,13 @@ The successful source-coverage job in
 at `e2b883ee` took 28m33s including setup and cleanup. Its report step took
 27m30s. The complete workflow failed elsewhere after 28m41s.
 
-| Observed phase | Duration |
-| --- | ---: |
-| Cargo build, including linking | 9m18s |
-| Discover 1,219 binaries | 35.96s |
-| Execute 18,532 cases with eight slots | 13m52.468s |
-| LLVM profile merge and export | 3m33.330s |
-| Evidence uploads | Approximately 3s |
+| Observed phase                        |         Duration |
+| ------------------------------------- | ---------------: |
+| Cargo build, including linking        |            9m18s |
+| Discover 1,219 binaries               |           35.96s |
+| Execute 18,532 cases with eight slots |       13m52.468s |
+| LLVM profile merge and export         |        3m33.330s |
+| Evidence uploads                      | Approximately 3s |
 
 All cases passed; 44 were excluded by the existing configuration. The report
 contains 4,249 source files and 474,654/554,696 covered lines (85.570114%).
