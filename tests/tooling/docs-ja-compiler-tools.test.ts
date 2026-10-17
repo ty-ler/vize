@@ -23,7 +23,11 @@ void test("Japanese compiler guides retain all original complete examples and in
     const english = read(`docs/content/guide/${name}.md`);
     const fences = (source: string) =>
       [...source.matchAll(/^```[^\n]*\n[\s\S]*?^```$/gm)].map((match) => match[0]);
-    assert.deepEqual(fences(japanese), page.fences.map(currentConfigExample), `${name}: every original recipe stays whole`);
+    assert.deepEqual(
+      fences(japanese),
+      page.fences.map(currentConfigExample),
+      `${name}: every original recipe stays whole`,
+    );
     assert.deepEqual(
       fences(japanese),
       fences(english),
