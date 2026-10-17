@@ -13,6 +13,7 @@ type Step = {
   "continue-on-error"?: boolean;
 };
 type Job = {
+  name?: string;
   permissions?: Record<string, string>;
   if?: string;
   needs?: string[] | string;
