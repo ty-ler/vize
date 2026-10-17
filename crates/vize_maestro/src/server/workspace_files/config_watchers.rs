@@ -47,10 +47,6 @@ impl Shared {
     reason = "the root and its OS worker require a shared queue; Carton exports no Arc"
 )]
 type SharedQueue = std::sync::Arc<Shared>;
-#[expect(
-    clippy::disallowed_types,
-    reason = "the worker must not keep the root queue alive during RPCs"
-)]
 type WeakQueue = std::sync::Weak<Shared>;
 
 type TransportEnded = SharedFuture<BoxFuture<'static, ()>>;

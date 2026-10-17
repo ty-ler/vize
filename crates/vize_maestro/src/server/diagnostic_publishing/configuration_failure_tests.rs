@@ -192,7 +192,7 @@ fn missing_compiler_base_publishes_once_keeps_backend_and_repairs_after_watch() 
             assert_eq!(
                 send(
                     &mut service,
-                    json!({"jsonrpc":"2.0","id":2,"method":"shutdown","params":null})
+                    json!({"jsonrpc":"2.0","id":2,"method":"shutdown"})
                 )
                 .await
                 .unwrap(),

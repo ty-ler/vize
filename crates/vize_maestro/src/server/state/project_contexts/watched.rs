@@ -1,8 +1,6 @@
 //! Prepare configuration once per Vite root; install only valid full-key owners.
 use super::config_reload::{ProjectConfigChanges, known_config_events, reload_error};
-use super::{
-    Arc, Ordering, ProjectContextKey, ServerState, is_config_marker, paths::physical_path, registry,
-};
+use super::{Arc, Ordering, ServerState, is_config_marker, paths::physical_path, registry};
 use std::path::{Path, PathBuf};
 use tower_lsp::lsp_types::{FileEvent, Url};
 use vize_l0::{FxHashMap, FxHashSet};
