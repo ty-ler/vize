@@ -13,10 +13,12 @@ impl ServerState {
         &self,
         directory: &Path,
         loaded: &mut LoadedLspConfig,
+        before: Option<&vize_canon::ConfigurationObservations>,
+        needs_confirmation: bool,
     ) -> bool {
         let key = self.project_contexts.key.read().clone();
         let authored = loaded.clone();
-        let mut observations = vize_canon::ConfigurationObservations::default();
+        let mut observations = before.cloned().unwrap_or_default();
         let result = Self::prepare_tsconfig_config_snapshot(
             directory,
             key.as_ref(),
@@ -29,6 +31,8 @@ impl ServerState {
                 loaded,
                 observations,
                 result.is_ok(),
+                before,
+                needs_confirmation,
             ),
         );
         match result {

@@ -50,6 +50,52 @@ pub struct CompilerConfigurationAttempt {
 mod tests;
 
 impl CompilerConfigurationSnapshot {
+    /// Compare complete compiler authority, excluding only observation metadata.
+    /// Exhaustive destructuring makes added authority fields require a decision.
+    pub fn same_authority(&self, other: &Self) -> bool {
+        let Self {
+            project_root,
+            tsconfig_path,
+            flattened,
+            verbatim,
+            vue_options,
+            dependencies,
+            vue_target,
+            solution_shell,
+            observations: _,
+        } = self;
+        let Self {
+            project_root: other_root,
+            tsconfig_path: other_path,
+            flattened: other_flattened,
+            verbatim: other_verbatim,
+            vue_options: other_vue,
+            dependencies: other_dependencies,
+            vue_target: other_target,
+            solution_shell: other_shell,
+            observations: _,
+        } = other;
+        (
+            project_root,
+            tsconfig_path,
+            flattened,
+            verbatim,
+            vue_options,
+            dependencies,
+            vue_target,
+            solution_shell,
+        ) == (
+            other_root,
+            other_path,
+            other_flattened,
+            other_verbatim,
+            other_vue,
+            other_dependencies,
+            other_target,
+            other_shell,
+        )
+    }
+
     /// Capture with consistent per-file reads and resolution outcomes through
     /// the existing checked resolver, then validate every observed input once.
     /// Changes reject admission; this is not a multi-file filesystem transaction.

@@ -4,7 +4,7 @@
     reason = "registry cells retain their isolated native owner"
 )]
 use super::{
-    Arc, AtomicBool, LoadedLspConfig, Ordering, ProjectContextKey, RetainedConfiguration,
+    Arc, AtomicBool, ObservedLspConfig, Ordering, ProjectContextKey, RetainedConfiguration,
     ServerState,
 };
 #[cfg(feature = "experimental-source-navigation")]
@@ -18,7 +18,7 @@ type Initialization = Shared<BoxFuture<'static, Option<Arc<ServerState>>>>;
 
 pub(super) struct ProjectContext {
     key: ProjectContextKey,
-    snapshot: OnceLock<(LoadedLspConfig, bool)>,
+    snapshot: OnceLock<(ObservedLspConfig, bool)>,
     prepared: OnceLock<RetainedConfiguration>,
     state: OnceLock<Arc<ServerState>>,
     #[cfg(feature = "experimental-source-navigation")]
@@ -58,7 +58,7 @@ impl ProjectContext {
         }
         self.snapshot
             .get()
-            .map(|(snapshot, _)| snapshot.project.dependencies.clone())
+            .map(|(snapshot, _)| snapshot.loaded.project.dependencies.clone())
             .unwrap_or_default()
     }
 
@@ -77,8 +77,24 @@ impl ProjectContext {
             .map(|prepared| prepared.observation.clone())
     }
 
-    pub(super) fn provide_snapshot(&self, snapshot: LoadedLspConfig, failed: bool) {
+    pub(super) fn provide_snapshot(&self, snapshot: ObservedLspConfig, failed: bool) {
         let _ = self.snapshot.set((snapshot, failed));
+    }
+
+    pub(super) fn same_authority(&self, next: &RetainedConfiguration) -> bool {
+        if let Some(state) = self.initialized_state() {
+            return state.retains_configuration_authority(next);
+        }
+        self.prepared
+            .get()
+            .is_some_and(|previous| next.same_authority(&previous.applied, &previous.compiler))
+    }
+
+    pub(super) fn confirm_observation(&self, next: &RetainedConfiguration) {
+        if let Some(state) = self.initialized_state() {
+            *state.project_contexts.configuration_observation.write() =
+                Some(next.observation.clone());
+        }
     }
 
     pub(super) fn record_reload_failure(&self) {

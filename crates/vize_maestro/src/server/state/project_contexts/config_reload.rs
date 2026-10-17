@@ -1,6 +1,6 @@
 //! Await root-local admission before consuming a bounded config worker.
 use super::paths::physical_path;
-use super::{Arc, PathBuf, ProjectContextKey, ServerState, Url};
+use super::{Arc, Path, PathBuf, ProjectContextKey, ServerState, Url};
 use tower_lsp::lsp_types::{FileEvent, MessageType, ShowMessageParams};
 
 #[derive(Default)]
@@ -279,4 +279,28 @@ impl ServerState {
     ) -> ProjectConfigChanges {
         self.apply_project_config_events(changes, self.project_config_event_scope(changes))
     }
+}
+
+pub(super) fn known_config_events(
+    root: &Path,
+    dependencies: &[PathBuf],
+    markers: &[PathBuf],
+    changes: &[Url],
+) -> Vec<Url> {
+    let mut changed = changes
+        .iter()
+        .filter(|change| {
+            change.to_file_path().is_ok_and(|path| {
+                let path = physical_path(&path);
+                dependencies
+                    .iter()
+                    .any(|dependency| physical_path(dependency) == path)
+                    || (markers.contains(&path) && path.starts_with(physical_path(root)))
+            })
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    changed.sort();
+    changed.dedup();
+    changed
 }

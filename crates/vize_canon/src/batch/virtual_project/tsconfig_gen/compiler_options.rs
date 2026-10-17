@@ -71,7 +71,7 @@ struct ChainLoad<'a> {
 
 /// Flattened options plus the effective `baseUrl` (#3886).
 #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
-#[derive(Clone, Default)]
+#[derive(Clone, Default, PartialEq)]
 pub(in super::super) struct FlattenedCompilerOptions {
     pub(in super::super) options: Map<std::string::String, Value>,
     /// The effective `baseUrl` rebased the way `paths` targets are: relative to

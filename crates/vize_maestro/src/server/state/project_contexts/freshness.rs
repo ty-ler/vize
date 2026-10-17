@@ -8,6 +8,7 @@ use vize_canon::ConfigurationObservations;
 #[derive(Clone)]
 pub(in crate::server::state) struct ConfigurationObservation {
     observations: ConfigurationObservations,
+    before_inputs: ConfigurationObservations,
     vite_paths: Vec<PathBuf>,
     unverified: bool,
     retry_unobservable: bool,
@@ -21,9 +22,16 @@ impl ConfigurationObservation {
         loaded: &LoadedLspConfig,
         compiler: ConfigurationObservations,
         accepted: bool,
+        before: Option<&ConfigurationObservations>,
+        needs_confirmation: bool,
     ) -> Self {
         if !accepted {
             return Self::failed(raw, loaded, &compiler);
+        }
+        if let Some(before) = before {
+            let mut record = Self::checked(raw, loaded, before, &compiler);
+            record.unverified |= needs_confirmation;
+            return record;
         }
         let mut observations = compiler;
         observations.extend(&ConfigurationObservations::capture(
@@ -31,6 +39,7 @@ impl ConfigurationObservation {
         ));
         Self {
             observations,
+            before_inputs: ConfigurationObservations::default(),
             vite_paths: raw.watch_dependencies.clone(),
             // Public Vite bundling reports paths after evaluation, not consumed
             // bytes. Confirm these paths once at the next operation boundary.
@@ -61,6 +70,7 @@ impl ConfigurationObservation {
         ));
         Self {
             observations,
+            before_inputs: before.clone(),
             vite_paths: raw.watch_dependencies.clone(),
             unverified,
             retry_unobservable: false,
@@ -82,6 +92,7 @@ impl ConfigurationObservation {
             // A rejected attempt's end-state is only a suppression/repair
             // baseline. It never supplies compiler options or source authority.
             observations: ConfigurationObservations::capture(&paths),
+            before_inputs: observed.clone(),
             vite_paths: raw.watch_dependencies.clone(),
             // A rejection caused by changed consumed inputs must confirm the
             // now-stable revision, even when the end-state no longer changes.
@@ -103,8 +114,17 @@ impl ConfigurationObservation {
     pub(super) fn input_observations(&self) -> &ConfigurationObservations {
         &self.observations
     }
+    pub(super) fn before_observations(&self) -> ConfigurationObservations {
+        self.before_inputs.clone()
+    }
     pub(super) fn needs_confirmation(&self) -> bool {
         self.unverified
+    }
+    pub(super) fn stable_confirmation(&self) -> bool {
+        self.unverified
+            && !self.rejected
+            && !self.retry_unobservable
+            && self.observations.changed_paths().is_empty()
     }
     pub(super) fn require_confirmation(&mut self) {
         self.unverified = true;
@@ -125,6 +145,31 @@ impl ConfigurationObservation {
 }
 
 impl ServerState {
+    pub(super) fn retains_configuration_authority(&self, next: &RetainedConfiguration) -> bool {
+        let applied = self.project_contexts.applied_config.read();
+        let compiler = self.project_contexts.compiler_configuration.read();
+        applied
+            .as_ref()
+            .zip(compiler.as_ref())
+            .is_some_and(|(applied, compiler)| next.same_authority(applied, compiler))
+    }
+
+    pub(super) fn configuration_authority_matches(
+        &self,
+        key: &ProjectContextKey,
+        previous: Option<&Arc<super::registry::ProjectContext>>,
+        next: &RetainedConfiguration,
+    ) -> bool {
+        previous.map_or_else(
+            || {
+                key.tsconfig.is_none()
+                    && self.is_primary_boundary(&key.root)
+                    && self.retains_configuration_authority(next)
+            },
+            |previous| previous.same_authority(next),
+        )
+    }
+
     pub(super) fn prepare_configuration_attempt(
         key: &ProjectContextKey,
         raw: &LoadedLspConfig,
@@ -328,6 +373,7 @@ impl ServerState {
         let outcome = Self::project_background(move || {
             let _admission = admission;
             let mut affected = Vec::new();
+            let mut confirmations = Vec::new();
             let mut changes = Vec::new();
             for (key, record) in worker
                 .configuration_records()
@@ -336,6 +382,9 @@ impl ServerState {
             {
                 let changed = record.changes();
                 if !changed.is_empty() {
+                    if record.stable_confirmation() {
+                        confirmations.push(key.clone());
+                    }
                     affected.push(key);
                     changes.extend(
                         changed
@@ -366,7 +415,8 @@ impl ServerState {
             }
             affected.sort_by(|a, b| (&a.root, &a.tsconfig).cmp(&(&b.root, &b.tsconfig)));
             affected.dedup();
-            let scope = super::watched::ConfigEventScope::for_owners(affected);
+            let mut scope = super::watched::ConfigEventScope::for_owners(affected);
+            scope.confirmations = confirmations;
             // One checked attempt, with the same per-root admission/CAS route
             // as file watching. No synthetic protocol notification or retry loop.
             worker.apply_project_config_paths(&changes, scope)

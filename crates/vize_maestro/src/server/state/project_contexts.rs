@@ -18,7 +18,9 @@ use vize_l0::{FxHashMap, FxHashSet};
 
 use super::{
     LspFeatureConfig, ServerState,
-    config::host::{LoadedLspConfig, ProjectModel, load_lsp_config_snapshot},
+    config::host::{
+        LoadedLspConfig, ObservedLspConfig, ProjectModel, load_observed_lsp_config_snapshot,
+    },
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -42,6 +44,27 @@ pub(super) struct RetainedConfiguration {
     applied: LoadedLspConfig,
     compiler: Arc<vize_canon::CompilerConfigurationSnapshot>,
     observation: freshness::ConfigurationObservation,
+}
+
+impl RetainedConfiguration {
+    fn same_authority(
+        &self,
+        previous: &LoadedLspConfig,
+        compiler: &vize_canon::CompilerConfigurationSnapshot,
+    ) -> bool {
+        let (Some(current), Some(previous_policy)) = (
+            self.applied.project.document.evaluated_policy(),
+            previous.project.document.evaluated_policy(),
+        ) else {
+            return false;
+        };
+        current == previous_policy
+            && self.applied.source_path == previous.source_path
+            && self.applied.project.source_path == previous.project.source_path
+            && self.applied.project.project_root == previous.project.project_root
+            && self.applied.project.dependencies == previous.project.dependencies
+            && self.compiler.same_authority(compiler)
+    }
 }
 
 #[derive(Default)]
@@ -204,7 +227,7 @@ impl ServerState {
     fn new_project_state(
         self: &Arc<Self>,
         key: &ProjectContextKey,
-        snapshot: Option<&LoadedLspConfig>,
+        snapshot: Option<&ObservedLspConfig>,
         snapshot_failed: bool,
         prepared: Option<&RetainedConfiguration>,
     ) -> Arc<ServerState> {
@@ -227,8 +250,8 @@ impl ServerState {
         } else {
             let loaded = snapshot
                 .cloned()
-                .unwrap_or_else(|| load_lsp_config_snapshot(Some(root)));
-            state.apply_workspace_config_snapshot(root, loaded);
+                .unwrap_or_else(|| load_observed_lsp_config_snapshot(Some(root)));
+            state.apply_observed_workspace_config_snapshot(root, loaded);
         }
         if snapshot_failed {
             state

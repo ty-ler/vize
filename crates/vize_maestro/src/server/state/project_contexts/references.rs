@@ -1,6 +1,7 @@
 //! A referenced TS project owns its editor state even beside sibling configs.
 use super::{
-    Arc, Path, ProjectContextKey, ProjectModel, ServerState, Url, paths::physical_path, registry,
+    Arc, ObservedLspConfig, Path, ProjectContextKey, ProjectModel, ServerState, Url,
+    paths::physical_path, registry,
 };
 use vize_canon::batch::TsconfigSourceKind;
 
@@ -22,6 +23,19 @@ impl ServerState {
                 previous.remove_virtual_docs(uri);
             }
         }
+        let owner_key = state.project_contexts.key.read().clone();
+        let observation = self
+            .configuration_records()
+            .into_iter()
+            .find(|(key, _)| Some(key) == owner_key.as_ref())
+            .map(|(_, record)| record)
+            .or_else(|| {
+                state
+                    .project_contexts
+                    .configuration_observation
+                    .read()
+                    .clone()
+            });
         let context = {
             let mut contexts = self.project_contexts.contexts.lock();
             if state.project_context_retired() {
@@ -32,7 +46,16 @@ impl ServerState {
                 .or_insert_with(|| Arc::new(registry::ProjectContext::new(key.clone())))
                 .clone();
             context.provide_snapshot(
-                snapshot,
+                ObservedLspConfig {
+                    loaded: snapshot,
+                    before: observation
+                        .as_ref()
+                        .map(|record| record.before_observations())
+                        .unwrap_or_default(),
+                    needs_confirmation: observation
+                        .as_ref()
+                        .is_none_or(|record| record.needs_confirmation()),
+                },
                 state
                     .project_contexts
                     .config_reload_failed
