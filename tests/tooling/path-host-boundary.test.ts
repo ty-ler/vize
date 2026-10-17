@@ -74,7 +74,6 @@ test("Maestro path and source IO compose without admitting extra source IO", () 
     assert.match(withoutHostRuntimeReferences(actual + "\n" + extra, file), forbidden, extra);
 });
 
-
 test("editor admission regression hosts retain exact real canonicalizer boundaries", () => {
   for (const file of [
     "crates/vize_canon/src/corsa_bridge/vue_document/build/native_union_tests.rs",
