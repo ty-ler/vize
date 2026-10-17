@@ -83,13 +83,9 @@ impl ServerState {
             compiler = Arc::new(snapshot);
             // Authored Vite dialects, including Vue 3, take precedence.
             let source_owner = key.is_some_and(|key| key.tsconfig.is_some());
-            let solution_shell = !source_owner
-                && vize_canon::batch::TsconfigOwnershipCache::default()
-                    .project_paths(&selected)
-                    .len()
-                    > 1;
+            let solution_shell = !source_owner && compiler.is_solution_shell();
             if loaded.features.vue_version.is_none() && !solution_shell {
-                match vize_canon::snapshot_tsconfig_vue_target(root, &selected) {
+                match compiler.vue_target() {
                     Ok(Some(version)) => {
                         loaded.features.vue_version = Some(version);
                         loaded.features.type_checker_legacy_vue2 |= version.is_legacy();

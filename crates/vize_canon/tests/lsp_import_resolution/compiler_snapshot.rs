@@ -34,7 +34,9 @@ async fn assert_typed_hover(bridge: &CorsaBridge, source: &Path, text: &str, typ
             assert_eq!(markup.kind, "markdown");
             assert_eq!(
                 markup.value,
-                vize_l0::cstr!("```typescript\nconst value: {typ}\n```").as_str()
+                // Native 7.0.2 gitHead 2bd066d87f5bafd315be9f40889d0a60b9e58e0b:
+                // internal/ls/hover.go writeCode writes LF after the closing fence.
+                vize_l0::cstr!("```typescript\nconst value: {typ}\n```\n").as_str()
             );
         }
         other => panic!("expected complete native markdown, received {other:?}"),

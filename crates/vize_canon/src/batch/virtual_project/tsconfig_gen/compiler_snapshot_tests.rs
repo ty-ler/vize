@@ -152,3 +152,172 @@ fn same_directory_selected_reference_snapshots_stay_independent_and_recover() {
     );
     assert!(!project.checks_unknown_props());
 }
+
+#[test]
+fn concurrent_base_change_rejects_mixed_options_paths_and_vue_target() {
+    let root = tempfile::tempdir().unwrap();
+    let config = root.path().join("tsconfig.json");
+    let base = root.path().join("base.json");
+    std::fs::write(&config, r#"{"extends":"./base.json"}"#).unwrap();
+    std::fs::write(&base, r#"{"compilerOptions":{"strict":true,"baseUrl":"old","paths":{"@policy/*":["types/*"]}},"vueCompilerOptions":{"target":2.7,"strictTemplates":true}}"#).unwrap();
+    let changed = r#"{"compilerOptions":{"strict":false,"baseUrl":"new","paths":{"@policy/*":["types/*"]}},"vueCompilerOptions":{"target":3,"strictTemplates":false}}"#;
+    let barrier = std::sync::Barrier::new(2);
+    std::thread::scope(|scope| {
+        let writer = scope.spawn(|| {
+            barrier.wait();
+            std::fs::write(&base, changed).unwrap();
+            barrier.wait();
+        });
+        let result = CompilerConfigurationSnapshot::capture_with_observer(
+            root.path(),
+            Some(&config),
+            || {
+                barrier.wait();
+                barrier.wait();
+            },
+        );
+        assert!(
+            vize_carton::cstr!("{}", result.err().unwrap())
+                .contains("configuration changed while it was being read")
+        );
+        writer.join().unwrap();
+    });
+    let fresh = CompilerConfigurationSnapshot::capture(root.path(), Some(&config)).unwrap();
+    assert_eq!(fresh.flattened.options["strict"], json!(false));
+    assert_eq!(fresh.verbatim["strict"], json!(false));
+    assert_eq!(
+        fresh.flattened.options["paths"]["@policy/*"],
+        json!(["new/types/*"])
+    );
+    assert_eq!(fresh.vue_options["strictTemplates"], json!(false));
+    assert_eq!(
+        fresh.vue_target().unwrap(),
+        Some(vize_carton::config::VueVersion::V3)
+    );
+}
+
+#[test]
+fn package_manifest_retarget_rejects_byte_identical_configs_with_different_path_anchors() {
+    let root = tempfile::tempdir().unwrap();
+    let package = root.path().join("node_modules/policy");
+    std::fs::create_dir_all(package.join("first")).unwrap();
+    std::fs::create_dir_all(package.join("second")).unwrap();
+    let manifest = package.join("package.json");
+    std::fs::write(&manifest, r#"{"tsconfig":"first/base.json"}"#).unwrap();
+    let policy = r#"{"compilerOptions":{"baseUrl":".","paths":{"@policy/*":["types/*"]}}}"#;
+    for directory in ["first", "second"] {
+        std::fs::write(package.join(directory).join("base.json"), policy).unwrap();
+    }
+    let config = root.path().join("tsconfig.json");
+    std::fs::write(&config, r#"{"extends":"policy"}"#).unwrap();
+    let result =
+        CompilerConfigurationSnapshot::capture_with_observer(root.path(), Some(&config), || {
+            std::fs::write(&manifest, r#"{"tsconfig":"second/base.json"}"#).unwrap();
+        });
+    assert!(
+        vize_carton::cstr!("{}", result.err().unwrap())
+            .contains("configuration changed while it was being read")
+    );
+    let fresh = CompilerConfigurationSnapshot::capture(root.path(), Some(&config)).unwrap();
+    assert_eq!(
+        fresh.flattened.options["paths"]["@policy/*"],
+        json!(["node_modules/policy/second/types/*"])
+    );
+    assert!(fresh.dependencies().contains(&manifest));
+}
+
+#[test]
+#[cfg(unix)]
+fn package_link_retarget_rejects_identical_config_bytes_at_a_new_real_anchor() {
+    let root = tempfile::tempdir().unwrap();
+    let modules = root.path().join("node_modules");
+    std::fs::create_dir(&modules).unwrap();
+    let policy = r#"{"compilerOptions":{"baseUrl":".","paths":{"@policy/*":["types/*"]}}}"#;
+    for directory in ["first", "second"] {
+        let package = root.path().join(directory);
+        std::fs::create_dir(&package).unwrap();
+        std::fs::write(package.join("tsconfig.json"), policy).unwrap();
+    }
+    let link = modules.join("policy");
+    std::os::unix::fs::symlink(root.path().join("first"), &link).unwrap();
+    let config = root.path().join("tsconfig.json");
+    std::fs::write(&config, r#"{"extends":"policy"}"#).unwrap();
+    let result =
+        CompilerConfigurationSnapshot::capture_with_observer(root.path(), Some(&config), || {
+            std::fs::remove_file(&link).unwrap();
+            std::os::unix::fs::symlink(root.path().join("second"), &link).unwrap();
+        });
+    assert!(
+        vize_carton::cstr!("{}", result.err().unwrap())
+            .contains("configuration changed while it was being read")
+    );
+    let fresh = CompilerConfigurationSnapshot::capture(root.path(), Some(&config)).unwrap();
+    assert_eq!(
+        fresh.flattened.options["paths"]["@policy/*"],
+        json!(["second/types/*"])
+    );
+    assert!(fresh.dependencies().contains(&link));
+}
+
+#[test]
+fn higher_priority_extends_candidate_creation_rejects_the_previous_resolution() {
+    let root = tempfile::tempdir().unwrap();
+    let config = root.path().join("tsconfig.json");
+    std::fs::write(&config, r#"{"extends":"./policy"}"#).unwrap();
+    std::fs::write(
+        root.path().join("policy.json"),
+        r#"{"compilerOptions":{"strict":true}}"#,
+    )
+    .unwrap();
+    let preferred = root.path().join("policy");
+    let result =
+        CompilerConfigurationSnapshot::capture_with_observer(root.path(), Some(&config), || {
+            std::fs::write(&preferred, r#"{"compilerOptions":{"strict":false}}"#).unwrap();
+        });
+    assert!(
+        vize_carton::cstr!("{}", result.err().unwrap())
+            .contains("configuration changed while it was being read")
+    );
+    let fresh = CompilerConfigurationSnapshot::capture(root.path(), Some(&config)).unwrap();
+    assert_eq!(fresh.flattened.options["strict"], json!(false));
+    assert_eq!(fresh.verbatim["strict"], json!(false));
+}
+
+#[test]
+fn captured_auto_vue_target_and_solution_shell_do_not_reread_live_configuration() {
+    let root = tempfile::tempdir().unwrap();
+    let vue = root.path().join("node_modules/vue");
+    std::fs::create_dir_all(&vue).unwrap();
+    let manifest = vue.join("package.json");
+    std::fs::write(&manifest, r#"{"name":"vue","version":"2.7.16"}"#).unwrap();
+    let config = root.path().join("tsconfig.json");
+    std::fs::write(
+        &config,
+        r#"{"vueCompilerOptions":{"target":"auto"},"references":[{"path":"./app.json"}]}"#,
+    )
+    .unwrap();
+    let referenced = root.path().join("app.json");
+    std::fs::write(&referenced, "{}").unwrap();
+    let captured = CompilerConfigurationSnapshot::capture(root.path(), Some(&config)).unwrap();
+    assert_eq!(
+        captured.vue_target().unwrap(),
+        Some(vize_carton::config::VueVersion::V2_7)
+    );
+    assert!(captured.is_solution_shell());
+    assert!(captured.dependencies().contains(&manifest));
+    assert!(captured.dependencies().contains(&referenced));
+    std::fs::write(&manifest, r#"{"name":"vue","version":"3.5.0"}"#).unwrap();
+    std::fs::write(&config, r#"{"vueCompilerOptions":{"target":"auto"}}"#).unwrap();
+    std::fs::remove_file(&referenced).unwrap();
+    assert_eq!(
+        captured.vue_target().unwrap(),
+        Some(vize_carton::config::VueVersion::V2_7)
+    );
+    assert!(captured.is_solution_shell());
+    let repaired = CompilerConfigurationSnapshot::capture(root.path(), Some(&config)).unwrap();
+    assert_eq!(
+        repaired.vue_target().unwrap(),
+        Some(vize_carton::config::VueVersion::V3)
+    );
+    assert!(!repaired.is_solution_shell());
+}

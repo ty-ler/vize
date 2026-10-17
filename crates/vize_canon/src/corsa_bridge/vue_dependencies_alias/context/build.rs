@@ -67,8 +67,13 @@ pub(super) fn build(
     // compiler options for every package beneath it. Anchor the source to its
     // nearest config before resolving a solution-style project's references.
     if let Some(snapshot) = environment.editor_session.compiler_configuration() {
+        #[expect(
+            clippy::disallowed_types,
+            reason = "native rebuilds retain the admitted owner's shared immutable compiler authority"
+        )]
+        let retained = std::sync::Arc::clone(snapshot);
         project
-            .set_compiler_configuration_snapshot(std::sync::Arc::clone(snapshot))
+            .set_compiler_configuration_snapshot(retained)
             .map_err(bridge_error)?;
     } else {
         if let Some(tsconfig) = configured_tsconfig.or(discovered_config) {

@@ -341,19 +341,30 @@ impl VirtualProject {
         if let Some(snapshot) = self.compiler_configuration.as_ref() {
             return snapshot.dependencies().to_vec();
         }
+        self.governing_config_paths_with_inputs(None)
+    }
+
+    pub(super) fn governing_config_paths_with_inputs(
+        &self,
+        inputs: Option<&super::tsconfig_gen::compiler_inputs::CompilerInputs>,
+    ) -> Vec<PathBuf> {
         let Some(anchored) = self.resolved_tsconfig_path() else {
             return Vec::new();
         };
         let mut config_roots = vec![anchored.clone()];
-        config_roots.extend(super::tsconfig_gen::references::referenced_project_configs(
-            &anchored,
-        ));
+        config_roots.extend(
+            super::tsconfig_gen::references::referenced_project_configs_with_inputs(
+                &anchored, inputs,
+            ),
+        );
         let mut paths = config_roots.clone();
         for config in config_roots {
-            if let Ok(flattened) = self.load_compiler_options_flattened(Some(&config)) {
+            if let Ok(flattened) =
+                self.load_compiler_options_flattened_with_inputs(Some(&config), inputs)
+            {
                 paths.extend(flattened.input_paths);
             }
-            paths.extend(self.vue_target_manifest_path(&config));
+            paths.extend(self.vue_target_manifest_path_with_inputs(&config, inputs));
         }
         paths.sort();
         paths.dedup();
