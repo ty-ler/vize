@@ -1,12 +1,12 @@
 name: Config dependency source qualification
-run-name: Config dependency laws at 008265d780
+run-name: Config dependency laws at 4002bc8f7d
 on:
   push:
     branches: [ci/config-dependency-source-qualification]
 permissions:
   contents: read
 env:
-  SOURCE_SHA: 008265d780e0113f82b8ad3bd7fc5a253b0ae1c5
+  SOURCE_SHA: 4002bc8f7d3362aec4102e429e16fe3ef2635454
   CARGO_BUILD_JOBS: "12"
   CARGO_TERM_COLOR: always
   RUST_TEST_THREADS: "4"
