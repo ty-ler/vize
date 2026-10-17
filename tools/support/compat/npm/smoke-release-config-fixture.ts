@@ -11,6 +11,50 @@ export const CONFIG_SOURCES = {
     '<script setup lang="ts">\nconst value: string = null;\n</script>\n<template><p>{{ value }}</p></template>\n',
 };
 
+// Both dependencies still exist; these are syntax errors, not missing-file aliases.
+export const MALFORMED_CONFIG_DEPENDENCIES = {
+  "vue-settings.ts": "export default { formatter: { singleQuote: true },\n",
+  "tsconfig.base.json": '{"compilerOptions":{"strictNullChecks":\n',
+} as const;
+
+// Whole authored inputs/packets from editors/vim/test/config_project_spec.vim.
+export const REFERENCE_SOURCE = '<template>\n<div :title.sync="title" />\n</template>\n';
+export const REFERENCE_DIRTY_SOURCE = REFERENCE_SOURCE.replace('"title"', '"draft"');
+export const REFERENCE_POLICY =
+  'export default { languageServer: { lint:true, typecheck:false, ecosystem:false, hover:false, formatting:false }, linter:{ preset:"incremental", rules:{ "vue/no-deprecated-v-bind-sync":"error" } } };';
+export const REFERENCE_DIAGNOSTICS = [
+  {
+    code: "vue/no-deprecated-v-bind-sync",
+    codeDescription: { href: "https://eslint.vuejs.org/rules/no-deprecated-v-bind-sync.html" },
+    message:
+      'the .sync modifier on v-bind was removed in Vue 3; use v-model:<prop> instead\n\nHelp: Vue 3 removed the .sync modifier and folded its two-way binding into argumented v-model. Replace it with v-model:<prop> (e.g. :title.sync="title" -> v-model:title="title").',
+    range: { start: { line: 1, character: 5 }, end: { line: 1, character: 24 } },
+    severity: 1,
+    source: "vize/lint",
+  },
+];
+export const REFERENCE_FORMATTED = [
+  {
+    newText: '<template>\n  <div :title.sync="draft" />\n</template>\n',
+    range: { start: { line: 0, character: 0 }, end: { line: 3, character: 0 } },
+  },
+];
+
+export function referenceWorkspaceFiles(): Record<string, string> {
+  return {
+    "vite.config.ts": 'import vue from "./vue-policy.mjs"; export default { vue };\n',
+    "vue-policy.mjs": `${REFERENCE_POLICY}\n`,
+    "tsconfig.json":
+      '{"files":[],"references":[{"path":"./tsconfig.legacy.json"},{"path":"./tsconfig.modern.json"}]}\n',
+    "tsconfig.legacy.json":
+      '{"include":["src/legacy/**/*.vue"],"vueCompilerOptions":{"target":2.7}}\n',
+    "tsconfig.modern.json":
+      '{"include":["src/modern/**/*.vue"],"vueCompilerOptions":{"target":3.5}}\n',
+    "src/legacy/App.vue": REFERENCE_SOURCE,
+    "src/modern/App.vue": REFERENCE_SOURCE,
+  };
+}
+
 export const SINGLE_FORMATTED =
   "<script setup>\nconst message = 'hello';\n</script>\n\n<template><p>{{ message }}</p></template>\n";
 export const DOUBLE_FORMATTED =
