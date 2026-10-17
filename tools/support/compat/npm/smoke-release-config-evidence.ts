@@ -102,7 +102,7 @@ export function runConfigHarness(
     signal: result.signal,
     error: result.error
       ? {
-          ...result.error,
+          ...Object.fromEntries(Object.entries(result.error)),
           name: result.error.name,
           message: result.error.message,
           stack: result.error.stack,

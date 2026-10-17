@@ -117,8 +117,17 @@ void test("config harness records spawn failure and closes both output descripto
   });
   try {
     const executable = path.join(directory, "absent executable");
+    let failure: Error | undefined;
     assert.throws(
-      () => runConfigHarness(executable, ["exact", "argv"], { cwd: directory, env: {}, directory }),
+      () => {
+        try {
+          runConfigHarness(executable, ["exact", "argv"], { cwd: directory, env: {}, directory });
+        } catch (error) {
+          assert.ok(error instanceof Error);
+          failure = error;
+          throw error;
+        }
+      },
       { code: "ENOENT" },
     );
     assert.ok(descriptors.length >= 2);
@@ -130,6 +139,13 @@ void test("config harness records spawn failure and closes both output descripto
     assert.equal(receipt.status, null);
     assert.equal(receipt.signal, null);
     assert.equal(receipt.error.code, "ENOENT");
+    assert.ok(failure);
+    assert.deepEqual(receipt.error, {
+      ...Object.fromEntries(Object.entries(failure)),
+      name: failure.name,
+      message: failure.message,
+      stack: failure.stack,
+    });
     for (const stream of [receipt.stdout, receipt.stderr]) {
       assert.equal(stream.bytes, 0);
       assert.deepEqual(fs.readFileSync(stream.path), Buffer.alloc(0));
