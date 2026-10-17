@@ -1,0 +1,67 @@
+name: Config dependency source qualification
+run-name: Config dependency laws at 5089dd1ad6
+on:
+  push:
+    branches: [ci/config-dependency-source-qualification]
+permissions:
+  contents: read
+env:
+  SOURCE_SHA: 5089dd1ad6dae7fbf6fc9efb33f202f8824f6f1e
+  CARGO_BUILD_JOBS: "12"
+  CARGO_TERM_COLOR: always
+  RUST_TEST_THREADS: "4"
+jobs:
+  source-laws:
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          persist-credentials: false
+      - name: Retain exact source identity before executing its original laws
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          mkdir -p target/config-dependency-qualification
+          git rev-parse HEAD HEAD^{tree} > target/config-dependency-qualification/source.txt
+          git ls-files -s > target/config-dependency-qualification/source-index.txt
+          sha256sum Cargo.lock crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs crates/vize_canon/src/batch/virtual_project/tests/editor_configuration_graph.rs > target/config-dependency-qualification/inputs.sha256
+      - uses: ./.github/actions/cache-vp-bootstrap
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: true
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+        with:
+          toolchain: "1.99.1"
+          components: clippy
+      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
+        with:
+          wild-version: "0.9.0"
+      - uses: ./.github/actions/setup-rust-sticky-cache
+        with:
+          key: nextest-ci
+          cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
+      - name: Run all three original and four added configuration graph laws
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_canon --lib editor_configuration_graph_tests -- --nocapture 2>&1 | tee target/config-dependency-qualification/laws.log
+          grep -F '7 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/laws.log
+      - name: Require Canon all-target Clippy without warnings
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo clippy --locked --profile ci -p vize_canon --all-targets -- -D warnings -D clippy::wildcard_imports 2>&1 | tee target/config-dependency-qualification/clippy.log
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test -z "$(git diff --name-only HEAD)"
+          sha256sum --check target/config-dependency-qualification/inputs.sha256
+      - name: Preserve complete logs and exact source custody
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: config-dependency-source-${{ env.SOURCE_SHA }}-${{ github.run_id }}
+          path: target/config-dependency-qualification/
+          if-no-files-found: error
+          retention-days: 7
