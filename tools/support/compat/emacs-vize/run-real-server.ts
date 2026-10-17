@@ -48,6 +48,15 @@ type Observation = {
   authoredConfig: { file: string; source: string } | null;
 };
 
+function shellQuote(value: string) {
+  return `'${value.replaceAll("'", "'\\''")}'`;
+}
+
+/** Keep the original pipe before POSIX asynchronous-list stdin defaults apply. */
+export function nativeProcessWrapper(server: string, pidFile: string) {
+  return `#!/bin/sh\nexec 3<&0\n${shellQuote(server)} "$@" <&3 &\nnative=$!\nexec 3<&-\nprintf '%s\\n' "$native" > ${shellQuote(pidFile)}\nwait "$native"\n`;
+}
+
 function prepareWorkspace(workspace: string) {
   fs.mkdirSync(workspace, { recursive: true });
   fs.writeFileSync(path.join(workspace, "package.json"), '{"private":true}\n');
@@ -117,20 +126,15 @@ async function main() {
   prepareWorkspace(workspace);
   const bin = path.join(session, "bin");
   fs.mkdirSync(bin);
-  const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
   const nativePidFile = path.join(output, "native.pid");
   fs.rmSync(nativePidFile, { force: true });
   const nativeWrapper = path.join(bin, "native-server");
-  fs.writeFileSync(
-    nativeWrapper,
-    `#!/bin/sh\n${quote(server)} "$@" <&0 &\nnative=$!\nprintf '%s\\n' "$native" > ${quote(nativePidFile)}\nwait "$native"\n`,
-    { mode: 0o755 },
-  );
+  fs.writeFileSync(nativeWrapper, nativeProcessWrapper(server, nativePidFile), { mode: 0o755 });
   fs.writeFileSync(
     path.join(bin, "vize"),
-    `#!/bin/sh\nexec ${quote(process.execPath)} ${quote(
+    `#!/bin/sh\nexec ${shellQuote(process.execPath)} ${shellQuote(
       path.join(repository, "tests/editor-conformance/lsp-tap.mjs"),
-    )} ${quote(nativeWrapper)} "$@"\n`,
+    )} ${shellQuote(nativeWrapper)} "$@"\n`,
     { mode: 0o755 },
   );
   const transcript = path.join(output, "transcript.jsonl");
@@ -348,4 +352,6 @@ async function main() {
   }
 }
 
-await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main();
+}

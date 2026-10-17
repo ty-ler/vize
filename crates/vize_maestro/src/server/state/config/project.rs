@@ -23,7 +23,7 @@ impl ServerState {
         }
     }
 
-    pub(super) fn prepare_tsconfig_config_snapshot(
+    pub(in crate::server::state) fn prepare_tsconfig_config_snapshot(
         directory: &Path,
         key: Option<&super::super::project_contexts::ProjectContextKey>,
         loaded: &mut LoadedLspConfig,
