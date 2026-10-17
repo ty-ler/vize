@@ -57,10 +57,15 @@ test("source planning uses Node and offline metadata before selecting affected p
     (step) => step.name === "Test CI selection when its inputs change",
   );
   assert.equal(ciSelection?.if, "${{ steps.plan.outputs.tooling == 'true' }}");
-  assert.equal(
-    ciSelection?.run,
-    "node --test tests/tooling/ci-iteration-plans.test.ts tests/tooling/pr-required-rust.test.ts tests/tooling/rust-test-cohorts.test.ts tests/tooling/rust-test-archive.test.mjs",
-  );
+  assert.deepEqual(ciSelection?.run?.trim().split(/\s+/), [
+    "node",
+    "--test",
+    "tests/tooling/ci-iteration-plans.test.ts",
+    "tests/tooling/pr-required-rust.test.ts",
+    "tests/tooling/rust-test-cohorts.test.ts",
+    "tests/tooling/rust-test-archive.test.mjs",
+    "tests/tooling/rust-build-evidence.test.mjs",
+  ]);
 });
 
 test("affected native runtime proofs execute independently of the scheduled tooling campaign", () => {

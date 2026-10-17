@@ -148,6 +148,7 @@ await test("actual PR shell keeps selected arguments, owned stdout capture and e
         "run-affected-rust.ts",
         "run-rust-test-cohort.ts",
         "rust-test-cohorts.ts",
+        "rust-test-default-features.ts",
         "plan-affected-rust.ts",
         "plan-source-checks.ts",
         "rust-differential-lanes.ts",

@@ -41,6 +41,7 @@ const installedHttpsContracts = [
 
 void test("release contract inventories retain complete imports or explicit broad runtime inputs", () => {
   const historicalUnscoped = [
+    "tests/tooling/release/legacy-check-qualification.test.ts",
     "tests/tooling/release/release-guest-locks.test.ts",
     "tests/tooling/release/release-integration-catalog.test.ts",
     "tests/tooling/release/release-preflight-full-js.test.ts",

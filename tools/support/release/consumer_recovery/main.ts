@@ -12,16 +12,18 @@ import {
   files,
   verifiedRecovery,
   verifyIntegration,
+  verifyStoredIntegration,
   type Original,
 } from "./custody.ts";
 import { verifyConsumer } from "./consumer.ts";
 import { assertOracleFiles } from "./oracles.ts";
 import { revalidatePublicArchives, type InstalledArchive } from "./archive.ts";
-import { sameIntegrationSnapshot, sameOriginalSnapshot } from "./snapshots.ts";
+import { sameOriginalSnapshot } from "./snapshots.ts";
 import {
   assertFresh,
   consumerAttempt,
   identity,
+  integrationIdentity,
   object,
   positive,
   repository,
@@ -70,7 +72,9 @@ if (operation === "prepare" || operation === "finalize") {
     const plan = derivePublicationPlan(root, expected.head);
     const publication = await verifyPublication(plan, expected, admission(original));
     save(output, "publication-before.json", publication);
-    save(output, "integration.json", verifyIntegration(publication.github, expected));
+    const integration = verifyIntegration(publication.github, expected);
+    integrationIdentity(integration);
+    save(output, "integration.json", integration);
     console.log("Known frozen consumer fixture admitted; original Release remains failed.");
   } else {
     const original = load(path.join(output, "original.json")) as Original;
@@ -107,9 +111,17 @@ if (operation === "prepare" || operation === "finalize") {
       admission(live),
     );
     save(output, "publication-after.json", publication);
-    sameIntegrationSnapshot(
-      verifyIntegration(publication.github, expected),
-      load(path.join(output, "integration.json")),
+    const integration = verifyIntegration(publication.github, expected);
+    save(output, "integration-after.json", integration);
+    same(
+      integrationIdentity(integration),
+      integrationIdentity(
+        verifyStoredIntegration(
+          object(publication.github),
+          expected,
+          load(path.join(output, "integration.json")),
+        ),
+      ),
       "original signed integration changed",
     );
     const receipt = {
@@ -155,6 +167,11 @@ if (operation === "prepare" || operation === "finalize") {
   const proof = await verifiedRecovery(expected, source.recoveryRun);
   const publication = await verifyPublication(derivePublicationPlan(root, source.head), source);
   const integration = verifyIntegration(publication.github, expected);
+  same(
+    integrationIdentity(integration),
+    integrationIdentity(proof.integration),
+    "delivery changed during verification",
+  );
   assert.ok(destination, "verification evidence output required");
   mkdirSync(destination, { recursive: false });
   save(destination, "verified.json", {
