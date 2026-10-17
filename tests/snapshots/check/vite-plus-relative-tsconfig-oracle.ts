@@ -281,7 +281,7 @@ void test("unconfigured no-match and intentionally disabled checking keep the ex
     assert.equal(disabled.stdout, "");
     assert.equal(
       disabled.stderr,
-      "[vize] Skipping check because typeChecker.enabled is false in vize.config.\n",
+      "[vize] Skipping check because typeChecker.enabled is false in vite.config.* vue settings.\n",
     );
     assert.equal(disabled.report, null);
     assert.deepEqual(await oracle.disabledFrontend(), { status: 0, launches: 0 });
