@@ -7,41 +7,7 @@ use std::path::{Path, PathBuf};
 use tower_lsp::lsp_types::{FileEvent, Url};
 use vize_l0::{FxHashMap, FxHashSet};
 
-pub(super) struct ConfigEventScope {
-    pub(super) affected: Vec<ProjectContextKey>,
-    pub(super) confirmations: Vec<(ProjectContextKey, vize_canon::ConfigurationObservations)>,
-    marker_paths: Vec<PathBuf>,
-}
-
-impl ConfigEventScope {
-    pub(super) fn for_owners(affected: Vec<ProjectContextKey>) -> Self {
-        Self {
-            affected,
-            confirmations: Vec::new(),
-            marker_paths: Vec::new(),
-        }
-    }
-
-    pub(super) fn for_topology(
-        affected: Vec<ProjectContextKey>,
-        marker_paths: Vec<PathBuf>,
-    ) -> Self {
-        Self {
-            affected,
-            confirmations: Vec::new(),
-            marker_paths,
-        }
-    }
-
-    pub(super) fn retain_root(&mut self, root: &Path) {
-        self.affected
-            .retain(|key| physical_path(&key.root) == physical_path(root));
-        self.confirmations
-            .retain(|(key, _)| physical_path(&key.root) == physical_path(root));
-        self.marker_paths
-            .retain(|path| path.starts_with(physical_path(root)));
-    }
-}
+pub(super) use super::config_reload::ConfigEventScope;
 
 impl ServerState {
     pub(super) fn project_config_event_scope(&self, changes: &[FileEvent]) -> ConfigEventScope {
@@ -103,12 +69,18 @@ impl ServerState {
         {
             primary_dependencies.extend(record.paths());
         }
-        let contexts = self.project_contexts.contexts.lock();
+        let contexts = self
+            .project_contexts
+            .contexts
+            .lock()
+            .iter()
+            .map(|(key, context)| (key.clone(), context.clone()))
+            .collect::<Vec<_>>();
         let mut tracked = primary_dependencies
             .iter()
             .map(|path| physical_path(path))
             .collect::<Vec<_>>();
-        for context in contexts.values() {
+        for (_, context) in &contexts {
             tracked.extend(
                 context
                     .config_dependencies()
@@ -119,7 +91,28 @@ impl ServerState {
         let untracked = marker_paths
             .iter()
             .filter(|path| !tracked.contains(path))
+            .map(|path| {
+                (
+                    path.clone(),
+                    super::paths::document_context_root(path, &roots),
+                )
+            })
             .collect::<Vec<_>>();
+        // A new boundary for an open buffer checks its own policy first. Its
+        // ancestor's unchanged policy must survive rejection in another worker.
+        let new_boundaries = untracked
+            .iter()
+            .filter_map(|(_, root)| root.as_ref())
+            .filter(|root| {
+                self.documents.iter().any(|document| {
+                    document
+                        .key()
+                        .to_file_path()
+                        .is_ok_and(|path| physical_path(&path).starts_with(physical_path(root)))
+                })
+            })
+            .cloned()
+            .collect::<FxHashSet<_>>();
         let mut affected = contexts
             .iter()
             .filter(|(key, context)| {
@@ -127,9 +120,12 @@ impl ServerState {
                     || observations
                         .get(key)
                         .is_some_and(|record| depends(&record.paths()))
-                    || untracked
-                        .iter()
-                        .any(|path| path.starts_with(physical_path(&key.root)))
+                    || untracked.iter().any(|(path, nearest)| {
+                        path.starts_with(physical_path(&key.root))
+                            && nearest.as_ref().is_none_or(|root| {
+                                root == &key.root || !new_boundaries.contains(root)
+                            })
+                    })
             })
             .map(|(key, _)| key.clone())
             .collect::<Vec<_>>();
@@ -174,18 +170,10 @@ impl ServerState {
                     .cloned(),
             );
         }
-        for path in untracked {
-            if let Some(root) = super::paths::document_context_root(path, &roots)
-                && !affected.iter().any(|key| {
-                    key.tsconfig.is_none() && physical_path(&key.root) == physical_path(&root)
-                })
-                && self.documents.iter().any(|document| {
-                    document
-                        .key()
-                        .to_file_path()
-                        .is_ok_and(|path| physical_path(&path).starts_with(physical_path(&root)))
-                })
-            {
+        for root in new_boundaries {
+            if !affected.iter().any(|key| {
+                key.tsconfig.is_none() && physical_path(&key.root) == physical_path(&root)
+            }) {
                 affected.push(root.into());
             }
         }

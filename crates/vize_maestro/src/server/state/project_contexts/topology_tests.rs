@@ -170,11 +170,16 @@ fn rejected_changed_input_baselines_confirm_now_stable_initial_and_reload_revisi
 fn watched_marker_transfers_to_checked_full_key_without_reloading_or_retiring_siblings() {
     use tower_lsp::lsp_types::{FileChangeType, FileEvent};
 
-    for referenced in [false, true] {
+    for (primary, referenced) in [(true, false), (true, true), (false, false), (false, true)] {
         let fixture = tempfile::tempdir().unwrap();
-        let root = fixture.path();
+        let workspace = fixture.path();
+        let root = if primary {
+            workspace.to_path_buf()
+        } else {
+            workspace.join("packages/a")
+        };
         let nested = root.join("nested");
-        let sibling_root = root.join("sibling");
+        let sibling_root = workspace.join("sibling");
         std::fs::create_dir_all(nested.join("src")).unwrap();
         std::fs::create_dir_all(&sibling_root).unwrap();
         let source = "<template>unsaved 😀</template>";
@@ -184,9 +189,12 @@ fn watched_marker_transfers_to_checked_full_key_without_reloading_or_retiring_si
         for uri in [&probe, &control, &sibling] {
             std::fs::write(uri.to_file_path().unwrap(), "<template>disk</template>").unwrap();
         }
+        std::fs::write(workspace.join("package.json"), "{}").unwrap();
         std::fs::write(root.join("package.json"), "{}").unwrap();
         let primary_counter = root.join("evaluations.txt");
         let nested_counter = nested.join("evaluations.txt");
+        std::fs::write(&primary_counter, "").unwrap();
+        std::fs::write(&nested_counter, "").unwrap();
         let config_source = |hover| {
             vize_l0::cstr!(
                 "import {{appendFileSync}} from 'node:fs'; export default () => {{ appendFileSync(new URL('./evaluations.txt', import.meta.url), 'x'); return {{vue:{{languageServer:{{hover:{hover}}}}}}}; }};"
@@ -204,9 +212,9 @@ fn watched_marker_transfers_to_checked_full_key_without_reloading_or_retiring_si
         )
         .unwrap();
         let state = Arc::new(ServerState::new());
-        state.set_workspace_root(root.to_path_buf());
-        state.load_workspace_config(root);
-        state.apply_initialize_workspace_folders(None, Some(root));
+        state.set_workspace_root(workspace.to_path_buf());
+        state.load_workspace_config(workspace);
+        state.apply_initialize_workspace_folders(None, Some(workspace));
         for uri in [&probe, &control, &sibling] {
             state
                 .documents
@@ -216,7 +224,10 @@ fn watched_marker_transfers_to_checked_full_key_without_reloading_or_retiring_si
                 .unwrap_or_else(|| state.clone());
             owner.update_virtual_docs(uri, source);
         }
-        let previous = state.clone();
+        let previous = state
+            .document_project_state(&probe)
+            .unwrap_or_else(|| state.clone());
+        let previous_stamp = previous.corsa_request_stamp();
         let sibling_owner = state.document_project_state(&sibling).unwrap();
         let sibling_stamp = sibling_owner.corsa_request_stamp();
         assert!(previous.get_virtual_docs(&probe).is_some());
@@ -237,8 +248,16 @@ fn watched_marker_transfers_to_checked_full_key_without_reloading_or_retiring_si
             uri: Url::from_file_path(&marker).unwrap(),
             typ,
         };
-        let rejected =
-            state.observe_project_config_events_checked(&[event(FileChangeType::CREATED)]);
+        assert_eq!(
+            state
+                .project_config_event_scope(&[event(FileChangeType::CREATED)])
+                .affected,
+            vec![ProjectContextKey::from(nested.clone())],
+            "the parent is excluded before async work is split by root",
+        );
+        let rejected = block_on(
+            state.observe_project_config_events_async(vec![event(FileChangeType::CREATED)]),
+        );
         assert_eq!(rejected.errors.len(), 1);
         assert_eq!(
             state.project_contexts.routes.get(&probe).unwrap().root,
@@ -246,11 +265,22 @@ fn watched_marker_transfers_to_checked_full_key_without_reloading_or_retiring_si
         );
         assert!(!previous.project_context_retired());
         assert!(previous.get_virtual_docs(&probe).is_some());
-        assert!(!nested_counter.exists());
+        assert!(
+            previous_stamp.is_current(&previous),
+            "a failed descendant cannot retire the parent epoch"
+        );
+        assert!(Arc::ptr_eq(
+            &previous,
+            &state
+                .document_project_state(&probe)
+                .unwrap_or_else(|| state.clone())
+        ));
+        assert_eq!(std::fs::read_to_string(&nested_counter).unwrap(), "");
 
         std::fs::write(&marker, config_source(true).as_bytes()).unwrap();
-        let accepted =
-            state.observe_project_config_events_checked(&[event(FileChangeType::CHANGED)]);
+        let accepted = block_on(
+            state.observe_project_config_events_async(vec![event(FileChangeType::CHANGED)]),
+        );
         assert!(accepted.errors.is_empty());
         assert_eq!(accepted.documents, vec![(probe.clone(), 17)]);
         let expected = ProjectContextKey {
@@ -280,7 +310,12 @@ fn watched_marker_transfers_to_checked_full_key_without_reloading_or_retiring_si
             &selected,
             &state.document_project_state(&probe).unwrap()
         ));
-        assert!(state.document_project_state(&control).is_none());
+        assert!(Arc::ptr_eq(
+            &previous,
+            &state
+                .document_project_state(&control)
+                .unwrap_or_else(|| state.clone())
+        ));
         assert!(Arc::ptr_eq(
             &sibling_owner,
             &state.document_project_state(&sibling).unwrap()
