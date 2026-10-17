@@ -202,3 +202,50 @@ fn a_known_input_edit_after_confirmation_preparation_still_replaces_the_owner() 
     assert!(!stamp.is_current(&previous));
     assert!(!next.lsp_features().hover);
 }
+
+#[test]
+fn incomplete_resolution_retries_once_without_claiming_unchanged_watch_paths_changed() {
+    let (fixture, state, a, _) = tests::fixture();
+    let root = fixture.path().join("packages/a");
+    let counter = root.join("factory-count.txt");
+    std::fs::write(&counter, "").unwrap();
+    current(&state, &a);
+    assert!(refresh(&state, &a).errors.is_empty());
+    let retained = current(&state, &a);
+    std::fs::write(root.join("vite.config.mjs"), "import {appendFileSync} from 'node:fs'; export default async () => { appendFileSync(new URL('./factory-count.txt', import.meta.url), 'x'); await import('missing-editor-watch-plugin'); return {vue:{}}; };").unwrap();
+    assert_eq!(refresh(&state, &a).errors.len(), 1);
+    let record = state
+        .configuration_records()
+        .into_iter()
+        .find(|(key, _)| key.root == root)
+        .unwrap()
+        .1;
+    assert!(
+        record.paths().len() > 1,
+        "the known watch graph remains available"
+    );
+    assert!(
+        record.retry_required(),
+        "unobservable resolution can repair elsewhere"
+    );
+    assert!(
+        record.changes().is_empty(),
+        "retry eligibility is not a physical edit"
+    );
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "x");
+    let retried = refresh(&state, &a);
+    assert!(
+        retried.errors.is_empty(),
+        "the same real failure is not reported twice"
+    );
+    assert!(
+        retried.configuration_events.is_empty(),
+        "no unchanged watch candidate is attributed as an edit"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&counter).unwrap(),
+        "xx",
+        "one required retry, with one original factory evaluation"
+    );
+    assert!(Arc::ptr_eq(&retained, &current(&state, &a)));
+}

@@ -103,12 +103,13 @@ impl ConfigurationObservation {
         }
     }
 
+    /// Retry eligibility is not evidence that every observed input changed.
+    pub(super) fn retry_required(&self) -> bool {
+        self.unverified || self.retry_unobservable
+    }
+
     pub(super) fn changes(&self) -> Vec<PathBuf> {
-        if self.unverified || self.retry_unobservable {
-            self.observations.paths()
-        } else {
-            self.observations.changed_paths()
-        }
+        self.observations.changed_paths()
     }
 
     pub(super) fn input_observations(&self) -> &ConfigurationObservations {
@@ -380,7 +381,7 @@ impl ServerState {
                 .filter(|(key, _)| key.root == root)
             {
                 let changed = record.changes();
-                if !changed.is_empty() {
+                if record.retry_required() || !changed.is_empty() {
                     if record.stable_confirmation() {
                         confirmations.push((key.clone(), record.input_observations().clone()));
                     }
@@ -394,7 +395,7 @@ impl ServerState {
             }
             changes.sort();
             changes.dedup();
-            if changes.is_empty() || worker.project_routing_shutting_down() {
+            if affected.is_empty() || worker.project_routing_shutting_down() {
                 return Default::default();
             }
             if affected.iter().any(|key| key.tsconfig.is_none()) {

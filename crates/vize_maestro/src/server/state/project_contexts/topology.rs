@@ -86,7 +86,9 @@ impl ServerState {
         let mut result = ProjectConfigChanges::default();
         let record = self.topology_record(&target_key);
         let changed = record.as_ref().map(|record| record.changes());
-        if record.as_ref().is_some_and(|record| record.rejected)
+        if record
+            .as_ref()
+            .is_some_and(|record| record.rejected && !record.retry_required())
             && changed.as_ref().is_some_and(Vec::is_empty)
         {
             result.checked_roots.push(target.to_path_buf());
@@ -116,7 +118,7 @@ impl ServerState {
             .iter()
             .filter_map(|path| Url::from_file_path(path).ok())
             .collect::<Vec<_>>();
-        if record.is_none()
+        if record.as_ref().is_none_or(|record| record.retry_required())
             || changed.as_ref().is_some_and(|paths| !paths.is_empty())
             || self.topology_owner(&target_key).is_none()
         {
@@ -211,6 +213,7 @@ impl ServerState {
         result: &mut ProjectConfigChanges,
     ) -> bool {
         if let Some(record) = self.topology_record(key)
+            && !record.retry_required()
             && record.changes().is_empty()
         {
             return !record.rejected && self.topology_owner(key).is_some();
