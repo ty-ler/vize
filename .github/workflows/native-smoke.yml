@@ -310,15 +310,23 @@ jobs:
           node --input-type=module <<'JS' >> "$PACKED_CONFIG_OUTPUT/versions.txt"
           import assert from 'node:assert/strict';
           import { spawnSync } from 'node:child_process';
+          import fs from 'node:fs';
+          import os from 'node:os';
+          import path from 'node:path';
           import { PACKAGE_MANAGERS } from './tools/support/compat/npm/smoke-release-init-managers.mjs';
           import { managerCommand, managerEnv } from './tools/support/compat/npm/smoke-release-init-project.mjs';
-          for (const manager of Object.values(PACKAGE_MANAGERS)) {
-            const argv = managerCommand(manager, ['--version']);
-            const result = spawnSync(argv.command, argv.args, { encoding: 'utf8', env: managerEnv(manager) });
-            console.log(JSON.stringify({ manager: manager.id, ...argv, status: result.status, signal: result.signal, stdout: result.stdout, stderr: result.stderr, error: result.error?.message }));
-            assert.equal(result.error, undefined);
-            assert.equal(result.status, 0);
-            assert.equal(result.signal, null);
+          const managerProbeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'vize-manager-versions-'));
+          try {
+            for (const manager of Object.values(PACKAGE_MANAGERS)) {
+              const argv = managerCommand(manager, ['--version']);
+              const result = spawnSync(argv.command, argv.args, { cwd: managerProbeRoot, encoding: 'utf8', env: managerEnv(manager) });
+              console.log(JSON.stringify({ manager: manager.id, cwd: managerProbeRoot, ...argv, status: result.status, signal: result.signal, stdout: result.stdout, stderr: result.stderr, error: result.error?.message }));
+              assert.equal(result.error, undefined);
+              assert.equal(result.status, 0);
+              assert.equal(result.signal, null);
+            }
+          } finally {
+            fs.rmSync(managerProbeRoot, { recursive: true, force: true });
           }
           JS
       - name: Build @vizejs/native

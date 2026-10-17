@@ -9,11 +9,86 @@ import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
 import { parse } from "yaml";
 import { withoutPackedConfigExtension } from "./support/native-packed-config-extension.ts";
+import { writeFakeCommand } from "./support/fake-command.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const source = fs.readFileSync(path.join(root, ".github/workflows/native-smoke.yml"), "utf8");
 const workflow = parse(source);
 const steps = workflow.jobs["packed-config-acceptance"].steps;
+
+void test("the actual manager version audit uses a manifest-free cwd and preserves failed probes", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-manager-probe-law-"));
+  try {
+    const run = steps.find(
+      (step: { name?: string }) =>
+        step.name === "Verify packed configuration driver laws and command versions",
+    ).run as string;
+    const match = /<<'JS' >>[^\n]+\n([\s\S]*?)\nJS/u.exec(run);
+    assert.ok(match);
+    const script = match[1];
+    const env = { ...process.env };
+    for (const manager of ["npm", "pnpm", "yarn", "bun", "vp"]) {
+      // A process control for context isolation, never installed-manager proof.
+      writeFakeCommand(
+        directory,
+        manager,
+        `
+        const fs = require('node:fs'), path = require('node:path');
+        let parent = process.cwd();
+        for (;;) {
+          const manifest = path.join(parent, 'package.json');
+          if (fs.existsSync(manifest) && JSON.parse(fs.readFileSync(manifest)).packageManager) {
+            process.stderr.write('project context inherited: ' + manifest + '\\n');
+            process.exit(23);
+          }
+          const next = path.dirname(parent);
+          if (next === parent) break;
+          parent = next;
+        }
+        process.stdout.write('fixture-version\\n');
+      `,
+      );
+      env[`${manager.toUpperCase()}_BIN`] = path.join(directory, manager);
+    }
+    const execute = (body: string) =>
+      spawnSync(process.execPath, ["--input-type=module", "-e", body], {
+        cwd: root,
+        env,
+        encoding: "utf8",
+        timeout: 10_000,
+      });
+    const success = execute(script);
+    assert.equal(success.status, 0, success.stderr);
+    assert.equal(success.signal, null);
+    const records = success.stdout
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    assert.deepEqual(
+      records.map((record) => record.manager),
+      ["npm", "pnpm", "yarn", "bun", "vp"],
+    );
+    for (const record of records) {
+      assert.notEqual(record.cwd, root);
+      assert.equal(fs.existsSync(record.cwd), false, "temporary probe cwd is removed");
+      assert.deepEqual(record.args, ["--version"]);
+      assert.equal(record.status, 0);
+      assert.equal(record.stdout, "fixture-version\n");
+      assert.equal(record.stderr, "");
+    }
+    const inherited = script.replace("cwd: managerProbeRoot, ", "");
+    assert.notEqual(inherited, script);
+    const failure = execute(inherited);
+    assert.notEqual(failure.status, 0);
+    const failed = JSON.parse(failure.stdout.trim());
+    assert.equal(failed.status, 23);
+    assert.equal(failed.stderr, `project context inherited: ${path.join(root, "package.json")}\n`);
+    assert.match(failure.stderr, /AssertionError/u);
+    assert.equal(fs.existsSync(failed.cwd), false, "failed probes also remove their temporary cwd");
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 void test("the refrozen composed producer binds every whole source and moved test module", () => {
   const producer = "9654d136f504765f0dfbdb1e17cf806e0b967878";
