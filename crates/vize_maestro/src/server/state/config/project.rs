@@ -101,10 +101,10 @@ impl ServerState {
                 }
             }
         } else {
-            compiler = Arc::new(
-                vize_canon::CompilerConfigurationSnapshot::capture(root, None)
-                    .map_err(|error| vize_l0::cstr!("{error}"))?,
-            );
+            let snapshot = vize_canon::CompilerConfigurationSnapshot::capture(root, None)
+                .map_err(|error| vize_l0::cstr!("{error}"))?;
+            dependencies.extend(snapshot.dependencies().iter().cloned());
+            compiler = Arc::new(snapshot);
         }
         dependencies.push(selected);
         dependencies.sort();

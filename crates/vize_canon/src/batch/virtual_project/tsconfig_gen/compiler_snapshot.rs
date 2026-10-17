@@ -37,6 +37,9 @@ mod tests;
 impl CompilerConfigurationSnapshot {
     /// Capture through the same checked resolver used by batch materialization.
     pub fn capture(project_root: &Path, tsconfig_path: Option<&Path>) -> CorsaResult<Self> {
+        let normalized = tsconfig_path
+            .map(|path| vize_carton::path::normalize_windows_verbatim_path(path.to_path_buf()));
+        let tsconfig_path = normalized.as_deref();
         let project = VirtualProject::new(project_root)?;
         let flattened = project.load_compiler_options_flattened(tsconfig_path)?;
         let verbatim = project.load_compiler_options_verbatim(tsconfig_path)?;
