@@ -1,12 +1,12 @@
 name: Config dependency source qualification
-run-name: Config dependency laws at b1cc8fd023
+run-name: Config dependency laws at 6341361ac5
 on:
   push:
     branches: [ci/config-dependency-source-qualification]
 permissions:
   contents: read
 env:
-  SOURCE_SHA: b1cc8fd0237c16e1b0d908342fc5860884629f2b
+  SOURCE_SHA: 6341361ac5804cc455b257b22f006bcf086924fa
   CARGO_BUILD_JOBS: "12"
   CARGO_TERM_COLOR: always
   RUST_TEST_THREADS: "4"
@@ -102,12 +102,35 @@ jobs:
             tests/tooling/native-config-repair-observations.test.ts \
             tests/tooling/vscode-passive-server-proxy.test.ts \
             crates/vize/tests/lsp_workspace_package_projection_cli.rs \
+            crates/vize_carton/src/config.rs \
+            crates/vize_carton/src/config/loader.rs \
+            crates/vize_carton/src/config/loader/js_observation.rs \
+            crates/vize_maestro/src/server/state/config/host.rs \
+            crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs \
+            crates/vize_maestro/src/server/state/workspace_folders/tests.rs \
+            crates/vize_maestro/src/server/workspace_files/config_watchers_protocol_tests.rs \
+            davinci/vize_l0/src/config/document.rs \
+            tests/tooling/config-host-boundary.test.ts \
+            tests/tooling/native-config-preload-observations.test.ts \
+            tests/tooling/support/davinci-host-imports.ts \
             > target/config-dependency-qualification/inputs.sha256
       - name: Check config host boundaries and actual loader repair observation laws
         run: |
           set -euo pipefail
-          node --test --test-reporter=tap tests/tooling/config-host-boundary.test.ts tests/tooling/native-config-repair-observations.test.ts tests/tooling/vscode-passive-server-proxy.test.ts 2>&1 | tee target/config-dependency-qualification/loader-observations.log
+          node --test --test-reporter=tap tests/tooling/config-host-boundary.test.ts tests/tooling/native-config-repair-observations.test.ts tests/tooling/native-config-preload-observations.test.ts tests/tooling/native-config-module-loader.test.ts tests/tooling/vscode-passive-server-proxy.test.ts 2>&1 | tee target/config-dependency-qualification/loader-observations.log
           grep -E '# pass [1-9][0-9]*' target/config-dependency-qualification/loader-observations.log
+      - name: Run all five native Carton observation transport laws
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_carton --lib config::loader::js_observation::tests:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/carton-transport.log
+          grep -F '5 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/carton-transport.log
+      - name: Run all four actual editor snapshot preload and exit laws
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_carton --lib config::loader::lsp_snapshot::tests:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/carton-snapshots.log
+          grep -F '4 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/carton-snapshots.log
       - name: Run all three original and four added configuration graph laws
         if: ${{ !cancelled() }}
         run: |
@@ -132,6 +155,12 @@ jobs:
           set -euo pipefail
           cargo test --locked --profile ci -p vize_maestro --lib server::state::project_contexts:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/project-contexts.log
           grep -E 'test result: ok\. [1-9][0-9]* passed; 0 failed; 0 ignored;' target/config-dependency-qualification/project-contexts.log
+      - name: Retain every workspace folder policy after invalid primary admission
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_maestro --lib server::state::workspace_folders::tests:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/workspace-folders.log
+          grep -F '7 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/workspace-folders.log
       - name: Retain live union members and unsaved source authority
         if: ${{ !cancelled() }}
         run: |
@@ -189,11 +218,11 @@ jobs:
           set -euo pipefail
           cargo test --locked --profile ci -p vize --test check_tsconfig_dependency_errors_cli -- --nocapture 2>&1 | tee target/config-dependency-qualification/cli-process.log
           grep -F '3 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/cli-process.log
-      - name: Require normal Canon and Maestro library Clippy gates
+      - name: Require normal Carton, Canon and Maestro library Clippy gates
         if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
-          cargo clippy --locked --profile ci -p vize_canon -p vize_maestro --lib -- -D warnings -D clippy::wildcard_imports 2>&1 | tee target/config-dependency-qualification/library-clippy.log
+          cargo clippy --locked --profile ci -p vize_carton -p vize_canon -p vize_maestro --lib -- -D warnings -D clippy::wildcard_imports 2>&1 | tee target/config-dependency-qualification/library-clippy.log
       - name: Require the normal CLI binary Clippy gate
         if: ${{ !cancelled() }}
         run: |
