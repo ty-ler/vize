@@ -63,9 +63,12 @@ test("actual legacy driver qualifies a cold cut before R and retains resume and 
 });
 
 function harness(watch: string, contract: string, digest: string): string {
-  return `//! cargo
+  return `//! \`\`\`cargo
 //! [dependencies]
 //! serde_json = "1"
+//! [package]
+//! edition = "2024"
+//! \`\`\`
 #![allow(dead_code)]
 use serde_json::{json, Value};
 use std::{cell::RefCell, path::Path, time::Duration};
