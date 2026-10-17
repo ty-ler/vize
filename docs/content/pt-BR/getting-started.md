@@ -59,7 +59,7 @@ Aplique correções com `vp run check -- --fix`. Use `vp run` para as tarefas ge
 Os guias que ainda não foram traduzidos abrem em inglês.
 
 > [!NOTE]
-> Vize 0.457.0: A CLI, a integração Vite e o editor compartilham as opções `vue:` do `vite.config.*`. Arquivos específicos `vize.config.*` e o objeto `vize:` no nível superior foram removidos; veja como migrar no [guia de configuração](./guide/configuration.md).
+> A CLI, a integração Vite e o editor compartilham as opções `vue:` do `vite.config.*` e usam o projeto TypeScript e as `vueCompilerOptions` do `tsconfig.json`. Arquivos específicos `vize.config.*` e o objeto `vize:` no nível superior foram removidos; veja como migrar no [guia de configuração](./guide/configuration.md).
 
 ## Usar o Vize sem Vite+
 
