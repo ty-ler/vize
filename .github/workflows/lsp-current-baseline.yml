@@ -1,5 +1,5 @@
-name: Diagnostic native image authentication
-run-name: Diagnostic native image authentication @ ${{ inputs.source_sha }}
+name: Diagnostic optimized native image authentication
+run-name: Diagnostic optimized native image authentication @ ${{ inputs.source_sha }}
 
 # Temporary diagnostic branch only. This workflow and instrumentation never land.
 on:
@@ -12,7 +12,7 @@ on:
 
 permissions: { contents: read }
 concurrency:
-  group: diagnostic-native-image-authentication-${{ inputs.source_sha }}
+  group: diagnostic-optimized-native-image-authentication-${{ inputs.source_sha }}
   cancel-in-progress: false
 env:
   CARGO_TERM_COLOR: always
@@ -26,29 +26,37 @@ jobs:
     env:
       DIAGNOSTIC_SOURCE: ${{ inputs.source_sha }}
       DIAGNOSTIC_BASE: e2b883eed6378eb7ada73bf0220d89a185a3d6fd
+      DIAGNOSTIC_PARENT: bd7c444d398baf5abc337fd32b776e5dab2d2e35
+      OPTIMIZATION_SOURCE: 93a73fcedbc1fd5c0a8617d747873edfb162f0f5
+      OPTIMIZATION_CARGO_SHA256: e67d3dd896748e223cdae7310a6ebedd224793586b22e2f0c8bee31c4be04635
       RAYON_NUM_THREADS: "4"
       VIZE_PERF_BUDGET_SCALE: "1"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with: { ref: "${{ inputs.source_sha }}", fetch-depth: 2, persist-credentials: false }
+        with: { ref: "${{ inputs.source_sha }}", fetch-depth: 3, persist-credentials: false }
       - name: Authenticate the frozen source and diagnostic-only delta
         shell: bash
         run: |
           set -euo pipefail
           [[ "$DIAGNOSTIC_SOURCE" =~ ^[0-9a-f]{40}$ ]]
-          test "$GITHUB_REF" = refs/heads/diag/vben-native-image-hash-20261017
+          test "$GITHUB_REF" = refs/heads/diag/vben-native-image-hash-opt-20261017
           test "$(git rev-parse HEAD)" = "$DIAGNOSTIC_SOURCE"
           test "$GITHUB_SHA" = "$DIAGNOSTIC_SOURCE"
           test "$GITHUB_WORKFLOW_SHA" = "$DIAGNOSTIC_SOURCE"
-          test "$(git rev-parse HEAD^)" = "$DIAGNOSTIC_BASE"
+          test "$(git rev-parse HEAD^)" = "$DIAGNOSTIC_PARENT"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { execFileSync } from 'node:child_process';
+          import { readFileSync } from 'node:fs';
+          import { createHash } from 'node:crypto';
           const changed = execFileSync('git', ['diff', '--name-only', process.env.DIAGNOSTIC_BASE, 'HEAD'], { encoding: 'utf8' }).trim().split('\n').sort();
           assert.deepEqual(changed, [
             '.github/workflows/lsp-current-baseline.yml',
+            'Cargo.toml',
             'crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown.rs',
           ]);
+          assert.equal(createHash('sha256').update(readFileSync('Cargo.toml')).digest('hex'), process.env.OPTIMIZATION_CARGO_SHA256);
+          assert.equal(execFileSync('git', ['diff', process.env.DIAGNOSTIC_PARENT, 'HEAD', '--', 'crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown.rs'], { encoding: 'utf8' }), '');
           JS
       - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
         with: { node-version-file: package.json, cache: true, run-install: false }
@@ -68,6 +76,8 @@ jobs:
           [[ "$(rustc --version)" == "rustc 1.99.1 "* ]]
           mkdir -p target/vize-tests/metrics/native-image-diagnostic
           git diff "$DIAGNOSTIC_BASE" HEAD > target/vize-tests/metrics/native-image-diagnostic/diagnostic.patch
+          git diff "$DIAGNOSTIC_PARENT" HEAD > target/vize-tests/metrics/native-image-diagnostic/optimization.patch
+          printf 'source=%s\nbaseline=%s\noriginal=%s\noptimization_source=%s\ncargo_sha256=%s\n' "$DIAGNOSTIC_SOURCE" "$DIAGNOSTIC_PARENT" "$DIAGNOSTIC_BASE" "$OPTIMIZATION_SOURCE" "$OPTIMIZATION_CARGO_SHA256" > target/vize-tests/metrics/native-image-diagnostic/source-identities.txt
           git submodule status > target/vize-tests/metrics/native-image-diagnostic/submodules.txt
           sha256sum node_modules/@typescript/typescript-linux-x64/lib/tsc > target/vize-tests/metrics/native-image-diagnostic/native-image.sha256
           stat -L --format='%s' node_modules/@typescript/typescript-linux-x64/lib/tsc > target/vize-tests/metrics/native-image-diagnostic/native-image.bytes
@@ -77,6 +87,7 @@ jobs:
           node --version > target/vize-tests/metrics/native-image-diagnostic/node.txt
           cp Cargo.toml target/vize-tests/metrics/native-image-diagnostic/Cargo.toml
       - name: Build and receipt the original CI-profile server with passive timing
+        env: { CARGO_TERM_VERBOSE: "true" }
         run: |
           set -euo pipefail
           cargo build --profile ci -p vize --features legacy 2>&1 | tee target/vize-tests/metrics/native-image-diagnostic/cargo-build.log
@@ -96,7 +107,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: vben-native-image-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
+          name: vben-native-image-optimized-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             target/ci/vize.differential-build.json
             target/differential/lsp-sessions/
