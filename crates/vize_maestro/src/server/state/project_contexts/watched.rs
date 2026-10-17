@@ -99,10 +99,9 @@ impl ServerState {
             .read()
             .clone()
             .or_else(|| self.get_workspace_root())
+            && let Some(record) = observations.get(&root.into())
         {
-            if let Some(record) = observations.get(&root.into()) {
-                primary_dependencies.extend(record.paths());
-            }
+            primary_dependencies.extend(record.paths());
         }
         let contexts = self.project_contexts.contexts.lock();
         let mut tracked = primary_dependencies
