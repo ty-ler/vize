@@ -10,7 +10,7 @@ mod loader;
 pub mod matcher;
 mod project;
 pub use loader::{
-    LoadedConfig, LoadedConfigEntryFiles, LoadedConfigEntryIgnores,
+    ConfigLoadFailureIdentity, LoadedConfig, LoadedConfigEntryFiles, LoadedConfigEntryIgnores,
     LoadedConfigExperimentalVueFlags, LoadedConfigWithFeatures, LoadedFormatterSnapshot,
     LoadedLibConfig, LoadedLintExecutionConfig, LoadedLspConfig, LoadedProjectConfig,
     load_compiler_custom_elements, load_compiler_host_compiler, load_compiler_jsx_compat,

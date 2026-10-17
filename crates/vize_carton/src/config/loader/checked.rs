@@ -2,7 +2,7 @@
 use std::path::{Path, PathBuf};
 
 use super::{
-    BeforeConfigRead, LoadedRawConfig,
+    BeforeConfigRead, ConfigLoadFailureIdentity, LoadedRawConfig,
     discovery::{
         CONFIG_FILE_NAMES, CONFIG_MIGRATION, retired_config_paths, search_directories_observed,
     },
@@ -12,7 +12,7 @@ use super::{
 pub(super) fn load_raw_config_checked(
     path: Option<&Path>,
 ) -> Result<LoadedRawConfig, std::string::String> {
-    load_raw_checked(path, true, &mut Vec::new(), &mut true, &mut None)
+    load_raw_checked(path, true, &mut Vec::new(), &mut true, &mut None, &mut None)
 }
 
 /// An editor workspace directory can legitimately have no dedicated config.
@@ -27,6 +27,7 @@ pub(super) struct EditorConfigAttempt {
     pub outcome: Result<LoadedRawConfig, std::string::String>,
     pub dependencies: Vec<PathBuf>,
     pub dependencies_complete: bool,
+    pub failure_identity: Option<ConfigLoadFailureIdentity>,
 }
 
 pub(super) fn load_raw_editor_config_attempt(path: Option<&Path>) -> EditorConfigAttempt {
@@ -39,12 +40,14 @@ pub(super) fn load_raw_editor_config_attempt_observed(
 ) -> EditorConfigAttempt {
     let mut dependencies = Vec::new();
     let mut dependencies_complete = true;
+    let mut failure_identity = None;
     let outcome = load_raw_checked(
         path,
         false,
         &mut dependencies,
         &mut dependencies_complete,
         &mut before_read,
+        &mut failure_identity,
     );
     dependencies.sort();
     dependencies.dedup();
@@ -52,6 +55,7 @@ pub(super) fn load_raw_editor_config_attempt_observed(
         outcome,
         dependencies,
         dependencies_complete,
+        failure_identity,
     }
 }
 
@@ -61,6 +65,7 @@ fn load_raw_checked(
     dependencies: &mut Vec<PathBuf>,
     complete: &mut bool,
     before_read: &mut BeforeConfigRead<'_>,
+    failure_identity: &mut Option<ConfigLoadFailureIdentity>,
 ) -> Result<LoadedRawConfig, std::string::String> {
     let base = path
         .map(Path::to_path_buf)
@@ -75,7 +80,7 @@ fn load_raw_checked(
         return Err(crate::cstr!("config file not found: {}", base.display()).into());
     }
     if base.is_file() {
-        return parse(&base, dependencies, complete, before_read);
+        return parse(&base, dependencies, complete, before_read, failure_identity);
     }
     // The directory's children are the actual discovery inputs. Keeping its
     // mtime would turn unrelated source-file creation into config changes.
@@ -103,6 +108,7 @@ fn load_raw_checked(
                     });
                 }
                 Err(error) => {
+                    *failure_identity = super::failure_identity::from_error(error.as_ref());
                     return Err(
                         crate::cstr!("failed to parse {}: {error}", candidate.display()).into(),
                     );
@@ -134,11 +140,15 @@ fn parse(
     dependencies: &mut Vec<PathBuf>,
     complete: &mut bool,
     before_read: &mut BeforeConfigRead<'_>,
+    failure_identity: &mut Option<ConfigLoadFailureIdentity>,
 ) -> Result<LoadedRawConfig, std::string::String> {
     super::parse::parse_raw_config_file_observed(path, dependencies, complete, before_read)
         .map(|config| LoadedRawConfig {
             config,
             source_path: Some(path.to_path_buf()),
         })
-        .map_err(|error| crate::cstr!("failed to parse {}: {error}", path.display()).into())
+        .map_err(|error| {
+            *failure_identity = super::failure_identity::from_error(error.as_ref());
+            crate::cstr!("failed to parse {}: {error}", path.display()).into()
+        })
 }

@@ -103,6 +103,7 @@ console.log = (...args) => console.error(...args);
 let attemptedDependencies = [configPath];
 let attemptedComplete = false;
 let evaluated;
+let failureArtifacts = [];
 try {
 const { value: config, dependencies } = await importConfigModuleWithDependencies(
   configPath, undefined, undefined, async (module) => {
@@ -117,9 +118,14 @@ const { value: config, dependencies } = await importConfigModuleWithDependencies
   beforeRead,
 );
 evaluated = { config: config ?? {}, dependencies, watchDependencies: attemptedDependencies, watchDependenciesComplete: true };
+} catch (error) {
+  if (observing) failureArtifacts = configModuleFailureArtifacts(error);
+  throw error;
 } finally {
   if (observing) process.stdout.write("R\n");
-  process.stdout.write(JSON.stringify(evaluated ?? { dependencies: attemptedDependencies, watchDependenciesComplete: attemptedComplete }));
+  const failure = { dependencies: attemptedDependencies, watchDependenciesComplete: attemptedComplete };
+  if (failureArtifacts.length) failure.failureArtifacts = failureArtifacts;
+  process.stdout.write(JSON.stringify(evaluated ?? failure));
 }
 "#,
     ]
@@ -146,6 +152,8 @@ evaluated = { config: config ?? {}, dependencies, watchDependencies: attemptedDe
         #[serde(default, rename = "watchDependencies")]
         watch_dependencies: Vec<PathBuf>,
         dependencies: Vec<std::string::String>,
+        #[serde(default, rename = "failureArtifacts")]
+        failure_artifacts: Vec<(std::string::String, std::string::String)>,
     }
     let evaluated = serde_json::from_slice::<Evaluation>(&output.stdout);
     if let Ok(evaluated) = &evaluated {
@@ -155,10 +163,14 @@ evaluated = { config: config ?? {}, dependencies, watchDependencies: attemptedDe
     }
 
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
+        let artifacts = evaluated
+            .as_ref()
+            .ok()
+            .map(|value| value.failure_artifacts.as_slice())
+            .unwrap_or_default();
         return Err(Box::new(IoError::new(
             ErrorKind::InvalidData,
-            crate::cstr!("node failed to load config: {}", stderr.trim()).to_string(),
+            super::failure_identity::NodeEvaluationFailure::new(&config_path, output, artifacts),
         )));
     }
 

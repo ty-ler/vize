@@ -13,6 +13,8 @@ pub use formatter::{
     try_load_formatter_snapshot,
 };
 mod discovery;
+mod failure_identity;
+pub use failure_identity::ConfigLoadFailureIdentity;
 #[cfg(test)]
 mod experimental_tests;
 #[cfg(test)]

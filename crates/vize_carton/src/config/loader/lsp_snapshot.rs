@@ -8,7 +8,7 @@ use crate::config::{
 };
 
 use super::{
-    BeforeConfigRead, LoadedProjectConfig, LoadedRawConfig,
+    BeforeConfigRead, ConfigLoadFailureIdentity, LoadedProjectConfig, LoadedRawConfig,
     checked::load_raw_editor_config_attempt_observed, project_config_snapshot,
 };
 
@@ -19,6 +19,9 @@ pub struct LoadedLspConfig {
     pub valid: bool,
     /// Evaluation failure retained for an editor-visible reload error.
     pub error: Option<std::string::String>,
+    /// Host-only failed evaluation identity. Never configuration or watch authority;
+    /// absent metadata preserves strict equality of the original error message.
+    pub failure_identity: Option<ConfigLoadFailureIdentity>,
     /// Last attempt's actual inputs and missing candidates, for repair watching
     /// only. These paths never make a failed configuration authoritative.
     pub watch_dependencies: Vec<PathBuf>,
@@ -74,6 +77,7 @@ fn load_snapshot(path: Option<&Path>, before_read: BeforeConfigRead<'_>) -> Load
     let mut snapshot = LoadedLspConfig::from_project(project_config_snapshot(loaded));
     snapshot.valid = error.is_none();
     snapshot.error = error;
+    snapshot.failure_identity = attempt.failure_identity;
     snapshot.watch_dependencies = attempt.dependencies;
     snapshot.watch_dependencies_complete = attempt.dependencies_complete;
     snapshot
@@ -92,6 +96,7 @@ impl LoadedLspConfig {
         Self {
             valid: true,
             error: None,
+            failure_identity: None,
             watch_dependencies: Vec::new(),
             watch_dependencies_complete: true,
             project,
