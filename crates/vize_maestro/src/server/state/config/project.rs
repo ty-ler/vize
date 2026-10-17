@@ -1,13 +1,13 @@
 //! TypeScript project authority complements the shared Vite snapshot.
 use std::path::Path;
 
-use super::ServerState;
+use super::{ServerState, host::LoadedLspConfig};
 
 impl ServerState {
     pub(super) fn apply_tsconfig_config_snapshot(
         &self,
         directory: &Path,
-        loaded: &mut vize_carton::config::LoadedLspConfig,
+        loaded: &mut LoadedLspConfig,
     ) -> bool {
         let root = loaded.project.project_root.as_deref().unwrap_or(directory);
         let base = loaded
