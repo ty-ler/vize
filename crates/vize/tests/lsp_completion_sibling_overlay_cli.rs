@@ -171,9 +171,11 @@ fn native_completion_resolves_after_unchanged_sibling_diagnostics_with_a_closed_
     ] {
         assert_eq!(std::fs::read_to_string(root.join(name)).unwrap(), source);
     }
+    id += 1;
+    lsp.send(json!({"jsonrpc":"2.0","id":id,"method":"shutdown"}));
     assert_eq!(
-        request(&mut lsp, &mut id, "shutdown", Value::Null),
-        Value::Null
+        lsp.recv_response(id),
+        json!({"jsonrpc":"2.0","id":id,"result":null})
     );
     lsp.send(json!({"jsonrpc":"2.0","method":"exit"}));
     assert!(lsp.wait_for_exit().success());
