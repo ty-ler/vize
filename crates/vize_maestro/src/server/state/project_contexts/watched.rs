@@ -1,29 +1,35 @@
-//! Retire changed owners and retain open documents needing fresh diagnostics.
-use super::{Arc, Ordering, ServerState, Url, is_config_marker, paths::physical_path, registry};
-use tower_lsp::lsp_types::FileEvent;
-
+//! Prepare configuration once per Vite root; install only valid full-key owners.
 use super::config_reload::{ProjectConfigChanges, reload_error};
+use super::{
+    Arc, Ordering, ProjectContextKey, RetainedConfiguration, ServerState, is_config_marker,
+    paths::physical_path, registry,
+};
+use std::path::{Path, PathBuf};
+use tower_lsp::lsp_types::{FileEvent, Url};
+use vize_l0::{FxHashMap, FxHashSet};
 
 pub(super) struct ConfigEventScope {
-    pub(super) affected: Vec<std::path::PathBuf>,
-    marker_paths: Vec<std::path::PathBuf>,
+    pub(super) affected: Vec<ProjectContextKey>,
+    marker_paths: Vec<PathBuf>,
 }
 
 impl ConfigEventScope {
-    pub(super) fn retain_root(&mut self, root: std::path::PathBuf) {
+    pub(super) fn retain_root(&mut self, root: &Path) {
+        self.affected
+            .retain(|key| physical_path(&key.root) == physical_path(root));
         self.marker_paths
-            .retain(|path| path.starts_with(physical_path(&root)));
-        self.affected = vec![root];
+            .retain(|path| path.starts_with(physical_path(root)));
     }
 }
 
 impl ServerState {
     pub(super) fn project_config_event_scope(&self, changes: &[FileEvent]) -> ConfigEventScope {
+        let empty = || ConfigEventScope {
+            affected: Vec::new(),
+            marker_paths: Vec::new(),
+        };
         if self.project_contexts.owner.read().is_some() || self.project_routing_shutting_down() {
-            return ConfigEventScope {
-                affected: Vec::new(),
-                marker_paths: Vec::new(),
-            };
+            return empty();
         }
         let mut roots = self.workspace_root_paths();
         if let Some(boundary) = self.project_contexts.boundary.read().clone()
@@ -35,7 +41,7 @@ impl ServerState {
             .iter()
             .map(|root| physical_path(root))
             .collect::<Vec<_>>();
-        let changed_paths = changes
+        let changed = changes
             .iter()
             .filter_map(|event| event.uri.to_file_path().ok())
             .map(|path| physical_path(&path))
@@ -47,28 +53,38 @@ impl ServerState {
             .map(|path| physical_path(&path))
             .filter(|path| is_config_marker(path) && !excluded_config_path(path, &physical_roots))
             .collect::<Vec<_>>();
-        let config_paths = marker_paths.iter().collect::<Vec<_>>();
-        let dependency_changed = |state: &ServerState| {
-            state
-                .project_contexts
-                .config_dependencies
-                .read()
+        let depends = |dependencies: &[PathBuf]| {
+            dependencies
                 .iter()
-                .any(|dependency| changed_paths.contains(&physical_path(dependency)))
+                .any(|dependency| changed.contains(&physical_path(dependency)))
         };
+        let primary_dependencies = self.project_contexts.config_dependencies.read().clone();
         let contexts = self.project_contexts.contexts.lock();
-        let mut affected = contexts
+        let mut tracked = primary_dependencies
             .iter()
-            .filter(|(root, context)| {
+            .map(|path| physical_path(path))
+            .collect::<Vec<_>>();
+        for context in contexts.values() {
+            tracked.extend(
                 context
                     .config_dependencies()
                     .iter()
-                    .any(|dependency| changed_paths.contains(&physical_path(dependency)))
-                    || config_paths
+                    .map(|path| physical_path(path)),
+            );
+        }
+        let untracked = marker_paths
+            .iter()
+            .filter(|path| !tracked.contains(path))
+            .collect::<Vec<_>>();
+        let mut affected = contexts
+            .iter()
+            .filter(|(key, context)| {
+                depends(&context.config_dependencies())
+                    || untracked
                         .iter()
-                        .any(|path| path.starts_with(physical_path(root)))
+                        .any(|path| path.starts_with(physical_path(&key.root)))
             })
-            .map(|(root, _)| root.clone())
+            .map(|(key, _)| key.clone())
             .collect::<Vec<_>>();
         if let Some(root) = self
             .project_contexts
@@ -76,20 +92,30 @@ impl ServerState {
             .read()
             .clone()
             .or_else(|| self.get_workspace_root())
-            && (dependency_changed(self)
-                || config_paths
+            && (depends(&primary_dependencies)
+                || marker_paths
                     .iter()
                     .any(|path| path.parent() == Some(physical_path(&root).as_path())))
         {
-            if !affected.contains(&root) {
-                affected.push(root);
-            }
+            affected.push(root.into());
         }
+        let base_roots = affected
+            .iter()
+            .filter(|key| key.tsconfig.is_none())
+            .map(|key| key.root.clone())
+            .collect::<Vec<_>>();
+        affected.extend(
+            contexts
+                .iter()
+                .filter(|(key, context)| {
+                    key.tsconfig.is_some()
+                        && base_roots.contains(&key.root)
+                        && context.initialized_state().is_none()
+                })
+                .map(|(key, _)| key.clone()),
+        );
         drop(contexts);
-        // An unsuccessful evaluation cannot expose its complete graph. Retry
-        // pending roots on workspace file events so newly introduced missing
-        // or malformed imports recover when created or repaired. No polling.
-        if changed_paths.iter().any(|path| {
+        if changed.iter().any(|path| {
             !excluded_config_path(path, &physical_roots)
                 && physical_roots.iter().any(|root| path.starts_with(root))
         }) {
@@ -101,13 +127,11 @@ impl ServerState {
                     .cloned(),
             );
         }
-        // A newly created marker may introduce an owner which has never
-        // existed in the registry; its open documents still need rerouting.
-        for path in &marker_paths {
+        for path in untracked {
             if let Some(root) = super::paths::document_context_root(path, &roots)
-                && !affected
-                    .iter()
-                    .any(|current| physical_path(current) == physical_path(&root))
+                && !affected.iter().any(|key| {
+                    key.tsconfig.is_none() && physical_path(&key.root) == physical_path(&root)
+                })
                 && self.documents.iter().any(|document| {
                     document
                         .key()
@@ -115,10 +139,10 @@ impl ServerState {
                         .is_ok_and(|path| physical_path(&path).starts_with(physical_path(&root)))
                 })
             {
-                affected.push(root);
+                affected.push(root.into());
             }
         }
-        affected.sort();
+        affected.sort_by(|a, b| (&a.root, &a.tsconfig).cmp(&(&b.root, &b.tsconfig)));
         affected.dedup();
         ConfigEventScope {
             affected,
@@ -135,83 +159,70 @@ impl ServerState {
         if scope.affected.is_empty() || self.project_routing_shutting_down() {
             return result;
         }
-        let affected = scope.affected;
-        let marker_paths = scope.marker_paths;
         let contexts = self.project_contexts.contexts.lock();
         if self.project_routing_shutting_down() {
             return result;
         }
-        // A canonical evaluation can discover a new dependency before its
-        // snapshot is installed. File events in that interval must queue this
-        // root rather than disappear against the old dependency graph.
         self.project_contexts
             .pending_config_reloads
             .lock()
-            .extend(affected.iter().cloned());
-        let mut retired = Vec::new();
-        // Evaluate outside the registry mutex, once per affected root. The
-        // last-good owner remains routable until a complete replacement exists.
-        let previous = affected
+            .extend(scope.affected.iter().cloned());
+        let previous = scope
+            .affected
             .iter()
-            .map(|root| (root.clone(), contexts.get(root).cloned()))
+            .map(|key| (key.clone(), contexts.get(key).cloned()))
             .collect::<Vec<_>>();
         drop(contexts);
-        let prepared = previous
-            .into_iter()
-            .map(|(root, previous)| {
-                let dependencies = previous
-                    .as_ref()
-                    .map(|context| context.config_dependencies())
-                    .unwrap_or_else(|| self.project_contexts.config_dependencies.read().clone());
-                let mut changed = changes
-                    .iter()
-                    .filter(|change| {
-                        change.uri.to_file_path().is_ok_and(|path| {
-                            let path = physical_path(&path);
-                            dependencies
-                                .iter()
-                                .any(|dependency| physical_path(dependency) == path)
-                                || (marker_paths.contains(&path)
-                                    && path.starts_with(physical_path(&root)))
-                        })
-                    })
-                    .map(|change| change.uri.clone())
-                    .collect::<Vec<_>>();
-                changed.sort();
-                changed.dedup();
-                result.configuration_events.extend(changed.clone());
-                let direct_change = !changed.is_empty();
-                let snapshot = Self::prepare_workspace_config(&root);
-                if let Ok(snapshot) = &snapshot {
-                    result.configuration_events.extend(
-                        changes
-                            .iter()
-                            .filter(|change| {
-                                change.uri.to_file_path().is_ok_and(|path| {
-                                    snapshot.project.dependencies.iter().any(|dependency| {
-                                        physical_path(dependency) == physical_path(&path)
-                                    })
-                                })
-                            })
-                            .map(|change| change.uri.clone()),
-                    );
-                }
-                (root, previous, snapshot, changed, direct_change)
-            })
-            .collect::<Vec<_>>();
+        // Canonical JS evaluation is shared by every referenced owner in one
+        // Vite root. Only the applied TypeScript snapshot varies by full key.
+        let mut authored = FxHashMap::default();
+        let mut prepared = Vec::new();
+        for (key, previous) in previous {
+            let dependencies = previous
+                .as_ref()
+                .map(|context| context.config_dependencies())
+                .unwrap_or_else(|| self.project_contexts.config_dependencies.read().clone());
+            let changed =
+                known_config_events(&key.root, &dependencies, &scope.marker_paths, changes);
+            result.configuration_events.extend(changed.clone());
+            let raw = authored
+                .entry(key.root.clone())
+                .or_insert_with(|| vize_carton::config::load_lsp_config_snapshot(Some(&key.root)));
+            let snapshot = if let Some(error) = &raw.error {
+                Err(vize_l0::String::from(error.as_str()))
+            } else {
+                let mut applied = raw.clone();
+                Self::prepare_tsconfig_config_snapshot(&key.root, Some(&key), &mut applied).map(
+                    |()| RetainedConfiguration {
+                        authored: raw.clone(),
+                        applied,
+                    },
+                )
+            };
+            if let Ok(snapshot) = &snapshot {
+                result.configuration_events.extend(known_config_events(
+                    &key.root,
+                    &snapshot.applied.project.dependencies,
+                    &[],
+                    changes,
+                ));
+            }
+            prepared.push((key, previous, snapshot, changed));
+        }
         #[cfg(test)]
         super::lock_order_tests::before_config_install();
         let mut contexts = self.project_contexts.contexts.lock();
-        // Shutdown seals admission before draining this same registry lock.
         if self.project_routing_shutting_down() {
             return ProjectConfigChanges::default();
         }
-        let mut accepted_primary = false;
         let mut routing_change = None;
-        let mut published_roots = Vec::new();
-        for (root, previous, snapshot, changed, direct_change) in prepared {
-            // Do not replace an owner installed by another concurrent reload.
-            let unchanged = match (&previous, contexts.get(&root)) {
+        let mut accepted_primary = false;
+        let mut retired = Vec::new();
+        let mut published_keys = Vec::new();
+        let mut accepted_roots = FxHashSet::default();
+        let mut failed_roots = FxHashSet::default();
+        for (key, previous, snapshot, changed) in prepared {
+            let unchanged = match (&previous, contexts.get(&key)) {
                 (Some(before), Some(current)) => Arc::ptr_eq(before, current),
                 (None, None) => true,
                 _ => false,
@@ -219,52 +230,70 @@ impl ServerState {
             if !unchanged {
                 continue;
             }
-            if previous.is_none() && !self.admits_new_config_root(&root) {
-                // A secondary workspace can disappear while a new marker's
-                // snapshot is being prepared, with None on both sides of CAS.
+            if previous.is_none() && !self.admits_new_config_root(&key.root) {
                 self.project_contexts
                     .pending_config_reloads
                     .lock()
-                    .remove(&root);
+                    .remove(&key);
                 continue;
             }
-            published_roots.push(root.clone());
+            published_keys.push(key.clone());
             match snapshot {
                 Ok(snapshot) => {
-                    // Preparation is read-only. Only a successful installation
-                    // begins a routing transition shared with global queries.
                     routing_change.get_or_insert_with(|| self.project_routing_change());
                     self.project_contexts
                         .pending_config_reloads
                         .lock()
-                        .remove(&root);
-                    let replacement = Arc::new(registry::ProjectContext::with_config(
-                        root.clone(),
+                        .remove(&key);
+                    let replacement = Arc::new(registry::ProjectContext::with_prepared(
+                        key.clone(),
                         snapshot,
                     ));
-                    if let Some(previous) = contexts.insert(root.clone(), replacement) {
+                    if let Some(previous) = contexts.insert(key.clone(), replacement) {
                         previous.mark_retired();
                         retired.push(previous);
                     }
-                    if self.is_primary_boundary(&root) {
+                    accepted_roots.insert(key.root.clone());
+                    if key.tsconfig.is_none() && self.is_primary_boundary(&key.root) {
                         self.project_contexts.retired.store(true, Ordering::Release);
                         accepted_primary = true;
                     }
                 }
                 Err(error) => {
-                    tracing::warn!(project = %root.display(), %error, "Keeping the last good project configuration");
+                    tracing::warn!(project=%key.root.display(),tsconfig=?key.tsconfig,%error,"Keeping the last good project configuration");
                     self.project_contexts
                         .pending_config_reloads
                         .lock()
-                        .insert(root.clone());
-                    if direct_change {
-                        result.errors.push(reload_error(&root, &changed));
+                        .insert(key.clone());
+                    if let Some(state) = previous
+                        .as_ref()
+                        .and_then(|context| context.initialized_state())
+                    {
+                        state
+                            .project_contexts
+                            .config_reload_failed
+                            .store(true, Ordering::Release);
+                    } else if key.tsconfig.is_none() && self.is_primary_boundary(&key.root) {
+                        self.project_contexts
+                            .config_reload_failed
+                            .store(true, Ordering::Release);
                     }
-                    result.rejected.push((root, changed));
+                    failed_roots.insert(key.root.clone());
+                    if !changed.is_empty() {
+                        result.errors.push(reload_error(&key.root, &changed));
+                    }
+                    result.rejected.push((key, changed));
                 }
             }
         }
         drop(contexts);
+        // Applying a shell policy is not proof that a malformed referenced
+        // leaf has a valid new membership graph. Preserve its routed dirty
+        // buffers and existing native owner until topology becomes valid.
+        let topology_roots = accepted_roots
+            .difference(&failed_roots)
+            .cloned()
+            .collect::<Vec<_>>();
         let affected_documents = self
             .documents
             .iter()
@@ -273,18 +302,23 @@ impl ServerState {
                     .key()
                     .to_file_path()
                     .ok()
-                    .map(|path| physical_path(&path))
                     .filter(|path| {
-                        published_roots
-                            .iter()
-                            .any(|root| path.starts_with(physical_path(root)))
+                        let route = self.project_contexts.routes.get(document.key());
+                        published_keys.iter().any(|key| {
+                            if route.as_ref().is_some_and(|route| route.value() == key) {
+                                return true;
+                            }
+                            // New package markers may move a buffer out of its
+                            // previous boundary. A shared directory alone must
+                            // not republish a different referenced owner.
+                            key.tsconfig.is_none()
+                                && route.as_ref().is_none_or(|route| route.root != key.root)
+                                && physical_path(path).starts_with(physical_path(&key.root))
+                        })
                     })
                     .map(|_| (document.key().clone(), document.value().version))
             })
             .collect::<Vec<_>>();
-        // A newly created marker can move a document out of the primary
-        // owner before any child context exists. Drop that old virtual view;
-        // the watcher prepares the current buffer in the new owner below.
         #[cfg(test)]
         if routing_change.is_some() {
             super::lock_order_tests::before_route_changes();
@@ -296,19 +330,25 @@ impl ServerState {
                     .routes
                     .get(uri)
                     .is_some_and(|previous| {
-                        routing_change.is_some()
-                            && self.is_primary_boundary(&previous)
+                        previous.tsconfig.is_none()
+                            && self.is_primary_boundary(&previous.root)
+                            && topology_roots.contains(&previous.root)
                             && uri
                                 .to_file_path()
                                 .ok()
                                 .and_then(|path| self.document_context_root(&path))
-                                .is_some_and(|current| current != *previous)
+                                .is_some_and(|current| current != previous.root)
                     })
             })
             .map(|(uri, _)| uri.clone())
             .collect::<Vec<_>>();
-        if routing_change.is_some() {
-            self.project_contexts.routes.clear();
+        if !topology_roots.is_empty() {
+            if failed_roots.is_empty() {
+                *self.project_contexts.reference_ownership.lock() = Default::default();
+            }
+            self.project_contexts
+                .routes
+                .retain(|_, key| !topology_roots.contains(&key.root));
         }
         if accepted_primary {
             self.retire_project_owner();
@@ -319,12 +359,40 @@ impl ServerState {
         for uri in moved_primary_documents {
             self.remove_virtual_docs(&uri);
         }
+        result.errors.sort_by(|a, b| a.message.cmp(&b.message));
+        result
+            .errors
+            .dedup_by(|a, b| a.typ == b.typ && a.message == b.message);
         result.documents = affected_documents;
         result
     }
 }
 
-pub(super) fn excluded_config_path(path: &std::path::Path, roots: &[std::path::PathBuf]) -> bool {
+fn known_config_events(
+    root: &Path,
+    dependencies: &[PathBuf],
+    markers: &[PathBuf],
+    changes: &[FileEvent],
+) -> Vec<Url> {
+    let mut changed = changes
+        .iter()
+        .filter(|change| {
+            change.uri.to_file_path().is_ok_and(|path| {
+                let path = physical_path(&path);
+                dependencies
+                    .iter()
+                    .any(|dependency| physical_path(dependency) == path)
+                    || (markers.contains(&path) && path.starts_with(physical_path(root)))
+            })
+        })
+        .map(|change| change.uri.clone())
+        .collect::<Vec<_>>();
+    changed.sort();
+    changed.dedup();
+    changed
+}
+
+pub(super) fn excluded_config_path(path: &Path, roots: &[PathBuf]) -> bool {
     let relative = roots
         .iter()
         .filter_map(|root| {
@@ -334,12 +402,5 @@ pub(super) fn excluded_config_path(path: &std::path::Path, roots: &[std::path::P
         })
         .max_by_key(|(root, _)| root.components().count())
         .map(|(_, relative)| relative);
-    relative.is_some_and(|relative| {
-        relative.components().any(|part| {
-            matches!(part, std::path::Component::Normal(name) if matches!(
-                name.to_str(),
-                Some("node_modules" | ".git" | "target" | "dist" | "build")
-            ))
-        })
-    })
+    relative.is_some_and(|relative| relative.components().any(|part| matches!(part,std::path::Component::Normal(name) if matches!(name.to_str(),Some("node_modules"|".git"|"target"|"dist"|"build")))))
 }

@@ -272,7 +272,7 @@ fn config_helper_that_is_also_a_sibling_source_import_still_invalidates_that_imp
     );
     sibling
         .open_imports
-        .update(&b, "import policy from '../../a/shared.mjs';");
+        .update(&b, &state.documents.text(&b).unwrap());
     std::fs::write(
         &helper,
         "export default { languageServer: { hover: true } };",
@@ -518,13 +518,19 @@ fn idle_new_package_markers_do_not_import_or_initialize_that_package() {
         &current,
         &state.document_project_state(&a).unwrap()
     ));
-    assert!(!state.project_contexts.contexts.lock().contains_key(&idle));
     assert!(
         !state
             .project_contexts
             .contexts
             .lock()
-            .contains_key(&fixture.path().join("packages/b"))
+            .contains_key(&ProjectContextKey::from(idle.clone()))
+    );
+    assert!(
+        !state
+            .project_contexts
+            .contexts
+            .lock()
+            .contains_key(&ProjectContextKey::from(fixture.path().join("packages/b")))
     );
     assert_eq!(state.documents.version(&b), None);
 }
@@ -579,7 +585,7 @@ fn unavailable_worker_retains_known_configuration_events_and_pending_retry() {
             .project_contexts
             .pending_config_reloads
             .lock()
-            .contains(&root)
+            .contains(&ProjectContextKey::from(root.clone()))
     );
     std::fs::write(
         &helper,
@@ -690,7 +696,10 @@ fn queued_or_unavailable_worker_after_workspace_removal_does_not_retain_retry_me
     std::fs::write(&config, "export default {};").unwrap();
     let changes = vec![event(&config, FileChangeType::CREATED)];
     let queued_scope = state.project_config_event_scope(&changes);
-    assert_eq!(queued_scope.affected, vec![secondary.clone()]);
+    assert_eq!(
+        queued_scope.affected,
+        vec![ProjectContextKey::from(secondary.clone())]
+    );
     state.set_workspace_folders(vec![primary]);
     state.refresh_project_routes();
     let unavailable = state.config_worker_unavailable(&secondary, &changes);

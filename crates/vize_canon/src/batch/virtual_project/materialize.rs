@@ -354,25 +354,14 @@ impl VirtualProject {
         paths
     }
 
-    /// Validate every inherited configuration before replacing an editor owner.
-    /// Uses the same resolver and merge traversal as compiler options; batch
-    /// checking retains its existing permissive missing-config behavior.
-    pub fn checked_governing_config_paths(&self) -> crate::batch::error::CorsaResult<Vec<PathBuf>> {
+    /// Validate the selected editor owner's `extends` chain through the same
+    /// resolver used for compiler options. Referenced projects are separate
+    /// owners; their broader watcher graph remains `governing_config_paths`.
+    pub fn checked_config_chain_paths(&self) -> crate::batch::error::CorsaResult<Vec<PathBuf>> {
         let Some(anchored) = self.resolved_tsconfig_path() else {
             return Ok(Vec::new());
         };
-        let mut roots = vec![anchored.clone()];
-        roots.extend(super::tsconfig_gen::references::referenced_project_configs(
-            &anchored,
-        ));
-        let mut paths = Vec::new();
-        for config in roots {
-            paths.extend(self.checked_compiler_config_paths(&config)?);
-            paths.extend(self.vue_target_manifest_path(&config));
-        }
-        paths.sort();
-        paths.dedup();
-        Ok(paths)
+        self.checked_compiler_config_paths(&anchored)
     }
 
     /// File that project-level (file-less) diagnostics are attributed to:

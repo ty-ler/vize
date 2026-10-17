@@ -77,11 +77,11 @@ fn fixture() -> (
         .project_contexts
         .contexts
         .lock()
-        .insert(root.path().to_path_buf(), context.clone());
+        .insert(root.path().to_path_buf().into(), context.clone());
     state
         .project_contexts
         .routes
-        .insert(uri.clone(), root.path().to_path_buf());
+        .insert(uri.clone(), root.path().to_path_buf().into());
     (root, state, uri, context)
 }
 
@@ -493,7 +493,7 @@ fn removed_secondary_workspace_cannot_install_a_prepared_new_marker_owner() {
             .project_contexts
             .pending_config_reloads
             .lock()
-            .contains(&secondary)
+            .contains(&super::ProjectContextKey::from(secondary.clone()))
     );
     state.set_workspace_folders(vec![primary.clone()]);
     state.refresh_project_routes();
@@ -502,11 +502,49 @@ fn removed_secondary_workspace_cannot_install_a_prepared_new_marker_owner() {
             .project_contexts
             .pending_config_reloads
             .lock()
-            .contains(&secondary)
+            .contains(&super::ProjectContextKey::from(secondary.clone()))
     );
     resume.send(()).unwrap();
     assert!(worker.join().unwrap().is_empty());
     assert!(state.project_contexts.contexts.lock().is_empty());
     assert!(state.cached_project_states().is_empty());
     assert_eq!(state.workspace_root_paths(), vec![primary]);
+}
+
+#[test]
+fn cached_document_dispatch_awaits_only_its_own_active_configuration_reload() {
+    use futures::Future;
+    use std::task::{Context, Poll};
+    let (fixture, state, a, b) = super::tests::fixture();
+    let previous = state.document_project_state(&a).unwrap();
+    let sibling = state.document_project_state(&b).unwrap();
+    let config = fixture.path().join("packages/a/vite.config.mjs");
+    std::fs::write(
+        &config,
+        "export default { vue: { languageServer: { hover: true } } };",
+    )
+    .unwrap();
+    let (entered, resume, install) = pause_at(Phase::BeforeConfigInstall);
+    let worker_state = state.clone();
+    let worker = std::thread::spawn(move || {
+        install();
+        worker_state.observe_project_config_events(&[FileEvent {
+            uri: Url::from_file_path(config).unwrap(),
+            typ: FileChangeType::CHANGED,
+        }]);
+    });
+    entered.recv_timeout(Duration::from_secs(10)).unwrap();
+    let mut request = Box::pin(state.document_project_state_async(&a));
+    let mut control = Box::pin(state.document_project_state_async(&b));
+    let mut context = Context::from_waker(futures::task::noop_waker_ref());
+    assert!(matches!(request.as_mut().poll(&mut context), Poll::Pending));
+    let Poll::Ready(Some(unaffected)) = control.as_mut().poll(&mut context) else {
+        panic!("a cached unrelated sibling must not wait for another root's reload");
+    };
+    assert!(Arc::ptr_eq(&sibling, &unaffected));
+    resume.send(()).unwrap();
+    worker.join().unwrap();
+    let current = futures::executor::block_on(request).unwrap();
+    assert!(!Arc::ptr_eq(&previous, &current));
+    assert!(current.lsp_features().hover);
 }

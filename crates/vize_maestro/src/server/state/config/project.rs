@@ -4,8 +4,28 @@ use std::path::Path;
 use super::ServerState;
 
 impl ServerState {
+    pub(super) fn apply_tsconfig_config_snapshot(
+        &self,
+        directory: &Path,
+        loaded: &mut vize_carton::config::LoadedLspConfig,
+    ) -> bool {
+        let key = self.project_contexts.key.read().clone();
+        match Self::prepare_tsconfig_config_snapshot(directory, key.as_ref(), loaded) {
+            Ok(()) => {
+                *self.project_contexts.config_dependencies.write() =
+                    loaded.project.dependencies.clone();
+                true
+            }
+            Err(error) => {
+                tracing::warn!("Failed to resolve project configuration: {error}");
+                false
+            }
+        }
+    }
+
     pub(super) fn prepare_tsconfig_config_snapshot(
         directory: &Path,
+        key: Option<&super::super::project_contexts::ProjectContextKey>,
         loaded: &mut vize_carton::config::LoadedLspConfig,
     ) -> Result<(), vize_l0::String> {
         let root = loaded.project.project_root.as_deref().unwrap_or(directory);
@@ -14,12 +34,16 @@ impl ServerState {
             .as_deref()
             .and_then(Path::parent)
             .unwrap_or(directory);
-        let selected = loaded
-            .config
-            .type_checker
-            .tsconfig
-            .as_deref()
-            .map(|path| base.join(path))
+        let selected = key
+            .and_then(|key| key.tsconfig.clone())
+            .or_else(|| {
+                loaded
+                    .config
+                    .type_checker
+                    .tsconfig
+                    .as_deref()
+                    .map(|path| base.join(path))
+            })
             .unwrap_or_else(|| {
                 [
                     root.join("tsconfig.json"),
@@ -31,6 +55,15 @@ impl ServerState {
                 .find(|path| path.is_file())
                 .unwrap_or_else(|| root.join("tsconfig.json"))
             });
+        if !selected.is_file()
+            && (key.is_some_and(|key| key.tsconfig.is_some())
+                || loaded.config.type_checker.tsconfig.is_some())
+        {
+            return Err(vize_l0::cstr!(
+                "selected TypeScript configuration does not exist: {}",
+                selected.display()
+            ));
+        }
         let mut dependencies = loaded.project.dependencies.clone();
         if selected.is_file() {
             // Keep the checker on the same TS project when Vite moves the source root.
@@ -41,14 +74,21 @@ impl ServerState {
                     project.set_tsconfig_path(Some(selected.clone()));
                     dependencies.extend(
                         project
-                            .checked_governing_config_paths()
+                            .checked_config_chain_paths()
                             .map_err(|error| vize_l0::cstr!("{error}"))?,
                     );
+                    dependencies.extend(project.governing_config_paths());
                 }
                 Err(error) => return Err(vize_l0::cstr!("{error}")),
             }
             // Authored Vite dialects, including Vue 3, take precedence.
-            if loaded.features.vue_version.is_none() {
+            let source_owner = key.is_some_and(|key| key.tsconfig.is_some());
+            let solution_shell = !source_owner
+                && vize_canon::batch::TsconfigOwnershipCache::default()
+                    .project_paths(&selected)
+                    .len()
+                    > 1;
+            if loaded.features.vue_version.is_none() && !solution_shell {
                 match vize_canon::snapshot_tsconfig_vue_target(root, &selected) {
                     Ok(Some(version)) => {
                         loaded.features.vue_version = Some(version);

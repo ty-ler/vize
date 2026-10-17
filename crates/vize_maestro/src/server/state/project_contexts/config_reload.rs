@@ -1,13 +1,13 @@
 //! Await root-local admission before consuming a bounded config worker.
 use super::paths::physical_path;
-use super::{Arc, PathBuf, ServerState, Url};
+use super::{Arc, PathBuf, ProjectContextKey, ServerState, Url};
 use tower_lsp::lsp_types::{FileEvent, MessageType, ShowMessageParams};
 
 #[derive(Default)]
 pub(crate) struct ProjectConfigChanges {
     pub documents: Vec<(Url, i32)>,
     pub errors: Vec<ShowMessageParams>,
-    pub(super) rejected: Vec<(std::path::PathBuf, Vec<Url>)>,
+    pub(super) rejected: Vec<(ProjectContextKey, Vec<Url>)>,
     pub(super) configuration_events: Vec<Url>,
 }
 
@@ -19,20 +19,20 @@ impl ProjectConfigChanges {
         state: &ServerState,
         changes: &[FileEvent],
     ) -> Vec<FileEvent> {
-        let boundary = state
-            .project_contexts
-            .boundary
-            .read()
-            .clone()
-            .or_else(|| state.get_workspace_root());
+        let key = state.project_contexts.key.read().clone().or_else(|| {
+            state
+                .project_contexts
+                .boundary
+                .read()
+                .clone()
+                .or_else(|| state.get_workspace_root())
+                .map(ProjectContextKey::from)
+        });
         changes
             .iter()
             .filter(|change| {
-                if self.rejected.iter().any(|(root, dependencies)| {
-                    boundary
-                        .as_ref()
-                        .is_some_and(|boundary| physical_path(boundary) == physical_path(root))
-                        && dependencies.contains(&change.uri)
+                if self.rejected.iter().any(|(rejected, dependencies)| {
+                    key.as_ref() == Some(rejected) && dependencies.contains(&change.uri)
                 }) {
                     return false;
                 }
@@ -42,18 +42,15 @@ impl ProjectConfigChanges {
                 // A sibling's config is not a disk mutation of this project. Keep
                 // ordinary source imports of that same file observable, including
                 // cross-package imports recorded by the open-importer index.
-                let own_path = change.uri.to_file_path().is_ok_and(|path| {
-                    boundary
-                        .as_ref()
-                        .is_some_and(|root| physical_path(&path).starts_with(physical_path(root)))
-                        || state
-                            .project_contexts
-                            .config_dependencies
-                            .read()
-                            .iter()
-                            .any(|dependency| physical_path(dependency) == physical_path(&path))
+                let dependency = change.uri.to_file_path().is_ok_and(|path| {
+                    state
+                        .project_contexts
+                        .config_dependencies
+                        .read()
+                        .iter()
+                        .any(|dependency| physical_path(dependency) == physical_path(&path))
                 });
-                own_path
+                dependency
                     || !crate::server::importers::open_typecheck_dependents(state, &change.uri)
                         .is_empty()
             })
@@ -101,7 +98,14 @@ impl ServerState {
         self: &Arc<Self>,
         changes: Vec<FileEvent>,
     ) -> ProjectConfigChanges {
-        let roots = self.project_config_event_scope(&changes).affected;
+        let mut roots = self
+            .project_config_event_scope(&changes)
+            .affected
+            .into_iter()
+            .map(|key| key.root)
+            .collect::<Vec<_>>();
+        roots.sort();
+        roots.dedup();
         let results = futures::future::join_all(roots.into_iter().map(|root| {
             let changes = &changes;
             async move {
@@ -111,10 +115,10 @@ impl ServerState {
                 };
                 let admission = gate.clone().lock_owned().await;
                 let mut fresh = self.project_config_event_scope(changes);
-                if !fresh.affected.contains(&root) {
+                if !fresh.affected.iter().any(|key| key.root == root) {
                     return ProjectConfigChanges::default();
                 }
-                fresh.retain_root(root.clone());
+                fresh.retain_root(&root);
                 let state = self.clone();
                 let worker_changes = changes.clone();
                 Self::project_background(move || {
@@ -156,45 +160,68 @@ impl ServerState {
         changes: &[FileEvent],
     ) -> ProjectConfigChanges {
         let contexts = self.project_contexts.contexts.lock();
+        let registered = contexts.keys().any(|key| key.root == root);
         if self.project_routing_shutting_down()
-            || (!contexts.contains_key(root) && !self.admits_new_config_root(root))
+            || (!registered && !self.admits_new_config_root(root))
         {
             return ProjectConfigChanges::default();
         }
-        let dependencies = contexts
-            .get(root)
-            .map(|context| context.config_dependencies())
-            .unwrap_or_else(|| self.project_contexts.config_dependencies.read().clone());
-        let roots = self.workspace_root_paths();
-        let mut rejected = changes
+        let mut keys = contexts
             .iter()
-            .filter(|change| {
-                change.uri.to_file_path().is_ok_and(|path| {
-                    let path = physical_path(&path);
-                    dependencies
-                        .iter()
-                        .any(|dependency| physical_path(dependency) == path)
-                        || (super::is_config_marker(&path)
-                            && path.starts_with(physical_path(root))
-                            && !super::watched::excluded_config_path(&path, &roots))
-                })
-            })
-            .map(|change| change.uri.clone())
+            .filter(|(key, _)| key.root == root)
+            .map(|(key, context)| (key.clone(), context.config_dependencies()))
             .collect::<Vec<_>>();
-        rejected.sort();
-        rejected.dedup();
-        self.project_contexts
-            .pending_config_reloads
-            .lock()
-            .insert(root.to_path_buf());
-        ProjectConfigChanges {
-            errors: vec![ShowMessageParams {
-                typ: MessageType::ERROR,
-                message: "Vize could not reload project configuration because the configuration worker is unavailable. Keeping the last good configuration.".into(),
-            }],
-            configuration_events: rejected.clone(),
-            rejected: vec![(root.to_path_buf(), rejected)],
+        if self.is_primary_boundary(root) && !keys.iter().any(|(key, _)| key.tsconfig.is_none()) {
+            keys.push((
+                root.to_path_buf().into(),
+                self.project_contexts.config_dependencies.read().clone(),
+            ));
+        }
+        if keys.is_empty() {
+            keys.push((root.to_path_buf().into(), Vec::new()));
+        }
+        let roots = self.workspace_root_paths();
+        let mut result = ProjectConfigChanges {
+            errors: vec![ShowMessageParams { typ: MessageType::ERROR, message: "Vize could not reload project configuration because the configuration worker is unavailable. Keeping the last good configuration.".into() }],
             ..Default::default()
+        };
+        for (key, dependencies) in keys {
+            let mut rejected = changes
+                .iter()
+                .filter(|change| {
+                    change.uri.to_file_path().is_ok_and(|path| {
+                        let path = physical_path(&path);
+                        dependencies
+                            .iter()
+                            .any(|dependency| physical_path(dependency) == path)
+                            || (super::is_config_marker(&path)
+                                && path.starts_with(physical_path(root))
+                                && !super::watched::excluded_config_path(&path, &roots))
+                    })
+                })
+                .map(|change| change.uri.clone())
+                .collect::<Vec<_>>();
+            rejected.sort();
+            rejected.dedup();
+            self.project_contexts
+                .pending_config_reloads
+                .lock()
+                .insert(key.clone());
+            result.configuration_events.extend(rejected.clone());
+            result.rejected.push((key, rejected));
+        }
+        result
+    }
+
+    pub(super) async fn await_project_config_reload(&self, root: &std::path::Path) {
+        let gate = self
+            .project_contexts
+            .reload_admission
+            .lock()
+            .get(root)
+            .and_then(std::sync::Weak::upgrade);
+        if let Some(gate) = gate {
+            let _admission = gate.lock_owned().await;
         }
     }
 
@@ -204,14 +231,21 @@ impl ServerState {
         changes: &[FileEvent],
     ) -> Vec<(Url, i32)> {
         let scope = self.project_config_event_scope(changes);
-        let gates = self.config_reload_gates(&scope.affected);
-        let _guards = futures::executor::block_on(async {
-            let mut guards = Vec::new();
-            for gate in &gates {
-                guards.push(gate.lock().await);
-            }
-            guards
-        });
+        let mut roots = scope
+            .affected
+            .iter()
+            .map(|key| key.root.clone())
+            .collect::<Vec<_>>();
+        roots.sort();
+        roots.dedup();
+        let gates = self.config_reload_gates(&roots);
+        let _guards = gates
+            .iter()
+            .map(|gate| {
+                gate.try_lock_owned()
+                    .unwrap_or_else(|| futures::executor::block_on(gate.clone().lock_owned()))
+            })
+            .collect::<Vec<_>>();
         self.observe_project_config_events_checked(changes)
             .documents
     }

@@ -3,7 +3,7 @@
     clippy::disallowed_types,
     reason = "registry cells retain their isolated native owner"
 )]
-use super::{Arc, AtomicBool, Ordering, PathBuf, ServerState};
+use super::{Arc, AtomicBool, Ordering, ProjectContextKey, RetainedConfiguration, ServerState};
 #[cfg(feature = "experimental-source-navigation")]
 use crate::source_project::{SourceQueryProject, navigation::NativeNavigationProject};
 use futures::{
@@ -14,12 +14,10 @@ use std::sync::OnceLock;
 type Initialization = Shared<BoxFuture<'static, Option<Arc<ServerState>>>>;
 
 pub(super) struct ProjectContext {
-    root: PathBuf,
+    key: ProjectContextKey,
+    snapshot: OnceLock<(vize_carton::config::LoadedLspConfig, bool)>,
+    prepared: OnceLock<RetainedConfiguration>,
     state: OnceLock<Arc<ServerState>>,
-    prepared_config: super::Mutex<Option<vize_carton::config::LoadedLspConfig>>,
-    // Available even while initialization has consumed the prepared snapshot
-    // but has not yet published its ServerState in the OnceLock.
-    prepared_dependencies: Vec<PathBuf>,
     #[cfg(feature = "experimental-source-navigation")]
     navigation: OnceLock<Arc<NativeNavigationProject<'static>>>,
     retired: AtomicBool,
@@ -27,12 +25,12 @@ pub(super) struct ProjectContext {
 }
 
 impl ProjectContext {
-    pub(super) fn new(root: PathBuf) -> Self {
+    pub(super) fn new(key: impl Into<ProjectContextKey>) -> Self {
         Self {
-            root,
+            key: key.into(),
+            snapshot: OnceLock::new(),
+            prepared: OnceLock::new(),
             state: OnceLock::new(),
-            prepared_config: super::Mutex::new(None),
-            prepared_dependencies: Vec::new(),
             #[cfg(feature = "experimental-source-navigation")]
             navigation: OnceLock::new(),
             retired: AtomicBool::new(false),
@@ -40,11 +38,31 @@ impl ProjectContext {
         }
     }
 
-    pub(super) fn with_config(root: PathBuf, config: vize_carton::config::LoadedLspConfig) -> Self {
-        let mut context = Self::new(root);
-        context.prepared_dependencies = config.project.dependencies.clone();
-        *context.prepared_config.lock() = Some(config);
+    pub(super) fn with_prepared(key: ProjectContextKey, prepared: RetainedConfiguration) -> Self {
+        let context = Self::new(key);
+        let _ = context.prepared.set(prepared);
         context
+    }
+
+    pub(super) fn config_dependencies(&self) -> Vec<std::path::PathBuf> {
+        if let Some(state) = self.initialized_state() {
+            return state.project_contexts.config_dependencies.read().clone();
+        }
+        if let Some(prepared) = self.prepared.get() {
+            return prepared.applied.project.dependencies.clone();
+        }
+        self.snapshot
+            .get()
+            .map(|(snapshot, _)| snapshot.project.dependencies.clone())
+            .unwrap_or_default()
+    }
+
+    pub(super) fn provide_snapshot(
+        &self,
+        snapshot: vize_carton::config::LoadedLspConfig,
+        failed: bool,
+    ) {
+        let _ = self.snapshot.set((snapshot, failed));
     }
 
     pub(super) async fn initialize_async(
@@ -92,8 +110,12 @@ impl ProjectContext {
         let state = self
             .state
             .get_or_init(|| {
-                let prepared = self.prepared_config.lock().take();
-                owner.new_project_state(&self.root, prepared)
+                owner.new_project_state(
+                    &self.key,
+                    self.snapshot.get().map(|(snapshot, _)| snapshot),
+                    self.snapshot.get().is_some_and(|(_, failed)| *failed),
+                    self.prepared.get(),
+                )
             })
             .clone();
         if self.retired.load(Ordering::Acquire) {
@@ -101,13 +123,6 @@ impl ProjectContext {
             return None;
         }
         Some(state)
-    }
-
-    pub(super) fn config_dependencies(&self) -> Vec<PathBuf> {
-        if let Some(state) = self.initialized_state() {
-            return state.project_contexts.config_dependencies.read().clone();
-        }
-        self.prepared_dependencies.clone()
     }
 
     pub(super) fn initialized_state(&self) -> Option<Arc<ServerState>> {

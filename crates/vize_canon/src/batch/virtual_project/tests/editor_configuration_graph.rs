@@ -15,7 +15,7 @@ fn missing_relative_and_package_extends_reject_only_checked_editor_admission() {
         let mut project = VirtualProject::new(root.path()).unwrap();
         project.set_tsconfig_path(Some(config.clone()));
         assert_eq!(project.governing_config_paths(), vec![config.clone()]);
-        let error = project.checked_governing_config_paths().unwrap_err();
+        let error = project.checked_config_chain_paths().unwrap_err();
         assert_eq!(
             cstr!("{error}"),
             cstr!(
@@ -57,9 +57,9 @@ fn checked_admission_uses_array_and_package_resolution_and_reports_the_whole_gra
         vize_carton::path::canonicalize_non_verbatim(&package.join("policy.json")),
     ];
     expected.sort();
-    assert_eq!(project.checked_governing_config_paths().unwrap(), expected);
+    assert_eq!(project.checked_config_chain_paths().unwrap(), expected);
     std::fs::remove_file(package.join("policy.json")).unwrap();
-    assert!(project.checked_governing_config_paths().is_err());
+    assert!(project.checked_config_chain_paths().is_err());
 }
 
 #[test]
@@ -71,9 +71,9 @@ fn malformed_inherited_json_rejects_checked_admission_and_recreation_repairs_it(
     std::fs::write(&base, "{").unwrap();
     let mut project = VirtualProject::new(root.path()).unwrap();
     project.set_tsconfig_path(Some(config.clone()));
-    assert!(project.checked_governing_config_paths().is_err());
+    assert!(project.checked_config_chain_paths().is_err());
     std::fs::write(&base, "{}").unwrap();
     let mut expected = vec![config, base];
     expected.sort();
-    assert_eq!(project.checked_governing_config_paths().unwrap(), expected);
+    assert_eq!(project.checked_config_chain_paths().unwrap(), expected);
 }
