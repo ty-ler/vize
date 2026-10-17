@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 
+import { preparePinnedFixtureWorkspace } from "../_helpers/realworld-patch.ts";
+
 import {
   preparePinnedFixtureDependencies,
   readPinnedFixtureDependencyPlan,
@@ -253,5 +255,43 @@ test("dependency preparation refuses upstream writes, untrusted corpus and forei
       false,
     );
     assertPinnedFixtureFiles(root, source);
+  });
+});
+
+test("an explicit repository root keeps fixture authority and output inside that checkout", () => {
+  withFixture((source, pin) => {
+    const repository = fs.mkdtempSync(path.join(os.tmpdir(), "vize-pinned-root-"));
+    let fixture: ReturnType<typeof preparePinnedFixtureWorkspace> | undefined;
+    try {
+      const fixturePath = "tests/_fixtures/_git/isolated";
+      const upstream = path.join(repository, fixturePath);
+      fs.cpSync(source, upstream, { recursive: true });
+      fs.writeFileSync(
+        path.join(repository, "tests/_fixtures/vue-ecosystem-fixtures.json"),
+        JSON.stringify({
+          projects: [{ id: "isolated", displayName: "isolated", fixturePath, revision: pin }],
+        }),
+      );
+      fixture = preparePinnedFixtureWorkspace({
+        repositoryRoot: repository,
+        fixtureId: "isolated",
+        includePaths: ["Original.vue"],
+      });
+      assert.equal(fixture.upstreamDir, upstream);
+      assert.equal(fixture.entry.revision, pin);
+      assert.ok(
+        fixture.workspaceDir.startsWith(
+          path.join(repository, "target/vize-tests/realworld-patches"),
+        ),
+      );
+      assert.equal(
+        fixture.read("Original.vue"),
+        fs.readFileSync(path.join(source, "Original.vue"), "utf8"),
+      );
+      assert.equal(git(upstream, ["status", "--porcelain"]), "");
+    } finally {
+      fixture?.dispose();
+      fs.rmSync(repository, { recursive: true, force: true });
+    }
   });
 });

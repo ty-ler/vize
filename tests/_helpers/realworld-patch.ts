@@ -44,6 +44,8 @@ export type PinnedFixtureWorkspace = {
 };
 
 type PinnedFixtureOptions = {
+  /** Owning checkout; explicit runners must not prepare a different repository. */
+  repositoryRoot?: string;
   fixtureId: string;
   includePaths: string[];
   outsideRepository?: boolean;
@@ -77,11 +79,15 @@ export async function withPinnedFixtureWorkspace<T>(
 export function preparePinnedFixtureWorkspace(
   options: PinnedFixtureOptions,
 ): PreparedPinnedFixtureWorkspace {
-  const { entry, upstreamDir, initialRevision } = openPinnedFixture(options.fixtureId);
+  const repositoryRoot = path.resolve(options.repositoryRoot ?? repoRoot);
+  const { entry, upstreamDir, initialRevision } = openPinnedFixture(
+    options.fixtureId,
+    repositoryRoot,
+  );
 
   const outputRoot = options.outsideRepository
     ? path.join(os.tmpdir(), "vize-realworld-patches")
-    : path.join(repoRoot, "target/vize-tests/realworld-patches");
+    : path.join(repositoryRoot, "target/vize-tests/realworld-patches");
   fs.mkdirSync(outputRoot, { recursive: true });
   const workspaceDir = fs.mkdtempSync(path.join(outputRoot, `${entry.id}-`));
 
@@ -98,7 +104,10 @@ export function preparePinnedFixtureWorkspace(
       try {
         const receipt = path.join(workspaceDir, ".vize-pinned-fixture-dependencies.json");
         if (fs.existsSync(receipt)) {
-          const artifact = path.join(repoRoot, "target/vize-tests/pinned-fixture-dependencies");
+          const artifact = path.join(
+            repositoryRoot,
+            "target/vize-tests/pinned-fixture-dependencies",
+          );
           fs.mkdirSync(artifact, { recursive: true });
           fs.copyFileSync(receipt, path.join(artifact, `${path.basename(workspaceDir)}.json`));
         }
@@ -200,16 +209,19 @@ export function symlinkDirectory(source: string, target: string): void {
   fs.symlinkSync(source, target, process.platform === "win32" ? "junction" : "dir");
 }
 
-function readFixtureEntry(id: string): FixtureRegistryEntry {
+function readFixtureEntry(id: string, repositoryRoot: string): FixtureRegistryEntry {
   const registry = JSON.parse(
-    fs.readFileSync(path.join(repoRoot, "tests/_fixtures/vue-ecosystem-fixtures.json"), "utf8"),
+    fs.readFileSync(
+      path.join(repositoryRoot, "tests/_fixtures/vue-ecosystem-fixtures.json"),
+      "utf8",
+    ),
   ) as FixtureRegistry;
   const entry = registry.projects.find((project) => project.id === id);
   if (entry != null) return entry;
 
   assert.match(id, /^[a-z0-9][a-z0-9-]*$/, `invalid fixture id: ${id}`);
   const fixturePath = `tests/_fixtures/_git/${id}`;
-  const treeEntry = git(repoRoot, "ls-tree", "HEAD", "--", fixturePath);
+  const treeEntry = git(repositoryRoot, "ls-tree", "HEAD", "--", fixturePath);
   const match = /^(160000) commit ([0-9a-f]{40})\t(.+)$/.exec(treeEntry);
   assert.ok(match, `${fixturePath} must be a pinned gitlink`);
   assert.equal(match[3], fixturePath);
@@ -221,13 +233,16 @@ function readFixtureEntry(id: string): FixtureRegistryEntry {
   };
 }
 
-function openPinnedFixture(fixtureId: string): {
+function openPinnedFixture(
+  fixtureId: string,
+  repositoryRoot: string,
+): {
   entry: FixtureRegistryEntry;
   upstreamDir: string;
   initialRevision: string;
 } {
-  const entry = readFixtureEntry(fixtureId);
-  const upstreamDir = path.join(repoRoot, entry.fixturePath);
+  const entry = readFixtureEntry(fixtureId, repositoryRoot);
+  const upstreamDir = path.join(repositoryRoot, entry.fixturePath);
   assert.ok(
     fs.existsSync(upstreamDir),
     `fixture ${entry.id} is not hydrated; run git submodule update --init ${entry.fixturePath}`,
