@@ -7,7 +7,7 @@ import { gunzipSync } from "node:zlib";
 import provenance from "../../_fixtures/differential/lint/legacy-instance-apis-9217/template-compiler-provenance.json" with { type: "json" };
 
 type CompilerDom = typeof import("@vue/compiler-dom");
-type CompilerSfc = typeof import("@vue/compiler-sfc");
+type CompilerSfc = typeof import("vue-legacy-instance-oracle/compiler-sfc");
 interface CompilerProvider {
   vue: string;
   compiler: string;
@@ -16,7 +16,7 @@ interface CompilerProvider {
 }
 interface Providers<Compiler> {
   compiler: Compiler;
-  vueRuntime: typeof import("vue");
+  vueRuntime: typeof import("vue-legacy-instance-oracle");
   typescript: typeof import("typescript");
   requireVuePackage: ReturnType<typeof createRequire>;
 }
@@ -142,7 +142,7 @@ export function loadFrozenTemplateCompiler(
   }
   const typescript: typeof import("typescript") = requireVuePackage("typescript");
   assert.equal(typescript.version, current.typescript);
-  const vueRuntime: typeof import("vue") = requireVue(vuePackage);
+  const vueRuntime: typeof import("vue-legacy-instance-oracle") = requireVue(vuePackage);
   assert.equal(vueRuntime.version, current.vue);
   assert.equal(
     requireVuePackage("vue"),
