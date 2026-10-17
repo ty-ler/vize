@@ -302,7 +302,7 @@ fn watcher(path: &Path) -> Option<FileSystemWatcher> {
     let parent = path.parent()?;
     let filename = path.file_name()?.to_str()?;
     let base_uri = Url::from_directory_path(parent).ok()?;
-    let mut pattern = String::new();
+    let mut pattern = String::new("");
     for character in filename.chars() {
         match character {
             '[' => pattern.push_str("[[]"),
