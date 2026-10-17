@@ -161,6 +161,10 @@ test("startup diagnostics retain the production producer and unchanged scale-one
     /process\.argv\[2\] === "--retain-rename-producer"[\s\S]*?retainIntegrationProducer\(path\.join\(directory, "rename\.stdout"\), directory, "rename-test"\)/,
   );
   for (const sourcePath of [
+    "tests/_helpers/pinned-fixture-dependencies.ts",
+    "tests/_helpers/pinned-fixture-source.ts",
+    "tests/_helpers/lint-fixture-runtime.ts",
+    "tests/performance/support/incremental-report.ts",
     "crates/vize_canon/src/batch/virtual_project/materialize_delta.rs",
     "crates/vize_canon/src/corsa_bridge/source_catalog.rs",
     "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/cache/catalog.rs",
