@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { parse } from "yaml";
 
 import { testAndBenchmarkTasks } from "../../tools/config/vite-plus/tasks/test-benchmark.ts";
 import { readRepoFile, root } from "./support/github-workflows.ts";
@@ -104,6 +105,31 @@ test("CI runs all real-server editor scenarios from one built server binary", ()
     7,
     "every real-server scenario and host health check must consume the one built binary",
   );
+  const workflow = parse(readRepoFile(".github", "workflows", "editor-conformance.yml")) as any;
+  const fullHosts = workflow.jobs.conformance.steps.filter(
+    (step: any) => step.run === "xvfb-run -a node test/run-extension-host-real.mjs",
+  );
+  assert.equal(
+    serverPathUses.length + fullHosts.length,
+    8,
+    "the additional genuine host reuses the conformance server",
+  );
+  assert.equal(fullHosts[0].if, "matrix.client == 'vscode'");
+  assert.equal(fullHosts[0].env.VIZE_SERVER_PATH, "${{ runner.temp }}/vize-server/vize");
+  assert.equal(fullHosts[0].env.VIZE_TEST_VSCODE_VERSION, "1.107.1");
+  assert.ok(
+    workflow.jobs.conformance.steps.some(
+      (step: any) =>
+        step.run?.includes("server-artifact.ts scorecard") && step.run.includes('"$GITHUB_SHA"'),
+    ),
+  );
+  const retention = workflow.jobs.conformance.steps.find(
+    (step: any) => step.with?.name === "vscode-full-authoring",
+  );
+  assert.equal(retention.if, "${{ always() && matrix.client == 'vscode' }}");
+  assert.equal(retention.with["include-hidden-files"], true);
+  assert.ok(retention.with.path.includes("vize-server/server.json"));
+  assert.ok(retention.with.path.includes("host-smoke-real/failure"));
   assert.match(action, /vp run --workspace-root test:vscode-extension:host-real/);
   // The pin is the value the step passes, not how YAML happens to quote it.
   assert.equal(
