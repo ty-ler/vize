@@ -190,6 +190,72 @@ fn original_two_document_revision_stages_linked_vue_companions_privately() {
 }
 
 #[test]
+fn reverse_open_order_preserves_the_complete_linked_package_until_session_cleanup() {
+    for authored_companions in [false, true] {
+        let fixture = Fixture::new(authored_companions);
+        let session = EditorMirrorSession::new();
+        let session_root = session.root().unwrap().to_path_buf();
+        let host = fixture.build(&session, &fixture.host, APP);
+        fixture.assert_authored_unchanged();
+
+        let project_root = host.session_project_root.as_ref().unwrap();
+        let request = crate::file_uri::file_uri_to_path(&host.host.request_uri).unwrap();
+        assert!(request.starts_with(&session_root));
+        assert_eq!(fs::read(&request).unwrap(), host.host.code.as_bytes());
+        let package = project_root.join("node_modules/ui");
+        assert!(
+            !fs::symlink_metadata(&package)
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+        let retained = [
+            request,
+            package.join("UiButton.vue.ts"),
+            package.join("UiButton.d.vue.ts"),
+            package.join("package.json"),
+        ]
+        .into_iter()
+        .map(|path| {
+            assert!(path.canonicalize().unwrap().starts_with(&session_root));
+            let bytes = fs::read(&path).unwrap();
+            (path, bytes)
+        })
+        .collect::<BTreeMap<_, _>>();
+
+        // The later host has no package imports. Its runtime pruning must
+        // retain every complete file owned by the earlier live host.
+        let other = fixture.build(&session, &fixture.other, OTHER);
+        assert_eq!(other.session_project_root.as_ref(), Some(project_root));
+        let other_request = crate::file_uri::file_uri_to_path(&other.host.request_uri).unwrap();
+        assert!(other_request.starts_with(&session_root));
+        assert_eq!(fs::read(other_request).unwrap(), other.host.code.as_bytes());
+        fixture.assert_authored_unchanged();
+        for (path, bytes) in &retained {
+            assert_eq!(fs::read(path).unwrap(), *bytes, "{}", path.display());
+        }
+
+        let reopened = fixture.build(&session, &fixture.host, APP);
+        assert_eq!(reopened.host.request_uri, host.host.request_uri);
+        assert_eq!(reopened.host.code, host.host.code);
+        assert_eq!(reopened.documents, host.documents);
+        assert_eq!(reopened.session_project_root.as_ref(), Some(project_root));
+        assert!(reopened.materialized_changes.is_empty());
+        fixture.assert_authored_unchanged();
+        for (path, bytes) in &retained {
+            assert_eq!(fs::read(path).unwrap(), *bytes, "{}", path.display());
+        }
+
+        session.clear();
+        assert!(!project_root.exists());
+        for path in retained.keys() {
+            assert!(!path.exists(), "{}", path.display());
+        }
+        fixture.assert_authored_unchanged();
+    }
+}
+
+#[test]
 fn genuine_authored_companions_are_never_overwritten_or_cleaned_up() {
     let fixture = Fixture::new(true);
     let session = EditorMirrorSession::new();
