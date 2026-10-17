@@ -58,7 +58,7 @@ vp run fmt:check
 - [JSR から JavaScript API を使う](./guide/jsr.md)。Node・Deno・Bun で利用できます。
 
 > [!NOTE]
-> Vize 0.457.0 のネイティブ CLI は Vite の共通設定を読み込めます。`init` も専用の Vize 設定ファイルを作らずに導入できます。共通設定を利用する場合は、CLI・Vite 連携・エディター拡張機能を更新してください。設定の検索順序・優先順位と、任意の専用形式は[リファレンス](./guide/configuration-reference.md)を参照してください。
+> CLI・Vite 連携・エディターは `vite.config.*` の `vue:` 設定を共有し、`tsconfig.json` の TypeScript プロジェクト設定と `vueCompilerOptions` を利用します。専用の `vize.config.*` ファイルとトップレベルの `vize:` 設定は廃止されました。移行方法は[設定ガイド](./guide/configuration.md)を参照してください。
 
 ## Vite+ なしで利用する
 

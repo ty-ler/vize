@@ -9,13 +9,13 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { stripVTControlCharacters } from "node:util";
-import { toolingTestFiles } from "./plan-tooling-tests.mjs";
 import {
   MAX_TOOLING_SHARDS,
   TOOLING_LEAD_STEPS,
   TOOLING_TIMINGS_LOG_MARKER,
   TOOLING_TIMINGS_PATH,
   validateToolingTimings,
+  toolingTestFiles,
 } from "./tooling-test-shards.ts";
 import type { ToolingTimings } from "./tooling-test-shards.ts";
 

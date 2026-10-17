@@ -88,7 +88,11 @@ function retainCompletion(request, completions) {
 function writePackets() {
   const output = path.join(getWorkspaceFolderPath(), "node_modules/.vize/rich-hover.json");
   fs.mkdirSync(path.dirname(output), { recursive: true });
-  fs.writeFileSync(output, `${JSON.stringify({ schemaVersion: 1, packets }, null, 2)}\n`);
+  const bytes = `${JSON.stringify({ schemaVersion: 1, packets }, null, 2)}\n`;
+  fs.writeFileSync(output, bytes);
+  if (process.env.VIZE_RICH_CUSTODY_OUTPUT) {
+    fs.writeFileSync(process.env.VIZE_RICH_CUSTODY_OUTPUT, bytes);
+  }
 }
 
 module.exports = { beginHover, retainHover, beginCompletion, retainCompletion };

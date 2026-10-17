@@ -201,6 +201,7 @@ void test("Japanese rule options retain the complete authored review and origina
   const currentTokens = [
     ...japanese.replace(fencePattern, "").matchAll(/(?<!`)`([^`\n]+)`(?!`)/g),
   ].map((match) => match[1]);
+  assert.equal(currentTokens.length, 135);
   const successorTokens = inlineTokens.map((token) =>
     token.replace(/^lint\.vize(?=\.|$)/, "vue.linter"),
   );
