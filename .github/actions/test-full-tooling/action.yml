@@ -64,3 +64,11 @@ runs:
     - uses: ./.github/actions/upload-formatter-api-corpus-evidence
       if: ${{ always() }}
       with: { shard: "${{ inputs.shard }}" }
+    - name: Retain genuine pinned project dependency closures
+      if: ${{ always() }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: tooling-pinned-fixture-closures-${{ inputs.shard }}
+        path: target/vize-tests/pinned-fixture-dependencies/
+        if-no-files-found: ignore
+        retention-days: 7

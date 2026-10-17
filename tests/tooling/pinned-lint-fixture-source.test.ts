@@ -6,6 +6,10 @@ import path from "node:path";
 import { test } from "node:test";
 
 import {
+  preparePinnedFixtureDependencies,
+  readPinnedFixtureDependencyPlan,
+} from "../_helpers/pinned-fixture-dependencies.ts";
+import {
   assertPinnedFixtureFiles,
   exportPinnedFixtureGitlinks,
   readPinnedFixtureSource,
@@ -148,3 +152,106 @@ test(
     });
   },
 );
+
+function withDependencyArchive(run: (root: string, archive: string, pin: string) => void): void {
+  withFixture((root) => {
+    fs.writeFileSync(
+      path.join(root, "package.json"),
+      '{"name":"create-vue","packageManager":"pnpm@11.10.0"}\n',
+    );
+    fs.writeFileSync(path.join(root, ".npmrc"), "engine-strict=true\n");
+    git(root, ["add", "package.json", ".npmrc"]);
+    git(root, [
+      "-c",
+      "user.name=Vize",
+      "-c",
+      "user.email=vize@example.com",
+      "commit",
+      "-qm",
+      "closure",
+    ]);
+    const pin = git(root, ["rev-parse", "HEAD"]);
+    const archive = fs.mkdtempSync(path.join(os.tmpdir(), "vize-dependency-archive-"));
+    try {
+      for (const { path: file } of readPinnedFixtureSource(root, pin).blobs) {
+        fs.copyFileSync(path.join(root, file), path.join(archive, file));
+      }
+      run(root, archive, pin);
+    } finally {
+      fs.rmSync(archive, { recursive: true, force: true });
+    }
+  });
+}
+
+test("dependency planning retains every source blob separately from the declared corpus and original install inputs", () => {
+  withDependencyArchive((root, archive, pin) => {
+    const source = readPinnedFixtureSource(root, pin);
+    const plan = readPinnedFixtureDependencyPlan(archive, root, source, ["Original.vue"]);
+    assert.deepEqual(plan.source, source);
+    assert.equal(plan.source.blobs.length, 5);
+    assert.deepEqual(
+      plan.declaredCorpus.blobs,
+      source.blobs.filter(({ path }) => path === "Original.vue"),
+    );
+    assert.equal(plan.managerVersion, "11.10.0");
+    assert.equal(plan.packageManager, "pnpm@11.10.0");
+    assert.deepEqual(plan.stubs, []);
+    assert.deepEqual(plan.modules, [
+      { importer: "package.json", specifier: "@tsconfig/node24/tsconfig.json" },
+    ]);
+    assert.deepEqual(
+      plan.originalInputs.map(({ path: file, contentsBase64 }) => ({
+        file: path.basename(file),
+        contents: Buffer.from(contentsBase64, "base64").toString("utf8"),
+      })),
+      [
+        { file: ".npmrc", contents: "engine-strict=true\n" },
+        {
+          file: "package.json",
+          contents: '{"name":"create-vue","packageManager":"pnpm@11.10.0"}\n',
+        },
+        { file: "pnpm-lock.yaml", contents: "lockfileVersion: '9.0'\n" },
+      ],
+    );
+    assert.equal(fs.existsSync(path.join(archive, "node_modules")), false);
+  });
+});
+
+test("dependency preparation refuses upstream writes, untrusted corpus and foreign dependencies before launching installers", () => {
+  withDependencyArchive((root, archive, pin) => {
+    const source = readPinnedFixtureSource(root, pin);
+    assert.throws(
+      () => preparePinnedFixtureDependencies(root, root, source, ["Original.vue"]),
+      /never modify the upstream checkout/,
+    );
+    assert.throws(
+      () => preparePinnedFixtureDependencies(archive, root, source, ["untracked.vue"]),
+      /must belong to the original source/,
+    );
+    assert.throws(
+      () =>
+        preparePinnedFixtureDependencies(archive, root, source, ["Original.vue", "Original.vue"]),
+      /must be unique/,
+    );
+    fs.mkdirSync(path.join(archive, "node_modules"));
+    assert.throws(
+      () => preparePinnedFixtureDependencies(archive, root, source, ["Original.vue"]),
+      /without foreign node_modules/,
+    );
+    fs.rmdirSync(path.join(archive, "node_modules"));
+    for (const file of [".npmrc", "pnpm-lock.yaml", "vite.config.ts"]) {
+      const original = fs.readFileSync(path.join(archive, file));
+      fs.appendFileSync(path.join(archive, file), "changed\n");
+      assert.throws(
+        () => preparePinnedFixtureDependencies(archive, root, source, ["Original.vue"]),
+        /original fixture bytes changed/,
+      );
+      fs.writeFileSync(path.join(archive, file), original);
+    }
+    assert.equal(
+      fs.existsSync(path.join(archive, ".vize-pinned-fixture-dependencies.json")),
+      false,
+    );
+    assertPinnedFixtureFiles(root, source);
+  });
+});

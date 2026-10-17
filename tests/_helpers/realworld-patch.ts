@@ -5,6 +5,12 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeVueConfigFixture } from "../tooling/support/vue-config-fixture.ts";
+import { preparePinnedFixtureDependencies } from "./pinned-fixture-dependencies.ts";
+import {
+  assertPinnedFixtureFiles,
+  exportPinnedFixtureGitlinks,
+  readPinnedFixtureSource,
+} from "./pinned-fixture-source.ts";
 
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -23,6 +29,10 @@ export type PinnedFixtureWorkspace = {
   entry: FixtureRegistryEntry;
   upstreamDir: string;
   workspaceDir: string;
+  /** Original selected corpus; dependency-only source files remain separate. */
+  corpusFiles?: readonly string[];
+  availableFiles?: readonly string[];
+  dependencyClosure?: ReturnType<typeof preparePinnedFixtureDependencies>["receipt"];
   applyExactPatch(relativePath: string, expected: string, replacement: string): string;
   read(relativePath: string): string;
   resolve(relativePath: string): string;
@@ -37,7 +47,14 @@ type PinnedFixtureOptions = {
   fixtureId: string;
   includePaths: string[];
   outsideRepository?: boolean;
+  /**
+   * Export and install the complete authored workspace in this same physical root.
+   * Original disk inputs remain immutable; use unsaved edits or new temporary files.
+   */
+  prepareDependencies?: boolean;
 };
+
+export type PreparedPinnedFixtureWorkspace = PinnedFixtureWorkspace & { dispose(): void };
 
 /**
  * Copies selected files from a pinned third-party git fixture into an isolated
@@ -48,6 +65,18 @@ export async function withPinnedFixtureWorkspace<T>(
   options: PinnedFixtureOptions,
   run: (fixture: PinnedFixtureWorkspace) => Promise<T>,
 ): Promise<T> {
+  const fixture = preparePinnedFixtureWorkspace(options);
+  try {
+    return await run(fixture);
+  } finally {
+    fixture.dispose();
+  }
+}
+
+/** Prepare outside measured test phases; disposal preserves receipts and checks upstream custody. */
+export function preparePinnedFixtureWorkspace(
+  options: PinnedFixtureOptions,
+): PreparedPinnedFixtureWorkspace {
   const { entry, upstreamDir, initialRevision } = openPinnedFixture(options.fixtureId);
 
   const outputRoot = options.outsideRepository
@@ -56,55 +85,112 @@ export async function withPinnedFixtureWorkspace<T>(
   fs.mkdirSync(outputRoot, { recursive: true });
   const workspaceDir = fs.mkdtempSync(path.join(outputRoot, `${entry.id}-`));
 
-  for (const relativePath of options.includePaths) {
-    const source = resolveInside(upstreamDir, relativePath);
-    const target = resolveInside(workspaceDir, relativePath);
-    assert.ok(fs.existsSync(source), `${entry.id} is missing ${relativePath}`);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.cpSync(source, target, { recursive: true });
-  }
-
-  const fixture: PinnedFixtureWorkspace = {
-    entry,
-    upstreamDir,
-    workspaceDir,
-    applyExactPatch(relativePath, expected, replacement) {
-      const filePath = resolveInside(workspaceDir, relativePath);
-      const source = fs.readFileSync(filePath, "utf8");
-      const first = source.indexOf(expected);
-      assert.notEqual(first, -1, `${relativePath} does not contain the expected patch anchor`);
-      assert.equal(
-        source.indexOf(expected, first + expected.length),
-        -1,
-        `${relativePath} patch anchor must be unique`,
-      );
-      const patched = `${source.slice(0, first)}${replacement}${source.slice(first + expected.length)}`;
-      fs.writeFileSync(filePath, patched, "utf8");
-      return patched;
-    },
-    read(relativePath) {
-      return fs.readFileSync(resolveInside(workspaceDir, relativePath), "utf8");
-    },
-    resolve(relativePath) {
-      return resolveInside(workspaceDir, relativePath);
-    },
-    writeVueConfig(document, relativeDirectory = ".") {
-      const directory = resolveInside(workspaceDir, relativeDirectory);
-      fs.mkdirSync(directory, { recursive: true });
-      writeVueConfigFixture(directory, document);
-    },
-    write(relativePath, content) {
-      const filePath = resolveInside(workspaceDir, relativePath);
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
-      fs.writeFileSync(filePath, content, "utf8");
-    },
+  let dependencies: ReturnType<typeof preparePinnedFixtureDependencies> | undefined;
+  let corpusFiles: string[] | undefined;
+  let availableFiles: string[] | undefined;
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    try {
+      dependencies?.verify();
+    } finally {
+      try {
+        const receipt = path.join(workspaceDir, ".vize-pinned-fixture-dependencies.json");
+        if (fs.existsSync(receipt)) {
+          const artifact = path.join(repoRoot, "target/vize-tests/pinned-fixture-dependencies");
+          fs.mkdirSync(artifact, { recursive: true });
+          fs.copyFileSync(receipt, path.join(artifact, `${path.basename(workspaceDir)}.json`));
+        }
+      } finally {
+        fs.rmSync(workspaceDir, { recursive: true, force: true });
+        assertPinnedFixtureUnchanged(entry, upstreamDir, initialRevision);
+      }
+    }
   };
-
   try {
-    return await run(fixture);
-  } finally {
-    fs.rmSync(workspaceDir, { recursive: true, force: true });
-    assertPinnedFixtureUnchanged(entry, upstreamDir, initialRevision);
+    if (options.prepareDependencies) {
+      const source = readPinnedFixtureSource(upstreamDir, initialRevision);
+      const archive = path.join(workspaceDir, ".vize-pinned-source.tar");
+      try {
+        execFileSync("git", ["archive", "--format=tar", `--output=${archive}`, initialRevision], {
+          cwd: upstreamDir,
+        });
+        execFileSync("tar", ["-xf", archive], { cwd: workspaceDir });
+      } finally {
+        fs.rmSync(archive, { force: true });
+      }
+      exportPinnedFixtureGitlinks(workspaceDir, upstreamDir, source);
+      assertPinnedFixtureFiles(workspaceDir, source);
+      availableFiles = source.blobs.map((blob) => blob.path).sort();
+      corpusFiles = source.blobs
+        .map((blob) => blob.path)
+        .filter((file) =>
+          options.includePaths.some(
+            (prefix) => prefix === "." || file === prefix || file.startsWith(`${prefix}/`),
+          ),
+        )
+        .sort();
+      dependencies = preparePinnedFixtureDependencies(
+        workspaceDir,
+        upstreamDir,
+        source,
+        corpusFiles,
+      );
+    } else {
+      for (const relativePath of options.includePaths) {
+        const source = resolveInside(upstreamDir, relativePath);
+        const target = resolveInside(workspaceDir, relativePath);
+        assert.ok(fs.existsSync(source), `${entry.id} is missing ${relativePath}`);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.cpSync(source, target, { recursive: true });
+      }
+    }
+
+    const fixture: PreparedPinnedFixtureWorkspace = {
+      entry,
+      upstreamDir,
+      workspaceDir,
+      ...(corpusFiles ? { corpusFiles } : {}),
+      ...(availableFiles ? { availableFiles } : {}),
+      ...(dependencies ? { dependencyClosure: dependencies.receipt } : {}),
+      dispose,
+      applyExactPatch(relativePath, expected, replacement) {
+        const filePath = resolveInside(workspaceDir, relativePath);
+        const source = fs.readFileSync(filePath, "utf8");
+        const first = source.indexOf(expected);
+        assert.notEqual(first, -1, `${relativePath} does not contain the expected patch anchor`);
+        assert.equal(
+          source.indexOf(expected, first + expected.length),
+          -1,
+          `${relativePath} patch anchor must be unique`,
+        );
+        const patched = `${source.slice(0, first)}${replacement}${source.slice(first + expected.length)}`;
+        fs.writeFileSync(filePath, patched, "utf8");
+        return patched;
+      },
+      read(relativePath) {
+        return fs.readFileSync(resolveInside(workspaceDir, relativePath), "utf8");
+      },
+      resolve(relativePath) {
+        return resolveInside(workspaceDir, relativePath);
+      },
+      writeVueConfig(document, relativeDirectory = ".") {
+        const directory = resolveInside(workspaceDir, relativeDirectory);
+        fs.mkdirSync(directory, { recursive: true });
+        writeVueConfigFixture(directory, document);
+      },
+      write(relativePath, content) {
+        const filePath = resolveInside(workspaceDir, relativePath);
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+        fs.writeFileSync(filePath, content, "utf8");
+      },
+    };
+
+    return fixture;
+  } catch (error) {
+    dispose();
+    throw error;
   }
 }
 

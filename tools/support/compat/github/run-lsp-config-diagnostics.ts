@@ -16,7 +16,11 @@ const directory = path.join(root, "target/vize-tests/lsp-config-diagnostics");
 const sourcePaths = [
   "tests/performance/vben-lsp-incremental.test.ts",
   "tests/performance/support/incremental-metrics.ts",
+  "tests/performance/support/incremental-report.ts",
   "tests/_helpers/realworld-patch.ts",
+  "tests/_helpers/pinned-fixture-dependencies.ts",
+  "tests/_helpers/pinned-fixture-source.ts",
+  "tests/_helpers/lint-fixture-runtime.ts",
   "tests/_fixtures/vue-ecosystem-fixtures.json",
   "tests/differential/build-receipt.ts",
   "tests/tooling/lsp-startup-local-interactive.test.ts",
