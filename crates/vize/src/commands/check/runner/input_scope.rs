@@ -186,7 +186,8 @@ pub(super) fn validate_selected_tsconfig(args: &CheckArgs, tsconfig_path: Option
         && let Err(error) = validate_tsconfig_chain(path)
     {
         emit_empty_json(args);
-        eprintln!("Error: {error}");
+        let style = super::text_style::TextStyle::stderr();
+        eprintln!("{} {error}", style.red("Error:"));
         std::process::exit(UNRESOLVED_SCOPE_EXIT_CODE);
     }
 }

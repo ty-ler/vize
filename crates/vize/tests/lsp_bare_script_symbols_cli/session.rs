@@ -130,6 +130,13 @@ impl Session {
         check(response, expected)
     }
 
+    pub(super) fn closed_publication(&mut self, uri: &str) -> TestResult {
+        let expected = json!({"jsonrpc":"2.0","method":"textDocument/publishDiagnostics",
+            "params":{"uri":uri,"diagnostics":[]}});
+        let response = self.process.recv_matching(|message| message == &expected);
+        check(response, expected)
+    }
+
     pub(super) fn finish(&mut self, executable: &Path) -> TestResult {
         let id = self.id;
         self.process

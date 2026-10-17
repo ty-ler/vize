@@ -22,6 +22,10 @@ type RootOwner = std::sync::Arc<Control>;
 mod protocol;
 use protocol::protocol_send;
 
+#[cfg(test)]
+#[path = "config_watchers_lifecycle_tests.rs"]
+mod lifecycle;
+
 struct Host {
     client: Client,
     control: RootOwner,
@@ -49,12 +53,22 @@ struct Harness {
     service: LspService<Host>,
     socket: ClientSocket,
     control: RootOwner,
+    // Rust drops fields in declaration order: the real socket goes first.
+    _transport: Option<TransportLease>,
 }
 
 impl Harness {
     fn new(watched: Value) -> Self {
+        Self::with_transport(watched, true)
+    }
+    fn with_transport(watched: Value, acquire_lease: bool) -> Self {
         let control = RootOwner::new(Control::default());
         let root = RootOwner::clone(&control);
+        let transport = if acquire_lease {
+            control.transport_lease()
+        } else {
+            None
+        };
         let (service, socket) = LspService::new(move |client| Host {
             client,
             control: root,
@@ -63,6 +77,7 @@ impl Harness {
             service,
             socket,
             control,
+            _transport: transport,
         };
         let response = host
             .send(

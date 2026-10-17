@@ -58,6 +58,8 @@ impl RetainedConfiguration {
         ) else {
             return false;
         };
+        // Failure identity is host-only notification metadata, never policy or
+        // compiler authority. The complete evaluated value remains authoritative.
         current == previous_policy
             && self.applied.source_path == previous.source_path
             && self.applied.project.source_path == previous.project.source_path

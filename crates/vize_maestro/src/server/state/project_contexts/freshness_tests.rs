@@ -202,3 +202,126 @@ fn a_known_input_edit_after_confirmation_preparation_still_replaces_the_owner() 
     assert!(!stamp.is_current(&previous));
     assert!(!next.lsp_features().hover);
 }
+
+#[test]
+fn incomplete_resolution_retries_once_without_claiming_unchanged_watch_paths_changed() {
+    let (fixture, state, a, _) = tests::fixture();
+    let root = fixture.path().join("packages/a");
+    let counter = root.join("factory-count.txt");
+    std::fs::write(&counter, "").unwrap();
+    current(&state, &a);
+    assert!(refresh(&state, &a).errors.is_empty());
+    let retained = current(&state, &a);
+    std::fs::write(root.join("vite.config.mjs"), "import {appendFileSync} from 'node:fs'; export default async () => { appendFileSync(new URL('./factory-count.txt', import.meta.url), 'x'); await import('missing-editor-watch-plugin'); return {vue:{}}; };").unwrap();
+    assert_eq!(refresh(&state, &a).errors.len(), 1);
+    let record = state
+        .configuration_records()
+        .into_iter()
+        .find(|(key, _)| key.root == root)
+        .unwrap()
+        .1;
+    assert!(
+        record.paths().len() > 1,
+        "the known watch graph remains available"
+    );
+    assert!(
+        record.retry_required(),
+        "unobservable resolution can repair elsewhere"
+    );
+    assert!(
+        record.changes().is_empty(),
+        "retry eligibility is not a physical edit"
+    );
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "x");
+    let retried = refresh(&state, &a);
+    assert!(
+        retried.errors.is_empty(),
+        "the same real failure is not reported twice"
+    );
+    assert!(
+        retried.configuration_events.is_empty(),
+        "no unchanged watch candidate is attributed as an edit"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&counter).unwrap(),
+        "xx",
+        "one required retry, with one original factory evaluation"
+    );
+    assert!(Arc::ptr_eq(&retained, &current(&state, &a)));
+}
+
+#[test]
+fn retry_notices_distinguish_new_failures_from_physical_changes() {
+    let (fixture, state, a, _) = tests::fixture();
+    let root = fixture.path().join("packages/a");
+    let config = root.join("vite.config.mjs");
+    let counter = root.join("factory-count.txt");
+    std::fs::write(&counter, "").unwrap();
+    current(&state, &a);
+    assert!(refresh(&state, &a).errors.is_empty());
+    let retained = current(&state, &a);
+    let source = "import {appendFileSync} from 'node:fs'; export default async () => { appendFileSync(new URL('./factory-count.txt', import.meta.url), 'x'); await import('missing-editor-notice-plugin'); return {vue:{}}; };";
+    std::fs::write(&config, source).unwrap();
+    let first = refresh(&state, &a);
+    let root_uri = Url::from_file_path(&root).unwrap();
+    let config_uri = Url::from_file_path(&config).unwrap();
+    assert_eq!(first.errors, vec![tower_lsp::lsp_types::ShowMessageParams {
+        typ: tower_lsp::lsp_types::MessageType::ERROR,
+        message: vize_l0::cstr!("Vize could not reload project configuration for {root_uri} after changes to {config_uri}. Keeping the last good configuration.").into(),
+    }]);
+    let repeat = refresh(&state, &a);
+    assert!(repeat.errors.is_empty());
+    assert!(repeat.configuration_events.is_empty());
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xx");
+
+    // Installing an unobserved bare package can change the actual failure even
+    // while every known configuration input remains byte-identical.
+    let installed = root.join("node_modules/missing-editor-notice-plugin");
+    std::fs::create_dir_all(&installed).unwrap();
+    std::fs::write(
+        installed.join("package.json"),
+        r#"{"type":"module","exports":"./index.mjs"}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        installed.join("index.mjs"),
+        "throw new Error('a distinct installed plugin failure');",
+    )
+    .unwrap();
+    let distinct = refresh(&state, &a);
+    assert!(distinct.configuration_events.is_empty());
+    assert_eq!(distinct.errors, vec![tower_lsp::lsp_types::ShowMessageParams {
+        typ: tower_lsp::lsp_types::MessageType::ERROR,
+        message: vize_l0::cstr!("Vize could not reload project configuration for {root_uri}. Keeping the last good configuration.").into(),
+    }]);
+    assert!(refresh(&state, &a).errors.is_empty());
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xxxx");
+
+    // The same failure after a genuine config edit must remain visible. The
+    // appended comment does not move the original throw or factory positions.
+    std::fs::write(
+        &config,
+        vize_l0::cstr!("{source}\n// physical edit\n").as_bytes(),
+    )
+    .unwrap();
+    let edited = refresh(&state, &a);
+    assert_eq!(edited.errors, first.errors);
+    assert_eq!(edited.configuration_events, vec![config_uri]);
+    assert_eq!(std::fs::read_to_string(&counter).unwrap(), "xxxxx");
+    assert!(Arc::ptr_eq(&retained, &current(&state, &a)));
+    assert_eq!(
+        std::fs::read(&config).unwrap(),
+        vize_l0::cstr!("{source}\n// physical edit\n").as_bytes()
+    );
+}
+
+#[test]
+fn unknown_failure_identity_keeps_strict_full_error_comparison() {
+    let (_fixture, state, a, _) = tests::fixture();
+    current(&state, &a);
+    let mut record = state.configuration_records().pop().unwrap().1;
+    record.mark_failure_notified("exact first error\nwith its complete path", None);
+    assert!(record.repeats_notified_failure("exact first error\nwith its complete path", None));
+    assert!(!record.repeats_notified_failure("exact first error\nwith a different path", None));
+    assert!(!record.repeats_notified_failure("exact first error\nwith its complete path\n", None));
+}

@@ -14,6 +14,13 @@ import {
 } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+// Failure identity is host metadata; never attach it to authored exports/errors.
+const configFailureArtifacts = new WeakMap();
+
+export function configModuleFailureArtifacts(error) {
+  return configFailureArtifacts.get(error)?.map(([owned, source]) => [owned, source]) ?? [];
+}
+
 export function configModuleImportPath(configURL, windows = process.platform === "win32") {
   return fileURLToPath(configURL, { windows });
 }
@@ -90,6 +97,7 @@ async function captureConfigEvaluation(
   evaluate,
   privateDirectory,
   observeDependencies,
+  ownedAdapter,
 ) {
   const files = new Set([configPath]);
   const requestedFiles = new Set();
@@ -146,6 +154,20 @@ async function captureConfigEvaluation(
     const value = evaluate ? await evaluate(namespace) : namespace;
     return { namespace, value, dependencies: [...files] };
   } catch (error) {
+    if (
+      ownedAdapter &&
+      error !== null &&
+      (typeof error === "object" || typeof error === "function")
+    ) {
+      configFailureArtifacts.set(error, [
+        [ownedAdapter, configPath],
+        [pathToFileURL(ownedAdapter).href, pathToFileURL(configPath).href],
+        [
+          relative(moduleConfigDirectory(configPath), ownedAdapter),
+          relative(moduleConfigDirectory(configPath), configPath),
+        ],
+      ]);
+    }
     complete = false;
     // User code may throw arbitrary objects, including getters that throw.
     // Observation must never replace the loader's original exception.
@@ -266,6 +288,7 @@ export async function importConfigModuleWithDependencies(
         evaluate,
         temporary,
         observe,
+        adapter,
       );
     } finally {
       await rm(temporary, { recursive: true, force: true });

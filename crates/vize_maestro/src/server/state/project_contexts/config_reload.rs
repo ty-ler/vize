@@ -3,6 +3,42 @@ use super::paths::physical_path;
 use super::{Arc, Path, PathBuf, ProjectContextKey, ServerState, Url};
 use tower_lsp::lsp_types::{FileEvent, MessageType, ShowMessageParams};
 
+pub(super) struct ConfigEventScope {
+    pub(super) affected: Vec<ProjectContextKey>,
+    pub(super) confirmations: Vec<(ProjectContextKey, vize_canon::ConfigurationObservations)>,
+    pub(super) marker_paths: Vec<PathBuf>,
+}
+
+impl ConfigEventScope {
+    pub(super) fn for_owners(affected: Vec<ProjectContextKey>) -> Self {
+        Self {
+            affected,
+            confirmations: Vec::new(),
+            marker_paths: Vec::new(),
+        }
+    }
+
+    pub(super) fn for_topology(
+        affected: Vec<ProjectContextKey>,
+        marker_paths: Vec<PathBuf>,
+    ) -> Self {
+        Self {
+            affected,
+            confirmations: Vec::new(),
+            marker_paths,
+        }
+    }
+
+    pub(super) fn retain_root(&mut self, root: &Path) {
+        self.affected
+            .retain(|key| physical_path(&key.root) == physical_path(root));
+        self.confirmations
+            .retain(|(key, _)| physical_path(&key.root) == physical_path(root));
+        self.marker_paths
+            .retain(|path| path.starts_with(physical_path(root)));
+    }
+}
+
 #[derive(Default)]
 pub(crate) struct ProjectConfigChanges {
     pub documents: Vec<(Url, i32)>,
@@ -70,9 +106,14 @@ pub(super) fn reload_error(root: &std::path::Path, changes: &[Url]) -> ShowMessa
         .map(Url::as_str)
         .collect::<Vec<_>>()
         .join(", ");
+    let cause = if changes.is_empty() {
+        vize_l0::String::default()
+    } else {
+        vize_l0::cstr!(" after changes to {changed}")
+    };
     ShowMessageParams {
         typ: MessageType::ERROR,
-        message: vize_l0::cstr!("Vize could not reload project configuration for {root} after changes to {changed}. Keeping the last good configuration.").into(),
+        message: vize_l0::cstr!("Vize could not reload project configuration for {root}{cause}. Keeping the last good configuration.").into(),
     }
 }
 

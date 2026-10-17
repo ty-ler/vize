@@ -5,14 +5,14 @@ use std::path::{Path, PathBuf};
 
 use futures::FutureExt;
 use futures::channel::oneshot;
-use futures::future::{Either, select};
+use futures::future::{BoxFuture, Either, Shared as SharedFuture, select};
 use parking_lot::{Condvar, Mutex};
 use tower_lsp::Client;
 use tower_lsp::lsp_types::{
     ClientCapabilities, DidChangeWatchedFilesRegistrationOptions, FileSystemWatcher, GlobPattern,
     OneOf, Registration, RelativePattern, Unregistration, Url, WatchKind,
 };
-use vize_carton::{String, cstr};
+use vize_l0::{String, cstr};
 
 const METHOD: &str = "workspace/didChangeWatchedFiles";
 
@@ -22,7 +22,6 @@ struct Queue {
     started: bool,
     closed: bool,
     latest: Option<Vec<PathBuf>>,
-    stop: Option<oneshot::Sender<()>>,
 }
 
 #[derive(Default)]
@@ -31,19 +30,89 @@ struct Shared {
     ready: Condvar,
 }
 
+impl Shared {
+    fn shutdown(&self) {
+        let discarded = {
+            let mut queue = self.queue.lock();
+            queue.closed = true;
+            queue.latest.take()
+        };
+        drop(discarded);
+        self.ready.notify_one();
+    }
+}
+
 #[expect(
     clippy::disallowed_types,
     reason = "the root and its OS worker require a shared queue; Carton exports no Arc"
 )]
 type SharedQueue = std::sync::Arc<Shared>;
+#[expect(
+    clippy::disallowed_types,
+    reason = "the worker must not keep the root queue alive during RPCs"
+)]
+type WeakQueue = std::sync::Weak<Shared>;
+
+type TransportEnded = SharedFuture<BoxFuture<'static, ()>>;
+
+/// Dropped only after the transport can no longer dispatch client responses.
+/// Shutdown and root-owner release are deliberately not transport termination.
+#[must_use = "keep the lease alive until the complete response transport has stopped"]
+pub struct TransportLease {
+    ended: Option<oneshot::Sender<()>>,
+    shared: WeakQueue,
+}
+
+impl Drop for TransportLease {
+    fn drop(&mut self) {
+        if let Some(shared) = self.shared.upgrade() {
+            shared.shutdown();
+        }
+        if let Some(ended) = self.ended.take() {
+            let _ = ended.send(());
+        }
+    }
+}
 
 /// Foreground operations only replace desired paths or signal the single worker.
-#[derive(Default)]
 pub(in crate::server) struct Control {
     shared: SharedQueue,
+    transport_end: Mutex<Option<oneshot::Sender<()>>>,
+    transport_ended: TransportEnded,
+    worker: Mutex<Option<std::thread::JoinHandle<()>>>,
+}
+
+impl Default for Control {
+    fn default() -> Self {
+        let (ended, receiver) = oneshot::channel();
+        Self {
+            shared: SharedQueue::default(),
+            transport_end: Mutex::new(Some(ended)),
+            transport_ended: async move {
+                if receiver.await.is_err() {
+                    // No transport lease was acquired. Root drop does not prove
+                    // that a direct embedder's ClientSocket stopped accepting ACKs.
+                    futures::future::pending::<()>().await;
+                }
+            }
+            .boxed()
+            .shared(),
+            worker: Mutex::new(None),
+        }
+    }
 }
 
 impl Control {
+    pub(in crate::server) fn transport_lease(&self) -> Option<TransportLease> {
+        self.transport_end
+            .lock()
+            .take()
+            .map(|sender| TransportLease {
+                ended: Some(sender),
+                shared: SharedQueue::downgrade(&self.shared),
+            })
+    }
+
     pub(in crate::server) fn record_capabilities(&self, capabilities: &ClientCapabilities) {
         let watched = capabilities
             .workspace
@@ -55,28 +124,24 @@ impl Control {
     }
 
     pub(in crate::server) fn start(&self, client: Client) {
-        let (stop, cancelled) = oneshot::channel();
         {
             let mut queue = self.shared.queue.lock();
             if queue.closed || queue.started || !queue.supported {
                 return;
             }
             queue.started = true;
-            queue.stop = Some(stop);
         }
-        let shared = SharedQueue::clone(&self.shared);
-        if let Err(error) = std::thread::Builder::new()
+        let shared = SharedQueue::downgrade(&self.shared);
+        let ended = self.transport_ended.clone();
+        match std::thread::Builder::new()
             .name("vize-config-watch".into())
-            .spawn(move || {
-                Worker::new(client, cancelled).run(shared);
-            })
+            .spawn(move || Worker::new(client, ended, shared).run())
         {
-            {
-                let mut queue = self.shared.queue.lock();
-                queue.started = false;
-                queue.stop.take();
+            Ok(worker) => *self.worker.lock() = Some(worker),
+            Err(error) => {
+                self.shared.queue.lock().started = false;
+                tracing::warn!("failed to spawn configuration watch worker: {error}");
             }
-            tracing::warn!("failed to spawn configuration watch worker: {error}");
         }
     }
 
@@ -95,16 +160,7 @@ impl Control {
     }
 
     pub(in crate::server) fn shutdown(&self) {
-        let (stop, discarded) = {
-            let mut queue = self.shared.queue.lock();
-            queue.closed = true;
-            (queue.stop.take(), queue.latest.take())
-        };
-        drop(discarded);
-        if let Some(stop) = stop {
-            let _ = stop.send(());
-        }
-        self.shared.ready.notify_one();
+        self.shared.shutdown();
     }
 }
 
@@ -121,28 +177,31 @@ struct Generation {
 
 struct Worker {
     client: Client,
-    cancelled: oneshot::Receiver<()>,
+    transport_ended: TransportEnded,
+    shared: WeakQueue,
     sequence: u64,
     active: Option<Generation>,
     obsolete: Option<String>,
-    pending: Option<String>,
 }
 
 impl Worker {
-    fn new(client: Client, cancelled: oneshot::Receiver<()>) -> Self {
+    fn new(client: Client, transport_ended: TransportEnded, shared: WeakQueue) -> Self {
         Self {
             client,
-            cancelled,
+            transport_ended,
+            shared,
             sequence: 0,
             active: None,
             obsolete: None,
-            pending: None,
         }
     }
 
-    fn run(mut self, shared: SharedQueue) {
+    fn run(mut self) {
         loop {
             let paths = {
+                let Some(shared) = self.shared.upgrade() else {
+                    break;
+                };
                 let mut queue = shared.queue.lock();
                 while !queue.closed && queue.latest.is_none() {
                     shared.ready.wait(&mut queue);
@@ -158,7 +217,6 @@ impl Worker {
                 break;
             }
         }
-        self.dispose();
     }
 
     /// Failed cleanup waits for another ordinary update, never a retry loop.
@@ -167,7 +225,8 @@ impl Worker {
             return Some(true);
         };
         match wait_rpc(
-            &mut self.cancelled,
+            &self.shared,
+            self.transport_ended.clone(),
             self.client.unregister_capability(vec![unregistration(id)]),
         )? {
             Ok(()) => {
@@ -214,18 +273,17 @@ impl Worker {
                 }
             },
         };
-        self.pending = Some(id.clone());
         match wait_rpc(
-            &mut self.cancelled,
+            &self.shared,
+            self.transport_ended.clone(),
             self.client.register_capability(vec![registration]),
         ) {
             None => return false,
             Some(Err(error)) => {
-                self.pending = None;
                 tracing::warn!("failed to register configuration watch {id}: {error}");
                 return true;
             }
-            Some(Ok(())) => self.pending = None,
+            Some(Ok(())) => {}
         }
         self.obsolete = self
             .active
@@ -233,41 +291,46 @@ impl Worker {
             .map(|active| active.id);
         self.cleanup().is_some()
     }
-
-    /// One nonblocking best-effort send per known ID; no unobserved ACK is claimed.
-    fn dispose(self) {
-        let ids = self
-            .active
-            .map(|active| active.id)
-            .into_iter()
-            .chain(self.obsolete)
-            .chain(self.pending);
-        for id in ids {
-            match self
-                .client
-                .unregister_capability(vec![unregistration(&id)])
-                .now_or_never()
-            {
-                Some(Ok(())) => tracing::debug!("retired configuration watch {id} during shutdown"),
-                _ => tracing::debug!(
-                    "configuration watch {id} retirement unacknowledged; disposing transport handle"
-                ),
-            }
-        }
-    }
 }
 
 fn wait_rpc<F>(
-    cancelled: &mut oneshot::Receiver<()>,
+    shared: &WeakQueue,
+    ended: TransportEnded,
     request: F,
 ) -> Option<tower_lsp::jsonrpc::Result<()>>
 where
     F: Future<Output = tower_lsp::jsonrpc::Result<()>>,
 {
+    let mut request = Box::pin(request);
     crate::runtime::block_on(async {
-        match select(cancelled, Box::pin(request)).await {
-            Either::Left(_) => None,
-            Either::Right((result, _)) => Some(result),
+        // Linearize the first poll against shutdown, then release the queue.
+        // Once initiated, the request receiver must survive every shutdown ACK.
+        let mut initiated = false;
+        let guarded = futures::future::poll_fn(|cx| {
+            if initiated {
+                return request.as_mut().poll(cx).map(Some);
+            }
+            let Some(shared) = shared.upgrade() else {
+                return std::task::Poll::Ready(None);
+            };
+            let queue = shared.queue.lock();
+            if queue.closed {
+                return std::task::Poll::Ready(None);
+            }
+            initiated = true;
+            request.as_mut().poll(cx).map(Some)
+        });
+        let result = match select(ended, Box::pin(guarded)).await {
+            Either::Left(_) => return None,
+            Either::Right((result, _)) => result,
+        };
+        // An ACK received after shutdown is consumed, never followed by cleanup
+        // or a coalesced replacement on the now-closed root.
+        let shared = shared.upgrade()?;
+        if shared.queue.lock().closed {
+            None
+        } else {
+            result
         }
     })
 }

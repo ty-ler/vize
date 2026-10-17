@@ -116,8 +116,12 @@ impl Fixture {
         let uri = self.uri(file);
         self.native.close(&uri);
         self.vize.close(&uri);
+        // Observe close before a same-version reopen can supersede it. These
+        // notifications witness lifecycle completion, not bare diagnostics.
+        self.vize.closed_publication(&uri)?;
         let source = std::fs::read_to_string(self.project.path().join(file))?;
         self.open_both(file, &source, language, version);
+        self.vize.publication(&uri, version, json!([]))?;
         Ok(())
     }
 

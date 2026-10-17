@@ -3,7 +3,8 @@ import { spawn } from "node:child_process";
 import { mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
+import { pathToFileURL } from "node:url";
 import { test } from "node:test";
 
 import { importConfigModuleWithDependencies } from "../../crates/vize_carton/src/config/loader/module-runtime.mjs";
@@ -271,3 +272,86 @@ for (const installedVite of [false, true]) {
     });
   });
 }
+
+test("real Vite failures carry only actual owned adapter identity while preserving the original diagnostic and repair", async () => {
+  await project(async (root) => {
+    const app = join(root, "space app 日本語");
+    await mkdir(join(app, "node_modules"), { recursive: true });
+    await symlink(vite, join(app, "node_modules/vite"), "junction");
+    const selected = join(app, "vite.config.ts");
+    const counter = join(app, "factory.txt");
+    const source = (request: string) => `import vue from ${JSON.stringify(request)};
+      import { appendFileSync } from 'node:fs';
+      export default () => { appendFileSync(${JSON.stringify(counter)}, 'once\\n'); return { vue }; };`;
+    await writeFile(selected, source("./missing-policy"));
+    const attempts: Awaited<ReturnType<typeof observedNative>>[] = [];
+    const invoke = async () => {
+      let configLoads = 0;
+      const result = await observedNative(selected, async (paths) => {
+        if (paths.includes(selected)) configLoads++;
+      });
+      assert.equal(configLoads, 1, "each attempt enters its original config loader once");
+      attempts.push(result);
+      return result;
+    };
+    const projected = (result: Awaited<ReturnType<typeof observedNative>>) => {
+      const mappings = result.value.failureArtifacts as Array<[string, string]>;
+      assert.equal(mappings.length, 3);
+      const [adapter, authored] = mappings[0];
+      assert.equal(authored, selected);
+      assert.ok(adapter.endsWith("/config.mjs"));
+      assert.ok(dirname(adapter).split("/").at(-1)?.startsWith("vize-config-module-"));
+      assert.deepEqual(mappings, [
+        [adapter, selected],
+        [pathToFileURL(adapter).href, pathToFileURL(selected).href],
+        [relative(app, adapter), relative(app, selected)],
+      ]);
+      assert.ok(mappings.some(([owned]) => result.stderr.includes(owned)));
+      assert.equal("config" in result.value, false);
+      assert.equal(result.value.watchDependenciesComplete, false);
+      for (const [owned] of mappings) {
+        assert.equal(result.value.dependencies.includes(owned), false);
+      }
+      const raw = result.stderr;
+      const identity = {
+        status: result.status,
+        stderr: [...mappings]
+          .sort(([a], [b]) => b.length - a.length)
+          .reduce((stderr, [owned, source]) => stderr.split(owned).join(source), raw),
+      };
+      assert.equal(result.stderr, raw, "identity metadata cannot replace original stderr");
+      return identity;
+    };
+    const first = await invoke();
+    const second = await invoke();
+    assert.equal(first.status, 1);
+    assert.equal(second.status, 1);
+    assert.notDeepEqual(first.value.failureArtifacts, second.value.failureArtifacts);
+    assert.notEqual(
+      first.stderr,
+      second.stderr,
+      "actual fresh adapters remain visible in raw diagnostics",
+    );
+    assert.deepEqual(projected(first), projected(second));
+    await assert.rejects(readFile(counter), { code: "ENOENT" });
+
+    await writeFile(selected, source("./different-missing-policy"));
+    const different = await invoke();
+    assert.equal(different.status, 1);
+    assert.notDeepEqual(
+      projected(first),
+      projected(different),
+      "a distinct real authored failure stays visible",
+    );
+    await writeFile(
+      join(app, "different-missing-policy.ts"),
+      "export default { formatter: { printWidth: 93 } };",
+    );
+    const repaired = await invoke();
+    assert.equal(repaired.status, 0, repaired.stderr);
+    assert.equal(repaired.value.config.formatter.printWidth, 93);
+    assert.equal("failureArtifacts" in repaired.value, false);
+    assert.equal(await readFile(counter, "utf8"), "once\n");
+    assert.equal(attempts.length, 4);
+  });
+});

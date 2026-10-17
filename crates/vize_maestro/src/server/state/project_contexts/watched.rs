@@ -7,41 +7,7 @@ use std::path::{Path, PathBuf};
 use tower_lsp::lsp_types::{FileEvent, Url};
 use vize_l0::{FxHashMap, FxHashSet};
 
-pub(super) struct ConfigEventScope {
-    pub(super) affected: Vec<ProjectContextKey>,
-    pub(super) confirmations: Vec<(ProjectContextKey, vize_canon::ConfigurationObservations)>,
-    marker_paths: Vec<PathBuf>,
-}
-
-impl ConfigEventScope {
-    pub(super) fn for_owners(affected: Vec<ProjectContextKey>) -> Self {
-        Self {
-            affected,
-            confirmations: Vec::new(),
-            marker_paths: Vec::new(),
-        }
-    }
-
-    pub(super) fn for_topology(
-        affected: Vec<ProjectContextKey>,
-        marker_paths: Vec<PathBuf>,
-    ) -> Self {
-        Self {
-            affected,
-            confirmations: Vec::new(),
-            marker_paths,
-        }
-    }
-
-    pub(super) fn retain_root(&mut self, root: &Path) {
-        self.affected
-            .retain(|key| physical_path(&key.root) == physical_path(root));
-        self.confirmations
-            .retain(|(key, _)| physical_path(&key.root) == physical_path(root));
-        self.marker_paths
-            .retain(|path| path.starts_with(physical_path(root)));
-    }
-}
+pub(super) use super::config_reload::ConfigEventScope;
 
 impl ServerState {
     pub(super) fn project_config_event_scope(&self, changes: &[FileEvent]) -> ConfigEventScope {
@@ -88,6 +54,10 @@ impl ServerState {
                 .iter()
                 .any(|dependency| changed.contains(&physical_path(dependency)))
         };
+        let observations = self
+            .configuration_records()
+            .into_iter()
+            .collect::<FxHashMap<_, _>>();
         let mut primary_dependencies = self.project_contexts.config_dependencies.read().clone();
         if let Some(root) = self
             .project_contexts
@@ -95,15 +65,22 @@ impl ServerState {
             .read()
             .clone()
             .or_else(|| self.get_workspace_root())
+            && let Some(record) = observations.get(&root.into())
         {
-            primary_dependencies.extend(self.configuration_paths_for_key(&root.into()));
+            primary_dependencies.extend(record.paths());
         }
-        let contexts = self.project_contexts.contexts.lock();
+        let contexts = self
+            .project_contexts
+            .contexts
+            .lock()
+            .iter()
+            .map(|(key, context)| (key.clone(), context.clone()))
+            .collect::<Vec<_>>();
         let mut tracked = primary_dependencies
             .iter()
             .map(|path| physical_path(path))
             .collect::<Vec<_>>();
-        for context in contexts.values() {
+        for (_, context) in &contexts {
             tracked.extend(
                 context
                     .config_dependencies()
@@ -114,15 +91,41 @@ impl ServerState {
         let untracked = marker_paths
             .iter()
             .filter(|path| !tracked.contains(path))
+            .map(|path| {
+                (
+                    path.clone(),
+                    super::paths::document_context_root(path, &roots),
+                )
+            })
             .collect::<Vec<_>>();
+        // A new boundary for an open buffer checks its own policy first. Its
+        // ancestor's unchanged policy must survive rejection in another worker.
+        let new_boundaries = untracked
+            .iter()
+            .filter_map(|(_, root)| root.as_ref())
+            .filter(|root| {
+                self.documents.iter().any(|document| {
+                    document
+                        .key()
+                        .to_file_path()
+                        .is_ok_and(|path| physical_path(&path).starts_with(physical_path(root)))
+                })
+            })
+            .cloned()
+            .collect::<FxHashSet<_>>();
         let mut affected = contexts
             .iter()
             .filter(|(key, context)| {
                 depends(&context.config_dependencies())
-                    || depends(&self.configuration_paths_for_key(key))
-                    || untracked
-                        .iter()
-                        .any(|path| path.starts_with(physical_path(&key.root)))
+                    || observations
+                        .get(key)
+                        .is_some_and(|record| depends(&record.paths()))
+                    || untracked.iter().any(|(path, nearest)| {
+                        path.starts_with(physical_path(&key.root))
+                            && nearest.as_ref().is_none_or(|root| {
+                                root == &key.root || !new_boundaries.contains(root)
+                            })
+                    })
             })
             .map(|(key, _)| key.clone())
             .collect::<Vec<_>>();
@@ -167,18 +170,10 @@ impl ServerState {
                     .cloned(),
             );
         }
-        for path in untracked {
-            if let Some(root) = super::paths::document_context_root(path, &roots)
-                && !affected.iter().any(|key| {
-                    key.tsconfig.is_none() && physical_path(&key.root) == physical_path(&root)
-                })
-                && self.documents.iter().any(|document| {
-                    document
-                        .key()
-                        .to_file_path()
-                        .is_ok_and(|path| physical_path(&path).starts_with(physical_path(&root)))
-                })
-            {
+        for root in new_boundaries {
+            if !affected.iter().any(|key| {
+                key.tsconfig.is_none() && physical_path(&key.root) == physical_path(&root)
+            }) {
                 affected.push(root.into());
             }
         }
@@ -258,7 +253,9 @@ impl ServerState {
                     .configuration_attempts
                     .lock()
                     .get(&key)
-                    .is_some_and(|record| record.repeats_notified_failure(error))
+                    .is_some_and(|record| {
+                        record.repeats_notified_failure(error, raw.failure_identity.as_ref())
+                    })
             });
             if let Ok(snapshot) = &snapshot {
                 result.configuration_events.extend(known_config_events(
@@ -279,7 +276,7 @@ impl ServerState {
                 snapshot,
                 changed,
                 observation,
-                repeated_failure,
+                (repeated_failure, raw.failure_identity.clone()),
                 confirmation_only,
             ));
         }
@@ -302,7 +299,7 @@ impl ServerState {
             snapshot,
             changed,
             mut observation,
-            repeated_failure,
+            (repeated_failure, failure_identity),
             confirmation_only,
         ) in prepared
         {
@@ -321,10 +318,8 @@ impl ServerState {
                     .remove(&key);
                 continue;
             }
-            if let Err(error) = &snapshot
-                && (!changed.is_empty() || repeated_failure)
-            {
-                observation.mark_failure_notified(error);
+            if let Err(error) = &snapshot {
+                observation.mark_failure_notified(error, failure_identity.as_ref());
             }
             self.project_contexts
                 .configuration_attempts
@@ -384,7 +379,7 @@ impl ServerState {
                             .store(true, Ordering::Release);
                     }
                     failed_roots.insert(key.root.clone());
-                    if !changed.is_empty() && !repeated_failure {
+                    if !repeated_failure {
                         result.errors.push(reload_error(&key.root, &changed));
                     }
                     result.rejected.push((key, changed));
@@ -451,9 +446,11 @@ impl ServerState {
             if failed_roots.is_empty() {
                 *self.project_contexts.reference_ownership.lock() = Default::default();
             }
-            self.project_contexts
-                .routes
-                .retain(|_, key| !topology_roots.contains(&key.root));
+            let transferred =
+                self.retarget_checked_topology_documents(&topology_roots, changes, &mut result);
+            self.project_contexts.routes.retain(|uri, key| {
+                !topology_roots.contains(&key.root) || transferred.contains(uri)
+            });
         }
         if accepted_primary {
             self.retire_project_owner();
@@ -468,7 +465,9 @@ impl ServerState {
         result
             .errors
             .dedup_by(|a, b| a.typ == b.typ && a.message == b.message);
-        result.documents = affected_documents;
+        result.documents.extend(affected_documents);
+        result.documents.sort();
+        result.documents.dedup();
         result
     }
 }

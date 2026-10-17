@@ -346,8 +346,8 @@ pub(super) fn build_with_import_facts(
     })
 }
 
-fn bridge_error(error: impl std::fmt::Display) -> CorsaBridgeError {
-    CorsaBridgeError::CommunicationError(vize_carton::cstr!("{error}"))
+fn bridge_error(error: crate::batch::error::CorsaError) -> CorsaBridgeError {
+    CorsaBridgeError::from(error)
 }
 
 #[cfg(test)]

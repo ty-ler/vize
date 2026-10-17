@@ -1,5 +1,7 @@
 //! Reviewed host runtime boundary; portable config models remain owned by L0.
 
+#[cfg(feature = "native")]
+pub(in crate::server::state) use vize_carton::config::ConfigLoadFailureIdentity;
 pub(in crate::server::state) use vize_carton::config::LoadedLspConfig;
 #[cfg(feature = "native")]
 pub(in crate::server::state) use vize_carton::config::ProjectModel;

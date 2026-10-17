@@ -15,6 +15,41 @@ fn native_documents(project: &CorsaVueVirtualProject) -> Vec<(String, String)> {
 }
 
 #[test]
+fn materialization_preserves_typed_configuration_failure_until_physical_repair() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = vize_l0::path::canonicalize_non_verbatim(directory.path());
+    let host = root.join("Host.vue");
+    let config = root.join("tsconfig.json");
+    std::fs::write(&host, CHILD).unwrap();
+    std::fs::write(&config, r#"{"extends":"./base.json"}"#).unwrap();
+    let session = EditorMirrorSession::new();
+    let build = || {
+        let mut env = environment(&session);
+        env.project_root = Some(&root);
+        env.tsconfig_path = Some(&config);
+        build_vue_virtual_workspace_project(&host, CHILD, Default::default(), &[], &[], env)
+    };
+    for _ in 0..2 {
+        let Err(error) = build() else {
+            panic!("an unresolved authored base must reject materialization");
+        };
+        assert!(matches!(&error, CorsaBridgeError::Configuration(_)));
+        assert_eq!(
+            error.to_string(),
+            vize_carton::cstr!(
+                "Configuration error: cannot resolve tsconfig extends \"./base.json\" from {}",
+                config.display()
+            )
+            .as_str()
+        );
+    }
+    std::fs::write(root.join("base.json"), "{}").unwrap();
+    let repaired = build().unwrap();
+    assert_eq!(repaired.host.source_path, host);
+    assert_eq!(std::fs::read_to_string(&host).unwrap(), CHILD);
+}
+
+#[test]
 fn native_live_union_contains_closed_sibling_dependencies_before_a_later_query() {
     let root = tempfile::tempdir().unwrap();
     let a = root.path().join("A.vue");

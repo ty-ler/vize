@@ -247,9 +247,10 @@ mod tests {
     fn owned_observations_preserve_original_read_and_absent_candidate_identity() {
         fn assert_send_sync<T: Send + Sync>() {}
         assert_send_sync::<ConfigurationObservations>();
-        let root = tempfile::tempdir().unwrap();
-        let base = root.path().join("base.json");
-        let absent = root.path().join("candidate.json");
+        let directory = tempfile::tempdir().unwrap();
+        let root = directory.path().canonicalize().unwrap();
+        let base = root.join("base.json");
+        let absent = root.join("candidate.json");
         std::fs::write(&base, "{}").unwrap();
         let inputs = CompilerInputs::default();
         inputs.read_jsonc(&base).unwrap();
@@ -257,17 +258,17 @@ mod tests {
         let observed = inputs.observations();
         drop(inputs);
         assert!(observed.changed_paths().is_empty());
-        assert!(observed.paths().contains(&absent));
+        let mut expected = vec![base.clone(), absent.clone()];
+        expected.sort();
+        assert_eq!(observed.paths(), expected);
         std::fs::write(&base, r#"{"strict":true}"#).unwrap();
         std::fs::write(&absent, "{}").unwrap();
-        let mut expected = vec![base, absent];
-        expected.sort();
         assert_eq!(observed.changed_paths(), expected);
         let repair_only = ConfigurationObservations::capture(&observed.paths());
         assert!(repair_only.changed_paths().is_empty());
         assert_eq!(observed.changed_paths(), expected);
         let inputs = CompilerInputs::default();
-        inputs.observe(&root.path().join("base.json"));
+        inputs.observe(&root.join("base.json"));
         inputs.mark_changed();
         assert!(inputs.observations().changed_paths().is_empty());
         assert!(inputs.observations().needs_confirmation());

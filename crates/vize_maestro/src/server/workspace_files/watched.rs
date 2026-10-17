@@ -71,7 +71,9 @@ pub(super) async fn did_change_watched_files(
         {
             project.state.update_virtual_docs(&uri, &source);
         }
-        project.publish_diagnostics_if_version(&uri, version).await;
+        project
+            .publish_configuration_diagnostics_if_version(&uri, version)
+            .await;
     }
 }
 

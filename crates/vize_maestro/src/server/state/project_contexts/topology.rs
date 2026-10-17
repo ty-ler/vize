@@ -86,7 +86,9 @@ impl ServerState {
         let mut result = ProjectConfigChanges::default();
         let record = self.topology_record(&target_key);
         let changed = record.as_ref().map(|record| record.changes());
-        if record.as_ref().is_some_and(|record| record.rejected)
+        if record
+            .as_ref()
+            .is_some_and(|record| record.rejected && !record.retry_required())
             && changed.as_ref().is_some_and(Vec::is_empty)
         {
             result.checked_roots.push(target.to_path_buf());
@@ -116,7 +118,7 @@ impl ServerState {
             .iter()
             .filter_map(|path| Url::from_file_path(path).ok())
             .collect::<Vec<_>>();
-        if record.is_none()
+        if record.as_ref().is_none_or(|record| record.retry_required())
             || changed.as_ref().is_some_and(|paths| !paths.is_empty())
             || self.topology_owner(&target_key).is_none()
         {
@@ -140,6 +142,53 @@ impl ServerState {
         {
             return result;
         }
+        self.transfer_topology_documents(previous, target, &target_owner, &changes, &mut result);
+        result
+    }
+
+    /// A watched marker has already admitted these roots in this operation.
+    /// Transfer cached routes through those snapshots without evaluating again.
+    pub(super) fn retarget_checked_topology_documents(
+        self: &Arc<Self>,
+        roots: &[PathBuf],
+        changes: &[Url],
+        result: &mut ProjectConfigChanges,
+    ) -> Vec<Url> {
+        let mut transitions = self
+            .documents
+            .uris()
+            .into_iter()
+            .filter_map(|uri| {
+                let previous = self.project_contexts.routes.get(&uri)?.value().clone();
+                let target = self.document_configuration_root(&uri)?;
+                (target != previous.root && roots.contains(&target)).then_some((previous, target))
+            })
+            .collect::<Vec<_>>();
+        transitions.sort_by(|(a, target_a), (b, target_b)| {
+            (&a.root, &a.tsconfig, target_a).cmp(&(&b.root, &b.tsconfig, target_b))
+        });
+        transitions.dedup();
+        let mut transferred = Vec::new();
+        for (previous, target) in transitions {
+            let Some(owner) = self.topology_owner(&target.clone().into()) else {
+                continue;
+            };
+            transferred.extend(
+                self.transfer_topology_documents(&previous, &target, &owner, changes, result),
+            );
+        }
+        transferred
+    }
+
+    fn transfer_topology_documents(
+        self: &Arc<Self>,
+        previous: &ProjectContextKey,
+        target: &Path,
+        target_owner: &Arc<Self>,
+        changes: &[Url],
+        result: &mut ProjectConfigChanges,
+    ) -> Vec<Url> {
+        let target_key = ProjectContextKey::from(target.to_path_buf());
         let moved = self
             .documents
             .uris()
@@ -155,18 +204,19 @@ impl ServerState {
         let mut admitted = Vec::new();
         for document in moved {
             let key = self
-                .document_reference_key(&document, &target_owner)
+                .document_reference_key(&document, target_owner)
                 .unwrap_or_else(|| target_key.clone());
             if key == target_key
-                || self.admit_topology_reference(&key, &target_owner, &changes, &mut result)
+                || self.admit_topology_reference(&key, target_owner, changes, result)
             {
                 admitted.push((document, key));
             }
         }
         if admitted.is_empty() {
-            return result;
+            return Vec::new();
         }
         let _routing_change = self.project_routing_change();
+        let mut transferred = Vec::new();
         for (document, key) in admitted {
             if self.document_configuration_root(&document).as_deref() != Some(target) {
                 continue;
@@ -194,13 +244,14 @@ impl ServerState {
                 owner.update_virtual_docs(&document, &source);
             }
             if let Some(version) = self.documents.version(&document) {
-                result.documents.push((document, version));
+                result.documents.push((document.clone(), version));
+                transferred.push(document);
             }
         }
         self.retire_unrouted_topology_owner(previous);
         result.documents.sort();
         result.documents.dedup();
-        result
+        transferred
     }
 
     fn admit_topology_reference(
@@ -211,6 +262,7 @@ impl ServerState {
         result: &mut ProjectConfigChanges,
     ) -> bool {
         if let Some(record) = self.topology_record(key)
+            && !record.retry_required()
             && record.changes().is_empty()
         {
             return !record.rejected && self.topology_owner(key).is_some();
@@ -283,8 +335,10 @@ impl ServerState {
                     .configuration_attempts
                     .lock()
                     .get(key)
-                    .is_some_and(|record| record.repeats_notified_failure(&error));
-                observation.mark_failure_notified(&error);
+                    .is_some_and(|record| {
+                        record.repeats_notified_failure(&error, raw.failure_identity.as_ref())
+                    });
+                observation.mark_failure_notified(&error, raw.failure_identity.as_ref());
                 self.project_contexts
                     .configuration_attempts
                     .lock()

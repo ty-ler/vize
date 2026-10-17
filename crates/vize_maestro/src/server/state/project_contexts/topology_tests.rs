@@ -165,3 +165,171 @@ fn rejected_changed_input_baselines_confirm_now_stable_initial_and_reload_revisi
         assert!(refresh(&state, &a).errors.is_empty());
     }
 }
+
+#[test]
+fn watched_marker_transfers_to_checked_full_key_without_reloading_or_retiring_siblings() {
+    use tower_lsp::lsp_types::{FileChangeType, FileEvent};
+
+    for (primary, referenced) in [(true, false), (true, true), (false, false), (false, true)] {
+        let fixture = tempfile::tempdir().unwrap();
+        let workspace = fixture.path();
+        let root = if primary {
+            workspace.to_path_buf()
+        } else {
+            workspace.join("packages/a")
+        };
+        let nested = root.join("nested");
+        let sibling_root = workspace.join("sibling");
+        std::fs::create_dir_all(nested.join("src")).unwrap();
+        std::fs::create_dir_all(&sibling_root).unwrap();
+        let source = "<template>unsaved 😀</template>";
+        let probe = Url::from_file_path(nested.join("src/Probe.vue")).unwrap();
+        let control = Url::from_file_path(root.join("Control.vue")).unwrap();
+        let sibling = Url::from_file_path(sibling_root.join("Sibling.vue")).unwrap();
+        for uri in [&probe, &control, &sibling] {
+            std::fs::write(uri.to_file_path().unwrap(), "<template>disk</template>").unwrap();
+        }
+        std::fs::write(workspace.join("package.json"), "{}").unwrap();
+        std::fs::write(root.join("package.json"), "{}").unwrap();
+        let primary_counter = root.join("evaluations.txt");
+        let nested_counter = nested.join("evaluations.txt");
+        std::fs::write(&primary_counter, "").unwrap();
+        std::fs::write(&nested_counter, "").unwrap();
+        let config_source = |hover| {
+            vize_l0::cstr!(
+                "import {{appendFileSync}} from 'node:fs'; export default () => {{ appendFileSync(new URL('./evaluations.txt', import.meta.url), 'x'); return {{vue:{{languageServer:{{hover:{hover}}}}}}}; }};"
+            )
+        };
+        std::fs::write(
+            root.join("vite.config.mjs"),
+            config_source(false).as_bytes(),
+        )
+        .unwrap();
+        std::fs::write(sibling_root.join("package.json"), "{}").unwrap();
+        std::fs::write(
+            sibling_root.join("vite.config.mjs"),
+            "export default {vue:{}};",
+        )
+        .unwrap();
+        let state = Arc::new(ServerState::new());
+        state.set_workspace_root(workspace.to_path_buf());
+        state.load_workspace_config(workspace);
+        state.apply_initialize_workspace_folders(None, Some(workspace));
+        for uri in [&probe, &control, &sibling] {
+            state
+                .documents
+                .open(uri.clone(), source.into(), 17, "vue".into());
+            let owner = state
+                .document_project_state(uri)
+                .unwrap_or_else(|| state.clone());
+            owner.update_virtual_docs(uri, source);
+        }
+        let previous = state
+            .document_project_state(&probe)
+            .unwrap_or_else(|| state.clone());
+        let previous_stamp = previous.corsa_request_stamp();
+        let sibling_owner = state.document_project_state(&sibling).unwrap();
+        let sibling_stamp = sibling_owner.corsa_request_stamp();
+        assert!(previous.get_virtual_docs(&probe).is_some());
+        assert!(previous.get_virtual_docs(&control).is_some());
+        let leaf = nested.join("config/leaf.json");
+        if referenced {
+            std::fs::create_dir_all(leaf.parent().unwrap()).unwrap();
+            std::fs::write(&leaf, r#"{"files":["../src/Probe.vue"]}"#).unwrap();
+            std::fs::write(
+                nested.join("tsconfig.json"),
+                r#"{"files":[],"references":[{"path":"./config/leaf.json"}]}"#,
+            )
+            .unwrap();
+        }
+        let marker = nested.join("vite.config.mjs");
+        std::fs::write(&marker, "export default { broken syntax").unwrap();
+        let event = |typ| FileEvent {
+            uri: Url::from_file_path(&marker).unwrap(),
+            typ,
+        };
+        assert_eq!(
+            state
+                .project_config_event_scope(&[event(FileChangeType::CREATED)])
+                .affected,
+            vec![ProjectContextKey::from(nested.clone())],
+            "the parent is excluded before async work is split by root",
+        );
+        let rejected = block_on(
+            state.observe_project_config_events_async(vec![event(FileChangeType::CREATED)]),
+        );
+        assert_eq!(rejected.errors.len(), 1);
+        assert_eq!(
+            state.project_contexts.routes.get(&probe).unwrap().root,
+            root
+        );
+        assert!(!previous.project_context_retired());
+        assert!(previous.get_virtual_docs(&probe).is_some());
+        assert!(
+            previous_stamp.is_current(&previous),
+            "a failed descendant cannot retire the parent epoch"
+        );
+        assert!(Arc::ptr_eq(
+            &previous,
+            &state
+                .document_project_state(&probe)
+                .unwrap_or_else(|| state.clone())
+        ));
+        assert_eq!(std::fs::read_to_string(&nested_counter).unwrap(), "");
+
+        std::fs::write(&marker, config_source(true).as_bytes()).unwrap();
+        let accepted = block_on(
+            state.observe_project_config_events_async(vec![event(FileChangeType::CHANGED)]),
+        );
+        assert!(accepted.errors.is_empty());
+        assert_eq!(accepted.documents, vec![(probe.clone(), 17)]);
+        let expected = ProjectContextKey {
+            root: nested.clone(),
+            tsconfig: referenced.then(|| super::paths::physical_path(&leaf)),
+        };
+        assert_eq!(
+            state.project_contexts.routes.get(&probe).unwrap().value(),
+            &expected,
+            "the watch operation itself transfers the route before another document request",
+        );
+        let selected = state
+            .project_contexts
+            .contexts
+            .lock()
+            .get(&expected)
+            .and_then(|context| context.initialized_state())
+            .unwrap();
+        assert!(selected.lsp_features().hover);
+        assert_eq!(selected.documents.text(&probe).as_deref(), Some(source));
+        assert_eq!(selected.documents.version(&probe), Some(17));
+        assert!(selected.get_virtual_docs(&probe).is_some());
+        assert!(previous.get_virtual_docs(&probe).is_none());
+        assert!(previous.get_virtual_docs(&control).is_some());
+        assert!(!previous.project_context_retired());
+        assert!(Arc::ptr_eq(
+            &selected,
+            &state.document_project_state(&probe).unwrap()
+        ));
+        assert!(Arc::ptr_eq(
+            &previous,
+            &state
+                .document_project_state(&control)
+                .unwrap_or_else(|| state.clone())
+        ));
+        assert!(Arc::ptr_eq(
+            &sibling_owner,
+            &state.document_project_state(&sibling).unwrap()
+        ));
+        assert!(sibling_stamp.is_current(&sibling_owner));
+        assert_eq!(std::fs::read_to_string(&primary_counter).unwrap(), "x");
+        assert_eq!(std::fs::read_to_string(&nested_counter).unwrap(), "x");
+        for uri in [&probe, &control, &sibling] {
+            assert_eq!(
+                std::fs::read_to_string(uri.to_file_path().unwrap()).unwrap(),
+                "<template>disk</template>"
+            );
+            assert_eq!(state.documents.text(uri).as_deref(), Some(source));
+            assert_eq!(state.documents.version(uri), Some(17));
+        }
+    }
+}
