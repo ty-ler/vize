@@ -222,6 +222,10 @@ impl ServerState {
 
     /// Keep the observed child transport on the existing bounded config workers.
     #[cfg(feature = "native")]
+    #[expect(
+        clippy::disallowed_types,
+        reason = "initial admission retains the shared editor owner on its worker"
+    )]
     pub(crate) async fn load_workspace_config_async(
         self: &std::sync::Arc<Self>,
         dir: &Path,
