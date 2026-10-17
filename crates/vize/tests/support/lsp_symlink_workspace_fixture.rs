@@ -214,6 +214,10 @@ impl Drop for Fixture {
                     Entry::Symlink(target) => json!({"path":path,"kind":"symlink","target":target}),
                 })
                 .collect::<Vec<_>>();
+            let executable_sha256 = Sha256::digest(fs::read(env!("CARGO_BIN_EXE_vize"))?)
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>();
             fs::write(
                 destination.join("identity.json"),
                 serde_json::to_vec_pretty(&json!({
@@ -221,7 +225,7 @@ impl Drop for Fixture {
                     "app":self.app,"host":self.host,"other":self.other,"authored":authored,
                     "unwinding":std::thread::panicking(),
                     "executable":env!("CARGO_BIN_EXE_vize"),
-                    "executableSha256":format!("{:x}", Sha256::digest(fs::read(env!("CARGO_BIN_EXE_vize"))?))
+                    "executableSha256":executable_sha256
                 }))?,
             )?;
             fs::copy(
