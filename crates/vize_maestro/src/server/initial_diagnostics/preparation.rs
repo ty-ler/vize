@@ -37,7 +37,7 @@ impl MaestroServer {
             Ok(true) => {}
             Ok(false) => return,
             Err(error) => {
-                tracing::debug!("initial native preparation deferred after {error}");
+                tracing::info!("initial native preparation deferred after {error}");
                 return;
             }
         }

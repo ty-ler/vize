@@ -5,6 +5,7 @@
 )]
 
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
     fs,
@@ -218,7 +219,9 @@ impl Drop for Fixture {
                 serde_json::to_vec_pretty(&json!({
                     "layout":format!("{:?}",self.layout), "root":self.root,
                     "app":self.app,"host":self.host,"other":self.other,"authored":authored,
-                    "unwinding":std::thread::panicking()
+                    "unwinding":std::thread::panicking(),
+                    "executable":env!("CARGO_BIN_EXE_vize"),
+                    "executableSha256":format!("{:x}", Sha256::digest(fs::read(env!("CARGO_BIN_EXE_vize"))?))
                 }))?,
             )?;
             fs::copy(

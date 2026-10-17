@@ -47,6 +47,21 @@ export function retainNativeLog(source: string, destination: string): boolean {
   return true;
 }
 
+export function retainMeasuredProducer(binary: string, receiptPath: string, destination: string) {
+  const retainedBinary = "measured-vize";
+  const retainedBuildReceipt = "measured-vize.differential-build.json";
+  const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
+  const bytes = fs.readFileSync(binary);
+  assert.equal(sha256(bytes), receipt.binarySha256);
+  fs.writeFileSync(path.join(destination, retainedBinary), bytes);
+  fs.copyFileSync(receiptPath, path.join(destination, retainedBuildReceipt));
+  assert.equal(
+    sha256(fs.readFileSync(path.join(destination, retainedBinary))),
+    receipt.binarySha256,
+  );
+  return { retainedBinary, retainedBuildReceipt };
+}
+
 export function runDiagnostics(): number {
   fs.mkdirSync(directory, { recursive: true });
   const identity = expectedBuildIdentity(root);
@@ -58,6 +73,13 @@ export function runDiagnostics(): number {
   const receiptPath = `${identity.binaryPath}.differential-build.json`;
   const receipt = JSON.parse(fs.readFileSync(path.join(root, receiptPath), "utf8"));
   validateBuildReceipt(receipt, identity, LEGACY_BUILD_RECIPE);
+  // Later integration tests can relink this path with Cargo dev dependencies.
+  // Retain the measured producer before any post-measurement Cargo command.
+  const retainedProducer = retainMeasuredProducer(
+    path.join(root, identity.binaryPath),
+    path.join(root, receiptPath),
+    directory,
+  );
   const registry = JSON.parse(
     fs.readFileSync(path.join(root, "tests/_fixtures/vue-ecosystem-fixtures.json"), "utf8"),
   );
@@ -91,6 +113,7 @@ export function runDiagnostics(): number {
     sourceTree: git("rev-parse", "HEAD^{tree}"),
     fixture: { path: fixture.fixturePath, revision: fixture.revision },
     buildReceipt: receipt,
+    ...retainedProducer,
     command,
     cwd: root,
     runtime: { node: process.version, executable: process.execPath },

@@ -3,9 +3,13 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { createHash } from "node:crypto";
 import { parse } from "yaml";
 
-import { retainNativeLog } from "../../tools/support/compat/github/run-lsp-config-diagnostics.ts";
+import {
+  retainMeasuredProducer,
+  retainNativeLog,
+} from "../../tools/support/compat/github/run-lsp-config-diagnostics.ts";
 import { readRepoFile } from "./support/github-workflows.ts";
 
 type Step = {
@@ -104,6 +108,38 @@ test("native phase logs retain all raw bytes after the mutable fixture is remove
     fs.rmSync(native);
     assert.equal(retainNativeLog(native, path.join(directory, "missing.log")), false);
     assert.equal(fs.existsSync(path.join(directory, "missing.log")), false);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("post-measurement Cargo relinking cannot replace the measured producer evidence", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-measured-producer-"));
+  try {
+    const binary = path.join(directory, "vize");
+    const receipt = path.join(directory, "vize.differential-build.json");
+    const original = Buffer.from([0x7f, 0x45, 0x4c, 0x46, 0xff, 0, 3]);
+    const originalReceipt = Buffer.from(
+      JSON.stringify({ binarySha256: createHash("sha256").update(original).digest("hex") }),
+    );
+    fs.writeFileSync(binary, original);
+    fs.writeFileSync(receipt, originalReceipt);
+    const retained = retainMeasuredProducer(binary, receipt, directory);
+    fs.writeFileSync(binary, "integration test relink with dev dependencies");
+    fs.writeFileSync(receipt, "subsequent producer receipt");
+    assert.deepEqual(fs.readFileSync(path.join(directory, retained.retainedBinary)), original);
+    assert.deepEqual(
+      fs.readFileSync(path.join(directory, retained.retainedBuildReceipt)),
+      originalReceipt,
+    );
+    assert.throws(() =>
+      retainMeasuredProducer(
+        binary,
+        path.join(directory, retained.retainedBuildReceipt),
+        directory,
+      ),
+    );
+    assert.deepEqual(fs.readFileSync(path.join(directory, retained.retainedBinary)), original);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }

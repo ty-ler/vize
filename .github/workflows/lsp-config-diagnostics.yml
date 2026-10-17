@@ -83,6 +83,7 @@ jobs:
         if: ${{ !cancelled() && steps.producer.outcome == 'success' }}
         env:
           VIZE_SYMLINK_STAGING_EVIDENCE_DIR: ${{ github.workspace }}/target/vize-tests/lsp-config-diagnostics/symlink-workspace
+          VIZE_LSP_PASSIVE_EVIDENCE: ${{ github.workspace }}/target/vize-tests/lsp-config-diagnostics/symlink-processes
         run: cargo test --locked --profile ci -p vize --features legacy --test lsp_symlink_workspace_staging_cli original_include_and_open_order_controls_keep_all_authored_bytes -- --nocapture
       - name: Retain source, binary, raw process output, native phases, and metrics
         if: always()
