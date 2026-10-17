@@ -18,10 +18,9 @@ import {
   CANONICAL_VITE,
   CONFIG_PACKAGE_NAMES,
   CONFIG_SOURCES,
-  DEFAULT_BUILD,
   DOUBLE_FORMATTED,
-  PRESERVED_BUILD,
   SINGLE_FORMATTED,
+  assertBuildFileOutput,
   lintReport,
   tsconfigBase,
   vueHelper,
@@ -156,10 +155,9 @@ function cli(project: string, args: string[], expectedStatus: number) {
 
 export function assertConfigCli(project: string, configured: boolean, strict: boolean): void {
   cli(project, ["build", "BuildPanel.vue", "-o", "config-dist"], 0);
-  assert.equal(
+  assertBuildFileOutput(
     fs.readFileSync(path.join(project, "config-dist/BuildPanel.js"), "utf8"),
-    configured ? PRESERVED_BUILD : DEFAULT_BUILD,
-    "complete configured compiler output",
+    configured,
   );
   const lint = cli(project, ["lint", "ImagePanel.vue", "--format", "json"], configured ? 1 : 0);
   assert.deepEqual(

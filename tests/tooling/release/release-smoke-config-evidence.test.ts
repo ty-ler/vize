@@ -8,6 +8,8 @@ import {
   REFERENCE_SOURCE,
   tsconfigBase,
   vueHelper,
+  BUILD_FILE_OUTPUTS,
+  assertBuildFileOutput,
 } from "../../../tools/support/compat/npm/smoke-release-config-fixture.ts";
 import { runConfigDependencyCell } from "../../../tools/support/compat/npm/smoke-release-config-lsp.ts";
 import assert from "node:assert/strict";
@@ -40,6 +42,31 @@ const fixture = () =>
       },
     },
   }));
+
+void test("compiler file counterparts retain the complete snapshots with exactly one framing LF", () => {
+  for (const [kind, snapshotName] of [
+    ["configured", "build_vite"],
+    ["defaults", "build_defaults"],
+  ] as const) {
+    const snapshot = readRepoFile(
+      `crates/vize/tests/snapshots/project_config_cli__project_settings_${snapshotName}.snap`,
+    ).replace(/^---\n[\s\S]*?\n---\n/u, "");
+    const file = BUILD_FILE_OUTPUTS[kind];
+    assert.equal(snapshot, `${file}\n`);
+    assert.equal(Buffer.byteLength(snapshot) - Buffer.byteLength(file), 1);
+    assert.equal(file.endsWith("}"), true);
+    const configured = kind === "configured";
+    assertBuildFileOutput(file, configured);
+    const changedBody = file.replace('"p"', '"span"');
+    assert.notEqual(changedBody, file);
+    for (const invalid of [`${file}\n`, file.slice(0, -1), changedBody]) {
+      assert.throws(
+        () => assertBuildFileOutput(invalid, configured),
+        /complete configured compiler output/u,
+      );
+    }
+  }
+});
 
 void test("real pinned pnpm links both edited siblings only through workspace graph installation", () => {
   // This is an offline package-linker control, not a native Vize runtime claim.

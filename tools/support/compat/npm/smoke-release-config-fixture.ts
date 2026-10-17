@@ -86,6 +86,22 @@ export function render(_ctx, _cache) {
 }
 `;
 
+// insta 1.49.0 snapshot.rs::Snapshot::serialize_snapshot adds one framing LF
+// after the displayed text. Preserve those complete snapshot bodies above and
+// declare only these two file counterparts; never normalize observed CLI files.
+export const BUILD_FILE_OUTPUTS = Object.freeze({
+  configured: PRESERVED_BUILD.slice(0, -1),
+  defaults: DEFAULT_BUILD.slice(0, -1),
+});
+
+export function assertBuildFileOutput(actual: string, configured: boolean): void {
+  assert.equal(
+    actual,
+    BUILD_FILE_OUTPUTS[configured ? "configured" : "defaults"],
+    "complete configured compiler output",
+  );
+}
+
 export function vueHelper(configured: boolean): string {
   return `export default ${JSON.stringify({
     compiler: {
