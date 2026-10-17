@@ -13,6 +13,7 @@ on:
       - "tools/support/compat/github/release-preflight*"
       - "tools/support/compat/github/require-needs-success.ts"
       - "tests/tooling/release/**"
+      - "tests/tooling/plan-release-gates.test.ts"
       - "tests/tooling/support/release-preflight*"
   workflow_dispatch:
 permissions:
@@ -52,6 +53,7 @@ jobs:
           tests/tooling/release/release-preflight-parent-evidence.test.ts
           tests/tooling/release/release-preflight-runner.test.ts
           tests/tooling/release/release-operator.test.ts
+          tests/tooling/plan-release-gates.test.ts
       - name: Require native policy and every incomplete full qualification to fail closed
         run: |
           rust-script --test tools/commands/ci/github/release-preflight.rs
