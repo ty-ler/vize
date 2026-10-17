@@ -248,6 +248,17 @@ impl ServerState {
         let mut loaded = loaded;
         if !loaded.valid {
             #[cfg(feature = "native")]
+            {
+                *self.project_contexts.configuration_observation.write() = Some(
+                    super::project_contexts::freshness::ConfigurationObservation::initial(
+                        &loaded,
+                        &loaded,
+                        Default::default(),
+                        false,
+                    ),
+                );
+            }
+            #[cfg(feature = "native")]
             if self.project_contexts.applied_config.read().is_none() {
                 self.refuse_unconfigured_linter_context(dir);
             }

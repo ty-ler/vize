@@ -41,6 +41,7 @@ pub(super) struct RetainedConfiguration {
     authored: LoadedLspConfig,
     applied: LoadedLspConfig,
     compiler: Arc<vize_canon::CompilerConfigurationSnapshot>,
+    observation: freshness::ConfigurationObservation,
 }
 
 #[derive(Default)]
@@ -58,6 +59,9 @@ pub(super) struct ProjectContexts {
     pub(super) compiler_configuration:
         RwLock<Option<Arc<vize_canon::CompilerConfigurationSnapshot>>>,
     pub(super) config_reload_failed: AtomicBool,
+    pub(super) configuration_observation: RwLock<Option<freshness::ConfigurationObservation>>,
+    configuration_attempts:
+        Mutex<FxHashMap<ProjectContextKey, freshness::ConfigurationObservation>>,
     reference_ownership: Mutex<vize_canon::batch::TsconfigOwnershipCache>,
     contexts: Mutex<FxHashMap<ProjectContextKey, Arc<registry::ProjectContext>>>,
     reload_admission: Mutex<FxHashMap<PathBuf, Weak<futures::lock::Mutex<()>>>>,
@@ -216,6 +220,8 @@ impl ServerState {
             // Raw dependency files can change before lazy initialization.
             *state.project_contexts.compiler_configuration.write() =
                 Some(prepared.compiler.clone());
+            *state.project_contexts.configuration_observation.write() =
+                Some(prepared.observation.clone());
             state.apply_retained_workspace_config(root, prepared.applied.clone());
             *state.project_contexts.loaded_config.write() = Some(prepared.authored.clone());
         } else {
@@ -296,6 +302,10 @@ impl ServerState {
             .pending_config_reloads
             .lock()
             .retain(|key| roots.iter().any(|folder| key.root.starts_with(folder)));
+        self.project_contexts
+            .configuration_attempts
+            .lock()
+            .retain(|key, _| roots.iter().any(|folder| key.root.starts_with(folder)));
         let mut retired = Vec::new();
         self.project_contexts.contexts.lock().retain(|root, state| {
             let retained = roots.iter().any(|folder| root.root.starts_with(folder));
@@ -324,6 +334,7 @@ impl ServerState {
             context.retire();
         }
         self.project_contexts.routes.clear();
+        self.project_contexts.configuration_attempts.lock().clear();
     }
 
     pub(crate) fn project_jsx_typecheck_enabled(&self) -> bool {
@@ -416,3 +427,8 @@ mod watched;
 mod config_reload;
 #[cfg(test)]
 mod config_reload_tests;
+
+pub(super) mod freshness;
+
+#[cfg(test)]
+mod freshness_tests;

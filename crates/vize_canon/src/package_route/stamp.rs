@@ -117,6 +117,10 @@ impl InputStamp {
         }
     }
 
+    pub(crate) fn path(&self) -> &Path {
+        &self.path
+    }
+
     pub(crate) fn is_current(&self) -> bool {
         *self == Self::capture_input(self.path.clone(), None, self.source_content)
     }

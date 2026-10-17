@@ -56,6 +56,18 @@ impl MaestroServer {
 
     pub(super) async fn for_document(&self, uri: &Url) -> DocumentServer<'_> {
         #[cfg(feature = "native")]
+        {
+            let changes = self.state.refresh_document_configuration_async(uri).await;
+            for error in changes.errors {
+                self.client.show_message(error.typ, error.message).await;
+            }
+        }
+        self.for_document_admitted(uri).await
+    }
+
+    /// Continue an operation whose configuration admission already completed.
+    pub(super) async fn for_document_admitted(&self, uri: &Url) -> DocumentServer<'_> {
+        #[cfg(feature = "native")]
         if let Some(state) = self.state.document_project_state_async(uri).await {
             return DocumentServer::Project(self.with_project_state(state));
         }

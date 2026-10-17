@@ -59,7 +59,7 @@ pub(super) async fn did_change_watched_files(
     }
     #[cfg(feature = "native")]
     for (uri, version) in reconfigured.documents {
-        let project = server.for_document(&uri).await;
+        let project = server.for_document_admitted(&uri).await;
         if project.state.documents.version(&uri) == Some(version)
             && let Some(source) = project.state.documents.text(&uri)
         {

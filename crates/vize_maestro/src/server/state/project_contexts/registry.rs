@@ -62,6 +62,21 @@ impl ProjectContext {
             .unwrap_or_default()
     }
 
+    pub(super) fn configuration_observation(
+        &self,
+    ) -> Option<super::freshness::ConfigurationObservation> {
+        if let Some(state) = self.initialized_state() {
+            return state
+                .project_contexts
+                .configuration_observation
+                .read()
+                .clone();
+        }
+        self.prepared
+            .get()
+            .map(|prepared| prepared.observation.clone())
+    }
+
     pub(super) fn provide_snapshot(&self, snapshot: LoadedLspConfig, failed: bool) {
         let _ = self.snapshot.set((snapshot, failed));
     }

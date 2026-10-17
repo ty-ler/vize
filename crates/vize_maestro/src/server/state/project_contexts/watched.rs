@@ -1,8 +1,7 @@
 //! Prepare configuration once per Vite root; install only valid full-key owners.
 use super::config_reload::{ProjectConfigChanges, reload_error};
 use super::{
-    Arc, Ordering, ProjectContextKey, RetainedConfiguration, ServerState, is_config_marker,
-    paths::physical_path, registry,
+    Arc, Ordering, ProjectContextKey, ServerState, is_config_marker, paths::physical_path, registry,
 };
 use std::path::{Path, PathBuf};
 use tower_lsp::lsp_types::{FileEvent, Url};
@@ -14,6 +13,13 @@ pub(super) struct ConfigEventScope {
 }
 
 impl ConfigEventScope {
+    pub(super) fn for_owners(affected: Vec<ProjectContextKey>) -> Self {
+        Self {
+            affected,
+            marker_paths: Vec::new(),
+        }
+    }
+
     pub(super) fn retain_root(&mut self, root: &Path) {
         self.affected
             .retain(|key| physical_path(&key.root) == physical_path(root));
@@ -24,6 +30,14 @@ impl ConfigEventScope {
 
 impl ServerState {
     pub(super) fn project_config_event_scope(&self, changes: &[FileEvent]) -> ConfigEventScope {
+        let paths = changes
+            .iter()
+            .map(|event| event.uri.clone())
+            .collect::<Vec<_>>();
+        self.project_config_path_scope(&paths)
+    }
+
+    pub(super) fn project_config_path_scope(&self, changes: &[Url]) -> ConfigEventScope {
         let empty = || ConfigEventScope {
             affected: Vec::new(),
             marker_paths: Vec::new(),
@@ -43,12 +57,12 @@ impl ServerState {
             .collect::<Vec<_>>();
         let changed = changes
             .iter()
-            .filter_map(|event| event.uri.to_file_path().ok())
+            .filter_map(|uri| uri.to_file_path().ok())
             .map(|path| physical_path(&path))
             .collect::<Vec<_>>();
         let marker_paths = changes
             .iter()
-            .filter_map(|event| event.uri.to_file_path().ok())
+            .filter_map(|uri| uri.to_file_path().ok())
             .filter(|path| !excluded_config_path(path, &roots))
             .map(|path| physical_path(&path))
             .filter(|path| is_config_marker(path) && !excluded_config_path(path, &physical_roots))
@@ -58,7 +72,16 @@ impl ServerState {
                 .iter()
                 .any(|dependency| changed.contains(&physical_path(dependency)))
         };
-        let primary_dependencies = self.project_contexts.config_dependencies.read().clone();
+        let mut primary_dependencies = self.project_contexts.config_dependencies.read().clone();
+        if let Some(root) = self
+            .project_contexts
+            .boundary
+            .read()
+            .clone()
+            .or_else(|| self.get_workspace_root())
+        {
+            primary_dependencies.extend(self.configuration_paths_for_key(&root.into()));
+        }
         let contexts = self.project_contexts.contexts.lock();
         let mut tracked = primary_dependencies
             .iter()
@@ -80,6 +103,7 @@ impl ServerState {
             .iter()
             .filter(|(key, context)| {
                 depends(&context.config_dependencies())
+                    || depends(&self.configuration_paths_for_key(key))
                     || untracked
                         .iter()
                         .any(|path| path.starts_with(physical_path(&key.root)))
@@ -155,6 +179,18 @@ impl ServerState {
         changes: &[FileEvent],
         scope: ConfigEventScope,
     ) -> ProjectConfigChanges {
+        let paths = changes
+            .iter()
+            .map(|event| event.uri.clone())
+            .collect::<Vec<_>>();
+        self.apply_project_config_paths(&paths, scope)
+    }
+
+    pub(super) fn apply_project_config_paths(
+        self: &Arc<Self>,
+        changes: &[Url],
+        scope: ConfigEventScope,
+    ) -> ProjectConfigChanges {
         let mut result = ProjectConfigChanges::default();
         if scope.affected.is_empty() || self.project_routing_shutting_down() {
             return result;
@@ -178,10 +214,17 @@ impl ServerState {
         let mut authored = FxHashMap::default();
         let mut prepared = Vec::new();
         for (key, previous) in previous {
-            let dependencies = previous
+            let repeated_failure = self
+                .project_contexts
+                .configuration_attempts
+                .lock()
+                .get(&key)
+                .is_some_and(super::freshness::ConfigurationObservation::repeats_notified_failure);
+            let mut dependencies = previous
                 .as_ref()
                 .map(|context| context.config_dependencies())
                 .unwrap_or_else(|| self.project_contexts.config_dependencies.read().clone());
+            dependencies.extend(self.configuration_paths_for_key(&key));
             let markers = if key.tsconfig.is_none() {
                 scope.marker_paths.as_slice()
             } else {
@@ -189,21 +232,14 @@ impl ServerState {
             };
             let changed = known_config_events(&key.root, &dependencies, markers, changes);
             result.configuration_events.extend(changed.clone());
-            let raw = authored
-                .entry(key.root.clone())
-                .or_insert_with(|| super::load_lsp_config_snapshot(Some(&key.root)));
-            let snapshot = if let Some(error) = &raw.error {
-                Err(vize_l0::String::from(error.as_str()))
-            } else {
-                let mut applied = raw.clone();
-                Self::prepare_tsconfig_config_snapshot(&key.root, Some(&key), &mut applied).map(
-                    |compiler| RetainedConfiguration {
-                        authored: raw.clone(),
-                        applied,
-                        compiler,
-                    },
-                )
-            };
+            let (raw, before) = authored.entry(key.root.clone()).or_insert_with(|| {
+                let before = vize_canon::ConfigurationObservations::capture(
+                    &self.configuration_vite_paths_for_root(&key.root),
+                );
+                (super::load_lsp_config_snapshot(Some(&key.root)), before)
+            });
+            let (snapshot, observation) =
+                Self::prepare_configuration_attempt(&key, raw, before, &dependencies);
             if let Ok(snapshot) = &snapshot {
                 result.configuration_events.extend(known_config_events(
                     &key.root,
@@ -212,7 +248,14 @@ impl ServerState {
                     changes,
                 ));
             }
-            prepared.push((key, previous, snapshot, changed));
+            prepared.push((
+                key,
+                previous,
+                snapshot,
+                changed,
+                observation,
+                repeated_failure,
+            ));
         }
         #[cfg(test)]
         super::lock_order_tests::before_config_install();
@@ -226,7 +269,7 @@ impl ServerState {
         let mut published_keys = Vec::new();
         let mut accepted_roots = FxHashSet::default();
         let mut failed_roots = FxHashSet::default();
-        for (key, previous, snapshot, changed) in prepared {
+        for (key, previous, snapshot, changed, mut observation, repeated_failure) in prepared {
             let unchanged = match (&previous, contexts.get(&key)) {
                 (Some(before), Some(current)) => Arc::ptr_eq(before, current),
                 (None, None) => true,
@@ -242,6 +285,13 @@ impl ServerState {
                     .remove(&key);
                 continue;
             }
+            if snapshot.is_err() && (!changed.is_empty() || repeated_failure) {
+                observation.mark_failure_notified();
+            }
+            self.project_contexts
+                .configuration_attempts
+                .lock()
+                .insert(key.clone(), observation);
             published_keys.push(key.clone());
             match snapshot {
                 Ok(snapshot) => {
@@ -278,7 +328,7 @@ impl ServerState {
                             .store(true, Ordering::Release);
                     }
                     failed_roots.insert(key.root.clone());
-                    if !changed.is_empty() {
+                    if !changed.is_empty() && !repeated_failure {
                         result.errors.push(reload_error(&key.root, &changed));
                     }
                     result.rejected.push((key, changed));
@@ -371,12 +421,12 @@ fn known_config_events(
     root: &Path,
     dependencies: &[PathBuf],
     markers: &[PathBuf],
-    changes: &[FileEvent],
+    changes: &[Url],
 ) -> Vec<Url> {
     let mut changed = changes
         .iter()
         .filter(|change| {
-            change.uri.to_file_path().is_ok_and(|path| {
+            change.to_file_path().is_ok_and(|path| {
                 let path = physical_path(&path);
                 dependencies
                     .iter()
@@ -384,7 +434,7 @@ fn known_config_events(
                     || (markers.contains(&path) && path.starts_with(physical_path(root)))
             })
         })
-        .map(|change| change.uri.clone())
+        .cloned()
         .collect::<Vec<_>>();
     changed.sort();
     changed.dedup();

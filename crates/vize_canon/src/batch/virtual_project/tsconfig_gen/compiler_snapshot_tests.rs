@@ -374,6 +374,7 @@ fn failed_capture_retains_new_external_extends_candidates_until_repaired() {
     let crate::CompilerConfigurationAttempt {
         outcome,
         dependencies,
+        ..
     } = CompilerConfigurationSnapshot::capture_attempt(&root, Some(&config));
     let error = outcome
         .err()

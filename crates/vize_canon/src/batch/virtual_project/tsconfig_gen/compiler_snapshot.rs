@@ -10,6 +10,7 @@ use std::sync::Arc;
 use serde_json::{Map, Value};
 
 use super::super::VirtualProject;
+pub use super::compiler_inputs::ConfigurationObservations;
 use super::compiler_options::FlattenedCompilerOptions;
 use crate::batch::error::{CorsaError, CorsaResult};
 
@@ -30,6 +31,7 @@ pub struct CompilerConfigurationSnapshot {
     dependencies: Vec<PathBuf>,
     vue_target: Result<Option<vize_carton::config::VueVersion>, vize_carton::String>,
     solution_shell: bool,
+    observations: ConfigurationObservations,
 }
 
 /// One capture result plus the exact paths observed while attempting it.
@@ -39,6 +41,8 @@ pub struct CompilerConfigurationAttempt {
     pub outcome: CorsaResult<CompilerConfigurationSnapshot>,
     /// Attempted reads and resolution candidates for watching, not compiler authority.
     pub dependencies: Vec<PathBuf>,
+    /// Original read/resolution observations, even when admission failed.
+    pub observations: ConfigurationObservations,
 }
 
 #[cfg(test)]
@@ -149,6 +153,7 @@ impl CompilerConfigurationSnapshot {
                 dependencies,
                 vue_target,
                 solution_shell,
+                observations: inputs.observations(),
             })
         })();
         let mut dependencies = inputs.paths();
@@ -160,7 +165,13 @@ impl CompilerConfigurationSnapshot {
         CompilerConfigurationAttempt {
             outcome,
             dependencies,
+            observations: inputs.observations(),
         }
+    }
+
+    /// The actual inputs checked during this capture, not a later reread.
+    pub fn observations(&self) -> &ConfigurationObservations {
+        &self.observations
     }
 
     /// The dialect resolved from these same captured options and Vue manifest.

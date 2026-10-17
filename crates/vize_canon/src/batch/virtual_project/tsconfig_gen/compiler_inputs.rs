@@ -11,6 +11,55 @@ use crate::package_route::stamp::InputStamp;
 
 use super::super::tsconfig_paths::{normalize_path_lexically, parse_jsonc_value};
 
+/// Owned filesystem observations for configuration admission and repair.
+/// These observations carry no compiler options and are safe to share across workers.
+#[derive(Clone, Default)]
+pub struct ConfigurationObservations {
+    stamps: Vec<InputStamp>,
+}
+
+impl ConfigurationObservations {
+    /// Observe known paths before an evaluation, including link ancestors.
+    /// This does not prove which bytes an external evaluator consumed.
+    pub fn capture(paths: &[PathBuf]) -> Self {
+        let inputs = CompilerInputs::default();
+        for path in paths {
+            inputs.observe(path);
+        }
+        inputs.observations()
+    }
+
+    /// Preserve both consumed-source observations and known-before observations.
+    pub fn extend(&mut self, other: &Self) {
+        self.stamps.extend(other.stamps.iter().cloned());
+    }
+
+    /// Known read and resolution paths, including absent candidates.
+    pub fn paths(&self) -> Vec<PathBuf> {
+        let mut paths = self
+            .stamps
+            .iter()
+            .map(|stamp| stamp.path().to_path_buf())
+            .collect::<Vec<_>>();
+        paths.sort();
+        paths.dedup();
+        paths
+    }
+
+    /// Inputs whose current physical identity differs from this observation.
+    pub fn changed_paths(&self) -> Vec<PathBuf> {
+        let mut paths = self
+            .stamps
+            .iter()
+            .filter(|stamp| !stamp.is_current())
+            .map(|stamp| stamp.path().to_path_buf())
+            .collect::<Vec<_>>();
+        paths.sort();
+        paths.dedup();
+        paths
+    }
+}
+
 #[derive(Eq, Hash, PartialEq)]
 struct ResolutionKey {
     kind: &'static str,
@@ -121,6 +170,17 @@ impl CompilerInputs {
         Some((path, manifest))
     }
 
+    pub(in super::super) fn observations(&self) -> ConfigurationObservations {
+        let mut stamps = self
+            .observations
+            .borrow()
+            .values()
+            .cloned()
+            .collect::<Vec<_>>();
+        stamps.extend(self.parsed_observations.borrow().iter().cloned());
+        ConfigurationObservations { stamps }
+    }
+
     pub(in super::super) fn validate(&self) -> CorsaResult<()> {
         if self
             .observations
@@ -160,4 +220,34 @@ pub(in super::super) fn read_jsonc(
             ))
         })?;
     profile!("canon.tsconfig.parse", parse_jsonc_value(&content))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{CompilerInputs, ConfigurationObservations};
+
+    #[test]
+    fn owned_observations_preserve_original_read_and_absent_candidate_identity() {
+        fn assert_send_sync<T: Send + Sync>() {}
+        assert_send_sync::<ConfigurationObservations>();
+        let root = tempfile::tempdir().unwrap();
+        let base = root.path().join("base.json");
+        let absent = root.path().join("candidate.json");
+        std::fs::write(&base, "{}").unwrap();
+        let inputs = CompilerInputs::default();
+        inputs.read_jsonc(&base).unwrap();
+        inputs.observe(&absent);
+        let observed = inputs.observations();
+        drop(inputs);
+        assert!(observed.changed_paths().is_empty());
+        assert!(observed.paths().contains(&absent));
+        std::fs::write(&base, r#"{"strict":true}"#).unwrap();
+        std::fs::write(&absent, "{}").unwrap();
+        let mut expected = vec![base, absent];
+        expected.sort();
+        assert_eq!(observed.changed_paths(), expected);
+        let repair_only = ConfigurationObservations::capture(&observed.paths());
+        assert!(repair_only.changed_paths().is_empty());
+        assert_eq!(observed.changed_paths(), expected);
+    }
 }

@@ -15,7 +15,23 @@ impl ServerState {
         loaded: &mut LoadedLspConfig,
     ) -> bool {
         let key = self.project_contexts.key.read().clone();
-        match Self::prepare_tsconfig_config_snapshot(directory, key.as_ref(), loaded) {
+        let authored = loaded.clone();
+        let mut observations = vize_canon::ConfigurationObservations::default();
+        let result = Self::prepare_tsconfig_config_snapshot(
+            directory,
+            key.as_ref(),
+            loaded,
+            &mut observations,
+        );
+        *self.project_contexts.configuration_observation.write() = Some(
+            super::super::project_contexts::freshness::ConfigurationObservation::initial(
+                &authored,
+                loaded,
+                observations,
+                result.is_ok(),
+            ),
+        );
+        match result {
             Ok(compiler) => {
                 *self.project_contexts.config_dependencies.write() =
                     loaded.project.dependencies.clone();
@@ -33,6 +49,7 @@ impl ServerState {
         directory: &Path,
         key: Option<&super::super::project_contexts::ProjectContextKey>,
         loaded: &mut LoadedLspConfig,
+        observations: &mut vize_canon::ConfigurationObservations,
     ) -> Result<Arc<vize_canon::CompilerConfigurationSnapshot>, vize_l0::String> {
         let root = loaded.project.project_root.as_deref().unwrap_or(directory);
         let base = loaded
@@ -40,6 +57,16 @@ impl ServerState {
             .as_deref()
             .and_then(Path::parent)
             .unwrap_or(directory);
+        if key.is_none_or(|key| key.tsconfig.is_none())
+            && loaded.config.type_checker.tsconfig.is_none()
+        {
+            observations.extend(&vize_canon::ConfigurationObservations::capture(&[
+                root.join("tsconfig.json"),
+                root.join("jsconfig.json"),
+                base.join("tsconfig.json"),
+                base.join("jsconfig.json"),
+            ]));
+        }
         let selected = key
             .and_then(|key| key.tsconfig.clone())
             .or_else(|| {
@@ -65,6 +92,10 @@ impl ServerState {
             && (key.is_some_and(|key| key.tsconfig.is_some())
                 || loaded.config.type_checker.tsconfig.is_some())
         {
+            loaded.watch_dependencies.push(selected.clone());
+            observations.extend(&vize_canon::ConfigurationObservations::capture(
+                std::slice::from_ref(&selected),
+            ));
             return Err(vize_l0::cstr!(
                 "selected TypeScript configuration does not exist: {}",
                 selected.display()
@@ -76,9 +107,11 @@ impl ServerState {
             // Keep the checker on the same TS project when Vite moves the source root.
             loaded.config.type_checker.tsconfig =
                 Some(selected.to_string_lossy().into_owned().into());
-            let snapshot =
-                vize_canon::CompilerConfigurationSnapshot::capture(root, Some(&selected))
-                    .map_err(|error| vize_l0::cstr!("{error}"))?;
+            let attempt =
+                vize_canon::CompilerConfigurationSnapshot::capture_attempt(root, Some(&selected));
+            loaded.watch_dependencies.extend(attempt.dependencies);
+            observations.extend(&attempt.observations);
+            let snapshot = attempt.outcome.map_err(|error| vize_l0::cstr!("{error}"))?;
             dependencies.extend(snapshot.dependencies().iter().cloned());
             compiler = Arc::new(snapshot);
             // Authored Vite dialects, including Vue 3, take precedence.
@@ -97,8 +130,10 @@ impl ServerState {
                 }
             }
         } else {
-            let snapshot = vize_canon::CompilerConfigurationSnapshot::capture(root, None)
-                .map_err(|error| vize_l0::cstr!("{error}"))?;
+            let attempt = vize_canon::CompilerConfigurationSnapshot::capture_attempt(root, None);
+            loaded.watch_dependencies.extend(attempt.dependencies);
+            observations.extend(&attempt.observations);
+            let snapshot = attempt.outcome.map_err(|error| vize_l0::cstr!("{error}"))?;
             dependencies.extend(snapshot.dependencies().iter().cloned());
             compiler = Arc::new(snapshot);
         }
@@ -106,6 +141,11 @@ impl ServerState {
         dependencies.sort();
         dependencies.dedup();
         loaded.project.dependencies = dependencies;
+        if !observations.changed_paths().is_empty() {
+            return Err(vize_l0::cstr!(
+                "TypeScript configuration changed during admission; keeping the last good configuration"
+            ));
+        }
         Ok(compiler)
     }
 }

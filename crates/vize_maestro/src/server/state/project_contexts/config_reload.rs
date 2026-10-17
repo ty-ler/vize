@@ -74,6 +74,10 @@ pub(super) fn reload_error(root: &std::path::Path, changes: &[Url]) -> ShowMessa
     }
 }
 
+pub(super) fn worker_unavailable_error() -> ShowMessageParams {
+    ShowMessageParams { typ: MessageType::ERROR, message: "Vize could not reload project configuration because the configuration worker is unavailable. Keeping the last good configuration.".into() }
+}
+
 impl ServerState {
     pub(super) fn config_reload_gates(
         &self,
@@ -189,7 +193,7 @@ impl ServerState {
         }
         let roots = self.workspace_root_paths();
         let mut result = ProjectConfigChanges {
-            errors: vec![ShowMessageParams { typ: MessageType::ERROR, message: "Vize could not reload project configuration because the configuration worker is unavailable. Keeping the last good configuration.".into() }],
+            errors: vec![worker_unavailable_error()],
             ..Default::default()
         };
         for (key, dependencies) in keys {
