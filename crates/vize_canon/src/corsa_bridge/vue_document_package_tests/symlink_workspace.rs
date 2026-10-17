@@ -199,6 +199,11 @@ fn reverse_open_order_preserves_the_complete_linked_package_until_session_cleanu
         fixture.assert_authored_unchanged();
 
         let project_root = host.session_project_root.as_ref().unwrap();
+        let config_path = host.session_config_path.as_ref().unwrap();
+        let config: serde_json::Value =
+            serde_json::from_slice(&fs::read(config_path).unwrap()).unwrap();
+        let compiler_options = config["compilerOptions"].clone();
+        assert_eq!(compiler_options["allowArbitraryExtensions"], true);
         let request = crate::file_uri::file_uri_to_path(&host.host.request_uri).unwrap();
         assert!(request.starts_with(&session_root));
         assert_eq!(fs::read(&request).unwrap(), host.host.code.as_bytes());
@@ -227,6 +232,10 @@ fn reverse_open_order_preserves_the_complete_linked_package_until_session_cleanu
         // retain every complete file owned by the earlier live host.
         let other = fixture.build(&session, &fixture.other, OTHER);
         assert_eq!(other.session_project_root.as_ref(), Some(project_root));
+        assert_eq!(other.session_config_path.as_ref(), Some(config_path));
+        let other_config: serde_json::Value =
+            serde_json::from_slice(&fs::read(config_path).unwrap()).unwrap();
+        assert_eq!(other_config["compilerOptions"], compiler_options);
         let other_request = crate::file_uri::file_uri_to_path(&other.host.request_uri).unwrap();
         assert!(other_request.starts_with(&session_root));
         assert_eq!(fs::read(other_request).unwrap(), other.host.code.as_bytes());
@@ -240,6 +249,10 @@ fn reverse_open_order_preserves_the_complete_linked_package_until_session_cleanu
         assert_eq!(reopened.host.code, host.host.code);
         assert_eq!(reopened.documents, host.documents);
         assert_eq!(reopened.session_project_root.as_ref(), Some(project_root));
+        assert_eq!(reopened.session_config_path.as_ref(), Some(config_path));
+        let reopened_config: serde_json::Value =
+            serde_json::from_slice(&fs::read(config_path).unwrap()).unwrap();
+        assert_eq!(reopened_config["compilerOptions"], compiler_options);
         assert!(reopened.materialized_changes.is_empty());
         fixture.assert_authored_unchanged();
         for (path, bytes) in &retained {
