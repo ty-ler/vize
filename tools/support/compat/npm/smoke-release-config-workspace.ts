@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import type { Session } from "./smoke-release-config-lsp.ts";
+import { runConfigHarness } from "./smoke-release-config-evidence.ts";
 import {
   assertLatestPublication,
   expectedConfigReloadError,
@@ -36,7 +37,7 @@ import {
   // @ts-expect-error -- untyped existing release smoke helpers
 } from "./smoke-release-init-project.mjs";
 // @ts-expect-error -- untyped existing release smoke helpers
-import { renderOutput, run, runResult } from "./smoke-process.mjs";
+import { renderOutput, runResult } from "./smoke-process.mjs";
 
 const LSP_SESSION = fileURLToPath(new URL("./smoke-release-lsp-session.ts", import.meta.url));
 
@@ -278,9 +279,10 @@ export function runConfigWorkspaceChecks(workspace: string): void {
     assertConfigCli(project, true, true);
     assertControlUnchanged(control, controlFiles);
   }
-  run(process.execPath, [LSP_SESSION, project, "--config-workspace", workspace], {
+  runConfigHarness(process.execPath, [LSP_SESSION, project, "--config-workspace", workspace], {
     cwd: project,
     env: projectEnv(),
+    directory: process.env.VIZE_SMOKE_LSP_LOG_DIR ?? path.join(workspace, ".vize-config-harness"),
   });
   // Same-directory reference-owned dialect identity is not covered by these
   // two different package roots, nor by this installed native LSP cell alone.

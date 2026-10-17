@@ -15,11 +15,15 @@ import { runConfigDependencyCell } from "../../../tools/support/compat/npm/smoke
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { verifyInstalledImages } from "../../../tools/support/compat/npm/smoke-release-config-evidence.ts";
+import {
+  runConfigHarness,
+  verifyInstalledImages,
+} from "../../../tools/support/compat/npm/smoke-release-config-evidence.ts";
 import { installPackedWorkspaceDependencies } from "../../../tools/support/compat/npm/smoke-release-init-workspace.ts";
 import { PACKAGE_MANAGERS } from "../../../tools/support/compat/npm/smoke-release-init-managers.mjs";
 import { packedFileSpec } from "../../../tools/support/compat/npm/smoke-release-init-fresh.mjs";
@@ -42,6 +46,100 @@ const fixture = () =>
       },
     },
   }));
+
+void test("config harness retains whole large stdout/stderr on success and nonzero exit", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-config-transport-"));
+  try {
+    const cwd = path.join(directory, "project with spaces");
+    fs.mkdirSync(cwd);
+    const packets = ["stdout", "stderr"].map((name, index) => {
+      const bytes = Buffer.concat([
+        Buffer.alloc(2 * 1024 * 1024 + 19, 0x61 + index),
+        Buffer.from("\0λ\r\ncomplete tail\n"),
+      ]);
+      const file = path.join(directory, `${name} source.bin`);
+      fs.writeFileSync(file, bytes);
+      return { file, bytes };
+    });
+    const program = `import fs from "node:fs";
+fs.writeFileSync(1, fs.readFileSync(process.argv[1]));
+fs.writeFileSync(2, fs.readFileSync(process.argv[2]));
+process.exitCode = Number(process.argv[3]);`;
+    const env = { ...process.env, VIZE_SMOKE_LSP_LOG_DIR: directory };
+    const args = ["--input-type=module", "-e", program, ...packets.map(({ file }) => file), "0"];
+    const previous = spawnSync(process.execPath, args, { cwd, env });
+    assert.equal(previous.error?.code, "ENOBUFS", "the old pipe transport loses this packet");
+    for (const status of [0, 17]) {
+      args[args.length - 1] = String(status);
+      const run = () => runConfigHarness(process.execPath, args, { cwd, env, directory });
+      if (status === 0) run();
+      else assert.throws(run, /config harness failed/u);
+      const receipts = fs
+        .readdirSync(directory)
+        .filter((name) => name.startsWith("config-harness-"));
+      assert.equal(receipts.length, status === 0 ? 1 : 2, "invocations have independent custody");
+      const receipt = receipts
+        .map((name) =>
+          JSON.parse(fs.readFileSync(path.join(directory, name, "process.json"), "utf8")),
+        )
+        .find((record) => record.status === status);
+      assert.ok(receipt);
+      assert.equal(receipt.executable, process.execPath);
+      assert.deepEqual(receipt.args, args);
+      assert.equal(receipt.cwd, cwd);
+      assert.equal(receipt.environment.VIZE_SMOKE_LSP_LOG_DIR, directory);
+      assert.equal(receipt.environment.PATH, env.PATH ?? null);
+      assert.equal(receipt.status, status);
+      assert.equal(receipt.signal, null);
+      assert.equal(receipt.error, null);
+      assert.equal(receipt.timeout, null);
+      assert.equal(receipt.stdin, "pipe");
+      for (const [index, name] of ["stdout", "stderr"].entries()) {
+        const expected = packets[index].bytes;
+        assert.deepEqual(fs.readFileSync(receipt[name].path), expected);
+        assert.equal(receipt[name].bytes, expected.length);
+        assert.equal(receipt[name].sha256, createHash("sha256").update(expected).digest("hex"));
+      }
+    }
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+void test("config harness records spawn failure and closes both output descriptors", (context) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-config-spawn-error-"));
+  const close = fs.closeSync;
+  const descriptors: number[] = [];
+  const observe = context.mock.method(fs, "closeSync", (descriptor: number) => {
+    close(descriptor);
+    assert.throws(() => fs.fstatSync(descriptor), { code: "EBADF" });
+    descriptors.push(descriptor);
+  });
+  try {
+    const executable = path.join(directory, "absent executable");
+    assert.throws(
+      () => runConfigHarness(executable, ["exact", "argv"], { cwd: directory, env: {}, directory }),
+      { code: "ENOENT" },
+    );
+    assert.ok(descriptors.length >= 2);
+    assert.notEqual(descriptors[0], descriptors[1], "both independently opened outputs close");
+    const [name] = fs.readdirSync(directory);
+    const receipt = JSON.parse(fs.readFileSync(path.join(directory, name, "process.json"), "utf8"));
+    assert.equal(receipt.executable, executable);
+    assert.deepEqual(receipt.args, ["exact", "argv"]);
+    assert.equal(receipt.status, null);
+    assert.equal(receipt.signal, null);
+    assert.equal(receipt.error.code, "ENOENT");
+    for (const stream of [receipt.stdout, receipt.stderr]) {
+      assert.equal(stream.bytes, 0);
+      assert.deepEqual(fs.readFileSync(stream.path), Buffer.alloc(0));
+      assert.equal(stream.sha256, createHash("sha256").digest("hex"));
+    }
+  } finally {
+    observe.mock.restore();
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 void test("compiler file counterparts retain the complete snapshots with exactly one framing LF", () => {
   for (const [kind, snapshotName] of [

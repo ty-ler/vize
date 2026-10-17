@@ -1,5 +1,6 @@
-/** Small same-source image receipt for the bounded installed config campaign. */
+/** Whole process/image evidence for the bounded installed config campaign. */
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -38,6 +39,94 @@ export function verifyInstalledImages(identities: InstalledIdentity[], expected:
 }
 
 const sha = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex");
+
+/** Keep the config session's complete, multi-megabyte packet off sync pipe buffers. */
+export function runConfigHarness(
+  executable: string,
+  args: string[],
+  options: { cwd: string; env: NodeJS.ProcessEnv; directory: string },
+) {
+  fs.mkdirSync(options.directory, { recursive: true });
+  const directory = fs.mkdtempSync(path.join(path.resolve(options.directory), "config-harness-"));
+  const stdout = path.join(directory, "stdout.jsonl");
+  const stderr = path.join(directory, "stderr.log");
+  const descriptors: number[] = [];
+  let result;
+  try {
+    descriptors.push(fs.openSync(stdout, "wx"));
+    descriptors.push(fs.openSync(stderr, "wx"));
+    // Preserve the previous pipe stdin, direct executable, and absence of a
+    // timeout. Only this harness's output transport changes; native wire/session
+    // custody and every consumer assertion remain owned by the child.
+    result = spawnSync(executable, args, {
+      cwd: options.cwd,
+      env: options.env,
+      stdio: ["pipe", descriptors[0], descriptors[1]],
+    });
+  } finally {
+    for (const descriptor of descriptors) fs.closeSync(descriptor);
+  }
+  const describe = (file: string) => {
+    const bytes = fs.readFileSync(file);
+    return { path: file, bytes: bytes.length, sha256: sha(bytes) };
+  };
+  const receipt = {
+    scope: "config harness process transport; native/session assertions remain in the child",
+    executable,
+    args,
+    cwd: options.cwd,
+    // Explicit relevant values/absences, without publishing inherited credentials.
+    environment: Object.fromEntries(
+      [
+        "PATH",
+        "Path",
+        "NODE_OPTIONS",
+        "NODE_PATH",
+        "CI",
+        "TMPDIR",
+        "TEMP",
+        "TMP",
+        "VIZE_SMOKE_LSP_LOG_DIR",
+        "VIZE_TEST_DISABLE_TSGO",
+        "VIZE_TRACE_EDITOR_PREPARATION",
+        "CORSA_PATH",
+        "CORSA_EXECUTABLE",
+        "TSGO_PATH",
+        "TSGO_EXECUTABLE",
+      ].map((name) => [name, options.env[name] ?? null]),
+    ),
+    stdin: "pipe",
+    timeout: null,
+    pid: result.pid,
+    status: result.status,
+    signal: result.signal,
+    error: result.error
+      ? {
+          ...result.error,
+          name: result.error.name,
+          message: result.error.message,
+          stack: result.error.stack,
+        }
+      : null,
+    stdout: describe(stdout),
+    stderr: describe(stderr),
+  };
+  const file = path.join(directory, "process.json");
+  fs.writeFileSync(file, JSON.stringify(receipt, null, 2) + "\n");
+  console.log(
+    JSON.stringify({
+      configHarness: file,
+      status: receipt.status,
+      signal: receipt.signal,
+      stdout: receipt.stdout,
+      stderr: receipt.stderr,
+    }),
+  );
+  if (result.error) throw result.error;
+  assert.equal(result.status, 0, `config harness failed; complete process evidence: ${file}`);
+  assert.equal(result.signal, null, `config harness signaled; complete process evidence: ${file}`);
+  return receipt;
+}
 
 function collect(): void {
   const directory = process.env.PACKED_CONFIG_OUTPUT;
