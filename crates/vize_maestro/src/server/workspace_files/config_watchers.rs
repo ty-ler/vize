@@ -152,10 +152,10 @@ impl Worker {
                 }
                 queue.latest.take()
             };
-            if let Some(paths) = paths {
-                if !self.replace(paths) {
-                    break;
-                }
+            if let Some(paths) = paths
+                && !self.replace(paths)
+            {
+                break;
             }
         }
         self.dispose();

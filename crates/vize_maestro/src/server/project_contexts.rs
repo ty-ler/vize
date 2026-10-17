@@ -133,7 +133,7 @@ impl MaestroServer {
                 .await
                 .unwrap_or_else(|| self.state.clone());
             self.queue_configuration_watches();
-            return DocumentServer::Project(self.with_project_state(state));
+            DocumentServer::Project(self.with_project_state(state))
         }
         #[cfg(not(feature = "native"))]
         {
