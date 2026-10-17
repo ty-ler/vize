@@ -144,10 +144,12 @@ impl InputStamp {
         *self == Self::capture_input(self.path.clone(), None, self.source_content)
     }
 
+    #[cfg(feature = "native")]
     pub(crate) fn observation_identity(&self) -> (&Path, bool) {
         (&self.path, self.source_content)
     }
 
+    #[cfg(feature = "native")]
     pub(crate) fn is_current_observed(&self, stats: &mut InputStampReadStats) -> bool {
         *self
             == Self::capture_input_observed(
