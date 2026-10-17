@@ -94,3 +94,12 @@ Fresh final combined-source Actions and actual host execution, protected
 merge, and release remain separate requirements. The original unrecorded
 host failure must not be retroactively asserted to have this exact causal
 chain.
+
+The first combined PR run `38986992717` passed all Rust cohorts but correctly
+failed feature-lane Clippy on this test companion. Clippy recognizes the
+workspace's assertion exemptions through a plain `#[cfg(test)]` module,
+not a combined test/feature/platform predicate. Keep that attribute separate
+from the unchanged native/Unix condition, matching existing test modules.
+Unknown fixture interventions still fail explicitly with their name. No lint
+is suppressed and no product or fixture assertion is removed; fresh Actions
+must verify the complete feature lane again.
