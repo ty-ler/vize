@@ -92,6 +92,7 @@ async function captureConfigEvaluation(
   observeDependencies,
 ) {
   const files = new Set([configPath]);
+  const requestedFiles = new Set();
   let complete = true;
   let moduleGraphLoaded = false;
   const owners = new Set([pathToFileURL(configPath).href]);
@@ -112,6 +113,26 @@ async function captureConfigEvaluation(
               if (owners.has(result.url) || owners.has(context.parentURL) || isPrivate(path)) {
                 owners.add(result.url);
                 if (!isPrivate(path)) files.add(path);
+                // Node reports the real target, but the actual explicit request
+                // also owns a symlink route whose retargeting must be observed.
+                // Keep this watch-only: it does not replace Node's resolution.
+                if (
+                  owners.has(context.parentURL) &&
+                  (specifier.startsWith("./") ||
+                    specifier.startsWith("../") ||
+                    specifier.startsWith("/") ||
+                    specifier.startsWith("file:"))
+                ) {
+                  try {
+                    const requested = new URL(specifier, context.parentURL);
+                    if (requested.protocol === "file:") {
+                      const requestedPath = fileURLToPath(requested);
+                      if (extname(requestedPath) && !isPrivate(requestedPath)) {
+                        requestedFiles.add(requestedPath);
+                      }
+                    }
+                  } catch {}
+                }
               }
             }
             return result;
@@ -139,7 +160,7 @@ async function captureConfigEvaluation(
     throw error;
   } finally {
     hooks?.deregister();
-    observeDependencies?.([...files], complete);
+    observeDependencies?.([...files, ...requestedFiles], complete);
   }
 }
 

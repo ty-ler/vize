@@ -25,6 +25,48 @@ const embedded =
     )
   ).join("") + [...rust.matchAll(/r#"([\s\S]*?)"#/g)][0][1];
 
+test("Node retains the actual explicit import symlink route for retarget repair", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "vize-config-alias-")));
+  try {
+    const app = join(root, "app");
+    await mkdir(app);
+    const selected = join(app, "vite.config.mjs");
+    const alias = join(root, "共有 policy.mjs");
+    const targets = [join(root, "one.mjs"), join(root, "two.mjs")];
+    const contents = targets.map(
+      (_, index) => `export default { formatter: { printWidth: ${91 + index} } };`,
+    );
+    await Promise.all(targets.map((file, index) => writeFile(file, contents[index])));
+    const counter = join(root, "evaluations.txt");
+    const source = `import { appendFileSync } from 'node:fs';
+import vue from '../共有 policy.mjs';
+export default () => { appendFileSync(${JSON.stringify(counter)}, 'once\\n'); return { vue }; };`;
+    await writeFile(selected, source);
+    const invoke = () =>
+      spawnSync(process.execPath, ["--input-type=module", "-e", embedded, selected], {
+        cwd: app,
+        encoding: "utf8",
+      });
+    for (const [index, target] of targets.entries()) {
+      if (index) await rm(alias);
+      await symlink(target, alias);
+      const response = invoke();
+      assert.equal(response.status, 0, response.stderr);
+      const loaded = JSON.parse(response.stdout);
+      assert.equal(loaded.config.formatter.printWidth, 91 + index);
+      assert.equal(loaded.watchDependenciesComplete, true);
+      assert.ok(loaded.watchDependencies.includes(alias), "the requested route stays watchable");
+      assert.equal(loaded.dependencies.includes(alias), false, "the authored graph stays resolved");
+      assert.ok(loaded.dependencies.includes(target), "the actual resolved target stays watchable");
+      assert.equal(await readFile(selected, "utf8"), source);
+      assert.deepEqual(await Promise.all(targets.map((file) => readFile(file, "utf8"))), contents);
+    }
+    assert.equal(await readFile(counter, "utf8"), "once\nonce\n");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 for (const installedVite of [false, true]) {
   for (const policyName of ["shared-policy.mjs", "共有 policy.mjs"]) {
     test(`native loader retains an explicit outside failed request and repairs without replacing its loader (Vite: ${installedVite}, path: ${policyName})`, async () => {
