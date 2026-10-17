@@ -4,6 +4,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import {
+  assertRecordOnlyObservations,
   breachFailure,
   cleanup,
   commitSha,
@@ -209,7 +210,8 @@ test("--budget-mode record-only records a breach without failing the job", () =>
     assert.equal(observations.baseline.stderr, "");
     assert.equal(observations.baseline.sourceConfig, "{}\n");
     // Recording is not forgiving: the artifact still carries the failing verdict.
-    assert.deepEqual(readJson(artifactPath(fixture, "json")).budget, {
+    const artifact = readJson(artifactPath(fixture, "json"));
+    assert.deepEqual(artifact.budget, {
       maxFalsePositiveRatio: 0.05,
       maxFalseNegativeRatio: 0.05,
       falsePositivePassed: false,
@@ -217,6 +219,10 @@ test("--budget-mode record-only records a breach without failing the job", () =>
       unusableReason: null,
       verdict: "breached",
       passed: false,
+    });
+    assertRecordOnlyObservations(fixture, artifact, {
+      baselineOutput: sharedBaselineOutput,
+      baselineFiles: ["src/App.vue"],
     });
   } finally {
     cleanup(fixture);

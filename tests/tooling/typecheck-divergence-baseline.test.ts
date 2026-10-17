@@ -4,6 +4,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import {
+  assertRecordOnlyObservations,
   breachFailure,
   cleanup,
   commitSha,
@@ -224,6 +225,7 @@ test("--budget-mode record-only reports an unusable baseline as a warning", () =
     assert.deepEqual(observations.vize, readJson(fixture.outputPath));
     assert.equal(sha256(observations.baseline.stdout), divergence.baseline.stdoutSha256);
     assert.equal(divergence.budget.passed, false);
+    assertRecordOnlyObservations(fixture, divergence, { baselineOutput: "", baselineFiles: [] });
   } finally {
     cleanup(fixture);
   }
