@@ -46,7 +46,7 @@ test("actual legacy driver qualifies a cold cut before R and retains resume and 
       .digest("hex");
     const script = path.join(root, "legacy-check.rs");
     fs.writeFileSync(script, harness(watch, contract, digest));
-    const result = spawnSync("rust-script", ["--test", script, "--", "--nocapture"], {
+    const result = spawnSync("rust-script", ["--test", script, "--nocapture"], {
       encoding: "utf8",
       timeout: 180_000,
     });
