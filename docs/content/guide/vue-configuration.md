@@ -121,13 +121,17 @@ local `file:` URL, or Vite 8 reports an explicit relative or absolute file reque
 with a filename extension. Creating or repairing such a target can trigger a
 reload when the client supports the required watches.
 
+A failed Vite bundle may report a missing file without listing every intermediate
+helper. Editing an omitted helper is detected at the next normal language
+operation. The reported missing file can still be watched automatically.
+
 Vite 7 errors without a structured file target, bare package names, extensionless
 requests, custom thrown errors, and ambiguous Vite specifiers containing `%`, `#`
 or `?` require a retry on the next normal language operation. The editor continues
 watching the graph it already knows; these errors do not establish a watch on a
 new target guessed from the error message.
 
-Each configuration factory runs once per load. Known files are checked before
+Each configuration factory runs once per load. Reloads check known files before
 and after loading. Vite's public bundle-loading API can discover a new helper
 after that helper has already changed, so a reload is not an atomic snapshot of
 concurrent edits across several files. Newly discovered file observations are
