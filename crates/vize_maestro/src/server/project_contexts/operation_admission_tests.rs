@@ -9,13 +9,19 @@ use tower_lsp::lsp_types::{
 };
 use tower_lsp::{ClientSocket, LanguageServer, LspService};
 
+struct Initialization {
+    responses: Vec<Value>,
+    notifications: Vec<Value>,
+}
+
 fn initialize(
     service: &mut LspService<MaestroServer>,
     socket: &mut ClientSocket,
     root_uri: Url,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<Initialization, Box<dyn std::error::Error>> {
     crate::runtime::block_on(async {
         let operation = async {
+            let mut responses = Vec::new();
             for value in [
                 json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{
                     "rootUri":root_uri,"capabilities":{},
@@ -24,45 +30,53 @@ fn initialize(
                 json!({"jsonrpc":"2.0","method":"initialized","params":{}}),
             ] {
                 futures::future::poll_fn(|cx| service.poll_ready(cx)).await?;
-                let response = service.call(serde_json::from_value(value)?).await?;
-                if let Some(response) = response {
-                    let response = serde_json::to_value(response)?;
-                    assert_eq!(response.get("id"), Some(&json!(1)));
-                    assert!(
-                        response
-                            .get("result")
-                            .and_then(|value| value.get("capabilities"))
-                            .is_some_and(Value::is_object)
-                    );
-                    assert!(response.get("error").is_none());
+                if let Some(response) = service.call(serde_json::from_value(value)?).await? {
+                    responses.push(serde_json::to_value(response)?);
                 }
             }
-            Ok::<(), Box<dyn std::error::Error>>(())
+            Ok::<_, Box<dyn std::error::Error>>(responses)
         }
         .fuse();
         futures::pin_mut!(operation);
-        let mut messages = Vec::<Value>::new();
-        loop {
+        let mut notifications = Vec::<Value>::new();
+        let responses = loop {
             futures::select! {
-                result = operation => { result?; break; },
+                result = operation => break result?,
                 message = socket.next().fuse() => {
                     let message = message.ok_or_else(|| std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "client socket closed during initialization"))?;
-                    messages.push(serde_json::to_value(message)?);
+                    notifications.push(serde_json::to_value(message)?);
                 },
             }
-        }
+        };
         while let Some(Some(message)) = socket.next().now_or_never() {
-            messages.push(serde_json::to_value(message)?);
+            notifications.push(serde_json::to_value(message)?);
         }
-        assert_eq!(
-            messages,
-            vec![json!({
-                "jsonrpc":"2.0","method":"window/logMessage",
-                "params":{"type":3,"message":"vize_maestro LSP server initialized"}
-            })]
-        );
-        Ok(())
+        Ok(Initialization {
+            responses,
+            notifications,
+        })
     })
+}
+
+fn assert_initialized(initialized: Initialization) {
+    assert_eq!(initialized.responses.len(), 1);
+    for response in initialized.responses {
+        assert_eq!(response.get("id"), Some(&json!(1)));
+        assert!(
+            response
+                .get("result")
+                .and_then(|value| value.get("capabilities"))
+                .is_some_and(Value::is_object)
+        );
+        assert!(response.get("error").is_none());
+    }
+    assert_eq!(
+        initialized.notifications,
+        vec![json!({
+            "jsonrpc":"2.0","method":"window/logMessage",
+            "params":{"type":3,"message":"vize_maestro LSP server initialized"}
+        })]
+    );
 }
 
 #[test]
@@ -79,12 +93,14 @@ fn incomplete_config_failure_evaluates_once_for_did_change_and_two_same_root_imp
         server.configuration_watchers = None;
         server
     });
-    initialize(
-        &mut service,
-        &mut socket,
-        Url::from_file_path(&root).unwrap(),
-    )
-    .unwrap();
+    assert_initialized(
+        initialize(
+            &mut service,
+            &mut socket,
+            Url::from_file_path(&root).unwrap(),
+        )
+        .unwrap(),
+    );
     let server = service.inner();
     let leaf = Url::from_file_path(root.join("Leaf.vue")).unwrap();
     let importers =
@@ -158,12 +174,14 @@ fn importer_fanout_checks_each_other_root_once_and_applies_its_actual_new_policy
         server.configuration_watchers = None;
         server
     });
-    initialize(
-        &mut service,
-        &mut socket,
-        Url::from_file_path(&root).unwrap(),
-    )
-    .unwrap();
+    assert_initialized(
+        initialize(
+            &mut service,
+            &mut socket,
+            Url::from_file_path(&root).unwrap(),
+        )
+        .unwrap(),
+    );
     let server = service.inner();
     let leaf = Url::from_file_path(a.join("Leaf.vue")).unwrap();
     let importers = [&a, &b]
