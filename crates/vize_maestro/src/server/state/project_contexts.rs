@@ -14,7 +14,7 @@ use std::{
     },
 };
 use tower_lsp::lsp_types::{ClientCapabilities, Url};
-use vize_l0::FxHashMap;
+use vize_l0::{FxHashMap, FxHashSet};
 
 use super::{
     LspFeatureConfig, ServerState,
@@ -57,6 +57,8 @@ pub(super) struct ProjectContexts {
     pub(super) config_reload_failed: AtomicBool,
     reference_ownership: Mutex<vize_canon::batch::TsconfigOwnershipCache>,
     contexts: Mutex<FxHashMap<ProjectContextKey, Arc<registry::ProjectContext>>>,
+    reload_admission: Mutex<FxHashMap<PathBuf, Weak<futures::lock::Mutex<()>>>>,
+    pending_config_reloads: Mutex<FxHashSet<ProjectContextKey>>,
     routes: DashMap<Url, ProjectContextKey>,
     initialization_options: RwLock<Option<serde_json::Value>>,
     client_capabilities: RwLock<ClientCapabilities>,
@@ -196,8 +198,8 @@ impl ServerState {
         self: &Arc<Self>,
         key: &ProjectContextKey,
         snapshot: Option<&LoadedLspConfig>,
-        previous: Option<&RetainedConfiguration>,
         snapshot_failed: bool,
+        prepared: Option<&RetainedConfiguration>,
     ) -> Arc<ServerState> {
         let root = &key.root;
         let mut state = ServerState::new();
@@ -206,18 +208,16 @@ impl ServerState {
         *state.project_contexts.key.write() = Some(key.clone());
         state.record_client_capabilities(&self.project_contexts.client_capabilities.read());
         state.set_workspace_root(root.to_path_buf());
-        let loaded = snapshot
-            .cloned()
-            .unwrap_or_else(|| load_lsp_config_snapshot(Some(root)));
-        if !state.apply_workspace_config_snapshot(root, loaded)
-            && let Some(previous) = previous
-        {
-            state.apply_retained_workspace_config(root, previous.applied.clone());
-            *state.project_contexts.loaded_config.write() = Some(previous.authored.clone());
-            state
-                .project_contexts
-                .config_reload_failed
-                .store(true, Ordering::Release);
+        if let Some(prepared) = prepared {
+            // This pair was already validated for this complete context key.
+            // Raw dependency files can change before lazy initialization.
+            state.apply_retained_workspace_config(root, prepared.applied.clone());
+            *state.project_contexts.loaded_config.write() = Some(prepared.authored.clone());
+        } else {
+            let loaded = snapshot
+                .cloned()
+                .unwrap_or_else(|| load_lsp_config_snapshot(Some(root)));
+            state.apply_workspace_config_snapshot(root, loaded);
         }
         if snapshot_failed {
             state
@@ -240,13 +240,6 @@ impl ServerState {
             }
         }
         Arc::new(state)
-    }
-
-    fn retained_configuration(&self) -> Option<RetainedConfiguration> {
-        Some(RetainedConfiguration {
-            authored: self.project_contexts.loaded_config.read().clone()?,
-            applied: self.project_contexts.applied_config.read().clone()?,
-        })
     }
 
     pub(crate) fn project_open_typecheck_dependents(self: &Arc<Self>, uri: &Url) -> Vec<Url> {
@@ -294,6 +287,10 @@ impl ServerState {
         let _change = self.project_routing_change();
         self.project_contexts.routes.clear();
         let roots = self.workspace_root_paths();
+        self.project_contexts
+            .pending_config_reloads
+            .lock()
+            .retain(|key| roots.iter().any(|folder| key.root.starts_with(folder)));
         let mut retired = Vec::new();
         self.project_contexts.contexts.lock().retain(|root, state| {
             let retained = roots.iter().any(|folder| root.root.starts_with(folder));
@@ -313,7 +310,11 @@ impl ServerState {
             .shutting_down
             .store(true, Ordering::Release);
         self.retire_project_owner();
-        let contexts = std::mem::take(&mut *self.project_contexts.contexts.lock());
+        let contexts = {
+            let mut contexts = self.project_contexts.contexts.lock();
+            self.project_contexts.pending_config_reloads.lock().clear();
+            std::mem::take(&mut *contexts)
+        };
         for context in contexts.into_values() {
             context.retire();
         }
@@ -406,3 +407,7 @@ mod registry;
 #[cfg(test)]
 mod tests;
 mod watched;
+
+mod config_reload;
+#[cfg(test)]
+mod config_reload_tests;

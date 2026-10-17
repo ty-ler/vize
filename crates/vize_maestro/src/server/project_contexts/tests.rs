@@ -477,3 +477,153 @@ fn registered_client_watcher_reloads_imported_vite_policy_through_the_protocol()
         }
     })).expect("registered watcher protocol completes within 30 seconds");
 }
+
+#[test]
+fn watched_reference_failures_keep_dispatch_and_native_environment_of_each_full_key() {
+    use tower_lsp::lsp_types::DidChangeWatchedFilesParams;
+    use vize_l0::config::VueVersion;
+
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().canonicalize().unwrap();
+    file(&root, "package.json", "{}").unwrap();
+    file(&root, "vite.config.mjs", "export default {};").unwrap();
+    file(
+        &root,
+        "tsconfig.json",
+        r#"{"files":[],"references":[{"path":"./tsconfig.legacy.json"},{"path":"./tsconfig.modern.json"}]}"#,
+    )
+    .unwrap();
+    let leaf_contents = r#"{"extends":"./legacy-base.json","include":["src/legacy/**/*.vue"]}"#;
+    let leaf = file(&root, "tsconfig.legacy.json", leaf_contents).unwrap();
+    let base = file(
+        &root,
+        "legacy-base.json",
+        r#"{"vueCompilerOptions":{"target":2.7}}"#,
+    )
+    .unwrap();
+    file(
+        &root,
+        "tsconfig.modern.json",
+        r#"{"include":["src/modern/**/*.vue"],"vueCompilerOptions":{"target":3.5}}"#,
+    )
+    .unwrap();
+    let source = "<script lang=\"ts\">export const unsavedReference = 1;</script><template><div /></template>";
+    let legacy = file(&root, "src/legacy/App.vue", "<template>disk</template>").unwrap();
+    let modern = file(&root, "src/modern/App.vue", "<template>disk</template>").unwrap();
+    let (service, socket) = LspService::new(|client| {
+        let mut server = MaestroServer::new(client);
+        server.initial_diagnostics = None;
+        server
+    });
+    drop(socket);
+    let server = service.inner();
+    server.state.set_workspace_root(root.clone());
+    server.state.set_workspace_folders(vec![root.clone()]);
+    server.state.load_workspace_config(&root);
+    server.state.apply_lsp_initialization_options(Some(
+        &json!({"lint":false,"typecheck":false,"ecosystem":false}),
+    ));
+    for uri in [&legacy, &modern] {
+        server
+            .state
+            .documents
+            .open(uri.clone(), source.into(), 19, "vue".into());
+    }
+    let mut previous = block_on(server.for_document(&legacy)).state.clone();
+    let control = block_on(server.for_document(&modern)).state.clone();
+    let control_stamp = control.corsa_request_stamp();
+    assert_eq!(previous.type_checker_vue_version(), VueVersion::V2_7);
+    assert_eq!(control.type_checker_vue_version(), VueVersion::V3);
+    for (changed, invalid, repair, expected) in [
+        (
+            &base,
+            Some(r#"{"vueCompilerOptions":{"target":4}}"#),
+            r#"{"vueCompilerOptions":{"target":3.5}}"#,
+            VueVersion::V3,
+        ),
+        (
+            &base,
+            None,
+            r#"{"vueCompilerOptions":{"target":2.7}}"#,
+            VueVersion::V2_7,
+        ),
+        (&leaf, None, leaf_contents, VueVersion::V2_7),
+    ] {
+        let path = changed.to_file_path().unwrap();
+        let before = previous.corsa_request_stamp();
+        let checker = previous.get_type_checker_config();
+        let dialect = previous.type_checker_vue_version();
+        assert!(previous.linter_settings_for_uri(&legacy).is_some());
+        let typ = if let Some(invalid) = invalid {
+            std::fs::write(&path, invalid).unwrap();
+            FileChangeType::CHANGED
+        } else {
+            std::fs::remove_file(&path).unwrap();
+            FileChangeType::DELETED
+        };
+        block_on(tower_lsp::LanguageServer::did_change_watched_files(
+            server,
+            DidChangeWatchedFilesParams {
+                changes: vec![FileEvent {
+                    uri: changed.clone(),
+                    typ,
+                }],
+            },
+        ));
+        // The shell successfully reloaded, while the selected leaf failed.
+        // Query production dispatch after the actual watcher, not the registry.
+        let retained = block_on(server.for_document(&legacy));
+        assert!(Arc::ptr_eq(&previous, &retained.state));
+        assert!(before.is_current(&retained.state));
+        assert_eq!(retained.state.get_type_checker_config(), checker);
+        assert_eq!(retained.state.type_checker_vue_version(), dialect);
+        assert!(retained.state.linter_settings_for_uri(&legacy).is_some());
+        assert_eq!(
+            retained.state.documents.text(&legacy).as_deref(),
+            Some(source)
+        );
+        assert_eq!(retained.state.documents.version(&legacy), Some(19));
+        assert!(
+            retained
+                .state
+                .get_virtual_docs(&legacy)
+                .unwrap()
+                .all()
+                .iter()
+                .any(|doc| doc.content.contains("unsavedReference"))
+        );
+        let unaffected = block_on(server.for_document(&modern));
+        assert!(Arc::ptr_eq(&control, &unaffected.state));
+        assert!(control_stamp.is_current(&unaffected.state));
+        assert_eq!(unaffected.state.type_checker_vue_version(), VueVersion::V3);
+        std::fs::write(&path, repair).unwrap();
+        block_on(tower_lsp::LanguageServer::did_change_watched_files(
+            server,
+            DidChangeWatchedFilesParams {
+                changes: vec![FileEvent {
+                    uri: changed.clone(),
+                    typ: if invalid.is_some() {
+                        FileChangeType::CHANGED
+                    } else {
+                        FileChangeType::CREATED
+                    },
+                }],
+            },
+        ));
+        let repaired = block_on(server.for_document(&legacy));
+        assert!(!Arc::ptr_eq(&previous, &repaired.state));
+        assert!(!before.is_current(&previous));
+        assert_eq!(repaired.state.type_checker_vue_version(), expected);
+        assert_eq!(
+            repaired.state.documents.text(&legacy).as_deref(),
+            Some(source)
+        );
+        assert_eq!(repaired.state.documents.version(&legacy), Some(19));
+        assert!(Arc::ptr_eq(
+            &control,
+            &block_on(server.for_document(&modern)).state
+        ));
+        assert!(control_stamp.is_current(&control));
+        previous = repaired.state.clone();
+    }
+}

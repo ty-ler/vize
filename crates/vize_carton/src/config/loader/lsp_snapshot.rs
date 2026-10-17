@@ -17,6 +17,8 @@ use super::{
 pub struct LoadedLspConfig {
     /// Configuration was absent or successfully parsed in this one evaluation.
     pub valid: bool,
+    /// Evaluation failure retained for an editor-visible reload error.
+    pub error: Option<std::string::String>,
     /// The same raw evaluation retains ordered lint scopes and selected root.
     pub project: LoadedProjectConfig,
     pub config: VizeConfig,
@@ -33,8 +35,8 @@ pub struct LoadedLspConfig {
 /// Evaluate JS/TS/PKL only once so the editor timeout and type checker
 /// settings always come from the same config snapshot.
 pub fn load_lsp_config_snapshot(path: Option<&Path>) -> LoadedLspConfig {
-    let (loaded, valid) = match load_raw_editor_config_checked(path) {
-        Ok(loaded) => (loaded, true),
+    let (loaded, error) = match load_raw_editor_config_checked(path) {
+        Ok(loaded) => (loaded, None),
         Err(error) => {
             eprintln!("Warning: Failed to load editor project configuration: {error}");
             (
@@ -42,12 +44,13 @@ pub fn load_lsp_config_snapshot(path: Option<&Path>) -> LoadedLspConfig {
                     config: Default::default(),
                     source_path: None,
                 },
-                false,
+                Some(error),
             )
         }
     };
     let mut snapshot = LoadedLspConfig::from_project(project_config_snapshot(loaded));
-    snapshot.valid = valid;
+    snapshot.valid = error.is_none();
+    snapshot.error = error;
     snapshot
 }
 
@@ -63,6 +66,7 @@ impl LoadedLspConfig {
         let source_path = project.source_path.clone();
         Self {
             valid: true,
+            error: None,
             project,
             config,
             source_path,

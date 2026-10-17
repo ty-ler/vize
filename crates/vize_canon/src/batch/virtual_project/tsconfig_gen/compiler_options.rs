@@ -53,6 +53,8 @@ type FlattenedChain = (Map<std::string::String, Value>, DeclarationDirs);
 /// The state of one flattening operation.
 #[derive(Default)]
 struct ChainLoad {
+    /// Editor replacements must reject unresolved authored dependencies.
+    require_extends: bool,
     /// The configs between the entry point and the one being flattened. Only
     /// these can close a cycle.
     active: FxHashSet<PathBuf>,
@@ -112,6 +114,23 @@ impl VirtualProject {
         &self,
         tsconfig_path: Option<&Path>,
     ) -> CorsaResult<FlattenedCompilerOptions> {
+        self.load_compiler_options_flattened_with_policy(tsconfig_path, false)
+    }
+
+    pub(in super::super) fn checked_compiler_config_paths(
+        &self,
+        tsconfig_path: &Path,
+    ) -> CorsaResult<Vec<PathBuf>> {
+        Ok(self
+            .load_compiler_options_flattened_with_policy(Some(tsconfig_path), true)?
+            .input_paths)
+    }
+
+    fn load_compiler_options_flattened_with_policy(
+        &self,
+        tsconfig_path: Option<&Path>,
+        require_extends: bool,
+    ) -> CorsaResult<FlattenedCompilerOptions> {
         let Some(tsconfig_path) = tsconfig_path else {
             return Ok(FlattenedCompilerOptions {
                 options: Map::new(),
@@ -119,7 +138,10 @@ impl VirtualProject {
                 input_paths: Vec::new(),
             });
         };
-        let mut load = ChainLoad::default();
+        let mut load = ChainLoad {
+            require_extends,
+            ..Default::default()
+        };
         let (mut options, dirs) =
             self.load_compiler_options_inner(tsconfig_path, &mut load, PathOptions::Rebase)?;
 
@@ -246,6 +268,8 @@ impl VirtualProject {
                         self.load_compiler_options_inner(&parent_path, load, path_options)?;
                     inherited = parent;
                     inherited_dirs = parent_dirs;
+                } else if load.require_extends {
+                    return Err(unresolved_extends(normalized, extends));
                 }
             }
             Some(Value::Array(entries)) => {
@@ -255,6 +279,8 @@ impl VirtualProject {
                             self.load_compiler_options_inner(&parent_path, load, path_options)?;
                         inherited.extend(parent);
                         inherited_dirs.absorb_overriding(parent_dirs);
+                    } else if load.require_extends {
+                        return Err(unresolved_extends(normalized, extends));
                     }
                 }
             }
@@ -268,4 +294,11 @@ impl VirtualProject {
         inherited.extend(compiler_options);
         Ok((inherited, inherited_dirs))
     }
+}
+
+fn unresolved_extends(config: &Path, extends: &str) -> crate::batch::error::CorsaError {
+    crate::batch::error::CorsaError::Configuration(vize_carton::cstr!(
+        "cannot resolve tsconfig extends {extends:?} from {}",
+        config.display()
+    ))
 }

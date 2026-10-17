@@ -247,6 +247,11 @@ impl ServerState {
         #[cfg(feature = "native")]
         let mut loaded = loaded;
         if !loaded.valid {
+            #[cfg(feature = "native")]
+            if self.project_contexts.applied_config.read().is_none() {
+                self.refuse_unconfigured_linter_context(dir);
+            }
+            #[cfg(not(feature = "native"))]
             self.refuse_unconfigured_linter_context(dir);
             #[cfg(feature = "native")]
             self.project_contexts
@@ -257,7 +262,9 @@ impl ServerState {
         #[cfg(feature = "native")]
         {
             if refresh_tsconfig && !self.apply_tsconfig_config_snapshot(dir, &mut loaded) {
-                self.refuse_unconfigured_linter_context(dir);
+                if self.project_contexts.applied_config.read().is_none() {
+                    self.refuse_unconfigured_linter_context(dir);
+                }
                 self.project_contexts
                     .config_reload_failed
                     .store(true, Ordering::Release);
@@ -343,7 +350,9 @@ impl ServerState {
         }
         #[cfg(feature = "native")]
         if !self.apply_tsconfig_config_snapshot(dir, &mut loaded) {
-            self.refuse_unconfigured_linter_context(dir);
+            if self.project_contexts.applied_config.read().is_none() {
+                self.refuse_unconfigured_linter_context(dir);
+            }
             return;
         }
         self.apply_project_formatting_default(loaded.source_path.as_deref());

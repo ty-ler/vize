@@ -9,17 +9,32 @@ impl ServerState {
         directory: &Path,
         loaded: &mut LoadedLspConfig,
     ) -> bool {
+        let key = self.project_contexts.key.read().clone();
+        match Self::prepare_tsconfig_config_snapshot(directory, key.as_ref(), loaded) {
+            Ok(()) => {
+                *self.project_contexts.config_dependencies.write() =
+                    loaded.project.dependencies.clone();
+                true
+            }
+            Err(error) => {
+                tracing::warn!("Failed to resolve project configuration: {error}");
+                false
+            }
+        }
+    }
+
+    pub(in crate::server::state) fn prepare_tsconfig_config_snapshot(
+        directory: &Path,
+        key: Option<&super::super::project_contexts::ProjectContextKey>,
+        loaded: &mut LoadedLspConfig,
+    ) -> Result<(), vize_l0::String> {
         let root = loaded.project.project_root.as_deref().unwrap_or(directory);
         let base = loaded
             .source_path
             .as_deref()
             .and_then(Path::parent)
             .unwrap_or(directory);
-        let selected = self
-            .project_contexts
-            .key
-            .read()
-            .as_ref()
+        let selected = key
             .and_then(|key| key.tsconfig.clone())
             .or_else(|| {
                 loaded
@@ -40,6 +55,15 @@ impl ServerState {
                 .find(|path| path.is_file())
                 .unwrap_or_else(|| root.join("tsconfig.json"))
             });
+        if !selected.is_file()
+            && (key.is_some_and(|key| key.tsconfig.is_some())
+                || loaded.config.type_checker.tsconfig.is_some())
+        {
+            return Err(vize_l0::cstr!(
+                "selected TypeScript configuration does not exist: {}",
+                selected.display()
+            ));
+        }
         let mut dependencies = loaded.project.dependencies.clone();
         if selected.is_file() {
             // Keep the checker on the same TS project when Vite moves the source root.
@@ -48,17 +72,17 @@ impl ServerState {
             match vize_canon::VirtualProject::new(root) {
                 Ok(mut project) => {
                     project.set_tsconfig_path(Some(selected.clone()));
+                    dependencies.extend(
+                        project
+                            .checked_config_chain_paths()
+                            .map_err(|error| vize_l0::cstr!("{error}"))?,
+                    );
                     dependencies.extend(project.governing_config_paths());
                 }
-                Err(error) => tracing::warn!("Failed to resolve project configuration: {error}"),
+                Err(error) => return Err(vize_l0::cstr!("{error}")),
             }
             // Authored Vite dialects, including Vue 3, take precedence.
-            let source_owner = self
-                .project_contexts
-                .key
-                .read()
-                .as_ref()
-                .is_some_and(|key| key.tsconfig.is_some());
+            let source_owner = key.is_some_and(|key| key.tsconfig.is_some());
             let solution_shell = !source_owner
                 && vize_canon::batch::TsconfigOwnershipCache::default()
                     .project_paths(&selected)
@@ -72,8 +96,7 @@ impl ServerState {
                     }
                     Ok(None) => {}
                     Err(error) => {
-                        tracing::warn!("Failed to load vueCompilerOptions: {error}");
-                        return false;
+                        return Err(vize_l0::cstr!("{error}"));
                     }
                 }
             }
@@ -81,8 +104,7 @@ impl ServerState {
         dependencies.push(selected);
         dependencies.sort();
         dependencies.dedup();
-        loaded.project.dependencies = dependencies.clone();
-        *self.project_contexts.config_dependencies.write() = dependencies;
-        true
+        loaded.project.dependencies = dependencies;
+        Ok(())
     }
 }
