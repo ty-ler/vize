@@ -37,7 +37,9 @@ pub struct CompilerConfigurationSnapshot {
 mod tests;
 
 impl CompilerConfigurationSnapshot {
-    /// Capture through the same checked resolver used by batch materialization.
+    /// Capture with consistent per-file reads and resolution outcomes through
+    /// the existing checked resolver, then validate every observed input once.
+    /// Changes reject admission; this is not a multi-file filesystem transaction.
     pub fn capture(project_root: &Path, tsconfig_path: Option<&Path>) -> CorsaResult<Self> {
         Self::capture_with_observer(project_root, tsconfig_path, || {})
     }
