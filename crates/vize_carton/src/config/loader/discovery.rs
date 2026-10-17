@@ -30,10 +30,6 @@ pub(super) fn is_retired_config(path: &Path) -> bool {
     })
 }
 
-pub(super) fn has_retired_config(directory: &Path) -> bool {
-    !retired_config_paths(directory).is_empty()
-}
-
 pub(super) fn retired_config_paths(directory: &Path) -> Vec<PathBuf> {
     let mut paths = std::fs::read_dir(directory)
         .into_iter()
