@@ -90,7 +90,7 @@ void test("the full tooling caller retains shard coordinates and native lead-ste
       ],
     ],
   );
-  for (const step of lead) assert.equal(step.if, "${{ always() && inputs.shard == '1' }}");
+  for (const step of lead) assert.equal(step.if, "${{ !cancelled() && inputs.shard == '1' }}");
   const at = (second: number) => `2026-10-13T08:45:${String(second).padStart(2, "0")}Z`;
   assert.deepEqual(
     leadStepDurations(
