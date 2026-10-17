@@ -110,7 +110,10 @@ test("release gate plans reject ambiguous SHAs and missing refs", () => {
   );
   for (const ref of [undefined, null, ""]) {
     assert.throws(
-      () => createReleaseGateDispatchPlans({ ref, headSha: releaseSha, baseSha: "b".repeat(40) }),
+      () =>
+        Reflect.apply(createReleaseGateDispatchPlans, undefined, [
+          { ref, headSha: releaseSha, baseSha: "b".repeat(40) },
+        ]),
       /Release dispatch ref is required/,
     );
   }

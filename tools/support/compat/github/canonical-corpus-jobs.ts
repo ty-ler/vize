@@ -31,7 +31,10 @@ export async function readCanonicalJobs(options: Options, run: Run) {
   const workers = checks
     .filter((check) => /(?:^| \/ )canonical observer \(([^)]+)\)$/.test(check.name ?? ""))
     .map((check) => {
-      assert(Number.isSafeInteger(check.id) && check.id > 0, "Invalid canonical check ID");
+      assert(
+        typeof check.id === "number" && Number.isSafeInteger(check.id) && check.id > 0,
+        "Invalid canonical check ID",
+      );
       assert(!ids.has(check.id), "Duplicate canonical check ID");
       ids.add(check.id);
       assert.equal(check.check_suite?.id, run.check_suite_id, "Foreign canonical check suite");

@@ -20,9 +20,9 @@ export function bootstrapRequiredWorkflowRuns(options: {
   sha: string;
   dispatchPlans: DispatchPlan[];
   listRuns: () => Promise<WorkflowRun[]>;
-  dispatchWorkflow: (plan: DispatchPlan) => Promise<void>;
+  dispatchWorkflow: (plan: DispatchPlan) => Promise<unknown>;
   evidenceShas?: EvidenceShas;
-  sleep?: (milliseconds: number) => Promise<void>;
+  sleep?: (milliseconds: number) => Promise<unknown>;
   now?: () => number;
   timeoutMs?: number;
   pollIntervalMs?: number;

@@ -34,6 +34,14 @@ import { releaseTypecheckParityEnforced } from "./release-preflight-typecheck-ev
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const releasePackageRoots = ["editors", "npm"];
 
+function workflowRunId(run: Record<string, unknown>): number {
+  const id = run.id;
+  if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) {
+    throw new Error("Release workflow run ID must be a positive exact integer");
+  }
+  return id;
+}
+
 function runGit(args: string[], acceptedExitCodes: number[] = [0], cwd: string = root) {
   const result = spawnSync("git", args, {
     cwd,
@@ -376,13 +384,16 @@ export async function verifyReleasePreflight(
           apiUrl,
           repository,
           token,
-          resource: `actions/runs/${run.id}/jobs`,
+          resource: `actions/runs/${workflowRunId(run)}/jobs`,
           collection: "jobs",
         });
         const required = new Set(requiredWorkflowJobNames(workflowName, run));
         return jobs.some(
           (job) =>
-            required.has(job.name) && job.status === "completed" && job.conclusion !== "success",
+            typeof job.name === "string" &&
+            required.has(job.name) &&
+            job.status === "completed" &&
+            job.conclusion !== "success",
         )
           ? summarizeRequiredWorkflowJobFailures(workflowName, jobs, run)
           : undefined;
@@ -423,7 +434,7 @@ export async function verifyReleasePreflight(
           apiUrl,
           repository,
           token,
-          resource: `actions/runs/${run.id}/jobs`,
+          resource: `actions/runs/${workflowRunId(run)}/jobs`,
           collection: "jobs",
         });
         assertRequiredWorkflowJobs(workflowName, jobs, run);

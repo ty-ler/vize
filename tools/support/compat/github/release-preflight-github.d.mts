@@ -7,7 +7,7 @@ interface Request {
   body?: unknown;
   fetchImpl?: typeof fetch;
   requestTimeoutMs?: number;
-  sleep?: (milliseconds: number) => Promise<void>;
+  sleep?: (milliseconds: number) => Promise<unknown>;
 }
 export function githubApiRequest(
   options: Request,
