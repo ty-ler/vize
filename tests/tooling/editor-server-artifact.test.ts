@@ -7,6 +7,7 @@ import {
   sha256,
   verifyArtifact,
   verifyHost,
+  verifyScorecard,
   writeArtifact,
 } from "../editor-conformance/server-artifact.ts";
 
@@ -57,4 +58,29 @@ test("host qualification requires executed cases, native identity and intact pac
     await assert.rejects(check({ ...valid, ...change }));
   await fs.appendFile(transcript, '{"extra":"unrecorded"}\n');
   await assert.rejects(check(valid));
+});
+
+test("full packaged host results bind the actually selected server to the source artifact", async (context) => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "vize-scorecard-"));
+  context.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const binary = path.join(directory, "vize");
+  const artifact = path.join(directory, "server.json");
+  const result = path.join(directory, "host-result.json");
+  const sourceSha = "a".repeat(40);
+  await fs.writeFile(binary, "source build");
+  await writeArtifact(binary, artifact, sourceSha);
+  await fs.writeFile(
+    result,
+    JSON.stringify({ serverInfo: { path: binary, source: "configured", status: "ready" } }),
+  );
+  await verifyScorecard(artifact, result, sourceSha);
+  const receipt = JSON.parse(
+    await fs.readFile(path.join(directory, "scorecard-receipt.json"), "utf8"),
+  );
+  assert.equal(receipt.passed, true);
+  assert.equal(receipt.sourceSha, sourceSha);
+  assert.equal(receipt.result.sha256, await sha256(result));
+  await assert.rejects(verifyScorecard(artifact, result, "b".repeat(40)));
+  await fs.appendFile(binary, "altered");
+  await assert.rejects(verifyScorecard(artifact, result, sourceSha));
 });
