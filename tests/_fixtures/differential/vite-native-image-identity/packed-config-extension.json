@@ -1,7 +1,7 @@
 {
   "schema": "vize.native-smoke-packed-config-extension.v1",
   "beforeSha256": "26890094723c79ee46b27c710b42feed3d5a660f98c382246cf19458000aeaa3",
-  "afterSha256": "d821c99bc60e6378d52a02e143cfed934818900c914fac135d87a4f17a848ebd",
+  "afterSha256": "b58e438418f3c9a71200618a21f3bdbc519d8d243df8e46a53bf8272ea2e76b4",
   "scope": "exact named bounded manual extension; immutable historical recipes/hash remain independently checked",
   "hunks": [
     {
@@ -34,18 +34,18 @@
     },
     {
       "before": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n",
-      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: c8855589af88f3804686959377d29e85e3d7a4f4\n    steps: *fresh-install-steps\n"
+      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: 5089dd1ad6dae7fbf6fc9efb33f202f8824f6f1e\n    steps: *fresh-install-steps\n"
     }
   ],
   "producer": {
-    "head": "c8855589af88f3804686959377d29e85e3d7a4f4",
+    "head": "5089dd1ad6dae7fbf6fc9efb33f202f8824f6f1e",
     "composedBase": "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b",
     "priorProducer": "820bf6b5d688c77f8edea6ba18ff6f86f76bffae",
     "scope": "Reviewed source admission only; native execution and installed acceptance remain unexecuted.",
     "files": {
       "crates/vize_canon/src/batch/virtual_project/materialize.rs": "a878193b798388cdce97309ef8ff0d33b8b03eb2fe747aba0252e4c2c75ff0e5",
-      "crates/vize_canon/src/batch/virtual_project/tests/editor_configuration_graph.rs": "aed1cb528332f4a75dd45d081cac8a87d80146d66b7eeeed9f65c3a647bbfbd4",
-      "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs": "87da4a6d39871557e28df7850c1d07c8020dcc14589c30c5462dcbd953a3d553",
+      "crates/vize_canon/src/batch/virtual_project/tests/editor_configuration_graph.rs": "1a77419738d7f6b57bf2933dc9229a8c14e4d33e39daa4fca989c47ce62f5274",
+      "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs": "700976133c15166f21dea3ef182d5671bec5eea4d7f9762351bb904846da6a46",
       "crates/vize_carton/src/config/loader/lsp_snapshot.rs": "c767d36693b575d4c01bc664704713f7d3bde021b1b642059f80c299e0b2a492",
       "crates/vize_maestro/src/server/project_contexts/tests.rs": "55ec5bfbbf38d83a493ec52cd4dd3741a023226111b3f457bb23d6cf10cccb55",
       "crates/vize_maestro/src/server/state/config.rs": "ee9194518fb405d2edaba430eb29604b1785731487726fa095067c2725c55029",
@@ -70,6 +70,7 @@
       "crates/vize_maestro/src/server/state/tests.rs": "93e18616590a48ed0a5fd08e1e713a935b652a6a87ef8d495575fa1d0f14e700",
       "crates/vize_maestro/src/server/workspace_files_tests.rs": "bd45b11ef17ad0832460f697ab12ba1f05dd5233c3c65ef3aff4958329d1c347"
     },
-    "previousFrozenProducer": "9654d136f504765f0dfbdb1e17cf806e0b967878"
+    "previousFrozenProducer": "c8855589af88f3804686959377d29e85e3d7a4f4",
+    "earlierFrozenProducer": "9654d136f504765f0dfbdb1e17cf806e0b967878"
   }
 }

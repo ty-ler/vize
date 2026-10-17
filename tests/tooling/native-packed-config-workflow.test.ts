@@ -91,7 +91,7 @@ void test("the actual manager version audit uses a manifest-free cwd and preserv
 });
 
 void test("the refrozen composed producer binds every whole source and moved test module", () => {
-  const producer = "c8855589af88f3804686959377d29e85e3d7a4f4";
+  const producer = "5089dd1ad6dae7fbf6fc9efb33f202f8824f6f1e";
   const witness = JSON.parse(
     fs.readFileSync(
       path.join(
@@ -105,7 +105,8 @@ void test("the refrozen composed producer binds every whole source and moved tes
   assert.equal(witness.producer.head, producer);
   assert.equal(witness.producer.composedBase, "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b");
   assert.equal(witness.producer.priorProducer, "820bf6b5d688c77f8edea6ba18ff6f86f76bffae");
-  assert.equal(witness.producer.previousFrozenProducer, "9654d136f504765f0dfbdb1e17cf806e0b967878");
+  assert.equal(witness.producer.previousFrozenProducer, "c8855589af88f3804686959377d29e85e3d7a4f4");
+  assert.equal(witness.producer.earlierFrozenProducer, "9654d136f504765f0dfbdb1e17cf806e0b967878");
   const script = steps.find(
     (step: { name?: string }) => step.name === "Authenticate selected packed configuration source",
   ).run as string;
