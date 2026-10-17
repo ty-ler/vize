@@ -17,7 +17,7 @@ const CORPUS: &str = concat!(
     "/../../tests/_fixtures/differential/lsp/symlink-workspace-staging-original"
 );
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Layout {
     Original,
     BroadInclude,
@@ -41,6 +41,7 @@ pub struct Fixture {
     pub other: PathBuf,
     pub host_source: String,
     pub other_source: String,
+    layout: Layout,
     before: BTreeMap<PathBuf, Entry>,
 }
 
@@ -167,6 +168,7 @@ impl Fixture {
             other,
             host_source,
             other_source,
+            layout,
             before,
         }
     }
@@ -191,6 +193,43 @@ impl Fixture {
             observed, self.before,
             "every authored path, symlink and full file byte must survive generation and cleanup"
         );
+    }
+}
+
+impl Drop for Fixture {
+    fn drop(&mut self) {
+        let Some(destination) = std::env::var_os("VIZE_SYMLINK_STAGING_EVIDENCE_DIR") else {
+            return;
+        };
+        let retain = || -> std::io::Result<()> {
+            let destination = PathBuf::from(destination).join(self.root.file_name().unwrap());
+            fs::create_dir_all(&destination)?;
+            let authored = self
+                .before
+                .iter()
+                .map(|(path, entry)| match entry {
+                    Entry::Directory => json!({"path":path,"kind":"directory"}),
+                    Entry::File(bytes) => json!({"path":path,"kind":"file","bytes":bytes}),
+                    Entry::Symlink(target) => json!({"path":path,"kind":"symlink","target":target}),
+                })
+                .collect::<Vec<_>>();
+            fs::write(
+                destination.join("identity.json"),
+                serde_json::to_vec_pretty(&json!({
+                    "layout":format!("{:?}",self.layout), "root":self.root,
+                    "app":self.app,"host":self.host,"other":self.other,"authored":authored,
+                    "unwinding":std::thread::panicking()
+                }))?,
+            )?;
+            fs::copy(
+                self.app.join("node_modules/.vize/lsp.log"),
+                destination.join("native-lsp.log"),
+            )?;
+            Ok(())
+        };
+        if let Err(error) = retain() {
+            eprintln!("symlink workspace evidence retention failed: {error}");
+        }
     }
 }
 

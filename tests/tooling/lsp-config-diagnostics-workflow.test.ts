@@ -60,6 +60,14 @@ test("startup diagnostics retain the production producer and unchanged scale-one
       "cargo test --locked --profile ci -p vize_maestro --features legacy --lib server::native_requests::\n" +
       "cargo clippy --locked --profile ci -p vize_maestro --features legacy --all-targets -- -D warnings\n",
   );
+  const symlinkControls = steps.findIndex(
+    (step) => step.name === "Observe the original six symlink workspace layouts",
+  );
+  assert.ok(symlinkControls > controls);
+  assert.equal(
+    steps[symlinkControls].run,
+    "cargo test --locked --profile ci -p vize --features legacy --test lsp_symlink_workspace_staging_cli original_include_and_open_order_controls_keep_all_authored_bytes -- --nocapture",
+  );
   const upload = steps.find((step) => step.uses?.startsWith("actions/upload-artifact@"))!;
   assert.equal(upload.if, "always()");
   for (const evidence of [

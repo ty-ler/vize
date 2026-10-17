@@ -20,6 +20,8 @@ const sourcePaths = [
   "tests/_fixtures/vue-ecosystem-fixtures.json",
   "tests/differential/build-receipt.ts",
   "tests/tooling/lsp-startup-local-interactive.test.ts",
+  "crates/vize/tests/lsp_symlink_workspace_staging_cli.rs",
+  "crates/vize/tests/support/lsp_symlink_workspace_fixture.rs",
   "crates/vize_maestro/src/server/initial_diagnostics.rs",
   "crates/vize_maestro/src/ide.rs",
   "crates/vize_maestro/src/server/initial_diagnostics/preparation.rs",
