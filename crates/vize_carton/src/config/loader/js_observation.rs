@@ -59,7 +59,7 @@ impl ObservedChild {
     fn drain_stderr(&mut self) -> io::Result<Vec<u8>> {
         self.stderr
             .take()
-            .expect("config stderr drain")
+            .ok_or_else(|| io::Error::other("Missing config stderr drain"))?
             .join()
             .map_err(|_| io::Error::other("Config stderr drain panicked"))?
     }
@@ -114,14 +114,28 @@ pub(super) fn evaluate_observed(
         child,
         stderr: None,
     };
-    let mut stderr = process.child.stderr.take().expect("piped config stderr");
+    let mut stderr = process
+        .child
+        .stderr
+        .take()
+        .ok_or_else(|| io::Error::other("Missing piped config stderr"))?;
     process.stderr = Some(thread::spawn(move || {
         let mut bytes = Vec::new();
         stderr.read_to_end(&mut bytes)?;
         Ok(bytes)
     }));
-    let mut stdout = BufReader::new(process.child.stdout.take().expect("piped config stdout"));
-    let mut stdin = process.child.stdin.take().expect("piped config stdin");
+    let mut stdout = BufReader::new(
+        process
+            .child
+            .stdout
+            .take()
+            .ok_or_else(|| io::Error::other("Missing piped config stdout"))?,
+    );
+    let mut stdin = process
+        .child
+        .stdin
+        .take()
+        .ok_or_else(|| io::Error::other("Missing piped config stdin"))?;
     let phases = read_phases(&mut stdout, &mut stdin, before_read);
     drop(stdin);
     let payload = phases.and_then(|()| {
