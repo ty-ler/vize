@@ -21,6 +21,10 @@ const sourcePaths = [
   "tests/differential/build-receipt.ts",
   "tests/tooling/lsp-startup-local-interactive.test.ts",
   "crates/vize/tests/lsp_symlink_workspace_staging_cli.rs",
+  "crates/vize/tests/lsp_completion_sibling_overlay_cli.rs",
+  "crates/vize_canon/src/corsa_bridge/source_catalog.rs",
+  "crates/vize_canon/src/corsa_bridge/vue_document.rs",
+  "crates/vize_canon/src/corsa_bridge/vue_document/build/tests.rs",
   "crates/vize/tests/support/lsp_symlink_workspace_fixture.rs",
   "crates/vize_canon/src/batch/virtual_project/materialize.rs",
   "crates/vize_canon/src/batch/virtual_project/tests/editor_union_alias_transition.rs",
@@ -75,36 +79,43 @@ export function retainMeasuredProducer(binary: string, receiptPath: string, dest
   return { retainedBinary, retainedBuildReceipt };
 }
 
-export function retainIntegrationProducer(log: string, destination: string) {
-  const artifacts = fs
-    .readFileSync(log, "utf8")
-    .split("\n")
-    .flatMap((line) => {
-      try {
-        const message = JSON.parse(line);
-        return message.reason === "compiler-artifact" &&
-          message.target?.name === "vize" &&
-          message.target.kind?.includes("bin") &&
-          typeof message.executable === "string"
-          ? [message]
-          : [];
-      } catch {
-        return [];
-      }
-    });
+export function requireRustTestsExecuted(output: string): void {
+  assert.match(
+    output,
+    /^running [1-9][0-9]* tests?$/m,
+    "a real nonzero Rust test count is required",
+  );
+}
+
+export function retainIntegrationProducer(log: string, destination: string, name = "symlink-test") {
+  const output = fs.readFileSync(log, "utf8");
+  requireRustTestsExecuted(output);
+  const artifacts = output.split("\n").flatMap((line) => {
+    try {
+      const message = JSON.parse(line);
+      return message.reason === "compiler-artifact" &&
+        message.target?.name === "vize" &&
+        message.target.kind?.includes("bin") &&
+        typeof message.executable === "string"
+        ? [message]
+        : [];
+    } catch {
+      return [];
+    }
+  });
   assert.equal(artifacts.length, 1, "Cargo must identify exactly one real test CLI producer");
   const producer = artifacts[0];
   const bytes = fs.readFileSync(producer.executable);
   const metadata = {
-    schema: "vize.symlink-test-producer",
+    schema: `vize.${name}-producer`,
     sourceRevision: git("rev-parse", "HEAD"),
     executable: producer.executable,
     binarySha256: sha256(bytes),
     cargoArtifact: producer,
   };
-  fs.writeFileSync(path.join(destination, "symlink-test-vize"), bytes);
+  fs.writeFileSync(path.join(destination, `${name}-vize`), bytes);
   fs.writeFileSync(
-    path.join(destination, "symlink-test-producer.json"),
+    path.join(destination, `${name}-producer.json`),
     `${JSON.stringify(metadata, null, 2)}\n`,
   );
   return metadata;
@@ -207,9 +218,18 @@ export function runDiagnostics(): number {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  if (process.argv[2] === "--retain-symlink-producer") {
+  if (process.argv[2] === "--require-rust-tests") {
+    requireRustTestsExecuted(fs.readFileSync(process.argv[3], "utf8"));
+  } else if (process.argv[2] === "--retain-symlink-producer") {
     assert.equal(git("rev-parse", "HEAD"), process.env.EXPECTED_SOURCE);
     retainIntegrationProducer(path.join(directory, "symlink.stdout"), directory);
+  } else if (process.argv[2] === "--retain-completion-producer") {
+    assert.equal(git("rev-parse", "HEAD"), process.env.EXPECTED_SOURCE);
+    retainIntegrationProducer(
+      path.join(directory, "completion.stdout"),
+      directory,
+      "completion-test",
+    );
   } else {
     process.exitCode = runDiagnostics();
   }

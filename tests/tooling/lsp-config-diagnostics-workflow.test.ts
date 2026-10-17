@@ -8,6 +8,7 @@ import { parse } from "yaml";
 
 import {
   retainIntegrationProducer,
+  requireRustTestsExecuted,
   retainMeasuredProducer,
   retainNativeLog,
 } from "../../tools/support/compat/github/run-lsp-config-diagnostics.ts";
@@ -72,7 +73,50 @@ test("startup diagnostics retain the production producer and unchanged scale-one
     (step) => step.name === "Verify real union ownership and reverse open-order regressions",
   );
   assert.ok(unionControls > controls);
-  assert.ok(symlinkControls > unionControls);
+  const completionControls = steps.findIndex(
+    (step) =>
+      step.name === "Resolve the original native candidate after unchanged sibling diagnostics",
+  );
+  const freshnessControls = steps.findIndex(
+    (step) =>
+      step.name === "Verify whole native views and issued candidate freshness with nonzero tests",
+  );
+  assert.ok(freshnessControls > unionControls);
+  assert.ok(completionControls > freshnessControls);
+  assert.match(
+    steps[freshnessControls].run!,
+    /run_required_rust_tests native-view cargo test .*corsa_bridge::vue_document::build::tests:: -- --nocapture/,
+  );
+  assert.match(
+    steps[freshnessControls].run!,
+    /run_required_rust_tests issued-candidates cargo test .*lsp_client::editor_lsp::completion_resolve::issued::tests:: -- --nocapture/,
+  );
+  assert.match(steps[freshnessControls].run!, /--require-rust-tests/);
+  assert.match(steps[freshnessControls].run!, /return "\$status"/);
+  assert.ok(symlinkControls > completionControls);
+  assert.match(
+    steps[completionControls].run!,
+    /--test lsp_completion_sibling_overlay_cli -- --nocapture/,
+  );
+  assert.match(steps[completionControls].run!, /--retain-completion-producer/);
+  assert.match(steps[completionControls].run!, /exit "\$status"/);
+  assert.deepEqual(
+    Array.from(
+      readRepoFile("crates/vize/tests/lsp_completion_sibling_overlay_cli.rs").matchAll(
+        /#\[test\]\nfn (\w+)\(/g,
+      ),
+      (match) => match[1],
+    ),
+    ["native_completion_resolves_after_unchanged_sibling_diagnostics_with_a_closed_dependency"],
+  );
+  assert.match(
+    readRepoFile("crates/vize_canon/src/corsa_bridge/vue_document/build.rs"),
+    /#\[cfg\(test\)\]\nmod tests;/,
+  );
+  assert.match(
+    readRepoFile("crates/vize_canon/src/lsp_client/editor_lsp/completion_resolve/issued.rs"),
+    /#\[cfg\(test\)\]\nmod tests;/,
+  );
   assert.equal(
     steps[unionControls].run,
     "cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_document_package_tests::symlink_workspace::\n" +
@@ -193,7 +237,7 @@ test("the six-layout CLI receipt uses the Cargo-reported integration producer", 
       target: { name: "vize", kind: ["bin"] },
       executable,
     };
-    fs.writeFileSync(log, `original test output\n${JSON.stringify(producer)}\n`);
+    fs.writeFileSync(log, `running 1 test\noriginal test output\n${JSON.stringify(producer)}\n`);
     const metadata = retainIntegrationProducer(log, directory);
     assert.equal(metadata.executable, executable);
     assert.equal(metadata.binarySha256, createHash("sha256").update(bytes).digest("hex"));
@@ -203,16 +247,40 @@ test("the six-layout CLI receipt uses the Cargo-reported integration producer", 
       JSON.parse(fs.readFileSync(path.join(directory, "symlink-test-producer.json"), "utf8")),
       metadata,
     );
+    const completionBytes = Buffer.concat([bytes, Buffer.from([10])]);
+    fs.writeFileSync(executable, completionBytes);
+    const completion = retainIntegrationProducer(log, directory, "completion-test");
+    assert.equal(completion.schema, "vize.completion-test-producer");
+    assert.equal(
+      completion.binarySha256,
+      createHash("sha256").update(completionBytes).digest("hex"),
+    );
+    assert.deepEqual(
+      fs.readFileSync(path.join(directory, "completion-test-vize")),
+      completionBytes,
+    );
+    assert.deepEqual(fs.readFileSync(path.join(directory, "symlink-test-vize")), bytes);
     for (const messages of [
       [],
       [{ ...producer, target: { name: "vize_canon", kind: ["lib"] } }],
       [producer, producer],
     ]) {
-      fs.writeFileSync(log, messages.map((message) => JSON.stringify(message)).join("\n"));
+      fs.writeFileSync(
+        log,
+        `running 1 test\n${messages.map((message) => JSON.stringify(message)).join("\n")}`,
+      );
       assert.throws(() => retainIntegrationProducer(log, directory), /exactly one real test CLI/);
       assert.deepEqual(fs.readFileSync(path.join(directory, "symlink-test-vize")), bytes);
     }
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("Rust producer evidence refuses empty and missing test enrollment", () => {
+  requireRustTestsExecuted("running 1 test\ntest native_case ... ok\n");
+  requireRustTestsExecuted("running 12 tests\n");
+  for (const output of ["running 0 tests\n", "Finished ci profile\n", "not running 1 test\n"]) {
+    assert.throws(() => requireRustTestsExecuted(output), /real nonzero Rust test count/);
   }
 });
