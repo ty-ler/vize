@@ -347,3 +347,93 @@ fn queued_or_unavailable_worker_after_workspace_removal_does_not_retain_retry_me
             .is_empty()
     );
 }
+
+#[test]
+fn first_failed_admission_observations_route_external_base_creation_to_primary_and_nested_owners() {
+    for primary in [false, true] {
+        let (fixture, state, nested, sibling) = tests::fixture();
+        let external = tempfile::tempdir().unwrap();
+        let base = external.path().join("base.json");
+        let (root, uri) = if primary {
+            (
+                fixture.path().to_path_buf(),
+                Url::from_file_path(fixture.path().join("Main.vue")).unwrap(),
+            )
+        } else {
+            (fixture.path().join("packages/a"), nested)
+        };
+        assert!(
+            !is_config_marker(&base),
+            "repair must use observations, not marker discovery"
+        );
+        std::fs::write(
+            root.join("tsconfig.json"),
+            serde_json::json!({"extends":base}).to_string(),
+        )
+        .unwrap();
+        std::fs::write(uri.to_file_path().unwrap(), "<template>disk</template>").unwrap();
+        state.documents.open(
+            uri.clone(),
+            "<template>unsaved</template>".into(),
+            5,
+            "vue".into(),
+        );
+        let sibling_owner = state.document_project_state(&sibling).unwrap();
+        let sibling_stamp = sibling_owner.corsa_request_stamp();
+        let initial = if primary {
+            state.load_workspace_config(&root);
+            state.clone()
+        } else {
+            state.document_project_state(&uri).unwrap()
+        };
+        assert!(
+            initial
+                .project_contexts
+                .config_dependencies
+                .read()
+                .is_empty()
+        );
+        assert!(
+            initial
+                .project_contexts
+                .compiler_configuration
+                .read()
+                .is_none()
+        );
+        assert!(
+            state
+                .configuration_watch_paths()
+                .contains(&super::paths::physical_path(&base))
+        );
+        std::fs::write(&base, r#"{"vueCompilerOptions":{"target":2.7}}"#).unwrap();
+        let change = event(&base, FileChangeType::CREATED);
+        let scope = state.project_config_event_scope(std::slice::from_ref(&change));
+        assert_eq!(scope.affected, vec![ProjectContextKey::from(root)]);
+        let repaired = state.observe_project_config_events_checked(&[change]);
+        assert!(repaired.errors.is_empty());
+        assert_eq!(repaired.documents, vec![(uri.clone(), 5)]);
+        let current = state.document_project_state(&uri).unwrap();
+        assert_eq!(current.type_checker_vue_version().as_str(), "2.7");
+        assert!(
+            current
+                .project_contexts
+                .compiler_configuration
+                .read()
+                .is_some()
+        );
+        assert_eq!(
+            current.documents.text(&uri).as_deref(),
+            Some("<template>unsaved</template>")
+        );
+        assert_eq!(current.documents.version(&uri), Some(5));
+        assert_eq!(
+            std::fs::read_to_string(uri.to_file_path().unwrap()).unwrap(),
+            "<template>disk</template>"
+        );
+        assert!(Arc::ptr_eq(
+            &sibling_owner,
+            &state.document_project_state(&sibling).unwrap()
+        ));
+        assert!(sibling_stamp.is_current(&sibling_owner));
+    }
+}

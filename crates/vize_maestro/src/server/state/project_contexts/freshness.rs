@@ -247,11 +247,10 @@ impl ServerState {
     }
 
     pub(super) fn configuration_paths_for_key(&self, key: &ProjectContextKey) -> Vec<PathBuf> {
-        self.project_contexts
-            .configuration_attempts
-            .lock()
-            .get(key)
-            .map(ConfigurationObservation::paths)
+        self.configuration_records()
+            .into_iter()
+            .find(|(candidate, _)| candidate == key)
+            .map(|(_, record)| record.paths())
             .unwrap_or_default()
     }
 

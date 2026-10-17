@@ -88,6 +88,10 @@ impl ServerState {
                 .iter()
                 .any(|dependency| changed.contains(&physical_path(dependency)))
         };
+        let observations = self
+            .configuration_records()
+            .into_iter()
+            .collect::<FxHashMap<_, _>>();
         let mut primary_dependencies = self.project_contexts.config_dependencies.read().clone();
         if let Some(root) = self
             .project_contexts
@@ -96,7 +100,9 @@ impl ServerState {
             .clone()
             .or_else(|| self.get_workspace_root())
         {
-            primary_dependencies.extend(self.configuration_paths_for_key(&root.into()));
+            if let Some(record) = observations.get(&root.into()) {
+                primary_dependencies.extend(record.paths());
+            }
         }
         let contexts = self.project_contexts.contexts.lock();
         let mut tracked = primary_dependencies
@@ -119,7 +125,9 @@ impl ServerState {
             .iter()
             .filter(|(key, context)| {
                 depends(&context.config_dependencies())
-                    || depends(&self.configuration_paths_for_key(key))
+                    || observations
+                        .get(key)
+                        .is_some_and(|record| depends(&record.paths()))
                     || untracked
                         .iter()
                         .any(|path| path.starts_with(physical_path(&key.root)))
