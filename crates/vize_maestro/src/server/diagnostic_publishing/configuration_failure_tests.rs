@@ -48,7 +48,7 @@ fn missing_compiler_base_publishes_once_keeps_backend_and_repairs_after_watch() 
     let cases = workspace.join("target/vize-tests/configuration-failure");
     std::fs::create_dir_all(&cases).unwrap();
     let directory = tempfile::tempdir_in(cases).unwrap();
-    let root = vize_l0::path::canonicalize_non_verbatim(directory.path());
+    let root = std::fs::canonicalize(directory.path()).unwrap();
     let config = root.join("tsconfig.json");
     let base = root.join("base.json");
     let host = root.join("App.vue");
