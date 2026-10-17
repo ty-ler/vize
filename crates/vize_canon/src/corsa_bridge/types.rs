@@ -59,10 +59,10 @@ impl std::fmt::Display for CorsaBridgeError {
 
 impl std::error::Error for CorsaBridgeError {}
 
-impl From<crate::batch::error::CorsaError> for CorsaBridgeError {
-    fn from(error: crate::batch::error::CorsaError) -> Self {
+impl From<crate::CorsaError> for CorsaBridgeError {
+    fn from(error: crate::CorsaError) -> Self {
         match error {
-            crate::batch::error::CorsaError::Configuration(message) => Self::Configuration(message),
+            crate::CorsaError::Configuration(message) => Self::Configuration(message),
             error => Self::CommunicationError(vize_carton::cstr!("{error}")),
         }
     }

@@ -2,7 +2,6 @@
 
 #[expect(
     clippy::disallowed_types,
-    clippy::disallowed_methods,
     reason = "host config evaluation retains its existing std error and process strings"
 )]
 mod loader;

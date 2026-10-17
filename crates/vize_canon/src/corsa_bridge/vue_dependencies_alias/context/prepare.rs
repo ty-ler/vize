@@ -156,7 +156,7 @@ impl AliasContext {
                     union.requires_arbitrary_extensions,
                 )
                 .map_err(|error| match error {
-                    crate::batch::error::CorsaError::Configuration(message) => {
+                    crate::CorsaError::Configuration(message) => {
                         super::super::super::types::CorsaBridgeError::Configuration(message)
                     }
                     error => super::super::super::types::CorsaBridgeError::CommunicationError(

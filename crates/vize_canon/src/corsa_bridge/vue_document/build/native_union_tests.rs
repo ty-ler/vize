@@ -17,7 +17,7 @@ fn native_documents(project: &CorsaVueVirtualProject) -> Vec<(String, String)> {
 #[test]
 fn materialization_preserves_typed_configuration_failure_until_physical_repair() {
     let directory = tempfile::tempdir().unwrap();
-    let root = vize_l0::path::canonicalize_non_verbatim(directory.path());
+    let root = vize_carton::path::canonicalize_non_verbatim(directory.path());
     let host = root.join("Host.vue");
     let config = root.join("tsconfig.json");
     std::fs::write(&host, CHILD).unwrap();
@@ -35,7 +35,7 @@ fn materialization_preserves_typed_configuration_failure_until_physical_repair()
         };
         assert!(matches!(&error, CorsaBridgeError::Configuration(_)));
         assert_eq!(
-            error.to_string(),
+            vize_carton::cstr!("{error}"),
             vize_carton::cstr!(
                 "Configuration error: cannot resolve tsconfig extends \"./base.json\" from {}",
                 config.display()
@@ -45,7 +45,14 @@ fn materialization_preserves_typed_configuration_failure_until_physical_repair()
     }
     std::fs::write(root.join("base.json"), "{}").unwrap();
     let repaired = build().unwrap();
-    assert_eq!(repaired.host.source_path, host);
+    let source = repaired
+        .host
+        .materialized_sources
+        .iter()
+        .find(|source| source.source_path == host)
+        .unwrap();
+    assert_eq!(source.source_path, host);
+    assert_eq!(source.source, CHILD);
     assert_eq!(std::fs::read_to_string(&host).unwrap(), CHILD);
 }
 

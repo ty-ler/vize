@@ -152,7 +152,7 @@ mod tests {
         let second = make("two", "authored-reason", 17, "/source root/vite.config.ts");
         assert_eq!(first.identity, second.identity);
         assert_eq!(
-            first.to_string(),
+            crate::cstr!("{first}"),
             "node failed to load config: authored-reason\n../../vize-config-module-one/config.mjs"
         );
         for different in [
@@ -185,7 +185,7 @@ mod tests {
                 NodeEvaluationFailure::new(Path::new("/source/vite.config.ts"), output, &artifacts);
             assert!(error.identity.is_none());
             assert_eq!(
-                error.to_string(),
+                crate::cstr!("{error}"),
                 "node failed to load config: exact authored error"
             );
         }
