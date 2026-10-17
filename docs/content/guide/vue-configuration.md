@@ -137,6 +137,13 @@ after that helper has already changed, so a reload is not an atomic snapshot of
 concurrent edits across several files. Newly discovered file observations are
 confirmed on the next normal language operation.
 
+Vite's bundle loader can report a symlinked helper's resolved target without the
+symlink path used by its import. Edits to that known target are observed, but
+retargeting only the symlink requires reloading the language server. Normal
+language operations cannot detect an import route absent from that dependency
+graph. Without installed Vite, Node's resolve hook also retains explicit local
+file requests with filename extensions as watch-only paths.
+
 ## Migrate existing settings
 
 Move top-level `vize:` and dedicated `vize.config.*` native settings into `vue:`.
