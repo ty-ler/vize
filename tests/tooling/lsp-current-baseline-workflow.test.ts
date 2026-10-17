@@ -51,7 +51,7 @@ test("ordinary recipe retains default glyph maestro profiling without legacy or 
   assert.equal(job.env.RUST_LOG, "info");
   assert.equal(job.env.VIZE_TRACE_CANONICAL_RENAME, "1");
   assert.equal(job.env.SOURCE_SHA, "${{ matrix.producer }}");
-  assert.equal(job.env.VIZE_LSP_PASSIVE_EVIDENCE, "${{ runner.temp }}/ordinary-rename/processes");
+  assert.equal(step.env.VIZE_LSP_PASSIVE_EVIDENCE, "${{ runner.temp }}/ordinary-rename/processes");
   assert.match(step.run, /assert\.equal\(artifacts\.length, 1,/);
   assert.match(
     step.run,

@@ -43,7 +43,6 @@ jobs:
       VIZE_TEST_CASE: library_refusal::original_emit_string_keeps_atomic_owned_updates_and_unsafe_name_refusals_without_file_writes
       RUST_LOG: info
       VIZE_TRACE_CANONICAL_RENAME: "1"
-      VIZE_LSP_PASSIVE_EVIDENCE: ${{ runner.temp }}/ordinary-rename/processes
       SOURCE_SHA: ${{ matrix.producer }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -79,6 +78,8 @@ jobs:
           cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
       - name: Run the exact ordinary CLI rename case and retain its actual result
         shell: bash
+        env:
+          VIZE_LSP_PASSIVE_EVIDENCE: ${{ runner.temp }}/ordinary-rename/processes
         run: |
           set -euo pipefail
           evidence="${RUNNER_TEMP}/ordinary-rename"
