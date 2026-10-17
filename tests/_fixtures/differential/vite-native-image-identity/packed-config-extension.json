@@ -1,7 +1,7 @@
 {
   "schema": "vize.native-smoke-packed-config-extension.v1",
   "beforeSha256": "26890094723c79ee46b27c710b42feed3d5a660f98c382246cf19458000aeaa3",
-  "afterSha256": "bfe6de5a305addbfe115ca334814c33b690145ebe6433f27b8fa5dfa57b84141",
+  "afterSha256": "d9686940317db0af352b6c46010d9c8eeb7f3e8210ef997a8f9b583ead56e29d",
   "scope": "exact named bounded manual extension; immutable historical recipes/hash remain independently checked",
   "hunks": [
     {
@@ -34,11 +34,11 @@
     },
     {
       "before": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n",
-      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: 47284d8e618b660658bdd28445306e18cfddca90\n    steps: *fresh-install-steps\n"
+      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: e0bc8fb50bdc28915167a3fbdceea86f00b65030\n    steps: *fresh-install-steps\n"
     }
   ],
   "producer": {
-    "head": "47284d8e618b660658bdd28445306e18cfddca90",
+    "head": "e0bc8fb50bdc28915167a3fbdceea86f00b65030",
     "composedBase": "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b",
     "priorProducer": "820bf6b5d688c77f8edea6ba18ff6f86f76bffae",
     "scope": "Reviewed finite current Rust boundary including explicit main retirements, module runtime and Cargo inputs; successor campaign qualification remains unexecuted.",
@@ -100,7 +100,7 @@
       "crates/vize_canon/src/batch/virtual_project/tests/pnpm_workspace_routes_lifecycle.rs": "3e343921338e094dca26a9c860fe10b6ff7b9f8e5655ea21bce7423e530a62d9",
       "crates/vize_canon/src/batch/virtual_project/tests/pnpm_workspace_shadow_cleanup.rs": "f4352cc7c9428aa59a19d6b3ae6fdc84423948a02de69fb3a8c5b8d5d8fb2014",
       "crates/vize_canon/src/batch/virtual_project/tsconfig_gen.rs": "c42c9eedae19afde6a79cdef219cad1d703aa3959e313749f39b8cd74f79cbb2",
-      "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_inputs.rs": "94335a03923448eeb54814d2c7bd84cc960d9436240a35b07fbd7b16fcd7e27a",
+      "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_inputs.rs": "3197d59a041ede470f59508955d63198e7ec7d65148e1e9c1927bcf3723b7f74",
       "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs": "d9efac64bb386ba1053ec71d215ee833a8838d36dfab8da16439e63ad6436da6",
       "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs": "43163dd8008c2b17b3de9cbe737539d0d4355dd8beee9be022959d9d1e7ca93f",
       "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot_tests.rs": "86d254d20f827ca68bd93bb36623878d93a486be969bbe3f2f99072e9352f25b",
@@ -111,7 +111,7 @@
       "crates/vize_canon/src/corsa_bridge.rs": "76fe438f7bc745af98635d212913c4bdc03591d0113bb952b7be2fdb5211faa7",
       "crates/vize_canon/src/corsa_bridge/bridge.rs": "c295fdad648d8ede489b1e3eab5aa42a67e214a665e0da871287850ce4350e5a",
       "crates/vize_canon/src/corsa_bridge/editor_session.rs": "11dd22f8f7b65dc169a9a22a15877456db0252df386480ace03b769a7810471a",
-      "crates/vize_canon/src/corsa_bridge/preparation_trace.rs": "30098110fed511b365181f29d485c591ca7f91352e91116d0d16f7538b8882e0",
+      "crates/vize_canon/src/corsa_bridge/preparation_trace.rs": "562fcc2dbb563f8e97c06f947b46cd0a238805de47bec4d16b971f873990b9d6",
       "crates/vize_canon/src/corsa_bridge/source_catalog.rs": "14f613c0c47a236bc1bdcc21e86a59799acedec459ab09a4295da7dffd174fc0",
       "crates/vize_canon/src/corsa_bridge/types.rs": "bea5ec0bd3f02b4951a8399c1db24b1554979dc96b5456de62df1f615386837f",
       "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build.rs": "365bb02cb6ad0ba35bd6eb73c867e5f170b7a5391f41f66083c9234b92f90558",
@@ -136,7 +136,7 @@
       "crates/vize_canon/src/lsp_client/bootstrap.rs": "66b892fd3cbc055b9a5fd2c09ff8dae35fe1724da074f31eda923b8b693d1c37",
       "crates/vize_canon/src/package_route.rs": "434f87379bfc4064e2fb61d0ebc2ceaf1cae7b808ce2b0aa6d1fdb36ede78b81",
       "crates/vize_canon/src/package_route/search.rs": "e30877caf6a9d7c9b6852643abf133b2f551fe7d234ba5ebae77e20ae1afa9a0",
-      "crates/vize_canon/src/package_route/stamp.rs": "696e78ec85d09874cada384e0f57f783c38e1ffd1794138754398764b8884c91",
+      "crates/vize_canon/src/package_route/stamp.rs": "7f391160b44ba76a6ab89ba3eb237028642cb93c53f70ac9554fcdde3c6a0f14",
       "crates/vize_canon/src/template_diagnostic_directives.rs": "8e32b3f5b4afed4fca5125198375be52692f94527ca34cf64c67dc6141c98674",
       "crates/vize_canon/src/template_diagnostic_directives/tests.rs": "704f97c25b4b427e7f419c21c2d683af92b2d60af25ffe782e01498ad333d83d",
       "crates/vize_canon/src/virtual_ts/scope.rs": "97e6753b8b9ebc1fab19d1d25337a73f49ce52bd50188d573be299224feac15a",
@@ -477,6 +477,13 @@
       "witnessSha256": "5aa986d67bb64fe9e0017e8b4c0563f5fef767798f9166d4e918473364e0489f",
       "workflowSha256": "93b6b2bb3f11ec6c7902cc6669e5f8c63e2bc25d9f2df880e79917e7122208ef",
       "scope": "All four campaigns failed; immutable historical custody grants no green qualification"
+    },
+    "previousDiagnostic": {
+      "source": "eb01ef3ace9ed68513b7cf65ca426d73ea139f46",
+      "producer": "47284d8e618b660658bdd28445306e18cfddca90",
+      "witnessSha256": "f2521858735028a1f0da99cd0ce69195242ff8b5eb7886882429c4fe3b12c197",
+      "workflowSha256": "bfe6de5a305addbfe115ca334814c33b690145ebe6433f27b8fa5dfa57b84141",
+      "scope": "Ordinary source Check passed; sole automatic performance diagnostic failed. No final qualification credit."
     }
   }
 }

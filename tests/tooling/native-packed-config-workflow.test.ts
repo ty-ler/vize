@@ -96,7 +96,7 @@ void test("the actual manager version audit uses a manifest-free cwd and preserv
 });
 
 void test("the historical composed producer authenticates every whole source and moved test module", () => {
-  const producer = "47284d8e618b660658bdd28445306e18cfddca90";
+  const producer = "e0bc8fb50bdc28915167a3fbdceea86f00b65030";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -191,6 +191,25 @@ void test("the historical composed producer authenticates every whole source and
   assert.equal(Object.keys(previousQualificationWitness.producer.files).length, 212);
   for (const file of Object.keys(previousQualificationWitness.producer.files))
     assert.ok(files.includes(file), file);
+  const diagnostic = witness.producer.previousDiagnostic;
+  assert.equal(diagnostic.source, "eb01ef3ace9ed68513b7cf65ca426d73ea139f46");
+  assert.equal(diagnostic.producer, "47284d8e618b660658bdd28445306e18cfddca90");
+  const previousDiagnosticBytes = git("show", diagnostic.source + ":" + witnessPath);
+  assert.equal(digest(previousDiagnosticBytes), diagnostic.witnessSha256);
+  assert.equal(
+    digest(git("show", diagnostic.source + ":.github/workflows/native-smoke.yml")),
+    diagnostic.workflowSha256,
+  );
+  const previousDiagnostic = JSON.parse(previousDiagnosticBytes.toString());
+  assert.deepEqual(Object.keys(previousDiagnostic.producer.files), files);
+  const changedDiagnosticInputs = files.filter(
+    (file) => previousDiagnostic.producer.files[file] !== witness.producer.files[file],
+  );
+  assert.deepEqual(changedDiagnosticInputs, [
+    "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_inputs.rs",
+    "crates/vize_canon/src/corsa_bridge/preparation_trace.rs",
+    "crates/vize_canon/src/package_route/stamp.rs",
+  ]);
   verifyHistoricalProducerFiles(root, witness.producer);
   const original = witness.producer.previousFreeze;
   assert.equal(original.source, "f7ee25f5db27bd210db07f514837b9f4c1b65054");
