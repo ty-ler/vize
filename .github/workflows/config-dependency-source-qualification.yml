@@ -112,6 +112,7 @@ jobs:
             davinci/vize_l0/src/config/document.rs \
             tests/tooling/config-host-boundary.test.ts \
             tests/tooling/native-config-preload-observations.test.ts \
+            tests/tooling/native-config-module-loader.test.ts \
             tests/tooling/support/davinci-host-imports.ts \
             > target/config-dependency-qualification/inputs.sha256
       - name: Check config host boundaries and actual loader repair observation laws
