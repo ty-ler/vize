@@ -12,7 +12,9 @@ import { readRepoFile } from "../support/github-workflows.ts";
 
 const workflow = parse(readRepoFile(".github", "workflows", "release-operator.yml"));
 const operator = workflow.jobs.operator;
-const invocation = operator.steps.at(-1);
+const invocation = operator.steps.find(
+  (step: { env?: Record<string, string> }) => step.env?.GH_TOKEN,
+);
 const dependencies = operator.steps.find((step: { run?: string }) =>
   step.run?.includes("vp install --frozen-lockfile"),
 );
@@ -43,6 +45,7 @@ test("hosted operator keeps user authority on protected main and does not deadlo
     "patch",
     "resume",
     "retire",
+    "recover-consumer",
   ]);
   assert.equal(workflow.on.workflow_dispatch.inputs.operation.default, "start");
   for (const [input, variable] of [
@@ -50,6 +53,7 @@ test("hosted operator keeps user authority on protected main and does not deadlo
     ["source_tag", "RELEASE_SOURCE_TAG"],
     ["release_run", "RELEASE_RUN"],
     ["operator_run", "RELEASE_ORIGINAL_OPERATOR_RUN"],
+    ["consumer_recovery_run", "RELEASE_CONSUMER_RECOVERY_RUN"],
   ]) {
     assert.equal(workflow.on.workflow_dispatch.inputs[input].type, "string");
     assert.equal(workflow.on.workflow_dispatch.inputs[input].default, "");
@@ -232,6 +236,7 @@ test("hosted entry invokes the unchanged public protocol only for its actual mai
         RELEASE_SOURCE_TAG: retirement.tag ?? "",
         RELEASE_RUN: retirement.run ?? "",
         RELEASE_ORIGINAL_OPERATOR_RUN: retirement.entry ?? "",
+        RELEASE_CONSUMER_RECOVERY_RUN: "",
         TEST_OPERATOR_LOGIN: login,
         TEST_OPERATOR_ROLE: role,
       },
@@ -342,8 +347,9 @@ test("hosted entry invokes the unchanged public protocol only for its actual mai
 test("new publication runs wait for full Check outside the bounded verify-only preflight", () => {
   const runs = readRepoFile("tools", "support", "release", "pr_pin_runs.rs");
   const watcher = readRepoFile("tools", "support", "release", "pr_pin_watch.rs");
+  const shared = readRepoFile("tools", "support", "release", "pr_ci.rs");
   const existing = runs.indexOf("if let Some(id) = find()?");
-  const qualify = runs.indexOf('"tools/support/release/qualify_check/main.ts"');
+  const qualify = runs.indexOf("pr_ci::qualify_check(");
   const authenticate = runs.indexOf("let current = super::source(");
   const recheckRun = runs.indexOf("if let Some(id) = find()?", existing + 1);
   const dispatch = runs.indexOf('"workflow",');
@@ -360,8 +366,8 @@ test("new publication runs wait for full Check outside the bounded verify-only p
   assert.match(child, /&candidate\.branch/);
   assert.match(child, /&candidate\.head/);
   assert.match(child, /&source\.cut/);
-  assert.match(child, /pr_budget::child_command\(&mut qualification, budget\)/);
-  assert.match(child, /if !status\.success\(\)/);
+  assert.match(shared, /pr_budget::child_command\(&mut qualification, budget\)/);
+  assert.match(shared, /if !status\.success\(\)/);
   assert.match(child, /operator\.verify\(\)\?/);
   const final = runs.slice(authenticate, dispatch);
   assert.match(final, /current\.cut != source\.cut/);
