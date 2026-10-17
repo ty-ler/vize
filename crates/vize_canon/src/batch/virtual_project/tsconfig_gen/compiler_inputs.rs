@@ -11,13 +11,20 @@ use crate::package_route::stamp::InputStamp;
 
 use super::super::tsconfig_paths::{normalize_path_lexically, parse_jsonc_value};
 
+#[derive(Eq, Hash, PartialEq)]
+struct ResolutionKey {
+    kind: &'static str,
+    origin: PathBuf,
+    specifier: vize_carton::String,
+}
+
 #[derive(Default)]
 pub(in super::super) struct CompilerInputs {
     parsed: RefCell<FxHashMap<PathBuf, Value>>,
     content: RefCell<FxHashMap<PathBuf, vize_carton::String>>,
     observations: RefCell<FxHashMap<PathBuf, InputStamp>>,
     parsed_observations: RefCell<Vec<InputStamp>>,
-    resolutions: RefCell<FxHashMap<(&'static str, PathBuf, vize_carton::String), Option<PathBuf>>>,
+    resolutions: RefCell<FxHashMap<ResolutionKey, Option<PathBuf>>>,
 }
 
 impl CompilerInputs {
@@ -80,11 +87,11 @@ impl CompilerInputs {
         specifier: &str,
         resolve: impl FnOnce() -> Option<PathBuf>,
     ) -> Option<PathBuf> {
-        let key = (
+        let key = ResolutionKey {
             kind,
-            normalize_path_lexically(origin),
-            vize_carton::String::from(specifier),
-        );
+            origin: normalize_path_lexically(origin),
+            specifier: vize_carton::String::from(specifier),
+        };
         if let Some(resolved) = self.resolutions.borrow().get(&key) {
             return resolved.clone();
         }
