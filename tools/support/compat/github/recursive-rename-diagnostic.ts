@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { stripVTControlCharacters } from "node:util";
 
 const root = process.cwd();
 const output = path.join(root, "target/recursive-rename-diagnostic");
@@ -205,9 +206,9 @@ const intact =
   sourceInputs.every((before, i) => before.sha256 === sourceAfter[i].sha256) &&
   Object.entries(images).every(([name, before]) => before.sha256 === imagesAfter[name].sha256) &&
   git("diff", "--name-only", "HEAD") === "";
-const testOutput = fs
-  .readFileSync(path.join(output, "test.stdout"), "utf8")
-  .replace(/\u001b\[[0-9;]*m/g, "");
+const testOutput = stripVTControlCharacters(
+  fs.readFileSync(path.join(output, "test.stdout"), "utf8"),
+);
 const completePass =
   testOutput.includes(`test ${test} ... ok`) &&
   testOutput.includes("1 passed; 0 failed; 0 ignored;");

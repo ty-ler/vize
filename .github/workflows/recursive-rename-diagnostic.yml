@@ -2,8 +2,6 @@ name: Recursive rename baseline diagnostic
 run-name: Recursive rename trace ${{ inputs.baseline_sha || '6bef15d8e2e92c4f7b724b791c1147ef13e2d4ac' }} / ${{ inputs.current_sha || '8df6e1fe3e8e91fe2a0adbb4633d1de38e81e506' }}
 
 on:
-  push:
-    branches: [ci/trace-recursive-rename-baseline]
   workflow_dispatch:
     inputs:
       baseline_sha:
