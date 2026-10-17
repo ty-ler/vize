@@ -136,3 +136,82 @@ fn admitted_compiler_configuration_survives_deleted_extends_before_first_native_
         });
     }
 }
+
+#[test]
+#[cfg(unix)]
+fn retired_union_member_leaves_native_mirror_while_other_member_and_old_catalog_remain_valid() {
+    let native = resolve_test_tsgo_binary();
+    if native.is_none() {
+        assert_ne!(
+            std::env::var("VIZE_TEST_REQUIRE_TSGO").as_deref(),
+            Ok("1"),
+            "this acceptance requires the actual native backend"
+        );
+        return;
+    }
+    let root = tempfile::tempdir().unwrap();
+    let project = vize_carton::path::canonicalize_non_verbatim(root.path());
+    std::os::unix::fs::symlink(
+        workspace_root().join("playground/node_modules"),
+        project.join("node_modules"),
+    )
+    .unwrap();
+    let config = project.join("tsconfig.json");
+    std::fs::write(&config, r#"{"compilerOptions":{"strict":true,"target":"ES2022","module":"ESNext","moduleResolution":"bundler","noEmit":true},"include":["*.vue"]}"#).unwrap();
+    let a = project.join("Moved.vue");
+    let b = project.join("Control.vue");
+    let a_text = "<script setup lang=\"ts\">\nconst value: string = 'moved';\n</script>\n<template>{{ value }}</template>\n";
+    let b_text = "<script setup lang=\"ts\">\nconst value: number = 42;\n</script>\n<template>{{ value }}</template>\n";
+    std::fs::write(&a, a_text).unwrap();
+    std::fs::write(&b, b_text).unwrap();
+    let bridge = CorsaBridge::with_config(CorsaBridgeConfig {
+        corsa_path: native,
+        working_dir: Some(project.clone()),
+        tsconfig_path: Some(config),
+        ..Default::default()
+    });
+    corsa::runtime::block_on(async {
+        bridge.spawn().await.unwrap();
+        assert_typed_hover(&bridge, &a, a_text, "string").await;
+        let before = bridge
+            .open_vue_virtual_document(&b, b_text, CorsaVueVirtualDocumentOptions::default())
+            .await
+            .unwrap();
+        assert_typed_hover(&bridge, &b, b_text, "number").await;
+        let moved = before
+            .materialized_sources
+            .iter()
+            .find(|source| source.source_path == a)
+            .expect("the warmed union contains the moved member");
+        let retired_path = moved.materialized_path.clone();
+        assert_eq!(moved.source.as_str(), a_text);
+        assert!(retired_path.is_file());
+        assert!(before.source_catalog.get(&retired_path).is_some());
+        bridge.forget_cached_vue_virtual_documents(std::slice::from_ref(&a));
+        bridge.mark_disk_project_state_dirty();
+        bridge.flush_disk_project_state_if_dirty().await.unwrap();
+        let after = bridge
+            .open_vue_virtual_document(&b, b_text, CorsaVueVirtualDocumentOptions::default())
+            .await
+            .unwrap();
+        assert!(bridge.is_initialized());
+        assert!(
+            !retired_path.exists(),
+            "next synchronization removes the retired materialized source"
+        );
+        assert!(after.source_catalog.get(&retired_path).is_none());
+        assert!(
+            before.source_catalog.get(&retired_path).is_some(),
+            "in-flight old packets retain their original complete source catalog"
+        );
+        assert!(
+            !before
+                .source_catalog
+                .shares_revision_with(&after.source_catalog)
+        );
+        assert_typed_hover(&bridge, &b, b_text, "number").await;
+        assert_eq!(std::fs::read_to_string(&a).unwrap(), a_text);
+        assert_eq!(std::fs::read_to_string(&b).unwrap(), b_text);
+        bridge.shutdown().await.unwrap();
+    });
+}
