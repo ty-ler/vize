@@ -23,6 +23,7 @@ const deliveredInitContracts = [
 const installedReportedContracts = ["tests/tooling/release/release-public-vapor.test.ts"];
 const stablePatchContracts = ["tests/tooling/release/release-stable-operator.test.ts"];
 const sharedPublisherContracts = ["tests/tooling/release/release-public-shared-publisher.test.ts"];
+const publishedConsumerContract = "tests/tooling/release/release-published-consumer.test.ts";
 
 const installedHttpsContracts = [
   "tests/tooling/release/release-public-quick-tunnel.test.ts",
@@ -52,6 +53,7 @@ void test("audited release contracts have complete imports and leave unresolved 
     ...installedReportedContracts,
     ...stablePatchContracts,
     ...sharedPublisherContracts,
+    publishedConsumerContract,
   ].sort();
   const inventory = [...scoped, ...expectedUnscoped].sort();
   assert.equal(new Set(inventory).size, inventory.length, "contracts belong to exactly one scope");
@@ -66,6 +68,25 @@ void test("audited release contracts have complete imports and leave unresolved 
     assert.equal(localImportInputs(file).complete, true, `${file} import closure`);
   }
   assert.deepEqual(selected("davinci/vize_l1/src/parser.rs"), unscoped);
+});
+
+void test("the published incident consumer retains its runtime authority and ledger inputs", () => {
+  // Git-selected Rust authority and the compressed incident ledger are not imports.
+  // Keep the existing broad scope until those runtime inputs have a complete audit.
+  assert.ok(unscoped.includes(publishedConsumerContract));
+  const imports = localImportInputs(publishedConsumerContract);
+  assert.equal(imports.complete, true);
+  assert.ok(imports.files.includes("tools/commands/release/verify-published-0.457.0.ts"));
+  assert.ok(imports.files.includes("tools/support/release/jsr/package.ts"));
+  for (const input of [
+    ".github/workflows/release-published-0-457-consumer.yml",
+    "tools/support/release/incidents/published-0.457.0.json.gz",
+    "tools/support/release/jsr/consumer-deno.json",
+    "tools/support/release/jsr/consumer.ts",
+    "tools/support/release/pr_pin_delivery.rs",
+  ]) {
+    assert.ok(selected(input).includes(publishedConsumerContract), input);
+  }
 });
 
 void test("shared publisher authority and fixtures keep their complete release contract", () => {
