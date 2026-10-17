@@ -33,8 +33,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
-          # Diagnostic producer adds only reviewed guard observations to product06a.
-          ref: 62c38ff7c1e8b2c66d5aa71ef36b2923defc74f5
+          # Product06a plus only the CLI regression test; no product fix or traces.
+          ref: 3f730c98626fef4a3d0e48b43750939514232f00
       # The runner's rustup installs the toolchain pinned in rust-toolchain.toml.
       - name: Install the repository Rust toolchain
         run: |
@@ -51,8 +51,10 @@ jobs:
       - name: Build vize CLI
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 62c38ff7c1e8b2c66d5aa71ef36b2923defc74f5
+          test "$(git rev-parse HEAD)" = 3f730c98626fef4a3d0e48b43750939514232f00
           cargo build --profile ci -p vize
+          mkdir -p "${RUNNER_TEMP}/vize-server"
+          cp target/ci/vize "${RUNNER_TEMP}/vize-server/vize"
           {
             echo "producer=$(git rev-parse HEAD)"
             echo "harness=${GITHUB_SHA}"
@@ -60,13 +62,86 @@ jobs:
             rustc --version --verbose
             cargo --version
             sha256sum rust-toolchain.toml Cargo.lock target/ci/vize
-          } > target/ci/vize-producer.txt
+          } > "${RUNNER_TEMP}/vize-server/vize-producer.txt"
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with:
+          node-version-file: "package.json"
+          cache: true
+          run-install: false
+      - name: Install frozen dependencies for the actual native CLI fixture
+        run: vp install --frozen-lockfile --prefer-offline
+      - name: Run the unchanged sibling diagnostics completion CLI regression
+        run: |
+          set -euo pipefail
+          evidence="${RUNNER_TEMP}/vize-server/completion-sibling-before"
+          mkdir -p "$evidence"
+          test "$(git rev-parse HEAD)" = 3f730c98626fef4a3d0e48b43750939514232f00
+          git diff --exit-code
+          {
+            echo "producer=$(git rev-parse HEAD)"
+            echo "harness=${GITHUB_SHA}"
+            echo 'product_baseline=06a51573858160eca1dfe4d54a06f90812f0f6b9'
+            echo 'recipe=cargo test --locked --profile ci -p vize --features legacy --message-format=json --test lsp_completion_sibling_overlay_cli -- --nocapture'
+            rustc --version --verbose
+            cargo --version
+            sha256sum rust-toolchain.toml Cargo.lock crates/vize/tests/lsp_completion_sibling_overlay_cli.rs
+          } > "$evidence/producer.txt"
+          set +e
+          cargo test --locked --profile ci -p vize --features legacy --message-format=json --test lsp_completion_sibling_overlay_cli -- --nocapture > "$evidence/cargo.stdout.jsonl" 2> "$evidence/cargo.stderr.log"
+          test_status=$?
+          set -e
+          printf '%s\n' "$test_status" > "$evidence/exit-status.txt"
+          capture_status=0
+          node --input-type=module - "$evidence" "$test_status" <<'NODE' || capture_status=$?
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import { createHash } from 'node:crypto';
+          import { execFileSync } from 'node:child_process';
+          const [output, status] = process.argv.slice(2);
+          const stdout = fs.readFileSync(path.join(output, 'cargo.stdout.jsonl'), 'utf8');
+          const rows = stdout
+            .split('\n').flatMap(line => {
+              try { return [JSON.parse(line)]; } catch { return []; }
+            });
+          const artifacts = rows.filter(row => row.reason === 'compiler-artifact'
+            && row.target?.name === 'vize' && row.target?.kind?.includes('bin')
+            && row.executable);
+          assert.equal(artifacts.length, 1, 'one Cargo vize artifact is required');
+          const images = [...new Set(artifacts.map(row => row.executable))];
+          assert.equal(images.length, 1, 'one Cargo-reported vize binary is required');
+          const reported = images[0];
+          const actual = fs.realpathSync(reported);
+          const bytes = fs.readFileSync(actual);
+          assert.equal(bytes.subarray(0, 4).toString('hex'), '7f454c46', 'actual image must be ELF');
+          const frozen = path.join(output, 'cargo-reported-vize');
+          fs.copyFileSync(actual, frozen);
+          const sha256 = createHash('sha256').update(bytes).digest('hex');
+          assert.equal(createHash('sha256').update(fs.readFileSync(frozen)).digest('hex'), sha256);
+          const producer = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+          assert.equal(producer, '3f730c98626fef4a3d0e48b43750939514232f00');
+          const runningExactlyOne = /^running 1 test\r?$/m.test(stdout);
+          const legacyImages = artifacts.every(row => row.features?.includes('legacy'));
+          fs.writeFileSync(path.join(output, 'image-receipt.json'), JSON.stringify({
+            producerSha: producer, harnessSha: process.env.GITHUB_SHA,
+            productBaselineSha: '06a51573858160eca1dfe4d54a06f90812f0f6b9',
+            cargoExitStatus: Number(status),
+            runningExactlyOne, legacyImages, cargoArtifacts: artifacts,
+            binary: { cargoReportedPath: reported, physicalPath: actual, frozenPath: frozen, sha256 },
+            toolchain: fs.readFileSync(path.join(output, 'producer.txt'), 'utf8'),
+          }, null, 2) + '\n');
+          assert.ok(runningExactlyOne, 'the actual CLI regression must execute exactly one test');
+          assert.ok(legacyImages, 'Cargo must attest the legacy feature on the test CLI image');
+          NODE
+          printf '%s\n' "$capture_status" > "$evidence/capture-status.txt"
+          if [ "$test_status" -ne 0 ]; then exit "$test_status"; fi
+          exit "$capture_status"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
         with:
           name: vize-server
-          path: |
-            target/ci/vize
-            target/ci/vize-producer.txt
+          path: ${{ runner.temp }}/vize-server/
+          if-no-files-found: error
           retention-days: 1
 
   conformance:

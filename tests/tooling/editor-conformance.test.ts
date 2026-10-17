@@ -297,11 +297,39 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
   assert.match(observation, /VIZE_CONFORMANCE_TRANSCRIPT=.*protocol\.jsonl/);
   assert.match(observation, /VIZE_RICH_CUSTODY_OUTPUT=.*public-api\.json/);
   const producer = workflow.jobs.server.steps;
-  assert.equal(producer[0].with.ref, "62c38ff7c1e8b2c66d5aa71ef36b2923defc74f5");
+  assert.equal(producer[0].with.ref, "3f730c98626fef4a3d0e48b43750939514232f00");
   assert.match(
     producer.find((step: { name?: string }) => step.name === "Build vize CLI").run,
     /cargo build --profile ci -p vize/,
   );
+  const regression = producer.find(
+    (step: { name?: string }) =>
+      step.name === "Run the unchanged sibling diagnostics completion CLI regression",
+  );
+  assert.ok(regression);
+  assert.equal(regression["continue-on-error"], undefined);
+  assert.match(
+    regression.run,
+    /cargo test --locked --profile ci -p vize --features legacy --message-format=json --test lsp_completion_sibling_overlay_cli -- --nocapture/,
+  );
+  assert.match(regression.run, /cargo\.stdout\.jsonl/);
+  assert.match(regression.run, /cargo\.stderr\.log/);
+  assert.match(regression.run, /test_status=\$\?/);
+  assert.match(regression.run, /exit "\$test_status"/);
+  assert.match(regression.run, /row\.reason === 'compiler-artifact'/);
+  assert.match(regression.run, /assert\.equal\(artifacts\.length, 1,/);
+  assert.match(regression.run, /cargoArtifacts: artifacts/);
+  assert.match(regression.run, /features\?\.includes\('legacy'\)/);
+  assert.match(regression.run, /runningExactlyOne/);
+  assert.match(regression.run, /7f454c46/);
+  assert.match(regression.run, /fs\.copyFileSync\(actual, frozen\)/);
+  assert.match(regression.run, /harnessSha: process\.env\.GITHUB_SHA/);
+  const producerUpload = producer.find(
+    (step: { with?: { name?: string } }) => step.with?.name === "vize-server",
+  );
+  assert.equal(producerUpload.if, "always()");
+  assert.equal(producerUpload.with.path, "${{ runner.temp }}/vize-server/");
+  assert.equal(producerUpload.with["if-no-files-found"], "error");
   assert.equal(steps[lifecycle].if, "matrix.client == 'vscode'");
   assert.equal(
     steps[lifecycle].run,
