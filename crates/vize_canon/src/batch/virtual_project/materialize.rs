@@ -41,11 +41,17 @@ impl VirtualProject {
         query_paths: &[PathBuf],
     ) -> CorsaResult<super::MaterializedFileSnapshot> {
         let _lock = super::super::materialize_lock::MaterializeLock::acquire(&self.virtual_root)?;
-        let package_links =
-            self.materialize_snapshot(preserved_files, preserved_package_links, Some(query_paths))?;
+        let package_links = self
+            .materialize_snapshot(preserved_files, preserved_package_links, Some(query_paths))
+            .inspect_err(|error| {
+                tracing::info!(target: "vize_editor_preparation", phase = "materialize_snapshot", root = %self.virtual_root.display(), error = %error, "editor union materialization failed");
+            })?;
         let mut expected_files = self.expected_materialized_files();
         expected_files.extend(preserved_files.iter().cloned());
         super::MaterializedFileSnapshot::capture_with_links(&expected_files, &package_links)
+            .inspect_err(|error| {
+                tracing::info!(target: "vize_editor_preparation", phase = "capture_snapshot", root = %self.virtual_root.display(), error = %error, "editor union snapshot failed");
+            })
     }
 
     fn materialize_snapshot(

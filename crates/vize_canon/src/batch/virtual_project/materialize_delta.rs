@@ -342,7 +342,9 @@ impl MaterializedFileSnapshot {
 }
 
 fn revision(path: &Path) -> CorsaResult<u64> {
-    Ok(hash_bytes(&std::fs::read(path)?))
+    Ok(hash_bytes(&std::fs::read(path).inspect_err(|error| {
+        tracing::info!(target: "vize_editor_preparation", phase = "materialized_file_revision", path = %path.display(), error = %error, "materialized file revision failed");
+    })?))
 }
 
 #[cfg(test)]
