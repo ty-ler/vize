@@ -29,6 +29,8 @@ pub(super) async fn did_change_watched_files(
         .observe_project_config_events_async(params.changes.clone())
         .await;
     #[cfg(feature = "native")]
+    server.queue_configuration_watches();
+    #[cfg(feature = "native")]
     for error in &reconfigured.errors {
         server
             .client

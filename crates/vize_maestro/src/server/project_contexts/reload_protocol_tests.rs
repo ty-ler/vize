@@ -285,3 +285,139 @@ fn watched_reference_failures_keep_dispatch_and_native_environment_of_each_full_
         previous = repaired.state.clone();
     }
 }
+
+#[test]
+fn held_external_watch_ack_does_not_delay_real_document_hover() {
+    use futures::{SinkExt, StreamExt};
+    use std::time::{Duration, Instant};
+
+    block_on(crate::runtime::timeout(Duration::from_secs(10), async {
+        let root = tempfile::tempdir().unwrap();
+        file(root.path(), "package.json", "{}").unwrap();
+        let source = "<template><div /></template>\n<style>.app { color:red }</style>";
+        let uri = file(root.path(), "App.vue", source).unwrap();
+        let mut expected = None;
+        for supported in [false, true] {
+            let (mut service, mut socket) = LspService::new(|client| {
+                let mut server = MaestroServer::new(client);
+                server.initial_diagnostics = None;
+                server
+            });
+            let response = protocol_send(
+                &mut service,
+                json!({
+                    "jsonrpc":"2.0","id":1,"method":"initialize","params":{
+                        "rootUri":Url::from_directory_path(root.path()).unwrap(),
+                        "capabilities":{"workspace":{"didChangeWatchedFiles":{
+                            "dynamicRegistration":supported,"relativePatternSupport":supported
+                        }}},
+                        "initializationOptions":{"lint":false,"typecheck":false,"ecosystem":false}
+                    }
+                }),
+            )
+            .await
+            .unwrap()
+            .unwrap();
+            assert!(response.get("error").is_none());
+            let held = if supported {
+                let registrations = async {
+                    let mut held = None;
+                    let mut generic = false;
+                    while held.is_none() || !generic {
+                        let request = socket.next().await.unwrap();
+                        if request.method() != "client/registerCapability" {
+                            continue;
+                        }
+                        let id = &request.params().unwrap()["registrations"][0]["id"];
+                        if id == "vize-typecheck-dependencies" {
+                            socket
+                                .send(tower_lsp::jsonrpc::Response::from_ok(
+                                    request.id().unwrap().clone(),
+                                    Value::Null,
+                                ))
+                                .await
+                                .unwrap();
+                            generic = true;
+                        } else {
+                            assert!(id.as_str().unwrap().starts_with("vize-config-watch-"));
+                            held = Some(request);
+                        }
+                    }
+                    held
+                };
+                let (notification, held) = futures::join!(
+                    protocol_send(
+                        &mut service,
+                        json!({"jsonrpc":"2.0","method":"initialized","params":{}})
+                    ),
+                    registrations
+                );
+                assert_eq!(notification.unwrap(), None);
+                held
+            } else {
+                assert_eq!(
+                    protocol_send(
+                        &mut service,
+                        json!({"jsonrpc":"2.0","method":"initialized","params":{}})
+                    )
+                    .await
+                    .unwrap(),
+                    None
+                );
+                None
+            };
+            assert_eq!(
+                protocol_send(
+                    &mut service,
+                    json!({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{
+                        "textDocument":{"uri":uri,"languageId":"vue","version":1,"text":source}
+                    }})
+                )
+                .await
+                .unwrap(),
+                None
+            );
+            let started = Instant::now();
+            let hover = protocol_send(
+                &mut service,
+                json!({"jsonrpc":"2.0","id":20,"method":"textDocument/hover","params":{
+                    "textDocument":{"uri":uri},"position":{"line":1,"character":15}
+                }}),
+            )
+            .await
+            .unwrap()
+            .unwrap();
+            assert!(
+                started.elapsed() < Duration::from_millis(100),
+                "local hover must not await watch registration"
+            );
+            assert!(hover["result"].is_object());
+            if let Some(expected) = &expected {
+                assert_eq!(
+                    &hover, expected,
+                    "the entire hover response survives a held watch ACK"
+                );
+            } else {
+                expected = Some(hover);
+            }
+            assert!(!service.inner().state.has_corsa_bridge());
+            assert!(service.inner().state.corsa_init_failure().is_none());
+            if let Some(held) = held {
+                socket
+                    .send(tower_lsp::jsonrpc::Response::from_ok(
+                        held.id().unwrap().clone(),
+                        Value::Null,
+                    ))
+                    .await
+                    .unwrap();
+            }
+            protocol_send(
+                &mut service,
+                json!({"jsonrpc":"2.0","id":30,"method":"shutdown","params":null}),
+            )
+            .await
+            .unwrap();
+        }
+    }))
+    .expect("watch ACK independence completes with the original local request budget");
+}

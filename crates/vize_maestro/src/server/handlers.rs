@@ -56,6 +56,10 @@ use signature_help::{SigHelp, SigHelpParams};
 impl LanguageServer for MaestroServer {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
         self.state.record_client_capabilities(&params.capabilities);
+        #[cfg(feature = "native")]
+        if let Some(watchers) = &self.configuration_watchers {
+            watchers.record_capabilities(&params.capabilities);
+        }
         // Resolve workspace root
         let workspace_path = self.state.primary_workspace_path(&params);
 

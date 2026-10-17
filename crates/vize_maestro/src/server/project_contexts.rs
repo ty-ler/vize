@@ -49,6 +49,7 @@ impl MaestroServer {
             },
             state,
             initial_diagnostics: self.initial_diagnostics.clone(),
+            configuration_watchers: self.configuration_watchers.clone(),
             #[cfg(feature = "experimental-source-navigation")]
             module_link_termination: None,
         }
@@ -68,8 +69,12 @@ impl MaestroServer {
     /// Continue an operation whose configuration admission already completed.
     pub(super) async fn for_document_admitted(&self, uri: &Url) -> DocumentServer<'_> {
         #[cfg(feature = "native")]
-        if let Some(state) = self.state.document_project_state_async(uri).await {
-            return DocumentServer::Project(self.with_project_state(state));
+        {
+            let state = self.state.document_project_state_async(uri).await;
+            self.queue_configuration_watches();
+            if let Some(state) = state {
+                return DocumentServer::Project(self.with_project_state(state));
+            }
         }
         #[cfg(not(feature = "native"))]
         let _ = uri;
