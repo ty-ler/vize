@@ -27,7 +27,9 @@
   "Allow the real client to process input until PREDICATE satisfies LABEL."
   (let ((deadline (+ (float-time) 30)) found)
     (while (and (not (setq found (funcall predicate))) (< (float-time) deadline))
-      (accept-process-output nil 0.05))
+      ;; File notifications are editor events, including in a batch ERT host.
+      ;; GNU Emacs's own filenotify tests pump them with `read-event'.
+      (read-event nil nil 0.05))
     (unless found (ert-fail (format "Timed out waiting for %s" label)))
     found))
 
