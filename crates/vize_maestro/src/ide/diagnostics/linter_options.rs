@@ -367,7 +367,9 @@ mod valid_v_on_options_tests {
             serde_json::from_str(r#"{"vue/valid-v-on":{"modifiers":["custom"]}}"#).unwrap();
         let mut registry = RuleRegistry::new();
         registry.register(Box::new(ValidVOn));
-        let linter = apply_rule_options(Linter::with_registry(registry), &options, false);
+        let linter = apply_rule_options(Linter::with_registry(registry), &options, false)
+            .with_locale(Locale::En)
+            .with_help_level(HelpLevel::Full);
         let result = linter.lint_template(
             r#"<div @click.custom="handler" @click.unknown="handler" />"#,
             "test.vue",
