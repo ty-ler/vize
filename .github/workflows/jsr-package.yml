@@ -4,6 +4,12 @@ on:
     paths:
       - "jsr/**"
       - "tools/support/release/jsr/**"
+      - "tools/support/release/consumer_repair/**"
+      - "tools/support/release/public_acceptance/**"
+      - "tests/tooling/release-consumer-repair.test.ts"
+      - "tests/tooling/fixtures/release-457-deno-attempt4.log.gz"
+      - ".github/workflows/release-operator.yml"
+      - "tsconfig.release-consumer-repair.json"
       - "tests/tooling/jsr-package.test.ts"
       - "tests/tooling/release-jsr-workflow.test.ts"
       - ".github/workflows/jsr-package.yml"
@@ -33,12 +39,17 @@ jobs:
         run: vp install --frozen-lockfile --prefer-offline --filter vize-workspace --ignore-scripts
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2
         with: { deno-version: "2.9.7" }
+      - name: Typecheck the supplemental consumer authority
+        run: node tools/support/typescript/check-project.ts tsconfig.release-consumer-repair.json
       - name: Test package generation
-        run: node --test tests/tooling/jsr-package.test.ts tests/tooling/release-jsr-workflow.test.ts
+        run: node --test tests/tooling/jsr-package.test.ts tests/tooling/release-jsr-workflow.test.ts tests/tooling/release-consumer-repair.test.ts tests/tooling/release/release-public-acceptance.test.ts
       - name: Verify scoped dependency age with the actual Deno runtime
         env:
           JSR_CONSUMER_PUBLISHED_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.published-version || '' }}
         run: node tools/support/release/jsr/verify-consumer-age.mjs "$RUNNER_TEMP/jsr-consumer-age"
+      - name: Verify the proposed host-only repair against the unchanged public 0.457.0 consumer
+        if: github.event_name == 'pull_request' && github.head_ref == 'fix/release-457-consumer-receipt'
+        run: node tools/support/release/consumer_repair/fixture.ts "$RUNNER_TEMP/jsr-consumer-age/proposed-457-fixture"
       - name: Generate the package for the checked-out release
         run: node tools/support/release/jsr/package.ts prepare "$RUNNER_TEMP/jsr-package"
       - name: Check the publication graph and public types

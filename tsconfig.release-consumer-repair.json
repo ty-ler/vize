@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.node.json",
+  "compilerOptions": { "composite": false, "incremental": false },
+  "include": [
+    "tools/support/release/consumer_repair/**/*.ts",
+    "tests/tooling/release-consumer-repair.test.ts"
+  ]
+}

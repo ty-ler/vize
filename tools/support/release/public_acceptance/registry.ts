@@ -9,6 +9,8 @@ export interface PublicationOptions {
   head: string;
   sourcePr: string | number;
   run: string | number;
+  /** Explicit, reviewed 0.457.0 Deno fixture supplement. Ordinary verification still requires R success. */
+  consumerRepair?: import("../consumer_repair/verify.ts").ConsumerRepairOptions;
   fetch?: typeof globalThis.fetch;
 }
 
@@ -93,10 +95,8 @@ export async function verifyPublication(plan: PublicationPlan, options: Publicat
   );
   const { json, download, text } = publicReader(options.fetch);
 
-  const { tagObject, tag, source, releaseRun, release, jobs, integrationPr } = await verifyGithub(
-    options,
-    json,
-  );
+  const { tagObject, tag, source, releaseRun, release, jobs, integrationPr, consumerRepair } =
+    await verifyGithub(options, json);
 
   const npmTarget = async (item: PublicationTarget) => {
     const metadataUrl = `https://registry.npmjs.org/${encodeURIComponent(item.name)}/${item.version}`;
@@ -251,6 +251,7 @@ export async function verifyPublication(plan: PublicationPlan, options: Publicat
       sourceState: source.state,
       integrationPr,
       jobs,
+      ...(consumerRepair ? { consumerRepair } : {}),
     },
     npm,
     crates,

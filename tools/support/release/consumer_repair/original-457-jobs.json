@@ -1,0 +1,506 @@
+[
+  {
+    "id": 117254405703,
+    "name": "Authorize release candidate",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254406368,
+    "name": "Build Editor Extensions",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254406402,
+    "name": "Release crates.io handoff crates",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "skipped"
+  },
+  {
+    "id": 117254406486,
+    "name": "Build CLI - aarch64-apple-darwin",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254406525,
+    "name": "Build Native - x86_64-pc-windows-msvc",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254406534,
+    "name": "candidate-preflight / Verify release safety contract",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254406592,
+    "name": "Build @vizejs/wasm package",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254406624,
+    "name": "Build CLI - x86_64-apple-darwin",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254406677,
+    "name": "Build Native - x86_64-apple-darwin",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254406934,
+    "name": "Build CLI - aarch64-pc-windows-msvc",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407023,
+    "name": "Build CLI - x86_64-pc-windows-msvc",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407055,
+    "name": "Build CLI - x86_64-unknown-linux-gnu",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407057,
+    "name": "Build Native - aarch64-pc-windows-msvc",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407108,
+    "name": "Build CLI - aarch64-unknown-linux-gnu",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407160,
+    "name": "Build Native - x86_64-unknown-linux-musl",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407187,
+    "name": "Build Native - x86_64-unknown-linux-gnu",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407250,
+    "name": "Build Native - aarch64-unknown-linux-gnu",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407328,
+    "name": "Build Native - aarch64-apple-darwin",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407388,
+    "name": "Build Native - aarch64-unknown-linux-musl",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407456,
+    "name": "Build CLI - x86_64-unknown-linux-musl",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407472,
+    "name": "Build CLI - aarch64-unknown-linux-musl",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254407703,
+    "name": "Smoke release npm package installs",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254408385,
+    "name": "Release candidate ready",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254408816,
+    "name": "release-preflight / Wait for validated PR and tag promotion",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409233,
+    "name": "Release @vizejs/marquette to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409317,
+    "name": "Release @vizejs/native to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409346,
+    "name": "Release @vizejs/composable to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409501,
+    "name": "Release @vizejs/fresco-native to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409509,
+    "name": "Release @vizejs/wasm to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409515,
+    "name": "Release @vizejs/ui to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409639,
+    "name": "Release VS Code extension",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409758,
+    "name": "Release crates to crates.io",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409821,
+    "name": "Release @vizejs/nuxt-lint-config to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409846,
+    "name": "Release @vizejs/unplugin to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409892,
+    "name": "Release @vizejs/rspack-plugin to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254409920,
+    "name": "Release oxlint-plugin-vize to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254410117,
+    "name": "Release vize CLI to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254410365,
+    "name": "Release @vizejs/musea-nuxt to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254410374,
+    "name": "Release @vizejs/plugin-sdk to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254410514,
+    "name": "Release @vizejs/musea-mcp-server to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254410522,
+    "name": "Release @vizejs/vite-plugin-musea to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254410590,
+    "name": "Release @vizejs/fresco to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254410858,
+    "name": "Release @vizejs/vite-plugin to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254410994,
+    "name": "Release @vizejs/nuxt to npm",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254411343,
+    "name": "Create GitHub Release",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254411464,
+    "name": "Release @vizejs/vize to JSR / Read the JSR channel",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254411511,
+    "name": "Release @vizejs/vize to JSR / JSR consumer (deno, ubuntu-24.04)",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "failure"
+  },
+  {
+    "id": 117254411980,
+    "name": "Release @vizejs/vize to JSR / Publish the JSR package",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254412304,
+    "name": "Release @vizejs/vize to JSR / JSR consumer (node, ubuntu-24.04)",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254412578,
+    "name": "Release @vizejs/vize to JSR / JSR consumer (node, ubuntu-24.04)",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254412693,
+    "name": "Release @vizejs/vize to JSR / JSR consumer (node, blacksmith-32vcpu-windows-2025)",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254412953,
+    "name": "Release @vizejs/vize to JSR / JSR consumer (node, blacksmith-12vcpu-macos-15)",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254413273,
+    "name": "Release @vizejs/vize to JSR / JSR consumer (bun, ubuntu-24.04)",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254434374,
+    "name": "Plan release platforms",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254435419,
+    "name": "candidate-preflight / Validate crates.io publish plan",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 117254448006,
+    "name": "Build release npm packages",
+    "run_id": 38805261385,
+    "run_attempt": 4,
+    "head_sha": "03882089eff75664abe99ba71868e33739496b01",
+    "status": "completed",
+    "conclusion": "success"
+  }
+]

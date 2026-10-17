@@ -1,4 +1,6 @@
 import type { PublicationOptions } from "./registry.ts";
+import { repair457, verifyOriginalJobs } from "../consumer_repair/contract.ts";
+import { verifyConsumerRepair } from "../consumer_repair/verify.ts";
 
 type ObjectValue = Record<string, unknown>;
 const repository = "ubugeeei-prod/vize";
@@ -96,6 +98,9 @@ export async function verifyGithub(
     "positive source integration marker required",
   );
   const releaseRun = await json(`${github}/actions/runs/${run}`);
+  const consumerRepair = options.consumerRepair
+    ? await verifyConsumerRepair(options, options.consumerRepair, releaseRun, json)
+    : undefined;
   requireValue(
     String(releaseRun.id) === run &&
       object(releaseRun.repository).full_name === repository &&
@@ -107,7 +112,7 @@ export async function verifyGithub(
         `Pinned Release ${options.tag} PR #${sourcePr} @ ${options.head}` &&
       releaseRun.path === ".github/workflows/release.yml" &&
       releaseRun.status === "completed" &&
-      releaseRun.conclusion === "success",
+      releaseRun.conclusion === (consumerRepair ? "failure" : "success"),
     "terminal own-repository exact-H/source-PR Pinned Release run required",
   );
   requireValue(
@@ -146,7 +151,9 @@ export async function verifyGithub(
           job.run_attempt <= Number(releaseRun.run_attempt) &&
           job.head_sha === options.head &&
           job.status === "completed" &&
-          (job.conclusion === "success" || job.conclusion === "skipped"),
+          (job.conclusion === "success" ||
+            job.conclusion === "skipped" ||
+            (consumerRepair && job.id === repair457.failedJob && job.conclusion === "failure")),
         "terminal exact-H/R Release job required",
       );
       ids.add(job.id);
@@ -164,6 +171,15 @@ export async function verifyGithub(
     if (jobs.length === expected) break;
   }
   requireValue(jobs.length === expected, "complete paginated Release jobs required");
+  if (consumerRepair)
+    verifyOriginalJobs(
+      jobs.map((job) => ({
+        ...job,
+        run_id: job.run,
+        run_attempt: job.attempt,
+        head_sha: job.head,
+      })),
+    );
   const finalRun = await json(`${github}/actions/runs/${run}`);
   requireValue(
     [
@@ -195,5 +211,5 @@ export async function verifyGithub(
     "published GitHub Release identity mismatch",
   );
 
-  return { tagObject, tag, source, releaseRun, release, jobs, integrationPr };
+  return { tagObject, tag, source, releaseRun, release, jobs, integrationPr, consumerRepair };
 }
