@@ -7,25 +7,17 @@ import os from "node:os";
 import path from "node:path";
 import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
+import {
+  readPackedProducerRetirement,
+  verifyHistoricalProducerFiles,
+  type Extension,
+  type SourceOnlyRust,
+} from "./native-packed-config-source.ts";
+export {
+  readPackedProducerRetirement,
+  verifyHistoricalProducerFiles,
+} from "./native-packed-config-source.ts";
 
-interface Extension {
-  schema: string;
-  beforeSha256: string;
-  afterSha256: string;
-  hunks: { before: string; after: string }[];
-  producer: {
-    head: string;
-    files: Record<string, string | null>;
-    absentFiles: string[];
-    retiredRust: { path: string; sha256: string };
-  };
-}
-interface Retirement {
-  schema: string;
-  source: string;
-  retiredAt: string;
-  files: Record<string, string>;
-}
 const witness = JSON.parse(
   fs.readFileSync(
     new URL(
@@ -36,61 +28,6 @@ const witness = JSON.parse(
   ),
 ) as Extension;
 const digest = (source: string) => createHash("sha256").update(source).digest("hex");
-
-export function readPackedProducerRetirement(
-  repository: string,
-  producer: Extension["producer"],
-): Retirement {
-  const bytes = fs.readFileSync(path.join(repository, producer.retiredRust.path));
-  assert.equal(createHash("sha256").update(bytes).digest("hex"), producer.retiredRust.sha256);
-  const retirement = JSON.parse(bytes.toString()) as Retirement;
-  assert.equal(retirement.schema, "vize.packed-config-retired-rust.v1");
-  return retirement;
-}
-
-/** Historical custody survives later product changes; current equality belongs to the selected preflight. */
-export function verifyHistoricalProducerFiles(
-  repository: string,
-  producer: Extension["producer"],
-): void {
-  const git = (...args: string[]) => execFileSync("git", args, { cwd: repository });
-  const retirement = readPackedProducerRetirement(repository, producer);
-  const absentFiles = [...producer.absentFiles, ...Object.keys(retirement.files)];
-  assert.equal(new Set(absentFiles).size, absentFiles.length);
-  assert.deepEqual(
-    [...absentFiles].sort(),
-    Object.keys(producer.files)
-      .filter((file) => producer.files[file] === null)
-      .sort(),
-  );
-  git("merge-base", "--is-ancestor", retirement.source, "HEAD");
-  git("merge-base", "--is-ancestor", retirement.retiredAt, producer.head);
-  for (const [file, expected] of Object.entries(retirement.files)) {
-    assert.equal(
-      createHash("sha256")
-        .update(git("show", retirement.source + ":" + file))
-        .digest("hex"),
-      expected,
-      file,
-    );
-    assert.equal(git("ls-tree", "--name-only", retirement.retiredAt, "--", file).length, 0, file);
-  }
-  for (const [file, expected] of Object.entries(producer.files)) {
-    if (absentFiles.includes(file)) {
-      assert.equal(expected, null, file);
-      assert.equal(git("ls-tree", "--name-only", producer.head, "--", file).length, 0, file);
-    } else {
-      assert.match(expected ?? "", /^[0-9a-f]{64}$/u);
-      assert.equal(
-        createHash("sha256")
-          .update(git("show", producer.head + ":" + file))
-          .digest("hex"),
-        expected,
-        file,
-      );
-    }
-  }
-}
 
 export function withoutPackedConfigExtension(source: string): string {
   assert.equal(witness.schema, "vize.native-smoke-packed-config-extension.v1");
@@ -125,7 +62,19 @@ export function verifyPackedProducerPreflight(script: string): void {
     assert.ok(match);
     const sourceFiles = runInNewContext(match[1]) as string[];
     const producerFiles = Object.keys(witness.producer.files);
-    assert.equal(producerFiles.length, 343);
+    assert.equal(producerFiles.length, 348);
+    const actualRepository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+    const originalRoles = JSON.parse(
+      fs.readFileSync(path.join(actualRepository, witness.producer.sourceOnlyRust.path), "utf8"),
+    ) as SourceOnlyRust;
+    const sourceOnlyFiles = Object.keys(originalRoles.files);
+    const sourceOnlyAbsent = sourceOnlyFiles.filter(
+      (file) => originalRoles.files[file].current === null,
+    );
+    const historicalNames = witness.producer.historicalRenames.map((row) => row.from);
+    const finiteRust = [...new Set([...producerFiles, ...sourceOnlyFiles])].filter(
+      (file) => file.endsWith(".rs") && !historicalNames.includes(file),
+    );
     const originalRetirement = readPackedProducerRetirement(
       path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.."),
       witness.producer,
@@ -133,8 +82,8 @@ export function verifyPackedProducerPreflight(script: string): void {
     const retiredFiles = Object.keys(originalRetirement.files);
     const absentFiles = [...witness.producer.absentFiles, ...retiredFiles];
     const fixtureBytes = "reviewed synthetic fixture bytes\n";
-    for (const name of [...sourceFiles, ...producerFiles]) {
-      if (absentFiles.includes(name)) continue;
+    for (const name of [...sourceFiles, ...producerFiles, ...sourceOnlyFiles]) {
+      if (absentFiles.includes(name) || sourceOnlyAbsent.includes(name)) continue;
       const file = path.join(repository, name);
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, fixtureBytes);
@@ -163,7 +112,15 @@ export function verifyPackedProducerPreflight(script: string): void {
       git("add", "--all");
       git("commit", "--quiet", "-m", "test: retain exact guard control inputs");
     };
+    const helper = "tests/tooling/support/native-packed-config-source.ts";
+    fs.copyFileSync(path.join(actualRepository, helper), path.join(repository, helper));
     git("init", "--quiet", "--initial-branch=main");
+    for (const file of finiteRust) {
+      const target = path.join(repository, file);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      if (originalRoles.files[file]?.prior === null) fs.rmSync(target, { force: true });
+      else fs.writeFileSync(target, "prior finite Rust source bytes\n");
+    }
     for (const file of retiredFiles) {
       const target = path.join(repository, file);
       fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -171,11 +128,17 @@ export function verifyPackedProducerPreflight(script: string): void {
     }
     commit();
     const retirementSource = git("rev-parse", "HEAD");
-    for (const file of retiredFiles) fs.unlinkSync(path.join(repository, file));
+    for (const file of finiteRust) {
+      const target = path.join(repository, file);
+      if (absentFiles.includes(file) || sourceOnlyAbsent.includes(file))
+        fs.rmSync(target, { force: true });
+      else fs.writeFileSync(target, fixtureBytes);
+    }
     commit();
     const producer = git("rev-parse", "HEAD");
     const fixtureWitness = structuredClone(witness);
     fixtureWitness.producer.head = producer;
+    fixtureWitness.producer.composedBase = retirementSource;
     fixtureWitness.producer.files = Object.fromEntries(
       producerFiles.map((file) => [
         file,
@@ -192,11 +155,47 @@ export function verifyPackedProducerPreflight(script: string): void {
       retiredAt: producer,
       files: Object.fromEntries(retiredFiles.map((file) => [file, digest(fixtureBytes)])),
     };
+    const identity = (ref: string, file: string) => {
+      const entry = git("ls-tree", "-z", ref, "--", file);
+      if (!entry) return null;
+      const match = /^(\d+) blob ([0-9a-f]+)\t[^\0]+\0?$/u.exec(entry);
+      assert.ok(match);
+      const bytes = execFileSync("git", ["cat-file", "blob", match[2]], { cwd: repository });
+      return {
+        mode: match[1],
+        blob: match[2],
+        sha256: createHash("sha256").update(bytes).digest("hex"),
+      };
+    };
+    const fixtureRoles: SourceOnlyRust = {
+      ...originalRoles,
+      producer,
+      priorSource: retirementSource,
+      main: producer,
+      files: Object.fromEntries(
+        sourceOnlyFiles.map((file) => [
+          file,
+          {
+            compilerBound: false,
+            prior: identity(retirementSource, file),
+            current: identity(producer, file),
+            main: identity(producer, file),
+            retiredAt: sourceOnlyAbsent.includes(file) ? producer : null,
+          },
+        ]),
+      ),
+    };
     const saveWitness = () => {
       const retirementBytes = JSON.stringify(fixtureRetirement);
       const retirementPath = path.join(repository, fixtureWitness.producer.retiredRust.path);
       fs.writeFileSync(retirementPath, retirementBytes);
       fixtureWitness.producer.retiredRust.sha256 = digest(retirementBytes);
+      const roleBytes = JSON.stringify(fixtureRoles);
+      fs.writeFileSync(
+        path.join(repository, fixtureWitness.producer.sourceOnlyRust.path),
+        roleBytes,
+      );
+      fixtureWitness.producer.sourceOnlyRust.sha256 = digest(roleBytes);
       fs.writeFileSync(witnessPath, JSON.stringify(fixtureWitness));
       commit();
     };
@@ -221,15 +220,60 @@ export function verifyPackedProducerPreflight(script: string): void {
       });
       assert.equal(child.error, undefined);
       assert.equal(child.signal, null);
-      const receipt = JSON.parse(
-        fs.readFileSync(path.join(directory, "evidence/source.json"), "utf8"),
-      );
+      const receiptPath = path.join(directory, "evidence/source.json");
+      assert.ok(fs.existsSync(receiptPath), child.stdout + child.stderr);
+      const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
       return { ...child, receipt };
     };
     const admitted = execute();
     assert.equal(admitted.status, 0, admitted.stderr);
     assert.deepEqual(admitted.receipt.producerAbsentFiles, absentFiles);
     assert.deepEqual(admitted.receipt.producerFiles, fixtureWitness.producer.files);
+    assert.deepEqual(admitted.receipt.sourceOnlyRust, {
+      compilerBound: false,
+      files: Object.fromEntries(
+        sourceOnlyFiles.map((file) => [file, fixtureRoles.files[file].current?.sha256 ?? null]),
+      ),
+    });
+    assert.deepEqual(
+      Object.keys(admitted.receipt.compilerFiles).sort(),
+      producerFiles.filter((file) => !sourceOnlyFiles.includes(file)).sort(),
+    );
+    for (const file of ["crates/unreviewed-native.rs", "tools/unreviewed-tool.rs"]) {
+      const target = path.join(repository, file);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, "unreviewed Rust source\n");
+      commit();
+      assert.notEqual(execute().status, 0, "all Rust roles fail closed: " + file);
+      fs.unlinkSync(target);
+      commit();
+      assert.equal(execute().status, 0);
+    }
+    const forgedNative = "crates/vize_canon/src/batch/virtual_project/materialize.rs";
+    fixtureRoles.files[forgedNative] = {
+      compilerBound: false,
+      prior: identity(retirementSource, forgedNative),
+      current: identity(producer, forgedNative),
+      main: identity(producer, forgedNative),
+      retiredAt: null,
+    };
+    saveWitness();
+    assert.notEqual(execute().status, 0, "rehashed native-as-false compiler role must be rejected");
+    delete fixtureRoles.files[forgedNative];
+    saveWitness();
+    assert.equal(execute().status, 0);
+    const sourceOnly = sourceOnlyFiles.find((file) => fixtureRoles.files[file].current !== null);
+    assert.ok(sourceOnly);
+    Reflect.set(fixtureRoles.files[sourceOnly], "compilerBound", true);
+    saveWitness();
+    assert.notEqual(
+      execute().status,
+      0,
+      "rehashed source-only metadata cannot claim compiler binding",
+    );
+    fixtureRoles.files[sourceOnly].compilerBound = false;
+    saveWitness();
+    assert.equal(execute().status, 0);
     const retired = retiredFiles[0];
     const changedPriorHash = digest("changed historical retirement source\n");
     fixtureRetirement.files[retired] = changedPriorHash;
@@ -258,6 +302,7 @@ export function verifyPackedProducerPreflight(script: string): void {
     assert.notEqual(nonancestor.status, 0, "identical bytes cannot replace source ancestry");
     assert.match(nonancestor.stderr, /merge-base --is-ancestor/u);
     fixtureWitness.producer.head = producer;
+    fixtureWitness.producer.composedBase = retirementSource;
     saveWitness();
     const moved =
       "crates/vize_maestro/src/server/state/project_contexts/config_reload_recovery_tests.rs";

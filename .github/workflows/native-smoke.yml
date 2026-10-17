@@ -200,9 +200,11 @@ jobs:
           import { execFileSync } from 'node:child_process';
           import fs from 'node:fs';
           import path from 'node:path';
+          import { verifySourceOnlyRust } from './tests/tooling/support/native-packed-config-source.ts';
           const source = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
           const files = [
             '.github/workflows/native-smoke.yml', 'rust-toolchain.toml',
+            'tests/_fixtures/differential/vite-native-image-identity/packed-config-source-only-rust.json',
             'tools/support/compat/npm/smoke-release-config-fixture.ts',
             'tools/support/compat/npm/smoke-release-config-workspace.ts',
             'tools/support/compat/npm/smoke-release-config-lsp.ts',
@@ -213,6 +215,7 @@ jobs:
             'tests/tooling/release/release-smoke-config-evidence.test.ts',
             'tests/tooling/native-packed-config-workflow.test.ts',
             'tests/tooling/support/native-packed-config-extension.ts',
+            'tests/tooling/support/native-packed-config-source.ts',
             'tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json',
             'tests/_fixtures/differential/vite-native-image-identity/packed-config-retired-rust.json',
             'editors/vscode/src/extension-setup.ts', 'editors/vscode/src/server-discovery.ts',
@@ -241,6 +244,8 @@ jobs:
           ];
           const { producer: producerWitness } = JSON.parse(fs.readFileSync('tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json', 'utf8'));
           const producerFiles = Object.keys(producerWitness.files);
+          const sourceOnlyRoles = JSON.parse(fs.readFileSync(producerWitness.sourceOnlyRust.path, 'utf8'));
+          const sourceOnlyFiles = Object.keys(sourceOnlyRoles.files);
           const retirementBytes = fs.readFileSync(producerWitness.retiredRust.path);
           assert.equal(createHash('sha256').update(retirementBytes).digest('hex'), producerWitness.retiredRust.sha256);
           const retirement = JSON.parse(retirementBytes);
@@ -255,7 +260,7 @@ jobs:
             producer: process.env.PACKED_CONFIG_PRODUCER,
             reviewedProducerFiles: producerWitness.files, producerAbsentFiles,
             run: process.env.GITHUB_RUN_ID, attempt: process.env.GITHUB_RUN_ATTEMPT,
-            files: Object.fromEntries([...files, ...producerFiles].map(file =>
+            files: Object.fromEntries([...files, ...producerFiles, ...sourceOnlyFiles].map(file =>
               [file, fs.existsSync(file) ? createHash('sha256').update(fs.readFileSync(file)).digest('hex') : null])),
           };
           fs.writeFileSync(path.join(process.env.PACKED_CONFIG_OUTPUT, 'source.json'), JSON.stringify(receipt, null, 2) + '\n');
@@ -291,6 +296,10 @@ jobs:
             assert.equal(receipt.producerFiles[file], producerWitness.files[file], file);
             assert.equal(receipt.files[file], receipt.producerFiles[file], file);
           }
+          const roleReceipt = verifySourceOnlyRust(process.cwd(), producerWitness, source);
+          receipt.compilerFiles = roleReceipt.compilerFiles;
+          receipt.sourceOnlyRust = { compilerBound: false, files: roleReceipt.sourceOnlyFiles };
+          fs.writeFileSync(path.join(process.env.PACKED_CONFIG_OUTPUT, 'source.json'), JSON.stringify(receipt, null, 2) + '\n');
           execFileSync('git', ['diff', '--exit-code', '--name-status', receipt.producer, source, '--', ...producerFiles]);
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `toolchain=${toolchain}\n`);
           JS
@@ -442,5 +451,5 @@ jobs:
       PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}
       PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}
       # Updated only when the reviewed producer is deliberately frozen again.
-      PACKED_CONFIG_PRODUCER: e0bc8fb50bdc28915167a3fbdceea86f00b65030
+      PACKED_CONFIG_PRODUCER: 354c1b4a054c0a727d839d08dc134e72a21819c4
     steps: *fresh-install-steps

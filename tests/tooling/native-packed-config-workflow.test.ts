@@ -96,7 +96,7 @@ void test("the actual manager version audit uses a manifest-free cwd and preserv
 });
 
 void test("the historical composed producer authenticates every whole source and moved test module", () => {
-  const producer = "e0bc8fb50bdc28915167a3fbdceea86f00b65030";
+  const producer = "354c1b4a054c0a727d839d08dc134e72a21819c4";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -109,7 +109,7 @@ void test("the historical composed producer authenticates every whole source and
   const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
   const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
   const files = Object.keys(witness.producer.files);
-  assert.equal(files.length, 343);
+  assert.equal(files.length, 348);
   assert.equal(new Set(files).size, files.length);
   const changedRust = git(
     "diff",
@@ -122,12 +122,50 @@ void test("the historical composed producer authenticates every whole source and
     .trim()
     .split("\n")
     .filter((file) => file.endsWith(".rs"));
-  assert.equal(changedRust.length, 337);
+  assert.equal(changedRust.length, 353);
+  const roleBytes = fs.readFileSync(path.join(root, witness.producer.sourceOnlyRust.path));
+  assert.equal(digest(roleBytes), witness.producer.sourceOnlyRust.sha256);
+  const roles = JSON.parse(roleBytes.toString());
+  assert.equal(roles.producer, producer);
+  assert.equal(roles.priorSource, "e0bc8fb50bdc28915167a3fbdceea86f00b65030");
+  assert.equal(roles.main, "a09d0e96214610bee58a5b31429eae51d07fb0df");
+  const sourceOnly = Object.keys(roles.files);
+  assert.deepEqual(sourceOnly, [
+    "tools/commands/ci/github/release-preflight.rs",
+    "tools/commands/ci/source-file-lengths.rs",
+    "tools/commands/fixtures/lint-divergence-report.rs",
+    "tools/commands/release/pr.rs",
+    "tools/support/lint_divergence_surface.rs",
+    "tools/support/release/pr_ci.rs",
+    "tools/support/release/pr_pin.rs",
+    "tools/support/release/pr_pin_metadata.rs",
+    "tools/support/release/pr_pin_retire.rs",
+    "tools/support/release/pr_pin_retire_archive.rs",
+    "tools/support/release/pr_pin_retire_evidence.rs",
+    "tools/support/release/pr_pin_retire_guard.rs",
+    "tools/support/release/pr_pin_retire_ledger.rs",
+    "tools/support/release/pr_pin_retire_lifecycle_tests.rs",
+    "tools/support/release/pr_pin_retire_prequalification_archive_tests.rs",
+    "tools/support/release/pr_pin_retire_source.rs",
+    "tools/support/release/pr_pin_runs.rs",
+    "tools/support/release/pr_pin_target_tests.rs",
+    "tools/support/release/pr_pin_tests.rs",
+    "tools/support/release/pr_watch.rs",
+    "tools/support/release/preflight_pinned_evidence_tests.rs",
+  ]);
+  for (const row of Object.values(roles.files) as { compilerBound: boolean }[])
+    assert.equal(row.compilerBound, false);
   const historicalAbsences = witness.producer.historicalRenames.map(
     (rename: { from: string }) => rename.from,
   );
   assert.deepEqual(
-    files.filter((file) => file.endsWith(".rs") && !historicalAbsences.includes(file)).sort(),
+    [
+      ...files.filter(
+        (file) =>
+          file.endsWith(".rs") && !historicalAbsences.includes(file) && !sourceOnly.includes(file),
+      ),
+      ...sourceOnly,
+    ].sort(),
     changedRust.sort(),
     "complete Rust composition, including additions and deletion, is authenticated",
   );
@@ -173,9 +211,11 @@ void test("the historical composed producer authenticates every whole source and
   assert.equal(Object.keys(retirement.files).length, 98);
   assert.deepEqual(
     removedRust.sort((left, right) => left.localeCompare(right)),
-    [deletion.from, ...Object.keys(retirement.files)].sort((left: string, right: string) =>
-      left.localeCompare(right),
-    ),
+    [
+      deletion.from,
+      ...Object.keys(retirement.files),
+      ...sourceOnly.filter((file) => roles.files[file].current === null),
+    ].sort((left: string, right: string) => left.localeCompare(right)),
   );
   assert.equal(Object.values(witness.producer.files).filter((value) => value === null).length, 101);
   const qualification = witness.producer.previousQualification;
@@ -201,15 +241,58 @@ void test("the historical composed producer authenticates every whole source and
     diagnostic.workflowSha256,
   );
   const previousDiagnostic = JSON.parse(previousDiagnosticBytes.toString());
-  assert.deepEqual(Object.keys(previousDiagnostic.producer.files), files);
+  assert.equal(Object.keys(previousDiagnostic.producer.files).length, 343);
+  assert.deepEqual(
+    files.filter(
+      (file) =>
+        ![
+          "crates/vize/tests/check_flow_depth_isolation_cli.rs",
+          "crates/vize_canon/src/virtual_ts/scope/vif_guard.rs",
+          "crates/vize_canon/src/virtual_ts/scope/vif_guard_chain.rs",
+          "crates/vize_patina/src/linter/tests/no_mutating_props.rs",
+          "crates/vize_patina/src/rules/vue/v_slot_style/tests.rs",
+        ].includes(file),
+    ),
+    Object.keys(previousDiagnostic.producer.files),
+  );
   const changedDiagnosticInputs = files.filter(
     (file) => previousDiagnostic.producer.files[file] !== witness.producer.files[file],
   );
   assert.deepEqual(changedDiagnosticInputs, [
+    "crates/vize/tests/check_flow_depth_isolation_cli.rs",
     "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_inputs.rs",
     "crates/vize_canon/src/corsa_bridge/preparation_trace.rs",
     "crates/vize_canon/src/package_route/stamp.rs",
+    "crates/vize_canon/src/virtual_ts/scope/vif_guard.rs",
+    "crates/vize_canon/src/virtual_ts/scope/vif_guard_chain.rs",
+    "crates/vize_maestro/src/server/state/project_contexts/freshness.rs",
+    "crates/vize_maestro/src/server/state/project_contexts/freshness_tests.rs",
+    "crates/vize_patina/src/linter/tests/no_mutating_props.rs",
+    "crates/vize_patina/src/rules/vue/v_slot_style/tests.rs",
+    "tools/commands/release/pr.rs",
+    "tools/support/release/pr_pin.rs",
   ]);
+  const latest = roles.latestDiagnostic;
+  assert.equal(latest.source, "3bfb3885f3328133968731873d2414773d00ee4a");
+  assert.equal(latest.producer, roles.priorSource);
+  const latestBytes = git("show", latest.source + ":" + witnessPath);
+  assert.equal(digest(latestBytes), latest.witnessSha256);
+  assert.equal(
+    digest(git("show", latest.source + ":.github/workflows/native-smoke.yml")),
+    latest.workflowSha256,
+  );
+  const latestWitness = JSON.parse(latestBytes.toString());
+  assert.equal(Object.keys(latestWitness.producer.files).length, 343);
+  for (const file of Object.keys(latestWitness.producer.files))
+    assert.ok(files.includes(file), file);
+  for (const field of [
+    "previousFreeze",
+    "priorAdmission",
+    "retiredRust",
+    "previousQualification",
+    "previousDiagnostic",
+  ])
+    assert.deepEqual(witness.producer[field], latestWitness.producer[field]);
   verifyHistoricalProducerFiles(root, witness.producer);
   const original = witness.producer.previousFreeze;
   assert.equal(original.source, "f7ee25f5db27bd210db07f514837b9f4c1b65054");
