@@ -53,8 +53,6 @@ type FlattenedChain = (Map<std::string::String, Value>, DeclarationDirs);
 /// The state of one flattening operation.
 #[derive(Default)]
 struct ChainLoad {
-    /// Editor replacements must reject unresolved authored dependencies.
-    require_extends: bool,
     /// The configs between the entry point and the one being flattened. Only
     /// these can close a cycle.
     active: FxHashSet<PathBuf>,
@@ -114,23 +112,6 @@ impl VirtualProject {
         &self,
         tsconfig_path: Option<&Path>,
     ) -> CorsaResult<FlattenedCompilerOptions> {
-        self.load_compiler_options_flattened_with_policy(tsconfig_path, false)
-    }
-
-    pub(in super::super) fn checked_compiler_config_paths(
-        &self,
-        tsconfig_path: &Path,
-    ) -> CorsaResult<Vec<PathBuf>> {
-        Ok(self
-            .load_compiler_options_flattened_with_policy(Some(tsconfig_path), true)?
-            .input_paths)
-    }
-
-    fn load_compiler_options_flattened_with_policy(
-        &self,
-        tsconfig_path: Option<&Path>,
-        require_extends: bool,
-    ) -> CorsaResult<FlattenedCompilerOptions> {
         let Some(tsconfig_path) = tsconfig_path else {
             return Ok(FlattenedCompilerOptions {
                 options: Map::new(),
@@ -138,10 +119,7 @@ impl VirtualProject {
                 input_paths: Vec::new(),
             });
         };
-        let mut load = ChainLoad {
-            require_extends,
-            ..Default::default()
-        };
+        let mut load = ChainLoad::default();
         let (mut options, dirs) =
             self.load_compiler_options_inner(tsconfig_path, &mut load, PathOptions::Rebase)?;
 
@@ -178,6 +156,15 @@ impl VirtualProject {
         })
     }
 
+    pub(in super::super) fn checked_compiler_config_paths(
+        &self,
+        tsconfig_path: &Path,
+    ) -> CorsaResult<Vec<PathBuf>> {
+        Ok(self
+            .load_compiler_options_flattened(Some(tsconfig_path))?
+            .input_paths)
+    }
+
     /// `load.active` is the *active* `extends` path, not a set of everything
     /// already loaded: each config is removed again once its own chain is
     /// flattened. Only a config currently being recursed into is a cycle. A
@@ -192,9 +179,6 @@ impl VirtualProject {
         load: &mut ChainLoad,
         path_options: PathOptions,
     ) -> CorsaResult<FlattenedChain> {
-        if !tsconfig_path.exists() {
-            return Ok((Map::new(), DeclarationDirs::default()));
-        }
         let normalized = normalize_path_lexically(tsconfig_path);
         if let Some(cached) = load.completed.get(&normalized) {
             return Ok(cached.clone());
@@ -222,7 +206,13 @@ impl VirtualProject {
         load: &mut ChainLoad,
         path_options: PathOptions,
     ) -> CorsaResult<FlattenedChain> {
-        let content = profile!("canon.tsconfig.read", std::fs::read_to_string(normalized))?;
+        let content = profile!("canon.tsconfig.read", std::fs::read_to_string(normalized))
+            .map_err(|error| {
+                crate::batch::error::CorsaError::Configuration(vize_carton::cstr!(
+                    "cannot read tsconfig {}: {error}",
+                    normalized.display()
+                ))
+            })?;
         let config = profile!("canon.tsconfig.parse", parse_jsonc_value(&content))?;
         let mut compiler_options = config
             .get("compilerOptions")
@@ -259,6 +249,9 @@ impl VirtualProject {
         // `extends` may be a single specifier or an array; array entries are
         // applied in order, with later entries overriding earlier ones, and
         // the extending file overriding them all.
+        // Every authored dependency must resolve before flattening erases the
+        // chain. Otherwise the generated native config silently loses the
+        // missing-file diagnostic that the original tsconfig would report.
         let mut inherited = Map::new();
         let mut inherited_dirs = DeclarationDirs::default();
         match config.get("extends") {
@@ -268,7 +261,7 @@ impl VirtualProject {
                         self.load_compiler_options_inner(&parent_path, load, path_options)?;
                     inherited = parent;
                     inherited_dirs = parent_dirs;
-                } else if load.require_extends {
+                } else {
                     return Err(unresolved_extends(normalized, extends));
                 }
             }
@@ -279,7 +272,7 @@ impl VirtualProject {
                             self.load_compiler_options_inner(&parent_path, load, path_options)?;
                         inherited.extend(parent);
                         inherited_dirs.absorb_overriding(parent_dirs);
-                    } else if load.require_extends {
+                    } else {
                         return Err(unresolved_extends(normalized, extends));
                     }
                 }
