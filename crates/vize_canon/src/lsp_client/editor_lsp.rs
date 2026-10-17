@@ -153,6 +153,12 @@ impl EditorLspSession {
                     })?;
             }
         }
+        if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+            // Diagnostic-only custody: preserve both complete generated views.
+            tracing::info!(document_uri,
+                previous = ?self.documents.get(document_uri), next = ?text,
+                "completion diagnostic: mirroring native document");
+        }
         self.documents.insert(document_uri.into(), text.into());
         self.dirty_documents.insert(document_uri.into());
         self.advance_document_generation();
