@@ -146,77 +146,99 @@ export async function importConfigModuleWithDependencies(
   evaluate,
   observeDependencies,
 ) {
-  const configURL = pathToFileURL(configPath);
-  const require = createRequire(configURL);
-  const searchPaths = require.resolve.paths("vite") ?? [];
-  const candidate = searchPaths
-    .filter((directory) => !globalPaths.includes(directory))
-    .map((directory) => join(directory, "vite"))
-    .find((directory) => lstatSync(directory, { throwIfNoEntry: false }) !== undefined);
-  // The public CLI can retain its explicit TypeScript transform fallback. Native
-  // editor snapshots always request the complete real import graph instead.
-  if (typeof registerModuleHooks !== "function") {
-    if (evaluate) {
-      throw new Error(
-        "Tracking imports while evaluating a Vite config requires Node.js 22.15 or newer. Upgrade Node.js; installed Vite alone cannot track runtime imports.",
-      );
-    }
-    if (candidate === undefined && !withoutVite) {
-      throw new Error(
-        "Loading a Vite config without project Vite requires Node.js 22.15 or newer to track imported configuration files. Upgrade Node.js or install Vite in the project.",
-      );
-    }
-  }
-  if (candidate === undefined) {
-    return captureConfigEvaluation(
-      async () => ({
-        namespace: await (withoutVite ? withoutVite(configURL) : import(configURL.href)),
-      }),
-      configPath,
-      registerModuleHooks,
-      evaluate,
-      undefined,
-      observeDependencies,
-    );
-  }
-  const viteDirectory = realpathSync(candidate);
-  const viteEntry = realpathSync(require.resolve("vite"));
-  const entryPath = relative(viteDirectory, viteEntry);
-  if (entryPath === ".." || entryPath.startsWith(`..${sep}`) || isAbsolute(entryPath)) {
-    throw new Error(`Resolved loader escapes selected project Vite: ${candidate} -> ${viteEntry}`);
-  }
-  const { loadConfigFromFile } = await import(pathToFileURL(viteEntry).href);
-  const temporary = await realpath(await mkdtemp(join(tmpdir(), "vize-config-module-")));
+  const watchInputs = new Set([configPath]);
+  let complete = false;
+  const observe = (paths, observedComplete) => {
+    for (const path of paths) watchInputs.add(path);
+    complete = observedComplete;
+  };
   try {
-    const adapter = join(temporary, "config.mjs");
-    await writeFile(
-      adapter,
-      `import * as original from ${JSON.stringify(configModuleImportPath(configURL))};\nexport default { namespace: original };\n`,
-      { flag: "wx", mode: 0o600 },
-    );
-    return await captureConfigEvaluation(
-      async () => {
-        const loaded = await loadConfigFromFile(
-          { mode: "development", command: "serve" },
-          adapter,
-          moduleConfigDirectory(configPath),
-          "silent",
-          undefined,
-          "bundle",
+    const configURL = pathToFileURL(configPath);
+    const require = createRequire(configURL);
+    const searchPaths = require.resolve.paths("vite") ?? [];
+    let candidate;
+    for (const directory of searchPaths.filter((path) => !globalPaths.includes(path))) {
+      const requested = join(directory, "vite");
+      watchInputs.add(requested);
+      if (lstatSync(requested, { throwIfNoEntry: false }) !== undefined) {
+        candidate = requested;
+        watchInputs.add(join(candidate, "package.json"));
+        break;
+      }
+    }
+    // The public CLI can retain its explicit TypeScript transform fallback. Native
+    // editor snapshots always request the complete real import graph instead.
+    if (typeof registerModuleHooks !== "function") {
+      if (evaluate) {
+        throw new Error(
+          "Tracking imports while evaluating a Vite config requires Node.js 22.15 or newer. Upgrade Node.js; installed Vite alone cannot track runtime imports.",
         );
-        if (!loaded) throw new Error(`Vite did not load the selected config: ${configPath}`);
-        return {
-          namespace: loaded.config.namespace,
-          dependencies: loaded.dependencies,
-        };
-      },
-      configPath,
-      registerModuleHooks,
-      evaluate,
-      temporary,
-      observeDependencies,
-    );
+      }
+      if (candidate === undefined && !withoutVite) {
+        throw new Error(
+          "Loading a Vite config without project Vite requires Node.js 22.15 or newer to track imported configuration files. Upgrade Node.js or install Vite in the project.",
+        );
+      }
+    }
+    if (candidate === undefined) {
+      return await captureConfigEvaluation(
+        async () => ({
+          namespace: await (withoutVite ? withoutVite(configURL) : import(configURL.href)),
+        }),
+        configPath,
+        registerModuleHooks,
+        evaluate,
+        undefined,
+        observe,
+      );
+    }
+    const viteDirectory = realpathSync(candidate);
+    watchInputs.add(join(viteDirectory, "package.json"));
+    const resolvedEntry = require.resolve("vite");
+    watchInputs.add(resolvedEntry);
+    const viteEntry = realpathSync(resolvedEntry);
+    watchInputs.add(viteEntry);
+    const entryPath = relative(viteDirectory, viteEntry);
+    if (entryPath === ".." || entryPath.startsWith(`..${sep}`) || isAbsolute(entryPath)) {
+      throw new Error(
+        `Resolved loader escapes selected project Vite: ${candidate} -> ${viteEntry}`,
+      );
+    }
+    const { loadConfigFromFile } = await import(pathToFileURL(viteEntry).href);
+    const temporary = await realpath(await mkdtemp(join(tmpdir(), "vize-config-module-")));
+    try {
+      const adapter = join(temporary, "config.mjs");
+      await writeFile(
+        adapter,
+        `import * as original from ${JSON.stringify(configModuleImportPath(configURL))};\nexport default { namespace: original };\n`,
+        { flag: "wx", mode: 0o600 },
+      );
+      return await captureConfigEvaluation(
+        async () => {
+          const loaded = await loadConfigFromFile(
+            { mode: "development", command: "serve" },
+            adapter,
+            moduleConfigDirectory(configPath),
+            "silent",
+            undefined,
+            "bundle",
+          );
+          if (!loaded) throw new Error(`Vite did not load the selected config: ${configPath}`);
+          return {
+            namespace: loaded.config.namespace,
+            dependencies: loaded.dependencies,
+          };
+        },
+        configPath,
+        registerModuleHooks,
+        evaluate,
+        temporary,
+        observe,
+      );
+    } finally {
+      await rm(temporary, { recursive: true, force: true });
+    }
   } finally {
-    await rm(temporary, { recursive: true, force: true });
+    observeDependencies?.([...watchInputs], complete);
   }
 }

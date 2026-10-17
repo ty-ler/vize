@@ -89,7 +89,7 @@ const { value: config, dependencies } = await importConfigModuleWithDependencies
   },
   (paths, complete) => { attemptedDependencies = paths; attemptedComplete = complete; },
 );
-evaluated = { config: config ?? {}, dependencies, watchDependenciesComplete: true };
+evaluated = { config: config ?? {}, dependencies, watchDependencies: attemptedDependencies, watchDependenciesComplete: true };
 } finally {
   process.stdout.write(JSON.stringify(evaluated ?? { dependencies: attemptedDependencies, watchDependenciesComplete: attemptedComplete }));
 }
@@ -110,11 +110,14 @@ evaluated = { config: config ?? {}, dependencies, watchDependenciesComplete: tru
         config: serde_json::Value,
         #[serde(default, rename = "watchDependenciesComplete")]
         complete: bool,
+        #[serde(default, rename = "watchDependencies")]
+        watch_dependencies: Vec<PathBuf>,
         dependencies: Vec<std::string::String>,
     }
     let evaluated = serde_json::from_slice::<Evaluation>(&output.stdout);
     if let Ok(evaluated) = &evaluated {
         *complete = evaluated.complete;
+        observed.extend(evaluated.watch_dependencies.iter().cloned());
         observed.extend(evaluated.dependencies.iter().map(PathBuf::from));
     }
 

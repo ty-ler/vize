@@ -162,3 +162,73 @@ test("incomplete failed observations preserve the original exception and require
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("actual loader selection watches nearer installation and broken-present repair without reevaluating the factory", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "vize-loader-selection-")));
+  try {
+    const app = join(root, "app");
+    await mkdir(app);
+    const selected = join(app, "vite.config.mjs");
+    const counter = join(root, "evaluations.txt");
+    const source = `import { appendFileSync } from 'node:fs'; export default () => {
+      appendFileSync(${JSON.stringify(counter)}, 'evaluation\\n');
+      return { vue: { formatter: { printWidth: 91 } } };
+    };`;
+    await writeFile(selected, source);
+    const invoke = () =>
+      spawnSync(process.execPath, ["--input-type=module", "-e", embedded, selected], {
+        cwd: app,
+        encoding: "utf8",
+      });
+    const nearer = join(app, "node_modules/vite");
+    const hoisted = join(root, "node_modules/vite");
+    const fallback = invoke();
+    assert.equal(fallback.status, 0, fallback.stderr);
+    assert.ok(JSON.parse(fallback.stdout).watchDependencies.includes(nearer));
+    assert.ok(JSON.parse(fallback.stdout).watchDependencies.includes(hoisted));
+    await mkdir(join(root, "node_modules"));
+    await symlink(vite, hoisted, "junction");
+    const installed = invoke();
+    assert.equal(installed.status, 0, installed.stderr);
+    const loaded = JSON.parse(installed.stdout);
+    assert.equal(loaded.config.formatter.printWidth, 91);
+    assert.ok(loaded.watchDependencies.includes(nearer));
+    assert.ok(loaded.watchDependencies.includes(join(hoisted, "package.json")));
+    assert.equal(
+      loaded.dependencies.includes(join(hoisted, "package.json")),
+      false,
+      "loader decisions are watch-only, not authored config imports",
+    );
+    await mkdir(nearer, { recursive: true });
+    await writeFile(
+      join(nearer, "package.json"),
+      '{"name":"vite","type":"module","exports":"./missing.mjs"}',
+    );
+    const broken = invoke();
+    assert.equal(broken.status, 1, broken.stderr);
+    const rejected = JSON.parse(broken.stdout);
+    assert.equal("config" in rejected, false);
+    assert.ok(rejected.dependencies.includes(nearer));
+    assert.ok(rejected.dependencies.includes(join(nearer, "package.json")));
+    assert.equal(
+      rejected.dependencies.includes(hoisted),
+      false,
+      "a present broken nearer Vite must not select the hoisted loader",
+    );
+    assert.equal(rejected.watchDependenciesComplete, false);
+    await rm(nearer, { recursive: true });
+    await symlink(vite, nearer, "junction");
+    const repaired = invoke();
+    assert.equal(repaired.status, 0, repaired.stderr);
+    assert.equal(JSON.parse(repaired.stdout).config.formatter.printWidth, 91);
+    assert.ok(JSON.parse(repaired.stdout).watchDependencies.includes(join(nearer, "package.json")));
+    assert.equal(await readFile(selected, "utf8"), source);
+    assert.equal(
+      await readFile(counter, "utf8"),
+      "evaluation\nevaluation\nevaluation\n",
+      "each successful attempt evaluates once; broken-present selection never evaluates or falls through",
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
