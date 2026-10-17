@@ -145,4 +145,4 @@ TypeScript 標準の `extends` とプロジェクトの `references` は引き�
 追加の機能は[Experimentals](./experimentals.md)を参照してください。
 
 > [!NOTE]
-> Vize 0.457.0: CLI とエディターは既存の Vite・TypeScript プロジェクト設定を読み込みます。廃止された専用設定は移行してから削除してください。
+> CLI とエディターは既存の Vite・TypeScript プロジェクト設定を読み込みます。廃止された専用設定は移行してから削除してください。

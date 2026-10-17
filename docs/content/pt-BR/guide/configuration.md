@@ -129,4 +129,4 @@ Não existe mais um `extends` específico do Vize. Importe objetos JavaScript co
 A [referência compartilhada](./configuration-reference.md) descreve a descoberta, os escopos, a resolução dos tipos Vue e as opções LSP/Musea. Veja a [referência do compilador](./compiler-configuration-reference.md) para opções e sintaxes, e os [recursos experimentais](/guide/experimentals.md) para opções que precisam ser ativadas.
 
 > [!NOTE]
-> Vize 0.457.0: A CLI e o editor usam os projetos Vite e TypeScript existentes. Migre as configurações dedicadas removidas antes de excluir seus arquivos.
+> A CLI e o editor usam os projetos Vite e TypeScript existentes. Migre as configurações dedicadas removidas antes de excluir seus arquivos.
