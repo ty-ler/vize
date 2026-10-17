@@ -8,7 +8,10 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { runInNewContext } from "node:vm";
 import { parse } from "yaml";
-import { withoutPackedConfigExtension } from "./support/native-packed-config-extension.ts";
+import {
+  withoutPackedConfigExtension,
+  verifyPackedProducerPreflight,
+} from "./support/native-packed-config-extension.ts";
 import { writeFakeCommand } from "./support/fake-command.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -91,53 +94,127 @@ void test("the actual manager version audit uses a manifest-free cwd and preserv
 });
 
 void test("the refrozen composed producer binds every whole source and moved test module", () => {
-  const producer = "5089dd1ad6dae7fbf6fc9efb33f202f8824f6f1e";
-  const witness = JSON.parse(
-    fs.readFileSync(
-      path.join(
-        root,
-        "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json",
-      ),
-      "utf8",
-    ),
-  );
+  const producer = "a9dec43c406c7afd1d2ce8067fc563678e28ac64";
+  const witnessPath =
+    "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
+  const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
   assert.equal(workflow.jobs["packed-config-acceptance"].env.PACKED_CONFIG_PRODUCER, producer);
   assert.equal(witness.producer.head, producer);
   assert.equal(witness.producer.composedBase, "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b");
   assert.equal(witness.producer.priorProducer, "820bf6b5d688c77f8edea6ba18ff6f86f76bffae");
   assert.equal(witness.producer.previousFrozenProducer, "c8855589af88f3804686959377d29e85e3d7a4f4");
   assert.equal(witness.producer.earlierFrozenProducer, "9654d136f504765f0dfbdb1e17cf806e0b967878");
-  const script = steps.find(
-    (step: { name?: string }) => step.name === "Authenticate selected packed configuration source",
-  ).run as string;
-  const match = /const producerFiles = (\[[\s\S]*?\]);/u.exec(script);
-  assert.ok(match);
-  const files = [...(runInNewContext(match[1]) as string[])];
-  assert.equal(files.length, 26);
-  assert.equal(new Set(files).size, files.length);
-  assert.deepEqual(files, Object.keys(witness.producer.files));
-  const composedFiles = execFileSync(
-    "git",
-    ["diff", "--name-only", witness.producer.composedBase, producer],
-    { cwd: root, encoding: "utf8" },
-  )
-    .trim()
-    .split("\n");
-  assert.deepEqual(
-    [...files].sort(),
-    composedFiles.sort(),
-    "the complete finite composition is authenticated",
-  );
-  execFileSync("git", ["merge-base", "--is-ancestor", producer, "HEAD"], { cwd: root });
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
   const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
+  const files = Object.keys(witness.producer.files);
+  assert.equal(files.length, 197);
+  assert.equal(new Set(files).size, files.length);
+  const changedRust = git(
+    "diff",
+    "--name-only",
+    "--no-renames",
+    witness.producer.composedBase,
+    producer,
+  )
+    .toString()
+    .trim()
+    .split("\n")
+    .filter((file) => file.endsWith(".rs"));
+  assert.equal(changedRust.length, 193);
+  const historicalAbsences = witness.producer.historicalRenames.map(
+    (rename: { from: string }) => rename.from,
+  );
+  assert.deepEqual(
+    files.filter((file) => file.endsWith(".rs") && !historicalAbsences.includes(file)).sort(),
+    changedRust.sort(),
+    "complete Rust composition, including additions and deletion, is authenticated",
+  );
+  assert.deepEqual(
+    files.filter((file) => !file.endsWith(".rs")),
+    [
+      "crates/vize_carton/src/config/loader/module-runtime.d.mts",
+      "crates/vize_carton/src/config/loader/module-runtime.mjs",
+    ],
+  );
+  git("merge-base", "--is-ancestor", producer, "HEAD");
+  assert.deepEqual(witness.producer.absentFiles, [
+    "crates/vize/src/commands/check/runner/input_scope/tests.rs",
+    "crates/vize_croquis/src/drawer/helpers/identifiers/ast/walk/retained_assignments.rs",
+    "crates/vize_croquis/src/drawer/helpers/identifiers/ast/walk/retained_scopes.rs",
+  ]);
+  const [deletion] = witness.producer.netRustDeletions;
+  assert.equal(witness.producer.netRustDeletions.length, 1);
+  assert.equal(deletion.from, "crates/vize/src/commands/check/runner/input_scope/tests.rs");
+  assert.equal(deletion.to, "crates/vize/src/commands/check/runner/input_scope_tests.rs");
+  assert.equal(deletion.fromSource, witness.producer.composedBase);
+  assert.equal(deletion.toSource, producer);
+  assert.equal(digest(git("show", deletion.fromSource + ":" + deletion.from)), deletion.fromSha256);
+  assert.equal(digest(git("show", producer + ":" + deletion.to)), deletion.toSha256);
+  const removedRust = git(
+    "diff",
+    "--name-only",
+    "--no-renames",
+    "--diff-filter=D",
+    witness.producer.composedBase,
+    producer,
+  )
+    .toString()
+    .trim()
+    .split("\n")
+    .filter((file) => file.endsWith(".rs"));
+  assert.deepEqual(removedRust, [deletion.from]);
   for (const file of files) {
-    const authenticated = execFileSync("git", ["show", `${producer}:${file}`], { cwd: root });
-    assert.equal(digest(authenticated), witness.producer.files[file], file);
+    if (witness.producer.absentFiles.includes(file)) {
+      assert.equal(witness.producer.files[file], null);
+      assert.equal(git("ls-tree", "--name-only", producer, "--", file).length, 0);
+      assert.equal(fs.lstatSync(path.join(root, file), { throwIfNoEntry: false }), undefined);
+    } else {
+      assert.equal(digest(git("show", producer + ":" + file)), witness.producer.files[file], file);
+      assert.equal(
+        digest(fs.readFileSync(path.join(root, file))),
+        witness.producer.files[file],
+        file,
+      );
+    }
+  }
+  const original = witness.producer.previousFreeze;
+  assert.equal(original.source, "f7ee25f5db27bd210db07f514837b9f4c1b65054");
+  assert.equal(original.head, "5089dd1ad6dae7fbf6fc9efb33f202f8824f6f1e");
+  const previous = JSON.parse(git("show", original.source + ":" + witnessPath).toString());
+  assert.deepEqual(original.files, previous.producer.files);
+  assert.equal(Object.keys(original.files).length, 26);
+  for (const file of Object.keys(original.files)) assert.ok(files.includes(file), file);
+  assert.equal(
+    digest(git("show", original.source + ":.github/workflows/native-smoke.yml")),
+    original.workflowSha256,
+  );
+  const historicalBase = "85b7c8d4b12226b67eaf23dd7b84fb14b616c832";
+  const prefix = "crates/vize_croquis/src/drawer/helpers/identifiers/ast/walk/";
+  const renames = git(
+    "diff",
+    "--name-status",
+    "--find-renames",
+    historicalBase,
+    producer,
+  ).toString();
+  for (const [index, name] of ["assignments", "scopes"].entries()) {
+    const from = prefix + "retained_" + name + ".rs",
+      to = prefix + "retained/" + name + ".rs";
+    const record = witness.producer.historicalRenames[index];
+    assert.equal(record.status, "R100");
+    assert.equal(record.fromSource, historicalBase);
+    assert.equal(record.toSource, producer);
+    assert.equal(record.from, from);
+    assert.equal(record.to, to);
+    assert.ok(renames.split("\n").includes(["R100", from, to].join("\t")));
     assert.equal(
-      digest(fs.readFileSync(path.join(root, file))),
-      witness.producer.files[file],
-      file,
+      git("ls-tree", "--name-only", witness.producer.composedBase, "--", from).length,
+      0,
     );
+    assert.equal(record.absentAtBase, true);
+    assert.equal(digest(git("show", historicalBase + ":" + from)), record.fromSha256);
+    assert.equal(digest(git("show", producer + ":" + to)), record.toSha256);
+    assert.equal(record.fromSha256, record.toSha256, "the whole renamed source stays exact");
   }
 });
 
@@ -261,121 +338,10 @@ void test("the actual packed runtime shell retains the full packet without hidin
   }
 });
 
-// Execute the real preflight in a tiny isolated repository, without builds or installs.
-void test("all sixteen reviewed producer files are bound, including a non-protocol source", () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-config-producer-"));
-  try {
-    const repository = path.join(directory, "repo");
-    fs.mkdirSync(repository);
-    const script = steps.find(
-      (step: { name?: string }) =>
-        step.name === "Authenticate selected packed configuration source",
-    ).run as string;
-    const array = (name: string): string[] => {
-      const match = script.match(new RegExp(`const ${name} = (\\[[\\s\\S]*?\\]);`, "u"));
-      assert.ok(match);
-      return runInNewContext(match[1]) as string[];
-    };
-    const producerFiles = array("producerFiles");
-    assert.equal(producerFiles.length, 26);
-    const nonProtocol = "crates/vize_canon/src/batch/virtual_project/materialize.rs";
-    assert.ok(producerFiles.includes(nonProtocol));
-    for (const name of [...array("files"), ...producerFiles]) {
-      const file = path.join(repository, name);
-      fs.mkdirSync(path.dirname(file), { recursive: true });
-      fs.writeFileSync(file, "reviewed fixture bytes\n");
-    }
-    fs.writeFileSync(
-      path.join(repository, "rust-toolchain.toml"),
-      '[toolchain]\nchannel = "1.99.1"\n',
-    );
-    const git = (...args: string[]) =>
-      execFileSync(
-        "git",
-        [
-          "-c",
-          "core.hooksPath=/dev/null",
-          "-c",
-          "commit.gpgsign=false",
-          "-c",
-          "user.name=Config fixture",
-          "-c",
-          "user.email=config-fixture@example.invalid",
-          ...args,
-        ],
-        { cwd: repository, encoding: "utf8" },
-      ).trim();
-    git("init", "--quiet", "--initial-branch=main");
-    git("add", ".");
-    git("commit", "--quiet", "-m", "test: retain producer fixture");
-    const producer = git("rev-parse", "HEAD");
-    const execute = (selectedProducer = producer) => {
-      const current = git("rev-parse", "HEAD");
-      return spawnSync("bash", ["-e", "-o", "pipefail", "-c", script], {
-        cwd: repository,
-        encoding: "utf8",
-        timeout: 10_000,
-        env: {
-          ...process.env,
-          PACKED_CONFIG_OUTPUT: path.join(directory, "evidence"),
-          PACKED_CONFIG_EXPECTED_SOURCE: current,
-          PACKED_CONFIG_HOST_ONLY: "false",
-          PACKED_CONFIG_PRODUCER: selectedProducer,
-          GITHUB_SHA: current,
-          GITHUB_WORKFLOW_SHA: current,
-          GITHUB_OUTPUT: path.join(directory, "outputs"),
-        },
-      });
-    };
-    assert.equal(execute().status, 0, "unchanged complete producer passes source preflight");
-    const unrelated = git(
-      "commit-tree",
-      git("rev-parse", "HEAD^{tree}"),
-      "-m",
-      "test: unrelated same-tree producer",
-    );
-    assert.notEqual(execute(unrelated).status, 0, "identical bytes cannot replace source ancestry");
-    const moved =
-      "crates/vize_maestro/src/server/state/project_contexts/config_reload_recovery_tests.rs";
-    assert.ok(producerFiles.includes(moved));
-    fs.writeFileSync(path.join(repository, moved), "changed complete migrated test module\n");
-    git("add", moved);
-    git("commit", "--quiet", "-m", "test: alter moved producer test module");
-    assert.notEqual(execute().status, 0);
-    const movedReceipt = JSON.parse(
-      fs.readFileSync(path.join(directory, "evidence/source.json"), "utf8"),
-    );
-    assert.notEqual(movedReceipt.files[moved], movedReceipt.producerFiles[moved]);
-    fs.writeFileSync(path.join(repository, moved), "reviewed fixture bytes\n");
-    git("add", moved);
-    git("commit", "--quiet", "-m", "test: restore moved producer test module");
-    assert.equal(execute().status, 0, "restoring all producer bytes recovers admission");
-    fs.writeFileSync(
-      path.join(repository, nonProtocol),
-      "changed outside the three protocol files\n",
-    );
-    git("add", nonProtocol);
-    git("commit", "--quiet", "-m", "test: alter non-protocol producer source");
-    const changed = execute();
-    assert.equal(changed.error, undefined);
-    assert.equal(changed.signal, null);
-    assert.notEqual(changed.status, 0);
-    const changedReceipt = JSON.parse(
-      fs.readFileSync(path.join(directory, "evidence/source.json"), "utf8"),
-    );
-    assert.equal(typeof changedReceipt.files[nonProtocol], "string");
-    git("rm", "--quiet", nonProtocol);
-    git("commit", "--quiet", "-m", "test: remove non-protocol producer source");
-    assert.notEqual(execute().status, 0);
-    const missingReceipt = JSON.parse(
-      fs.readFileSync(path.join(directory, "evidence/source.json"), "utf8"),
-    );
-    assert.equal(
-      missingReceipt.files[nonProtocol],
-      null,
-      "a removed file still leaves the raw failure receipt",
-    );
-  } finally {
-    fs.rmSync(directory, { recursive: true, force: true });
-  }
+// Execute the unchanged real preflight in synthetic history, without builds/installs.
+void test("all reviewed producer files and deletion tombstones are bound", () => {
+  const script = steps.find(
+    (step: { name?: string }) => step.name === "Authenticate selected packed configuration source",
+  ).run as string;
+  verifyPackedProducerPreflight(script);
 });

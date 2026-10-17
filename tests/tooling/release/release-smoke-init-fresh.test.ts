@@ -244,7 +244,9 @@ function smokeInstallInvocations(workflow: string): string[][] {
   const invocations: string[][] = [];
   for (const job of Object.values(parsed.jobs ?? {})) {
     for (const step of job.steps ?? []) {
-      if (!step.run?.includes("smoke-release-install.")) continue;
+      // A quoted source-custody path is metadata, not an installer command.
+      if (!step.run?.match(/^[ \t]*[^ \t'"#\n][^\n]*smoke-release-install\.(?:rs|ts)\b/mu))
+        continue;
       // A selected manual mode may wrap two real invocations in if/else.
       // Inspect both complete continuation-joined commands, not the shell's if.
       const commands = [
