@@ -75,9 +75,27 @@ test("startup diagnostics retain the production producer and unchanged scale-one
   assert.equal(
     steps[unionControls].run,
     "cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_document_package_tests::symlink_workspace::\n" +
-      "cargo test --locked --profile ci -p vize_canon --features legacy --lib batch::virtual_project::tests::editor_union_alias_transition::\n" +
+      "cargo test --locked --profile ci -p vize_canon --features legacy --lib batch::virtual_project::materialize::alias_transition_tests::\n" +
       "cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_dependencies_alias::context::cache::tests::\n" +
       "cargo clippy --locked --profile ci -p vize_canon --features legacy --lib -- -D warnings\n",
+  );
+  // The #[path] fixture is nested under materialize, not virtual_project::tests.
+  // Bind this filter to its real module and both existing test declarations.
+  assert.match(
+    readRepoFile("crates/vize_canon/src/batch/virtual_project/materialize.rs"),
+    /#\[path = "tests\/editor_union_alias_transition\.rs"\]\nmod alias_transition_tests;/,
+  );
+  assert.deepEqual(
+    Array.from(
+      readRepoFile(
+        "crates/vize_canon/src/batch/virtual_project/tests/editor_union_alias_transition.rs",
+      ).matchAll(/#\[test\]\nfn (\w+)\(/g),
+      (match) => match[1],
+    ),
+    [
+      "editor_union_replaces_external_link_with_owned_workspace_alias",
+      "editor_union_still_rejects_distinct_owned_alias_targets",
+    ],
   );
   assert.equal(
     steps[symlinkControls].run,
