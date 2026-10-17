@@ -325,3 +325,51 @@ fn unknown_failure_identity_keeps_strict_full_error_comparison() {
     assert!(!record.repeats_notified_failure("exact first error\nwith a different path", None));
     assert!(!record.repeats_notified_failure("exact first error\nwith its complete path\n", None));
 }
+
+#[test]
+fn known_path_membership_matches_original_vec_with_absence_duplicates_and_new_paths() {
+    let (fixture, state, a, _) = tests::fixture();
+    let owner = current(&state, &a);
+    let mut raw = owner.project_contexts.loaded_config.read().clone().unwrap();
+    let root = fixture.path().join("packages/a");
+    let file = root.join("policy.mjs");
+    let absent = root.join("optional-base.json");
+    let new = root.join("new-helper.mjs");
+    std::fs::write(&file, "export default {};").unwrap();
+    std::fs::create_dir(root.join("alias")).unwrap();
+    let lexical_alias = root.join("alias/../policy.mjs");
+    let mut before =
+        vize_canon::ConfigurationObservations::capture(&[file.clone(), absent.clone()]);
+    before.extend(&before.clone());
+    let original_paths = before.paths();
+    let compiler = vize_canon::ConfigurationObservations::default();
+    for (paths, expected) in [
+        (vec![], false),
+        (vec![file.clone(), file.clone()], false),
+        (vec![absent.clone(), absent.clone()], false),
+        (vec![new.clone()], true),
+        (vec![file.clone(), absent.clone(), new], true),
+        // Keep lexical Path equality, even when a different spelling resolves.
+        (vec![lexical_alias], true),
+    ] {
+        raw.watch_dependencies = paths;
+        let original = raw
+            .watch_dependencies
+            .iter()
+            .any(|path| !original_paths.contains(path));
+        assert_eq!(original, expected);
+        let checked =
+            super::freshness::ConfigurationObservation::checked(&raw, &raw, &before, &compiler);
+        assert_eq!(checked.needs_confirmation(), original);
+        assert_eq!(before.paths(), original_paths);
+    }
+    // A known absent candidate remains known, while its real creation is still
+    // retained as a physical change by the complete original observations.
+    std::fs::write(&absent, "{}").unwrap();
+    raw.watch_dependencies = vec![absent.clone(), file];
+    let checked =
+        super::freshness::ConfigurationObservation::checked(&raw, &raw, &before, &compiler);
+    assert!(!checked.needs_confirmation());
+    assert_eq!(checked.changes(), vec![absent.clone()]);
+    assert_eq!(before.changed_paths(), vec![absent]);
+}

@@ -23,11 +23,17 @@ impl ConfigurationObservations {
     /// Observe known paths before an evaluation, including link ancestors.
     /// This does not prove which bytes an external evaluator consumed.
     pub fn capture(paths: &[PathBuf]) -> Self {
+        let phase = crate::corsa_bridge::preparation_trace::Phase::start(
+            "configuration_observation_capture",
+            paths.len(),
+        );
         let inputs = CompilerInputs::default();
         for path in paths {
             inputs.observe(path);
         }
-        inputs.observations()
+        let observations = inputs.observations();
+        phase.finish();
+        observations
     }
 
     /// Preserve both consumed-source observations and known-before observations.

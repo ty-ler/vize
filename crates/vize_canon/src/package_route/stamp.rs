@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use vize_carton::FxHashMap;
+use vize_l0::hash::StableHasher128;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct InputStamp {
@@ -11,7 +12,7 @@ pub(crate) struct InputStamp {
     modified: Option<std::time::SystemTime>,
     len: Option<u64>,
     kind: Option<InputKind>,
-    content_digest: Option<u64>,
+    content_digest: Option<[u8; 16]>,
     symlink_target: Option<PathBuf>,
     source_content: bool,
 }
@@ -200,7 +201,7 @@ pub(crate) fn canonicalize_changed_path(path: &Path) -> PathBuf {
     vize_carton::path::normalize_windows_verbatim_path(path.to_path_buf())
 }
 
-fn read_digest(path: &Path, stats: Option<&mut InputStampReadStats>) -> Option<u64> {
+fn read_digest(path: &Path, stats: Option<&mut InputStampReadStats>) -> Option<[u8; 16]> {
     let Some(stats) = stats else {
         return std::fs::read(path).ok().map(|content| digest(&content));
     };
@@ -216,11 +217,12 @@ fn read_digest(path: &Path, stats: Option<&mut InputStampReadStats>) -> Option<u
     Some(result)
 }
 
-fn digest(content: &[u8]) -> u64 {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::hash::DefaultHasher::new();
-    content.hash(&mut hasher);
-    hasher.finish()
+// Private in-memory change detection, never a persisted/public artifact key.
+// Feed every byte through the existing non-cryptographic 128-bit content hasher.
+fn digest(content: &[u8]) -> [u8; 16] {
+    let mut hasher = StableHasher128::new();
+    hasher.update(content);
+    hasher.digest()
 }
 
 pub(super) fn stamp_paths(paths: &[PathBuf]) -> Vec<InputStamp> {
@@ -284,6 +286,36 @@ mod tests {
         assert!(!stamp.is_current());
         assert!(!stamp.is_current_with_cache(&mut cache));
         assert_eq!(cache.captures(), 1);
+    }
+
+    #[test]
+    fn same_size_and_mtime_edits_still_change_full_content_stamps() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("config.json");
+        let mut content = vec![b' '; 8193];
+        std::fs::write(&path, &content).unwrap();
+        let physical = InputStamp::capture(&path);
+        let source = InputStamp::capture_source(&path, &content);
+        let original = std::fs::metadata(&path).unwrap();
+        assert!(physical.is_current());
+        assert!(source.is_current());
+
+        // Preserve metadata and the complete prefix; only the final byte changes.
+        *content.last_mut().unwrap() = b'!';
+        std::fs::write(&path, &content).unwrap();
+        std::fs::File::options()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_times(std::fs::FileTimes::new().set_modified(original.modified().unwrap()))
+            .unwrap();
+        let modified = std::fs::metadata(&path).unwrap();
+        assert_eq!(modified.len(), original.len());
+        assert_eq!(modified.modified().unwrap(), original.modified().unwrap());
+        assert!(!physical.is_current());
+        assert!(!source.is_current());
+        assert!(InputStamp::capture(&path).is_current());
+        assert!(InputStamp::capture_source(&path, &content).is_current());
     }
 
     #[cfg(unix)]

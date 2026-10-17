@@ -61,11 +61,19 @@ impl ConfigurationObservation {
     ) -> Self {
         let mut observations = before.clone();
         observations.extend(compiler);
-        let known = before.paths();
+        let phase = vize_canon::corsa_bridge::EditorPreparationPhase::start(
+            "configuration_observation_membership",
+            raw.watch_dependencies.len(),
+        );
+        let known = before
+            .paths()
+            .into_iter()
+            .collect::<vize_l0::FxHashSet<_>>();
         let unverified = raw
             .watch_dependencies
             .iter()
             .any(|path| !known.contains(path));
+        phase.finish();
         // This post-read observes future repair only. `unverified` explicitly
         // prevents it from being represented as an evaluated-byte receipt.
         observations.extend(&ConfigurationObservations::capture(
