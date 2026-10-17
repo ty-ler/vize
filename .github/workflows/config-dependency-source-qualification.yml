@@ -1,12 +1,12 @@
 name: Config dependency source qualification
-run-name: Config dependency laws at 10b06ec4ee
+run-name: Config dependency laws at b1cc8fd023
 on:
   push:
     branches: [ci/config-dependency-source-qualification]
 permissions:
   contents: read
 env:
-  SOURCE_SHA: 10b06ec4ee6c814e2c500e327dab5ad8046cee86
+  SOURCE_SHA: b1cc8fd0237c16e1b0d908342fc5860884629f2b
   CARGO_BUILD_JOBS: "12"
   CARGO_TERM_COLOR: always
   RUST_TEST_THREADS: "4"
@@ -106,7 +106,7 @@ jobs:
       - name: Check config host boundaries and actual loader repair observation laws
         run: |
           set -euo pipefail
-          node --test tests/tooling/config-host-boundary.test.ts tests/tooling/native-config-repair-observations.test.ts tests/tooling/vscode-passive-server-proxy.test.ts 2>&1 | tee target/config-dependency-qualification/loader-observations.log
+          node --test --test-reporter=tap tests/tooling/config-host-boundary.test.ts tests/tooling/native-config-repair-observations.test.ts tests/tooling/vscode-passive-server-proxy.test.ts 2>&1 | tee target/config-dependency-qualification/loader-observations.log
           grep -E '# pass [1-9][0-9]*' target/config-dependency-qualification/loader-observations.log
       - name: Run all three original and four added configuration graph laws
         if: ${{ !cancelled() }}
@@ -175,7 +175,8 @@ jobs:
           cargo build --profile ci -p vize 2>&1 | tee target/config-dependency-qualification/source-cli-build.log
           node tests/differential/build-receipt.ts
           cp target/ci/vize.differential-build.json target/config-dependency-qualification/
-          VIZE_LSP_BIN=target/ci/vize VIZE_LSP_REQUIRE_SOURCE_BUILD=1 node --test tests/tooling/lsp-config-bundle-repair.test.ts 2>&1 | tee target/config-dependency-qualification/vite-bundle-repair.log
+          VIZE_LSP_BIN=target/ci/vize VIZE_LSP_REQUIRE_SOURCE_BUILD=1 node --test --test-reporter=tap tests/tooling/lsp-config-bundle-repair.test.ts 2>&1 | tee target/config-dependency-qualification/vite-bundle-repair.log
+          grep -F '# pass 1' target/config-dependency-qualification/vite-bundle-repair.log
       - name: Run all eighteen CLI input scope unit laws
         if: ${{ !cancelled() }}
         run: |
