@@ -1,0 +1,88 @@
+name: Recursive rename baseline diagnostic
+run-name: Recursive rename trace ${{ inputs.baseline_sha }} / ${{ inputs.current_sha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseline_sha:
+        description: Exact health source before syntax-fact stamping reuse
+        required: true
+        default: 6bef15d8e2e92c4f7b724b791c1147ef13e2d4ac
+        type: string
+      current_sha:
+        description: Exact main source containing the reviewed stamping optimization
+        required: true
+        default: 8df6e1fe3e8e91fe2a0adbb4633d1de38e81e506
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_BUILD_JOBS: "12"
+  RUST_TEST_THREADS: "4"
+
+jobs:
+  unchanged-case:
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: baseline
+            source: ${{ inputs.baseline_sha }}
+          - lane: current
+            source: ${{ inputs.current_sha }}
+    env:
+      SOURCE_SHA: ${{ matrix.source }}
+      DRIVER_SHA: ${{ github.sha }}
+      DIAGNOSTIC_LANE: ${{ matrix.lane }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - name: Retain the reviewed observer outside the source checkout
+        run: cp tools/support/compat/github/recursive-rename-diagnostic.ts "$RUNNER_TEMP/recursive-rename-diagnostic.ts"
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+          ref: ${{ matrix.source }}
+      - uses: ./.github/actions/cache-vp-bootstrap
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: true
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
+        with:
+          toolchain: "1.99.1"
+      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
+        with:
+          wild-version: "0.9.0"
+      - uses: ./.github/actions/setup-rust-sticky-cache
+        with:
+          key: nextest-ci
+          cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
+      - name: Build the unchanged source CLI and original integration test
+        run: |
+          mkdir -p target/recursive-rename-diagnostic
+          cargo test --locked --profile ci -p vize --test lsp_recursive_prop_rename_cli --no-run --message-format=json > target/recursive-rename-diagnostic/build.jsonl
+      - name: Observe the original complete parent-local rename test
+        env:
+          # Match the health PR envelope. This fixture still resolves and
+          # configures its actual native executable; its source stays unchanged.
+          VIZE_TEST_DISABLE_TSGO: "1"
+          VIZE_TRACE_EDITOR_PREPARATION: "1"
+          RUST_LOG: info,vize_editor_preparation=info,corsa_client=debug,corsa_runtime=debug,corsa_jsonrpc=debug
+        run: node "$RUNNER_TEMP/recursive-rename-diagnostic.ts"
+      - name: Retain complete source, process and protocol evidence even on timeout
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: recursive-rename-${{ matrix.lane }}-${{ matrix.source }}-${{ github.run_id }}
+          path: target/recursive-rename-diagnostic/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
