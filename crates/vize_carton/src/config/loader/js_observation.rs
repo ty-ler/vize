@@ -318,6 +318,31 @@ process.stdin.once('data', ack => {{
 
     #[test]
     fn startup_exception_before_finally_retains_actual_diagnostic_and_status() {
+        // Independent Node execution owns the complete default exception packet,
+        // including runtime-specific internal stack frames. Keep the actual throw
+        // and argv identical; this oracle never calls the observation transport.
+        let mut direct = Command::new("node");
+        direct
+            .arg("-e")
+            .arg("throw new Error('startup-specificreason');")
+            .arg("--")
+            .arg("config-fixture")
+            .arg("--observe-config-inputs")
+            .stdin(std::process::Stdio::piped());
+        let baseline = direct.output().unwrap();
+        assert_eq!(baseline.status.code(), Some(1));
+        assert_eq!(baseline.stdout.as_slice(), b"");
+        let stderr = std::str::from_utf8(&baseline.stderr).unwrap();
+        let (source, exception) = stderr.split_once("\n\n").unwrap();
+        assert_eq!(
+            source,
+            "[eval]:1\nthrow new Error('startup-specificreason');\n^"
+        );
+        assert_eq!(
+            exception.lines().next(),
+            Some("Error: startup-specificreason")
+        );
+
         let mut command = Command::new("node");
         command
             .arg("-e")
@@ -331,12 +356,28 @@ process.stdin.once('data', ack => {{
             .unwrap()
             .downcast_ref::<ObservationFailure>()
             .unwrap();
-        assert_eq!(failure.status.as_ref().unwrap().code(), Some(1));
-        assert!(
-            String::from_utf8_lossy(failure.stderr.as_ref().unwrap())
-                .contains("Error: startup-specificreason")
+        assert_eq!(command.get_program(), direct.get_program());
+        assert_eq!(
+            command.get_args().collect::<Vec<_>>(),
+            direct.get_args().collect::<Vec<_>>()
         );
-        assert!(error.to_string().contains("Error: startup-specificreason"));
+        assert_eq!(command.get_current_dir(), direct.get_current_dir());
+        assert_eq!(
+            command.get_envs().collect::<Vec<_>>(),
+            direct.get_envs().collect::<Vec<_>>()
+        );
+        assert_eq!(failure.status.as_ref().unwrap(), &baseline.status);
+        assert_eq!(failure.stderr.as_ref().unwrap(), &baseline.stderr);
+        assert_eq!(failure.cause.kind(), std::io::ErrorKind::UnexpectedEof);
+        assert_eq!(failure.cause.to_string(), "failed to fill whole buffer");
+        assert_eq!(
+            error.to_string(),
+            format!(
+                "node failed to load config: {} ({}; observation transport: failed to fill whole buffer)",
+                stderr.strip_suffix('\n').unwrap(),
+                baseline.status
+            )
+        );
     }
 
     #[test]
