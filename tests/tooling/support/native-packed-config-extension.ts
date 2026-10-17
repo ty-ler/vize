@@ -25,6 +25,29 @@ const witness = JSON.parse(
 ) as Extension;
 const digest = (source: string) => createHash("sha256").update(source).digest("hex");
 
+/** Historical custody survives later product changes; current equality belongs to the selected preflight. */
+export function verifyHistoricalProducerFiles(
+  repository: string,
+  producer: Extension["producer"],
+): void {
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: repository });
+  for (const [file, expected] of Object.entries(producer.files)) {
+    if (producer.absentFiles.includes(file)) {
+      assert.equal(expected, null, file);
+      assert.equal(git("ls-tree", "--name-only", producer.head, "--", file).length, 0, file);
+    } else {
+      assert.match(expected ?? "", /^[0-9a-f]{64}$/u);
+      assert.equal(
+        createHash("sha256")
+          .update(git("show", producer.head + ":" + file))
+          .digest("hex"),
+        expected,
+        file,
+      );
+    }
+  }
+}
+
 export function withoutPackedConfigExtension(source: string): string {
   assert.equal(witness.schema, "vize.native-smoke-packed-config-extension.v1");
   assert.equal(
@@ -174,6 +197,14 @@ export function verifyPackedProducerPreflight(script: string): void {
       const changed = execute();
       assert.notEqual(changed.status, 0, file);
       assert.notEqual(changed.receipt.files[file], changed.receipt.producerFiles[file]);
+      if (file === "Cargo.toml") {
+        // A real later release commit preserves the old producer's historical authority,
+        // while the unchanged selected campaign refuses credit for its changed inputs.
+        verifyHistoricalProducerFiles(repository, fixtureWitness.producer);
+        const alteredHistory = structuredClone(fixtureWitness.producer);
+        alteredHistory.files[file] = digest("unreviewed historical Cargo bytes\n");
+        assert.throws(() => verifyHistoricalProducerFiles(repository, alteredHistory));
+      }
       fs.writeFileSync(target, fixtureBytes);
       commit();
       assert.equal(execute().status, 0, "whole source restoration recovers admission");

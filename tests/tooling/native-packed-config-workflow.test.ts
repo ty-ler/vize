@@ -10,6 +10,7 @@ import { runInNewContext } from "node:vm";
 import { parse } from "yaml";
 import {
   withoutPackedConfigExtension,
+  verifyHistoricalProducerFiles,
   verifyPackedProducerPreflight,
 } from "./support/native-packed-config-extension.ts";
 import { writeFakeCommand } from "./support/fake-command.ts";
@@ -93,7 +94,7 @@ void test("the actual manager version audit uses a manifest-free cwd and preserv
   }
 });
 
-void test("the refrozen composed producer binds every whole source and moved test module", () => {
+void test("the historical composed producer authenticates every whole source and moved test module", () => {
   const producer = "c45e0901fc05cfa51c50d167ac97a34ec466dd18";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
@@ -166,20 +167,7 @@ void test("the refrozen composed producer binds every whole source and moved tes
     .split("\n")
     .filter((file) => file.endsWith(".rs"));
   assert.deepEqual(removedRust, [deletion.from]);
-  for (const file of files) {
-    if (witness.producer.absentFiles.includes(file)) {
-      assert.equal(witness.producer.files[file], null);
-      assert.equal(git("ls-tree", "--name-only", producer, "--", file).length, 0);
-      assert.equal(fs.lstatSync(path.join(root, file), { throwIfNoEntry: false }), undefined);
-    } else {
-      assert.equal(digest(git("show", producer + ":" + file)), witness.producer.files[file], file);
-      assert.equal(
-        digest(fs.readFileSync(path.join(root, file))),
-        witness.producer.files[file],
-        file,
-      );
-    }
-  }
+  verifyHistoricalProducerFiles(root, witness.producer);
   const original = witness.producer.previousFreeze;
   assert.equal(original.source, "f7ee25f5db27bd210db07f514837b9f4c1b65054");
   assert.equal(original.head, "5089dd1ad6dae7fbf6fc9efb33f202f8824f6f1e");
