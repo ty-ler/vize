@@ -65,7 +65,7 @@ const jobs = (): Row[] =>
     status: "completed",
     conclusion: "success",
   }));
-function harness(snapshots: Row[][], observed = jobs()) {
+function harness(snapshots: Row[][], observed: Row[] | (() => Row[]) = jobs()) {
   let time = 1000;
   let index = 0;
   let refReads = 0;
@@ -88,7 +88,7 @@ function harness(snapshots: Row[][], observed = jobs()) {
       assert.equal(resource, "actions/runs/71/jobs");
       assert.equal(collection, "jobs");
       assert.deepEqual(query, { filter: "latest" });
-      return structuredClone(observed);
+      return structuredClone(typeof observed === "function" ? observed() : observed);
     },
     dispatch: async (resource, body) => {
       writes.push({ resource, body });
@@ -203,8 +203,46 @@ test("a newer failed or pending exact run never falls back to an older green run
   }
 });
 
+test("rerun-failed preserves prior successful required jobs alongside the freshly repaired job", async () => {
+  const observed = jobs();
+  observed[0].run_attempt = 3;
+  // All other successful jobs remain observations from attempt 1 in the latest effective graph.
+  const f = harness([[run({ run_attempt: 3 })]], observed);
+  const result = await qualifyCheck(candidate, f.options);
+  assert.equal(result.run_attempt, 3);
+  assert.deepEqual(f.writes, []);
+  assert.equal(observed.filter((job) => job.run_attempt === 1).length, 18);
+});
+
+test("an old failed job cannot abort or satisfy a pending repair before its latest replacement appears", async () => {
+  const prior = jobs();
+  prior[0].conclusion = "failure";
+  const repaired = jobs();
+  repaired[0].run_attempt = 2;
+  let reads = 0;
+  const pending = run({ run_attempt: 2, status: "in_progress", conclusion: null });
+  const f = harness([[pending], [pending], [run({ run_attempt: 2 })]], () =>
+    ++reads === 1 ? prior : repaired,
+  );
+  await qualifyCheck(candidate, f.options);
+  assert.equal(reads, 2);
+  assert.deepEqual(f.writes, []);
+  await assert.rejects(
+    qualifyCheck(candidate, harness([[run({ run_attempt: 2 })]], prior).options),
+    /test-scripts.*failure/,
+  );
+});
+
 test("job evidence from another source, run or attempt refuses qualification", async () => {
-  for (const changes of [{ run_id: 72 }, { run_attempt: 2 }, { head_sha: candidate.cut }]) {
+  for (const changes of [
+    { run_id: 72 },
+    { run_attempt: 2 },
+    { run_attempt: 0 },
+    { run_attempt: -1 },
+    { run_attempt: 1.5 },
+    { run_attempt: "1" },
+    { head_sha: candidate.cut },
+  ]) {
     const observed = jobs();
     Object.assign(observed[0], changes);
     await assert.rejects(

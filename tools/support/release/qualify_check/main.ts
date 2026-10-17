@@ -16,6 +16,29 @@ import {
 import { githubApiPages, githubApiRequest } from "../../compat/github/release-preflight-github.mjs";
 
 type Row = Record<string, unknown>;
+type CheckedRun = Row & {
+  id: number;
+  run_attempt: number;
+  status: string;
+  conclusion: string | null;
+};
+function assertRun(run: Row): asserts run is CheckedRun {
+  assert.ok(
+    typeof run.id === "number" && Number.isSafeInteger(run.id) && run.id > 0,
+    "positive Check run ID required",
+  );
+  assert.ok(
+    typeof run.run_attempt === "number" &&
+      Number.isSafeInteger(run.run_attempt) &&
+      run.run_attempt > 0,
+    "positive latest Check attempt required",
+  );
+  assert.equal(typeof run.status, "string", "Check run status required");
+  assert.ok(
+    run.conclusion === null || typeof run.conclusion === "string",
+    "Check conclusion required",
+  );
+}
 export type Candidate = { repository: string; branch: string; head: string; cut: string };
 export type Api = {
   read: (resource: string) => Promise<Row>;
@@ -100,6 +123,7 @@ export async function qualifyCheck(candidate: Candidate, options: Options) {
       qualifiers.get("Check"),
     );
     if (current) {
+      assertRun(current);
       const state = `${current.id}/${current.run_attempt}/${current.status}/${current.conclusion}`;
       if (state !== previous) {
         log(
@@ -111,14 +135,26 @@ export async function qualifyCheck(candidate: Candidate, options: Options) {
     return runs;
   };
   const jobsFor = async (run: Row) => {
+    assertRun(run);
     remaining();
     const jobs = await options.api.pages(`actions/runs/${run.id}/jobs`, "jobs", {
       filter: "latest",
     });
     const names = new Set(requiredWorkflowJobNames("Check", run));
+    const attempt = run.run_attempt;
+    assert.ok(
+      typeof attempt === "number" && Number.isSafeInteger(attempt) && attempt > 0,
+      "positive latest Check attempt required",
+    );
     for (const job of jobs.filter((value) => names.has(String(value.name)))) {
       assert.equal(job.run_id, run.id, "Check job belongs to another run");
-      assert.equal(job.run_attempt, run.run_attempt, "Check job belongs to another attempt");
+      assert.ok(
+        typeof job.run_attempt === "number" &&
+          Number.isSafeInteger(job.run_attempt) &&
+          job.run_attempt > 0 &&
+          job.run_attempt <= attempt,
+        "Check job belongs to an invalid or future attempt",
+      );
       assert.equal(job.head_sha, candidate.head, "Check job belongs to another source");
     }
     remaining();
@@ -147,7 +183,12 @@ export async function qualifyCheck(candidate: Candidate, options: Options) {
         (job, index) => selectedJobs.findIndex((other) => other.name === job.name) !== index,
       );
       return duplicate ||
-        selectedJobs.some((job) => job.status === "completed" && job.conclusion !== "success")
+        selectedJobs.some(
+          (job) =>
+            job.run_attempt === run.run_attempt &&
+            job.status === "completed" &&
+            job.conclusion !== "success",
+        )
         ? summarizeRequiredWorkflowJobFailures("Check", jobs, run)
         : undefined;
     },
@@ -157,8 +198,7 @@ export async function qualifyCheck(candidate: Candidate, options: Options) {
     onWait: () => remaining(),
   });
   const run = selected.get("Check") as Row;
-  assert.ok(Number.isSafeInteger(run.id) && Number(run.id) > 0);
-  assert.ok(Number.isSafeInteger(run.run_attempt) && Number(run.run_attempt) > 0);
+  assertRun(run);
   assertRequiredWorkflowJobs("Check", await jobsFor(run), run);
   // A newer failed/pending attempt must not be hidden by the run just inspected.
   const latest = selectRequiredWorkflowRuns(
