@@ -247,7 +247,7 @@ fn authored_revision_precedes_admission_but_valid_policy_reload_remains_usable()
             };
             if changed {
                 assert_eq!(result, Err(Error::content_modified()));
-                assert!(!entered.load(std::sync::atomic::Ordering::SeqCst));
+                assert!(entered.load(std::sync::atomic::Ordering::SeqCst));
             } else {
                 assert_eq!(result, Ok(pending_native_reply()));
                 assert!(entered.load(std::sync::atomic::Ordering::SeqCst));

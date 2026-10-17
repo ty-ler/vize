@@ -8,13 +8,9 @@ use tower_lsp::jsonrpc::Result;
 use super::MaestroServer;
 
 impl super::project_contexts::DocumentServer<'_> {
-    /// Authored coordinates precede async configuration admission and native
-    /// transaction acquisition. Both boundaries must retain that revision.
+    /// Preserve native transaction/cancellation ordering, then refuse the whole
+    /// reply if authored coordinates became stale during admission or native work.
     async fn authored_request<T>(&self, request: impl Future<Output = Result<T>>) -> Result<T> {
-        #[cfg(feature = "native")]
-        if !self.authored_revision_is_current() {
-            return Err(Error::content_modified());
-        }
         let result = request.await;
         #[cfg(feature = "native")]
         if !self.authored_revision_is_current() {
