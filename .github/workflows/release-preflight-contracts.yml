@@ -7,6 +7,7 @@ on:
       - ".github/actions/report-full-js-qualification/**"
       - ".github/actions/setup-rust-script/**"
       - "tools/commands/ci/github/release-preflight.rs"
+      - "tools/commands/release/pr.rs"
       - "tools/support/common.rs"
       - "tools/support/release/**"
       - "tools/support/compat/github/release-preflight*"
@@ -50,6 +51,7 @@ jobs:
           tests/tooling/release/release-preflight-bootstrap-budget.test.ts
           tests/tooling/release/release-preflight-parent-evidence.test.ts
           tests/tooling/release/release-preflight-runner.test.ts
+          tests/tooling/release/release-operator.test.ts
       - name: Require native policy and every incomplete full qualification to fail closed
         run: |
           rust-script --test tools/commands/ci/github/release-preflight.rs
