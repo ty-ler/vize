@@ -4,10 +4,10 @@ use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 
 use serde_json::Value;
-use vize_carton::{FxHashMap, profile};
+use vize_carton::{FxHashMap, FxHashSet, profile};
 
 use crate::batch::error::{CorsaError, CorsaResult};
-use crate::package_route::stamp::InputStamp;
+use crate::package_route::stamp::{InputStamp, InputStampReadStats};
 
 use super::super::tsconfig_paths::{normalize_path_lexically, parse_jsonc_value};
 
@@ -56,10 +56,40 @@ impl ConfigurationObservations {
 
     /// Inputs whose current physical identity differs from this observation.
     pub fn changed_paths(&self) -> Vec<PathBuf> {
+        if !crate::corsa_bridge::preparation_trace::enabled() {
+            return self.collect_changed_paths(InputStamp::is_current);
+        }
+        let started = std::time::Instant::now();
+        let (paths, stats, unique) = self.observed_changed_paths();
+        tracing::info!(target: "vize_editor_preparation",
+            phase = "configuration_observation_validation", event = "aggregate",
+            entries = self.stamps.len(), unique, reads = stats.reads, bytes = stats.bytes,
+            read_ms = stats.read_time.as_secs_f64() * 1000.0,
+            digest_ms = stats.digest_time.as_secs_f64() * 1000.0,
+            elapsed_ms = started.elapsed().as_secs_f64() * 1000.0);
+        paths
+    }
+
+    fn observed_changed_paths(&self) -> (Vec<PathBuf>, InputStampReadStats, usize) {
+        let unique = self
+            .stamps
+            .iter()
+            .map(InputStamp::observation_identity)
+            .collect::<FxHashSet<_>>()
+            .len();
+        let mut stats = InputStampReadStats::default();
+        let paths = self.collect_changed_paths(|stamp| stamp.is_current_observed(&mut stats));
+        (paths, stats, unique)
+    }
+
+    fn collect_changed_paths(
+        &self,
+        mut is_current: impl FnMut(&InputStamp) -> bool,
+    ) -> Vec<PathBuf> {
         let mut paths = self
             .stamps
             .iter()
-            .filter(|stamp| !stamp.is_current())
+            .filter(|stamp| !is_current(stamp))
             .map(|stamp| stamp.path().to_path_buf())
             .collect::<Vec<_>>();
         paths.sort();
@@ -251,6 +281,7 @@ fn parse_jsonc_at_path(path: &Path, content: &str) -> CorsaResult<Value> {
 #[cfg(test)]
 mod tests {
     use super::{CompilerInputs, ConfigurationObservations, read_jsonc};
+    use crate::package_route::stamp::InputStamp;
     use crate::{CompilerConfigurationSnapshot, CorsaError, snapshot_tsconfig_compiler_options};
 
     #[test]
@@ -282,6 +313,95 @@ mod tests {
         inputs.mark_changed();
         assert!(inputs.observations().changed_paths().is_empty());
         assert!(inputs.observations().needs_confirmation());
+    }
+
+    #[test]
+    fn validation_aggregates_keep_duplicate_roles_conflicts_and_fresh_reads() {
+        let directory = tempfile::tempdir().unwrap();
+        let file = directory.path().join("base.json");
+        let absent = directory.path().join("absent.json");
+        let content = b"alpha";
+        std::fs::write(&file, content).unwrap();
+        let physical = InputStamp::capture(&file);
+        let source = InputStamp::capture_source(&file, content);
+        let mut observed = ConfigurationObservations {
+            stamps: vec![
+                physical.clone(),
+                physical,
+                source.clone(),
+                source,
+                InputStamp::capture(&absent),
+            ],
+            changed_during_capture: false,
+        };
+        let (paths, stats, unique) = observed.observed_changed_paths();
+        assert!(paths.is_empty());
+        assert_eq!(observed.stamps.len(), 5);
+        assert_eq!(unique, 3);
+        assert_eq!(stats.reads, 4);
+        assert_eq!(stats.bytes, 20);
+        assert_eq!(
+            paths,
+            observed.collect_changed_paths(InputStamp::is_current)
+        );
+
+        // A later validation must read disk again, even for the same paths/roles.
+        std::fs::write(&file, b"omega").unwrap();
+        let conflicting = ConfigurationObservations::capture(std::slice::from_ref(&file));
+        observed.extend(&conflicting);
+        let (paths, stats, unique) = observed.observed_changed_paths();
+        assert_eq!(paths, vec![file.clone()]);
+        assert_eq!(observed.stamps.len(), 6);
+        assert_eq!(unique, 3);
+        assert_eq!(stats.reads, 5);
+        assert_eq!(stats.bytes, 25);
+        assert_eq!(
+            paths,
+            observed.collect_changed_paths(InputStamp::is_current)
+        );
+        assert!(conflicting.observed_changed_paths().0.is_empty());
+        std::fs::write(&absent, content).unwrap();
+        let (paths, stats, unique) = observed.observed_changed_paths();
+        let mut expected = vec![file, absent];
+        expected.sort();
+        assert_eq!(paths, expected);
+        assert_eq!(unique, 3);
+        assert_eq!(stats.reads, 6);
+        assert_eq!(stats.bytes, 30);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn validation_aggregates_preserve_symlink_source_and_filesystem_roles() {
+        let directory = tempfile::tempdir().unwrap();
+        let target = directory.path().join("target.json");
+        let link = directory.path().join("base.json");
+        let content = b"alpha";
+        std::fs::write(&target, content).unwrap();
+        std::os::unix::fs::symlink(&target, &link).unwrap();
+        let observed = ConfigurationObservations {
+            stamps: vec![
+                InputStamp::capture(&link),
+                InputStamp::capture_source(&link, content),
+            ],
+            changed_during_capture: false,
+        };
+        let (paths, stats, unique) = observed.observed_changed_paths();
+        assert!(paths.is_empty());
+        assert_eq!(unique, 2);
+        assert_eq!(stats.reads, 1);
+        assert_eq!(stats.bytes, 5);
+        std::fs::write(&target, b"omega").unwrap();
+        assert!(observed.stamps[0].is_current());
+        assert!(!observed.stamps[1].is_current());
+        let (paths, stats, _) = observed.observed_changed_paths();
+        assert_eq!(paths, vec![link]);
+        assert_eq!(
+            paths,
+            observed.collect_changed_paths(InputStamp::is_current)
+        );
+        assert_eq!(stats.reads, 1);
+        assert_eq!(stats.bytes, 5);
     }
 
     #[test]
