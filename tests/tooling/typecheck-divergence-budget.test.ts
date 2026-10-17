@@ -48,6 +48,7 @@ function artifactPath(fixture: ReturnType<typeof setup>, extension: string) {
 /** Everything the script prints on the happy path, before any verdict line. */
 function wroteLines(fixture: ReturnType<typeof setup>) {
   return [
+    `Wrote ${path.relative(root, path.join(fixture.reportDir, "fixture-typecheck-observations.json"))}`,
     `Wrote ${path.relative(root, artifactPath(fixture, "json"))}`,
     `Wrote ${path.relative(root, artifactPath(fixture, "md"))}`,
     "",
@@ -196,6 +197,17 @@ test("--budget-mode record-only records a breach without failing the job", () =>
       `${wroteLines(fixture)}::warning title=Typecheck divergence budget not enforced::` +
         `${breachFailure(1, "1 false positives (ratio 0.5) exceed maxFalsePositiveRatio 0.05")}\n`,
     );
+    const observations = readJson(
+      path.join(fixture.reportDir, "fixture-typecheck-observations.json"),
+    );
+    assert.deepEqual(
+      [observations.schema, observations.version, observations.project],
+      ["vize.fixtureTypecheckObservations", 1, "fixture"],
+    );
+    assert.deepEqual(observations.vize, readJson(fixture.outputPath));
+    assert.equal(observations.baseline.stdout, sharedBaselineOutput);
+    assert.equal(observations.baseline.stderr, "");
+    assert.equal(observations.baseline.sourceConfig, "{}\n");
     // Recording is not forgiving: the artifact still carries the failing verdict.
     assert.deepEqual(readJson(artifactPath(fixture, "json")).budget, {
       maxFalsePositiveRatio: 0.05,
