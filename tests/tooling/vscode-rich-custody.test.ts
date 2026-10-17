@@ -36,11 +36,30 @@ test("rich host custody preserves the whole completion API result before Markdow
       { expression: "invoice.total", label: "total" },
       16,
     );
+    // The actual VSCode MarkdownString uses non-enumerable public getters.
+    // Preserve that boundary: serializing the instance itself yields {}.
+    class MarkdownString {
+      get value() {
+        return "**JPY**";
+      }
+      get isTrusted() {
+        return false;
+      }
+      get supportThemeIcons() {
+        return true;
+      }
+      get supportHtml() {
+        return false;
+      }
+      get baseUri() {
+        return new URL("file:///project/docs/");
+      }
+    }
     const actual = {
       isIncomplete: false,
       items: [
         { label: "total", detail: "total: number", data: { original: [1, "opaque"] } },
-        { label: "formatTotal", documentation: { value: "**JPY**", isTrusted: false } },
+        { label: "formatTotal", documentation: new MarkdownString() },
       ],
     };
     module.exports.retainCompletion(request, actual);
@@ -49,7 +68,7 @@ test("rich host custody preserves the whole completion API result before Markdow
     );
     assert.equal(result.packets.length, 1);
     const packet = result.packets[0];
-    assert.deepEqual(packet.actual, actual);
+    assert.deepEqual(packet.actual, JSON.parse(JSON.stringify(actual)));
     assert.equal(packet.source, authored);
     assert.equal(packet.sourceSha256, createHash("sha256").update(authored).digest("hex"));
     assert.deepEqual(packet.document, {
@@ -64,7 +83,16 @@ test("rich host custody preserves the whole completion API result before Markdow
     });
     assert.deepEqual(packet.publicDocumentation, [
       { label: "total" },
-      { label: "formatTotal", raw: actual.items[1].documentation, constructor: "Object" },
+      {
+        label: "formatTotal",
+        raw: {},
+        constructor: "MarkdownString",
+        value: "**JPY**",
+        isTrusted: false,
+        supportThemeIcons: true,
+        supportHtml: false,
+        baseUri: "file:///project/docs/",
+      },
     ]);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });

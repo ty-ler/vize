@@ -72,6 +72,14 @@ function retainCompletion(request, completions) {
       label: item.label,
       raw: item.documentation,
       constructor: item.documentation?.constructor?.name,
+      // VSCode's MarkdownString stores its fields privately; JSON.stringify
+      // alone produces {}. Read the public getters without rewriting them.
+      language: item.documentation?.language,
+      value: item.documentation?.value,
+      isTrusted: item.documentation?.isTrusted,
+      supportThemeIcons: item.documentation?.supportThemeIcons,
+      supportHtml: item.documentation?.supportHtml,
+      baseUri: item.documentation?.baseUri?.toString(),
     })),
   });
   writePackets();
