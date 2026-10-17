@@ -1,15 +1,16 @@
 name: Config dependency source qualification
-run-name: Config dependency laws at fe2219ec97
+run-name: Config dependency laws at 5867788786
 on:
   push:
     branches: [ci/config-dependency-source-qualification]
 permissions:
   contents: read
 env:
-  SOURCE_SHA: fe2219ec9701b32d8ebc7bffaf339701d627b5ad
+  SOURCE_SHA: 5867788786f5a1681aff7163f872b17a5dd30500
   CARGO_BUILD_JOBS: "12"
   CARGO_TERM_COLOR: always
   RUST_TEST_THREADS: "4"
+  VIZE_TEST_REQUIRE_TSGO: "1"
 jobs:
   source-laws:
     runs-on: blacksmith-32vcpu-ubuntu-2404
@@ -43,17 +44,58 @@ jobs:
           mkdir -p target/config-dependency-qualification
           git rev-parse HEAD HEAD^{tree} > target/config-dependency-qualification/source.txt
           git ls-files -s > target/config-dependency-qualification/source-index.txt
-          sha256sum Cargo.lock crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs crates/vize_canon/src/batch/virtual_project/tests/editor_configuration_graph.rs > target/config-dependency-qualification/inputs.sha256
+          sha256sum Cargo.lock crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs crates/vize_canon/src/batch/virtual_project/tests/editor_configuration_graph.rs crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot_tests.rs crates/vize_canon/tests/lsp_import_resolution/compiler_snapshot.rs crates/vize_maestro/src/server/state/project_contexts/config_reload_tests.rs crates/vize/src/commands/check/runner/input_scope_tests.rs crates/vize/tests/check_tsconfig_dependency_errors_cli.rs > target/config-dependency-qualification/inputs.sha256
       - name: Run all three original and four added configuration graph laws
         run: |
           set -euo pipefail
           cargo test --locked --profile ci -p vize_canon --lib editor_configuration_graph_tests -- --nocapture 2>&1 | tee target/config-dependency-qualification/laws.log
           grep -F '7 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/laws.log
-      - name: Require the existing normal Canon library Clippy gate
+      - name: Run all three immutable compiler snapshot laws
         if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
-          cargo clippy --locked --profile ci -p vize_canon --lib -- -D warnings -D clippy::wildcard_imports 2>&1 | tee target/config-dependency-qualification/library-clippy.log
+          cargo test --locked --profile ci -p vize_canon --lib compiler_snapshot::tests -- --nocapture 2>&1 | tee target/config-dependency-qualification/snapshots.log
+          grep -F '3 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/snapshots.log
+      - name: Retain live union members and unsaved source authority
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_canon --lib admitted_compiler_inputs_preserve_live_union_members_after_dependency_deletion -- --nocapture 2>&1 | tee target/config-dependency-qualification/union.log
+          grep -F '1 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/union.log
+      - name: Retain lazy editor owner and admit repaired configuration
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_maestro --lib lazy_native_owner_retains_admitted_compiler_authority_after_inherited_config_deletion -- --nocapture 2>&1 | tee target/config-dependency-qualification/lazy-owner.log
+          grep -F '1 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/lazy-owner.log
+      - name: Require real native cold and warm hover with deleted inherited configuration
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_canon --test lsp_import_resolution compiler_snapshot::admitted_compiler_configuration_survives_deleted_extends_before_first_native_request_and_rebuilds -- --exact --nocapture 2>&1 | tee target/config-dependency-qualification/native.log
+          grep -F '1 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/native.log
+      - name: Run all eighteen CLI input scope unit laws
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize --lib commands::check::runner::input_scope::tests -- --nocapture 2>&1 | tee target/config-dependency-qualification/cli-unit.log
+          grep -F '18 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/cli-unit.log
+      - name: Run all three actual CLI dependency error cases
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize --test check_tsconfig_dependency_errors_cli -- --nocapture 2>&1 | tee target/config-dependency-qualification/cli-process.log
+          grep -F '3 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/cli-process.log
+      - name: Require normal Canon and Maestro library Clippy gates
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo clippy --locked --profile ci -p vize_canon -p vize_maestro --lib -- -D warnings -D clippy::wildcard_imports 2>&1 | tee target/config-dependency-qualification/library-clippy.log
+      - name: Require the normal CLI binary Clippy gate
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo clippy --locked --profile ci -p vize --bin vize -- -D warnings -D clippy::wildcard_imports 2>&1 | tee target/config-dependency-qualification/cli-clippy.log
       - name: Require Canon all-target Clippy without warnings
         if: ${{ !cancelled() }}
         run: |
