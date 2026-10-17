@@ -458,9 +458,11 @@ impl ServerState {
             if failed_roots.is_empty() {
                 *self.project_contexts.reference_ownership.lock() = Default::default();
             }
-            self.project_contexts
-                .routes
-                .retain(|_, key| !topology_roots.contains(&key.root));
+            let transferred =
+                self.retarget_checked_topology_documents(&topology_roots, changes, &mut result);
+            self.project_contexts.routes.retain(|uri, key| {
+                !topology_roots.contains(&key.root) || transferred.contains(uri)
+            });
         }
         if accepted_primary {
             self.retire_project_owner();
@@ -475,7 +477,9 @@ impl ServerState {
         result
             .errors
             .dedup_by(|a, b| a.typ == b.typ && a.message == b.message);
-        result.documents = affected_documents;
+        result.documents.extend(affected_documents);
+        result.documents.sort();
+        result.documents.dedup();
         result
     }
 }
