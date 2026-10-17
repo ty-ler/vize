@@ -18,6 +18,10 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { verifyInstalledImages } from "../../../tools/support/compat/npm/smoke-release-config-evidence.ts";
+import { installPackedWorkspaceDependencies } from "../../../tools/support/compat/npm/smoke-release-init-workspace.ts";
+import { PACKAGE_MANAGERS } from "../../../tools/support/compat/npm/smoke-release-init-managers.mjs";
+import { packedFileSpec } from "../../../tools/support/compat/npm/smoke-release-init-fresh.mjs";
+import { runManager } from "../../../tools/support/compat/npm/smoke-release-init-project.mjs";
 
 const expected = "a".repeat(64);
 const fixture = () =>
@@ -36,6 +40,114 @@ const fixture = () =>
       },
     },
   }));
+
+void test("real pinned pnpm links both edited siblings only through workspace graph installation", () => {
+  // This is an offline package-linker control, not a native Vize runtime claim.
+  const directory = fs.realpathSync(
+    fs.mkdtempSync(path.join(os.tmpdir(), "vize-workspace-link-law-")),
+  );
+  const manager = PACKAGE_MANAGERS.pnpm;
+  const previousCI = process.env.CI;
+  try {
+    process.env.CI = "true";
+    assert.equal(
+      runManager(manager, ["--version"], { cwd: directory }).trim(),
+      manager.corepackSpec.split("@")[1],
+    );
+    const workspace = path.join(directory, "pnpm workspace");
+    const packs = path.join(directory, "packs");
+    fs.mkdirSync(packs);
+    fs.mkdirSync(workspace);
+    fs.writeFileSync(path.join(workspace, "package.json"), '{"private":true}\n');
+    fs.writeFileSync(path.join(workspace, "pnpm-workspace.yaml"), 'packages:\n  - "packages/*"\n');
+    fs.writeFileSync(path.join(workspace, ".npmrc"), "offline=true\nignore-scripts=true\n");
+    const dependencies = ["vize", "@vizejs/vite-plugin"];
+    const packed = new Map<string, string>();
+    for (const [index, name] of dependencies.entries()) {
+      const provider = path.join(directory, `provider-${index}`);
+      fs.mkdirSync(provider);
+      fs.writeFileSync(
+        path.join(provider, "package.json"),
+        JSON.stringify({ name, version: "1.2.3", files: ["identity.txt"] }) + "\n",
+      );
+      fs.writeFileSync(path.join(provider, "identity.txt"), `${name}: independent local packet\n`);
+      runManager(manager, ["pack", "--pack-destination", packs], { cwd: provider });
+      packed.set(name, path.join(packs, `${name.replace(/^@/u, "").replace("/", "-")}-1.2.3.tgz`));
+    }
+    const manifests = new Map<string, Record<string, unknown>>();
+    for (const name of ["app", "control"]) {
+      const project = path.join(workspace, "packages", name);
+      fs.mkdirSync(project, { recursive: true });
+      const manifest = {
+        name,
+        private: true,
+        description: `${name} sentinel`,
+        devDependencies: {},
+      };
+      manifests.set(name, manifest);
+      fs.writeFileSync(path.join(project, "package.json"), JSON.stringify(manifest) + "\n");
+    }
+    runManager(manager, manager.bootstrapArgs, { cwd: workspace });
+    const bootstrapLock = fs.readFileSync(path.join(workspace, manager.lockfile));
+    const control = path.join(workspace, "packages/control");
+    const controlManifest = {
+      ...manifests.get("control"),
+      devDependencies: Object.fromEntries(
+        dependencies.map((name) => [name, packedFileSpec(packed.get(name)!)]),
+      ),
+    };
+    fs.writeFileSync(path.join(control, "package.json"), JSON.stringify(controlManifest) + "\n");
+    runManager(
+      manager,
+      [
+        ...manager.installArgs,
+        ...dependencies.map((name) => `${name}@${packedFileSpec(packed.get(name)!)}`),
+        ...manager.installFlags,
+      ],
+      { cwd: path.join(workspace, "packages/app") },
+    );
+    assert.throws(
+      () => fs.realpathSync(path.join(control, "node_modules/vize")),
+      { code: "ENOENT" },
+      "the previous app-only add leaves the edited control manifest unlinked",
+    );
+
+    // Restore the pre-install graph so the repaired single root install cannot
+    // borrow either lockfile updates or links from the old app-only command.
+    fs.writeFileSync(path.join(workspace, manager.lockfile), bootstrapLock);
+    for (const directory of [
+      workspace,
+      ...["app", "control"].map((name) => path.join(workspace, "packages", name)),
+    ]) {
+      fs.rmSync(path.join(directory, "node_modules"), { recursive: true, force: true });
+    }
+    installPackedWorkspaceDependencies(workspace, dependencies, packed);
+    for (const name of ["app", "control"]) {
+      const project = path.join(workspace, "packages", name);
+      assert.deepEqual(JSON.parse(fs.readFileSync(path.join(project, "package.json"), "utf8")), {
+        ...manifests.get(name),
+        devDependencies: controlManifest.devDependencies,
+      });
+      for (const dependency of dependencies) {
+        const installed = fs.realpathSync(path.join(project, "node_modules", dependency));
+        const relative = path.relative(workspace, installed);
+        assert.ok(relative !== "" && !path.isAbsolute(relative) && !relative.startsWith(".."));
+        assert.equal(
+          fs.readFileSync(path.join(installed, "identity.txt"), "utf8"),
+          `${dependency}: independent local packet\n`,
+        );
+        assert.equal(
+          JSON.parse(fs.readFileSync(path.join(installed, "package.json"), "utf8")).version,
+          "1.2.3",
+        );
+      }
+    }
+  } finally {
+    if (previousCI === undefined) delete process.env.CI;
+    else process.env.CI = previousCI;
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 void test("both independent installed siblings use the source-built native image", () => {
   verifyInstalledImages(fixture(), expected);

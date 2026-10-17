@@ -13,6 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runConfigWorkspaceChecks } from "./smoke-release-config-workspace.ts";
+import { CONFIG_PACKAGE_NAMES } from "./smoke-release-config-fixture.ts";
 
 // @ts-expect-error -- untyped release smoke helpers
 import { CONFIG_FREE_PROJECT_SHAPES } from "./smoke-release-init-config-free.mjs";
@@ -53,6 +54,26 @@ const LSP_SESSION = fileURLToPath(new URL("./smoke-release-lsp-session.ts", impo
  */
 export function runProjectLspSession(projectRoot: string): void {
   run(process.execPath, [LSP_SESSION, projectRoot], { cwd: projectRoot, env: projectEnv() });
+}
+
+/** Link both sibling manifests as one workspace graph, using only the packed plan. */
+export function installPackedWorkspaceDependencies(
+  workspace: string,
+  plannedDependencies: readonly string[],
+  packed: ReadonlyMap<string, string>,
+): void {
+  for (const name of CONFIG_PACKAGE_NAMES) {
+    const filename = path.join(workspace, "packages", name, "package.json");
+    const manifest = readJson(filename);
+    for (const dependency of plannedDependencies) {
+      const artifact = packed.get(dependency);
+      assert.ok(artifact, `missing packed workspace dependency: ${dependency}`);
+      manifest.devDependencies[dependency] = packedFileSpec(artifact);
+    }
+    fs.writeFileSync(filename, `${JSON.stringify(manifest, null, 2)}\n`);
+  }
+  const manager = PACKAGE_MANAGERS.pnpm;
+  runManager(manager, manager.bootstrapArgs, { cwd: workspace });
 }
 
 export function runWorkspacePackageCheck(context: SmokeContext): void {
@@ -97,22 +118,17 @@ export function runWorkspacePackageCheck(context: SmokeContext): void {
     });
   assert.equal(init(["--dry-run"]), expectedInitOutput(shape, project, manager, "dry"));
   assert.equal(init(["--no-install"]), expectedInitOutput(shape, project, manager, "apply"));
+  const generatedManifest = readJson(path.join(project, "package.json"));
+  assert.deepEqual(generatedManifest.scripts, shape.expectedScripts);
+  assert.deepEqual(
+    Object.keys(generatedManifest.devDependencies).sort(),
+    shape.expectedDevDependencies,
+  );
 
-  const specs = shape.plannedDependencies.map(
-    (name: string) => `${name}@${packedFileSpec(context.packed.get(name))}`,
-  );
-  // The existing pnpm install also links the control package. It installs the
-  // same two packed dependencies; no second project install or host fallback.
-  for (const name of shape.plannedDependencies) {
-    controlManifest.devDependencies[name] = packedFileSpec(context.packed.get(name));
-  }
-  fs.writeFileSync(
-    path.join(control, "package.json"),
-    `${JSON.stringify(controlManifest, null, 2)}\n`,
-  );
-  runManager(manager, [...manager.installArgs, ...specs, ...manager.installFlags], {
-    cwd: project,
-  });
+  // Init's complete generated plan was checked above. Redirect only its named
+  // dependencies to this campaign's tarballs, then link the entire workspace:
+  // an app-scoped pnpm add does not install an edited sibling manifest.
+  installPackedWorkspaceDependencies(workspace, shape.plannedDependencies, context.packed);
   const vize = fs.realpathSync(path.join(project, "node_modules", "vize"));
   assert.ok(vize.startsWith(workspace), `vize resolved outside the workspace: ${vize}`);
   assert.equal(readJson(path.join(vize, "package.json")).version, context.versions.get("vize"));
