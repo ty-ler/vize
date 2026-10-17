@@ -84,6 +84,8 @@ jobs:
         run: |
           cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_document_package_tests::symlink_workspace::
           cargo test --locked --profile ci -p vize_canon --features legacy --lib batch::virtual_project::tests::editor_union_alias_transition::
+          cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_dependencies_alias::context::cache::tests::
+          cargo clippy --locked --profile ci -p vize_canon --features legacy --all-targets -- -D warnings
       - name: Observe the original six symlink workspace layouts
         if: ${{ !cancelled() && steps.producer.outcome == 'success' }}
         env:

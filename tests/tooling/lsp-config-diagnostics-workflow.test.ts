@@ -75,7 +75,9 @@ test("startup diagnostics retain the production producer and unchanged scale-one
   assert.equal(
     steps[unionControls].run,
     "cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_document_package_tests::symlink_workspace::\n" +
-      "cargo test --locked --profile ci -p vize_canon --features legacy --lib batch::virtual_project::tests::editor_union_alias_transition::\n",
+      "cargo test --locked --profile ci -p vize_canon --features legacy --lib batch::virtual_project::tests::editor_union_alias_transition::\n" +
+      "cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::vue_dependencies_alias::context::cache::tests::\n" +
+      "cargo clippy --locked --profile ci -p vize_canon --features legacy --all-targets -- -D warnings\n",
   );
   assert.equal(
     steps[symlinkControls].run,
