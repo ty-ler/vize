@@ -16,6 +16,8 @@ use crate::{
 
 const RESOLVE_DATA: &str = "vizeCompletion";
 
+#[cfg(all(test, feature = "native", unix))]
+mod native_interleaving_tests;
 #[cfg(test)]
 mod tests;
 mod visibility;

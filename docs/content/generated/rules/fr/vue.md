@@ -1805,9 +1805,9 @@ Correction automatique: Disponible pour les diagnostics pris en charge
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
 
-**Sélection numérique et corrections**
+**Sélection des modificateurs numériques et corrections**
 
-Le premier modificateur à préfixe numérique décimal détermine le diagnostic. `@keyup.13.27="submit"` ne signale que `13` et propose `@keyup.enter.27="submit"` ; une autre passe peut remplacer `27` par `escape`. `@keyup.13suffix="submit"` devient aussi `@keyup.enter="submit"`. Les valeurs 0–9 sont exemptées : `@keyup.0.13="submit"` ne produit donc aucun diagnostic pour cette règle. Les valeurs inconnues telles que `999` sont signalées sans correction. Vue 2 et petite-vue restent exemptés.
+Le premier modificateur numérique dont le nom commence par un entier décimal détermine le diagnostic. `@keyup.13.27="submit"` ne signale que `13` et propose `@keyup.enter.27="submit"` ; un autre passage de correction peut remplacer `27` par `escape`. `@keyup.13suffix="submit"` devient également `@keyup.enter="submit"`. Les valeurs de 0 à 9 sont exemptées ; `@keyup.0.13="submit"` ne produit donc aucun diagnostic de cette règle. Les valeurs inconnues telles que `999` sont signalées sans correction. L’exemption existante pour Vue 2 et petite-vue reste en vigueur.
 
 **Configuration (Vite+)**
 
@@ -3176,9 +3176,9 @@ Correction automatique: Aucune ; examinez la modification proposée
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
 
-Le contrôle compare les liaisons de `v-for`, de `v-slot` (y compris `#name`) et des anciens slots à portée dans le template. Il signale l’identifiant qui masque une liaison antérieure, y compris les déclarations du même élément dans l’ordre des attributs. Les éléments frères ont des portées indépendantes. Les clés de propriété et les références des valeurs par défaut ne sont pas des déclarations, et `v-pre` rend son sous-arbre inerte.
+Le contrôle compare les liaisons `v-for`, `v-slot` (y compris `#name`) et les anciennes liaisons de slots à portée limitée au sein du template. Il signale l’identifiant qui masque une liaison précédente, y compris les déclarations du même élément dans l’ordre des attributs. Les éléments frères ont des portées indépendantes. Les clés de propriétés et les références dans les valeurs par défaut ne sont pas des déclarations, et `v-pre` rend son sous-arbre inerte.
 
-Les noms des propriétés du script et du composant sont hors du contrôle actuel : une liaison de template isolée ne produit pas d’avertissement simplement parce qu’une liaison du script porte le même nom. Les plages de diagnostic couvrent l’identifiant écrit, y compris les graphies échappées et les entités HTML.
+Les noms du script et des propriétés du composant sont hors du champ du contrôle actuel : une liaison isolée du template ne produit pas d’avertissement simplement parce qu’une liaison du script porte le même nom. Les plages de diagnostic couvrent l’identifiant tel qu’il est écrit dans le code source, y compris les graphies échappées et les entités HTML.
 
 **Configuration (Vite+)**
 
@@ -5448,11 +5448,11 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 
 **Quand les gestionnaires se chevauchent**
 
-La règle compare les écouteurs du même événement sur un élément natif. Elle ignore les événements de composants personnalisés sauf si les deux écouteurs utilisent `.native`. Des noms d’événements différents et des filtres de clavier disjoints ne créent pas de conflit.
+La règle compare les écouteurs du même événement sur un élément natif. Elle ignore les événements des composants personnalisés, sauf si les deux écouteurs utilisent `.native`. Des noms d’événements différents et des filtres de touches sans touche commune n’entrent pas en conflit.
 
-Les modificateurs système sont des touches requises : `@keydown.alt.shift` accepte donc aussi Ctrl+Alt+Shift. Si un second gestionnaire utilise `@keydown.alt.ctrl.shift`, ajoutez `.exact` au gestionnaire le plus large pour séparer ces actions. `.exact` autorise les modificateurs système déclarés et refuse les touches Ctrl, Shift, Alt ou Meta supplémentaires.
+Les modificateurs système désignent des touches qui doivent être enfoncées ; `@keydown.alt.shift` accepte donc également Ctrl+Alt+Shift. Si un second gestionnaire utilise `@keydown.alt.ctrl.shift`, ajoutez `.exact` au gestionnaire le plus général pour séparer ces actions. `.exact` autorise les modificateurs système qu’il déclare et refuse toute touche Ctrl, Shift, Alt ou Meta supplémentaire.
 
-Plusieurs modificateurs de clavier sont des alternatives : `@keydown.up.down` accepte l’une ou l’autre flèche. Il peut chevaucher `@keydown.ctrl.down` sur Ctrl+ArrowDown. La règle signale la clé de directive qui nécessite `.exact`, sans inclure l’expression du gestionnaire.
+Plusieurs modificateurs de touches représentent des alternatives : `@keydown.up.down` accepte l’une ou l’autre des deux touches fléchées. Il peut se chevaucher avec `@keydown.ctrl.down` sur Ctrl+FlècheBas. La règle signale la clé de directive qui nécessite `.exact`, sans inclure son expression de gestionnaire.
 
 **Configuration (Vite+)**
 
@@ -6607,9 +6607,26 @@ Options: Consultez les [options typées et leurs valeurs par défaut](/rules/opt
 
 **Validation des modificateurs**
 
-Les modificateurs non pris en charge sont signalés individuellement sur leur nom, y compris pour les écouteurs longs, dynamiques et sous forme d’objet. Les noms acceptés suivent `eslint-plugin-vue` 10.9.2 : modificateurs d’événements Vue, alias de clavier, points de code Unicode uniques et préfixes d’entiers décimaux finis (`Number.parseInt(name, 10)`). Ainsi, `.13suffix` est accepté ; les migrations des touches numériques et de `.native` relèvent de règles distinctes. Seuls `.stop` et `.prevent` fonctionnent sans gestionnaire ; `.once`, `.enter` et les noms personnalisés en exigent un.
+Les modificateurs non pris en charge sont signalés individuellement sur leur nom, y compris avec la forme longue `v-on:click`, les arguments d’événement dynamiques et la syntaxe objet des écouteurs. Les noms acceptés correspondent à ceux d’`eslint-plugin-vue` 10.9.2 : les modificateurs d’événement intégrés de Vue, la table complète des alias de touches, tout point de code Unicode unique et les noms ayant un préfixe entier décimal fini (selon la sémantique de `Number.parseInt(name, 10)` en JavaScript). Par exemple, cette règle accepte `.13suffix`. Les diagnostics concernant l’abandon des codes de touche numériques et la migration de `.native` relèvent de règles distinctes.
 
-`modifiers` ajoute des noms exacts et sensibles à la casse sans activer la règle. La configuration Vite+ ci-dessous accepte `@click.custom="handler"` ; la configuration autonome utilise `linter.ruleOptions`. Les entrées de portée remplacent la liste ; `[]` la réinitialise. La table de clavier provient des [alias eslint-plugin-vue](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json), sous licence MIT ; la source et la licence sont conservées avec l’implémentation.
+Seuls `.stop` et `.prevent` ont un effet sans gestionnaire. Un modificateur tel que `.once`, `.enter` ou un nom personnalisé configuré nécessite toujours une expression de gestionnaire.
+
+Les projets ayant une gestion personnalisée des événements peuvent ajouter des noms sous `linter.ruleOptions` :
+
+```json
+{
+  "linter": {
+    "rules": { "vue/valid-v-on": "error" },
+    "ruleOptions": {
+      "vue/valid-v-on": { "modifiers": ["custom"] }
+    }
+  }
+}
+```
+
+Cela autorise `@click.custom="handler"`. Les noms doivent correspondre exactement, en respectant la casse ; les options complètent les noms intégrés et n’activent pas une règle désactivée. Les entrées de configuration à portée limitée peuvent remplacer les noms hérités par une nouvelle liste ou les réinitialiser avec `[]`.
+
+La table des touches est adaptée des [alias de touches d’eslint-plugin-vue](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json), sous licence MIT. Son code source et sa licence sont conservés aux côtés de l’implémentation.
 
 **Configuration (Vite+)**
 

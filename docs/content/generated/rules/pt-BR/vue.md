@@ -1806,9 +1806,9 @@ Correção automática: Disponível para os diagnósticos compatíveis
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
 
-**Seleção numérica e correções**
+**Seleção de modificadores numéricos e correções**
 
-O primeiro modificador com prefixo numérico decimal determina o diagnóstico. `@keyup.13.27="submit"` reporta apenas `13` e oferece `@keyup.enter.27="submit"`; outra passagem pode substituir `27` por `escape`. `@keyup.13suffix="submit"` também se torna `@keyup.enter="submit"`. Valores de 0 a 9 são isentos, portanto `@keyup.0.13="submit"` não gera diagnóstico nesta regra. Valores desconhecidos como `999` são reportados sem correção. Vue 2 e petite-vue continuam isentos.
+O primeiro modificador numérico cujo nome começa com um inteiro decimal determina o diagnóstico. `@keyup.13.27="submit"` reporta apenas `13` e oferece `@keyup.enter.27="submit"`; outra passagem de correção pode substituir `27` por `escape`. `@keyup.13suffix="submit"` também se torna `@keyup.enter="submit"`. Os valores de 0 a 9 são isentos, portanto `@keyup.0.13="submit"` não gera diagnóstico desta regra. Valores desconhecidos, como `999`, são reportados sem correção. A isenção existente para Vue 2 e petite-vue continua em vigor.
 
 **Configuração (Vite+)**
 
@@ -3177,9 +3177,9 @@ Correção automática: Nenhuma; revise a alteração sugerida
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
 
-A verificação compara variáveis de `v-for`, de `v-slot` (incluindo `#name`) e de slots com escopo legados no template. Ela reporta o identificador que oculta uma variável anterior, incluindo declarações no mesmo elemento na ordem dos atributos. Elementos irmãos têm escopos independentes. Chaves de propriedade e referências em valores padrão não são declarações, e `v-pre` torna sua subárvore inerte.
+A verificação compara as vinculações de `v-for`, `v-slot` (incluindo `#name`) e slots com escopo da sintaxe legada dentro do template. Ela reporta o identificador que oculta uma vinculação anterior, incluindo declarações no mesmo elemento, na ordem dos atributos. Elementos irmãos têm escopos independentes. Chaves de propriedades e referências em valores padrão não são declarações, e `v-pre` torna sua subárvore inerte.
 
-Nomes de propriedades do script e do componente estão fora da verificação atual: uma variável isolada do template não produz aviso apenas porque uma variável do script tem o mesmo nome. Os intervalos de diagnóstico cobrem o identificador escrito, incluindo grafias escapadas e entidades HTML.
+Nomes do script e de propriedades do componente estão fora da verificação atual: uma única vinculação no template não produz um aviso apenas porque uma vinculação no script tem o mesmo nome. Os intervalos de diagnóstico abrangem o identificador como foi escrito no código-fonte, incluindo grafias com escapes e entidades HTML.
 
 **Configuração (Vite+)**
 
@@ -5449,11 +5449,11 @@ Opções: Sem opções específicas da regra. A severidade e a seleção de pred
 
 **Quando os manipuladores se sobrepõem**
 
-A regra compara listeners do mesmo evento em um elemento nativo. Ela ignora eventos de componentes personalizados, a menos que ambos os listeners usem `.native`. Nomes de eventos diferentes e filtros de teclado sem interseção não entram em conflito.
+A regra compara listeners do mesmo evento em um elemento nativo. Ela ignora eventos de componentes personalizados, a menos que ambos os listeners usem `.native`. Nomes de eventos diferentes e filtros de teclado sem teclas em comum não entram em conflito.
 
-Modificadores de sistema são teclas obrigatórias, portanto `@keydown.alt.shift` também aceita Ctrl+Alt+Shift. Se um segundo manipulador usa `@keydown.alt.ctrl.shift`, adicione `.exact` ao manipulador mais amplo para separar as ações. `.exact` permite os modificadores de sistema declarados e rejeita teclas Ctrl, Shift, Alt ou Meta adicionais.
+Os modificadores de sistema indicam teclas que precisam estar pressionadas, então `@keydown.alt.shift` também aceita Ctrl+Alt+Shift. Se um segundo manipulador usar `@keydown.alt.ctrl.shift`, adicione `.exact` ao manipulador mais abrangente para manter essas ações separadas. `.exact` permite os modificadores de sistema declarados e rejeita teclas Ctrl, Shift, Alt ou Meta adicionais.
 
-Vários modificadores de teclado são alternativas: `@keydown.up.down` aceita qualquer uma das setas. Ele pode se sobrepor a `@keydown.ctrl.down` em Ctrl+ArrowDown. A regra reporta a chave da diretiva que precisa de `.exact`, excluindo a expressão do manipulador.
+Vários modificadores de teclado são alternativas: `@keydown.up.down` aceita qualquer uma das duas teclas de seta. Ele pode se sobrepor a `@keydown.ctrl.down` em Ctrl+SetaParaBaixo. A regra reporta a chave da diretiva que precisa de `.exact`, excluindo sua expressão de manipulador.
 
 **Configuração (Vite+)**
 
@@ -6608,9 +6608,26 @@ Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md)
 
 **Validação de modificadores**
 
-Modificadores não suportados são reportados individualmente em seus nomes, inclusive em listeners de forma longa, dinâmicos e em objeto. Os nomes aceitos seguem `eslint-plugin-vue` 10.9.2: modificadores de eventos do Vue, aliases de teclado, pontos de código Unicode únicos e prefixos inteiros decimais finitos (`Number.parseInt(name, 10)`). Assim, `.13suffix` é aceito; migrações de teclas numéricas e de `.native` usam regras separadas. Apenas `.stop` e `.prevent` funcionam sem manipulador; `.once`, `.enter` e nomes personalizados exigem um.
+Modificadores não suportados são reportados individualmente no nome do modificador, inclusive na forma longa `v-on:click`, em argumentos de evento dinâmicos e na sintaxe de objeto de listeners. Os nomes aceitos correspondem aos do `eslint-plugin-vue` 10.9.2: modificadores de evento nativos do Vue, a tabela completa de aliases de teclas, qualquer ponto de código Unicode único e nomes com um prefixo inteiro decimal finito (conforme a semântica de `Number.parseInt(name, 10)` do JavaScript). Por exemplo, `.13suffix` é aceito por esta regra. Os diagnósticos de descontinuação de códigos numéricos de teclas e de migração de `.native` pertencem a regras separadas.
 
-`modifiers` adiciona nomes exatos e sensíveis a maiúsculas e minúsculas sem ativar a regra. A configuração Vite+ abaixo aceita `@click.custom="handler"`; a configuração independente usa `linter.ruleOptions`. Entradas com escopo substituem a lista; `[]` a redefine. A tabela de teclado vem dos [aliases eslint-plugin-vue](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json), sob licença MIT; a fonte e a licença são preservadas junto à implementação.
+Apenas `.stop` e `.prevent` têm efeito sem um manipulador. Um modificador como `.once`, `.enter` ou um nome personalizado configurado ainda precisa de uma expressão de manipulador.
+
+Projetos com tratamento personalizado de eventos podem adicionar nomes em `linter.ruleOptions`:
+
+```json
+{
+  "linter": {
+    "rules": { "vue/valid-v-on": "error" },
+    "ruleOptions": {
+      "vue/valid-v-on": { "modifiers": ["custom"] }
+    }
+  }
+}
+```
+
+Isso permite `@click.custom="handler"`. Os nomes devem corresponder exatamente e diferenciam maiúsculas de minúsculas; as opções complementam os nomes nativos e não ativam uma regra desativada. Entradas de configuração com escopo específico podem substituir os nomes herdados por uma nova lista ou redefini-los com `[]`.
+
+A tabela de teclas é adaptada dos [aliases de teclas do eslint-plugin-vue](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json), licenciados sob a MIT. Seu código-fonte e sua licença são preservados junto à implementação.
 
 **Configuração (Vite+)**
 

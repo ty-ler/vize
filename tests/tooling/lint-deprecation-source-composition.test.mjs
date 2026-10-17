@@ -123,6 +123,56 @@ void test("whole composition refuses extra, omitted, reordered and mutated close
     assert.throws(() => validate(changed));
   }
 });
+// #9213 adds exactly these five numeric-key fixes to both current native
+// preset views. Historical packets and the seven reviewed range witnesses
+// stay frozen; restoring only these complete fix objects must recover them.
+const numericAutofixes = [
+  [
+    0,
+    "numeric-shorthand",
+    [0, 0],
+    39,
+    41,
+    "enter",
+    '<template><button type="button" @keyup.enter="submit">Submit</button></template>\n',
+  ],
+  [
+    1,
+    "numeric-longhand",
+    [1, 0],
+    43,
+    45,
+    "escape",
+    '<template><button type="button" v-on:keyup.escape="cancel">Cancel</button></template>\n',
+  ],
+  [
+    2,
+    "numeric-combined",
+    [0, 0],
+    39,
+    41,
+    "enter",
+    '<template><button type="button" @keyup.enter.27.stop="submit">Submit</button></template>\n',
+  ],
+  [
+    4,
+    "combined",
+    [1, 1],
+    50,
+    52,
+    "enter",
+    '<template functional><button type="button" @keyup.enter.stop="submit">Submit</button></template>\n',
+  ],
+  [
+    10,
+    "unicode-crlf",
+    [1, 1],
+    70,
+    72,
+    "escape",
+    '<!-- 日本語 -->\r\n<template functional><button type="button" @keyup.escape="cancel">Cancel</button></template>\r\n',
+  ],
+];
 const vectors = [
   [
     "lint-default-correctness",
@@ -134,6 +184,7 @@ const vectors = [
       [5, "utf8-crlf", 40, 59, 32, 51],
     ],
     [],
+    [],
   ],
   [
     "lint-default-migrations",
@@ -143,45 +194,12 @@ const vectors = [
       [4, "combined", 10, 20, 10, 20],
       [10, "unicode-crlf", 30, 40, 10, 20],
     ],
-    [
-      [0, "numeric-shorthand", 39, 41, "enter"],
-      [1, "numeric-longhand", 43, 45, "escape"],
-      [2, "numeric-combined", 39, 41, "enter"],
-      [4, "combined", 50, 52, "enter"],
-      [10, "unicode-crlf", 70, 72, "escape"],
-    ],
+    numericAutofixes,
+    [[2, "numeric-combined"]],
   ],
 ];
-function validateCurrentPacket(original, current, changes, numericFixes) {
+function validateCurrentPacket(original, current, changes, autofixes, firstNumericOnly) {
   const inverse = structuredClone(current);
-  // #9213 intentionally adds named-key fixes and reports only the first
-  // numeric modifier. Keep the original packets immutable and invert just
-  // those approved changes, including the complete fix and LSP cardinality.
-  for (const [index, id, start, end, new_text] of numericFixes) {
-    const row = inverse.cases[index];
-    assert.equal(row.id, id);
-    for (const field of ["diagnostics", "essentialDiagnostics"]) {
-      const findings = row[field].filter(
-        (finding) => finding.rule_name === "vue/no-deprecated-v-on-number-modifiers",
-      );
-      assert.equal(findings.length, 1);
-      assert.deepEqual(findings[0].fix, {
-        message: "Replace the numeric keyCode modifier with a named key",
-        edits: [{ start, end, new_text }],
-      });
-      findings[0].fix = null;
-    }
-  }
-  if (numericFixes.length) {
-    const row = inverse.cases[2];
-    const old = original.cases[2];
-    assert.equal(row.id, "numeric-combined");
-    for (const field of ["diagnostics", "essentialDiagnostics", "lspDiagnostics"]) {
-      assert.equal(row[field].length, 1);
-      assert.equal(old[field].length, 2);
-      row[field].push(old[field][1]);
-    }
-  }
   for (const [index, id, start, end, lspStart, lspEnd] of changes) {
     const row = inverse.cases[index];
     const old = original.cases[index];
@@ -201,16 +219,54 @@ function validateCurrentPacket(original, current, changes, numericFixes) {
     row.lspDiagnostics[0].range.start.character = old.lspDiagnostics[0].range.start.character;
     row.lspDiagnostics[0].range.end.character = old.lspDiagnostics[0].range.end.character;
   }
+  for (const [index, id, positions, start, end, key, applied] of autofixes) {
+    const row = inverse.cases[index];
+    const old = original.cases[index];
+    assert.equal(row.id, id);
+    for (const [view, field] of ["diagnostics", "essentialDiagnostics"].entries()) {
+      const diagnostic = row[field][positions[view]];
+      assert.equal(diagnostic.rule_name, "vue/no-deprecated-v-on-number-modifiers");
+      assert.deepEqual([diagnostic.start, diagnostic.end], [start, end]);
+      assert.deepEqual(diagnostic.fix, {
+        message: "Replace the numeric keyCode modifier with a named key",
+        edits: [{ start, end, new_text: key }],
+      });
+      const source = Buffer.from(row.source);
+      assert.equal(
+        Buffer.concat([
+          source.subarray(0, start),
+          Buffer.from(key),
+          source.subarray(end),
+        ]).toString(),
+        applied,
+      );
+      assert.equal(old[field][positions[view]].fix, null);
+      diagnostic.fix = old[field][positions[view]].fix;
+    }
+  }
+  // #9213 also explicitly changes `.13.27` from two findings to the first
+  // numeric modifier only. Preserve the complete removed original rows; only
+  // this named listener may restore them for the frozen inverse comparison.
+  for (const [index, id] of firstNumericOnly) {
+    const row = inverse.cases[index];
+    const old = original.cases[index];
+    assert.equal(row.id, id);
+    for (const field of ["diagnostics", "essentialDiagnostics", "lspDiagnostics"]) {
+      assert.equal(old[field].length, 2);
+      assert.deepEqual(row[field], [old[field][0]]);
+      row[field].push(structuredClone(old[field][1]));
+    }
+  }
   assert.deepEqual(inverse, original);
 }
-void test("current whole preset packets retain approved spans and numeric-key migrations", () => {
-  for (const [directory, hash, changes, numericFixes] of vectors) {
+void test("current whole preset packets preserve seven ranges, five numeric fixes and one first-modifier witness", () => {
+  for (const [directory, hash, changes, autofixes, firstNumericOnly] of vectors) {
     const fixture = path.join(root, "tests/_fixtures", directory);
     const old = fs.readFileSync(path.join(fixture, "cases.json"));
     assert.equal(digest(old), hash);
     const original = JSON.parse(old);
     const current = JSON.parse(fs.readFileSync(path.join(fixture, "current-range-cases.json")));
-    validateCurrentPacket(original, current, changes, numericFixes);
+    validateCurrentPacket(original, current, changes, autofixes, firstNumericOnly);
     const mutations = [
       (packet) => {
         packet.cases[0].source += "foreign";
@@ -227,35 +283,58 @@ void test("current whole preset packets retain approved spans and numeric-key mi
       (packet) => packet.cases.pop(),
       (packet) => packet.cases.reverse(),
     ];
-    if (numericFixes.length) {
-      mutations.push(
-        (packet) => {
-          packet.cases[0].diagnostics[0].fix = null;
-        },
-        (packet) => {
-          packet.cases[0].diagnostics[0].fix.edits[0].new_text = "escape";
-        },
-        (packet) => {
-          packet.cases[0].essentialDiagnostics[0].fix.edits[0].start++;
-        },
-        (packet) => {
-          packet.cases[0].diagnostics[0].fix.message += "foreign";
-        },
-        (packet) => {
-          packet.cases[0].diagnostics[0].fix.edits.push({ start: 0, end: 0, new_text: "foreign" });
-        },
-        (packet) => {
-          packet.cases[2].diagnostics.push(original.cases[2].diagnostics[1]);
-        },
-        (packet) => {
-          packet.cases[2].lspDiagnostics.push(original.cases[2].lspDiagnostics[1]);
-        },
-      );
-    }
     for (const mutate of mutations) {
       const changed = structuredClone(current);
       mutate(changed);
-      assert.throws(() => validateCurrentPacket(original, changed, changes, numericFixes));
+      assert.throws(() =>
+        validateCurrentPacket(original, changed, changes, autofixes, firstNumericOnly),
+      );
+    }
+    for (const [index, , positions] of autofixes) {
+      for (const [view, field] of ["diagnostics", "essentialDiagnostics"].entries()) {
+        for (const mutate of [
+          (fix) => {
+            fix.message += "foreign";
+          },
+          (fix) => {
+            fix.edits[0].new_text += "foreign";
+          },
+          (fix) => {
+            fix.edits[0].start++;
+          },
+          (fix) => {
+            fix.edits[0].end++;
+          },
+          (fix) => {
+            fix.edits.push(structuredClone(fix.edits[0]));
+          },
+        ]) {
+          const changed = structuredClone(current);
+          mutate(changed.cases[index][field][positions[view]].fix);
+          assert.throws(() =>
+            validateCurrentPacket(original, changed, changes, autofixes, firstNumericOnly),
+          );
+        }
+        const missing = structuredClone(current);
+        missing.cases[index][field][positions[view]].fix = null;
+        assert.throws(() =>
+          validateCurrentPacket(original, missing, changes, autofixes, firstNumericOnly),
+        );
+      }
+    }
+    for (const [index] of firstNumericOnly) {
+      for (const field of ["diagnostics", "essentialDiagnostics", "lspDiagnostics"]) {
+        for (const alter of [
+          (rows) => rows.push(structuredClone(original.cases[index][field][1])),
+          (rows) => rows.pop(),
+        ]) {
+          const changed = structuredClone(current);
+          alter(changed.cases[index][field]);
+          assert.throws(() =>
+            validateCurrentPacket(original, changed, changes, autofixes, firstNumericOnly),
+          );
+        }
+      }
     }
   }
 });

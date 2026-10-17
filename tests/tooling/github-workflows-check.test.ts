@@ -151,7 +151,7 @@ test("check workflow builds local native bindings before JS checks", () => {
     "build-js-packages must install rust-script before build:packages",
   );
   assert.match(buildJob, /name:\s*shared-js-build/);
-  assert.match(playgroundJob, /needs:\n\s+- build-js-packages\b/);
+  assert.deepEqual(parse(workflow).jobs["playground-test"].needs, ["build-js-packages"]);
   assert.match(playgroundJob, /name:\s*shared-js-build/);
   assert.doesNotMatch(playgroundJob, /name: Build npm packages/);
 });

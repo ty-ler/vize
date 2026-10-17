@@ -16,9 +16,26 @@ v-on のイベント名・式・修飾子を検査します。
 
 ## 修飾子の検証
 
-未対応の修飾子は、その名前の位置で個別に報告します。長い形式・動的引数・オブジェクト形式のリスナーも対象です。`eslint-plugin-vue` 10.9.2 と同じく、Vue のイベント修飾子、キーの別名、単一の Unicode コードポイント、十進整数として有限の値を読み取れる接頭辞（`Number.parseInt(name, 10)`）を許可します。そのため `.13suffix` も有効です。数値キーと `.native` の移行は別のルールで検査します。ハンドラーなしで動作するのは `.stop` と `.prevent` だけで、`.once`・`.enter`・独自の名前には式が必要です。
+未対応の修飾子は、修飾子の名前ごとに報告します。長い `v-on:click`、動的なイベント引数、オブジェクト形式も対象です。受け付ける名前は `eslint-plugin-vue` 10.9.2 に合わせ、Vue 組み込みのイベント修飾子、完全なキー別名一覧、単一の Unicode コードポイント、有限な十進整数の接頭辞を持つ名前です。整数は JavaScript の `Number.parseInt(name, 10)` と同じように読み取るため、`.13suffix` もこのルールでは有効です。数値キーの非推奨判定と `.native` の移行診断は別のルールが担当します。
 
-`modifiers` は大文字と小文字を区別する完全一致の名前を追加します。ルールは別に有効にしてください。以下の Vite+ 設定は `@click.custom="handler"` を許可します。単独の設定では `linter.ruleOptions` を使います。スコープ付きの設定はリストを置き換え、`[]` でリセットできます。キーの表は MIT ライセンスの [eslint-plugin-vue の別名一覧](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json)に由来し、実装とともに元のソースとライセンスを保持しています。
+ハンドラーなしで動作するのは `.stop` と `.prevent` だけです。`.once`、`.enter`、設定した独自の名前にもハンドラー式が必要です。
+
+独自のイベント処理で使う名前は `linter.ruleOptions` に追加できます。
+
+```json
+{
+  "linter": {
+    "rules": { "vue/valid-v-on": "error" },
+    "ruleOptions": {
+      "vue/valid-v-on": { "modifiers": ["custom"] }
+    }
+  }
+}
+```
+
+これにより `@click.custom="handler"` を使えます。名前は大文字と小文字を区別して完全一致で比較し、組み込みの名前に追加します。ルール自体が無効な場合は有効にしません。範囲別の設定では継承した一覧を置き換え、`[]` でリセットできます。
+
+キーの一覧は、MIT ライセンスの [eslint-plugin-vue のキー別名](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json) を元にしています。出典とライセンスは実装とともに保持しています。
 
 ## 設定（Vite+）
 

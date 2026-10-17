@@ -207,23 +207,28 @@ await test("legacy instance API packets preserve every pinned original source an
 });
 
 await test("Vue 3 keeps removed APIs unavailable on public instances and Options-returning factories", () => {
-  const requireVue = createRequire(
-    process.env.VIZE_LEGACY_API_VUE_MANIFEST ??
-      path.join(root, "tools/benchmarks/scripts/package.json"),
-  );
-  const requireTypeScript = createRequire(
+  const vueManifest = process.env.VIZE_LEGACY_API_VUE_MANIFEST;
+  const vueSpecifier = vueManifest ? "vue" : "vue-legacy-instance-api-oracle";
+  const requireVue = createRequire(vueManifest ?? path.join(root, "tests/package.json"));
+  const requireScriptParser = createRequire(
     process.env.VIZE_LEGACY_API_SCRIPT_PARSER_MANIFEST ??
       path.join(root, "tools/benchmarks/scripts/package.json"),
   );
+  // Follow the selected providers' own dependencies under pnpm's isolated layout.
+  const requireTypeScript = createRequire(
+    requireScriptParser.resolve("@typescript-eslint/parser/package.json"),
+  );
   const runtime = json("runtime.json");
-  const { createRenderer, h, version } = requireVue("vue");
-  const requireDom = createRequire(requireVue.resolve("@vue/runtime-dom/package.json"));
+  const { createRenderer, h, version } = requireVue(vueSpecifier);
+  assert.equal(version, runtime.provider.vue);
+  const requireVueRuntime = createRequire(requireVue.resolve(`${vueSpecifier}/package.json`));
+  const requireDom = createRequire(requireVueRuntime.resolve("@vue/runtime-dom/package.json"));
   const runtimePath = path.join(
     path.dirname(requireDom.resolve("@vue/runtime-core/package.json")),
     runtime.provider.source.path,
   );
-  assert.equal(version, runtime.provider.vue);
   assert.equal(hash(fs.readFileSync(runtimePath)), runtime.provider.source.sha256);
+  assert.ok(requireDom.cache[runtimePath], "the pinned runtime-core implementation is loaded");
   const typescript = requireTypeScript("typescript");
   assert.equal(typescript.version, runtime.provider.typescript);
   const { transpileModule, ModuleKind, ScriptTarget } = typescript;

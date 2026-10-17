@@ -183,6 +183,14 @@ fn parse_eslint_rule_list(raw: &str) -> Vec<String> {
             "vue/no-side-effects-in-computed-properties" => {
                 "script/no-side-effects-in-computed-properties"
             }
+            "vue/no-deprecated-dollar-listeners-api" => "script/no-deprecated-dollar-listeners-api",
+            "vue/no-deprecated-dollar-scopedslots-api" => {
+                "script/no-deprecated-dollar-scopedslots-api"
+            }
+            "vue/no-use-computed-property-like-method" => {
+                "script/no-use-computed-property-like-method"
+            }
+            "vue/require-valid-default-prop" => "script/require-valid-default-prop",
             rule => rule,
         })
         .map(String::from)

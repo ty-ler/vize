@@ -18,6 +18,15 @@ pub(super) fn integration(
     expected_gate: Option<&str>,
     root: &Path,
 ) -> Result<Option<Receipt>, String> {
+    Ok(integration_catalog(source, expected_gate, root, false)?.map(|(receipt, _)| receipt))
+}
+
+fn integration_catalog(
+    source: &Source,
+    expected_gate: Option<&str>,
+    root: &Path,
+    published: bool,
+) -> Result<Option<(Receipt, Value)>, String> {
     let candidate = &source.candidate;
     let pr = github::api(
         &candidate.repository,
@@ -75,23 +84,7 @@ pub(super) fn integration(
     first_parent(&merge, &main, root)?;
     let version = candidate.tag.trim_start_matches('v');
     metadata::verify_delta(&parent, &merge, &source.base_version, version, root)?;
-    // The exact source registry closure remains authoritative. A newly added
-    // package, changed publishing plan, or changed local dependency topology
-    // requires a new cut rather than borrowing H's artifacts for moving main.
-    let catalog = if source.stable.is_some() {
-        super::stable::shipping_catalog(source, root)?
-    } else {
-        metadata::catalog(&candidate.head, version, root)?
-    };
-    if source.stable.is_none()
-        && (metadata::catalog(&merge, version, root)? != catalog
-            || metadata::catalog(&main, version, root)? != catalog)
-    {
-        return Err(
-            "The integration/current main registry closure differs from the qualified H catalog."
-                .into(),
-        );
-    }
+    let catalog = registry_catalog(source, &merge, &main, published, root)?;
     let gate = match expected_gate {
         Some(gate) => {
             if !gates::verify(
@@ -117,13 +110,92 @@ pub(super) fn integration(
             None => return Ok(None),
         },
     };
-    Ok(Some(Receipt {
-        head,
-        merge,
-        parent,
-        gate,
+    Ok(Some((
+        Receipt {
+            head,
+            merge,
+            parent,
+            gate,
+        },
+        catalog,
+    )))
+}
+
+fn registry_catalog(
+    source: &Source,
+    merge: &str,
+    main: &str,
+    published: bool,
+    root: &Path,
+) -> Result<Value, String> {
+    let candidate = &source.candidate;
+    let version = candidate.tag.trim_start_matches('v');
+    // Promotion still requires moving main's exact publication authority. Only
+    // the tagged historical reader below can omit that comparison; H == V stays.
+    let catalog = if source.stable.is_some() {
+        super::stable::shipping_catalog(source, root)?
+    } else {
+        metadata::catalog(&candidate.head, version, root)?
+    };
+    if source.stable.is_none()
+        && (metadata::catalog(merge, version, root)? != catalog
+            || (!published && metadata::catalog(main, version, root)? != catalog))
+    {
+        return Err(
+            "The integration/current main registry closure differs from the qualified H catalog."
+                .into(),
+        );
+    }
+    Ok(catalog)
+}
+
+/// Historical verification never authorizes promotion or new publication. The
+/// immutable tag must already bind H/R/V before moving-main equality is omitted.
+pub(super) fn published_history(source: &Source, id: u64, root: &Path) -> Result<Value, String> {
+    let (recorded_id, recorded) = tag_receipt(source, root)?;
+    if recorded_id != id {
+        return Err("Published history belongs to another original Release run".into());
+    }
+    let candidate = &source.candidate;
+    let run = github::api(&candidate.repository, &format!("actions/runs/{id}"), root)?;
+    run_identity(&run, source, id)?;
+    if !pr_contract::ready_job(&github::jobs(&candidate.repository, id, root)?)?
+        || !pr_promote::checks_pass(candidate, root)?
+    {
+        return Err("Published H/R lacks its original readiness or exact required checks".into());
+    }
+    let (actual, catalog) = integration_catalog(source, Some(&recorded.gate), root, true)?
+        .ok_or("Published history lacks its signed integration")?;
+    if actual.head != recorded.head
+        || actual.merge != recorded.merge
+        || actual.parent != recorded.parent
+    {
+        return Err("Published integration differs from the immutable tag receipt".into());
+    }
+    let pin =
+        super::retire_archive::remote(&format!("refs/heads/release-pin/{}", candidate.tag), root)?
+            .ok_or("Missing published source pin")?;
+    // Re-fetch the tag after integration verification, which uses FETCH_HEAD.
+    tag_receipt(source, root)?;
+    let tag_object = github::git(&["rev-parse", "FETCH_HEAD"], root)?;
+    Ok(serde_json::json!({
+        "schema": "vize-published-history-v1",
+        "identity": {
+            "repository": candidate.repository, "sourcePr": candidate.number,
+            "cut": source.cut, "head": candidate.head, "tag": candidate.tag,
+            "releaseRun": id, "releaseAttempt": run["run_attempt"], "pin": pin,
+            "tagObject": tag_object, "integrationPr": source.integration,
+            "integrationHead": actual.head, "integrationMerge": actual.merge,
+            "integrationParent": actual.parent, "protectedCandidate": actual.gate
+        },
+        "catalog": catalog,
+        "authority": "Historical H/V/catalog only; never authorizes promotion, replacement artifacts or a later version"
     }))
 }
+
+#[cfg(test)]
+#[path = "pr_pin_published_tests.rs"]
+mod published_tests;
 
 pub(super) fn signed_merge(commit: &Value, expected: &str) -> Result<(), String> {
     if commit.get("sha").and_then(Value::as_str) != Some(expected)
