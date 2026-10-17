@@ -129,7 +129,19 @@ impl VirtualProject {
         // Current package links survive the runtime prune; the link pass
         // below repairs any whose target changed.
         let mut runtime_preserved = self.root_package_shadow_scope_entries();
+        // Another live member can own a generated package even when this host
+        // has no imports. Preserve its complete union-owned root scope too.
+        let root_modules = self.virtual_root.join("node_modules");
+        runtime_preserved.extend(expected_files.iter().filter_map(|path| {
+            let relative = path.strip_prefix(&root_modules).ok()?;
+            let std::path::Component::Normal(entry) = relative.components().next()? else {
+                return None;
+            };
+            Some(root_modules.join(entry))
+        }));
         runtime_preserved.extend(package_links.iter().map(|link| link.virtual_dir.clone()));
+        runtime_preserved.sort();
+        runtime_preserved.dedup();
         profile!(
             "canon.project.runtime_deps",
             materialize_runtime_dependencies(
