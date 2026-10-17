@@ -285,6 +285,35 @@ test("CI runs every client at the editor-host-smoke pins and requires all four r
   assert.equal(download?.with?.pattern, "ts45-*");
 });
 
+test("Vim and Emacs configuration cases use the verified native artifact and retain full evidence", () => {
+  const workflow = parse(readRepoFile(".github", "workflows", "editor-conformance.yml")) as any;
+  const host = workflow.jobs["configuration-clients"];
+  assert.equal(host.needs, "server");
+  assert.equal(host.strategy["fail-fast"], false);
+  assert.deepEqual(host.strategy.matrix.client, ["vim", "emacs"]);
+  const commands = host.steps.map((step: any) => step.run ?? "").join("\n");
+  assert.match(commands, /server-artifact\.ts verify/);
+  assert.match(commands, /vim-vize\/run-config-server\.ts/);
+  assert.match(commands, /emacs-vize\/run-real-server\.ts/);
+  assert.match(commands, /server-artifact\.ts host/);
+  assert.ok(!commands.includes("continue-on-error"));
+  const upload = host.steps.find((step: any) => step.uses?.startsWith("actions/upload-artifact@"));
+  assert.equal(upload.if, "always()");
+  assert.equal(upload.with["if-no-files-found"], "error");
+  assert.equal(upload.with.name, "configuration-${{ matrix.client }}");
+  const pin = host.steps.find((step: any) => step.env?.VIM_LSP_COMMIT).env.VIM_LSP_COMMIT;
+  assert.ok(readRepoFile(".github", "actions", "vscode-host-smoke", "action.yml").includes(pin));
+  const build = workflow.jobs.server.steps;
+  assert.ok(build.some((step: any) => step.run?.includes("server-artifact.ts write")));
+  const artifact = build.find((step: any) => step.uses?.startsWith("actions/upload-artifact@"));
+  assert.ok(artifact.with.path.includes("target/ci/server.json"));
+  assert.ok(
+    workflow.jobs.conformance.steps.some((step: any) =>
+      step.run?.includes("server-artifact.ts verify"),
+    ),
+  );
+});
+
 test("every client has a driver and only Zed is a protocol replay", async () => {
   const modes: Record<string, string> = {};
   for (const client of ["helix", "neovim", "vscode", "zed"]) {
