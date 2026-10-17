@@ -129,7 +129,7 @@ impl MaestroServer {
         self.publish_diagnostics_with_cause(uri, true).await;
     }
 
-    async fn publish_diagnostics_with_cause(&self, uri: &Url, explicit_save: bool) {
+    async fn publish_diagnostics_with_cause(&self, uri: &Url, explicit_refresh: bool) {
         #[cfg(feature = "native")]
         let retained = super::initial_diagnostics::RetainedDiagnostics::new(self, uri);
         // tower-lsp polls notifications concurrently. A watched declaration
@@ -147,7 +147,7 @@ impl MaestroServer {
         drop(diagnostic_guard);
 
         if let Some(diagnostics) = diagnostics {
-            self.publish_collected_diagnostics_with_cause(uri, diagnostics, explicit_save)
+            self.publish_collected_diagnostics_with_cause(uri, diagnostics, explicit_refresh)
                 .await;
         }
         #[cfg(feature = "native")]
@@ -157,6 +157,27 @@ impl MaestroServer {
     /// Publish only if the document still has the version that scheduled the
     /// refresh. Watcher revalidation yields to a newer didChange publish.
     pub(crate) async fn publish_diagnostics_if_version(&self, uri: &Url, expected: i32) {
+        self.publish_versioned_diagnostics_with_cause(uri, expected, false)
+            .await;
+    }
+
+    /// An explicit configuration event requires its complete retained answer,
+    /// even when a rejected reload keeps the same version, owner and payload.
+    pub(super) async fn publish_configuration_diagnostics_if_version(
+        &self,
+        uri: &Url,
+        expected: i32,
+    ) {
+        self.publish_versioned_diagnostics_with_cause(uri, expected, true)
+            .await;
+    }
+
+    async fn publish_versioned_diagnostics_with_cause(
+        &self,
+        uri: &Url,
+        expected: i32,
+        explicit_refresh: bool,
+    ) {
         #[cfg(feature = "native")]
         let retained = super::initial_diagnostics::RetainedDiagnostics::new(self, uri);
         #[cfg(feature = "native")]
@@ -170,7 +191,8 @@ impl MaestroServer {
         drop(diagnostic_guard);
 
         if let Some(diagnostics) = diagnostics {
-            self.publish_collected_diagnostics(uri, diagnostics).await;
+            self.publish_collected_diagnostics_with_cause(uri, diagnostics, explicit_refresh)
+                .await;
         }
         #[cfg(feature = "native")]
         retained.finish();
