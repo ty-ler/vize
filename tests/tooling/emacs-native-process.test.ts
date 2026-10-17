@@ -5,7 +5,10 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 
-import { nativeProcessWrapper } from "../../tools/support/compat/emacs-vize/run-real-server.ts";
+import {
+  nativeProcessStopped,
+  nativeProcessWrapper,
+} from "../../tools/support/compat/emacs-vize/run-real-server.ts";
 
 test(
   "Emacs native PID wrapper preserves the real child's original stdin pipe",
@@ -26,5 +29,11 @@ test(
     const nativePid = Number(fs.readFileSync(pidFile, "utf8").trim());
     assert.ok(Number.isInteger(nativePid) && nativePid > 0);
     assert.notEqual(nativePid, result.pid, "Record the native child, not the launcher shell");
+    assert.equal(nativeProcessStopped(nativePid), true);
+    assert.equal(
+      nativeProcessStopped(process.pid),
+      false,
+      "A running process must not qualify as stopped",
+    );
   },
 );

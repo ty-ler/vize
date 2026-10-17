@@ -57,6 +57,27 @@ export function nativeProcessWrapper(server: string, pidFile: string) {
   return `#!/bin/sh\nexec 3<&0\n${shellQuote(server)} "$@" <&3 &\nnative=$!\nexec 3<&-\nprintf '%s\\n' "$native" > ${shellQuote(pidFile)}\nwait "$native"\n`;
 }
 
+/** A zombie has terminated even when the editor killed its launcher before reaping. */
+export function nativeProcessStopped(pid: number): boolean {
+  assert.ok(Number.isInteger(pid) && pid > 0, "Probe the recorded native child PID");
+  try {
+    process.kill(pid, 0);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ESRCH") return true;
+    throw error;
+  }
+  if (process.platform === "linux") {
+    try {
+      const stat = fs.readFileSync(`/proc/${pid}/stat`, "utf8");
+      return ["Z", "X"].includes(stat.slice(stat.lastIndexOf(")") + 2, stat.lastIndexOf(")") + 3));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return true;
+      throw error;
+    }
+  }
+  return false;
+}
+
 function prepareWorkspace(workspace: string) {
   fs.mkdirSync(workspace, { recursive: true });
   fs.writeFileSync(path.join(workspace, "package.json"), '{"private":true}\n');
@@ -189,26 +210,80 @@ async function main() {
     process.stderr.write(chunk);
   });
   let passed = false;
+  const lifecycle: {
+    shutdownAcknowledged: boolean;
+    exitNotificationObserved: boolean;
+    nativeStopped: boolean;
+    nativeExitObservable: boolean;
+    nativeExitCode: number | null;
+  } = {
+    shutdownAcknowledged: false,
+    exitNotificationObserved: false,
+    nativeStopped: false,
+    nativeExitObservable: false,
+    nativeExitCode: null,
+  };
   try {
     const code = await new Promise<number | null>((resolve, reject) => {
       child.once("error", reject);
       child.once("close", resolve);
     });
     assert.equal(code, 0, "The actual Eglot ERT scenario must pass");
-    for (let attempt = 0; attempt < 30; attempt++) {
-      if (readPackets(transcript).some((entry) => entry.event === "exit")) break;
-      await sleep(100);
-    }
-    const packets = readPackets(transcript);
+    let packets = readPackets(transcript);
     const nativePid = Number(fs.readFileSync(nativePidFile, "utf8").trim());
     assert.ok(
       Number.isInteger(nativePid) && nativePid > 0,
       "Actual native child PID must be recorded",
     );
-    assert.ok(
-      packets.some((entry) => entry.event === "exit" && entry.code === 0),
-      "The real native server must exit cleanly",
+    const shutdownIndex = packets.findIndex(
+      (entry) => entry.dir === "c2s" && entry.msg?.method === "shutdown",
     );
+    assert.ok(shutdownIndex >= 0, "The real Eglot client must send shutdown");
+    const shutdown = packets[shutdownIndex];
+    assert.ok(shutdown.msg?.id != null, "The actual shutdown request must carry its JSON-RPC ID");
+    const acknowledgedIndex = packets.findIndex(
+      (entry, index) =>
+        index > shutdownIndex &&
+        entry.session === shutdown.session &&
+        entry.dir === "s2c" &&
+        entry.msg?.id === shutdown.msg?.id &&
+        entry.msg?.method == null &&
+        Object.hasOwn(entry.msg ?? {}, "result") &&
+        !Object.hasOwn(entry.msg ?? {}, "error") &&
+        entry.msg?.result === null,
+    );
+    assert.ok(
+      acknowledgedIndex > shutdownIndex,
+      "The native server must acknowledge shutdown with null",
+    );
+    lifecycle.shutdownAcknowledged = true;
+    assert.ok(
+      packets.some(
+        (entry, index) =>
+          index > acknowledgedIndex &&
+          entry.session === shutdown.session &&
+          entry.dir === "c2s" &&
+          entry.msg?.method === "exit",
+      ),
+      "The actual Eglot client must send exit after its matching shutdown acknowledgment",
+    );
+    lifecycle.exitNotificationObserved = true;
+    for (let attempt = 0; attempt < 30 && !nativeProcessStopped(nativePid); attempt++)
+      await sleep(100);
+    lifecycle.nativeStopped = nativeProcessStopped(nativePid);
+    assert.ok(
+      lifecycle.nativeStopped,
+      "The recorded native PID must stop after actual Eglot shutdown",
+    );
+    packets = readPackets(transcript);
+    // Eglot deletes its own launcher after `exit'; its process-group kill can
+    // prevent the transparent tap's recorder from observing a native exit code.
+    const ledger = packets.find(
+      (entry) => entry.session === shutdown.session && entry.event === "exit",
+    );
+    lifecycle.nativeExitObservable = ledger !== undefined;
+    lifecycle.nativeExitCode = ledger?.code ?? null;
+    if (ledger) assert.equal(ledger.code, 0, "An observed native exit must be clean");
     const initial = packets.find(
       (entry) => entry.dir === "c2s" && entry.msg?.method === "initialize",
     );
@@ -323,6 +398,7 @@ async function main() {
         {
           passed,
           sourceSha,
+          lifecycle,
           binary: {
             path: server,
             sha256: binaryHash,

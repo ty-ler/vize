@@ -175,6 +175,39 @@ jobs:
           path: ${{ runner.temp }}/ts45
           retention-days: 14
 
+      - name: Hydrate the pinned full-host fixture
+        if: matrix.client == 'vscode'
+        run: |
+          git submodule update --init --force --depth 1 -- tests/_fixtures/_git/create-vue
+          test "$(git rev-parse HEAD:tests/_fixtures/_git/create-vue)" = \
+            "$(git -C tests/_fixtures/_git/create-vue rev-parse HEAD)"
+      - name: Run the complete packaged VS Code authoring oracle
+        if: matrix.client == 'vscode'
+        working-directory: editors/vscode
+        env:
+          VIZE_SERVER_PATH: ${{ runner.temp }}/vize-server/vize
+          VIZE_TEST_VSCODE_VERSION: "1.107.1"
+          VIZE_LSP_TRACE_NATIVE_SCOPE: "1"
+          VIZE_REAL_HOST_ARTIFACT_DIR: ${{ runner.temp }}/vscode-full-host
+        run: xvfb-run -a node test/run-extension-host-real.mjs
+      - name: Verify the full host used this source-built binary
+        if: matrix.client == 'vscode'
+        run: node tests/editor-conformance/server-artifact.ts scorecard "${RUNNER_TEMP}/vize-server/server.json" "${RUNNER_TEMP}/vscode-full-host/host-result.json" "$GITHUB_SHA"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ always() && matrix.client == 'vscode' }}
+        with:
+          name: vscode-full-authoring
+          overwrite: true
+          include-hidden-files: true
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/vscode-full-host/
+            ${{ runner.temp }}/vize-server/server.json
+            editors/vscode/.vscode-test/host-smoke-real/failure/
+            editors/vscode/.vscode-test/host-smoke/failure/
+            editors/vscode/.vscode-test/host-smoke/output-channel/
+          retention-days: 14
+
   configuration-clients:
     name: Project configuration ${{ matrix.client }}
     needs: server

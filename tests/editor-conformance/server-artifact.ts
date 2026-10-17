@@ -49,6 +49,28 @@ export async function verifyHost(artifactFile: string, hostFile: string, sourceS
   );
 }
 
+export async function verifyScorecard(artifactFile: string, resultFile: string, sourceSha: string) {
+  const result = JSON.parse(await fs.readFile(resultFile, "utf8"));
+  assert.equal(result.serverInfo?.source, "configured");
+  assert.equal(result.serverInfo?.status, "ready");
+  const binary = result.serverInfo.path;
+  assert.ok(path.isAbsolute(binary), "The actual packaged host must identify its selected server");
+  const artifact = await verifyArtifact(binary, artifactFile, sourceSha);
+  await fs.writeFile(
+    path.join(path.dirname(resultFile), "scorecard-receipt.json"),
+    JSON.stringify(
+      {
+        passed: true,
+        sourceSha,
+        binary: { path: binary, sha256: artifact.sha256 },
+        result: { path: resultFile, sha256: await sha256(resultFile) },
+      },
+      null,
+      2,
+    ),
+  );
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [command, first, second, sourceSha] = process.argv.slice(2);
   assert.ok(
@@ -58,5 +80,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   if (command === "write") await writeArtifact(first, second, sourceSha);
   else if (command === "verify") await verifyArtifact(first, second, sourceSha);
   else if (command === "host") await verifyHost(first, second, sourceSha);
+  else if (command === "scorecard") await verifyScorecard(first, second, sourceSha);
   else assert.fail(`Unknown artifact command: ${command}`);
 }

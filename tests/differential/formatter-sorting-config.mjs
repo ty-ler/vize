@@ -152,13 +152,21 @@ function explicitSerializationPlan(fixture) {
     initialFiles: addCarrier(fixture.initialFiles),
     steps: fixture.steps.map((step) => {
       const argv = step.argv.map((arg) => (arg === historical ? current : arg));
-      if (!argv.includes("--no-config") && !argv.includes("--config")) {
-        argv.splice(1, 0, "--config", current);
-      }
+      const selectsRelativeCarrier = !argv.includes("--no-config") && !argv.includes("--config");
+      if (selectsRelativeCarrier) argv.splice(1, 0, "--config", current);
+      let stderr = step.stderr.toString().replaceAll(historical, current);
+      // Discovery supplied an absolute path in the retained source law. The
+      // explicit current argv supplies a relative one; checked::parse displays
+      // that exact argument. Keep the complete serde message and coordinates.
+      if (selectsRelativeCarrier)
+        stderr = stderr.replace(
+          `failed to parse {{workspace}}/${current}:`,
+          `failed to parse ${current}:`,
+        );
       return {
         ...step,
         argv,
-        stderr: Buffer.from(step.stderr.toString().replaceAll(historical, current)),
+        stderr: Buffer.from(stderr),
         expectedFiles: addCarrier(step.expectedFiles),
       };
     }),

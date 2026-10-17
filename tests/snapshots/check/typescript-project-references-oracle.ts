@@ -28,6 +28,7 @@ import type {
   PublishDiagnosticsParams,
 } from "../../tooling/support/lsp/protocol.ts";
 import { LspSession } from "../../tooling/support/lsp/session.ts";
+import { vueConfigFixtureSource } from "../../tooling/support/vue-config-fixture.ts";
 
 const projectPath = "packages/experiments-playground";
 const appPath = "src/pages/about.vue";
@@ -69,12 +70,13 @@ test("Vue Router solution tsconfigs preserve exact diagnostics across edits", as
         path.join(repoRoot, "node_modules/@types/node"),
         fixture.resolve(`${projectPath}/node_modules/@types/node`),
       );
-      fixture.writeVueConfig(
-        {
+      // The referenced Node project includes TypeScript Vite configs, not .mjs.
+      fixture.write(
+        `${projectPath}/vite.config.ts`,
+        vueConfigFixtureSource({
           lsp: { completion: true, editor: true, hover: true, lint: false, typecheck: true },
           typeChecker: { corsaPath },
-        },
-        projectPath,
+        }),
       );
 
       fixture.applyExactPatch(
