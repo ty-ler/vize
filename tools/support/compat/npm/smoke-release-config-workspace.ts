@@ -229,7 +229,9 @@ export function assertConfigDependencyFailure(project: string, name: string): vo
   const result = cli(
     project,
     [name === "vue-settings.ts" ? "build" : "check", "TypedPanel.vue"],
-    1,
+    // Root tsconfig admission fails before checking inputs (the independent
+    // check_tsconfig_dependency_errors_cli Rust contract requires exit 2).
+    name === "vue-settings.ts" ? 1 : 2,
   );
   assert.ok(
     result.stderr.includes(name.replace(/\.ts$/u, "")) &&
