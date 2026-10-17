@@ -390,8 +390,9 @@ fn malformed_inherited_configuration_refuses_and_valid_repair_recovers() {
     assert_eq!(
         error,
         cstr!(
-            "Failed to resolve TypeScript configuration `{}`: JSON parse error: key must be a string at line 1 column 2",
-            config.display()
+            "Failed to resolve TypeScript configuration `{}`: Configuration error: cannot parse tsconfig {}: JSON parse error: key must be a string at line 1 column 2",
+            config.display(),
+            base.display()
         )
     );
     fs::write(&base, "{}").unwrap();
