@@ -335,8 +335,10 @@ impl ServerState {
                     .configuration_attempts
                     .lock()
                     .get(key)
-                    .is_some_and(|record| record.repeats_notified_failure(&error));
-                observation.mark_failure_notified(&error);
+                    .is_some_and(|record| {
+                        record.repeats_notified_failure(&error, raw.failure_identity.as_ref())
+                    });
+                observation.mark_failure_notified(&error, raw.failure_identity.as_ref());
                 self.project_contexts
                     .configuration_attempts
                     .lock()

@@ -70,9 +70,14 @@ pub(super) fn reload_error(root: &std::path::Path, changes: &[Url]) -> ShowMessa
         .map(Url::as_str)
         .collect::<Vec<_>>()
         .join(", ");
+    let cause = if changes.is_empty() {
+        vize_l0::String::default()
+    } else {
+        vize_l0::cstr!(" after changes to {changed}")
+    };
     ShowMessageParams {
         typ: MessageType::ERROR,
-        message: vize_l0::cstr!("Vize could not reload project configuration for {root} after changes to {changed}. Keeping the last good configuration.").into(),
+        message: vize_l0::cstr!("Vize could not reload project configuration for {root}{cause}. Keeping the last good configuration.").into(),
     }
 }
 

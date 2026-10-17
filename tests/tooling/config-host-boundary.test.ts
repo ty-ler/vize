@@ -189,9 +189,10 @@ test("applied module context retains only its exact reviewed host ProjectModel i
   }
 });
 
-test("one private snapshot facade exposes only the five reviewed Carton host APIs", () => {
+test("one private snapshot facade exposes only the six reviewed Carton host APIs", () => {
   const file = "crates/vize_maestro/src/server/state/config/host.rs";
   const symbols = [
+    "ConfigLoadFailureIdentity",
     "LoadedLspConfig",
     "ProjectModel",
     "load_config_with_source",

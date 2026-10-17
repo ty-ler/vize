@@ -1,5 +1,6 @@
 //! Configuration-only freshness at operation boundaries; native queries retain
 //! admitted compiler authority and never parse live configuration themselves.
+use super::super::config::host::ConfigLoadFailureIdentity;
 use super::{
     Arc, LoadedLspConfig, Path, PathBuf, ProjectContextKey, RetainedConfiguration, ServerState, Url,
 };
@@ -13,6 +14,7 @@ pub(in crate::server::state) struct ConfigurationObservation {
     unverified: bool,
     retry_unobservable: bool,
     notified_error: Option<vize_l0::String>,
+    notified_identity: Option<ConfigLoadFailureIdentity>,
     pub(super) rejected: bool,
 }
 
@@ -46,6 +48,7 @@ impl ConfigurationObservation {
             unverified: !raw.watch_dependencies.is_empty(),
             retry_unobservable: false,
             notified_error: None,
+            notified_identity: None,
             rejected: false,
         }
     }
@@ -75,6 +78,7 @@ impl ConfigurationObservation {
             unverified,
             retry_unobservable: false,
             notified_error: None,
+            notified_identity: None,
             rejected: false,
         }
     }
@@ -99,6 +103,7 @@ impl ConfigurationObservation {
             unverified: needs_confirmation,
             retry_unobservable: !raw.watch_dependencies_complete,
             notified_error: None,
+            notified_identity: None,
             rejected: true,
         }
     }
@@ -131,13 +136,25 @@ impl ConfigurationObservation {
         self.unverified = true;
     }
 
-    pub(super) fn repeats_notified_failure(&self, error: &str) -> bool {
-        self.notified_error.as_deref() == Some(error)
-            && self.observations.changed_paths().is_empty()
+    pub(super) fn repeats_notified_failure(
+        &self,
+        error: &str,
+        identity: Option<&ConfigLoadFailureIdentity>,
+    ) -> bool {
+        let same_failure = match (&self.notified_identity, identity) {
+            (Some(previous), Some(current)) => previous == current,
+            _ => self.notified_error.as_deref() == Some(error),
+        };
+        same_failure && self.observations.changed_paths().is_empty()
     }
 
-    pub(super) fn mark_failure_notified(&mut self, error: &str) {
+    pub(super) fn mark_failure_notified(
+        &mut self,
+        error: &str,
+        identity: Option<&ConfigLoadFailureIdentity>,
+    ) {
         self.notified_error = Some(error.into());
+        self.notified_identity = identity.cloned();
     }
 
     pub(super) fn paths(&self) -> Vec<PathBuf> {

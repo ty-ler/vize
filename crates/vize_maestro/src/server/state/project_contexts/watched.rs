@@ -265,7 +265,9 @@ impl ServerState {
                     .configuration_attempts
                     .lock()
                     .get(&key)
-                    .is_some_and(|record| record.repeats_notified_failure(error))
+                    .is_some_and(|record| {
+                        record.repeats_notified_failure(error, raw.failure_identity.as_ref())
+                    })
             });
             if let Ok(snapshot) = &snapshot {
                 result.configuration_events.extend(known_config_events(
@@ -286,7 +288,7 @@ impl ServerState {
                 snapshot,
                 changed,
                 observation,
-                repeated_failure,
+                (repeated_failure, raw.failure_identity.clone()),
                 confirmation_only,
             ));
         }
@@ -309,7 +311,7 @@ impl ServerState {
             snapshot,
             changed,
             mut observation,
-            repeated_failure,
+            (repeated_failure, failure_identity),
             confirmation_only,
         ) in prepared
         {
@@ -328,10 +330,8 @@ impl ServerState {
                     .remove(&key);
                 continue;
             }
-            if let Err(error) = &snapshot
-                && (!changed.is_empty() || repeated_failure)
-            {
-                observation.mark_failure_notified(error);
+            if let Err(error) = &snapshot {
+                observation.mark_failure_notified(error, failure_identity.as_ref());
             }
             self.project_contexts
                 .configuration_attempts
@@ -391,7 +391,7 @@ impl ServerState {
                             .store(true, Ordering::Release);
                     }
                     failed_roots.insert(key.root.clone());
-                    if !changed.is_empty() && !repeated_failure {
+                    if !repeated_failure {
                         result.errors.push(reload_error(&key.root, &changed));
                     }
                     result.rejected.push((key, changed));
