@@ -135,7 +135,7 @@ fn module_link_actual_exit_signal_preserves_notification_and_retires_transport_l
 }
 
 #[test]
-fn actual_transport_accepts_omitted_and_null_lifecycle_parameters() {
+fn module_link_actual_transport_accepts_omitted_and_null_lifecycle_parameters() {
     for explicit_null in [false, true] {
         let (mut service, socket) = build_lsp_service();
         initialize_disabled(&mut service);
@@ -181,7 +181,7 @@ fn actual_transport_accepts_omitted_and_null_lifecycle_parameters() {
 }
 
 #[test]
-fn actual_transport_keeps_malformed_shutdown_parameters_rejected() {
+fn module_link_actual_transport_keeps_malformed_shutdown_parameters_rejected() {
     for params in [
         json!({}),
         json!([]),
@@ -193,7 +193,7 @@ fn actual_transport_keeps_malformed_shutdown_parameters_rejected() {
         initialize_disabled(&mut service);
         let state = Arc::clone(&service.inner().state);
         let (mut service, _exit) = crate::server::with_exit_signal(service);
-        let message = format!("Unexpected params: {params}");
+        let message = vize_l0::cstr!("Unexpected params: {params}");
         let response = block_on(async {
             futures::future::poll_fn(|cx| service.poll_ready(cx))
                 .await
@@ -216,7 +216,7 @@ fn actual_transport_keeps_malformed_shutdown_parameters_rejected() {
 }
 
 #[test]
-fn actual_transport_preserves_other_requests_and_non_null_lifecycle_packets() {
+fn module_link_actual_transport_preserves_other_requests_and_non_null_lifecycle_packets() {
     for packet in [
         json!({"jsonrpc":"2.0","id":"hover","method":"textDocument/hover","params":null}),
         json!({"jsonrpc":"2.0","id":71,"method":"unknown/method","params":null}),
