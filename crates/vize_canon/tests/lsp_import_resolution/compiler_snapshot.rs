@@ -172,21 +172,35 @@ fn retired_union_member_leaves_native_mirror_while_other_member_and_old_catalog_
     });
     corsa::runtime::block_on(async {
         bridge.spawn().await.unwrap();
+        let moved_packet = bridge
+            .open_vue_virtual_document(&a, a_text, CorsaVueVirtualDocumentOptions::default())
+            .await
+            .unwrap();
+        let moved = moved_packet
+            .materialized_sources
+            .iter()
+            .find(|source| source.source_path == a)
+            .expect("the moved source owns its exact materialized identity");
+        let retired_path = moved.materialized_path.clone();
+        assert_eq!(moved.source.as_str(), a_text);
+        assert!(retired_path.is_file());
         assert_typed_hover(&bridge, &a, a_text, "string").await;
         let before = bridge
             .open_vue_virtual_document(&b, b_text, CorsaVueVirtualDocumentOptions::default())
             .await
             .unwrap();
         assert_typed_hover(&bridge, &b, b_text, "number").await;
-        let moved = before
-            .materialized_sources
-            .iter()
-            .find(|source| source.source_path == a)
-            .expect("the warmed union contains the moved member");
-        let retired_path = moved.materialized_path.clone();
-        assert_eq!(moved.source.as_str(), a_text);
-        assert!(retired_path.is_file());
-        assert!(before.source_catalog.get(&retired_path).is_some());
+        // A query surface can remain scoped to B. Its live union catalog,
+        // rather than its local materialized-source list, must still own A.
+        assert_eq!(
+            before
+                .source_catalog
+                .get(&retired_path)
+                .unwrap()
+                .source
+                .as_str(),
+            a_text
+        );
         bridge.forget_cached_vue_virtual_documents(std::slice::from_ref(&a));
         bridge.mark_disk_project_state_dirty();
         bridge.flush_disk_project_state_if_dirty().await.unwrap();
