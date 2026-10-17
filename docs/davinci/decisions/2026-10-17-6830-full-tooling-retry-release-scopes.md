@@ -14,8 +14,12 @@ Foreign run/source selection, changed archive bytes and stale source receipts
 remain rejected. The existing archive-download tests cover bounded transfer
 retry, cleanup, digest enforcement and fatal completion gates.
 
-The one-time v0.457.0 consumer contract was absent from the explicit release
-test inventory. Keep it in the existing broad scope: its compressed incident
-ledger and Git-selected Rust authority are runtime inputs beyond its static
-imports. Assert selection for those inputs, the original consumer, Deno policy
-and workflow. Source identity and all incident refusal controls are unchanged.
+The one-time v0.457.0 consumer contract was initially restored to the explicit
+broad inventory because its ledger and Git-selected authority were runtime
+inputs. That unexecuted duplicate was subsequently
+[retired](./2026-10-17-6830-published-consumer-supplement.md) when main gained
+the canonical recovery path. Its stale inventory registration was removed too.
+The two existing contracts now importing the canonical runtime native probe
+retain the planner's broad fallback; all other audited import closures remain
+complete. Exact inventory equality and selection for unknown runtime inputs
+remain checked, without changing production input selection.

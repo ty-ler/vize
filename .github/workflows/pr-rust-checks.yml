@@ -294,8 +294,8 @@ jobs:
           export VIZE_RUST_COHORT_TIMING_PATH="target/nextest/$NEXTEST_PROFILE/timing.json"
           evidence="$RUNNER_TEMP/rust-build-evidence"
           node tools/support/compat/github/rust-build-evidence.ts before "$evidence"
-          set -o pipefail
-          exec node tools/support/compat/github/run-rust-test-cohort.ts "$RUNNER_TEMP/rust-plan.json" "$COHORT" --cargo-profile ci --timings --cargo-message-format=json-render-diagnostics --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass > >(tee "$evidence/cargo.jsonl")
+          export VIZE_RUST_BUILD_STDOUT_PATH="$evidence/cargo.jsonl"
+          exec node tools/support/compat/github/run-rust-test-cohort.ts "$RUNNER_TEMP/rust-plan.json" "$COHORT" --cargo-profile ci --timings --cargo-message-format=json-render-diagnostics --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass
       - name: Preserve actual PR Rust build units and fresh timing HTML
         if: ${{ always() && github.event_name == 'pull_request' }}
         run: node tools/support/compat/github/rust-build-evidence.ts collect "$RUNNER_TEMP/rust-build-evidence"

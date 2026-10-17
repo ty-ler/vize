@@ -136,7 +136,7 @@ await test("failed/missing preparation keeps partial raw output and excludes cac
   }
 });
 
-await test("actual PR shell keeps selected arguments, captured stdout and exit0/17 through tee", () => {
+await test("actual PR shell keeps selected arguments, owned stdout capture and exit0/17", () => {
   for (const exit of [0, 17]) {
     const { directory } = fixture();
     try {
