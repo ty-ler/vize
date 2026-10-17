@@ -30,7 +30,7 @@ impl VirtualProject {
     /// rewrite entirely, which avoids needless write IO and keeps mtimes stable
     /// so TypeScript's own filesystem caches are not invalidated.
     pub fn materialize(&self) -> CorsaResult<()> {
-        self.materialize_snapshot(&FxHashSet::default(), &Default::default(), None)
+        self.materialize_snapshot(&FxHashSet::default(), &Default::default(), None, false)
             .map(|_| ())
     }
 
@@ -39,10 +39,11 @@ impl VirtualProject {
         preserved_files: &FxHashSet<PathBuf>,
         preserved_package_links: &vize_carton::FxHashMap<PathBuf, PathBuf>,
         query_paths: &[PathBuf],
+        preserved_arbitrary_extensions: bool,
     ) -> CorsaResult<super::MaterializedFileSnapshot> {
         let _lock = super::super::materialize_lock::MaterializeLock::acquire(&self.virtual_root)?;
         let package_links = self
-            .materialize_snapshot(preserved_files, preserved_package_links, Some(query_paths))
+            .materialize_snapshot(preserved_files, preserved_package_links, Some(query_paths), preserved_arbitrary_extensions)
             .inspect_err(|error| {
                 tracing::info!(target: "vize_editor_preparation", phase = "materialize_snapshot", root = %self.virtual_root.display(), error = %error, "editor union materialization failed");
             })?;
@@ -59,6 +60,7 @@ impl VirtualProject {
         preserved_files: &FxHashSet<PathBuf>,
         preserved_package_links: &vize_carton::FxHashMap<PathBuf, PathBuf>,
         query_paths: Option<&[PathBuf]>,
+        preserved_arbitrary_extensions: bool,
     ) -> CorsaResult<vize_carton::FxHashMap<PathBuf, PathBuf>> {
         let mut expected_files = self.expected_materialized_files();
         expected_files.extend(preserved_files.iter().cloned());
@@ -261,6 +263,7 @@ impl VirtualProject {
                     None,
                     false,
                     Some(includes.as_slice()),
+                    preserved_arbitrary_extensions,
                 )
             } else {
                 self.write_tsconfig_file(&path, None, false)
@@ -293,6 +296,7 @@ impl VirtualProject {
                 Some(out_dir),
                 declaration_map,
                 Some(&include_paths),
+                false,
             )
         )?;
         Ok(config_path)
