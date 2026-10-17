@@ -20,11 +20,26 @@ const sourcePaths = [
   "tests/_fixtures/vue-ecosystem-fixtures.json",
   "tests/differential/build-receipt.ts",
   "tests/tooling/lsp-startup-local-interactive.test.ts",
+  "crates/vize/tests/lsp_symlink_workspace_staging_cli.rs",
+  "crates/vize/tests/support/lsp_symlink_workspace_fixture.rs",
+  "crates/vize_canon/src/batch/virtual_project/materialize.rs",
+  "crates/vize_canon/src/batch/virtual_project/tests/editor_union_alias_transition.rs",
+  "crates/vize_canon/src/batch/virtual_project/tests/pnpm_workspace_alias_filesystem.rs",
+  "crates/vize_canon/src/batch/virtual_project/tests/pnpm_workspace_routes_lifecycle.rs",
+  "crates/vize_canon/src/batch/virtual_project/tests/pnpm_workspace_shadow_cleanup.rs",
+  "crates/vize_canon/src/corsa_bridge/vue_document_package_tests/symlink_workspace.rs",
+  "crates/vize_canon/src/batch/virtual_project/tsconfig_gen.rs",
+  "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/cache.rs",
+  "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/cache/tests.rs",
+  "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/prepare.rs",
   "crates/vize_maestro/src/server/initial_diagnostics.rs",
   "crates/vize_maestro/src/ide.rs",
   "crates/vize_maestro/src/server/initial_diagnostics/preparation.rs",
   "crates/vize_maestro/src/server/state/corsa_requests.rs",
   "crates/vize_maestro/src/server/native_requests.rs",
+  "crates/vize_maestro/src/server/native_requests/tests.rs",
+  "tests/tooling/lsp-config-diagnostics-workflow.test.ts",
+  "crates/vize/tests/support/lsp_process.rs",
   "crates/vize_maestro/src/server/handlers.rs",
   "crates/vize_maestro/src/server/handlers/typed.rs",
   ".github/workflows/lsp-config-diagnostics.yml",
@@ -45,6 +60,56 @@ export function retainNativeLog(source: string, destination: string): boolean {
   return true;
 }
 
+export function retainMeasuredProducer(binary: string, receiptPath: string, destination: string) {
+  const retainedBinary = "measured-vize";
+  const retainedBuildReceipt = "measured-vize.differential-build.json";
+  const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
+  const bytes = fs.readFileSync(binary);
+  assert.equal(sha256(bytes), receipt.binarySha256);
+  fs.writeFileSync(path.join(destination, retainedBinary), bytes);
+  fs.copyFileSync(receiptPath, path.join(destination, retainedBuildReceipt));
+  assert.equal(
+    sha256(fs.readFileSync(path.join(destination, retainedBinary))),
+    receipt.binarySha256,
+  );
+  return { retainedBinary, retainedBuildReceipt };
+}
+
+export function retainIntegrationProducer(log: string, destination: string) {
+  const artifacts = fs
+    .readFileSync(log, "utf8")
+    .split("\n")
+    .flatMap((line) => {
+      try {
+        const message = JSON.parse(line);
+        return message.reason === "compiler-artifact" &&
+          message.target?.name === "vize" &&
+          message.target.kind?.includes("bin") &&
+          typeof message.executable === "string"
+          ? [message]
+          : [];
+      } catch {
+        return [];
+      }
+    });
+  assert.equal(artifacts.length, 1, "Cargo must identify exactly one real test CLI producer");
+  const producer = artifacts[0];
+  const bytes = fs.readFileSync(producer.executable);
+  const metadata = {
+    schema: "vize.symlink-test-producer",
+    sourceRevision: git("rev-parse", "HEAD"),
+    executable: producer.executable,
+    binarySha256: sha256(bytes),
+    cargoArtifact: producer,
+  };
+  fs.writeFileSync(path.join(destination, "symlink-test-vize"), bytes);
+  fs.writeFileSync(
+    path.join(destination, "symlink-test-producer.json"),
+    `${JSON.stringify(metadata, null, 2)}\n`,
+  );
+  return metadata;
+}
+
 export function runDiagnostics(): number {
   fs.mkdirSync(directory, { recursive: true });
   const identity = expectedBuildIdentity(root);
@@ -56,6 +121,13 @@ export function runDiagnostics(): number {
   const receiptPath = `${identity.binaryPath}.differential-build.json`;
   const receipt = JSON.parse(fs.readFileSync(path.join(root, receiptPath), "utf8"));
   validateBuildReceipt(receipt, identity, LEGACY_BUILD_RECIPE);
+  // Later integration tests can relink this path with Cargo dev dependencies.
+  // Retain the measured producer before any post-measurement Cargo command.
+  const retainedProducer = retainMeasuredProducer(
+    path.join(root, identity.binaryPath),
+    path.join(root, receiptPath),
+    directory,
+  );
   const registry = JSON.parse(
     fs.readFileSync(path.join(root, "tests/_fixtures/vue-ecosystem-fixtures.json"), "utf8"),
   );
@@ -89,6 +161,7 @@ export function runDiagnostics(): number {
     sourceTree: git("rev-parse", "HEAD^{tree}"),
     fixture: { path: fixture.fixturePath, revision: fixture.revision },
     buildReceipt: receipt,
+    ...retainedProducer,
     command,
     cwd: root,
     runtime: { node: process.version, executable: process.execPath },
@@ -134,5 +207,10 @@ export function runDiagnostics(): number {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  process.exitCode = runDiagnostics();
+  if (process.argv[2] === "--retain-symlink-producer") {
+    assert.equal(git("rev-parse", "HEAD"), process.env.EXPECTED_SOURCE);
+    retainIntegrationProducer(path.join(directory, "symlink.stdout"), directory);
+  } else {
+    process.exitCode = runDiagnostics();
+  }
 }
