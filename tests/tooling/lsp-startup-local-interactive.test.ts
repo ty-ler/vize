@@ -81,7 +81,7 @@ const chosen = palette.tone;
       };
       const [hover, completion] = await Promise.all([
         request("textDocument/hover", source.indexOf("color") + 2),
-        request("textDocument/completion", source.indexOf("palette.tone") + "palette.to".length),
+        request("textDocument/completion", source.indexOf("palette.tone") + "palette.".length),
       ]);
       assert.match(hoverToText(hover as { contents?: unknown }), /color/i);
       assert.deepEqual(
@@ -172,7 +172,7 @@ export const view = <div>{value}</div>;
           assert.equal(
             await request(
               "textDocument/completion",
-              source.indexOf("palette.tone") + "palette.to".length,
+              source.indexOf("palette.tone") + "palette.".length,
             ),
             null,
           );
