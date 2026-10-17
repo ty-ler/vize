@@ -78,6 +78,7 @@ exports.run = async function run() {
   );
   const policyHover = () => hover(probe, "const typed", "const ty");
   assert.equal(await policyHover(), null, "the outside helper initially disables hover");
+  await vscode.window.showTextDocument(control);
   const initial = frames().find(
     (record) => record.direction === "client" && record.packet.method === "initialize",
   );
@@ -169,7 +170,7 @@ exports.run = async function run() {
         30_000,
       );
     }
-    await waitFor(
+    const publication = await waitFor(
       () =>
         frames()
           .slice(after)
@@ -183,6 +184,21 @@ exports.run = async function run() {
       Boolean,
       "OS notification triggers native publication before any hover request",
       30_000,
+    );
+    const terminal = frames().findIndex(
+      (record, index) => index >= after && record.frameBase64 === publication.frameBase64,
+    );
+    assert.deepEqual(
+      frames()
+        .slice(start, terminal + 1)
+        .filter(
+          (record) =>
+            record.direction === "client" &&
+            record.packet.id !== undefined &&
+            record.packet.params?.textDocument?.uri?.startsWith(`${uri(a)}/`),
+        ),
+      [],
+      "the outside watch must publish before any A-owner request can revalidate configuration",
     );
     await assertDiagnostics(values);
     assert.deepEqual(
