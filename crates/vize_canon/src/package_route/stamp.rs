@@ -73,6 +73,36 @@ impl InputStampCache {
     }
 }
 
+/// Fresh physical snapshots shared only within one configuration validation.
+/// Every retained expected revision is compared; no expected stamp seeds this map.
+#[cfg(feature = "native")]
+#[derive(Default)]
+pub(crate) struct InputStampValidation {
+    current: FxHashMap<(PathBuf, bool), InputStamp>,
+}
+
+#[cfg(feature = "native")]
+impl InputStampValidation {
+    pub(crate) fn is_current(
+        &mut self,
+        expected: &InputStamp,
+        stats: Option<&mut InputStampReadStats>,
+    ) -> bool {
+        let (path, source_content) = expected.observation_identity();
+        let current = self
+            .current
+            .entry((path.to_path_buf(), source_content))
+            .or_insert_with(|| {
+                InputStamp::capture_input_observed(path.to_path_buf(), None, source_content, stats)
+            });
+        expected == &*current
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.current.len()
+    }
+}
+
 impl InputStamp {
     pub(crate) fn capture(path: impl Into<PathBuf>) -> Self {
         Self::capture_input(path.into(), None, false)
@@ -147,17 +177,6 @@ impl InputStamp {
     #[cfg(feature = "native")]
     pub(crate) fn observation_identity(&self) -> (&Path, bool) {
         (&self.path, self.source_content)
-    }
-
-    #[cfg(feature = "native")]
-    pub(crate) fn is_current_observed(&self, stats: &mut InputStampReadStats) -> bool {
-        *self
-            == Self::capture_input_observed(
-                self.path.clone(),
-                None,
-                self.source_content,
-                Some(stats),
-            )
     }
 
     pub(crate) fn is_current_with_cache(&self, cache: &mut InputStampCache) -> bool {
@@ -256,6 +275,8 @@ pub(super) fn manifest_path(root: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::{InputStamp, InputStampCache};
+    #[cfg(feature = "native")]
+    use super::{InputStampReadStats, InputStampValidation};
 
     #[test]
     fn stamp_cache_captures_each_path_once_per_epoch() {
@@ -297,6 +318,10 @@ mod tests {
         let physical = InputStamp::capture(&path);
         let source = InputStamp::capture_source(&path, &content);
         let original = std::fs::metadata(&path).unwrap();
+        #[cfg(feature = "native")]
+        let observed = crate::ConfigurationObservations::capture(std::slice::from_ref(&path));
+        #[cfg(feature = "native")]
+        assert!(observed.changed_paths().is_empty());
         assert!(physical.is_current());
         assert!(source.is_current());
 
@@ -314,6 +339,8 @@ mod tests {
         assert_eq!(modified.modified().unwrap(), original.modified().unwrap());
         assert!(!physical.is_current());
         assert!(!source.is_current());
+        #[cfg(feature = "native")]
+        assert_eq!(observed.changed_paths(), vec![path.clone()]);
         assert!(InputStamp::capture(&path).is_current());
         assert!(InputStamp::capture_source(&path, &content).is_current());
     }
@@ -337,5 +364,38 @@ mod tests {
         std::os::unix::fs::symlink(&other, &link).unwrap();
         assert!(!stamp.is_current());
         assert!(InputStamp::capture_source(&link, content).is_current());
+    }
+
+    #[cfg(feature = "native")]
+    #[test]
+    fn validation_compares_every_consumed_revision_to_fresh_bytes_in_both_orders() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("source.ts");
+        std::fs::write(&path, b"omega").unwrap();
+        let stale = InputStamp::capture_source(&path, b"alpha");
+        let current = InputStamp::capture_source(&path, b"omega");
+        for (stamps, expected) in [
+            ([&stale, &current], [false, true]),
+            ([&current, &stale], [true, false]),
+        ] {
+            let mut validation = InputStampValidation::default();
+            let mut stats = InputStampReadStats::default();
+            let actual = stamps.map(|stamp| validation.is_current(stamp, Some(&mut stats)));
+            assert_eq!(actual, expected);
+            assert_eq!(validation.len(), 1);
+            assert_eq!(stats.reads, 1);
+            assert_eq!(stats.bytes, 5);
+        }
+    }
+
+    #[cfg(feature = "native")]
+    #[test]
+    fn validation_does_not_reuse_absence_across_calls() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("absent.json");
+        let observed = crate::ConfigurationObservations::capture(std::slice::from_ref(&path));
+        assert!(observed.changed_paths().is_empty());
+        std::fs::write(&path, b"{}").unwrap();
+        assert_eq!(observed.changed_paths(), vec![path]);
     }
 }
