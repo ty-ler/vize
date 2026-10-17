@@ -1,4 +1,0 @@
-<script setup lang="ts">
-import Child from "./components/子 [赤] #.vue";
-</script>
-<template><Child /></template>
