@@ -3,7 +3,7 @@
 use tower_lsp::lsp_types::Url;
 
 use super::MaestroServer;
-use crate::ide::{IdeContext, open_canonical_virtual_document_strict};
+use crate::ide::{IdeContext, prepare_canonical_virtual_document};
 
 impl MaestroServer {
     pub(super) async fn prepare_initial_native_document(&self, uri: &Url, version: i32) {
@@ -33,9 +33,9 @@ impl MaestroServer {
         }
         // Both configured-project attestations and normal mirror ownership run
         // unchanged. This opens no diagnostic query and publishes no result.
-        match open_canonical_virtual_document_strict(&ctx, &bridge).await {
-            Ok(Some(_)) => {}
-            Ok(None) => return,
+        match prepare_canonical_virtual_document(&ctx, &bridge).await {
+            Ok(true) => {}
+            Ok(false) => return,
             Err(error) => {
                 tracing::debug!("initial native preparation deferred after {error}");
                 return;
