@@ -100,6 +100,7 @@ impl CompilerConfigurationSnapshot {
                 for path in &implicit_candidates {
                     inputs.observe(path);
                     if path.is_file() {
+                        inputs.mark_changed();
                         return Err(CorsaError::Configuration(vize_carton::cstr!(
                             "TypeScript configuration {} appeared while admitting configuration absence",
                             path.display()

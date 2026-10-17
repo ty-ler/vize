@@ -432,3 +432,8 @@ pub(super) mod freshness;
 
 #[cfg(test)]
 mod freshness_tests;
+
+mod topology;
+
+#[cfg(test)]
+mod topology_tests;

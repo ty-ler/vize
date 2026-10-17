@@ -202,6 +202,22 @@ impl ServerState {
                 .is_some_and(|bridge| bridge.is_initialized())
     }
 
+    /// A buffer moved to another admitted owner. Preserve this owner's backend
+    /// for its remaining sources, but remove the moved overlay and union member.
+    pub(super) fn retire_document_project_membership(&self, uri: &tower_lsp::lsp_types::Url) {
+        let _change = self.corsa_environment_change();
+        self.forget_closed_document(uri);
+        self.remove_virtual_docs(uri);
+        self.forget_workspace_vue_files(uri.as_str());
+        self.batch_cache.invalidate();
+        if let Ok(path) = uri.to_file_path()
+            && let Some(bridge) = self.corsa_bridge.read().as_ref()
+        {
+            bridge.forget_cached_vue_virtual_documents(&[path]);
+            bridge.mark_disk_project_state_dirty();
+        }
+    }
+
     /// Drop the cached editor session after a Vue file disappears on disk.
     /// Its private mirror is rebuilt by the next Corsa request. This must not
     /// wait for the old worker while handling the file-operation notification.

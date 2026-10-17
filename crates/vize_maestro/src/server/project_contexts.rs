@@ -12,6 +12,24 @@ use tower_lsp::lsp_types::{TextDocumentPositionParams, Url};
 
 use super::MaestroServer;
 
+#[cfg(feature = "native")]
+#[derive(Clone, Default)]
+pub(super) struct ConfigurationAdmissionReceipt {
+    roots: Vec<std::path::PathBuf>,
+}
+
+#[cfg(feature = "native")]
+impl ConfigurationAdmissionReceipt {
+    fn covers(&self, root: &std::path::Path) -> bool {
+        self.roots.iter().any(|known| known == root)
+    }
+    fn extend(&mut self, roots: impl IntoIterator<Item = std::path::PathBuf>) {
+        self.roots.extend(roots);
+        self.roots.sort();
+        self.roots.dedup();
+    }
+}
+
 pub(super) enum DocumentServer<'a> {
     Primary(&'a MaestroServer),
     #[cfg(feature = "native")]
@@ -50,6 +68,7 @@ impl MaestroServer {
             state,
             initial_diagnostics: self.initial_diagnostics.clone(),
             configuration_watchers: self.configuration_watchers.clone(),
+            configuration_admission: self.configuration_admission.clone(),
             #[cfg(feature = "experimental-source-navigation")]
             module_link_termination: None,
         }
@@ -58,29 +77,74 @@ impl MaestroServer {
     pub(super) async fn for_document(&self, uri: &Url) -> DocumentServer<'_> {
         #[cfg(feature = "native")]
         {
+            // A public dispatch always begins a new operation, even when its
+            // caller retained an old document view from a previous operation.
+            let mut receipt = ConfigurationAdmissionReceipt::default();
+            self.for_document_in_operation(uri, &mut receipt).await
+        }
+        #[cfg(not(feature = "native"))]
+        {
+            let _ = uri;
+            DocumentServer::Primary(self)
+        }
+    }
+
+    #[cfg(feature = "native")]
+    pub(super) async fn for_document_in_operation(
+        &self,
+        uri: &Url,
+        receipt: &mut ConfigurationAdmissionReceipt,
+    ) -> DocumentServer<'_> {
+        if self
+            .state
+            .document_configuration_root(uri)
+            .is_none_or(|root| !receipt.covers(&root))
+        {
             let changes = self.state.refresh_document_configuration_async(uri).await;
+            receipt.extend(changes.checked_roots);
             for error in changes.errors {
                 self.client.show_message(error.typ, error.message).await;
             }
         }
-        self.for_document_admitted(uri).await
+        let mut project = self.for_document_admitted(uri).await;
+        if let DocumentServer::Project(server) = &mut project {
+            server.configuration_admission = receipt.clone();
+        }
+        project
     }
 
-    /// Continue an operation whose configuration admission already completed.
+    #[cfg(feature = "native")]
+    pub(super) fn with_configuration_admission(&self, roots: &[std::path::PathBuf]) -> Self {
+        let mut view = self.with_project_state(self.state.clone());
+        view.configuration_admission.extend(roots.iter().cloned());
+        view
+    }
+
+    /// Route a continuation only after its governing root was explicitly checked.
     pub(super) async fn for_document_admitted(&self, uri: &Url) -> DocumentServer<'_> {
         #[cfg(feature = "native")]
         {
-            let state = self.state.document_project_state_async(uri).await;
-            self.queue_configuration_watches();
-            if let Some(state) = state {
-                return DocumentServer::Project(self.with_project_state(state));
+            if uri.to_file_path().is_err() {
+                return DocumentServer::Primary(self);
             }
+            let state = self
+                .state
+                .document_project_state_async(uri)
+                .await
+                .unwrap_or_else(|| self.state.clone());
+            self.queue_configuration_watches();
+            return DocumentServer::Project(self.with_project_state(state));
         }
         #[cfg(not(feature = "native"))]
-        let _ = uri;
-        DocumentServer::Primary(self)
+        {
+            let _ = uri;
+            DocumentServer::Primary(self)
+        }
     }
 }
 
 #[cfg(all(test, feature = "native", feature = "experimental-source-navigation"))]
 mod tests;
+
+#[cfg(all(test, feature = "native"))]
+mod operation_admission_tests;

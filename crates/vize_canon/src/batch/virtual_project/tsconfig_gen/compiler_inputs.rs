@@ -1,6 +1,6 @@
 //! Consistent inputs for one compiler-configuration capture.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 
 use serde_json::Value;
@@ -16,6 +16,7 @@ use super::super::tsconfig_paths::{normalize_path_lexically, parse_jsonc_value};
 #[derive(Clone, Default)]
 pub struct ConfigurationObservations {
     stamps: Vec<InputStamp>,
+    changed_during_capture: bool,
 }
 
 impl ConfigurationObservations {
@@ -32,6 +33,13 @@ impl ConfigurationObservations {
     /// Preserve both consumed-source observations and known-before observations.
     pub fn extend(&mut self, other: &Self) {
         self.stamps.extend(other.stamps.iter().cloned());
+        self.changed_during_capture |= other.changed_during_capture;
+    }
+
+    /// A rejected read must confirm the next stable revision, even if inputs
+    /// subsequently return to the observed bytes before repair is recorded.
+    pub fn needs_confirmation(&self) -> bool {
+        self.changed_during_capture || !self.changed_paths().is_empty()
     }
 
     /// Known read and resolution paths, including absent candidates.
@@ -74,6 +82,7 @@ pub(in super::super) struct CompilerInputs {
     observations: RefCell<FxHashMap<PathBuf, InputStamp>>,
     parsed_observations: RefCell<Vec<InputStamp>>,
     resolutions: RefCell<FxHashMap<ResolutionKey, Option<PathBuf>>>,
+    changed_during_capture: Cell<bool>,
 }
 
 impl CompilerInputs {
@@ -178,7 +187,14 @@ impl CompilerInputs {
             .cloned()
             .collect::<Vec<_>>();
         stamps.extend(self.parsed_observations.borrow().iter().cloned());
-        ConfigurationObservations { stamps }
+        ConfigurationObservations {
+            stamps,
+            changed_during_capture: self.changed_during_capture.get(),
+        }
+    }
+
+    pub(in super::super) fn mark_changed(&self) {
+        self.changed_during_capture.set(true);
     }
 
     pub(in super::super) fn validate(&self) -> CorsaResult<()> {
@@ -195,6 +211,7 @@ impl CompilerInputs {
         {
             return Ok(());
         }
+        self.mark_changed();
         Err(CorsaError::Configuration(vize_carton::cstr!(
             "compiler configuration changed while it was being read; retry after the configuration is stable"
         )))
@@ -249,5 +266,10 @@ mod tests {
         let repair_only = ConfigurationObservations::capture(&observed.paths());
         assert!(repair_only.changed_paths().is_empty());
         assert_eq!(observed.changed_paths(), expected);
+        let inputs = CompilerInputs::default();
+        inputs.observe(&root.path().join("base.json"));
+        inputs.mark_changed();
+        assert!(inputs.observations().changed_paths().is_empty());
+        assert!(inputs.observations().needs_confirmation());
     }
 }

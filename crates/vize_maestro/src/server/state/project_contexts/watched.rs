@@ -20,6 +20,16 @@ impl ConfigEventScope {
         }
     }
 
+    pub(super) fn for_topology(
+        affected: Vec<ProjectContextKey>,
+        marker_paths: Vec<PathBuf>,
+    ) -> Self {
+        Self {
+            affected,
+            marker_paths,
+        }
+    }
+
     pub(super) fn retain_root(&mut self, root: &Path) {
         self.affected
             .retain(|key| physical_path(&key.root) == physical_path(root));
@@ -214,12 +224,6 @@ impl ServerState {
         let mut authored = FxHashMap::default();
         let mut prepared = Vec::new();
         for (key, previous) in previous {
-            let repeated_failure = self
-                .project_contexts
-                .configuration_attempts
-                .lock()
-                .get(&key)
-                .is_some_and(super::freshness::ConfigurationObservation::repeats_notified_failure);
             let mut dependencies = previous
                 .as_ref()
                 .map(|context| context.config_dependencies())
@@ -240,6 +244,13 @@ impl ServerState {
             });
             let (snapshot, observation) =
                 Self::prepare_configuration_attempt(&key, raw, before, &dependencies);
+            let repeated_failure = snapshot.as_ref().err().is_some_and(|error| {
+                self.project_contexts
+                    .configuration_attempts
+                    .lock()
+                    .get(&key)
+                    .is_some_and(|record| record.repeats_notified_failure(error))
+            });
             if let Ok(snapshot) = &snapshot {
                 result.configuration_events.extend(known_config_events(
                     &key.root,
@@ -257,6 +268,7 @@ impl ServerState {
                 repeated_failure,
             ));
         }
+        result.checked_roots.extend(authored.keys().cloned());
         #[cfg(test)]
         super::lock_order_tests::before_config_install();
         let mut contexts = self.project_contexts.contexts.lock();
@@ -285,8 +297,10 @@ impl ServerState {
                     .remove(&key);
                 continue;
             }
-            if snapshot.is_err() && (!changed.is_empty() || repeated_failure) {
-                observation.mark_failure_notified();
+            if let Err(error) = &snapshot
+                && (!changed.is_empty() || repeated_failure)
+            {
+                observation.mark_failure_notified(error);
             }
             self.project_contexts
                 .configuration_attempts

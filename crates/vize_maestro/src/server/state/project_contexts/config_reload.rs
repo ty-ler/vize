@@ -7,6 +7,8 @@ use tower_lsp::lsp_types::{FileEvent, MessageType, ShowMessageParams};
 pub(crate) struct ProjectConfigChanges {
     pub documents: Vec<(Url, i32)>,
     pub errors: Vec<ShowMessageParams>,
+    /// Roots actually checked in this operation, including rejected attempts.
+    pub(crate) checked_roots: Vec<PathBuf>,
     pub(super) rejected: Vec<(ProjectContextKey, Vec<Url>)>,
     pub(super) configuration_events: Vec<Url>,
 }
@@ -140,6 +142,7 @@ impl ServerState {
         for next in results {
             result.documents.extend(next.documents);
             result.errors.extend(next.errors);
+            result.checked_roots.extend(next.checked_roots);
             result.rejected.extend(next.rejected);
             result
                 .configuration_events

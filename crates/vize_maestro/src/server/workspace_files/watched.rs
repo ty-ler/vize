@@ -37,6 +37,10 @@ pub(super) async fn did_change_watched_files(
             .show_message(error.typ, error.message.clone())
             .await;
     }
+    #[cfg(feature = "native")]
+    let operation = server.with_configuration_admission(&reconfigured.checked_roots);
+    #[cfg(feature = "native")]
+    let server = &operation;
     #[cfg(all(feature = "native", feature = "experimental-source-navigation"))]
     if server.state.project_context_retired()
         && let Some(navigation) = &server.navigation

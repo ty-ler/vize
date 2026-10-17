@@ -11,7 +11,8 @@ pub(in crate::server::state) struct ConfigurationObservation {
     vite_paths: Vec<PathBuf>,
     unverified: bool,
     retry_unobservable: bool,
-    notified_failure: bool,
+    notified_error: Option<vize_l0::String>,
+    pub(super) rejected: bool,
 }
 
 impl ConfigurationObservation {
@@ -35,7 +36,8 @@ impl ConfigurationObservation {
             // bytes. Confirm these paths once at the next operation boundary.
             unverified: !raw.watch_dependencies.is_empty(),
             retry_unobservable: false,
-            notified_failure: false,
+            notified_error: None,
+            rejected: false,
         }
     }
 
@@ -62,7 +64,8 @@ impl ConfigurationObservation {
             vite_paths: raw.watch_dependencies.clone(),
             unverified,
             retry_unobservable: false,
-            notified_failure: false,
+            notified_error: None,
+            rejected: false,
         }
     }
 
@@ -71,6 +74,7 @@ impl ConfigurationObservation {
         loaded: &LoadedLspConfig,
         observed: &ConfigurationObservations,
     ) -> Self {
+        let needs_confirmation = observed.needs_confirmation();
         let mut paths = observed.paths();
         paths.extend(loaded.watch_dependencies.iter().cloned());
         paths.extend(loaded.project.dependencies.iter().cloned());
@@ -79,13 +83,16 @@ impl ConfigurationObservation {
             // baseline. It never supplies compiler options or source authority.
             observations: ConfigurationObservations::capture(&paths),
             vite_paths: raw.watch_dependencies.clone(),
-            unverified: false,
+            // A rejection caused by changed consumed inputs must confirm the
+            // now-stable revision, even when the end-state no longer changes.
+            unverified: needs_confirmation,
             retry_unobservable: !raw.watch_dependencies_complete,
-            notified_failure: false,
+            notified_error: None,
+            rejected: true,
         }
     }
 
-    fn changes(&self) -> Vec<PathBuf> {
+    pub(super) fn changes(&self) -> Vec<PathBuf> {
         if self.unverified || self.retry_unobservable {
             self.observations.paths()
         } else {
@@ -93,15 +100,26 @@ impl ConfigurationObservation {
         }
     }
 
-    pub(super) fn repeats_notified_failure(&self) -> bool {
-        self.notified_failure && self.observations.changed_paths().is_empty()
+    pub(super) fn input_observations(&self) -> &ConfigurationObservations {
+        &self.observations
+    }
+    pub(super) fn needs_confirmation(&self) -> bool {
+        self.unverified
+    }
+    pub(super) fn require_confirmation(&mut self) {
+        self.unverified = true;
     }
 
-    pub(super) fn mark_failure_notified(&mut self) {
-        self.notified_failure = true;
+    pub(super) fn repeats_notified_failure(&self, error: &str) -> bool {
+        self.notified_error.as_deref() == Some(error)
+            && self.observations.changed_paths().is_empty()
     }
 
-    fn paths(&self) -> Vec<PathBuf> {
+    pub(super) fn mark_failure_notified(&mut self, error: &str) {
+        self.notified_error = Some(error.into());
+    }
+
+    pub(super) fn paths(&self) -> Vec<PathBuf> {
         self.observations.paths()
     }
 }
@@ -118,6 +136,7 @@ impl ServerState {
     ) {
         let mut compiler_observations = ConfigurationObservations::default();
         let mut applied = raw.clone();
+        let mut changed_before_admission = false;
         let snapshot = if let Some(error) = &raw.error {
             Err(vize_l0::String::from(error.as_str()))
         } else {
@@ -127,7 +146,8 @@ impl ServerState {
                     authored: raw.clone(), applied: applied.clone(), compiler,
                 })
         }.and_then(|snapshot| {
-            if before.changed_paths().is_empty() { Ok(snapshot) } else {
+            changed_before_admission = !before.changed_paths().is_empty();
+            if !changed_before_admission { Ok(snapshot) } else {
                 Err(vize_l0::cstr!("project configuration changed during evaluation; keeping the last good configuration"))
             }
         });
@@ -136,13 +156,20 @@ impl ServerState {
             Ok(snapshot) => snapshot.observation.clone(),
             Err(_) => {
                 compiler_observations.extend(&ConfigurationObservations::capture(dependencies));
-                ConfigurationObservation::failed(raw, &applied, &compiler_observations)
+                let mut failed =
+                    ConfigurationObservation::failed(raw, &applied, &compiler_observations);
+                if changed_before_admission {
+                    failed.require_confirmation();
+                }
+                failed
             }
         };
         (snapshot, observation)
     }
 
-    fn configuration_records(&self) -> Vec<(ProjectContextKey, ConfigurationObservation)> {
+    pub(super) fn configuration_records(
+        &self,
+    ) -> Vec<(ProjectContextKey, ConfigurationObservation)> {
         let mut records = self
             .project_contexts
             .contexts
@@ -248,6 +275,19 @@ impl ServerState {
         paths
     }
 
+    pub(crate) fn document_configuration_root(&self, uri: &Url) -> Option<PathBuf> {
+        let owner = self
+            .project_contexts
+            .owner
+            .read()
+            .as_ref()
+            .and_then(super::Weak::upgrade);
+        let state = owner.as_deref().unwrap_or(self);
+        uri.to_file_path()
+            .ok()
+            .and_then(|path| state.document_context_root(&path))
+    }
+
     pub(crate) async fn refresh_document_configuration_async(
         self: &Arc<Self>,
         uri: &Url,
@@ -266,13 +306,26 @@ impl ServerState {
         else {
             return Default::default();
         };
+        let cached = state
+            .project_contexts
+            .routes
+            .get(uri)
+            .map(|route| route.value().clone());
+        if let Some(previous) = cached
+            && previous.root != root
+        {
+            return state
+                .refresh_configuration_topology_async(uri, previous, root)
+                .await;
+        }
         let gates = state.config_reload_gates(std::slice::from_ref(&root));
         let Some(gate) = gates.first() else {
             return Default::default();
         };
         let admission = gate.clone().lock_owned().await;
+        let checked_root = root.clone();
         let worker = state.clone();
-        Self::project_background(move || {
+        let outcome = Self::project_background(move || {
             let _admission = admission;
             let mut affected = Vec::new();
             let mut changes = Vec::new();
@@ -318,15 +371,21 @@ impl ServerState {
             // as file watching. No synthetic protocol notification or retry loop.
             worker.apply_project_config_paths(&changes, scope)
         })
-        .await
-        .unwrap_or_else(|| {
-            if state.project_routing_shutting_down() {
-                return Default::default();
+        .await;
+        match outcome {
+            Some(mut result) => {
+                result.checked_roots.push(checked_root);
+                result
             }
-            super::config_reload::ProjectConfigChanges {
-                errors: vec![super::config_reload::worker_unavailable_error()],
-                ..Default::default()
+            None => {
+                if state.project_routing_shutting_down() {
+                    return Default::default();
+                }
+                super::config_reload::ProjectConfigChanges {
+                    errors: vec![super::config_reload::worker_unavailable_error()],
+                    ..Default::default()
+                }
             }
-        })
+        }
     }
 }

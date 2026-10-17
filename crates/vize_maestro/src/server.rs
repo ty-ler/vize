@@ -101,6 +101,9 @@ pub struct MaestroServer {
     /// Registration ACKs run independently of document requests and diagnostics.
     #[cfg(feature = "native")]
     configuration_watchers: Option<ConfigurationWatchControl>,
+    /// Explicit checked-root receipt carried only by a single operation view.
+    #[cfg(feature = "native")]
+    configuration_admission: project_contexts::ConfigurationAdmissionReceipt,
 }
 
 impl MaestroServer {
@@ -142,6 +145,8 @@ impl MaestroServer {
             initial_diagnostics,
             #[cfg(feature = "native")]
             configuration_watchers: Some(ConfigurationWatchControl::new(Default::default())),
+            #[cfg(feature = "native")]
+            configuration_admission: Default::default(),
             #[cfg(feature = "experimental-source-navigation")]
             navigation,
             #[cfg(feature = "experimental-source-navigation")]
@@ -183,6 +188,7 @@ impl MaestroServer {
             state,
             initial_diagnostics: None,
             configuration_watchers: None,
+            configuration_admission: Default::default(),
             #[cfg(feature = "experimental-source-navigation")]
             navigation: None,
             #[cfg(feature = "experimental-source-navigation")]

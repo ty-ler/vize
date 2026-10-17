@@ -474,9 +474,11 @@ fn rejected_absence_attempt_retains_both_default_config_candidates() {
         std::fs::write(&config, "{}").unwrap();
     });
     assert!(raced.outcome.is_err());
+    assert!(raced.observations.needs_confirmation());
     assert_eq!(raced.dependencies, expected);
     let existing = CompilerConfigurationSnapshot::capture_attempt(&root, None);
     assert!(existing.outcome.is_err());
+    assert!(existing.observations.needs_confirmation());
     assert_eq!(existing.dependencies, expected);
     assert!(CompilerConfigurationSnapshot::capture(&root, None).is_err());
 }

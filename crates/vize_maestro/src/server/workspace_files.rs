@@ -233,9 +233,10 @@ async fn publish_versioned_dependents(
     server: &MaestroServer,
     dependents: Vec<(tower_lsp::lsp_types::Url, i32)>,
 ) {
+    let mut admission = server.configuration_admission.clone();
     for (dependent, version) in dependents {
         server
-            .for_document(&dependent)
+            .for_document_in_operation(&dependent, &mut admission)
             .await
             .publish_diagnostics_if_version(&dependent, version)
             .await;
