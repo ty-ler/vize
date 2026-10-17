@@ -18,10 +18,10 @@ mod corsa_support;
 mod expression_regions;
 #[cfg(feature = "native")]
 mod native_code_actions;
-#[cfg(feature = "native")]
-pub(crate) use corsa_support::normalize_physical_path;
 #[cfg(all(test, feature = "native"))]
 pub(crate) use corsa_support::{canonical_request_path, request_file_uri};
+#[cfg(feature = "native")]
+pub(crate) use corsa_support::{normalize_physical_path, open_canonical_virtual_document_strict};
 #[cfg(feature = "native")]
 pub(crate) use native_code_actions::NATIVE_SOURCE_KINDS;
 pub mod cursor_context;
