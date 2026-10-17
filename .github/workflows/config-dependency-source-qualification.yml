@@ -1,12 +1,12 @@
 name: Config dependency source qualification
-run-name: Config dependency laws at 85b7c8d4b1
+run-name: Config dependency laws at 10b06ec4ee
 on:
   push:
     branches: [ci/config-dependency-source-qualification]
 permissions:
   contents: read
 env:
-  SOURCE_SHA: 85b7c8d4b12226b67eaf23dd7b84fb14b616c832
+  SOURCE_SHA: 10b06ec4ee6c814e2c500e327dab5ad8046cee86
   CARGO_BUILD_JOBS: "12"
   CARGO_TERM_COLOR: always
   RUST_TEST_THREADS: "4"
@@ -44,18 +44,82 @@ jobs:
           mkdir -p target/config-dependency-qualification
           git rev-parse HEAD HEAD^{tree} > target/config-dependency-qualification/source.txt
           git ls-files -s > target/config-dependency-qualification/source-index.txt
-          sha256sum Cargo.lock crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs crates/vize_canon/src/batch/virtual_project/tests/editor_configuration_graph.rs crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot_tests.rs crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_inputs.rs crates/vize_canon/src/batch/virtual_project/tsconfig_paths.rs crates/vize_canon/src/package_route/search.rs crates/vize_maestro/src/server/state/config/project.rs crates/vize_canon/tests/lsp_import_resolution/compiler_snapshot.rs crates/vize_maestro/src/server/state/project_contexts/config_reload_tests.rs crates/vize/src/commands/check/runner/input_scope_tests.rs crates/vize/tests/check_tsconfig_dependency_errors_cli.rs > target/config-dependency-qualification/inputs.sha256
+          sha256sum \
+            Cargo.lock \
+            crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs \
+            crates/vize_canon/src/batch/virtual_project/tests/editor_configuration_graph.rs \
+            crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs \
+            crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot_tests.rs \
+            crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_inputs.rs \
+            crates/vize_canon/src/batch/virtual_project/tsconfig_paths.rs \
+            crates/vize_canon/src/package_route/search.rs \
+            crates/vize_maestro/src/server/state/config/project.rs \
+            crates/vize_canon/tests/lsp_import_resolution/compiler_snapshot.rs \
+            crates/vize_maestro/src/server/state/project_contexts/config_reload_tests.rs \
+            crates/vize/src/commands/check/runner/input_scope_tests.rs \
+            crates/vize/tests/check_tsconfig_dependency_errors_cli.rs \
+            crates/vize_canon/src/batch.rs \
+            crates/vize_canon/src/batch/virtual_project.rs \
+            crates/vize_canon/src/batch/virtual_project/tsconfig_gen.rs \
+            crates/vize_canon/src/corsa_bridge/vue_document.rs \
+            crates/vize_canon/src/lib.rs \
+            crates/vize_canon/src/package_route/stamp.rs \
+            crates/vize_carton/src/config/loader/checked.rs \
+            crates/vize_carton/src/config/loader/discovery.rs \
+            crates/vize_carton/src/config/loader/js.rs \
+            crates/vize_carton/src/config/loader/lsp_snapshot.rs \
+            crates/vize_carton/src/config/loader/module-runtime.d.mts \
+            crates/vize_carton/src/config/loader/module-runtime.mjs \
+            crates/vize_carton/src/config/loader/parse.rs \
+            crates/vize_maestro/src/server.rs \
+            crates/vize_maestro/src/server/handlers.rs \
+            crates/vize_maestro/src/server/helpers.rs \
+            crates/vize_maestro/src/server/project_contexts.rs \
+            crates/vize_maestro/src/server/project_contexts/operation_admission_tests.rs \
+            crates/vize_maestro/src/server/state/config.rs \
+            crates/vize_maestro/src/server/state/corsa.rs \
+            crates/vize_maestro/src/server/state/project_contexts.rs \
+            crates/vize_maestro/src/server/state/project_contexts/config_reload.rs \
+            crates/vize_maestro/src/server/state/project_contexts/freshness.rs \
+            crates/vize_maestro/src/server/state/project_contexts/freshness_tests.rs \
+            crates/vize_maestro/src/server/state/project_contexts/references.rs \
+            crates/vize_maestro/src/server/state/project_contexts/registry.rs \
+            crates/vize_maestro/src/server/state/project_contexts/topology.rs \
+            crates/vize_maestro/src/server/state/project_contexts/topology_tests.rs \
+            crates/vize_maestro/src/server/state/project_contexts/watched.rs \
+            crates/vize_maestro/src/server/workspace_files.rs \
+            crates/vize_maestro/src/server/workspace_files/config_watchers.rs \
+            crates/vize_maestro/src/server/workspace_files/config_watchers_tests.rs \
+            crates/vize_maestro/src/server/workspace_files/watched.rs \
+            crates/vize_maestro/src/server/workspace_folder_events.rs \
+            docs/content/guide/vue-configuration.md \
+            docs/content/ja/guide/vue-configuration.md \
+            editors/vscode/test/fixtures/passive-vize-server.cjs \
+            editors/vscode/test/run-existing-config-host-real.mjs \
+            editors/vscode/test/suite/existing-config-real.cjs \
+            editors/vscode/test/suite/external-config-real.cjs \
+            tests/tooling/lsp-config-bundle-repair.test.ts \
+            tests/tooling/native-config-repair-observations.test.ts \
+            tests/tooling/vscode-passive-server-proxy.test.ts \
+            crates/vize/tests/lsp_workspace_package_projection_cli.rs \
+            > target/config-dependency-qualification/inputs.sha256
+      - name: Check config host boundaries and actual loader repair observation laws
+        run: |
+          set -euo pipefail
+          node --test tests/tooling/config-host-boundary.test.ts tests/tooling/native-config-repair-observations.test.ts tests/tooling/vscode-passive-server-proxy.test.ts 2>&1 | tee target/config-dependency-qualification/loader-observations.log
+          grep -E '# pass [1-9][0-9]*' target/config-dependency-qualification/loader-observations.log
       - name: Run all three original and four added configuration graph laws
+        if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
           cargo test --locked --profile ci -p vize_canon --lib editor_configuration_graph_tests -- --nocapture 2>&1 | tee target/config-dependency-qualification/laws.log
           grep -F '7 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/laws.log
-      - name: Run all nine immutable compiler snapshot and consistency laws
+      - name: Run all twelve immutable compiler snapshot and attempt laws
         if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
           cargo test --locked --profile ci -p vize_canon --lib compiler_snapshot::tests -- --nocapture 2>&1 | tee target/config-dependency-qualification/snapshots.log
-          grep -F '9 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/snapshots.log
+          grep -F '12 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/snapshots.log
       - name: Run the complete existing Canon tsconfig generator module laws
         if: ${{ !cancelled() }}
         run: |
@@ -80,12 +144,38 @@ jobs:
           set -euo pipefail
           cargo test --locked --profile ci -p vize_maestro --lib lazy_native_owner_retains_admitted_compiler_authority_after_inherited_config_deletion -- --nocapture 2>&1 | tee target/config-dependency-qualification/lazy-owner.log
           grep -F '1 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/lazy-owner.log
-      - name: Require real native cold and warm hover with deleted inherited configuration
+      - name: Require native cold and warm hover and retired union membership
         if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
-          cargo test --locked --profile ci -p vize_canon --test lsp_import_resolution compiler_snapshot::admitted_compiler_configuration_survives_deleted_extends_before_first_native_request_and_rebuilds -- --exact --nocapture 2>&1 | tee target/config-dependency-qualification/native.log
-          grep -F '1 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/native.log
+          cargo test --locked --profile ci -p vize_canon --test lsp_import_resolution compiler_snapshot:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/native.log
+          grep -F '2 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/native.log
+      - name: Exercise actual didChange fanout with one admission per governing root
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_maestro --lib server::project_contexts::operation_admission_tests:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/operation-admission.log
+          grep -F '2 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/operation-admission.log
+      - name: Exercise native dynamic watcher lifecycle and held ACK responsiveness
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize_maestro --lib server::workspace_files::config_watchers::tests:: -- --nocapture 2>&1 | tee target/config-dependency-qualification/config-watchers.log
+          grep -F '8 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/config-watchers.log
+      - name: Require the original workspace package native freshness regression unchanged
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo test --locked --profile ci -p vize --test lsp_workspace_package_projection_cli shared_workspace_package_native_queries_and_freshness_share_one_server -- --exact --nocapture 2>&1 | tee target/config-dependency-qualification/workspace-native.log
+          grep -F '1 passed; 0 failed; 0 ignored;' target/config-dependency-qualification/workspace-native.log
+      - name: Exercise real Vite partial graph repair through the source-built CLI
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          cargo build --profile ci -p vize 2>&1 | tee target/config-dependency-qualification/source-cli-build.log
+          node tests/differential/build-receipt.ts
+          cp target/ci/vize.differential-build.json target/config-dependency-qualification/
+          VIZE_LSP_BIN=target/ci/vize VIZE_LSP_REQUIRE_SOURCE_BUILD=1 node --test tests/tooling/lsp-config-bundle-repair.test.ts 2>&1 | tee target/config-dependency-qualification/vite-bundle-repair.log
       - name: Run all eighteen CLI input scope unit laws
         if: ${{ !cancelled() }}
         run: |
@@ -125,6 +215,8 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: config-dependency-source-${{ env.SOURCE_SHA }}-${{ github.run_id }}
-          path: target/config-dependency-qualification/
+          path: |
+            target/config-dependency-qualification/
+            target/differential/config-bundle-repair/
           if-no-files-found: error
           retention-days: 7
