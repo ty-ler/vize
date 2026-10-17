@@ -26,7 +26,20 @@ impl CorsaProjectClient {
         // Opaque data belongs to the existing process. Do not replay it on a
         // newly spawned session after transport failure.
         if self.editor_lsp.is_none() || !self.document_texts.contains_key(uri) {
+            if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+                tracing::info!(
+                    uri,
+                    absent_session = self.editor_lsp.is_none(),
+                    missing_document = !self.document_texts.contains_key(uri),
+                    "completion diagnostic: native transport precheck refused"
+                );
+            }
             return Ok(None);
+        }
+        if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+            tracing::info!(uri, dirty = self.editor_lsp_documents_dirty,
+                generation = ?self.editor_lsp.as_ref().map(|session| session.document_generation),
+                "completion diagnostic: before restoring editor view");
         }
         // Diagnostics may have temporarily synchronized a different document
         // set. Restore the editor view before resolving the candidate.
@@ -51,21 +64,37 @@ impl EditorLspSession {
                 })),
         )
         .map_err(|error| cstr!("Failed to request editor LSP completion: {error}"))?;
+        if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+            tracing::info!(
+                document_uri,
+                generation = self.document_generation,
+                "completion diagnostic: recording issued native candidates"
+            );
+        }
         self.issued_completions
             .record(self.document_generation, document_uri, response.as_ref());
         Ok(response)
     }
 
     fn completion_resolve(&mut self, uri: &str, item: Value) -> Result<Option<Value>, String> {
-        if self.closed
-            || !self
-                .issued_completions
-                .allows(self.document_generation, uri, &item)
-        {
+        let issued = self
+            .issued_completions
+            .allows(self.document_generation, uri, &item);
+        if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+            tracing::info!(uri, generation = self.document_generation,
+                closed = self.closed, issued, label = ?item.get("label"),
+                "completion diagnostic: checking issued native candidate");
+        }
+        if self.closed || !issued {
             return Ok(None);
         }
         self.ready_document_uri(uri)?;
-        block_on(self.client.request::<CompletionResolveRequest>(item))
-            .map_err(|error| cstr!("Failed to resolve editor LSP completion: {error}"))
+        let response = block_on(self.client.request::<CompletionResolveRequest>(item))
+            .map_err(|error| cstr!("Failed to resolve editor LSP completion: {error}"));
+        if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+            tracing::info!(uri, response = ?response,
+                "completion diagnostic: native resolve response");
+        }
+        response
     }
 }

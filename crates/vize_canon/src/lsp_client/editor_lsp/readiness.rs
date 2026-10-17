@@ -64,7 +64,13 @@ impl EditorLspSession {
         Ok(())
     }
 
+    #[track_caller]
     pub(super) fn advance_document_generation(&mut self) {
+        if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+            tracing::info!(generation = self.document_generation,
+                caller = %std::panic::Location::caller(),
+                "completion diagnostic: invalidating issued native candidates");
+        }
         self.issued_completions.invalidate();
         self.document_generation = self.document_generation.wrapping_add(1);
         self.ready_generation = None;

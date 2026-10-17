@@ -96,19 +96,38 @@ impl CompletionService {
             return item;
         };
         if !can_resolve(state, &uri, revision) {
+            if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+                tracing::info!(%uri, revision, "completion diagnostic: source freshness refused before backend");
+            }
             return item;
         }
         let Some(bridge) = state.get_corsa_bridge().await else {
+            if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+                tracing::info!(%uri, revision, "completion diagnostic: no backend available");
+            }
             return item;
         };
         if !can_resolve(state, &uri, revision) {
+            if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+                tracing::info!(%uri, revision,
+                    "completion diagnostic: source freshness refused after backend acquisition or resolve");
+            }
             return item;
         }
         let native_label = raw.get("label").and_then(Value::as_str).map(str::to_owned);
-        let Ok(Some(resolved)) = bridge.completion_resolve(&request_uri, raw).await else {
+        let response = bridge.completion_resolve(&request_uri, raw).await;
+        if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+            tracing::info!(%uri, revision, response = ?response,
+                "completion diagnostic: bridge resolve outcome");
+        }
+        let Ok(Some(resolved)) = response else {
             return item;
         };
         if !can_resolve(state, &uri, revision) {
+            if std::env::var_os("VIZE_LSP_TRACE_NATIVE_SCOPE").is_some() {
+                tracing::info!(%uri, revision,
+                    "completion diagnostic: source freshness refused after backend acquisition or resolve");
+            }
             return item;
         }
         if let Ok(resolved) = serde_json::from_value::<LspCompletionItem>(resolved)
