@@ -30,20 +30,42 @@ impl ConfigurationAdmissionReceipt {
     }
 }
 
-pub(super) enum DocumentServer<'a> {
+enum DocumentOwner<'a> {
     Primary(&'a MaestroServer),
     #[cfg(feature = "native")]
     Project(MaestroServer),
+}
+
+pub(super) struct DocumentServer<'a> {
+    owner: DocumentOwner<'a>,
+    #[cfg(feature = "native")]
+    authored_revision: Option<u64>,
+}
+
+impl<'a> DocumentServer<'a> {
+    pub(super) fn primary(server: &'a MaestroServer) -> Self {
+        Self {
+            owner: DocumentOwner::Primary(server),
+            #[cfg(feature = "native")]
+            authored_revision: server.state.documents.stable_revision(),
+        }
+    }
+
+    #[cfg(feature = "native")]
+    pub(super) fn authored_revision_is_current(&self) -> bool {
+        self.authored_revision.is_some()
+            && self.authored_revision == self.state.documents.stable_revision()
+    }
 }
 
 impl Deref for DocumentServer<'_> {
     type Target = MaestroServer;
 
     fn deref(&self) -> &Self::Target {
-        match self {
-            Self::Primary(server) => server,
+        match &self.owner {
+            DocumentOwner::Primary(server) => server,
             #[cfg(feature = "native")]
-            Self::Project(server) => server,
+            DocumentOwner::Project(server) => server,
         }
     }
 }
@@ -85,7 +107,7 @@ impl MaestroServer {
         #[cfg(not(feature = "native"))]
         {
             let _ = uri;
-            DocumentServer::Primary(self)
+            DocumentServer::primary(self)
         }
     }
 
@@ -95,6 +117,7 @@ impl MaestroServer {
         uri: &Url,
         receipt: &mut ConfigurationAdmissionReceipt,
     ) -> DocumentServer<'_> {
+        let authored_revision = self.state.documents.stable_revision();
         if self
             .state
             .document_configuration_root(uri)
@@ -107,9 +130,12 @@ impl MaestroServer {
             }
         }
         let mut project = self.for_document_admitted(uri).await;
-        if let DocumentServer::Project(server) = &mut project {
+        if let DocumentOwner::Project(server) = &mut project.owner {
             server.configuration_admission = receipt.clone();
         }
+        // Admission can await configuration work; positions still belong to
+        // the authored revision at the beginning of this operation.
+        project.authored_revision = authored_revision;
         project
     }
 
@@ -124,8 +150,9 @@ impl MaestroServer {
     pub(super) async fn for_document_admitted(&self, uri: &Url) -> DocumentServer<'_> {
         #[cfg(feature = "native")]
         {
+            let authored_revision = self.state.documents.stable_revision();
             if uri.to_file_path().is_err() {
-                return DocumentServer::Primary(self);
+                return DocumentServer::primary(self);
             }
             let state = self
                 .state
@@ -133,12 +160,15 @@ impl MaestroServer {
                 .await
                 .unwrap_or_else(|| self.state.clone());
             self.queue_configuration_watches();
-            DocumentServer::Project(self.with_project_state(state))
+            DocumentServer {
+                owner: DocumentOwner::Project(self.with_project_state(state)),
+                authored_revision,
+            }
         }
         #[cfg(not(feature = "native"))]
         {
             let _ = uri;
-            DocumentServer::Primary(self)
+            DocumentServer::primary(self)
         }
     }
 }

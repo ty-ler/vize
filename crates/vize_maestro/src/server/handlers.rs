@@ -162,10 +162,9 @@ impl LanguageServer for MaestroServer {
             .and_then(serde_json::Value::as_str)
             .and_then(|uri| tower_lsp::lsp_types::Url::parse(uri).ok());
         let server = match &uri {
-            Some(uri) => Some(self.for_document(uri).await),
-            None => None,
+            Some(uri) => self.for_document(uri).await,
+            None => super::project_contexts::DocumentServer::primary(self),
         };
-        let server = server.as_deref().unwrap_or(self);
         server
             .native_request(async {
                 #[cfg(feature = "native")]

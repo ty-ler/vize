@@ -7,6 +7,40 @@ use tower_lsp::jsonrpc::Result;
 
 use super::MaestroServer;
 
+impl super::project_contexts::DocumentServer<'_> {
+    /// Authored coordinates precede async configuration admission and native
+    /// transaction acquisition. Both boundaries must retain that revision.
+    async fn authored_request<T>(&self, request: impl Future<Output = Result<T>>) -> Result<T> {
+        #[cfg(feature = "native")]
+        if !self.authored_revision_is_current() {
+            return Err(Error::content_modified());
+        }
+        let result = request.await;
+        #[cfg(feature = "native")]
+        if !self.authored_revision_is_current() {
+            return Err(Error::content_modified());
+        }
+        result
+    }
+
+    pub(super) async fn native_request<T>(
+        &self,
+        request: impl Future<Output = Result<T>>,
+    ) -> Result<T> {
+        self.authored_request(MaestroServer::native_request(self, request))
+            .await
+    }
+
+    pub(super) async fn workspace_native_request<T, F, Fut>(&self, request: F) -> Result<T>
+    where
+        F: Fn() -> Fut,
+        Fut: Future<Output = Result<T>>,
+    {
+        self.authored_request(MaestroServer::workspace_native_request(self, request))
+            .await
+    }
+}
+
 impl MaestroServer {
     /// Bulk requests do not borrow the retired primary's Corsa transaction.
     /// Each native owner acquires its own scope; the aggregate also refuses

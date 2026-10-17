@@ -189,3 +189,69 @@ fn ignored_older_versions_and_absent_closes_keep_the_complete_result() {
     release.send(()).unwrap();
     assert_eq!(block_on(reply), Ok(pending_native_reply()));
 }
+
+#[test]
+fn authored_revision_precedes_admission_but_valid_policy_reload_remains_usable() {
+    for changed in [false, true] {
+        for workspace in [false, true] {
+            let project = tempfile::tempdir().unwrap();
+            let root = vize_carton::path::canonicalize_non_verbatim(project.path());
+            let config = root.join("vite.config.mjs");
+            std::fs::write(&config, "export default {vue:{languageServer:{hover:false,typecheck:false,lint:false,ecosystem:false}}};").unwrap();
+            let (service, _socket) = build_lsp_service();
+            let server = service.inner();
+            server.state.set_workspace_root(root.clone());
+            server.state.load_workspace_config(&root);
+            let uri = Url::from_file_path(root.join("App.vue")).unwrap();
+            server
+                .state
+                .documents
+                .open(uri.clone(), APP.into(), 1, "vue".into());
+            std::fs::write(&config, "import {writeFileSync,existsSync} from 'node:fs'; writeFileSync(new URL('./entered',import.meta.url),''); while(!existsSync(new URL('./release',import.meta.url))) await new Promise(resolve=>setTimeout(resolve,1)); export default {vue:{languageServer:{hover:true,typecheck:false,lint:false,ecosystem:false}}};").unwrap();
+            let mut admission = Box::pin(server.for_document(&uri));
+            assert!(admission.as_mut().now_or_never().is_none());
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+            while !root.join("entered").is_file() {
+                assert!(
+                    std::time::Instant::now() < deadline,
+                    "actual config admission did not enter"
+                );
+                std::thread::sleep(std::time::Duration::from_millis(1));
+            }
+            if changed {
+                assert!(server.state.documents.apply_changes(
+                    &uri,
+                    vec![TextDocumentContentChangeEvent {
+                        range: None,
+                        range_length: None,
+                        text: "<template>new revision</template>".into(),
+                    }],
+                    2
+                ));
+            }
+            std::fs::write(root.join("release"), "").unwrap();
+            let view = block_on(admission);
+            assert!(
+                view.state.lsp_features().hover,
+                "the actual valid replacement is admitted"
+            );
+            let entered = std::sync::atomic::AtomicBool::new(false);
+            let request = || async {
+                entered.store(true, std::sync::atomic::Ordering::SeqCst);
+                Ok(pending_native_reply())
+            };
+            let result = if workspace {
+                block_on(view.workspace_native_request(request))
+            } else {
+                block_on(view.native_request(request()))
+            };
+            if changed {
+                assert_eq!(result, Err(Error::content_modified()));
+                assert!(!entered.load(std::sync::atomic::Ordering::SeqCst));
+            } else {
+                assert_eq!(result, Ok(pending_native_reply()));
+                assert!(entered.load(std::sync::atomic::Ordering::SeqCst));
+            }
+        }
+    }
+}
