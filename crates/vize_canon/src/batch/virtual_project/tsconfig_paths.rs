@@ -22,6 +22,19 @@ pub(super) fn resolve_extended_tsconfig_path_with_inputs(
     extends: &str,
     inputs: Option<&CompilerInputs>,
 ) -> Option<PathBuf> {
+    if let Some(inputs) = inputs {
+        return inputs.resolve("extends", tsconfig_path, extends, || {
+            resolve_extended_tsconfig_path_uncached(tsconfig_path, extends, Some(inputs))
+        });
+    }
+    resolve_extended_tsconfig_path_uncached(tsconfig_path, extends, None)
+}
+
+fn resolve_extended_tsconfig_path_uncached(
+    tsconfig_path: &Path,
+    extends: &str,
+    inputs: Option<&CompilerInputs>,
+) -> Option<PathBuf> {
     let base_dir = tsconfig_path.parent().unwrap_or(Path::new("."));
     let extends_path = Path::new(extends);
     if !(extends_path.is_absolute()

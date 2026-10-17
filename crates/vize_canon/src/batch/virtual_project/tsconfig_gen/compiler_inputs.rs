@@ -17,6 +17,7 @@ pub(in super::super) struct CompilerInputs {
     content: RefCell<FxHashMap<PathBuf, vize_carton::String>>,
     observations: RefCell<FxHashMap<PathBuf, InputStamp>>,
     parsed_observations: RefCell<Vec<InputStamp>>,
+    resolutions: RefCell<FxHashMap<(&'static str, PathBuf, vize_carton::String), Option<PathBuf>>>,
 }
 
 impl CompilerInputs {
@@ -72,20 +73,45 @@ impl CompilerInputs {
         Ok(content)
     }
 
+    pub(in super::super) fn resolve(
+        &self,
+        kind: &'static str,
+        origin: &Path,
+        specifier: &str,
+        resolve: impl FnOnce() -> Option<PathBuf>,
+    ) -> Option<PathBuf> {
+        let key = (
+            kind,
+            normalize_path_lexically(origin),
+            vize_carton::String::from(specifier),
+        );
+        if let Some(resolved) = self.resolutions.borrow().get(&key) {
+            return resolved.clone();
+        }
+        let resolved = resolve();
+        self.resolutions.borrow_mut().insert(key, resolved.clone());
+        resolved
+    }
+
     pub(in super::super) fn installed_vue_manifest(
         &self,
         directory: &Path,
     ) -> Option<(PathBuf, Value)> {
-        crate::package_route::installed_package_manifest_with_reader(
-            directory,
-            "vue",
-            |path| {
-                self.read_content(path)
-                    .ok()
-                    .and_then(|content| serde_json::from_str(&content).ok())
-            },
-            |path| self.observe(path),
-        )
+        let path = self.resolve("package", directory, "vue", || {
+            crate::package_route::installed_package_manifest_with_reader(
+                directory,
+                "vue",
+                |path| {
+                    self.read_content(path)
+                        .ok()
+                        .and_then(|content| serde_json::from_str(&content).ok())
+                },
+                |path| self.observe(path),
+            )
+            .map(|(path, _)| path)
+        })?;
+        let manifest = serde_json::from_str(&self.read_content(&path).ok()?).ok()?;
+        Some((path, manifest))
     }
 
     pub(in super::super) fn validate(&self) -> CorsaResult<()> {

@@ -57,6 +57,19 @@ fn resolve_reference(
     reference: &str,
     inputs: Option<&CompilerInputs>,
 ) -> Option<PathBuf> {
+    if let Some(inputs) = inputs {
+        return inputs.resolve("reference", tsconfig_path, reference, || {
+            resolve_reference_uncached(tsconfig_path, reference, Some(inputs))
+        });
+    }
+    resolve_reference_uncached(tsconfig_path, reference, None)
+}
+
+fn resolve_reference_uncached(
+    tsconfig_path: &Path,
+    reference: &str,
+    inputs: Option<&CompilerInputs>,
+) -> Option<PathBuf> {
     let base_dir = tsconfig_path.parent().unwrap_or(Path::new("."));
     let reference = Path::new(reference);
     let base = if reference.is_absolute() {
