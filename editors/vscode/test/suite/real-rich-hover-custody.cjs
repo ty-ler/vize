@@ -51,9 +51,36 @@ function retainHover(request, hovers) {
         }))
       : undefined,
   });
+  writePackets();
+}
+
+function beginCompletion(document, position, expected, itemResolveCount) {
+  const request = beginHover(document, position, expected);
+  request.request.method = "vscode.executeCompletionItemProvider";
+  request.request.itemResolveCount = itemResolveCount;
+  return request;
+}
+
+function retainCompletion(request, completions) {
+  // Preserve the complete real VSCode API result before checking any item.
+  // This API resolves up to itemResolveCount entries; it is not a raw LSP tap.
+  packets.push({
+    ...request,
+    resultType: completions === null ? "null" : typeof completions,
+    actual: completions,
+    publicDocumentation: completions?.items.map((item) => ({
+      label: item.label,
+      raw: item.documentation,
+      constructor: item.documentation?.constructor?.name,
+    })),
+  });
+  writePackets();
+}
+
+function writePackets() {
   const output = path.join(getWorkspaceFolderPath(), "node_modules/.vize/rich-hover.json");
   fs.mkdirSync(path.dirname(output), { recursive: true });
   fs.writeFileSync(output, `${JSON.stringify({ schemaVersion: 1, packets }, null, 2)}\n`);
 }
 
-module.exports = { beginHover, retainHover };
+module.exports = { beginHover, retainHover, beginCompletion, retainCompletion };

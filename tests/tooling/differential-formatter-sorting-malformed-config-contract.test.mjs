@@ -110,6 +110,42 @@ void test("malformed history retains all original named-law settings and complet
   );
 });
 
+void test("relative explicit serialization preserves every historical parse error beyond its discovered-path identity", () => {
+  const loaded = loadSortingConfigManifest(root, manifestPath);
+  let changedPaths = 0;
+  for (const fixture of loaded.cases) {
+    const original = fixture.steps[0];
+    const current = fixture.execution.steps[0];
+    assert.deepEqual(original.argv, ["fmt", "--write", "UserCard.vue"]);
+    assert.deepEqual(current.argv, [
+      "fmt",
+      "--config",
+      "serialized-config.json",
+      "--write",
+      "UserCard.vue",
+    ]);
+    const originalStderr = original.stderr.toString();
+    const expected = originalStderr.replace(
+      "failed to parse {{workspace}}/vize.config.json:",
+      "failed to parse serialized-config.json:",
+    );
+    if (expected !== originalStderr) changedPaths++;
+    assert.equal(current.stderr.toString(), expected, fixture.id);
+    assert.equal(current.exitStatus, original.exitStatus);
+    assert.deepEqual(current.stdout, original.stdout);
+    assert.deepEqual(current.expectedFiles["UserCard.vue"], original.expectedFiles["UserCard.vue"]);
+    assert.deepEqual(
+      current.expectedFiles["serialized-config.json"],
+      original.expectedFiles["vize.config.json"],
+    );
+  }
+  assert.equal(
+    changedPaths,
+    4,
+    "the four complete serde errors change only the declared path context",
+  );
+});
+
 void test("malformed admission rejects lost complete errors, bypasses and file protection", () => {
   const loaded = loadSortingConfigManifest(root, manifestPath);
   for (const mutate of [
@@ -120,6 +156,17 @@ void test("malformed admission rejects lost complete errors, bypasses and file p
     (report) => (report.rows[0].passes[0].exitStatus = 0),
     (report) => (report.rows[0].passes[1].argv = ["fmt", "--check", "UserCard.vue"]),
     (report) => (report.rows[0].passes[0].stderr = observation(Buffer.alloc(0))),
+    (report) => {
+      const workspace = report.rows[0].workspace;
+      report.rows[0].passes[0].stderr = observation(
+        Buffer.from(
+          loaded.cases[0].steps[0].stderr
+            .toString()
+            .replaceAll("{{workspace}}", workspace)
+            .replaceAll("vize.config.json", "serialized-config.json"),
+        ),
+      );
+    },
     (report) => (report.rows[0].passes[0].stderr.sha256 = "0".repeat(64)),
     (report) =>
       (report.rows[0].passes[0].outputFiles["UserCard.vue"] = observation(Buffer.from("changed"))),

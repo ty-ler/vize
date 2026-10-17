@@ -89,8 +89,8 @@ fn run(layout: Layout, open_other: bool, reverse: bool, original_wait: bool) {
     publication(&mut process, &probe, 2, json!([]));
     fixture.assert_authored_unchanged();
     if original_wait {
-        // Preserve the reporter's null lifecycle parameters. The editor
-        // boundary accepts them as the canonical no-params shutdown request.
+        // The exact reporter awaits any reply, without asserting success.
+        // The transport accepts the reporter's explicit null unit parameters.
         process.send(json!({ "jsonrpc": "2.0", "id": 9, "method": "shutdown", "params": null }));
         assert_eq!(
             receive(&mut process, |message| message["id"] == 9),
