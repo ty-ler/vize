@@ -16,7 +16,9 @@ use crate::{
 
 const RESOLVE_DATA: &str = "vizeCompletion";
 
-#[cfg(all(test, feature = "native", unix))]
+// Plain cfg(test) preserves the workspace's test-only assertion lint policy.
+#[cfg(test)]
+#[cfg(all(feature = "native", unix))]
 mod native_interleaving_tests;
 #[cfg(test)]
 mod tests;
