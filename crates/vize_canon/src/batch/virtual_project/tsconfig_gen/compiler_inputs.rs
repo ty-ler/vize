@@ -291,7 +291,7 @@ mod tests {
         let path = root.join("tsconfig.base.json");
         std::fs::write(&path, "{\n").unwrap();
         let expected = vize_carton::cstr!(
-            "Configuration error: cannot parse tsconfig {}: JSON parse error: EOF while parsing a value at line 2 column 0",
+            "Configuration error: cannot parse tsconfig {}: JSON parse error: EOF while parsing an object at line 2 column 0",
             path.display()
         );
         let inputs = CompilerInputs::default();
