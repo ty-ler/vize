@@ -9,6 +9,28 @@ use std::sync::Arc;
 use super::{ServerState, host::LoadedLspConfig};
 
 impl ServerState {
+    /// Keep the observed child transport on the existing bounded config workers.
+    #[cfg(feature = "native")]
+    #[expect(
+        clippy::disallowed_types,
+        reason = "initial admission retains the shared editor owner on its worker"
+    )]
+    pub(crate) async fn load_workspace_config_async(
+        self: &std::sync::Arc<Self>,
+        dir: &Path,
+        folders: Option<&[tower_lsp::lsp_types::WorkspaceFolder]>,
+    ) -> bool {
+        let state = self.clone();
+        let directory = dir.to_path_buf();
+        let folders = folders.map(<[_]>::to_vec);
+        Self::project_background(move || {
+            state.load_workspace_config(&directory);
+            state.apply_initialize_workspace_folders(folders.as_deref(), Some(&directory));
+        })
+        .await
+        .is_some()
+    }
+
     pub(super) fn apply_tsconfig_config_snapshot(
         &self,
         directory: &Path,
