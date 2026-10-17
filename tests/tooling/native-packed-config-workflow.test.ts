@@ -11,6 +11,7 @@ import { parse } from "yaml";
 import {
   withoutPackedConfigExtension,
   verifyHistoricalProducerFiles,
+  readPackedProducerRetirement,
   verifyPackedProducerPreflight,
 } from "./support/native-packed-config-extension.ts";
 import { writeFakeCommand } from "./support/fake-command.ts";
@@ -95,7 +96,7 @@ void test("the actual manager version audit uses a manifest-free cwd and preserv
 });
 
 void test("the historical composed producer authenticates every whole source and moved test module", () => {
-  const producer = "c45e0901fc05cfa51c50d167ac97a34ec466dd18";
+  const producer = "47284d8e618b660658bdd28445306e18cfddca90";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -108,7 +109,7 @@ void test("the historical composed producer authenticates every whole source and
   const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
   const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
   const files = Object.keys(witness.producer.files);
-  assert.equal(files.length, 212);
+  assert.equal(files.length, 343);
   assert.equal(new Set(files).size, files.length);
   const changedRust = git(
     "diff",
@@ -121,7 +122,7 @@ void test("the historical composed producer authenticates every whole source and
     .trim()
     .split("\n")
     .filter((file) => file.endsWith(".rs"));
-  assert.equal(changedRust.length, 206);
+  assert.equal(changedRust.length, 337);
   const historicalAbsences = witness.producer.historicalRenames.map(
     (rename: { from: string }) => rename.from,
   );
@@ -153,7 +154,7 @@ void test("the historical composed producer authenticates every whole source and
   assert.equal(deletion.fromSource, witness.producer.composedBase);
   assert.equal(deletion.toSource, "a9dec43c406c7afd1d2ce8067fc563678e28ac64");
   assert.equal(digest(git("show", deletion.fromSource + ":" + deletion.from)), deletion.fromSha256);
-  assert.equal(digest(git("show", producer + ":" + deletion.to)), deletion.toSha256);
+  assert.equal(digest(git("show", deletion.toSource + ":" + deletion.to)), deletion.toSha256);
   const removedRust = git(
     "diff",
     "--name-only",
@@ -166,7 +167,30 @@ void test("the historical composed producer authenticates every whole source and
     .trim()
     .split("\n")
     .filter((file) => file.endsWith(".rs"));
-  assert.deepEqual(removedRust, [deletion.from]);
+  const retirement = readPackedProducerRetirement(root, witness.producer);
+  assert.equal(retirement.source, "7136efec7025c009299b583b36c40b2dc9b7424e");
+  assert.equal(retirement.retiredAt, "c022cf601c6e49b14dbcc57093948c56f132cc55");
+  assert.equal(Object.keys(retirement.files).length, 98);
+  assert.deepEqual(
+    removedRust.sort((left, right) => left.localeCompare(right)),
+    [deletion.from, ...Object.keys(retirement.files)].sort((left: string, right: string) =>
+      left.localeCompare(right),
+    ),
+  );
+  assert.equal(Object.values(witness.producer.files).filter((value) => value === null).length, 101);
+  const qualification = witness.producer.previousQualification;
+  assert.equal(qualification.source, retirement.source);
+  assert.equal(qualification.producer, "c45e0901fc05cfa51c50d167ac97a34ec466dd18");
+  const previousQualification = git("show", qualification.source + ":" + witnessPath);
+  assert.equal(digest(previousQualification), qualification.witnessSha256);
+  assert.equal(
+    digest(git("show", qualification.source + ":.github/workflows/native-smoke.yml")),
+    qualification.workflowSha256,
+  );
+  const previousQualificationWitness = JSON.parse(previousQualification.toString());
+  assert.equal(Object.keys(previousQualificationWitness.producer.files).length, 212);
+  for (const file of Object.keys(previousQualificationWitness.producer.files))
+    assert.ok(files.includes(file), file);
   verifyHistoricalProducerFiles(root, witness.producer);
   const original = witness.producer.previousFreeze;
   assert.equal(original.source, "f7ee25f5db27bd210db07f514837b9f4c1b65054");
@@ -202,7 +226,7 @@ void test("the historical composed producer authenticates every whole source and
     "--name-status",
     "--find-renames",
     historicalBase,
-    producer,
+    "a9dec43c406c7afd1d2ce8067fc563678e28ac64",
   ).toString();
   for (const [index, name] of ["assignments", "scopes"].entries()) {
     const from = prefix + "retained_" + name + ".rs",
@@ -220,7 +244,7 @@ void test("the historical composed producer authenticates every whole source and
     );
     assert.equal(record.absentAtBase, true);
     assert.equal(digest(git("show", historicalBase + ":" + from)), record.fromSha256);
-    assert.equal(digest(git("show", producer + ":" + to)), record.toSha256);
+    assert.equal(digest(git("show", record.toSource + ":" + to)), record.toSha256);
     assert.equal(record.fromSha256, record.toSha256, "the whole renamed source stays exact");
   }
 });

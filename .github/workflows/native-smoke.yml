@@ -214,6 +214,8 @@ jobs:
             'tests/tooling/native-packed-config-workflow.test.ts',
             'tests/tooling/support/native-packed-config-extension.ts',
             'tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json',
+            'tests/_fixtures/differential/vite-native-image-identity/packed-config-retired-rust.json',
+            'editors/vscode/src/extension-setup.ts', 'editors/vscode/src/server-discovery.ts',
             '.github/workflows/lsp-config-diagnostics.yml',
             'tests/tooling/lsp-config-diagnostics-workflow.test.ts',
             'tools/support/compat/github/run-lsp-config-diagnostics.ts',
@@ -239,7 +241,11 @@ jobs:
           ];
           const { producer: producerWitness } = JSON.parse(fs.readFileSync('tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json', 'utf8'));
           const producerFiles = Object.keys(producerWitness.files);
-          const producerAbsentFiles = producerWitness.absentFiles;
+          const retirementBytes = fs.readFileSync(producerWitness.retiredRust.path);
+          assert.equal(createHash('sha256').update(retirementBytes).digest('hex'), producerWitness.retiredRust.sha256);
+          const retirement = JSON.parse(retirementBytes);
+          assert.equal(retirement.schema, 'vize.packed-config-retired-rust.v1');
+          const producerAbsentFiles = [...producerWitness.absentFiles, ...Object.keys(retirement.files)];
           const toolchain = /^channel\s*=\s*"([^"]+)"/mu.exec(fs.readFileSync('rust-toolchain.toml', 'utf8'))?.[1];
           assert.match(toolchain ?? '', /^\d+\.\d+\.\d+$/u);
           const receipt = {
@@ -263,6 +269,13 @@ jobs:
           assert.deepEqual([...producerAbsentFiles].sort(), producerFiles.filter(file => producerWitness.files[file] === null).sort());
           execFileSync('git', ['diff', '--exit-code', 'HEAD']);
           execFileSync('git', ['merge-base', '--is-ancestor', receipt.producer, source]);
+          execFileSync('git', ['merge-base', '--is-ancestor', retirement.source, source]);
+          execFileSync('git', ['merge-base', '--is-ancestor', retirement.retiredAt, receipt.producer]);
+          for (const [file, expected] of Object.entries(retirement.files)) {
+            assert.equal(producerWitness.files[file], null, file);
+            assert.equal(createHash('sha256').update(execFileSync('git', ['show', `${retirement.source}:${file}`])).digest('hex'), expected, file);
+            assert.equal(execFileSync('git', ['ls-tree', '--name-only', retirement.retiredAt, '--', file], { encoding: 'utf8' }), '', file);
+          }
           assert.match(receipt.producer ?? "", /^[0-9a-f]{40}$/u);
           receipt.producerFiles = Object.fromEntries(producerFiles.map(file => {
             if (producerAbsentFiles.includes(file)) {
@@ -429,5 +442,5 @@ jobs:
       PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}
       PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}
       # Updated only when the reviewed producer is deliberately frozen again.
-      PACKED_CONFIG_PRODUCER: c45e0901fc05cfa51c50d167ac97a34ec466dd18
+      PACKED_CONFIG_PRODUCER: 47284d8e618b660658bdd28445306e18cfddca90
     steps: *fresh-install-steps

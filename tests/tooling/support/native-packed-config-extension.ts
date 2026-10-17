@@ -6,13 +6,25 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { runInNewContext } from "node:vm";
+import { fileURLToPath } from "node:url";
 
 interface Extension {
   schema: string;
   beforeSha256: string;
   afterSha256: string;
   hunks: { before: string; after: string }[];
-  producer: { head: string; files: Record<string, string | null>; absentFiles: string[] };
+  producer: {
+    head: string;
+    files: Record<string, string | null>;
+    absentFiles: string[];
+    retiredRust: { path: string; sha256: string };
+  };
+}
+interface Retirement {
+  schema: string;
+  source: string;
+  retiredAt: string;
+  files: Record<string, string>;
 }
 const witness = JSON.parse(
   fs.readFileSync(
@@ -25,14 +37,46 @@ const witness = JSON.parse(
 ) as Extension;
 const digest = (source: string) => createHash("sha256").update(source).digest("hex");
 
+export function readPackedProducerRetirement(
+  repository: string,
+  producer: Extension["producer"],
+): Retirement {
+  const bytes = fs.readFileSync(path.join(repository, producer.retiredRust.path));
+  assert.equal(createHash("sha256").update(bytes).digest("hex"), producer.retiredRust.sha256);
+  const retirement = JSON.parse(bytes.toString()) as Retirement;
+  assert.equal(retirement.schema, "vize.packed-config-retired-rust.v1");
+  return retirement;
+}
+
 /** Historical custody survives later product changes; current equality belongs to the selected preflight. */
 export function verifyHistoricalProducerFiles(
   repository: string,
   producer: Extension["producer"],
 ): void {
   const git = (...args: string[]) => execFileSync("git", args, { cwd: repository });
+  const retirement = readPackedProducerRetirement(repository, producer);
+  const absentFiles = [...producer.absentFiles, ...Object.keys(retirement.files)];
+  assert.equal(new Set(absentFiles).size, absentFiles.length);
+  assert.deepEqual(
+    [...absentFiles].sort(),
+    Object.keys(producer.files)
+      .filter((file) => producer.files[file] === null)
+      .sort(),
+  );
+  git("merge-base", "--is-ancestor", retirement.source, "HEAD");
+  git("merge-base", "--is-ancestor", retirement.retiredAt, producer.head);
+  for (const [file, expected] of Object.entries(retirement.files)) {
+    assert.equal(
+      createHash("sha256")
+        .update(git("show", retirement.source + ":" + file))
+        .digest("hex"),
+      expected,
+      file,
+    );
+    assert.equal(git("ls-tree", "--name-only", retirement.retiredAt, "--", file).length, 0, file);
+  }
   for (const [file, expected] of Object.entries(producer.files)) {
-    if (producer.absentFiles.includes(file)) {
+    if (absentFiles.includes(file)) {
       assert.equal(expected, null, file);
       assert.equal(git("ls-tree", "--name-only", producer.head, "--", file).length, 0, file);
     } else {
@@ -81,10 +125,16 @@ export function verifyPackedProducerPreflight(script: string): void {
     assert.ok(match);
     const sourceFiles = runInNewContext(match[1]) as string[];
     const producerFiles = Object.keys(witness.producer.files);
-    assert.equal(producerFiles.length, 212);
+    assert.equal(producerFiles.length, 343);
+    const originalRetirement = readPackedProducerRetirement(
+      path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.."),
+      witness.producer,
+    );
+    const retiredFiles = Object.keys(originalRetirement.files);
+    const absentFiles = [...witness.producer.absentFiles, ...retiredFiles];
     const fixtureBytes = "reviewed synthetic fixture bytes\n";
     for (const name of [...sourceFiles, ...producerFiles]) {
-      if (witness.producer.absentFiles.includes(name)) continue;
+      if (absentFiles.includes(name)) continue;
       const file = path.join(repository, name);
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, fixtureBytes);
@@ -114,6 +164,14 @@ export function verifyPackedProducerPreflight(script: string): void {
       git("commit", "--quiet", "-m", "test: retain exact guard control inputs");
     };
     git("init", "--quiet", "--initial-branch=main");
+    for (const file of retiredFiles) {
+      const target = path.join(repository, file);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, fixtureBytes);
+    }
+    commit();
+    const retirementSource = git("rev-parse", "HEAD");
+    for (const file of retiredFiles) fs.unlinkSync(path.join(repository, file));
     commit();
     const producer = git("rev-parse", "HEAD");
     const fixtureWitness = structuredClone(witness);
@@ -128,7 +186,17 @@ export function verifyPackedProducerPreflight(script: string): void {
       repository,
       "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json",
     );
+    const fixtureRetirement = {
+      ...originalRetirement,
+      source: retirementSource,
+      retiredAt: producer,
+      files: Object.fromEntries(retiredFiles.map((file) => [file, digest(fixtureBytes)])),
+    };
     const saveWitness = () => {
+      const retirementBytes = JSON.stringify(fixtureRetirement);
+      const retirementPath = path.join(repository, fixtureWitness.producer.retiredRust.path);
+      fs.writeFileSync(retirementPath, retirementBytes);
+      fixtureWitness.producer.retiredRust.sha256 = digest(retirementBytes);
       fs.writeFileSync(witnessPath, JSON.stringify(fixtureWitness));
       commit();
     };
@@ -160,8 +228,23 @@ export function verifyPackedProducerPreflight(script: string): void {
     };
     const admitted = execute();
     assert.equal(admitted.status, 0, admitted.stderr);
-    assert.deepEqual(admitted.receipt.producerAbsentFiles, witness.producer.absentFiles);
+    assert.deepEqual(admitted.receipt.producerAbsentFiles, absentFiles);
     assert.deepEqual(admitted.receipt.producerFiles, fixtureWitness.producer.files);
+    const retired = retiredFiles[0];
+    const changedPriorHash = digest("changed historical retirement source\n");
+    fixtureRetirement.files[retired] = changedPriorHash;
+    saveWitness();
+    const changedPrior = execute();
+    assert.notEqual(
+      changedPrior.status,
+      0,
+      "rehashed metadata cannot replace original retired bytes",
+    );
+    assert.ok(changedPrior.stderr.includes(retired));
+    assert.ok(changedPrior.stderr.includes(changedPriorHash));
+    fixtureRetirement.files[retired] = digest(fixtureBytes);
+    saveWitness();
+    assert.equal(execute().status, 0);
     assert.notEqual(execute("b".repeat(40)).status, 0, "exact producer identity is required");
     const unrelated = git(
       "commit-tree",
@@ -223,7 +306,7 @@ export function verifyPackedProducerPreflight(script: string): void {
       commit();
       assert.equal(execute().status, 0);
     }
-    for (const file of witness.producer.absentFiles) {
+    for (const file of [...witness.producer.absentFiles, retiredFiles[0]]) {
       const target = path.join(repository, file);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, "resurrected old source path\n");
