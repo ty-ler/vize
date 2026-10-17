@@ -61,6 +61,8 @@ pub(crate) use state::{
     NativeLinkedNamesRoute, NativeLinkedNamesTicket, NativeNamesConfigurationError,
     NativeNamesParserTicket, NativeNamesSettings,
 };
+#[cfg(feature = "native")]
+pub use workspace_files::config_watchers::TransportLease as ConfigurationWatchTransportLease;
 
 use tower_lsp::{Client, ClientSocket, LspService};
 
@@ -194,6 +196,34 @@ impl MaestroServer {
             #[cfg(feature = "experimental-source-navigation")]
             module_link_termination: None,
         }
+    }
+
+    /// Own the configuration-watch RPC lifetime for a custom LSP transport.
+    ///
+    /// Keep the returned lease until the entire transport future is completed or
+    /// dropped, so no buffered client ACK can still dispatch. LSP shutdown and
+    /// dropping the server owner alone do not terminate the response transport.
+    /// Returns `None` once the shared root lease was acquired, or without a controller.
+    /// Without a lease, an issued request remains retained until its ACK.
+    /// The built-in stdio and TCP transports acquire this lease automatically.
+    ///
+    /// ```no_run
+    /// async fn embedded<I, O>(read: I, write: O)
+    /// where
+    ///     I: futures::io::AsyncRead + Unpin,
+    ///     O: futures::io::AsyncWrite,
+    /// {
+    ///     let (service, socket) = tower_lsp::LspService::new(vize_maestro::MaestroServer::new);
+    ///     let lease = service.inner().configuration_watch_transport_lease();
+    ///     tower_lsp::Server::new(read, write, socket).serve(service).await;
+    ///     drop(lease);
+    /// }
+    /// ```
+    #[cfg(feature = "native")]
+    pub fn configuration_watch_transport_lease(&self) -> Option<ConfigurationWatchTransportLease> {
+        self.configuration_watchers
+            .as_ref()
+            .and_then(|watchers| watchers.transport_lease())
     }
 
     #[cfg(feature = "experimental-source-navigation")]
