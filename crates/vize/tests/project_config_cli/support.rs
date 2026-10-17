@@ -105,10 +105,15 @@ pub fn run(root: &Path, args: &[&str]) -> Output {
 pub const LEGACY_CONFIG_ERROR: &str = "vize.config.* is no longer supported; move Vue settings to vue: in vite.config.* and TypeScript settings to tsconfig.json";
 
 pub fn assert_legacy_config_rejected(output: &Output) {
-    assert_eq!(output.status.code(), Some(1), "{output:?}");
-    assert!(
-        String::from_utf8_lossy(&output.stderr).contains(LEGACY_CONFIG_ERROR),
-        "{output:?}"
+    // Invalid configuration is a usage failure, distinct from lint diagnostics.
+    assert_eq!(output.status.code(), Some(2), "{output:?}");
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        vize_l0::cstr!(
+            "\x1b[31mError:\x1b[0m failed to parse vize.config.json: {LEGACY_CONFIG_ERROR}\n"
+        )
+        .as_str(),
+        "{output:?}",
     );
     assert!(output.stdout.is_empty(), "{output:?}");
 }

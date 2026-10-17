@@ -14,12 +14,17 @@ fn module_link_context_retains_complete_actual_applied_values_and_separate_load_
         let config_dir = dir.path().join("config");
         std::fs::create_dir(&config_dir).unwrap();
         let config_path = config_dir.join("vite.config.mjs");
+        let root = dir.path().join("actual-root");
+        std::fs::create_dir(&root).unwrap();
         std::fs::write(
             &config_path,
-            vize_l0::cstr!("export default {{ vue: {} }};", CONFIG).as_bytes(),
+            vize_l0::cstr!(
+                "export default {{ root: '../actual-root', vue: {} }};",
+                CONFIG,
+            )
+            .as_bytes(),
         )
         .unwrap();
-        let root = dir.path().join("actual-root");
         let state = ServerState::new();
         assert!(matches!(
             state.capture_module_link_context(),
@@ -45,9 +50,9 @@ fn module_link_context_retains_complete_actual_applied_values_and_separate_load_
                 check_setup_context: false,
                 check_invalid_exports: false,
                 check_fallthrough_attrs: false,
-                tsconfig: Some("app/tsconfig.json".into()),
-                tsgo_path: Some("tools/corsa".into()),
-                globals_file: Some("globals.d.ts".into()),
+                tsconfig: Some(root.join("app/tsconfig.json").to_str().unwrap().into()),
+                tsgo_path: Some(root.join("tools/corsa").to_str().unwrap().into()),
+                globals_file: Some(root.join("globals.d.ts").to_str().unwrap().into()),
                 servers: Some(2),
             }
         );

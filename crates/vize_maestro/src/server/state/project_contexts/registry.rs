@@ -3,7 +3,10 @@
     clippy::disallowed_types,
     reason = "registry cells retain their isolated native owner"
 )]
-use super::{Arc, AtomicBool, Ordering, PathBuf, ServerState};
+use super::{
+    Arc, AtomicBool, LoadedLspConfig, Ordering, ProjectContextKey, RetainedConfiguration,
+    ServerState,
+};
 #[cfg(feature = "experimental-source-navigation")]
 use crate::source_project::{SourceQueryProject, navigation::NativeNavigationProject};
 use futures::{
@@ -14,23 +17,62 @@ use std::sync::OnceLock;
 type Initialization = Shared<BoxFuture<'static, Option<Arc<ServerState>>>>;
 
 pub(super) struct ProjectContext {
-    root: PathBuf,
+    key: ProjectContextKey,
+    snapshot: OnceLock<(LoadedLspConfig, bool)>,
+    prepared: OnceLock<RetainedConfiguration>,
     state: OnceLock<Arc<ServerState>>,
     #[cfg(feature = "experimental-source-navigation")]
     navigation: OnceLock<Arc<NativeNavigationProject<'static>>>,
     retired: AtomicBool,
+    reload_failed: AtomicBool,
     initialization: super::Mutex<Option<Initialization>>,
 }
 
 impl ProjectContext {
-    pub(super) fn new(root: PathBuf) -> Self {
+    pub(super) fn new(key: impl Into<ProjectContextKey>) -> Self {
         Self {
-            root,
+            key: key.into(),
+            snapshot: OnceLock::new(),
+            prepared: OnceLock::new(),
             state: OnceLock::new(),
             #[cfg(feature = "experimental-source-navigation")]
             navigation: OnceLock::new(),
             retired: AtomicBool::new(false),
+            reload_failed: AtomicBool::new(false),
             initialization: super::Mutex::new(None),
+        }
+    }
+
+    pub(super) fn with_prepared(key: ProjectContextKey, prepared: RetainedConfiguration) -> Self {
+        let context = Self::new(key);
+        let _ = context.prepared.set(prepared);
+        context
+    }
+
+    pub(super) fn config_dependencies(&self) -> Vec<std::path::PathBuf> {
+        if let Some(state) = self.initialized_state() {
+            return state.project_contexts.config_dependencies.read().clone();
+        }
+        if let Some(prepared) = self.prepared.get() {
+            return prepared.applied.project.dependencies.clone();
+        }
+        self.snapshot
+            .get()
+            .map(|(snapshot, _)| snapshot.project.dependencies.clone())
+            .unwrap_or_default()
+    }
+
+    pub(super) fn provide_snapshot(&self, snapshot: LoadedLspConfig, failed: bool) {
+        let _ = self.snapshot.set((snapshot, failed));
+    }
+
+    pub(super) fn record_reload_failure(&self) {
+        self.reload_failed.store(true, Ordering::Release);
+        if let Some(state) = self.state.get() {
+            state
+                .project_contexts
+                .config_reload_failed
+                .store(true, Ordering::Release);
         }
     }
 
@@ -78,8 +120,23 @@ impl ProjectContext {
         }
         let state = self
             .state
-            .get_or_init(|| owner.new_project_state(&self.root))
+            .get_or_init(|| {
+                owner.new_project_state(
+                    &self.key,
+                    self.snapshot.get().map(|(snapshot, _)| snapshot),
+                    self.snapshot.get().is_some_and(|(_, failed)| *failed),
+                    self.prepared.get(),
+                )
+            })
             .clone();
+        // Recheck after publishing initialization: a rejection can occur after
+        // new_project_state captured its snapshot but before the cell was set.
+        if self.reload_failed.load(Ordering::Acquire) {
+            state
+                .project_contexts
+                .config_reload_failed
+                .store(true, Ordering::Release);
+        }
         if self.retired.load(Ordering::Acquire) {
             state.retire_project_owner();
             return None;
@@ -141,6 +198,14 @@ impl ProjectContext {
                 ))
             })
             .clone();
+        // Recheck after publishing initialization: a rejection can occur after
+        // new_project_state captured its snapshot but before the cell was set.
+        if self.reload_failed.load(Ordering::Acquire) {
+            state
+                .project_contexts
+                .config_reload_failed
+                .store(true, Ordering::Release);
+        }
         if self.retired.load(Ordering::Acquire) {
             navigation.retire();
             return None;

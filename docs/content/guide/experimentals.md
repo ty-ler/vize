@@ -49,6 +49,8 @@ The same option values can be represented as JSON data inside a shared JavaScrip
 }
 ```
 
+> Historical migration example: PKL configuration has been removed and is not loaded. Move the same values into the JavaScript object above.
+
 ```pkl
 amends "node_modules/vize/pkl/vize.pkl"
 
@@ -140,8 +142,10 @@ Enable `patternedTemplate` to parse `v-match` containers and direct `v-when` bra
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    patternedTemplate: true,
+  vue: {
+    experimentals: {
+      patternedTemplate: true,
+    },
   },
 });
 ```
@@ -193,8 +197,10 @@ Enable `inTagComment` to parse compile-time-only `//` comments inside opening ta
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    inTagComment: true,
+  vue: {
+    experimentals: {
+      inTagComment: true,
+    },
   },
 });
 ```
@@ -225,8 +231,10 @@ Enable `selfComponent` to reserve the exact `<Self>` tag for recursive component
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    selfComponent: true,
+  vue: {
+    experimentals: {
+      selfComponent: true,
+    },
   },
 });
 ```
@@ -264,8 +272,10 @@ Enable `strictSlotChildren` to add virtual-TypeScript checks for slot children f
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    strictSlotChildren: true,
+  vue: {
+    experimentals: {
+      strictSlotChildren: true,
+    },
   },
 });
 ```
@@ -308,8 +318,10 @@ Enable `serverScript` only for hosts that explicitly test the server-script comp
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    serverScript: true,
+  vue: {
+    experimentals: {
+      serverScript: true,
+    },
   },
 });
 ```
@@ -322,8 +334,10 @@ Enable `vapor` to route SFC compilation through experimental Vapor backend suppo
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    vapor: true,
+  vue: {
+    experimentals: {
+      vapor: true,
+    },
   },
 });
 ```
@@ -336,8 +350,10 @@ Enable `jsxVapor` to default JSX and TSX files to Vapor output when stable `comp
 
 ```ts
 export default defineConfig({
-  experimentals: {
-    jsxVapor: true,
+  vue: {
+    experimentals: {
+      jsxVapor: true,
+    },
   },
 });
 ```

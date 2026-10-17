@@ -1,6 +1,6 @@
 // Real Helix (pinned in CI) in a pseudo-terminal, driven by keystrokes: the
 // packaged `editors/helix/languages.toml` is the user's languages.toml (plus
-// the formatting opt-in every client makes for this scenario), `vize` resolves
+// the explicit initialization profile shared by this scenario), `vize` resolves
 // through PATH as the package expects, and every request is one Helix builds
 // from its own cursor, selection, menu and prompt. The driver waits on the tap
 // transcript between keystrokes; it never reads a response itself.
@@ -54,23 +54,28 @@ function visibleText(raw: string): string {
   return text.replace(/ {2,}/gu, " ");
 }
 
-/** The packaged languages.toml with `formatting = true` added to the server config table. */
-function userLanguages(): string {
-  const packaged = fs.readFileSync(
-    path.join(repoRoot, "editors", "helix", "languages.toml"),
-    "utf8",
-  );
+/** Add the scenario's explicit initialization options to the packaged server config. */
+export function userLanguages(
+  packaged = fs.readFileSync(path.join(repoRoot, "editors", "helix", "languages.toml"), "utf8"),
+  initializationOptions: object = { formatting: true },
+): string {
   const table = "[language-server.vize.config]\n";
-  if (!packaged.includes(table))
-    throw new Error("editors/helix/languages.toml lost its config table");
-  return packaged.replace(table, `${table}formatting = true\n`);
+  const overrides = Object.entries(initializationOptions)
+    .map(([key, value]) => `${JSON.stringify(key)} = ${JSON.stringify(value)}\n`)
+    .join("");
+  return packaged.includes(table)
+    ? packaged.replace(table, `${table}${overrides}`)
+    : `${packaged}\n${table}${overrides}`;
 }
 
 async function run(context: DriverContext): Promise<void> {
   const { scenario } = context;
   const config = path.join(context.scratch, "config");
   fs.mkdirSync(path.join(config, "helix"), { recursive: true });
-  fs.writeFileSync(path.join(config, "helix", "languages.toml"), userLanguages());
+  fs.writeFileSync(
+    path.join(config, "helix", "languages.toml"),
+    userLanguages(undefined, scenario.initializationOptions),
+  );
   // Completion only when asked (C-x), no signature/inlay requests racing the scenario.
   fs.writeFileSync(
     path.join(config, "helix", "config.toml"),

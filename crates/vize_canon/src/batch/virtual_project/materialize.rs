@@ -354,6 +354,16 @@ impl VirtualProject {
         paths
     }
 
+    /// Validate the selected editor owner's `extends` chain through the same
+    /// resolver used for compiler options. Referenced projects are separate
+    /// owners; their broader watcher graph remains `governing_config_paths`.
+    pub fn checked_config_chain_paths(&self) -> crate::batch::error::CorsaResult<Vec<PathBuf>> {
+        let Some(anchored) = self.resolved_tsconfig_path() else {
+            return Ok(Vec::new());
+        };
+        self.checked_compiler_config_paths(&anchored)
+    }
+
     /// File that project-level (file-less) diagnostics are attributed to:
     /// the effective tsconfig when one exists, otherwise the project root.
     pub(crate) fn project_diagnostics_anchor(&self) -> PathBuf {
@@ -365,3 +375,7 @@ impl VirtualProject {
 #[cfg(all(test, unix))]
 #[path = "tests/editor_union_alias_transition.rs"]
 mod alias_transition_tests;
+
+#[cfg(test)]
+#[path = "tests/editor_configuration_graph.rs"]
+mod editor_configuration_graph_tests;

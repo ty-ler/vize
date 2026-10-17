@@ -33,3 +33,20 @@ pub fn write(root: &Path, config: impl AsRef<[u8]>) -> PathBuf {
     std::fs::write(&path, source(config)).expect("Vite config fixture");
     path
 }
+
+/// Use the installed Vite runtime and client types without changing its files.
+pub fn link_vite_runtime(root: &Path) -> std::io::Result<()> {
+    let workspace = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace root should exist");
+    let installed = workspace.join("node_modules/vite").canonicalize()?;
+    let dependencies = root.join("node_modules");
+    std::fs::create_dir_all(&dependencies)?;
+    let selected = dependencies.join("vite");
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(installed, selected)?;
+    #[cfg(windows)]
+    std::os::windows::fs::symlink_dir(installed, selected)?;
+    Ok(())
+}

@@ -108,7 +108,9 @@ impl Fixture {
             project.path().join("vite.config.mjs"),
             vite_config::source(
                 serde_json::to_vec(&json!({
-                    "typeChecker": { "corsaPath": runtime },
+                    // Preserve this historical SFC-only control's effective mode;
+                    // canonical Vite projects now enable JSX checking by default.
+                    "typeChecker": { "corsaPath": runtime, "jsxTypecheck": false },
                     "lsp": { "lint": true, "typecheck": true, "hover": true, "crossFile": true }
                 }))
                 .unwrap(),

@@ -65,7 +65,7 @@ export interface MuseaA11YConfig {}
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type LintPreset = "happy-path" | "opinionated" | "essential" | "incremental" | "ecosystem" | "nuxt";
+export type LintPreset = NonNullable<LinterConfig["preset"]>;
 
 export type RuleSeverity = "off" | "warn" | "error";
 

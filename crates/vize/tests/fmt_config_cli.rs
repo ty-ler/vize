@@ -194,6 +194,40 @@ fn fmt_check_resolves_entry_relative_art_vue_paths_from_monorepo_root() {
     assert!(!stderr.contains("No .vue"), "{stderr}");
 }
 
+#[cfg(unix)]
+#[test]
+fn fmt_check_keeps_entry_relative_resolution_through_a_config_directory_alias() {
+    let project = tempfile::tempdir().unwrap();
+    let aliases = tempfile::tempdir().unwrap();
+    let alias = aliases.path().join("workspace");
+    std::os::unix::fs::symlink(project.path(), &alias).unwrap();
+    write_entry_config(project.path());
+    let source =
+        "<template><div>{{msg}}</div></template>\n<script setup lang=\"ts\">const msg=1</script>\n";
+    let relative = "design-system/src/AfsButton.art.vue";
+    write_project_file(project.path(), relative, source);
+
+    let output = Command::new(env!("CARGO_BIN_EXE_vize"))
+        .current_dir(project.path())
+        .arg("fmt")
+        .arg("--config")
+        .arg(alias.join("vite.config.mjs"))
+        .args(["--check", "src/AfsButton.art.vue"])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(1), "{}", output_details(&output));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("Found 1 file(s)"), "{stderr}");
+    assert!(stderr.contains("Would reformat:"), "{stderr}");
+    assert!(stderr.contains("AfsButton.art.vue"), "{stderr}");
+    assert!(!stderr.contains("No .vue"), "{stderr}");
+    assert_eq!(
+        fs::read_to_string(project.path().join(relative)).unwrap(),
+        source
+    );
+}
+
 #[test]
 fn fmt_check_fails_when_explicit_patterns_match_no_files() {
     let project = tempfile::tempdir().unwrap();

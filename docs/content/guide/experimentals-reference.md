@@ -103,11 +103,13 @@ until the feature has moved to a stable `compiler` or tool option.
 One RFC proposal in shared config:
 
 ```ts
-import { defineConfig } from "vize";
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  experimentals: {
-    inTagComment: true,
+  vue: {
+    experimentals: {
+      inTagComment: true,
+    },
   },
 });
 ```

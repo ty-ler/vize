@@ -7,7 +7,7 @@ title: ルールのオプション
 <!-- Type-aware reference: [型ルールのオプション](./options-type.md) -->
 
 ルールの判定方法をプロジェクトに合わせたいときに、このページを使ってください。
-Vite+ では `vite.config.ts` の `lint.vize.ruleOptions` に指定し、`vp run lint` で検査します。
+Vite+ では `vite.config.ts` の `vue.linter.ruleOptions` に指定し、`vp run lint` で検査します。
 単独で使う互換設定では、同じ内容を `linter.ruleOptions` に指定します。
 
 `linter.ruleOptions` には、オプションを受け取るルールの設定をプロジェクトごとに指定します。
@@ -69,6 +69,7 @@ export default defineConfig({
 | `html/no-empty-palpable-content` | `{ contentDirectives?: string[] }` | 既定は空のリストです。目に見える内容を挿入するディレクティブの名前を、接頭辞を除いて完全一致で指定します。ルールは別に有効にしてください。 |
 | `script/no-restricted-globals` | `{ globals?: Array<{ name: string; message?: string }> }` | オプションを省略すると、組み込みの禁止リストにある `process`、`localStorage`、`sessionStorage` を検査します。空でない `globals` を指定すると、組み込みのリストを置き換えます。 |
 | `script/no-restricted-members` | `{ members?: Array<{ object: string; property: string; message?: string }> }` | `members` を設定し、ルールを有効にした場合だけ報告します。`message` を省略すると、共通の説明を表示します。 |
+| `vue/valid-v-on` | `{ modifiers?: string[] }` | 既定は空の一覧です。大文字・小文字を区別する独自の名前を組み込みの修飾子に追加します。ルールを有効にしたり、ハンドラーの省略を許可したりする設定ではありません。範囲別の設定は継承した一覧を置き換え、`[]` で解除します。[修飾子の詳しい例](./reference/vue-valid-v-on.md)を参照してください。 |
 | `vue/component-name-in-template-casing` | `{ casing?: "PascalCase" \| "kebab-case" }` | 既定は `PascalCase` です。登録済みのコンポーネントだけを対象にし、追加のグローバル名は既定で空です。 |
 | `script/custom-event-name-casing` | `{ casing?: "camelCase" \| "kebab-case" }` | 既定は `camelCase` です。 |
 | `script/define-props-destructuring` | `{ destructure?: "only-when-assigned" \| "always" \| "never" }` | 既定は `only-when-assigned` です。`always` は代入しない呼び出しも検査し、`never` は props オブジェクトでの参照を要求します。Vue 3.5 の分割代入はリアクティビティを保ちます。 |
@@ -537,8 +538,8 @@ Vuetify のデータテーブルなど、ドットを含むスロット名を使
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       rules: { "vue/valid-v-slot": "error" },
       ruleOptions: { "vue/valid-v-slot": { allowModifiers: true } },
     },
@@ -626,8 +627,8 @@ export default defineConfig({
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       rules: { "script/define-props-destructuring": "warn" },
       ruleOptions: { "script/define-props-destructuring": { destructure: "only-when-assigned" } },
     },
@@ -652,7 +653,7 @@ const { size = "md" } = defineProps<{ size?: string }>();
 ```
 
 ESLint からの移行では、ルール名とオプションの指定位置を変更します。
-追加する `rules` と `ruleOptions` は、上記の `lint.vize` に指定してください。
+追加する `rules` と `ruleOptions` は、上記の `vue.linter` に指定してください。
 
 ```ts annotate="remove:1;add:2,3"
  rules: { "vue/define-props-destructuring": ["warn", "always"] }
@@ -670,8 +671,8 @@ PascalCase と kebab-case の表記を許可し、正規表現は解釈しませ
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "rules": {
         "vue/require-component-registration": "warn"
       },

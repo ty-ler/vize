@@ -74,8 +74,8 @@ fn all_whole_vectors_and_original_json_ts_configs_keep_complete_bytes() -> Resul
     let expected = fs::read(directory.join("original-example.expected"))?;
     for (name, fixture, explicit) in [
         ("vite.config.mjs", "vize.config.ts.txt", false),
-        ("explicit-js.mjs", "vize.config.ts.txt", true),
-        ("explicit-json.mjs", "vize.config.json.txt", true),
+        ("vite.config.ts", "vize.config.ts.txt", true),
+        ("vite.config.mts", "vize.config.json.txt", true),
     ] {
         replay(
             &source,

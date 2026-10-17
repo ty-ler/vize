@@ -30,8 +30,7 @@ pub fn snapshot_tsconfig_vue_target(
     project_root: &Path,
     tsconfig_path: &Path,
 ) -> CorsaResult<Option<vize_carton::config::VueVersion>> {
-    let project = VirtualProject::new(project_root)?;
-    let options = project.load_vue_compiler_options(Some(tsconfig_path))?;
+    let options = load_vue_compiler_options(Some(tsconfig_path))?;
     let Some(target) = options.get("target") else {
         return Ok(None);
     };
@@ -96,7 +95,7 @@ struct ChainLoad {
 
 impl VirtualProject {
     pub(in super::super) fn vue_target_manifest_path(&self, config: &Path) -> Option<PathBuf> {
-        let options = self.load_vue_compiler_options(Some(config)).ok()?;
+        let options = load_vue_compiler_options(Some(config)).ok()?;
         if options.get("target").and_then(Value::as_str) != Some("auto") {
             return None;
         }
@@ -109,7 +108,7 @@ impl VirtualProject {
 
     pub(in super::super) fn refresh_vue_compiler_options(&mut self) {
         let path = self.resolved_tsconfig_path();
-        let options = self.load_vue_compiler_options(path.as_deref()).ok();
+        let options = load_vue_compiler_options(path.as_deref()).ok();
         self.typed_router.root =
             super::super::typed_router::configured_root(self, options.as_ref(), path.as_deref());
         self.virtual_ts_check_options.check_unknown_props = if path.is_none() {
@@ -249,80 +248,77 @@ impl VirtualProject {
     pub(crate) fn checks_unknown_props(&self) -> bool {
         self.virtual_ts_check_options.check_unknown_props
     }
+}
 
-    #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
-    fn load_vue_compiler_options(
-        &self,
-        tsconfig_path: Option<&Path>,
-    ) -> CorsaResult<Map<std::string::String, Value>> {
-        let Some(tsconfig_path) = tsconfig_path else {
-            return Ok(Map::new());
-        };
-        let mut load = ChainLoad::default();
-        self.load_vue_compiler_options_inner(tsconfig_path, &mut load)
+#[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
+fn load_vue_compiler_options(
+    tsconfig_path: Option<&Path>,
+) -> CorsaResult<Map<std::string::String, Value>> {
+    let Some(tsconfig_path) = tsconfig_path else {
+        return Ok(Map::new());
+    };
+    let mut load = ChainLoad::default();
+    load_vue_compiler_options_inner(tsconfig_path, &mut load)
+}
+
+#[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
+fn load_vue_compiler_options_inner(
+    tsconfig_path: &Path,
+    load: &mut ChainLoad,
+) -> CorsaResult<Map<std::string::String, Value>> {
+    if !tsconfig_path.exists() {
+        return Ok(Map::new());
     }
-
-    #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
-    fn load_vue_compiler_options_inner(
-        &self,
-        tsconfig_path: &Path,
-        load: &mut ChainLoad,
-    ) -> CorsaResult<Map<std::string::String, Value>> {
-        if !tsconfig_path.exists() {
-            return Ok(Map::new());
-        }
-        let normalized = normalize_path_lexically(tsconfig_path);
-        if let Some(cached) = load.completed.get(&normalized) {
-            return Ok(cached.clone());
-        }
-        if !load.active.insert(normalized.clone()) {
-            load.cycle_cut = true;
-            return Ok(Map::new());
-        }
-        let enclosing_cycle_cut = std::mem::replace(&mut load.cycle_cut, false);
-        let flattened = self.merge_extended_vue_compiler_options(&normalized, load);
-        load.active.remove(&normalized);
-        let chain_cycle_cut = load.cycle_cut;
-        load.cycle_cut = enclosing_cycle_cut || chain_cycle_cut;
-        if !chain_cycle_cut && let Ok(flattened) = &flattened {
-            load.completed.insert(normalized, flattened.clone());
-        }
-        flattened
+    let normalized = normalize_path_lexically(tsconfig_path);
+    if let Some(cached) = load.completed.get(&normalized) {
+        return Ok(cached.clone());
     }
+    if !load.active.insert(normalized.clone()) {
+        load.cycle_cut = true;
+        return Ok(Map::new());
+    }
+    let enclosing_cycle_cut = std::mem::replace(&mut load.cycle_cut, false);
+    let flattened = merge_extended_vue_compiler_options(&normalized, load);
+    load.active.remove(&normalized);
+    let chain_cycle_cut = load.cycle_cut;
+    load.cycle_cut = enclosing_cycle_cut || chain_cycle_cut;
+    if !chain_cycle_cut && let Ok(flattened) = &flattened {
+        load.completed.insert(normalized, flattened.clone());
+    }
+    flattened
+}
 
-    #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
-    fn merge_extended_vue_compiler_options(
-        &self,
-        normalized: &Path,
-        load: &mut ChainLoad,
-    ) -> CorsaResult<Map<std::string::String, Value>> {
-        let content = std::fs::read_to_string(normalized)?;
-        let config = parse_jsonc_value(&content)?;
-        let current = config
-            .get("vueCompilerOptions")
-            .and_then(Value::as_object)
-            .cloned()
-            .unwrap_or_default();
+#[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]
+fn merge_extended_vue_compiler_options(
+    normalized: &Path,
+    load: &mut ChainLoad,
+) -> CorsaResult<Map<std::string::String, Value>> {
+    let content = std::fs::read_to_string(normalized)?;
+    let config = parse_jsonc_value(&content)?;
+    let current = config
+        .get("vueCompilerOptions")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
 
-        let mut inherited = Map::new();
-        match config.get("extends") {
-            Some(Value::String(extends)) => {
+    let mut inherited = Map::new();
+    match config.get("extends") {
+        Some(Value::String(extends)) => {
+            if let Some(parent_path) = resolve_extended_tsconfig_path(normalized, extends) {
+                inherited = load_vue_compiler_options_inner(&parent_path, load)?;
+            }
+        }
+        Some(Value::Array(entries)) => {
+            for extends in entries.iter().filter_map(Value::as_str) {
                 if let Some(parent_path) = resolve_extended_tsconfig_path(normalized, extends) {
-                    inherited = self.load_vue_compiler_options_inner(&parent_path, load)?;
+                    inherited.extend(load_vue_compiler_options_inner(&parent_path, load)?);
                 }
             }
-            Some(Value::Array(entries)) => {
-                for extends in entries.iter().filter_map(Value::as_str) {
-                    if let Some(parent_path) = resolve_extended_tsconfig_path(normalized, extends) {
-                        inherited.extend(self.load_vue_compiler_options_inner(&parent_path, load)?);
-                    }
-                }
-            }
-            _ => {}
         }
-        inherited.extend(current);
-        Ok(inherited)
+        _ => {}
     }
+    inherited.extend(current);
+    Ok(inherited)
 }
 
 #[expect(clippy::disallowed_types, reason = "serde_json keys are std String")]

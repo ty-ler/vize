@@ -107,8 +107,15 @@ fn vue2_project_formatting_preserves_filter_names_for_document_range_and_on_type
         let service = server_with(&uri, source, "vue");
         let server = service.inner();
         let project = tempfile::tempdir().unwrap();
-        std::fs::write(project.path().join("vite.config.mjs"),
-            vize_l0::cstr!("export default {{ vue: {} }};", serde_json::json!({"vue": {"version": version}, "languageServer": {"formatting": true}})).as_bytes()).unwrap();
+        std::fs::write(
+            project.path().join("vite.config.mjs"),
+            vize_l0::cstr!(
+                "export default {{ vue: {} }};",
+                serde_json::json!({"version":version, "languageServer": {"formatting": true}})
+            )
+            .as_bytes(),
+        )
+        .unwrap();
         server.state.load_workspace_config(project.path());
 
         let edits = futures::executor::block_on(server.formatting(formatting_params(uri.clone())))

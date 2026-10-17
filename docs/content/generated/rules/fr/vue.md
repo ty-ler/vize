@@ -139,8 +139,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/a11y-img-alt": "warn"
@@ -208,8 +208,8 @@ Options: Consultez les [options typées et leurs valeurs par défaut](/rules/opt
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/attribute-hyphenation": "warn"
@@ -269,8 +269,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/attribute-order": "warn"
@@ -332,8 +332,8 @@ Le nom de fichier du composant est contrôlé. PascalCase et kebab-case sont acc
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/component-definition-name-casing": "warn"
@@ -393,8 +393,8 @@ Options: Consultez les [options typées et leurs valeurs par défaut](/rules/opt
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/component-name-in-template-casing": "warn"
@@ -463,8 +463,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-button-has-type": "warn"
@@ -528,8 +528,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-quotes": "warn"
@@ -592,8 +592,8 @@ Options: Consultez les [options typées et leurs valeurs par défaut](/rules/opt
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-self-closing": "warn"
@@ -664,8 +664,8 @@ Consultez [le calcul de la complexité et les limites des composants](../guide/c
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/max-template-complexity": "warn"
@@ -744,8 +744,8 @@ Le diagnostic concerne le nom de fichier. Renommez ce même composant ; modifier
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/multi-word-component-names": "error"
@@ -805,8 +805,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/mustache-interpolation-spacing": "warn"
@@ -870,8 +870,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-array-index-key": "warn"
@@ -931,8 +931,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-bare-strings-in-template": "warn"
@@ -999,8 +999,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-boolean-attr-value": "warn"
@@ -1064,8 +1064,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-child-content": "error"
@@ -1125,8 +1125,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-filter": "error"
@@ -1166,7 +1166,7 @@ L’appel capitalize(message) applique la transformation sous la forme d’une e
 
 Le bon exemple évite le diagnostic de cette règle avec la configuration ci-dessus ; d’autres règles peuvent encore signaler des diagnostics.
 
-[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L53) · [Toutes les règles](all.md)
+[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L56) · [Toutes les règles](all.md)
 
 ### `vue/no-deprecated-functional-template`
 
@@ -1186,8 +1186,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-functional-template": "error"
@@ -1247,8 +1247,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-html-element-is": "error"
@@ -1309,8 +1309,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-inline-template": "error"
@@ -1370,8 +1370,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-router-link-tag-prop": "error"
@@ -1433,8 +1433,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-scope-attribute": "error"
@@ -1494,8 +1494,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-slot-attribute": "error"
@@ -1560,8 +1560,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-slot-scope-attribute": "error"
@@ -1621,8 +1621,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-bind-sync": "error"
@@ -1685,8 +1685,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-is": "error"
@@ -1747,8 +1747,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-on-native-modifier": "error"
@@ -1801,9 +1801,13 @@ Interdire les modificateurs numériques obsolètes `keyCode` sur `v-on`
 
 Gravité par défaut: `error`  
 Préréglages: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
-Correction automatique: Aucune ; examinez la modification proposée  
+Correction automatique: Disponible pour les diagnostics pris en charge  
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
+
+**Sélection des modificateurs numériques et corrections**
+
+Le premier modificateur numérique dont le nom commence par un entier décimal détermine le diagnostic. `@keyup.13.27="submit"` ne signale que `13` et propose `@keyup.enter.27="submit"` ; un autre passage de correction peut remplacer `27` par `escape`. `@keyup.13suffix="submit"` devient également `@keyup.enter="submit"`. Les valeurs de 0 à 9 sont exemptées ; `@keyup.0.13="submit"` ne produit donc aucun diagnostic de cette règle. Les valeurs inconnues telles que `999` sont signalées sans correction. L’exemption existante pour Vue 2 et petite-vue reste en vigueur.
 
 **Configuration (Vite+)**
 
@@ -1811,8 +1815,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-on-number-modifiers": "error"
@@ -1875,8 +1879,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-dupe-v-else-if": "error"
@@ -1938,8 +1942,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-duplicate-attributes": "error"
@@ -1999,8 +2003,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-empty-component-block": "warn"
@@ -2071,8 +2075,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-inline-style": "warn"
@@ -2134,8 +2138,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-invalid-html-attribute": "warn"
@@ -2195,8 +2199,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-lone-template": "warn"
@@ -2256,8 +2260,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multi-spaces": "warn"
@@ -2319,8 +2323,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multiple-objects-in-class": "warn"
@@ -2385,8 +2389,8 @@ Activez cette règle uniquement pour un contrat à racine unique. Vue 3 prend no
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multiple-template-root": "error"
@@ -2447,8 +2451,8 @@ Options: Consultez les [options typées et leurs valeurs par défaut](/rules/opt
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-mutating-props": "error"
@@ -2515,8 +2519,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-negated-v-if-condition": "warn"
@@ -2583,8 +2587,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-non-component-keep-alive-child": "warn"
@@ -2659,8 +2663,8 @@ Cette entrée du catalogue n’émet actuellement aucun diagnostic propre à cet
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-preprocessor-lang": "warn"
@@ -2722,8 +2726,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-reserved-component-names": "error"
@@ -2791,8 +2795,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-root-v-if": "warn"
@@ -2858,8 +2862,8 @@ Cette entrée du catalogue n’émet actuellement aucun diagnostic propre à cet
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-script-non-standard-lang": "warn"
@@ -2921,8 +2925,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-src-attribute": "warn"
@@ -2992,8 +2996,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-static-inline-styles": "warn"
@@ -3052,8 +3056,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-key": "error"
@@ -3117,8 +3121,8 @@ Cette entrée du catalogue n’émet actuellement aucun diagnostic propre à cet
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-lang": "warn"
@@ -3172,7 +3176,9 @@ Correction automatique: Aucune ; examinez la modification proposée
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
 
-Le contrôle actuel compare les liaisons de v-for imbriqués. Il ne signale pas une liaison v-for isolée simplement parce qu’elle porte le même nom qu’une liaison du script.
+Le contrôle compare les liaisons `v-for`, `v-slot` (y compris `#name`) et les anciennes liaisons de slots à portée limitée au sein du template. Il signale l’identifiant qui masque une liaison précédente, y compris les déclarations du même élément dans l’ordre des attributs. Les éléments frères ont des portées indépendantes. Les clés de propriétés et les références dans les valeurs par défaut ne sont pas des déclarations, et `v-pre` rend son sous-arbre inerte.
+
+Les noms du script et des propriétés du composant sont hors du champ du contrôle actuel : une liaison isolée du template ne produit pas d’avertissement simplement parce qu’une liaison du script porte le même nom. Les plages de diagnostic couvrent l’identifiant tel qu’il est écrit dans le code source, y compris les graphies échappées et les entités HTML.
 
 **Configuration (Vite+)**
 
@@ -3180,8 +3186,8 @@ Le contrôle actuel compare les liaisons de v-for imbriqués. Il ne signale pas 
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-shadow": "warn"
@@ -3241,8 +3247,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-target-blank": "warn"
@@ -3302,8 +3308,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-textarea-mustache": "error"
@@ -3363,8 +3369,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-undefined-refs": "warn"
@@ -3422,8 +3428,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unsafe-url": "warn"
@@ -3483,8 +3489,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unsandboxed-iframe": "warn"
@@ -3545,8 +3551,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-components": "warn"
@@ -3614,8 +3620,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-properties": "warn"
@@ -3684,8 +3690,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-refs": "warn"
@@ -3748,8 +3754,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-setup-bindings": "warn"
@@ -3807,8 +3813,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-vars": "warn"
@@ -3875,8 +3881,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-else-with-v-for": "warn"
@@ -3938,8 +3944,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-if-with-v-for": "warn"
@@ -4007,8 +4013,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-mustaches": "warn"
@@ -4073,8 +4079,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-template-attributes": "error"
@@ -4134,8 +4140,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-v-bind": "warn"
@@ -4198,8 +4204,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-for-template-key-on-child": "error"
@@ -4259,8 +4265,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-html": "warn"
@@ -4320,8 +4326,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-text": "warn"
@@ -4381,8 +4387,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-text-v-html-on-component": "error"
@@ -4445,8 +4451,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/permitted-contents": "error"
@@ -4511,8 +4517,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prefer-props-shorthand": "warn"
@@ -4579,8 +4585,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prefer-true-attribute-shorthand": "warn"
@@ -4645,8 +4651,8 @@ Contrôle les noms des props déclarées, et non la casse des attributs transmis
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prop-name-casing": "warn"
@@ -4708,8 +4714,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-component-is": "error"
@@ -4771,8 +4777,8 @@ Listez les noms explicites des composants fournis par les plugins de l’applica
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-component-registration": "warn"
@@ -4840,8 +4846,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-scoped-style": "warn"
@@ -4905,8 +4911,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-toggle-inside-transition": "error"
@@ -4970,8 +4976,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-v-for-key": "error"
@@ -5031,8 +5037,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/scoped-event-names": "warn"
@@ -5100,8 +5106,8 @@ Options: Consultez les [options typées et leurs valeurs par défaut](/rules/opt
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/sfc-element-order": "warn"
@@ -5176,8 +5182,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/single-style-block": "warn"
@@ -5250,8 +5256,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/slot-name-casing": "warn"
@@ -5311,8 +5317,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/this-in-template": "warn"
@@ -5357,7 +5363,7 @@ Utilisez directement `message`, `className` et `handleClick`. La chaîne littér
 
 Le bon exemple évite le diagnostic de cette règle avec la configuration ci-dessus ; d’autres règles peuvent encore signaler des diagnostics.
 
-[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [Toutes les règles](all.md)
+[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [Toutes les règles](all.md)
 
 ### `vue/use-unique-element-ids`
 
@@ -5377,8 +5383,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/use-unique-element-ids": "warn"
@@ -5440,14 +5446,22 @@ Correction automatique: Aucune ; examinez la modification proposée
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
 
+**Quand les gestionnaires se chevauchent**
+
+La règle compare les écouteurs du même événement sur un élément natif. Elle ignore les événements des composants personnalisés, sauf si les deux écouteurs utilisent `.native`. Des noms d’événements différents et des filtres de touches sans touche commune n’entrent pas en conflit.
+
+Les modificateurs système désignent des touches qui doivent être enfoncées ; `@keydown.alt.shift` accepte donc également Ctrl+Alt+Shift. Si un second gestionnaire utilise `@keydown.alt.ctrl.shift`, ajoutez `.exact` au gestionnaire le plus général pour séparer ces actions. `.exact` autorise les modificateurs système qu’il déclare et refuse toute touche Ctrl, Shift, Alt ou Meta supplémentaire.
+
+Plusieurs modificateurs de touches représentent des alternatives : `@keydown.up.down` accepte l’une ou l’autre des deux touches fléchées. Il peut se chevaucher avec `@keydown.ctrl.down` sur Ctrl+FlècheBas. La règle signale la clé de directive qui nécessite `.exact`, sans inclure son expression de gestionnaire.
+
 **Configuration (Vite+)**
 
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/use-v-on-exact": "warn"
@@ -5495,7 +5509,7 @@ Le gestionnaire de clic ordinaire peut également s’exécuter lors d’un Ctrl
 
 Le bon exemple évite le diagnostic de cette règle avec la configuration ci-dessus ; d’autres règles peuvent encore signaler des diagnostics.
 
-[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L28) · [Toutes les règles](all.md)
+[Implémentation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L31) · [Toutes les règles](all.md)
 
 ### `vue/v-bind-style`
 
@@ -5515,8 +5529,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-bind-style": "warn"
@@ -5576,8 +5590,8 @@ Options: Consultez les [options typées et leurs valeurs par défaut](/rules/opt
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-event-hyphenation": "warn"
@@ -5640,8 +5654,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-handler-style": "warn"
@@ -5706,8 +5720,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-style": "warn"
@@ -5767,8 +5781,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-slot-style": "warn"
@@ -5838,8 +5852,8 @@ Un nom d’attribut mal formé est diagnostiqué par parser/template avant que c
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-attribute-name": "error"
@@ -5899,8 +5913,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-template-root": "error"
@@ -5960,8 +5974,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-bind": "error"
@@ -6024,8 +6038,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-cloak": "error"
@@ -6087,8 +6101,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else": "error"
@@ -6151,8 +6165,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else-if": "error"
@@ -6216,8 +6230,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-for": "error"
@@ -6280,8 +6294,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-html": "error"
@@ -6343,8 +6357,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-if": "error"
@@ -6407,8 +6421,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-is": "error"
@@ -6471,8 +6485,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-memo": "error"
@@ -6532,8 +6546,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-model": "error"
@@ -6589,7 +6603,30 @@ Gravité par défaut: `error`
 Préréglages: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correction automatique: Aucune ; examinez la modification proposée  
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
-Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
+Options: Consultez les [options typées et leurs valeurs par défaut](/rules/options.md).
+
+**Validation des modificateurs**
+
+Les modificateurs non pris en charge sont signalés individuellement sur leur nom, y compris avec la forme longue `v-on:click`, les arguments d’événement dynamiques et la syntaxe objet des écouteurs. Les noms acceptés correspondent à ceux d’`eslint-plugin-vue` 10.9.2 : les modificateurs d’événement intégrés de Vue, la table complète des alias de touches, tout point de code Unicode unique et les noms ayant un préfixe entier décimal fini (selon la sémantique de `Number.parseInt(name, 10)` en JavaScript). Par exemple, cette règle accepte `.13suffix`. Les diagnostics concernant l’abandon des codes de touche numériques et la migration de `.native` relèvent de règles distinctes.
+
+Seuls `.stop` et `.prevent` ont un effet sans gestionnaire. Un modificateur tel que `.once`, `.enter` ou un nom personnalisé configuré nécessite toujours une expression de gestionnaire.
+
+Les projets ayant une gestion personnalisée des événements peuvent ajouter des noms sous `vue.linter.ruleOptions` :
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  linter: {
+    rules: { "vue/valid-v-on": "error" },
+    ruleOptions: { "vue/valid-v-on": { modifiers: ["custom"] } },
+  },
+});
+```
+
+Cela autorise `@click.custom="handler"`. Les noms doivent correspondre exactement, en respectant la casse ; les options complètent les noms intégrés et n’activent pas une règle désactivée. Les entrées de configuration à portée limitée peuvent remplacer les noms hérités par une nouvelle liste ou les réinitialiser avec `[]`.
+
+La table des touches est adaptée des [alias de touches d’eslint-plugin-vue](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json), sous licence MIT. Son code source et sa licence sont conservés aux côtés de l’implémentation.
 
 **Configuration (Vite+)**
 
@@ -6597,11 +6634,18 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-on": "error"
+      },
+      "ruleOptions": {
+        "vue/valid-v-on": {
+          "modifiers": [
+            "custom"
+          ]
+        }
       }
     },
   },
@@ -6618,11 +6662,14 @@ vp run lint
 
 Les formes d’écouteurs omettent un argument d’événement ou l’expression de gestionnaire ou d’objet nécessaire.
 
-```vue annotate="remove:2,3,4"
+```vue annotate="remove:2,3,4,5,6,7"
 <template>
   <div v-on></div>
   <div @></div>
   <div @click></div>
+  <div @click.sync="handleClick"></div>
+  <div @click.nativeish="handleClick"></div>
+  <div @click.once></div>
 </template>
 ```
 
@@ -6632,9 +6679,12 @@ Les formes d’écouteurs omettent un argument d’événement ou l’expression
 
 Utilisez un événement avec son gestionnaire, ou transmettez un objet d’écouteurs à `v-on` sans argument.
 
-```vue annotate="add:2,3"
+```vue annotate="add:2,3,4,5,6"
 <template>
   <div @click="handleClick"></div>
+  <form @submit.prevent></form>
+  <input @keyup.page-down="handlePageDown" />
+  <input @keyup.あ="handleKey" />
   <div v-on="{ click: handleClick }"></div>
 </template>
 ```
@@ -6661,8 +6711,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-once": "error"
@@ -6724,8 +6774,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-pre": "error"
@@ -6787,8 +6837,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-show": "error"
@@ -6850,8 +6900,8 @@ Options: Consultez les [options typées et leurs valeurs par défaut](/rules/opt
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-slot": "error"
@@ -6916,8 +6966,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-text": "error"
@@ -6979,8 +7029,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/warn-custom-block": "warn"
@@ -7048,8 +7098,8 @@ Options: Aucune option propre à la règle. La gravité et le choix des prérég
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/warn-custom-directive": "warn"

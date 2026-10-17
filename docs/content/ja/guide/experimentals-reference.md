@@ -113,11 +113,13 @@ compileSfcBatchWithResults(files, {
 共通設定で、一つの RFC 提案だけを有効にする例:
 
 ```ts
-import { defineConfig } from "vize";
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  experimentals: {
-    inTagComment: true,
+  vue: {
+    experimentals: {
+      inTagComment: true,
+    },
   },
 });
 ```

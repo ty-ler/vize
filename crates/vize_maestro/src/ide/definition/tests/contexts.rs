@@ -229,7 +229,7 @@ export default {
     let dir_path = Box::leak(Box::new(dir)).path();
     fs::write(
         dir_path.join("vite.config.mjs"),
-        r#"{ "typeChecker": { "optionsApi": false } }"#,
+        r#"export default { vue: { "typeChecker": { "optionsApi": false } } };"#,
     )
     .unwrap();
     let path = dir_path.join("Greeting.vue");

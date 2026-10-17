@@ -69,17 +69,12 @@ test("Vue Router solution tsconfigs preserve exact diagnostics across edits", as
         path.join(repoRoot, "node_modules/@types/node"),
         fixture.resolve(`${projectPath}/node_modules/@types/node`),
       );
-      fixture.write(`${projectPath}/vite.config.ts`, "export default {}\n");
-      fixture.write(
-        `${projectPath}/vize.config.json`,
-        `${JSON.stringify(
-          {
-            lsp: { completion: true, editor: true, hover: true, lint: false, typecheck: true },
-            typeChecker: { corsaPath },
-          },
-          null,
-          2,
-        )}\n`,
+      fixture.writeVueConfig(
+        {
+          lsp: { completion: true, editor: true, hover: true, lint: false, typecheck: true },
+          typeChecker: { corsaPath },
+        },
+        projectPath,
       );
 
       fixture.applyExactPatch(

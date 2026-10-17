@@ -28,6 +28,7 @@ import {
 } from "../../../tools/support/compat/npm/smoke-release-config-lsp.ts";
 
 const CHANGED_FIELDS = new Set([
+  "detection",
   "features",
   "reconfiguredDetection",
   "reconfiguredFeatures",
@@ -80,6 +81,14 @@ test("every original manager cell retains its entire current discovery packet", 
   for (const cell of FRESH_INIT_MATRIX) {
     const current = CONFIG_FREE_PROJECT_SHAPES[cell.shape];
     const manager = PACKAGE_MANAGERS[cell.packageManager];
+    assert.deepEqual(
+      current.detection(manager),
+      PROJECT_SHAPES[cell.shape]
+        .detection(manager)
+        .map((line) =>
+          line === "  vize config:     none" ? "  Vue settings:    vue: in vite.config.*" : line,
+        ),
+    );
     assert.deepEqual(current.reconfiguredDetection(manager), [
       cell.shape === "vite-plus-vue-ts"
         ? "  framework:       Vite+ (vite.config.ts)"
@@ -89,7 +98,7 @@ test("every original manager cell retains its entire current discovery packet", 
       cell.shape === "vite-plus-vue-ts"
         ? "  lint command:    vp lint"
         : "  lint command:    oxlint",
-      "  vize config:     none",
+      "  Vue settings:    vue: in vite.config.*",
       "  oxlint config:   none",
     ]);
   }
@@ -139,7 +148,10 @@ test("the delivered Yarn cell retains its whole archive and declares three curre
   for (const mode of ["dry", "apply", "rerun"])
     assert.equal(
       expectedInitOutput(shape, current.projectRootToken, manager, mode),
-      current.expected[`${mode}Stdout`],
+      current.expected[`${mode}Stdout`].replaceAll(
+        "  vize config:     none",
+        "  Vue settings:    vue: in vite.config.*",
+      ),
     );
   assert.deepEqual(shape.check.broken, current.expected.broken.files);
   assert.deepEqual(shape.check.brokenDiagnostics, current.expected.broken.diagnosticFiles);

@@ -163,6 +163,10 @@ local languageServerConfigDef: JsonSchema = new JsonSchema {
       type = "boolean"
       description = "Enable Vue ecosystem lint and editor helpers"
     }
+    ["crossFile"] = new JsonSchema {
+      type = "boolean"
+      description = "Enable workspace-wide cross-file diagnostic groups (disabled by default)"
+    }
     ["legacyVue2"] = new JsonSchema {
       type = "boolean"
       description = "Enable Vue 2.7 / Nuxt 2 editor and type-checking compatibility"

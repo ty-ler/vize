@@ -104,12 +104,10 @@ Vize は `.jsx`/`.tsx` の Vue コンポーネントを Virtual DOM または [V
 // vite.config.ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
-export default defineConfig({
-  vue: {
-    compiler: {
-      // Default every .jsx/.tsx component to Vapor output.
-      jsxMode: "vapor",
-    },
+export default defineConfig({}).withVue({
+  compiler: {
+    // Default every .jsx/.tsx component to Vapor output.
+    jsxMode: "vapor",
   },
 });
 ```
@@ -171,10 +169,13 @@ export const LegacyWidget = () => {
 
 `dialect` は単独の HTML ドキュメント（`.html`/`.htm`）で使う Vue の方言を選びます。
 
-```json
-{
-  "dialect": "petite-vue"
-}
+```ts
+// vite.config.ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  dialect: "petite-vue",
+});
 ```
 
 - `"vue"` は単独の HTML ドキュメントを、CDN から Vue を読み込む通常の Vue ドキュメントとして扱います。

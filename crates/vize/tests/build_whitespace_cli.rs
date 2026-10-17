@@ -40,8 +40,8 @@ fn build_config_whitespace_reaches_client_ssr_and_vapor_whole_outputs() {
             false,
         ),
         (
-            "vite.config.mjs",
-            false,
+            "explicit-unknown.json",
+            true,
             false,
             r#"{"compiler":{"whitespace":"unknown"}}"#,
             false,

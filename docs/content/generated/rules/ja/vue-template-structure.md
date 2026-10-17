@@ -8,7 +8,7 @@ title: "繰り返し・条件分岐とテンプレートの構造"
 
 繰り返しや条件分岐、スロットの変数と、template 要素の使い方を確認するルールをまとめています。リストの表示や分岐を変更したとき、テンプレートの構造を整理したときに使います。
 
-リストでは項目を識別する key、条件分岐では重複する条件、入れ子のループやスロットでは変数の参照を確認します。no-template-shadow が比較するのは入れ子の v-for の変数で、script 側と同じ名前であるだけでは診断しません。各ルールの現在の検査範囲を確認してください。
+リストでは項目を識別する key、条件分岐では重複する条件、入れ子のループやスロットでは変数の参照を確認します。no-template-shadow はテンプレート内の v-for・v-slot・従来のスコープ付きスロットの束縛を比較します。兄弟要素のスコープは独立しており、script 側と同じ名前であるだけでは診断しません。各ルールの現在の検査範囲を確認してください。
 
 まずは [繰り返す要素に key を指定する例](./reference/vue-require-v-for-key.md)と[v-if と v-for を分ける例](./reference/vue-no-use-v-if-with-v-for.md)で、悪い例と良い例の差を確認してください。採用するルールだけを掲載された設定で有効にし、`vp run lint` を実行します。[Vue の全ルール](./vue.md)から、構文や属性の関連ルールも確認できます。
 
@@ -47,8 +47,8 @@ v-html / v-text と子コンテンツを同時に指定する箇所を検出し�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-child-content": "error"
@@ -108,8 +108,8 @@ v-if / v-else-if の条件重複を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-dupe-v-else-if": "error"
@@ -171,8 +171,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-lone-template": "warn"
@@ -232,8 +232,8 @@ v-for 用ではない template の key 指定を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-key": "error"
@@ -287,7 +287,9 @@ template の v-for に key を付け、繰り返す各フラグメントを識�
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
 
-現在の検査は入れ子になった v-for の変数を比較します。script 内の名前と同じという理由だけで単独の v-for を検出するものではありません。
+検査はテンプレート内の `v-for`、`v-slot`（`#name` を含む）、従来のスコープ付きスロットの束縛を比較します。外側の束縛を隠す識別子を報告し、同じ要素内では属性の順番に比較します。兄弟要素のスコープは独立しています。プロパティのキーや既定値の参照は宣言ではなく、`v-pre` の部分木は検査しません。
+
+script やコンポーネントのプロパティ名は現在の検査範囲に含みません。同じ名前の script 束縛があるだけで、単独のテンプレート束縛を報告することはありません。診断範囲は、エスケープや HTML エンティティを含む元の識別子を示します。
 
 **設定（Vite+）**
 
@@ -295,8 +297,8 @@ template の v-for に key を付け、繰り返す各フラグメントを識�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-shadow": "warn"
@@ -356,8 +358,8 @@ v-for / v-slot に宣言しているのに使わない変数を検出します�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-vars": "warn"
@@ -424,8 +426,8 @@ index を参照するか、未使用を意図する _index という名前にし
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-if-with-v-for": "warn"
@@ -493,8 +495,8 @@ template 要素の効果がない属性を検出します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-template-attributes": "error"
@@ -554,8 +556,8 @@ v-for に安定した :key を指定します。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-v-for-key": "error"

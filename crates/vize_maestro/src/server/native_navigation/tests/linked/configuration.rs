@@ -127,7 +127,7 @@ fn standard_route_uses_whole_real_loader_state_for_disabled_legacy_and_native_pa
     let directory = tempfile::tempdir().unwrap();
     std::fs::write(
         directory.path().join("vite.config.mjs"),
-        r#"export default { vue: {"vue":{"version":"3"},"dialect":"vue","languageServer":{"rename":false}} };"#,
+        r#"export default { vue: {"version":"3","dialect":"vue","languageServer":{"rename":false}} };"#,
     )
     .unwrap();
     service

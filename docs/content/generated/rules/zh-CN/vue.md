@@ -139,8 +139,8 @@ title: Vue 规则
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/a11y-img-alt": "warn"
@@ -208,8 +208,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/attribute-hyphenation": "warn"
@@ -269,8 +269,8 @@ first-name 符合配置要求的连字符组件属性命名规范。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/attribute-order": "warn"
@@ -332,8 +332,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/component-definition-name-casing": "warn"
@@ -393,8 +393,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/component-name-in-template-casing": "warn"
@@ -463,8 +463,8 @@ import MyComponent from "./MyComponent.vue";
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-button-has-type": "warn"
@@ -528,8 +528,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-quotes": "warn"
@@ -592,8 +592,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/html-self-closing": "warn"
@@ -664,8 +664,8 @@ Bad 的圈复杂度为 13，认知复杂度为 25（上限分别为 11 和 16）
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/max-template-complexity": "warn"
@@ -744,8 +744,8 @@ defineProps<{ rows: Row[] }>();
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/multi-word-component-names": "error"
@@ -805,8 +805,8 @@ TodoItem.vue 为同一模板使用了多个单词组成的组件名称。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/mustache-interpolation-spacing": "warn"
@@ -870,8 +870,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-array-index-key": "warn"
@@ -931,8 +931,8 @@ key 来自 item.id，即使位置改变，也能保持每个列表项的身份�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-bare-strings-in-template": "warn"
@@ -999,8 +999,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-boolean-attr-value": "warn"
@@ -1064,8 +1064,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-child-content": "error"
@@ -1125,8 +1125,8 @@ v-text 会替换段落内容，因此编写的后备文本无法在该指令生�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-filter": "error"
@@ -1166,7 +1166,7 @@ vp run lint
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L53) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/vue/no_deprecated_filter.rs#L56) · [全部规则](all.md)
 
 ### `vue/no-deprecated-functional-template`
 
@@ -1186,8 +1186,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-functional-template": "error"
@@ -1247,8 +1247,8 @@ SFC 模板使用了已移除的 functional 属性，并读取旧的 props 上下
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-html-element-is": "error"
@@ -1309,8 +1309,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-inline-template": "error"
@@ -1370,8 +1370,8 @@ Card 使用已弃用的 inline-template 属性接收其内容。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-router-link-tag-prop": "error"
@@ -1433,8 +1433,8 @@ RouterLink 使用了已移除的 tag prop 来指定 button 元素。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-scope-attribute": "error"
@@ -1494,8 +1494,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-slot-attribute": "error"
@@ -1560,8 +1560,8 @@ v-slot:header 使用当前指令显式选择 header 插槽。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-slot-scope-attribute": "error"
@@ -1621,8 +1621,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-bind-sync": "error"
@@ -1685,8 +1685,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-is": "error"
@@ -1747,8 +1747,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-on-native-modifier": "error"
@@ -1801,9 +1801,13 @@ vp run lint
 
 默认严重程度: `error`  
 预设: `ecosystem`, `essential`, `happy-path`, `nuxt`, `opinionated`  
-自动修复: 无；请检查建议的修改  
+自动修复: 适用于已支持的诊断  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
+
+**数值修饰符的选择与修复**
+
+首个名称带十进制整数前缀的数值修饰符决定诊断结果。`@keyup.13.27="submit"` 只报告 `13`，并提供修复结果 `@keyup.enter.27="submit"`；再次修复可以将 `27` 替换为 `escape`。`@keyup.13suffix="submit"` 也会变为 `@keyup.enter="submit"`。0–9 不在检查范围内，因此 `@keyup.0.13="submit"` 不会触发此规则。`999` 等未知值会被报告，但不提供修复。现有的 Vue 2 和 petite-vue 豁免仍然有效。
 
 **配置（Vite+）**
 
@@ -1811,8 +1815,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-deprecated-v-on-number-modifiers": "error"
@@ -1875,8 +1879,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-dupe-v-else-if": "error"
@@ -1938,8 +1942,8 @@ else-if 重复了首个分支已检查的 ready 条件，导致后面的分支�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-duplicate-attributes": "error"
@@ -1999,8 +2003,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-empty-component-block": "warn"
@@ -2071,8 +2075,8 @@ const message = "Hello";
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-inline-style": "warn"
@@ -2134,8 +2138,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-invalid-html-attribute": "warn"
@@ -2195,8 +2199,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-lone-template": "warn"
@@ -2256,8 +2260,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multi-spaces": "warn"
@@ -2319,8 +2323,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multiple-objects-in-class": "warn"
@@ -2385,8 +2389,8 @@ class 数组包含两个可以合并的顶层对象字面量。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-multiple-template-root": "error"
@@ -2447,8 +2451,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-mutating-props": "error"
@@ -2515,8 +2519,8 @@ function increment() {
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-negated-v-if-condition": "warn"
@@ -2583,8 +2587,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-non-component-keep-alive-child": "warn"
@@ -2659,8 +2663,8 @@ KeepAlive 有条件地包装原生 div，而没有直接缓存 UserCard。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-preprocessor-lang": "warn"
@@ -2722,8 +2726,8 @@ style 块通过 lang 选择 SCSS。这描述了不使用预处理器的预期规
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-reserved-component-names": "error"
@@ -2791,8 +2795,8 @@ defineOptions({ name: "AppButton" });
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-root-v-if": "warn"
@@ -2858,8 +2862,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-script-non-standard-lang": "warn"
@@ -2921,8 +2925,8 @@ const count = 0;
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-src-attribute": "warn"
@@ -2992,8 +2996,8 @@ p {
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-static-inline-styles": "warn"
@@ -3052,8 +3056,8 @@ notice 类和 scoped 样式表将固定颜色放在模板属性之外。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-key": "error"
@@ -3117,8 +3121,8 @@ key 属于 template v-for 迭代，用来标识每个重复的片段。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-lang": "warn"
@@ -3172,7 +3176,9 @@ p Notice
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
 
-当前检查比较嵌套的 v-for 绑定。单个 v-for 绑定仅与脚本绑定同名时，不会因此被报告。
+此检查比较模板内的 `v-for`、`v-slot`（包括 `#name`）和旧式作用域插槽绑定。它报告遮蔽先前绑定的标识符，也包括按属性顺序比较的同一元素上的声明。兄弟元素具有独立的作用域。属性键和默认值中的引用不属于声明，`v-pre` 会使其子树不参与检查。
+
+脚本和组件属性的名称不在当前检查范围内：单个模板绑定不会仅仅因为与脚本绑定同名就产生警告。诊断范围覆盖源代码中实际编写的标识符，包括转义写法和 HTML 实体。
 
 **配置（Vite+）**
 
@@ -3180,8 +3186,8 @@ p Notice
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-shadow": "warn"
@@ -3241,8 +3247,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-template-target-blank": "warn"
@@ -3302,8 +3308,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-textarea-mustache": "error"
@@ -3363,8 +3369,8 @@ v-model 将可编辑的 textarea 值绑定到 message。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-undefined-refs": "warn"
@@ -3422,8 +3428,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unsafe-url": "warn"
@@ -3483,8 +3489,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unsandboxed-iframe": "warn"
@@ -3545,8 +3551,8 @@ sandbox 施加限制；需要脚本能力时，allow-scripts 显式允许这一�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-components": "warn"
@@ -3614,8 +3620,8 @@ import UserAvatar from "./UserAvatar.vue";
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-properties": "warn"
@@ -3684,8 +3690,8 @@ defineProps<{ title: string; description: string }>();
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-refs": "warn"
@@ -3748,8 +3754,8 @@ const inputEl = ref(null)
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-setup-bindings": "warn"
@@ -3807,8 +3813,8 @@ script setup 中的 message 绑定从未被模板读取。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-unused-vars": "warn"
@@ -3875,8 +3881,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-else-with-v-for": "warn"
@@ -3938,8 +3944,8 @@ else 分支和 v-for 迭代都附加在同一段落上。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-use-v-if-with-v-for": "warn"
@@ -4007,8 +4013,8 @@ const visibleItems = computed(() => items.filter((item) => item.visible));
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-mustaches": "warn"
@@ -4073,8 +4079,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-template-attributes": "error"
@@ -4134,8 +4140,8 @@ class 移到实际渲染的段落上，v-if 则保留在结构性 template 上�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-useless-v-bind": "warn"
@@ -4198,8 +4204,8 @@ foo 绑定对带引号的常量字符串，或不含插值的模板字符串，�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-for-template-key-on-child": "error"
@@ -4259,8 +4265,8 @@ key 移到 template v-for 上，用来标识整个重复片段。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-html": "warn"
@@ -4320,8 +4326,8 @@ v-html 将 content 解释为 HTML，而不是普通文本。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-text": "warn"
@@ -4381,8 +4387,8 @@ div 的内容通过 v-text 指令提供。
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/no-v-text-v-html-on-component": "error"
@@ -4445,8 +4451,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/permitted-contents": "error"
@@ -4511,8 +4517,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prefer-props-shorthand": "warn"
@@ -4579,8 +4585,8 @@ Vue 3.4+ 的同名绑定简写省略了重复表达式；bar 等不同的来源�
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prefer-true-attribute-shorthand": "warn"
@@ -4645,8 +4651,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/prop-name-casing": "warn"
@@ -4708,8 +4714,8 @@ defineProps<{ userName: string }>();
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-component-is": "error"
@@ -4771,8 +4777,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-component-registration": "warn"
@@ -4840,8 +4846,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-scoped-style": "warn"
@@ -4905,8 +4911,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-toggle-inside-transition": "error"
@@ -4970,8 +4976,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/require-v-for-key": "error"
@@ -5031,8 +5037,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/scoped-event-names": "warn"
@@ -5100,8 +5106,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/sfc-element-order": "warn"
@@ -5176,8 +5182,8 @@ p {
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/single-style-block": "warn"
@@ -5250,8 +5256,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/slot-name-casing": "warn"
@@ -5311,8 +5317,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/this-in-template": "warn"
@@ -5357,7 +5363,7 @@ vp run lint
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L33) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/this_in_template.rs#L37) · [全部规则](all.md)
 
 ### `vue/use-unique-element-ids`
 
@@ -5377,8 +5383,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/use-unique-element-ids": "warn"
@@ -5440,14 +5446,22 @@ const emailId = useId();
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
 选项: 没有规则专属选项。可以配置严重程度和预设。
 
+**处理器何时会重叠**
+
+此规则比较原生元素上同一事件的监听器。对于自定义组件事件，只有两个监听器都使用 `.native` 时才进行检查。事件名称不同或按键过滤器没有共同按键时，不会发生冲突。
+
+系统修饰符指定必须按下的按键，因此 `@keydown.alt.shift` 也接受 Ctrl+Alt+Shift。如果另一个处理器使用 `@keydown.alt.ctrl.shift`，请为匹配范围更广的处理器添加 `.exact`，以区分这些操作。`.exact` 允许其声明的系统修饰符，并拒绝额外的 Ctrl、Shift、Alt 或 Meta 键。
+
+多个键盘修饰符表示备选项：`@keydown.up.down` 接受上、下两个方向键中的任意一个。按下 Ctrl+下方向键时，它可能与 `@keydown.ctrl.down` 重叠。规则报告需要 `.exact` 的指令键，不包括其处理器表达式。
+
 **配置（Vite+）**
 
 ```ts
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/use-v-on-exact": "warn"
@@ -5495,7 +5509,7 @@ vp run lint
 
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
-[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L28) · [全部规则](all.md)
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/opinionated/vue/use_v_on_exact.rs#L31) · [全部规则](all.md)
 
 ### `vue/v-bind-style`
 
@@ -5515,8 +5529,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-bind-style": "warn"
@@ -5576,8 +5590,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-event-hyphenation": "warn"
@@ -5640,8 +5654,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-handler-style": "warn"
@@ -5706,8 +5720,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-on-style": "warn"
@@ -5767,8 +5781,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/v-slot-style": "warn"
@@ -5838,8 +5852,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-attribute-name": "error"
@@ -5899,8 +5913,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-template-root": "error"
@@ -5960,8 +5974,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-bind": "error"
@@ -6024,8 +6038,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-cloak": "error"
@@ -6087,8 +6101,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else": "error"
@@ -6151,8 +6165,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-else-if": "error"
@@ -6216,8 +6230,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-for": "error"
@@ -6280,8 +6294,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-html": "error"
@@ -6343,8 +6357,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-if": "error"
@@ -6407,8 +6421,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-is": "error"
@@ -6471,8 +6485,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-memo": "error"
@@ -6532,8 +6546,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-model": "error"
@@ -6589,7 +6603,30 @@ vp run lint
 预设: `essential`, `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自动修复: 无；请检查建议的修改  
 适用范围: Vue SFC 模板和代码块，包括规则所需的脚本上下文  
-选项: 没有规则专属选项。可以配置严重程度和预设。
+选项: 参见[类型化选项和默认值](/rules/options.md)。
+
+**修饰符验证**
+
+不受支持的修饰符会在各自名称的位置被单独报告，包括长格式 `v-on:click`、动态事件参数和监听器对象语法中的修饰符。接受的名称与 `eslint-plugin-vue` 10.9.2 一致：Vue 内置的事件修饰符、完整的按键别名表、任意单个 Unicode 码点，以及带有有限十进制整数前缀的名称（遵循 JavaScript 的 `Number.parseInt(name, 10)` 语义）。例如，此规则接受 `.13suffix`。数字键码的弃用诊断和 `.native` 的迁移诊断由其他规则负责。
+
+只有 `.stop` 和 `.prevent` 在没有处理器时也能产生行为。`.once`、`.enter` 或配置的自定义名称等修饰符仍然需要处理器表达式。
+
+使用自定义事件处理的项目可以在 `vue.linter.ruleOptions` 下添加名称：
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({}).withVue({
+  linter: {
+    rules: { "vue/valid-v-on": "error" },
+    ruleOptions: { "vue/valid-v-on": { modifiers: ["custom"] } },
+  },
+});
+```
+
+这允许使用 `@click.custom="handler"`。名称必须精确匹配且区分大小写；这些选项补充内置名称，不会启用已禁用的规则。限定作用范围的配置条目可以用新列表替换继承的名称，或用 `[]` 将其重置。
+
+按键表改编自采用 MIT 许可证的 [eslint-plugin-vue 按键别名](https://github.com/vuejs/eslint-plugin-vue/blob/v10.9.2/lib/utils/key-aliases.json)。其源代码和许可证与实现一同保留。
 
 **配置（Vite+）**
 
@@ -6597,11 +6634,18 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-on": "error"
+      },
+      "ruleOptions": {
+        "vue/valid-v-on": {
+          "modifiers": [
+            "custom"
+          ]
+        }
       }
     },
   },
@@ -6618,11 +6662,14 @@ vp run lint
 
 监听器形式缺少事件参数，或缺少所需的处理器或对象表达式。
 
-```vue annotate="remove:2,3,4"
+```vue annotate="remove:2,3,4,5,6,7"
 <template>
   <div v-on></div>
   <div @></div>
   <div @click></div>
+  <div @click.sync="handleClick"></div>
+  <div @click.nativeish="handleClick"></div>
+  <div @click.once></div>
 </template>
 ```
 
@@ -6632,9 +6679,12 @@ vp run lint
 
 提供事件及其处理器，或将监听器对象传给无参数的 `v-on`。
 
-```vue annotate="add:2,3"
+```vue annotate="add:2,3,4,5,6"
 <template>
   <div @click="handleClick"></div>
+  <form @submit.prevent></form>
+  <input @keyup.page-down="handlePageDown" />
+  <input @keyup.あ="handleKey" />
   <div v-on="{ click: handleClick }"></div>
 </template>
 ```
@@ -6661,8 +6711,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-once": "error"
@@ -6724,8 +6774,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-pre": "error"
@@ -6787,8 +6837,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-show": "error"
@@ -6850,8 +6900,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-slot": "error"
@@ -6916,8 +6966,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/valid-v-text": "error"
@@ -6979,8 +7029,8 @@ vp run lint
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/warn-custom-block": "warn"
@@ -7048,8 +7098,8 @@ const hello = "Hello";
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "preset": "incremental",
       "rules": {
         "vue/warn-custom-directive": "warn"

@@ -49,7 +49,7 @@ fn load_format_config_from_file() {
     std::fs::write(
         dir.path().join("vite.config.mjs"),
         r#"export default { vue: {
-                "fmt": {
+                "formatter": {
                     "printWidth": 80,
                     "tabWidth": 4,
                     "useTabs": true,
@@ -76,7 +76,7 @@ fn load_format_config_partial() {
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(
         dir.path().join("vite.config.mjs"),
-        r#"export default { vue: { "fmt": { "printWidth": 120 } } };"#,
+        r#"export default { vue: { "formatter": { "printWidth": 120 } } };"#,
     )
     .unwrap();
 
@@ -91,7 +91,7 @@ fn load_format_config_partial() {
 
 #[cfg(feature = "glyph")]
 #[test]
-fn load_format_config_no_fmt_section() {
+fn load_format_config_no_formatter_section() {
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(
         dir.path().join("vite.config.mjs"),
@@ -101,7 +101,7 @@ fn load_format_config_no_fmt_section() {
 
     let state = ServerState::new();
     state.load_format_config(dir.path());
-    // no fmt section → options remain default
+    // no formatter section → options remain default
     let opts = state.get_format_options();
     assert_eq!(opts.print_width, 100);
 }
@@ -190,8 +190,14 @@ fn load_lsp_config_updates_type_checker_config() {
     assert!(config.strict);
     assert!(!config.check_props);
     assert!(!config.check_emits);
-    assert_eq!(config.tsconfig.as_deref(), Some("tsconfig.app.json"));
-    assert_eq!(config.runtime_path(), Some("./node_modules/.bin/corsa"));
+    assert_eq!(
+        config.tsconfig.as_deref(),
+        dir.path().join("tsconfig.app.json").to_str(),
+    );
+    assert_eq!(
+        config.runtime_path(),
+        dir.path().join("node_modules/.bin/corsa").to_str(),
+    );
 }
 
 #[test]

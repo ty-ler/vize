@@ -4,7 +4,7 @@ title: Rule Options
 
 # Rule Options
 
-With Vite+, configure `lint.vize.ruleOptions` in `vite.config.ts` and run `vp run lint`. The standalone compatibility config uses the same values under `linter.ruleOptions`.
+With Vite+, configure `vue.linter.ruleOptions` in `vite.config.ts` and run `vp run lint`. The standalone compatibility config uses the same values under `linter.ruleOptions`.
 
 `linter.ruleOptions` holds typed project-local settings for rules that accept options. Unknown
 option fields are rejected, and later matching config entries replace the full option object for the
@@ -66,6 +66,7 @@ export default defineConfig({
 | `html/no-empty-palpable-content` | `{ contentDirectives?: string[] }` | Defaults to an empty list. Exact bare names identify directives that supply visible content. Rule enablement remains separate. |
 | `script/no-restricted-globals` | `{ globals?: Array<{ name: string; message?: string }> }` | Without options, the built-in deny list is `process`, `localStorage`, and `sessionStorage`. A non-empty `globals` list replaces that built-in list. |
 | `script/no-restricted-members` | `{ members?: Array<{ object: string; property: string; message?: string }> }` | Off unless `members` is configured and the rule is enabled. A missing `message` uses the generic diagnostic help. |
+| `vue/valid-v-on` | `{ modifiers?: string[] }` | Defaults to an empty list. Adds exact, case-sensitive custom names to the built-in modifiers; it does not enable the rule or permit a missing handler. Scoped entries replace the inherited list, and `[]` clears it. See the [complete modifier example](./reference/vue-valid-v-on.md). |
 | `vue/component-name-in-template-casing` | `{ casing?: "PascalCase" \| "kebab-case", registeredComponentsOnly?: boolean, globals?: string[] }` | Defaults to `PascalCase`, registered components only, and no literal globals. |
 | `script/custom-event-name-casing` | `{ casing?: "camelCase" \| "kebab-case" }` | Defaults to `camelCase`. |
 | `script/define-props-destructuring` | `{ destructure?: "only-when-assigned" \| "always" \| "never" }` | Defaults to `only-when-assigned`. `always` also checks bare calls; `never` requires props-object access. Vue 3.5 destructuring preserves reactivity. |
@@ -145,8 +146,8 @@ For components supplied by application plugins or Musea `previewSetup`, configur
 import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 
 export default defineConfig({
-  lint: {
-    vize: {
+  vue: {
+    linter: {
       "rules": {
         "vue/require-component-registration": "warn"
       },

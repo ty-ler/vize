@@ -56,10 +56,10 @@ Apply fixes with `vp run check -- --fix`. Use `vp run` for Vize's generated task
 - [Use the JavaScript APIs through JSR](./guide/jsr.md) from Node, Deno or Bun.
 
 > [!NOTE]
-> Vize 0.457.0 supports shared Vite configuration in the native CLI and `init` without a dedicated Vize file. Keep the CLI, Vite integration and editor extension up to date to use the shared configuration workflow. The [reference](./guide/configuration-reference.md) covers discovery, precedence and optional dedicated formats.
+> Vize 0.457.0 supports shared Vite configuration in the native CLI and `init` without a dedicated Vize file. Keep the CLI, Vite integration and editor extension up to date to use the shared configuration workflow. The [reference](./guide/configuration-reference.md) covers discovery, precedence and migration from removed dedicated formats.
 
 ## Use Vize without Vite+
 
-The [standalone CLI](./guide/cli.md) provides `vize lint`, `vize fmt` and `vize check`. Run from the target package root and keep the TypeScript project in `tsconfig.json`. Native commands can share top-level `vize` settings in `vite.config.*`; see [CLI configuration](./guide/configuration.md#standalone-cli) for discovery and its current scope.
+The [standalone CLI](./guide/cli.md) provides `vize lint`, `vize fmt` and `vize check`. Run from the target package root and keep the TypeScript project in `tsconfig.json`. Native commands can share top-level `vue` settings in `vite.config.*`; see [CLI configuration](./guide/configuration.md#standalone-cli) for discovery and its current scope.
 
 Preview interactive setup with `vpx vize init --dry-run`, then run `vpx vize init` to select features. [Project Setup](./guide/init.md) explains detection and editing limits. Init uses project settings and defaults; it does not create a dedicated Vize config.

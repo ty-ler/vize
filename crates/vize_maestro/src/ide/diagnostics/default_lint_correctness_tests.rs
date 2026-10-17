@@ -98,11 +98,7 @@ fn configured_editor_vue_versions_preserve_whole_existing_baselines() {
         let root = tempfile::tempdir().unwrap();
         std::fs::write(
             root.path().join("vite.config.mjs"),
-            vize_l0::cstr!(
-                "export default {{ vue: {} }};",
-                json!({"vue":{"version":version}})
-            )
-            .as_bytes(),
+            vize_l0::cstr!("export default {{ vue: {} }};", json!({"version":version})).as_bytes(),
         )
         .unwrap();
         let state = ServerState::new();
@@ -148,12 +144,12 @@ fn editor_vue_version_is_owned_by_the_matching_folder_and_global_fallback() {
     }
     std::fs::write(
         roots[0].join("vite.config.mjs"),
-        r#"export default { vue: {"vue":{"version":"2.7"}} };"#,
+        r#"export default { vue: {"version":"2.7"} };"#,
     )
     .unwrap();
     std::fs::write(
         roots[1].join("vite.config.mjs"),
-        r#"export default { vue: {"vue":{"version":"3"}} };"#,
+        r#"export default { vue: {"version":"3"} };"#,
     )
     .unwrap();
     let folders: Vec<_> = roots[..3]
@@ -164,7 +160,7 @@ fn editor_vue_version_is_owned_by_the_matching_folder_and_global_fallback() {
             name: ["folder-0", "folder-1", "folder-2"][index].to_owned(),
         })
         .collect();
-    let state = ServerState::new();
+    let state = std::sync::Arc::new(ServerState::new());
     state.load_workspace_config(&roots[0]);
     state.apply_initialize_workspace_folders(Some(&folders), Some(&roots[0]));
     for (index, root) in roots.iter().enumerate() {
@@ -181,8 +177,14 @@ fn editor_vue_version_is_owned_by_the_matching_folder_and_global_fallback() {
             } else {
                 &case["lspDiagnostics"]
             };
+            #[cfg(feature = "native")]
+            let owner = state
+                .document_project_state(&uri)
+                .unwrap_or_else(|| state.clone());
+            #[cfg(not(feature = "native"))]
+            let owner = state.clone();
             assert_eq!(
-                serde_json::to_value(DiagnosticService::collect_lint_only(&state, &uri)).unwrap(),
+                serde_json::to_value(DiagnosticService::collect_lint_only(&owner, &uri)).unwrap(),
                 *expected,
                 "{} / folder={index}",
                 case["id"]
