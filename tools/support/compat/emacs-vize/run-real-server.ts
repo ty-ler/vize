@@ -229,7 +229,7 @@ async function main() {
       child.once("close", resolve);
     });
     assert.equal(code, 0, "The actual Eglot ERT scenario must pass");
-    const packets = readPackets(transcript);
+    let packets = readPackets(transcript);
     const nativePid = Number(fs.readFileSync(nativePidFile, "utf8").trim());
     assert.ok(
       Number.isInteger(nativePid) && nativePid > 0,
@@ -275,6 +275,7 @@ async function main() {
       lifecycle.nativeStopped,
       "The recorded native PID must stop after actual Eglot shutdown",
     );
+    packets = readPackets(transcript);
     // Eglot deletes its own launcher after `exit'; its process-group kill can
     // prevent the transparent tap's recorder from observing a native exit code.
     const ledger = packets.find(
