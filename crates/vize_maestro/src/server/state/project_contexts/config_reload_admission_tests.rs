@@ -11,7 +11,7 @@ fn serialized_config_reload_rechecks_latest_disk_after_an_older_preparation() {
         "export default { vue: { languageServer: { hover: false } } };",
     )
     .unwrap();
-    let (entered, resume, install) = pause_at(Phase::BeforeConfigInstall);
+    let (entered, resume, install) = pause_at(Phase::ConfigInstall);
     let first_state = state.clone();
     let first_marker = marker.clone();
     let first = std::thread::spawn(move || {
@@ -60,7 +60,7 @@ fn shutdown_between_preparation_and_installation_never_recreates_primary_owner()
     state.set_workspace_root(root.path().to_path_buf());
     state.load_workspace_config(root.path());
     assert!(state.project_contexts.contexts.lock().is_empty());
-    let (entered, resume, install) = pause_at(Phase::BeforeConfigInstall);
+    let (entered, resume, install) = pause_at(Phase::ConfigInstall);
     let worker_state = state.clone();
     let worker = std::thread::spawn(move || {
         install();
@@ -93,7 +93,7 @@ fn same_root_async_waiters_do_not_consume_workers_needed_by_an_unrelated_sibling
     state.document_project_state(&a).unwrap();
     let old_b = state.document_project_state(&b).unwrap();
     let root_a = fixture.path().join("packages/a");
-    let gates = state.config_reload_gates(&[root_a.clone()]);
+    let gates = state.config_reload_gates(std::slice::from_ref(&root_a));
     let held = futures::executor::block_on(gates.first().unwrap().lock());
     let changes_a = vec![FileEvent {
         uri: Url::from_file_path(root_a.join("vite.config.mjs")).unwrap(),
@@ -160,7 +160,7 @@ fn dependency_event_during_preparation_queues_against_the_new_graph() {
     )
     .unwrap();
     std::fs::write(&helper, "export { default } from './next-settings.mjs';").unwrap();
-    let (entered, resume, install) = pause_at(Phase::BeforeConfigInstall);
+    let (entered, resume, install) = pause_at(Phase::ConfigInstall);
     let first_state = state.clone();
     let first = std::thread::spawn(move || {
         install();
@@ -220,7 +220,7 @@ fn removed_secondary_workspace_cannot_install_a_prepared_new_marker_owner() {
         "export default { vue: { languageServer: { hover: false } } };",
     )
     .unwrap();
-    let (entered, resume, install) = pause_at(Phase::BeforeConfigInstall);
+    let (entered, resume, install) = pause_at(Phase::ConfigInstall);
     let worker_state = state.clone();
     let worker = std::thread::spawn(move || {
         install();
@@ -266,7 +266,7 @@ fn cached_document_dispatch_awaits_only_its_own_active_configuration_reload() {
         "export default { vue: { languageServer: { hover: true } } };",
     )
     .unwrap();
-    let (entered, resume, install) = pause_at(Phase::BeforeConfigInstall);
+    let (entered, resume, install) = pause_at(Phase::ConfigInstall);
     let worker_state = state.clone();
     let worker = std::thread::spawn(move || {
         install();

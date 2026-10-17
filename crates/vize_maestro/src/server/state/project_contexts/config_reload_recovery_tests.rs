@@ -48,7 +48,8 @@ fn newly_introduced_missing_or_malformed_inherited_bases_recover_without_config_
                     FileChangeType::CREATED
                 },
             );
-            let repaired = state.observe_project_config_events_checked(&[change.clone()]);
+            let repaired =
+                state.observe_project_config_events_checked(std::slice::from_ref(&change));
             assert!(repaired.errors.is_empty());
             let current = state.document_project_state(&a).unwrap();
             assert!(!Arc::ptr_eq(&before, &current));
@@ -271,14 +272,14 @@ fn failed_incidental_retry_keeps_shared_tsconfig_included_global_source_events_o
         crate::server::importers::open_typecheck_dependents(&sibling, &change.uri).is_empty(),
         "the governing global has no ES import edge"
     );
-    let retry = state.observe_project_config_events_checked(&[change.clone()]);
+    let retry = state.observe_project_config_events_checked(std::slice::from_ref(&change));
     assert!(retry.errors.is_empty());
     assert_eq!(
-        retry.accepted_file_events(&owner, &[change.clone()]),
+        retry.accepted_file_events(&owner, std::slice::from_ref(&change)),
         vec![change.clone()]
     );
     assert_eq!(
-        retry.accepted_file_events(&sibling, &[change.clone()]),
+        retry.accepted_file_events(&sibling, std::slice::from_ref(&change)),
         vec![change]
     );
     assert!(Arc::ptr_eq(

@@ -159,7 +159,7 @@ fn inherited_base_failure_is_checked_even_with_explicit_vite_vue_dialect() {
                 FileChangeType::DELETED
             };
             let change = event(&base, typ);
-            let result = state.observe_project_config_events_checked(&[change.clone()]);
+            let result = state.observe_project_config_events_checked(std::slice::from_ref(&change));
             assert_error(&result, &root, &base);
             assert!(Arc::ptr_eq(
                 &previous,
@@ -169,7 +169,7 @@ fn inherited_base_failure_is_checked_even_with_explicit_vite_vue_dialect() {
             assert!(stamp.is_current(&previous));
             assert!(
                 result
-                    .accepted_file_events(&previous, &[change.clone()])
+                    .accepted_file_events(&previous, std::slice::from_ref(&change))
                     .is_empty()
             );
             assert!(result.accepted_file_events(&sibling, &[change]).is_empty());
@@ -286,10 +286,10 @@ fn config_helper_that_is_also_a_sibling_source_import_still_invalidates_that_imp
     )
     .unwrap();
     let changed = event(&helper, FileChangeType::CHANGED);
-    let result = state.observe_project_config_events_checked(&[changed.clone()]);
+    let result = state.observe_project_config_events_checked(std::slice::from_ref(&changed));
     assert!(result.errors.is_empty());
     assert_eq!(
-        result.accepted_file_events(&sibling, &[changed.clone()]),
+        result.accepted_file_events(&sibling, std::slice::from_ref(&changed)),
         vec![changed]
     );
 }
@@ -337,13 +337,14 @@ fn newly_introduced_missing_or_malformed_imports_recover_on_creation_or_change()
                 &state.document_project_state(&a).unwrap()
             ));
             let unrelated = event(&root.join("src/ordinary.ts"), FileChangeType::CHANGED);
-            let retry = state.observe_project_config_events_checked(&[unrelated.clone()]);
+            let retry =
+                state.observe_project_config_events_checked(std::slice::from_ref(&unrelated));
             assert!(
                 retry.errors.is_empty(),
                 "incidental retries do not repeat editor error toasts"
             );
             assert_eq!(
-                retry.accepted_file_events(&before, &[unrelated.clone()]),
+                retry.accepted_file_events(&before, std::slice::from_ref(&unrelated)),
                 vec![unrelated]
             );
             assert!(Arc::ptr_eq(
@@ -363,7 +364,8 @@ fn newly_introduced_missing_or_malformed_imports_recover_on_creation_or_change()
                     FileChangeType::CREATED
                 },
             );
-            let repaired = state.observe_project_config_events_checked(&[change.clone()]);
+            let repaired =
+                state.observe_project_config_events_checked(std::slice::from_ref(&change));
             assert!(repaired.errors.is_empty());
             let current = state.document_project_state(&a).unwrap();
             assert!(!Arc::ptr_eq(&before, &current));
