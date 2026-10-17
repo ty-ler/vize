@@ -233,3 +233,35 @@ fn unrelated_marker_text_never_creates_owner_directives() {
         (0, 0)
     );
 }
+
+#[test]
+fn static_prop_terminal_quotes_belong_to_ignore_and_skip_without_navigation_widening() {
+    for policy in ["ignore", "skip"] {
+        for newline in ["\n", "\r\n"] {
+            for prefix in ["", "😀日本"] {
+                let source = vize_carton::cstr!(
+                    "<script setup lang=\"ts\">import Comp from './Comp.vue'; const value = 1;</script>{newline}<template>{prefix}<!-- @vue-{policy} -->{newline}<Comp id=\"bad\">{{{{ value.bad }}}}</Comp></template>"
+                );
+                let result = transform(&source);
+                let directives = result.diagnostic_directives.unwrap();
+                assert!(directives.unused_expect_directive_diagnostics.is_empty());
+                let literal = result.text.find(" = \"bad\";").unwrap() + " = ".len();
+                let closing_quote = literal + "\"bad\"".len() - 1;
+                assert!(covered(&directives.directives, closing_quote));
+                assert!(
+                    !result.mappings.iter().any(|span| {
+                        let [start, length, _, _, _, _] = span.0;
+                        start <= closing_quote && closing_quote < start + length
+                    }),
+                    "navigation must retain its exact interior-only mapping"
+                );
+                let child = source.find("value.bad").unwrap();
+                let child_positions = mapped_positions(&result.mappings, child);
+                assert!(!child_positions.is_empty());
+                assert!(child_positions.iter().all(|position| {
+                    covered(&directives.directives, *position) == (policy == "skip")
+                }));
+            }
+        }
+    }
+}

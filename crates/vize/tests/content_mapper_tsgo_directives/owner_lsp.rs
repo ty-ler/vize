@@ -205,9 +205,9 @@ fn run_session(
                 (
                     "ignore",
                     source.replace("@vue-expect-error", "@vue-ignore"),
-                    5,
+                    4,
                 ),
-                ("skip", source.replace("@vue-expect-error", "@vue-skip"), 4),
+                ("skip", source.replace("@vue-expect-error", "@vue-skip"), 3),
             ];
             for (index, (name, source, count)) in states.into_iter().enumerate() {
                 let document = overlay.replace(&uri, source.as_str()).unwrap();
@@ -316,7 +316,7 @@ fn expected_report(source: &str, state: &str) -> Value {
             "Type '\"bad\"' is not assignable to type '\"ok\"'.",
         ));
     }
-    if ["calibration", "ignore", "skip"].contains(&state) {
+    if state == "calibration" {
         let value_end = source.find("id=\"bad\"").unwrap() + "id=\"bad".len();
         items.push(diagnostic(
             source,
@@ -354,18 +354,23 @@ fn parameter_suggestions(source: &str) -> Vec<Value> {
 }
 
 fn old_expected_report(source: &str, state: &str) -> Value {
-    if [
-        "both-bad",
-        "prop-fixed",
-        "handler-fixed",
-        "parents-fixed",
-        "both-restored",
-    ]
-    .contains(&state)
-    {
-        // Actual OLD RED: legitimate script suggestions remain, child is lost.
-        json!({"kind":"full","items":parameter_suggestions(source)})
-    } else {
-        expected_report(source, state)
+    let mut report = expected_report(source, state);
+    if ["ignore", "skip"].contains(&state) {
+        // Frozen complete 8df baseline: only this terminal-quote diagnostic
+        // is removed by the candidate; the unmapped aggregate stays visible.
+        let value_end = source.find("id=\"bad\"").unwrap() + "id=\"bad".len();
+        let index = usize::from(state == "ignore");
+        report["items"].as_array_mut().unwrap().insert(
+            index,
+            diagnostic(
+                source,
+                value_end,
+                0,
+                2322,
+                "ts",
+                "Type '\"bad\"' is not assignable to type '\"ok\"'.",
+            ),
+        );
     }
+    report
 }

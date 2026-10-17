@@ -6,7 +6,6 @@ import {
   mkdir,
   copyFile,
   readdir,
-  unlink,
   path,
   sha256,
   json,
@@ -17,28 +16,22 @@ import {
 } from "./owner-process.mjs";
 
 const root = path.resolve(process.env.RUNNER_TEMP, "directive-owners");
-const baseline = "8d3ca7bbc544ec1d8cf8e275cc758037c5289237";
+const baseline = "8df6e1fe3e8e91fe2a0adbb4633d1de38e81e506";
 const overlay = [
   "crates/vize/tests/content_mapper_tsgo_directives.rs",
   "crates/vize/tests/content_mapper_tsgo_directives/owners.rs",
   "crates/vize/tests/content_mapper_tsgo_directives/owner_lsp.rs",
 ];
 const owned = [
-  ...overlay,
-  ".github/workflows/content-mapper-conformance.yml",
-  "crates/vize_canon/src/template_diagnostic_directives.rs",
-  "crates/vize_canon/src/template_diagnostic_directives/tests.rs",
-  "crates/vize_canon/src/batch/virtual_project/content_mapper_directive_tests.rs",
+  overlay[2],
   ...[
-    "scope.rs",
-    "scope/closures.rs",
-    "scope/component_props.rs",
-    "scope/component_prop_navigation.rs",
-    "scope/root_owner_packets.rs",
-    "scope/root_owner_packets/tests.rs",
-  ].map((file) => `crates/vize_canon/src/virtual_ts/${file}`),
-  "docs/davinci/decisions/2026-10-17-content-mapper-static-owner-packets.md",
-  ...["owner-process.mjs", "owner-verify.mjs", "owner-qualify.mjs"].map(
+    "content_mapper.rs",
+    "content_mapper_directives.rs",
+    "content_mapper_directive_tests.rs",
+    "content_mapper_diagnostic_ranges_tests.rs",
+  ].map((file) => `crates/vize_canon/src/batch/virtual_project/${file}`),
+  "docs/davinci/decisions/2026-10-17-content-mapper-diagnostic-leaf-ranges.md",
+  ...["owner-verify.mjs", "owner-qualify.mjs"].map(
     (file) => `tools/support/compat/content-mapper/${file}`,
   ),
 ];
@@ -53,6 +46,10 @@ const unitFilters = [
   "static_component_expect_owns_one_packet_without_its_child",
   "borrowed_root_preserves_the_complete_canonical_policy_with_offsets",
   "unrelated_marker_text_never_creates_owner_directives",
+  "content_mapper::directives::tests",
+  "static_prop_terminal_quotes_belong_to_ignore_and_skip_without_navigation_widening",
+  "ignore_directive_owns_parent_checks_without_hiding_child_checks",
+  "skip_directive_owns_parent_and_child_checks",
 ];
 const env = {
   VIZE_TEST_CONTENT_MAPPER_TSGO: path.resolve(process.env.RUNNER_TEMP, "tsgo"),
@@ -181,7 +178,10 @@ async function units(artifacts) {
   const results = [];
   for (const filter of unitFilters) {
     const names = allNames.filter((name) => name.includes(filter));
-    assert.equal(names.length, filter === "root_owner_packets" ? 3 : 1);
+    assert.equal(
+      names.length,
+      ["root_owner_packets", "content_mapper::directives::tests"].includes(filter) ? 3 : 1,
+    );
     const result = await test(
       executable,
       [filter, "--nocapture"],
@@ -313,20 +313,20 @@ try {
   );
   assert.equal(overlayPatch.status, 0);
   await writeFile(path.join(root, "old-test-overlay.patch"), overlayPatch.stdout);
-  assert.equal((await git("ls-tree", "-r", baseline, "--", ...overlay)).split("\n").length, 1);
+  assert.equal((await git("ls-tree", "-r", baseline, "--", ...overlay)).split("\n").length, 3);
   for (const [file, bytes] of saved) {
     const destination = path.join(root, "test-overlay", file);
     await mkdir(path.dirname(destination), { recursive: true });
     await writeFile(destination, bytes);
   }
   const trackedOverlay = await git("diff", "--name-only", "HEAD");
-  assert.equal(trackedOverlay, overlay[0]);
+  assert.equal(trackedOverlay, overlay[2]);
   const untrackedOverlay = (
     await git("ls-files", "--others", "--exclude-standard", "--", ...overlay)
   )
     .split("\n")
     .sort();
-  assert.deepEqual(untrackedOverlay, overlay.slice(1).toSorted());
+  assert.deepEqual(untrackedOverlay.filter(Boolean), []);
   await json(path.join(root, "old-test-overlay-status.json"), {
     trackedOverlay,
     untrackedOverlay,
@@ -337,8 +337,7 @@ try {
     await build("old", ["-p", "vize", "--test", "content_mapper_tsgo_directives"]),
   );
   for (const [file, bytes] of saved) assert.equal(sha256(await readFile(file)), sha256(bytes));
-  await git("restore", "--source", baseline, "--worktree", "--", overlay[0]);
-  for (const file of overlay.slice(1)) await unlink(file);
+  await git("restore", "--source", baseline, "--worktree", "--", ...overlay);
   await git("checkout", "--detach", candidate);
   assert.equal(await git("status", "--porcelain", "--untracked-files=no"), "");
   const artifacts = await build("new", [

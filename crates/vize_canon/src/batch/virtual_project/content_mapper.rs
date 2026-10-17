@@ -185,7 +185,11 @@ pub fn generate_vue_content_mapper_transform_with_options(
     let spans = protocol_spans(content, &code, &mappings);
     Ok(ContentMapperTransform {
         extension: CONTENT_MAPPER_VIRTUAL_EXTENSION,
-        diagnostic_directives: template_diagnostic_directives(descriptor.template.as_ref(), &spans),
+        diagnostic_directives: template_diagnostic_directives(
+            descriptor.template.as_ref(),
+            &spans,
+            &mappings,
+        ),
         mappings: spans,
         semantic_links: protocol_semantic_links(&semantic_links),
         diagnostics: diagnostics

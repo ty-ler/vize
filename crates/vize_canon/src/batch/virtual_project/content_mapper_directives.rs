@@ -11,6 +11,7 @@ use vize_atelier_sfc::SfcTemplateBlock;
 use vize_l0::String as CompactString;
 
 use crate::template_diagnostic_directives::{DirectivePolicy, TemplateDiagnosticDirectives};
+use crate::virtual_ts::VizeMapping;
 
 use super::protocol::{
     ContentMapperDiagnosticDirective, ContentMapperDiagnosticDirectives, ContentMapperSpan,
@@ -25,6 +26,7 @@ const UNUSED_EXPECT_CODE: i32 = 4;
 pub(super) fn template_diagnostic_directives(
     template: Option<&SfcTemplateBlock<'_>>,
     spans: &[ContentMapperSpan],
+    mappings: &[VizeMapping],
 ) -> Option<ContentMapperDiagnosticDirectives> {
     let template = template?;
     let authored = TemplateDiagnosticDirectives::for_template(template);
@@ -32,7 +34,15 @@ pub(super) fn template_diagnostic_directives(
     let mut expects_unused_table = false;
 
     for directive in authored.directives() {
-        let ranges = mapped_virtual_ranges(spans, &directive.targets);
+        let ranges = if directive.policy == DirectivePolicy::Expect {
+            mapped_virtual_ranges(spans, &directive.targets)
+        } else {
+            // Navigation spans may trim a generated literal to its authored
+            // interior. TypeScript can diagnose the closing quote, so ignore
+            // and skip must retain the complete owned diagnostic projection.
+            // Keep disjoint leaf ranges; never claim intervening child checks.
+            mapped_diagnostic_ranges(mappings, &directive.targets)
+        };
         let policy = match directive.policy {
             DirectivePolicy::Expect => {
                 expects_unused_table = true;
@@ -92,7 +102,7 @@ fn mapped_virtual_ranges(
     spans: &[ContentMapperSpan],
     targets: &[Range<usize>],
 ) -> Vec<Range<usize>> {
-    let mut ranges = spans
+    let ranges = spans
         .iter()
         .filter_map(
             |ContentMapperSpan([generated, length, original, original_length, _, _])| {
@@ -104,6 +114,36 @@ fn mapped_virtual_ranges(
             },
         )
         .collect::<Vec<_>>();
+    merge_ranges(ranges)
+}
+
+fn mapped_diagnostic_ranges(
+    mappings: &[VizeMapping],
+    targets: &[Range<usize>],
+) -> Vec<Range<usize>> {
+    let mut ranges = Vec::new();
+    let mut retain = |generated: &Range<usize>, original: &Range<usize>| {
+        if !generated.is_empty()
+            && targets
+                .iter()
+                .any(|target| original.start < target.end && target.start < original.end)
+        {
+            ranges.push(generated.clone());
+        }
+    };
+    for mapping in mappings {
+        if mapping.sub_spans.is_empty() {
+            retain(&mapping.gen_range, &mapping.src_range);
+        } else {
+            for span in &mapping.sub_spans {
+                retain(&span.gen_range, &span.src_range);
+            }
+        }
+    }
+    merge_ranges(ranges)
+}
+
+fn merge_ranges(mut ranges: Vec<Range<usize>>) -> Vec<Range<usize>> {
     ranges.sort_unstable_by_key(|range| range.start);
     let mut merged: Vec<Range<usize>> = Vec::new();
     for range in ranges {
@@ -117,3 +157,7 @@ fn mapped_virtual_ranges(
     }
     merged
 }
+
+#[cfg(test)]
+#[path = "content_mapper_diagnostic_ranges_tests.rs"]
+mod tests;

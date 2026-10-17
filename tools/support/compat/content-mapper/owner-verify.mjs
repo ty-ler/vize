@@ -67,12 +67,12 @@ export async function verify(root) {
       await readFile(path.join(current, "Owner.vue")),
     );
     const oldOutcome = await load(path.join(baseline, "outcome.json"));
-    assert.equal(
-      oldOutcome.status,
-      0,
-      `genuine OLD RED case-${index}: child must be wrongly suppressed`,
+    assert.equal(oldOutcome.status, 1, `genuine baseline expectation case-${index}`);
+    assert.equal(oldOutcome.success, false);
+    assert.deepEqual(
+      await readFile(path.join(baseline, "stdout.bin")),
+      await readFile(path.join(current, "expected.bin")),
     );
-    assert.equal((await readFile(path.join(baseline, "stdout.bin"))).length, 0);
     assert.equal((await readFile(path.join(baseline, "stderr.bin"))).length, 0);
     const outcome = await load(path.join(current, "outcome.json"));
     assert(Number.isInteger(outcome.status) && outcome.status !== 0);
@@ -120,8 +120,22 @@ export async function verify(root) {
       assert.deepEqual(oldReport, oldExpected, `OLD full LSP ${session}/${index}`);
       if ([0, 9, 10].includes(index)) {
         // These exact inherited failures are OPEN fronts, not semantic acceptance.
-        assert.deepEqual(oldReport, current, `known-failing whole fallback ${session}/${index}`);
         assert.equal(current.items.filter((item) => item.code === 100036).length, 1);
+        if (index === 0) {
+          assert.deepEqual(oldReport, current, `unchanged calibration ${session}`);
+        } else {
+          const leak = index === 9 ? 1 : 0;
+          const expectedLeak = oldExpected.items[leak];
+          assert.equal(expectedLeak.code, 2322);
+          assert.equal(expectedLeak.message, `Type '"bad"' is not assignable to type '"ok"'.`);
+          assert.deepEqual(expectedLeak.range.start, expectedLeak.range.end);
+          assert.equal(oldReport.items.length, current.items.length + 1);
+          assert.deepEqual(
+            oldReport.items.toSpliced(leak, 1),
+            current.items,
+            `only the exact historical terminal-quote leak may disappear ${session}/${index}`,
+          );
+        }
       } else {
         assert(
           !current.items.some((item) => item.code === 100036),
@@ -183,16 +197,7 @@ export async function verify(root) {
     assert(parentRows.length > 0 && childRows.length > 0);
     assert(parentRows.every(([at, len]) => start <= at && at + len <= end));
     assert(childRows.every(([at, len]) => at + len <= start || end <= at));
-    const [, , oldStart, oldEnd] = d1.directives[0];
-    assert(
-      before.mappings.some(
-        ([at, len, original, originalLength]) =>
-          original <= child &&
-          child < original + originalLength &&
-          oldStart <= at &&
-          at + len <= oldEnd,
-      ),
-    );
+    assert.deepEqual(before, after, `complete expectation transform unchanged ${index}`);
   }
   for (const [phase, expected] of [
     [old, 101],
@@ -200,7 +205,7 @@ export async function verify(root) {
   ]) {
     for (const selector of ["cli-test", "lsp-test"]) {
       const outcome = await load(path.join(phase, selector, "outcome.json"));
-      assert.equal(outcome.status, expected);
+      assert.equal(outcome.status, phase === old && selector === "cli-test" ? 0 : expected);
       assert.equal(outcome.signal, null);
       const stdout = await readFile(path.join(phase, selector, "stdout.bin"), "utf8");
       assert.match(stdout, /running 1 test/);
@@ -209,7 +214,7 @@ export async function verify(root) {
     }
   }
   const unit = await load(path.join(candidate, "unit-results.json"));
-  assert.equal(unit.length, 4);
+  assert.equal(unit.length, 8);
   unit.forEach((result) => {
     assert.equal(result.status, 0);
     assert.equal(result.signal, null);
@@ -250,15 +255,17 @@ export async function verify(root) {
     );
   }
   const verdict = {
-    oldActualRed: 16,
+    oldTerminalQuoteRedReports: 8,
     cliWhole: 16,
     calibrations: 4,
     lspWholeReportsAsserted: 44,
     boundedOwnerAcceptance: 32,
-    unchangedKnownFrontiers: 12,
+    unchangedKnownFrontiers: 4,
+    partiallyRepairedKnownFrontiers: 8,
+    remainingUnmappedFrontiers: 12,
     overall6258SemanticAcceptance: false,
     transforms: 16,
-    unitFilters: 4,
+    unitFilters: 8,
     stockRustTests: stock.map(({ name, names, pureNames, backendDependentNames }) => ({
       name,
       count: names.length,
