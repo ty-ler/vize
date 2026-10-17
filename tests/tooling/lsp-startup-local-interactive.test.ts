@@ -73,6 +73,9 @@ const chosen = palette.tone;
           1000,
         );
         const elapsed = performance.now() - started;
+        process.stdout.write(
+          `${JSON.stringify({ method, elapsedMs: elapsed, phase: "initial native preparation" })}\n`,
+        );
         assert.ok(
           elapsed < 100,
           `${method} source-local response took ${elapsed.toFixed(1)}ms during native preparation`,
@@ -107,6 +110,9 @@ const chosen = palette.tone;
         10_000,
       )) as PublishDiagnosticsParams;
       assert.deepEqual(terminal.diagnostics, []);
+      process.stdout.write(
+        `${JSON.stringify({ terminalAfterOpenMs: performance.now() - openedAt, version: terminal.version, diagnostics: terminal.diagnostics })}\n`,
+      );
       assert.ok(
         performance.now() - openedAt >= 1000,
         "terminal type diagnostics must preserve the entire initial grace",
