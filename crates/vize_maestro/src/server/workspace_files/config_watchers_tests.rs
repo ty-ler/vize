@@ -18,6 +18,7 @@ use tower_lsp::{
 )]
 type RootOwner = std::sync::Arc<Control>;
 
+#[cfg(test)]
 #[path = "config_watchers_protocol_tests.rs"]
 mod protocol;
 use protocol::protocol_send;
