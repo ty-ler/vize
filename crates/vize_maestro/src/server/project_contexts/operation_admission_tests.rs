@@ -26,7 +26,7 @@ fn incomplete_config_failure_evaluates_once_for_did_change_and_two_same_root_imp
     server.state.set_workspace_root(root.clone());
     server.state.load_workspace_config(&root);
     server.state.apply_lsp_initialization_options(Some(
-        &json!({"lint":false,"typecheck":false,"ecosystem":false}),
+        &json!({"lint":true,"typecheck":false,"ecosystem":false}),
     ));
     let leaf = Url::from_file_path(root.join("Leaf.vue")).unwrap();
     let importers =
@@ -105,7 +105,7 @@ fn importer_fanout_checks_each_other_root_once_and_applies_its_actual_new_policy
     server.state.set_workspace_folders(vec![root.clone()]);
     server.state.load_workspace_config(&root);
     server.state.apply_lsp_initialization_options(Some(
-        &json!({"lint":false,"typecheck":false,"ecosystem":false}),
+        &json!({"lint":true,"typecheck":false,"ecosystem":false}),
     ));
     let leaf = Url::from_file_path(a.join("Leaf.vue")).unwrap();
     let importers = [&a, &b]

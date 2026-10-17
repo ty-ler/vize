@@ -16,7 +16,7 @@ fn nested_vite_and_tsconfig_markers_create_repair_and_delete_without_watch_notif
         ),
         (
             "tsconfig.json",
-            r#"{"vueCompilerOptions":{"target":"2.7"}}"#,
+            r#"{"vueCompilerOptions":{"target":2.7}}"#,
             "{ broken syntax",
         ),
     ] {
@@ -123,7 +123,7 @@ fn rejected_changed_input_baselines_confirm_now_stable_initial_and_reload_revisi
         let root = fixture.path().join("packages/a");
         let config = root.join("tsconfig.json");
         if !initial_absence {
-            std::fs::write(&config, r#"{"vueCompilerOptions":{"target":"2.7"}}"#).unwrap();
+            std::fs::write(&config, r#"{"vueCompilerOptions":{"target":2.7}}"#).unwrap();
         }
         let previous = state.document_project_state(&a).unwrap();
         let observed = vize_canon::CompilerConfigurationSnapshot::capture(
@@ -145,7 +145,7 @@ fn rejected_changed_input_baselines_confirm_now_stable_initial_and_reload_revisi
             .unwrap();
         // The exact old consumed observations differ from the now-valid final
         // revision, as when checked admission rejects an in-flight edit.
-        std::fs::write(&config, r#"{"vueCompilerOptions":{"target":"3.5"}}"#).unwrap();
+        std::fs::write(&config, r#"{"vueCompilerOptions":{"target":3.5}}"#).unwrap();
         assert!(!observed.observations().changed_paths().is_empty());
         let failed = super::freshness::ConfigurationObservation::failed(
             &raw,

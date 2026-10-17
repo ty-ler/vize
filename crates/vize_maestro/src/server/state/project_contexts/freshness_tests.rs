@@ -11,10 +11,10 @@ fn refresh(state: &Arc<ServerState>, uri: &Url) -> super::config_reload::Project
     block_on(state.refresh_document_configuration_async(uri))
 }
 
-fn write_base(path: &Path, target: &str) {
+fn write_base(path: &Path, target: f64) {
     std::fs::write(
         path,
-        format!(r#"{{"vueCompilerOptions":{{"target":"{target}"}}}}"#),
+        serde_json::json!({"vueCompilerOptions":{"target":target}}).to_string(),
     )
     .unwrap();
 }
@@ -24,7 +24,7 @@ fn ordinary_boundary_reloads_inherited_options_and_preserves_sibling_and_unsaved
     let (fixture, state, a, b) = tests::fixture();
     let root = fixture.path().join("packages/a");
     let base = root.join("base.json");
-    write_base(&base, "2.7");
+    write_base(&base, 2.7);
     std::fs::write(root.join("tsconfig.json"), r#"{"extends":"./base.json"}"#).unwrap();
     state.documents.open(
         a.clone(),
@@ -44,7 +44,7 @@ fn ordinary_boundary_reloads_inherited_options_and_preserves_sibling_and_unsaved
     assert_eq!(state.project_routing_generation(), generation);
     assert!(Arc::ptr_eq(&previous, &current(&state, &a)));
 
-    write_base(&base, "3");
+    write_base(&base, 3.0);
     assert!(refresh(&state, &a).errors.is_empty());
     let next = current(&state, &a);
     assert!(!Arc::ptr_eq(&previous, &next));
@@ -62,7 +62,7 @@ fn failed_boundary_retains_owner_without_repeated_errors_and_repairs_new_externa
     let (fixture, state, a, _) = tests::fixture();
     let root = fixture.path().join("packages/a");
     let config = root.join("tsconfig.json");
-    std::fs::write(&config, r#"{"vueCompilerOptions":{"target":"2.7"}}"#).unwrap();
+    std::fs::write(&config, r#"{"vueCompilerOptions":{"target":2.7}}"#).unwrap();
     current(&state, &a);
     assert!(refresh(&state, &a).errors.is_empty());
     let previous = current(&state, &a);
@@ -79,7 +79,7 @@ fn failed_boundary_retains_owner_without_repeated_errors_and_repairs_new_externa
     assert!(watched.contains(&super::paths::physical_path(&base)));
     assert!(refresh(&state, &a).errors.is_empty());
     assert!(Arc::ptr_eq(&previous, &current(&state, &a)));
-    write_base(&base, "3");
+    write_base(&base, 3.0);
     assert!(refresh(&state, &a).errors.is_empty());
     assert_eq!(current(&state, &a).type_checker_vue_version().as_str(), "3");
     assert!(!Arc::ptr_eq(&previous, &current(&state, &a)));
