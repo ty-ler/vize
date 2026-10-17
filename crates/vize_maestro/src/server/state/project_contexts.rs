@@ -16,7 +16,10 @@ use std::{
 use tower_lsp::lsp_types::{ClientCapabilities, Url};
 use vize_l0::FxHashMap;
 
-use super::{LspFeatureConfig, ServerState};
+use super::{
+    LspFeatureConfig, ServerState,
+    config::host::{LoadedLspConfig, ProjectModel, load_lsp_config_snapshot},
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(super) struct ProjectContextKey {
@@ -35,8 +38,8 @@ impl From<PathBuf> for ProjectContextKey {
 
 #[derive(Clone)]
 pub(super) struct RetainedConfiguration {
-    authored: vize_carton::config::LoadedLspConfig,
-    applied: vize_carton::config::LoadedLspConfig,
+    authored: LoadedLspConfig,
+    applied: LoadedLspConfig,
 }
 
 #[derive(Default)]
@@ -49,8 +52,8 @@ pub(super) struct ProjectContexts {
     boundary: RwLock<Option<PathBuf>>,
     pub(super) config_dependencies: RwLock<Vec<PathBuf>>,
     pub(super) key: RwLock<Option<ProjectContextKey>>,
-    pub(super) loaded_config: RwLock<Option<vize_carton::config::LoadedLspConfig>>,
-    pub(super) applied_config: RwLock<Option<vize_carton::config::LoadedLspConfig>>,
+    pub(super) loaded_config: RwLock<Option<LoadedLspConfig>>,
+    pub(super) applied_config: RwLock<Option<LoadedLspConfig>>,
     pub(super) config_reload_failed: AtomicBool,
     reference_ownership: Mutex<vize_canon::batch::TsconfigOwnershipCache>,
     contexts: Mutex<FxHashMap<ProjectContextKey, Arc<registry::ProjectContext>>>,
@@ -192,7 +195,7 @@ impl ServerState {
     fn new_project_state(
         self: &Arc<Self>,
         key: &ProjectContextKey,
-        snapshot: Option<&vize_carton::config::LoadedLspConfig>,
+        snapshot: Option<&LoadedLspConfig>,
         previous: Option<&RetainedConfiguration>,
         snapshot_failed: bool,
     ) -> Arc<ServerState> {
@@ -205,7 +208,7 @@ impl ServerState {
         state.set_workspace_root(root.to_path_buf());
         let loaded = snapshot
             .cloned()
-            .unwrap_or_else(|| vize_carton::config::load_lsp_config_snapshot(Some(root)));
+            .unwrap_or_else(|| load_lsp_config_snapshot(Some(root)));
         if !state.apply_workspace_config_snapshot(root, loaded)
             && let Some(previous) = previous
         {
