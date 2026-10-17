@@ -34,7 +34,7 @@ jobs:
         with:
           persist-credentials: false
           # Diagnostic producer adds only reviewed guard observations to product06a.
-          ref: 279d0a12095aa1e04de0a7114c210d39aab83242
+          ref: 62c38ff7c1e8b2c66d5aa71ef36b2923defc74f5
       # The runner's rustup installs the toolchain pinned in rust-toolchain.toml.
       - name: Install the repository Rust toolchain
         run: |
@@ -51,7 +51,7 @@ jobs:
       - name: Build vize CLI
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 279d0a12095aa1e04de0a7114c210d39aab83242
+          test "$(git rev-parse HEAD)" = 62c38ff7c1e8b2c66d5aa71ef36b2923defc74f5
           cargo build --profile ci -p vize
           {
             echo "producer=$(git rev-parse HEAD)"
