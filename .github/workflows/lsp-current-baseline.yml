@@ -1,11 +1,11 @@
 name: Current-source LSP baseline
 
-# Finite, manually approved RPC baseline. Ordinary PR checks run pure controls.
+# Diagnostic branch only: one approved ordinary CLI case on two reviewed sources.
 on:
   workflow_dispatch:
     inputs:
       source_sha:
-        description: Exact reviewed source SHA (must equal the dispatched ref)
+        description: Exact reviewed diagnostic carrier SHA (must equal dispatched ref)
         required: true
         type: string
 
@@ -22,25 +22,43 @@ env:
   NODE_OPTIONS: "--disable-warning=DEP0040 --disable-warning=DEP0169"
 
 jobs:
-  misskey:
+  ordinary-rename:
+    name: Ordinary rename ${{ matrix.case }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - case: before-06a
+            producer: 006db2c6daa9c65df920864ab3838bd106d2b217
+            product: 06a51573858160eca1dfe4d54a06f90812f0f6b9
+          - case: after-574
+            producer: 4ab561447b51886f7ca9e29c81ed19aee0e89aaf
+            product: 574da6d432febac6056840e450e2fd422ac2ec16
     env:
-      VIZE_BASELINE_EXPECTED_SOURCE: ${{ inputs.source_sha }}
-      VIZE_PERF_BUDGET_SCALE: "1"
-      RAYON_NUM_THREADS: "4"
+      VIZE_SOURCE_PRODUCER: ${{ matrix.producer }}
+      VIZE_DIAGNOSTIC_CARRIER: ${{ inputs.source_sha }}
+      VIZE_PRODUCT_SOURCE: ${{ matrix.product }}
+      VIZE_TEST_CASE: library_refusal::original_emit_string_keeps_atomic_owned_updates_and_unsafe_name_refusals_without_file_writes
+      RUST_LOG: info
+      VIZE_TRACE_CANONICAL_RENAME: "1"
+      VIZE_LSP_PASSIVE_EVIDENCE: ${{ runner.temp }}/ordinary-rename/processes
+      SOURCE_SHA: ${{ matrix.producer }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ inputs.source_sha }}
+          ref: ${{ matrix.producer }}
           persist-credentials: false
-      - name: Refuse a stale or different dispatch source
+      - name: Refuse unreviewed source or stale diagnostic carrier
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$VIZE_BASELINE_EXPECTED_SOURCE" =~ ^[0-9a-f]{40}$ ]]
-          test "$(git rev-parse HEAD)" = "$VIZE_BASELINE_EXPECTED_SOURCE"
-          test "$GITHUB_SHA" = "$VIZE_BASELINE_EXPECTED_SOURCE"
+          [[ "$VIZE_SOURCE_PRODUCER" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$VIZE_DIAGNOSTIC_CARRIER" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$VIZE_SOURCE_PRODUCER"
+          test "$GITHUB_SHA" = "$VIZE_DIAGNOSTIC_CARRIER"
+          git diff --exit-code
       - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
         with:
           node-version-file: package.json
@@ -48,8 +66,6 @@ jobs:
           run-install: false
       - name: Install locked JavaScript and native TypeScript dependencies
         run: vp install --frozen-lockfile --prefer-offline
-      - name: Hydrate only the pinned Misskey fixture
-        run: git submodule update --init --depth 1 tests/_fixtures/_git/misskey
       - name: Install repository Rust toolchain
         run: |
           rustup toolchain install || rustup show active-toolchain
@@ -61,20 +77,113 @@ jobs:
         with:
           key: lsp-current-baseline
           cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
-      - name: Build and receipt the exact current source server
+      - name: Run the exact ordinary CLI rename case and retain its actual result
+        shell: bash
         run: |
-          cargo build --profile ci -p vize
-          node tests/differential/build-receipt.ts
-      - name: Qualify pure observation and refusal laws
-        run: node --test tests/tooling/lsp-current-baseline*.test.ts tests/tooling/lsp-session-capture.test.ts
-      - name: Measure three serial fresh sessions with all original checks
-        run: node tests/performance/lsp-current-baseline.ts
+          set -euo pipefail
+          evidence="${RUNNER_TEMP}/ordinary-rename"
+          mkdir -p "$evidence"
+          {
+            echo "producer=$(git rev-parse HEAD)"
+            echo "product=${VIZE_PRODUCT_SOURCE}"
+            echo "harness=${GITHUB_SHA}"
+            echo 'recipe=cargo test --locked --profile ci -p vize --features profiling --message-format=json --test lsp_component_attribute_authority_cli library_refusal::original_emit_string_keeps_atomic_owned_updates_and_unsafe_name_refusals_without_file_writes -- --exact --nocapture'
+            rustc --version --verbose
+            cargo --version
+            sha256sum rust-toolchain.toml Cargo.lock pnpm-lock.yaml
+          } > "$evidence/producer.txt"
+          git diff --exit-code
+          set +e
+          cargo test --locked --profile ci -p vize --features profiling --message-format=json --test lsp_component_attribute_authority_cli library_refusal::original_emit_string_keeps_atomic_owned_updates_and_unsafe_name_refusals_without_file_writes -- --exact --nocapture > "$evidence/cargo.stdout.jsonl" 2> "$evidence/cargo.stderr.log"
+          test_status=$?
+          set -e
+          printf '%s\n' "$test_status" > "$evidence/exit-status.txt"
+          capture_status=0
+          node --input-type=module - "$evidence" "$test_status" <<'NODE' || capture_status=$?
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import { createHash } from 'node:crypto';
+          import { execFileSync } from 'node:child_process';
+          const [output, status] = process.argv.slice(2);
+          const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+          const stdout = fs.readFileSync(path.join(output, 'cargo.stdout.jsonl'), 'utf8');
+          const rows = stdout.split('\n').flatMap(line => {
+            try { return [JSON.parse(line)]; } catch { return []; }
+          });
+          const artifacts = rows.filter(row => row.reason === 'compiler-artifact'
+            && row.target?.name === 'vize' && row.target?.kind?.includes('bin') && row.executable);
+          assert.equal(artifacts.length, 1, 'one real Cargo-reported vize BIN row is required');
+          const artifact = artifacts[0];
+          const actual = fs.realpathSync(artifact.executable);
+          const bytes = fs.readFileSync(actual);
+          assert.equal(bytes.subarray(0, 4).toString('hex'), '7f454c46', 'actual image must be ELF');
+          const frozen = path.join(output, 'cargo-reported-vize');
+          fs.copyFileSync(actual, frozen);
+          assert.equal(hash(fs.readFileSync(frozen)), hash(bytes));
+          const producer = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+          assert.equal(producer, process.env.VIZE_SOURCE_PRODUCER);
+          const paths = execFileSync('git', ['ls-files', '-z', '--',
+            'crates/vize/tests/lsp_component_attribute_authority_cli.rs',
+            'crates/vize/tests/lsp_component_attribute_authority_cli/',
+            'crates/vize/tests/lsp_library_rename_refusal_cli/',
+            'crates/vize/tests/support/', 'tests/_fixtures/differential/lsp/'],
+            { encoding: 'utf8' }).split('\0').filter(Boolean);
+          const testSourceHashes = paths.map(file => ({ path: file, sha256: hash(fs.readFileSync(file)) }));
+          const processes = fs.readdirSync(path.join(output, 'processes'), { withFileTypes: true })
+            .filter(entry => entry.isDirectory()).map(entry => {
+              const directory = path.join(output, 'processes', entry.name);
+              const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'manifest.json'), 'utf8'));
+              const complete = fs.readFileSync(path.join(directory, 'complete-evidence.json'));
+              const bounded = fs.readFileSync(path.join(directory, 'evidence.json'));
+              assert.equal(complete.length, manifest.originalBytes);
+              assert.equal(hash(complete), manifest.originalSha256);
+              assert.equal(bounded.length, manifest.persistedBytes);
+              assert.equal(hash(bounded), manifest.persistedSha256);
+              assert.deepEqual(bounded, complete.subarray(0, bounded.length));
+              const evidence = JSON.parse(complete);
+              assert.equal(evidence.process.sourceSha, producer);
+              assert.equal(evidence.process.extraIdentityProbe, false);
+              const terminal = evidence.terminalEvidence;
+              assert.equal(terminal.sourceSha, producer);
+              assert.equal(fs.realpathSync(terminal.executable), actual);
+              assert.equal(terminal.stdoutReaderJoined, true);
+              assert.equal(terminal.stderrReaderJoined, true);
+              assert.ok(Array.isArray(terminal.protocol) && terminal.protocol.length > 0);
+              const stderr = Buffer.from(terminal.stderrBytes);
+              fs.writeFileSync(path.join(directory, 'native.stderr.log'), stderr);
+              return { directory, completeSha256: hash(complete), manifest,
+                stderrBytes: stderr.length, stderrSha256: hash(stderr),
+                representation: terminal.protocolRepresentation,
+                identityScope: evidence.process.identityScope };
+            });
+          assert.ok(processes.length > 0, 'actual original native process evidence is required');
+          const nativeLog = 'node_modules/.vize/lsp.log';
+          const repositoryLog = fs.existsSync(nativeLog)
+            ? { path: nativeLog, sha256: hash(fs.readFileSync(nativeLog)) } : null;
+          if (repositoryLog) fs.copyFileSync(nativeLog, path.join(output, 'repository-lsp.log'));
+          const runningExactlyOne = /^running 1 test\r?$/m.test(stdout);
+          fs.writeFileSync(path.join(output, 'receipt.json'), JSON.stringify({
+            producerSha: producer, productSha: process.env.VIZE_PRODUCT_SOURCE,
+            harnessSha: process.env.GITHUB_SHA, cargoExitStatus: Number(status),
+            expectedFeatures: ['default', 'glyph', 'maestro', 'profiling'],
+            cargoArtifact: artifact, runningExactlyOne, testCase: process.env.VIZE_TEST_CASE,
+            binary: { cargoReportedPath: artifact.executable, physicalPath: actual, frozenPath: frozen, sha256: hash(bytes) },
+            testSourceHashes, processes, repositoryLog,
+            toolchain: fs.readFileSync(path.join(output, 'producer.txt'), 'utf8'),
+            nativeProcessIdentity: 'Original spawned PID and declared command only; no physical PID/image join is inferred.'
+          }, null, 2) + '\n');
+          assert.deepEqual([...artifact.features].sort(), ['default', 'glyph', 'maestro', 'profiling']);
+          assert.ok(runningExactlyOne, 'exactly one filtered ordinary native CLI case must run');
+          assert.ok(stdout.includes(process.env.VIZE_TEST_CASE), 'the requested full test name must be observed');
+          NODE
+          printf '%s\n' "$capture_status" > "$evidence/capture-status.txt"
+          if [ "$test_status" -ne 0 ]; then exit "$test_status"; fi
+          exit "$capture_status"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
-          name: lsp-current-baseline-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.source_sha }}
-          path: |
-            target/vize-tests/lsp-current-baseline/
-            target/differential/lsp-sessions/
+          name: ordinary-rename-${{ matrix.case }}-${{ matrix.producer }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ordinary-rename/
           if-no-files-found: error
           retention-days: 3
