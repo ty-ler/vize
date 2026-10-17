@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { Script } from "node:vm";
 
 type Options = Record<string, unknown>;
 type Environment = { command: string; mode: string; isSsrBuild: boolean };
@@ -14,11 +15,19 @@ export function configRecipe(source: string, environment: Environment): Options 
     return config;
   };
   const expression = source.replace(/^import .*;\n/gm, "").replace("export default ", "return ");
-  return new Function("defineConfig", "musea", "vize", expression)(
-    defineConfig,
-    (options: Options) => ({ musea: options }),
-    (options: Options) => ({ compiler: options }),
+  const script = new Script(`(() => {\n${expression}\n})()`, {
+    filename: "archived-doc-config.js",
+  });
+  const result = script.runInNewContext(
+    {
+      defineConfig,
+      musea: (options: Options) => ({ musea: options }),
+      vize: (options: Options) => ({ compiler: options }),
+    },
+    { timeout: 1_000 },
   ) as Options;
+  // Normalize cross-realm prototypes without discarding RegExp option values.
+  return structuredClone(result);
 }
 
 export function nativeOptions(config: Options): Options {

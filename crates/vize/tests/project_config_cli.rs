@@ -151,10 +151,23 @@ fn package_boundaries_precedence_and_sibling_settings_reach_the_formatter() {
         r#"{"formatter":{"singleQuote":false}}"#,
     );
     assert_eq!(formatted(&a, &[]).as_str(), support::FORMATTED_SINGLE);
-    support::assert_legacy_config_rejected(&run(
+    let rejected = run(
         &a,
         &["fmt", "Quotes.vue", "--config", "../vize.config.json"],
-    ));
+    );
+    let expected = vize_l0::cstr!(
+        "Invalid formatter configuration: failed to parse ../vize.config.json: {}\n",
+        support::LEGACY_CONFIG_ERROR
+    );
+    assert_eq!(
+        (
+            rejected.status.code(),
+            rejected.stdout.as_slice(),
+            rejected.stderr.as_slice()
+        ),
+        (Some(2), b"".as_slice(), expected.as_bytes()),
+        "{rejected:?}"
+    );
     write(
         &root.join("packages/a"),
         "manual.json",
