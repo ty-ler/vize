@@ -8,8 +8,10 @@ import { inspect } from "node:util";
 import { fixtureIdentity } from "./nuxt-ui-fixture-identity.ts";
 import {
   retainNuxtUiGeneratedOutput,
+  captureNuxtUiAliveGraphResponse,
   observeNuxtUiModuleGraphs,
   type ModuleGraphHooks,
+  type AliveViteServer,
 } from "./nuxt-ui-output-authority.ts";
 export { fixtureIdentity } from "./nuxt-ui-fixture-identity.ts";
 
@@ -245,6 +247,16 @@ export function captureNuxtUiHtml(name: string, raw: string, normalized: string)
   });
 }
 
+export async function captureNuxtUiAliveGraphs(
+  origin: string,
+  request: Parameters<typeof captureNuxtUiAliveGraphResponse>[3],
+): Promise<void> {
+  const directory = authorityDirectory(),
+    current = phase();
+  if (directory && current)
+    await captureNuxtUiAliveGraphResponse(directory, current, origin, request);
+}
+
 type TransformContext = { environment?: { name?: string } };
 type TransformResult = string | null | undefined | { code: string; map?: unknown };
 type Hook = (
@@ -258,11 +270,13 @@ type LoadHook = (
   id: string,
   options?: { ssr?: boolean },
 ) => TransformResult | Promise<TransformResult>;
+type ConfigureHook = (this: TransformContext, server: AliveViteServer) => unknown;
 export type CompilerPlugin = {
   name?: string;
   api?: { version?: unknown; options?: { compiler?: { version?: unknown } } };
   transform?: Hook | { handler: Hook; [key: string]: unknown };
   load?: LoadHook | { handler: LoadHook; [key: string]: unknown };
+  configureServer?: ConfigureHook | { handler: ConfigureHook; [key: string]: unknown };
 };
 type PluginValue = CompilerPlugin | CompilerPluginOption[] | false | null | undefined;
 export type CompilerPluginOption = PluginValue | Promise<PluginValue>;
@@ -290,7 +304,7 @@ export function nuxtUiCompilerAuthority(_options: unknown, nuxt: Nuxt): void {
   const current = phase();
   assert.ok(directory && current);
   const session = path.join(directory, current, `session-${process.pid}-${randomUUID()}`);
-  observeNuxtUiModuleGraphs(
+  const registerAliveGraphs = observeNuxtUiModuleGraphs(
     {
       onServer: (callback) => nuxt.hook("vite:serverCreated", callback),
       onClose: (callback) => nuxt.hook("close", callback),
@@ -340,6 +354,18 @@ export function nuxtUiCompilerAuthority(_options: unknown, nuxt: Nuxt): void {
         "candidate must use the native plugin",
       );
     for (const plugin of owners) {
+      const configureServer = plugin.configureServer;
+      const original =
+        typeof configureServer === "function" ? configureServer : configureServer?.handler;
+      const observeServer: ConfigureHook = async function (server) {
+        const result = await original?.call(this, server);
+        registerAliveGraphs(server, context);
+        return result;
+      };
+      plugin.configureServer =
+        configureServer && typeof configureServer === "object"
+          ? { ...configureServer, handler: observeServer }
+          : observeServer;
       function capture(
         operation: "load" | "transform",
         original: Hook | LoadHook,

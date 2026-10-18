@@ -4,7 +4,6 @@ import * as fs from "node:fs";
 import { createRequire } from "node:module";
 import * as path from "node:path";
 import { createConnection } from "node:net";
-import { createHash } from "node:crypto";
 import { inspect } from "node:util";
 import {
   fixtureIdentity,
@@ -16,6 +15,7 @@ import {
   compareNuxtUiAuthoredIdentity,
   retainNuxtUiGeneratedOutput,
   verifyNuxtUiGeneratedOutputUnused,
+  summarizeNuxtUiWholeHtml,
 } from "../../_helpers/nuxt-ui-output-authority.ts";
 
 const root = path.resolve("target/app-e2e-logs/nuxt-ui-reference");
@@ -199,31 +199,11 @@ const candidateConfig = fs.readFileSync(path.join(root, "candidate-config.ts"), 
 const referenceConfig = fs.readFileSync(path.join(cwd, "playgrounds/nuxt/nuxt.config.ts"), "utf8");
 assert.equal(referenceConfig, stockNuxtUiCompilerConfig(candidateConfig));
 const transforms = summarizeNuxtUiTransforms(root, cwd);
-const html = (["candidate", "reference"] as const).map((phase) => {
-  const directory = path.join(root, phase);
-  const files = fs
-    .readdirSync(directory)
-    .filter((name) => name.startsWith("html-button-"))
-    .map((name) => path.join(directory, name, "normalized.html"));
-  assert.ok(files.length > 0, `${phase} must retain the complete original button SSR response`);
-  return {
-    phase,
-    files: files.map((file) => {
-      const bytes = fs.readFileSync(file);
-      return {
-        file,
-        bytes: bytes.length,
-        sha256: createHash("sha256").update(bytes).digest("hex"),
-      };
-    }),
-  };
-});
-const referenceBodies = html.find((item) => item.phase === "reference")?.files;
-assert.equal(referenceBodies?.length, 1, "new reference invocation has no retries");
-const primaryHash = referenceBodies?.[0]?.sha256;
-const wholeHtmlEqual = html.every((item) =>
-  item.files.every((file) => file.sha256 === primaryHash),
-);
+const bodies = summarizeNuxtUiWholeHtml(root);
+const html = bodies.routes.find((route) => route.name === "button")?.phases;
+const homeHtml = bodies.routes.find((route) => route.name === "home")?.phases;
+assert.ok(html && homeHtml);
+const wholeHtmlEqual = bodies.wholeHtmlEqual;
 write("paired-result.json", {
   candidate,
   reference,
@@ -231,6 +211,7 @@ write("paired-result.json", {
   generatedOutput: { namespace: generated.namespace, delta: generatedDelta, moduleGraphs },
   actualSelectTransforms: transforms,
   wholeHtml: html,
+  wholeHomeHtml: homeHtml,
   wholeHtmlEqual,
   configDifference: "public compiler: false only",
   referenceInvocations: 1,

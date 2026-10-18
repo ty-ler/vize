@@ -15,6 +15,8 @@ import {
   type CompilerPluginOption,
 } from "../_helpers/nuxt-ui-compiler-authority.ts";
 
+import type { AliveViteServer } from "../_helpers/nuxt-ui-output-authority.ts";
+
 import { sourceInventory } from "../_helpers/nuxt-ui-fixture-identity.ts";
 
 async function observe(plugins: CompilerPluginOption[], isServer: boolean) {
@@ -379,4 +381,47 @@ test("both observed compiler lanes are mandatory and captured bytes cannot be re
     fs.writeFileSync(output, before);
     fs.rmSync(ssr.directory, { recursive: true });
     assert.throws(() => summarizeNuxtUiTransforms(directory, "/fixture"), /freshly compile/);
+  }));
+
+test("configureServer retains original this, object metadata and post-hook result in both phases", () =>
+  temporary(async () => {
+    for (const [phase, name] of [
+      ["candidate", "vite-plugin-vize"],
+      ["reference", "vite:vue"],
+    ]) {
+      process.env.VIZE_NUXT_UI_COMPILER_PHASE = phase;
+      const context = { environment: { name: "client" } };
+      let calls = 0,
+        middleware = 0;
+      const graph = { idToModuleMap: new Map() };
+      const server: AliveViteServer = {
+        moduleGraph: graph,
+        config: { base: "/_nuxt/" },
+        middlewares: {
+          use() {
+            middleware++;
+          },
+        },
+      };
+      const result = () => undefined;
+      const original = function (this: unknown, input: AliveViteServer) {
+        assert.equal(this, context);
+        assert.equal(input, server);
+        calls++;
+        return result;
+      };
+      const plugin: CompilerPlugin = {
+        name,
+        configureServer: { order: "post", handler: original },
+      };
+      await observe([plugin], false);
+      assert.ok(plugin.configureServer && typeof plugin.configureServer === "object");
+      assert.equal(plugin.configureServer.order, "post");
+      const returned = await plugin.configureServer.handler.call(context, server);
+      assert.equal(returned, result);
+      assert.equal(calls, 1);
+      assert.equal(middleware, 1);
+      assert.equal(server.moduleGraph, graph);
+      assert.equal(graph.idToModuleMap.size, 0);
+    }
   }));

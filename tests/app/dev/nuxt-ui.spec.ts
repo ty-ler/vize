@@ -17,7 +17,10 @@ import {
 } from "./nuxt-ui-dev-server";
 import { verifyNuxtUiAuthoredSourceHmr } from "./nuxt-ui-hmr";
 import { normalizeNuxtUiSnapshotHtml } from "./nuxt-ui-snapshot";
-import { captureNuxtUiHtml } from "../../_helpers/nuxt-ui-compiler-authority.ts";
+import {
+  captureNuxtUiHtml,
+  captureNuxtUiAliveGraphs,
+} from "../../_helpers/nuxt-ui-compiler-authority.ts";
 
 const app = nuxtUiApp;
 
@@ -245,6 +248,7 @@ test.describe("nuxt-ui dev", () => {
 
     const html = await verifySSRContent(page, app.url);
     captureNuxtUiHtml("home", html, normalizeNuxtUiSnapshotHtml(html, { cwd: app.cwd }));
+    await captureNuxtUiAliveGraphs(app.url, (url) => page.request.get(url));
     expect(normalizeNuxtUiSnapshotHtml(html, { cwd: app.cwd })).toMatchSnapshot("home-ssr");
 
     expect(consoleErrors.filter(isFatalError)).toHaveLength(0);
@@ -272,8 +276,15 @@ test.describe("nuxt-ui dev", () => {
     await expect(loadingAutoButton).toBeDisabled();
     await expect(loadingAutoButton).toBeEnabled({ timeout: 10_000 });
 
+    // Reuse this one stock worker/server for both complete SSR authorities.
+    // The original candidate suite and its snapshot assertions stay unchanged.
+    if (process.env.VIZE_NUXT_UI_COMPILER_PHASE === "reference") {
+      const home = await verifySSRContent(page, app.url);
+      captureNuxtUiHtml("home", home, normalizeNuxtUiSnapshotHtml(home, { cwd: app.cwd }));
+    }
     const html = await verifySSRContent(page, `${app.url}/components/button`);
     captureNuxtUiHtml("button", html, normalizeNuxtUiSnapshotHtml(html, { cwd: app.cwd }));
+    await captureNuxtUiAliveGraphs(app.url, (url) => page.request.get(url));
     expect(normalizeNuxtUiSnapshotHtml(html, { cwd: app.cwd })).toMatchSnapshot("button-ssr");
 
     expect(consoleErrors.filter(isFatalError)).toHaveLength(0);

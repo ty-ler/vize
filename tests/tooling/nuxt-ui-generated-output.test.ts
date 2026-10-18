@@ -9,6 +9,10 @@ import {
   retainNuxtUiGeneratedOutput,
   observeNuxtUiModuleGraphs,
   snapshotNuxtUiModuleGraph,
+  summarizeNuxtUiWholeHtml,
+  captureNuxtUiAliveGraphResponse,
+  NUXT_UI_GRAPH_PATH,
+  type AliveViteServer,
   verifyNuxtUiGeneratedOutputUnused,
   type ModuleGraphHooks,
 } from "../_helpers/nuxt-ui-output-authority.ts";
@@ -195,9 +199,11 @@ test("output non-use needs both actual Select graphs and refuses any output id, 
       for (const phase of ["candidate", "reference"])
         file(
           root,
-          `${phase}/session-1/module-graphs.json`,
+          `${phase}/session-1/module-graphs-live.json`,
           JSON.stringify({
             schema: 1,
+            live: true,
+            pid: 1,
             graphs: [
               { lane: { isClient: true }, environment: null, ...graph },
               { lane: { isServer: true }, environment: null, ...graph },
@@ -212,9 +218,11 @@ test("output non-use needs both actual Select graphs and refuses any output id, 
     Object.assign(lookalike.modules[0]!, { id: `${select.id}-unrelated`, file: null });
     file(
       root,
-      "reference/session-1/module-graphs.json",
+      "reference/session-1/module-graphs-live.json",
       JSON.stringify({
         schema: 1,
+        live: true,
+        pid: 1,
         graphs: [
           { lane: { isClient: true }, environment: null, ...lookalike },
           { lane: { isServer: true }, environment: null, ...lookalike },
@@ -223,7 +231,8 @@ test("output non-use needs both actual Select graphs and refuses any output id, 
     );
     assert.throws(() => verifyNuxtUiGeneratedOutputUnused(root, cwd), /both lanes/);
     write();
-    fs.rmSync(path.join(root, "reference/session-1/module-graphs.json"));
+    fs.rmSync(path.join(root, "reference/session-1/module-graphs-live.json"));
+    file(root, "reference/session-1/module-graphs.json", JSON.stringify({ schema: 1, graphs: [] }));
     assert.throws(() => verifyNuxtUiGeneratedOutputUnused(root, cwd), /both lanes/);
     for (const field of ["id", "url", "file", "realFile"]) {
       const bad = structuredClone(graph);
@@ -243,3 +252,205 @@ test("output non-use needs both actual Select graphs and refuses any output id, 
     write([{ lane: { isServer: true }, environment: null, ...broken }]);
     assert.throws(() => verifyNuxtUiGeneratedOutputUnused(root, cwd), /edge closure/);
   }));
+
+test("whole home and button authorities compare separately without changing response bytes", () =>
+  temporary((root) => {
+    for (const phase of ["candidate", "reference"])
+      for (const name of ["home", "button"])
+        file(
+          root,
+          `${phase}/html-${name}-1/normalized.html`,
+          `<!doctype html>\r\n<!--${name}-->完整`,
+        );
+    file(root, "candidate/html-home-2/normalized.html", "<!doctype html>\r\n<!--home-->完整");
+    const result = summarizeNuxtUiWholeHtml(root);
+    assert.equal(result.wholeHtmlEqual, true);
+    assert.deepEqual(
+      result.routes.map(({ name, phases, wholeHtmlEqual }) => ({
+        name,
+        counts: phases.map(({ files }) => files.length),
+        wholeHtmlEqual,
+      })),
+      [
+        { name: "home", counts: [2, 1], wholeHtmlEqual: true },
+        { name: "button", counts: [1, 1], wholeHtmlEqual: true },
+      ],
+    );
+    file(root, "candidate/html-home-2/normalized.html", "<!doctype html>\n<!--home-->完整");
+    assert.equal(
+      summarizeNuxtUiWholeHtml(root).wholeHtmlEqual,
+      false,
+      "CRLF bytes cannot be normalized",
+    );
+    file(root, "candidate/html-home-2/normalized.html", "<!doctype html>\r\n<!--home-->完整");
+    file(root, "reference/html-home-1/normalized.html", "<!doctype html>\r\n<!--button-->完整");
+    assert.equal(
+      summarizeNuxtUiWholeHtml(root).wholeHtmlEqual,
+      false,
+      "button authority cannot bless home",
+    );
+  }));
+
+test("both route authorities are mandatory and duplicate or empty stock responses refuse", () =>
+  temporary((root) => {
+    for (const phase of ["candidate", "reference"])
+      for (const name of ["home", "button"])
+        file(root, `${phase}/html-${name}-1/normalized.html`, name);
+    file(root, "reference/html-home-2/normalized.html", "home");
+    assert.throws(() => summarizeNuxtUiWholeHtml(root), /one stock observation/);
+    fs.rmSync(path.join(root, "reference/html-home-2"), { recursive: true });
+    file(root, "reference/html-home-1/normalized.html", "");
+    assert.throws(() => summarizeNuxtUiWholeHtml(root), /complete SSR body required/);
+    fs.rmSync(path.join(root, "reference/html-home-1"), { recursive: true });
+    assert.throws(() => summarizeNuxtUiWholeHtml(root), /reference must retain.*home/);
+  }));
+
+test("live graph capture works before close and ordinary requests retain their handler", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "nuxt-live-graph-law-"));
+  try {
+    const session = `session-${process.pid}-a`;
+    const directory = path.join(root, "candidate", session);
+    const handlers: Parameters<AliveViteServer["middlewares"]["use"]>[0][] = [];
+    let close: (() => void) | undefined;
+    const select = module("/fixture/src/runtime/components/Select.vue");
+    const graph = { idToModuleMap: new Map([[select.id, select]]) };
+    const server: AliveViteServer = {
+      moduleGraph: graph,
+      config: { base: "/_nuxt/" },
+      middlewares: {
+        use(callback) {
+          handlers.push(callback);
+        },
+      },
+    };
+    const register = observeNuxtUiModuleGraphs(
+      {
+        onServer() {},
+        onClose(callback) {
+          close = callback;
+        },
+      },
+      directory,
+    );
+    register(server, { isClient: true });
+    register(server, { isClient: true });
+    const ssrServer: AliveViteServer = {
+      moduleGraph: graph,
+      config: { base: "/ssr-internal/" },
+      middlewares: {
+        use() {
+          assert.fail("SSR-only server must not expose the client diagnostic route");
+        },
+      },
+    };
+    register(ssrServer, { isServer: true, isClient: false });
+    assert.equal(
+      JSON.parse(fs.readFileSync(path.join(directory, "graph-endpoint.json"), "utf8")).route,
+      `/_nuxt/${NUXT_UI_GRAPH_PATH}`,
+      "SSR-only public base cannot overwrite the reachable client endpoint",
+    );
+    assert.equal(handlers.length, 1, "one middleware per actual server");
+    assert.equal(typeof close, "function");
+    assert.equal(fs.existsSync(path.join(directory, "module-graphs.json")), false);
+    let next = 0,
+      body = "";
+    const response = {
+      statusCode: 0,
+      setHeader() {},
+      end(value: string) {
+        body = value;
+      },
+    };
+    handlers[0]!({ url: "/ordinary.vue" }, response, () => {
+      next++;
+    });
+    assert.equal(next, 1);
+    assert.equal(body, "");
+    handlers[0]!({ url: `/_nuxt/${NUXT_UI_GRAPH_PATH}` }, response, () => {
+      next++;
+    });
+    assert.equal(response.statusCode, 200);
+    assert.equal(next, 1);
+    const record = JSON.parse(body);
+    assert.equal(record.live, true);
+    assert.equal(record.pid, process.pid);
+    assert.equal(record.graphs[0].modules[0].id, select.id);
+    assert.deepEqual(
+      record.graphs.map((value: { lane: unknown }) => value.lane),
+      [{ isClient: true }, { isServer: true, isClient: false }],
+      "the client request must retain both actual client and SSR server graphs",
+    );
+    assert.equal(
+      fs.existsSync(path.join(directory, "module-graphs.json")),
+      false,
+      "close was never invoked",
+    );
+    await captureNuxtUiAliveGraphResponse(
+      root,
+      "candidate",
+      "http://127.0.0.1:5317",
+      async (url) => {
+        assert.equal(url, `http://127.0.0.1:5317/_nuxt/${NUXT_UI_GRAPH_PATH}`);
+        return { status: () => response.statusCode, text: async () => body };
+      },
+    );
+    assert.equal(graph.idToModuleMap.size, 1);
+    assert.equal(server.moduleGraph, graph);
+  } finally {
+    fs.rmSync(root, { recursive: true });
+  }
+});
+
+test("failed live graph responses retain the complete error and refuse admission", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "nuxt-live-error-law-"));
+  try {
+    const directory = path.join(root, "candidate", `session-${process.pid}-b`);
+    let handler: Parameters<AliveViteServer["middlewares"]["use"]>[0] | undefined;
+    const server: AliveViteServer = {
+      moduleGraph: { idToModuleMap: new Map() },
+      config: { base: "/_nuxt/" },
+      middlewares: {
+        use(callback) {
+          handler = callback;
+        },
+      },
+    };
+    const register = observeNuxtUiModuleGraphs({ onServer() {}, onClose() {} }, directory);
+    register(server, { isClient: true });
+    Object.assign(server.moduleGraph, { idToModuleMap: null });
+    let body = "";
+    const response = {
+      statusCode: 0,
+      setHeader() {},
+      end(value: string) {
+        body = value;
+      },
+    };
+    assert.ok(handler);
+    handler({ url: `/${NUXT_UI_GRAPH_PATH}` }, response, () =>
+      assert.fail("capture cannot fall through"),
+    );
+    assert.equal(response.statusCode, 500);
+    const record = JSON.parse(body);
+    assert.equal(record.live, false);
+    assert.equal(record.failure.name, "AssertionError");
+    assert.equal(record.failure.code, "ERR_ASSERTION");
+    assert.match(record.failure.stack, /snapshotNuxtUiModuleGraph/);
+    assert.match(record.failure.raw, /AssertionError/);
+    await assert.rejects(
+      captureNuxtUiAliveGraphResponse(root, "candidate", "http://127.0.0.1:5317", async () => ({
+        status: () => 500,
+        text: async () => body,
+      })),
+      /graph request failed/,
+    );
+    const raw = fs
+      .readdirSync(path.join(root, "candidate"))
+      .find((name) => name.startsWith("graph-response-"));
+    assert.ok(raw);
+    assert.equal(fs.readFileSync(path.join(root, "candidate", raw), "utf8"), body);
+    assert.equal(fs.existsSync(path.join(directory, "module-graphs-live.json")), false);
+  } finally {
+    fs.rmSync(root, { recursive: true });
+  }
+});
