@@ -1,4 +1,6 @@
 const fs = require("node:fs");
+const path = require("node:path");
+const { fileURLToPath, pathToFileURL } = require("node:url");
 
 exports.sendInitializeResponse = function sendInitializeResponse(
   id,
@@ -81,12 +83,20 @@ exports.createCapabilities = function createCapabilities(activeInitializationOpt
   return capabilities;
 };
 
-// Same names as WORKSPACE_PROJECT_CONFIG_GLOB; native config watches use this
-// registerCapability/RelativePattern/kind7 protocol, independently of typecheck.
+// Keep the broad default for existing fixtures. Known-file content-edit cases
+// mirror native config_watchers::watcher with an explicit parent/filename pair.
 exports.createConfigurationWatchRegistration = function createConfigurationWatchRegistration(
   workspaceRootUri,
   requestId,
+  configurationWatchUri,
 ) {
+  const globPattern = configurationWatchUri
+    ? configurationFileGlob(configurationWatchUri)
+    : {
+        baseUri: workspaceRootUri,
+        pattern:
+          "**/{vite.config.ts,vite.config.mts,vite.config.cts,vite.config.js,vite.config.mjs,vite.config.cjs,tsconfig.json,jsconfig.json,tsconfig.*.json}",
+      };
   return {
     id: requestId,
     jsonrpc: "2.0",
@@ -100,11 +110,7 @@ exports.createConfigurationWatchRegistration = function createConfigurationWatch
             watchers: [
               {
                 kind: 7,
-                globPattern: {
-                  baseUri: workspaceRootUri,
-                  pattern:
-                    "**/{vite.config.ts,vite.config.mts,vite.config.cts,vite.config.js,vite.config.mjs,vite.config.cjs,tsconfig.json,jsconfig.json,tsconfig.*.json}",
-                },
+                globPattern,
               },
             ],
           },
@@ -113,3 +119,15 @@ exports.createConfigurationWatchRegistration = function createConfigurationWatch
     },
   };
 };
+
+function configurationFileGlob(uri) {
+  const filename = fileURLToPath(uri);
+  const escapes = { "[": "[[]", "]": "[]]", "{": "[{]", "}": "[}]", "?": "[?]", "*": "[*]" };
+  return {
+    baseUri: pathToFileURL(path.dirname(filename) + path.sep).href,
+    pattern: Array.from(
+      path.basename(filename),
+      (character) => escapes[character] ?? (character.trim() === "" ? `[${character}]` : character),
+    ).join(""),
+  };
+}

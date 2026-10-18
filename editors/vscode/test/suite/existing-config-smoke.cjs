@@ -123,8 +123,12 @@ async function runExistingConfigurationContentChangeSmoke() {
   const { logPath, serverPath } = getFakeServer();
   const root = getWorkspaceFolder().uri.fsPath;
   for (const filename of ["vite.config.ts", "vite.config.mjs", "packages/app/tsconfig.app.json"]) {
-    await prepareConfiguredFakeServer({ logPath, serverPath });
     const uri = vscode.Uri.file(path.join(root, filename));
+    await prepareConfiguredFakeServer({
+      logPath,
+      serverPath,
+      configurationWatchUri: uri.toString(),
+    });
     await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(uri.fsPath)));
     await vscode.workspace.fs.writeFile(uri, Buffer.from("{}\n"));
     await updateVizeConfiguration("typecheck.enable", false);
@@ -146,6 +150,26 @@ async function runExistingConfigurationContentChangeSmoke() {
         ),
       `${filename} real client ACKs dynamic configuration watches`,
     );
+    const registered = entries.find(
+      (entry) => entry.event === "configuration-watch-register" && entry.pid === pid,
+    );
+    assert.deepEqual(registered?.packet.params.registrations, [
+      {
+        id: "vize-config-watch-1",
+        method: "workspace/didChangeWatchedFiles",
+        registerOptions: {
+          watchers: [
+            {
+              kind: 7,
+              globPattern: {
+                baseUri: vscode.Uri.file(path.dirname(uri.fsPath) + path.sep).toString(),
+                pattern: path.basename(uri.fsPath),
+              },
+            },
+          ],
+        },
+      },
+    ]);
     const previousPids = lspPids(entries);
     const previousInitializations = initializeMessages(entries).length;
 

@@ -107,6 +107,7 @@ function handleMessage(message) {
     const packet = createConfigurationWatchRegistration(
       workspaceRootUri,
       configurationWatchRequestId,
+      process.env.VIZE_TEST_SERVER_CONFIG_WATCH_URI,
     );
     appendLog({
       event: "configuration-watch-register",

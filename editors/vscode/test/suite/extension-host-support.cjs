@@ -19,12 +19,14 @@ const { featureSettingKeys } = require("./extension-host-fixtures.cjs");
  * `extension-host.cjs` hands it.
  */
 
-async function prepareConfiguredFakeServer({ logPath, serverPath }) {
+async function prepareConfiguredFakeServer({ logPath, serverPath, configurationWatchUri }) {
   fs.writeFileSync(logPath, "");
   await resetVizeConfiguration();
   await updateVizeConfiguration("serverPath", serverPath);
   await sleep(300);
   assert.equal(initializeMessages(readLogEntries(logPath)).length, 0);
+  if (configurationWatchUri === undefined) delete process.env.VIZE_TEST_SERVER_CONFIG_WATCH_URI;
+  else process.env.VIZE_TEST_SERVER_CONFIG_WATCH_URI = configurationWatchUri;
 }
 
 async function resetVizeConfiguration() {
