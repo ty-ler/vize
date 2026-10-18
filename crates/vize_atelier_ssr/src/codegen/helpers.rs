@@ -329,25 +329,3 @@ pub(crate) fn loop_children<'node, 'a>(
 fn loop_needs_fragment(children: &[TemplateChildNode<'_>]) -> bool {
     !matches!(loop_children(children), [TemplateChildNode::Element(_)])
 }
-
-pub(super) fn append_for_aliases(
-    ctx: &mut SsrCodegenContext<'_>,
-    out: &mut String,
-    for_node: &ForNode,
-) {
-    let mut has_alias = false;
-    for alias in [
-        for_node.value_alias.as_ref(),
-        for_node.key_alias.as_ref(),
-        for_node.object_index_alias.as_ref(),
-    ]
-    .into_iter()
-    .flatten()
-    {
-        if has_alias {
-            out.push_str(", ");
-        }
-        out.push_str(&ctx.expression_to_string(alias));
-        has_alias = true;
-    }
-}

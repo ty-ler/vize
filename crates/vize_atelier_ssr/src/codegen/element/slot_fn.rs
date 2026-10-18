@@ -3,12 +3,12 @@
 //! Slot names map to their authored `v-slot` argument and each slot function
 //! opens at the authored element carrying the slot (Davinci P3-9).
 
-use super::super::helpers::{append_for_aliases, collect_for_scoped_params};
+use super::super::helpers::collect_for_scoped_params;
 use super::component::{has_slot_directive, slot_template_in_children, template_slot_is_dynamic};
 use super::props::{is_valid_js_identifier, quoted_js_string};
 use super::{
     ComponentSlotChildren, ElementNode, ElementType, FxHashSet, PropNode, RuntimeHelper,
-    SlotAnchor, SsrCodegenContext, String, TemplateChildNode, ToCompactString,
+    SlotAnchor, SsrCodegenContext, String, TemplateChildNode, ToCompactString, append_for_aliases,
     extract_destructure_params,
 };
 
