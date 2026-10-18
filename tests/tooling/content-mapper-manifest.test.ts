@@ -90,7 +90,7 @@ const publicScope = {
   "event-rename-only": false,
   "directive-owners-only": false,
 };
-function evaluates(expression: string, inputs = publicScope): unknown {
+function evaluates(expression: string, inputs = publicScope, runId = "7001"): unknown {
   return runInNewContext(
     expression
       .replace(/^\$\{\{\s*|\s*\}\}$/gu, "")
@@ -100,6 +100,7 @@ function evaluates(expression: string, inputs = publicScope): unknown {
       github: {
         event_name: "workflow_dispatch",
         ref: "refs/heads/main",
+        run_id: runId,
         event: { pull_request: {} },
       },
       always: () => true,
@@ -127,11 +128,20 @@ test("published mapper workflow selects fourteen public cases without source bui
     }),
     true,
   );
-  assert.equal(
+  const group = (runId: string, inputs = publicScope) =>
     workflow.concurrency.group.replace(/\$\{\{(.*?)\}\}/gu, (_, expression) =>
-      String(evaluates(expression)),
-    ),
-    "content-mapper-refs/heads/main-published-defaults",
+      String(evaluates(expression, inputs, runId)),
+    );
+  assert.deepEqual(
+    ["7001", "7002", "7003"].map((runId) => group(runId)),
+    ["7001", "7002", "7003"].map((runId) => `content-mapper-${runId}-published-defaults`),
+    "independent public runs must never replace a pending acceptance run",
+  );
+  const sourceScope = { ...publicScope, "published-defaults-only": false };
+  assert.equal(
+    group("7001", sourceScope),
+    group("7002", sourceScope),
+    "source runs on the same ref retain their existing supersession policy",
   );
   const job = workflow.jobs["official-css-options"];
   assert.equal(job["timeout-minutes"], 15);

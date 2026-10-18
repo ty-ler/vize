@@ -30,7 +30,7 @@ on:
       release_run: { description: "Successful official Release R", type: string, required: false }
 
 concurrency:
-  group: content-mapper-${{ github.event.pull_request.number || github.ref }}${{ inputs.published-defaults-only && '-published-defaults' || inputs.official-css-options-only && '-official-css-options' || inputs.directive-owners-only && '-directive-owners' || inputs.event-rename-only && '-event-rename' || '' }}
+  group: content-mapper-${{ inputs.published-defaults-only && github.run_id || github.event.pull_request.number || github.ref }}${{ inputs.published-defaults-only && '-published-defaults' || inputs.official-css-options-only && '-official-css-options' || inputs.directive-owners-only && '-directive-owners' || inputs.event-rename-only && '-event-rename' || '' }}
   cancel-in-progress: ${{ !inputs.published-defaults-only }}
 
 permissions:
