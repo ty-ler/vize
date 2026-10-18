@@ -4,6 +4,21 @@ use corsa_lsp::process::{ProcessObserver, ProcessReceipt};
 use std::io::Write;
 use vize_l0::{String, cstr};
 
+#[derive(Debug, PartialEq, Eq)]
+pub(super) enum ReportError {
+    Unacknowledged,
+    Physical(String),
+}
+
+impl ReportError {
+    pub(super) fn into_message(self) -> String {
+        match self {
+            Self::Unacknowledged => cstr!("Native editor shutdown was not acknowledged"),
+            Self::Physical(error) => error,
+        }
+    }
+}
+
 fn terminal_complete(receipt: &ProcessReceipt) -> bool {
     receipt.completed
         && receipt.stderr_complete
@@ -19,7 +34,7 @@ pub(super) fn report(
     observer: &ProcessObserver,
     graceful_acknowledged: bool,
     require_clean_exit: bool,
-) -> Result<(), String> {
+) -> Result<(), ReportError> {
     report_to(
         &observer.receipts(),
         graceful_acknowledged,
@@ -33,20 +48,25 @@ fn report_to(
     graceful_acknowledged: bool,
     require_clean_exit: bool,
     output: &mut impl Write,
-) -> Result<(), String> {
+) -> Result<(), ReportError> {
     let complete = receipts.len() == 1 && receipts.first().is_some_and(terminal_complete);
     for receipt in receipts {
         // The authenticated native EOF lifecycle finishes without stderr.
         // Unknown servers and wrappers retain every byte, even a byte-for-byte
         // copy of a previously observed native Exit error line.
         output.write_all(&receipt.stderr).map_err(|error| {
-            cstr!("Failed to retain native editor process stderr: {error}; {receipts:?}")
+            ReportError::Physical(cstr!(
+                "Failed to retain native editor process stderr: {error}; {receipts:?}"
+            ))
         })?;
     }
-    if require_clean_exit && !(graceful_acknowledged && complete) {
+    if require_clean_exit && !complete {
         let error = cstr!("Native editor process did not finish cleanly: {receipts:?}");
         tracing::warn!(error = %error, "native editor termination was incomplete");
-        return Err(error);
+        return Err(ReportError::Physical(error));
+    }
+    if require_clean_exit && !graceful_acknowledged {
+        return Err(ReportError::Unacknowledged);
     }
     Ok(())
 }
@@ -99,6 +119,27 @@ mod tests {
             assert_eq!(result.is_ok(), acknowledged);
             assert_eq!(output, expected);
         }
+    }
+
+    #[test]
+    fn failed_acknowledgment_is_distinct_from_physical_completion_failure() {
+        let mut output = Vec::new();
+        assert_eq!(
+            report_to(&[receipt(b"\0\xff", 0)], false, true, &mut output),
+            Err(ReportError::Unacknowledged)
+        );
+        assert_eq!(output, b"\0\xff");
+        let mut output = Vec::new();
+        let row = receipt(b"\0\xff", 2);
+        let expected = cstr!(
+            "Native editor process did not finish cleanly: {:?}",
+            [row.clone()]
+        );
+        assert_eq!(
+            report_to(&[row], false, true, &mut output),
+            Err(ReportError::Physical(expected))
+        );
+        assert_eq!(output, b"\0\xff");
     }
 
     #[test]

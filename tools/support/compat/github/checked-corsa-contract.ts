@@ -122,8 +122,17 @@ export const sameSet = (a: Iterable<string>, b: Iterable<string>) =>
   assert.deepEqual([...a].sort(), [...b].sort());
 export const jsonLines = (output: string) => {
   // Match Python str.splitlines(), including its Unicode line separators.
-  const lines = output.split(/\r\n|[\n\r\v\f\u001c-\u001e\u0085\u2028\u2029]/u);
-  if (lines.at(-1) === "") lines.pop();
+  const separators = new Set([10, 11, 12, 13, 28, 29, 30, 133, 8232, 8233]);
+  const lines: string[] = [];
+  let start = 0;
+  for (let index = 0; index < output.length; index++) {
+    const character = output.charCodeAt(index);
+    if (!separators.has(character)) continue;
+    lines.push(output.slice(start, index));
+    if (character === 13 && output.charCodeAt(index + 1) === 10) index++;
+    start = index + 1;
+  }
+  if (start < output.length) lines.push(output.slice(start));
   return lines.map((line) => parseJson(line));
 };
 /** Match Path.resolve() for existing symlinks and not-yet-created roots. */

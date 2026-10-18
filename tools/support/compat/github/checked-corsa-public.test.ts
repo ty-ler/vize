@@ -7,7 +7,6 @@ import {
   REGISTRY,
   RUNTIME_VERSION,
   digest,
-  toml,
   type Bodies,
   type Metadata,
 } from "./checked-corsa-contract.ts";
@@ -59,7 +58,7 @@ function publicGraph() {
   });
   return { metadata, home, directory };
 }
-test("public registry graph, exact Canon and requested distribution", () => {
+await test("public registry graph, exact Canon and requested distribution", () => {
   const { metadata, home, directory } = publicGraph();
   assert.equal(
     verifyPublicGraph(metadata, VERSION, home, directory, false, true).ownedPackages.length,
@@ -71,7 +70,7 @@ test("public registry graph, exact Canon and requested distribution", () => {
   verifyPublicGraph(metadata, VERSION, home, directory, true, true);
   assert.throws(() => verifyPublicGraph(metadata, VERSION, home, directory, false, true));
 });
-test("public source, version, runtime, root and native-feature spoofs refused", () => {
+await test("public source, version, runtime, root and native-feature spoofs refused", () => {
   const { metadata, home, directory } = publicGraph();
   const mutations = [
     (data: Metadata) => (data.packages[0].source = null),
@@ -89,7 +88,7 @@ test("public source, version, runtime, root and native-feature spoofs refused", 
     assert.throws(() => verifyPublicGraph(changed, VERSION, home, directory, false, true));
   }
 });
-test("public consumer strips source/compiler environment and refuses config/ranges", (t) => {
+await test("public consumer strips source/compiler environment and refuses config/ranges", (t) => {
   const environment = publicEnvironment(
     {
       PATH: "/bin",
@@ -186,14 +185,14 @@ function publicArchive(
     };
   return { pkg, home, lock, source, archive };
 }
-test("complete public archive checksum/source and truthful dirty receipt", (t) => {
+await test("complete public archive checksum/source and truthful dirty receipt", (t) => {
   const { pkg, home, lock, source } = publicArchive(t),
     evidence = archiveEvidence(pkg, home, lock, SHA, source);
   assert.equal(evidence.vcs.git.dirty, true);
   assert.ok(evidence.members["tests/control.txt"]);
   assert.equal(evidence.checksum, lock.package[0].checksum);
 });
-test("public license/source/VCS/checksum and compiled-input mutations refused", (t) => {
+await test("public license/source/VCS/checksum and compiled-input mutations refused", (t) => {
   for (const change of [
     (bodies: Bodies) => {
       delete bodies.LICENSE;

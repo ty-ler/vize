@@ -5,6 +5,21 @@ use corsa::runtime::block_on;
 use std::sync::atomic::Ordering;
 use vize_l0::{String, cstr};
 
+fn complete_close(
+    result: Result<(), String>,
+    receipt_result: Result<(), process_receipt::ReportError>,
+) -> Result<(), String> {
+    match (result, receipt_result) {
+        // The actual protocol/close error already accounts for this failure.
+        // A physically clean receipt must not invent a second process error.
+        (Err(error), Err(process_receipt::ReportError::Unacknowledged)) => Err(error),
+        (Err(error), Err(receipt_error)) => Err(cstr!("{error}; {}", receipt_error.into_message())),
+        (result, receipt_result) => {
+            result.and(receipt_result.map_err(|error| error.into_message()))
+        }
+    }
+}
+
 impl EditorLspSession {
     /// Complete the selected LSP lifecycle before closing and reaping the
     /// owned process. The responder remains alive until `shutdown` returns so
@@ -28,10 +43,7 @@ impl EditorLspSession {
         let result = self.finish_close(first_error);
         let receipt_result =
             process_receipt::report(&self.process_observer, graceful_acknowledged, true);
-        match (result, receipt_result) {
-            (Err(error), Err(receipt_error)) => Err(cstr!("{error}; {receipt_error}")),
-            (result, receipt_result) => result.and(receipt_result),
-        }
+        complete_close(result, receipt_result)
     }
 
     /// Tear down the editor process without waiting for a protocol shutdown
@@ -49,7 +61,7 @@ impl EditorLspSession {
         }
         let result = self.finish_close(first_error);
         let receipt_result = process_receipt::report(&self.process_observer, false, false);
-        result.and(receipt_result)
+        result.and(receipt_result.map_err(|error| error.into_message()))
     }
 
     fn finish_close(&mut self, mut first_error: Option<String>) -> Result<(), String> {
@@ -82,6 +94,46 @@ impl Drop for EditorLspSession {
     fn drop(&mut self) {
         if let Err(error) = self.shutdown() {
             eprintln!("{error}");
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use process_receipt::ReportError;
+
+    #[test]
+    fn close_keeps_protocol_failure_and_independent_physical_failures() {
+        let rpc = cstr!(
+            "Failed to gracefully close editor LSP process: rpc error -32603: controlled shutdown refusal"
+        );
+        let physical = cstr!("controlled physical receipt failure");
+        for (close, receipt, expected) in [
+            (Ok(()), Ok(()), Ok(())),
+            (Err(rpc.clone()), Ok(()), Err(rpc.clone())),
+            (
+                Ok(()),
+                Err(ReportError::Unacknowledged),
+                Err(cstr!("Native editor shutdown was not acknowledged")),
+            ),
+            (
+                Err(rpc.clone()),
+                Err(ReportError::Unacknowledged),
+                Err(rpc.clone()),
+            ),
+            (
+                Ok(()),
+                Err(ReportError::Physical(physical.clone())),
+                Err(physical.clone()),
+            ),
+            (
+                Err(rpc.clone()),
+                Err(ReportError::Physical(physical.clone())),
+                Err(cstr!("{rpc}; {physical}")),
+            ),
+        ] {
+            assert_eq!(complete_close(close, receipt), expected);
         }
     }
 }

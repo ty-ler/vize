@@ -122,13 +122,13 @@ establish a future token's permission to create the new namespaces. This is
 not proof that a future authenticated first publication will be permitted. No
 names have been registered and no crates have been published by this change.
 
-The shipping graph and publisher catalog stay deferred until the urgent next
+Shipping the six-package graph stays deferred until the urgent next
 minor carrying #9202 and #9199 is public and its source receipts are closed, as
 confirmed by the release coordinator. Closing #9196 alone does not clear this
 hold; merging a new six-package graph between pinned release sources would
-invalidate that delivery. The manifest resolver is prepared for the six vendor
-paths; adding the packages to the ordered publisher catalog is a separate release
-coordination step. The
+invalidate that delivery. The manifest resolver and ordered publisher catalog
+are prepared for the six vendor packages as source only. First publication and
+Trusted Publishing still require a separate authenticated handoff. The
 local workspace version is preparation, not a public-release promise. Per the
 pre-1.0 release policy, ship the migration in a new minor release after the
 urgent release and source-receipt closure finish.
@@ -137,7 +137,7 @@ After source and package/native Actions pass:
 
 1. Confirm the publication identity and ability to create the six namespaces;
    report any actual registry authentication or ownership rejection verbatim.
-2. Add the six packages to the publisher catalog before their consumers, in
+2. Verify the six catalog entries precede their consumers in the current
    dependency order: core, JSON-RPC, client, LSP, orchestrator, facade. Preserve
    existing runtime 1.14.2 rather than republishing it.
 3. Publish the new minor's six packages before Canon and other Vize consumers.

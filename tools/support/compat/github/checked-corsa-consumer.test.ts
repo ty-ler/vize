@@ -29,7 +29,6 @@ import {
   type Executor,
 } from "./checked-corsa-package-consumer.ts";
 import {
-  root,
   VERSION,
   SHA,
   clone,
@@ -59,7 +58,7 @@ function graph() {
   });
   return { providers, metadata };
 }
-test("archive regular members, GNU and PAX names preserve complete bytes", (t) => {
+await test("archive regular members, GNU and PAX names preserve complete bytes", (t) => {
   const directory = temporary(t),
     archive = path.join(directory, "fixture.crate"),
     body = Buffer.from("body\0\xff", "latin1");
@@ -81,7 +80,7 @@ test("archive regular members, GNU and PAX names preserve complete bytes", (t) =
   ]);
   assert.deepEqual({ ...archiveMembers(archive, "crate-1") }, { [long.slice(8)]: body });
 });
-test("archive traversal, links, aliases, duplicate and malformed TAR are refused", (t) => {
+await test("archive traversal, links, aliases, duplicate and malformed TAR are refused", (t) => {
   const archive = path.join(temporary(t), "fixture.crate");
   const controls: [string, Buffer, string?][][] = [
     [["crate-1/../escape", Buffer.from("body")]],
@@ -106,7 +105,7 @@ test("archive traversal, links, aliases, duplicate and malformed TAR are refused
   fs.writeFileSync(archive, gzipSync(Buffer.alloc(511)));
   assert.throws(() => archiveMembers(archive, "crate-1"));
 });
-test("six-package graph and requested distributed activation", () => {
+await test("six-package graph and requested distributed activation", () => {
   const { metadata, providers } = graph();
   assert.equal(verifyGraph(metadata, VERSION, providers, false).length, 6);
   for (const node of metadata.resolve.nodes)
@@ -115,7 +114,7 @@ test("six-package graph and requested distributed activation", () => {
   assert.equal(verifyGraph(metadata, VERSION, providers, true).length, 6);
   assert.throws(() => verifyGraph(metadata, VERSION, providers, false), /experimental feature/u);
 });
-test("upstream, duplicate, wrong path/version and runtime provider spoof controls", () => {
+await test("upstream, duplicate, wrong path/version and runtime provider spoof controls", () => {
   const { metadata, providers } = graph();
   const mutations = [
     (data: Metadata) => data.packages.push({ name: "corsa_core" }),
@@ -156,7 +155,7 @@ function sourceFixture(t: any) {
   };
   return { directory, bodies };
 }
-test("complete packaged source permits only reserved regenerated members", (t) => {
+await test("complete packaged source permits only reserved regenerated members", (t) => {
   const { directory, bodies } = sourceFixture(t);
   assert.deepEqual(verifyPackagedSource(directory, bodies), [
     "LICENSE",
@@ -202,7 +201,7 @@ function consumerFixture(t: any) {
   };
   return { directory, manifest, artifact };
 }
-test("consumer identity and fresh exact-root compilation cannot be shared", (t) => {
+await test("consumer identity and fresh exact-root compilation cannot be shared", (t) => {
   const { directory, manifest, artifact } = consumerFixture(t);
   assert.equal(
     new Set(
@@ -238,7 +237,7 @@ test("consumer identity and fresh exact-root compilation cannot be shared", (t) 
     ),
   );
 });
-test("each mode cleans only its own generated root then builds/tests", (t) => {
+await test("each mode cleans only its own generated root then builds/tests", (t) => {
   const { directory, artifact } = consumerFixture(t),
     runner = Object.create(Acceptance.prototype) as Acceptance,
     commands: string[][] = [];
@@ -258,7 +257,7 @@ test("each mode cleans only its own generated root then builds/tests", (t) => {
   }
   assert.equal(runner.consumerBuilds.length, 2);
 });
-test("whole command stdout/stderr, explicit expected exit and failed spawn/signal evidence", (t) => {
+await test("whole command stdout/stderr, explicit expected exit and failed spawn/signal evidence", (t) => {
   const directory = temporary(t),
     stdout = Buffer.from([0, 97, 10, 98]),
     stderr = Buffer.from([98, 0, 254]);
@@ -308,7 +307,7 @@ test("whole command stdout/stderr, explicit expected exit and failed spawn/signa
     if ("error" in result) assert.equal(receipt.error, result.error.message);
   }
 });
-test("default refusal must be the one exact E0432 from the independent root", () => {
+await test("default refusal must be the one exact E0432 from the independent root", () => {
   const message = {
     reason: "compiler-message",
     message: {
@@ -331,7 +330,7 @@ test("default refusal must be the one exact E0432 from the independent root", ()
   assert.throws(() => verifyDefaultRefusal("", "/negative"));
 });
 
-test("Python integer JSON stays exact and unsafe TOML integers fail closed", () => {
+await test("Python integer JSON stays exact and unsafe TOML integers fail closed", () => {
   const packet =
     '{"inode": 9007199254740993, "mtime_ns": 18446744073709551615, "negative": -9007199254740993, "bounded": 512}';
   const parsed = parseJson(packet);
@@ -350,7 +349,7 @@ test("Python integer JSON stays exact and unsafe TOML integers fail closed", () 
   assert.throws(() => parseJson('{"unsafe":1e400}'), /nonfinite/u);
 });
 
-test("original Python ASCII pretty bytes and newline are retained", (t) => {
+await test("original Python ASCII pretty bytes and newline are retained", (t) => {
   const directory = temporary(t);
   const packet = parseJson('{"text":"é😀\\ud800\\udfff\\u007f\\u2028","inode":9007199254740993}');
   const expected =

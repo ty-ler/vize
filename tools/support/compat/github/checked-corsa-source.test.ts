@@ -29,7 +29,7 @@ import {
   tarArchive,
   frozenPackageCommands,
 } from "./checked-corsa-test-fixtures.ts";
-test("Canon actual defaults and six independent source roots reach library builds", () => {
+await test("Canon actual defaults and six independent source roots reach library builds", () => {
   assert.deepEqual(toml(sourceManifest("vize_canon", "/source/canon")).dependencies, {
     vize_canon: { path: "/source/canon" },
   });
@@ -97,7 +97,7 @@ test("Canon actual defaults and six independent source roots reach library build
     );
   }
 });
-test("source provider and filtered/unrelated minimal test output are refused", () => {
+await test("source provider and filtered/unrelated minimal test output are refused", () => {
   assert.throws(
     () =>
       packageFeatures(
@@ -124,7 +124,7 @@ test("source provider and filtered/unrelated minimal test output are refused", (
   ])
     assert.throws(() => verifyMinimalStoryTest(output), /one exact regression/u);
 });
-test("complete six-package source census and licenses reject every substitution", (t) => {
+await test("complete six-package source census and licenses reject every substitution", (t) => {
   const directory = temporary(t),
     rows = ["package\tpath\tbytes\tsha256"];
   for (const alias of ALIASES)
@@ -182,7 +182,7 @@ test("complete six-package source census and licenses reject every substitution"
   assert.throws(() => verifySource(directory));
 });
 
-test("whole package acceptance executes every frozen phase before earning its receipt", (t) => {
+await test("whole package acceptance executes every frozen phase before earning its receipt", (t) => {
   const directory = temporary(t),
     release = path.join(directory, "source"),
     output = path.join(directory, "evidence");
@@ -352,9 +352,10 @@ test("whole package acceptance executes every frozen phase before earning its re
     executor,
   );
   const command = runner.command.bind(runner);
-  runner.command = (label, args, cwd = runner.root, status = 0) => {
-    calls.push({ label, args, cwd });
-    return command(label, args, cwd, status);
+  runner.command = (label: string, args: string[], cwd?: string, status?: number) => {
+    const directory = cwd ?? runner.root;
+    calls.push({ label, args, cwd: directory });
+    return command(label, args, directory, status);
   };
   runner.run();
   const expected = frozenPackageCommands(release, output);
