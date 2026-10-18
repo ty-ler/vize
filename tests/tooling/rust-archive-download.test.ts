@@ -14,6 +14,7 @@ import {
   validateArchive,
 } from "../../tools/support/compat/github/rust-archive-download.ts";
 import { readRepoFile } from "./support/github-workflows.ts";
+import { RUST_TEST_COHORT_IDS } from "../../tools/support/compat/github/rust-test-cohorts.ts";
 
 const context = { run: "123", sha: "a".repeat(40), repository: "owner/repo" };
 const artifact = {
@@ -40,6 +41,30 @@ test("archive selection rejects ambiguous, expired, foreign and missing digest i
     { ...artifact, workflow_run: { id: 123, head_sha: "c".repeat(40) } },
   ])
     assert.throws(() => validateArchive(changed, context));
+});
+
+test("cohort selectors never fall back to the common or another cohort archive", () => {
+  const all = RUST_TEST_COHORT_IDS.map((cohort, index) => ({
+    ...artifact,
+    id: index + 1,
+    name: `${artifact.name}-${cohort}`,
+  }));
+  for (const cohort of RUST_TEST_COHORT_IDS) {
+    const own = all.find((item) => item.name.endsWith(`-${cohort}`))!;
+    const current = { ...context, cohort };
+    assert.deepEqual(selectArchive(all, current), { id: own.id, digest: own.digest });
+    assert.throws(() => selectArchive([artifact], current));
+    assert.throws(() =>
+      selectArchive(
+        all.filter((item) => item.id !== own.id),
+        current,
+      ),
+    );
+    assert.throws(() => selectArchive([...all, own], current));
+    assert.throws(() => validateArchive({ ...own, digest: undefined }, current));
+  }
+  for (const cohort of ["", "unknown", "compiler/../../other"])
+    assert.throws(() => selectArchive(all, { ...context, cohort }));
 });
 
 test("only a clean first success or a single successful retry can qualify", () => {
@@ -89,7 +114,10 @@ test("workflow bounds both attempts, pins the same ID and requires cleanup plus 
   const required = job.steps.find(
     (step: { name?: string }) => step.name === "Require completed immutable archive download",
   );
-  assert.equal(required.run, "node tools/support/compat/github/rust-archive-download.ts verify");
+  assert.equal(
+    required.run,
+    "node tools/support/compat/github/rust-archive-download.ts verify-cohort",
+  );
   assert.equal(required.if, "${{ !cancelled() && github.event_name == 'merge_group' }}");
   assert.equal(required["continue-on-error"], undefined);
   const receipt = job.steps.find(
@@ -97,7 +125,7 @@ test("workflow bounds both attempts, pins the same ID and requires cleanup plus 
   );
   assert.equal(
     receipt.run,
-    "node tools/support/compat/github/rust-test-archive.mjs verify .artifacts/rust-test-archive/tests.tar.zst .artifacts/rust-test-archive/receipt.json",
+    'node tools/support/compat/github/rust-test-archive.ts verify-cohort .artifacts/rust-test-archive/tests.tar.zst .artifacts/rust-test-archive/receipt.json "$COHORT"',
   );
   assert.ok(job.steps.indexOf(receipt) > job.steps.indexOf(required));
   const run = job.steps.find(

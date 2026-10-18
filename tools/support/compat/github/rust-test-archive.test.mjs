@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { createArchiveReceipt, verifyArchiveReceipt } from "./rust-test-archive.mjs";
+import { createArchiveReceipt, verifyArchiveReceipt } from "./rust-test-archive.ts";
 
 const workspaceRoot = fileURLToPath(new URL("../../../../", import.meta.url));
 

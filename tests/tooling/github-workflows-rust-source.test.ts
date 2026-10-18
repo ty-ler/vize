@@ -6,6 +6,7 @@ import { readRepoFile } from "./support/github-workflows.ts";
 type Step = {
   id?: string;
   "timeout-minutes"?: number;
+  "continue-on-error"?: boolean | string;
   name?: string;
   if?: string;
   run?: string;
@@ -35,6 +36,58 @@ const js = workflow("pr-js-checks.yml");
 const commands = (job: Job): string => (job.steps ?? []).map((step) => step.run ?? "").join("\n");
 const needs = (job: Job): string[] =>
   typeof job.needs === "string" ? [job.needs] : (job.needs ?? []);
+
+function guardedCohortPackaging(producer: Job) {
+  assert.equal(producer.if, "${{ github.event_name == 'merge_group' && inputs.run-rust }}");
+  const steps = producer.steps ?? [];
+  const probe = steps.filter(
+    (step) => step.name === "Qualify pinned nextest cohort archive resources",
+  );
+  const uploads = steps.filter((step) =>
+    String(step.with?.name ?? "").startsWith(
+      "rust-test-archive-${{ github.run_id }}-${{ github.sha }}-",
+    ),
+  );
+  assert.equal(probe.length, 1);
+  assert.equal(uploads.length, 5);
+  for (const step of [...probe, ...uploads]) {
+    assert.equal(step.if, "${{ inputs.run-rust }}");
+    assert.equal(step["continue-on-error"], undefined);
+  }
+  return [...probe, ...uploads];
+}
+
+void test("cohort probe and all five payload uploads retain the selected Rust truth table", () => {
+  const producer = rust.jobs["merge-rust-source"];
+  const guarded = guardedCohortPackaging(producer);
+  for (const [event, runRust, expected] of [
+    ["merge_group", true, true],
+    ["merge_group", false, false],
+    ["pull_request", true, false],
+    ["pull_request", false, false],
+    ["workflow_dispatch", true, false],
+  ] as const) {
+    // Evaluate the exact, validated two-variable predicates rather than grant
+    // an unrecognized workflow expression the expected selection.
+    const selected = event === "merge_group" && runRust;
+    assert.deepEqual(
+      guarded.map(() => selected && runRust),
+      Array(6).fill(expected),
+    );
+  }
+  for (const original of guarded) {
+    for (const mutation of [
+      { if: undefined },
+      { if: "${{ always() }}" },
+      { "continue-on-error": true },
+    ]) {
+      const changed = structuredClone(producer);
+      const index = producer.steps!.indexOf(original);
+      Object.assign(changed.steps![index], mutation);
+      assert.throws(() => guardedCohortPackaging(changed));
+    }
+  }
+});
 
 void test("required source reports include selected product gates and mandatory Rust acceptance", () => {
   const entry = check.jobs["pr-source-checks"];
@@ -104,13 +157,27 @@ void test("Clippy and doctests start beside affected cohort execution and stay r
   assert.doesNotMatch(validation, /nextest archive/);
   const producer = rust.jobs["merge-rust-source"];
   assert.match(producer.if ?? "", /github\.event_name == 'merge_group'/);
-  assert.match(commands(producer), /nextest archive @packages@ --cargo-profile ci/);
+  assert.match(
+    commands(producer),
+    /rust-test-archive\.ts build-cohorts "\$RUNNER_TEMP\/rust-plan.json" target\/rust-test-archive/,
+  );
   const producerSteps = producer.steps ?? [];
-  const build = producerSteps.findIndex((step) => /nextest archive/.test(step.run ?? ""));
+  const build = producerSteps.findIndex((step) =>
+    /rust-test-archive\.ts build-cohorts/.test(step.run ?? ""),
+  );
   const pkl = producerSteps.findIndex((step) =>
     /npm install --global @pkl-community\/pkl@/.test(step.run ?? ""),
   );
   assert.ok(pkl >= 0 && pkl < build, "Pkl is available before archive compilation");
+  const probe = producerSteps.findIndex(
+    (step) => step.name === "Qualify pinned nextest cohort archive resources",
+  );
+  assert.ok(probe >= 0 && probe < build, "real pinned archive equivalence qualifies packaging");
+  assert.equal(
+    producerSteps[probe].run,
+    "node --test tests/tooling/rust-cohort-archive-integration.test.ts",
+  );
+  assert.deepEqual(producerSteps[probe].env, { VIZE_TEST_REAL_COHORT_ARCHIVES: "1" });
   for (const name of [
     "merge-rust-source",
     "merge-rust-differential",
@@ -141,7 +208,9 @@ void test("named Rust cohorts preserve filtered execution and receipt-bound queu
     assert.match(step.run ?? "", /exit "\$phase_exit"/);
     assert.doesNotMatch(step.run ?? "", /--partition/);
   }
-  const verify = steps.findIndex((step) => /rust-test-archive\.mjs verify/.test(step.run ?? ""));
+  const verify = steps.findIndex((step) =>
+    /rust-test-archive\.ts verify-cohort/.test(step.run ?? ""),
+  );
   assert.ok(
     verify >= 0 && verify < steps.indexOf(archiveRun),
     "verify custody before executing archived binaries",
@@ -149,6 +218,15 @@ void test("named Rust cohorts preserve filtered execution and receipt-bound queu
   assert.match(archiveRun.run ?? "", /--extract-to "\$GITHUB_WORKSPACE"/);
   assert.match(archiveRun.run ?? "", /--workspace-remap "\$GITHUB_WORKSPACE"/);
   assert.match(steps[verify].if ?? "", /merge_group/);
+  const closure = steps.find(
+    (step) => step.name === "Verify the complete cohort and extracted resource closure",
+  );
+  assert.equal(closure?.if, "${{ !cancelled() && github.event_name == 'merge_group' }}");
+  assert.equal(
+    closure?.run,
+    'node tools/support/compat/github/rust-test-archive.ts verify-files "$GITHUB_WORKSPACE" .artifacts/rust-test-archive/receipt.json "$COHORT" target/nextest/full/junit.xml',
+  );
+  assert.ok(closure && steps.indexOf(closure) > steps.indexOf(archiveRun));
   const artifacts = steps.filter((step) => step.uses?.startsWith("actions/download-artifact@"));
   assert.equal(artifacts.length, 2, "one bounded attempt and one clean retry");
   for (const artifact of artifacts) {

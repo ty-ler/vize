@@ -11,6 +11,10 @@ import {
   type RustTestCohortId,
 } from "../../tools/support/compat/github/rust-test-cohorts.ts";
 import {
+  validateCohortBuildReceipt,
+  verifyCohortExecution,
+} from "../../tools/support/compat/github/rust-test-archive.ts";
+import {
   TYPECHECKER_TESTS,
   loadTypecheckerManifest,
   readCapture,
@@ -33,7 +37,7 @@ type Receipt = {
   requireTsgo: string | null;
   disableTsgo: string | null;
   nuxtIterations: string;
-  archiveSha256: string;
+  archiveSha256?: string;
 };
 type Worker = {
   schema: string;
@@ -66,9 +70,13 @@ export function typecheckerSourceIdentity(repoRoot: string): SourceIdentity {
   return { sha, tree: git("rev-parse", `${sha}^{tree}`), toolchain };
 }
 
-export function validateTypecheckerReceipt(bytes: Buffer, expected: SourceIdentity) {
+export function validateTypecheckerReceipt(
+  bytes: Buffer,
+  expected: SourceIdentity,
+  schema: 3 | 4 = 3,
+) {
   const receipt: Receipt = JSON.parse(bytes.toString("utf8"));
-  assert.equal(receipt.schemaVersion, 3);
+  assert.equal(receipt.schemaVersion, schema);
   assert.equal(receipt.sha, expected.sha);
   assert.equal(receipt.tree, expected.tree);
   assert.equal(receipt.cargoProfile, "ci");
@@ -81,7 +89,10 @@ export function validateTypecheckerReceipt(bytes: Buffer, expected: SourceIdenti
   assert.equal(receipt.requireTsgo, "1");
   assert.equal(receipt.disableTsgo, null);
   assert.equal(receipt.nuxtIterations, "100");
-  assert.match(receipt.archiveSha256, /^[a-f0-9]{64}$/);
+  if (schema === 3) {
+    assert(typeof receipt.archiveSha256 === "string");
+    assert.match(receipt.archiveSha256, /^[a-f0-9]{64}$/);
+  } else validateCohortBuildReceipt(receipt);
   return receipt;
 }
 
@@ -115,6 +126,7 @@ function validateWorker(
   worker: Worker,
   junit: Buffer,
   expected: SourceIdentity,
+  schema: 3 | 4 = 3,
 ) {
   assert.equal(worker.schema, "vize.typechecker-worker-observations");
   assert.equal(worker.version, 2, "named Rust worker observations version 2 is required");
@@ -123,7 +135,9 @@ function validateWorker(
   assert.equal(worker.sourceTree, expected.tree);
   assert.equal(worker.manifestSha256, loaded.manifestSha256);
   const receipt = Buffer.from(worker.receiptBase64, "base64");
-  validateTypecheckerReceipt(receipt, expected);
+  const build = validateTypecheckerReceipt(receipt, expected, schema);
+  const common = schema === 4 ? validateCohortBuildReceipt(build) : undefined;
+  if (common) verifyCohortExecution(common, worker.cohort, junit.toString("utf8"));
   assert.equal(worker.junitSha256, sha256(junit));
   assert.deepEqual(worker.tests, passedFixtureTests(junit.toString("utf8")));
   assert.deepEqual(
@@ -134,6 +148,14 @@ function validateWorker(
   assert.equal(worker.captures.length, worker.tests.length);
   for (const capture of worker.captures) {
     assert.match(capture.binarySha256, /^[a-f0-9]{64}$/);
+    if (common)
+      assert.equal(
+        capture.binarySha256,
+        common.payloads
+          .flatMap((item) => item.binaryFiles)
+          .find((file) => file.id === "vize_canon::fix_history_diagnostics")?.sha256,
+        "binarySha256 differs from common archive executable",
+      );
     validateTypecheckerCapture(loaded, capture, { receipt, binarySha256: capture.binarySha256 });
   }
   return worker;
@@ -145,12 +167,14 @@ export function verifyTypecheckerWorker({
   receiptPath,
   junitPath,
   cohort,
+  receiptSchema = 3,
 }: {
   repoRoot: string;
   evidenceDir: string;
   receiptPath: string;
   junitPath: string;
   cohort: string;
+  receiptSchema?: 3 | 4;
 }) {
   assert(isRustTestCohort(cohort), "unknown or missing Rust test cohort");
   const loaded = loadTypecheckerManifest(
@@ -158,7 +182,7 @@ export function verifyTypecheckerWorker({
   );
   const expected = typecheckerSourceIdentity(repoRoot);
   const receipt = fs.readFileSync(receiptPath);
-  const identity = validateTypecheckerReceipt(receipt, expected);
+  const identity = validateTypecheckerReceipt(receipt, expected, receiptSchema);
   const junit = fs.readFileSync(junitPath);
   const tests = passedFixtureTests(junit.toString("utf8"));
   fs.mkdirSync(evidenceDir, { recursive: true });
@@ -192,7 +216,7 @@ export function verifyTypecheckerWorker({
     tests,
     captures,
   };
-  validateWorker(loaded, worker, junit, expected);
+  validateWorker(loaded, worker, junit, expected, receiptSchema);
   fs.writeFileSync(path.join(evidenceDir, "worker.json"), `${JSON.stringify(worker, null, 2)}\n`);
   return worker;
 }
@@ -201,10 +225,12 @@ export function aggregateTypecheckerWorkers({
   repoRoot,
   artifactRoot,
   outputDir,
+  receiptSchema = 3,
 }: {
   repoRoot: string;
   artifactRoot: string;
   outputDir: string;
+  receiptSchema?: 3 | 4;
 }) {
   for (const name of ["report.json", "acceptance.json"]) {
     fs.rmSync(path.join(outputDir, name), { force: true });
@@ -232,6 +258,7 @@ export function aggregateTypecheckerWorkers({
         worker,
         fs.readFileSync(path.join(root, "junit.xml")),
         expected,
+        receiptSchema,
       );
     });
   assert.equal(
@@ -273,13 +300,15 @@ export function aggregateTypecheckerWorkers({
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [operation, ...args] = process.argv.slice(2);
-  if (operation === "worker" && args.length === 4) {
+  const cohortMode = args.at(-1) === "4";
+  if (operation === "worker" && (args.length === 4 || (args.length === 5 && cohortMode))) {
     const worker = verifyTypecheckerWorker({
       repoRoot: process.cwd(),
       evidenceDir: path.resolve(args[0]),
       receiptPath: path.resolve(args[1]),
       junitPath: path.resolve(args[2]),
       cohort: args[3],
+      receiptSchema: cohortMode ? 4 : 3,
     });
     console.log(
       JSON.stringify({
@@ -288,11 +317,15 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
         projects: worker.captures.reduce((n, capture) => n + capture.cases.length, 0),
       }),
     );
-  } else if (operation === "aggregate" && args.length === 2) {
+  } else if (
+    operation === "aggregate" &&
+    (args.length === 2 || (args.length === 3 && cohortMode))
+  ) {
     const result = aggregateTypecheckerWorkers({
       repoRoot: process.cwd(),
       artifactRoot: path.resolve(args[0]),
       outputDir: path.resolve(args[1]),
+      receiptSchema: cohortMode ? 4 : 3,
     });
     console.log(JSON.stringify(result.report.summary));
   } else {

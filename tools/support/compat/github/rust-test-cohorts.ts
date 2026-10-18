@@ -100,6 +100,20 @@ export function isRustTestCohort(value: unknown): value is RustTestCohortId {
   return RUST_TEST_COHORT_IDS.some((id) => id === value);
 }
 
+/** The same package/binary ownership used by the nextest filter expressions. */
+export function rustTestCohortForBinary(pkg: string, binary: string): RustTestCohortId {
+  if (pkg === "vize") {
+    return (
+      RUST_TEST_COHORT_IDS.find((id) =>
+        definitions[id].cliPrefixes?.some((prefix) => binary.startsWith(prefix)),
+      ) ?? "cli-and-integrations"
+    );
+  }
+  const owners = RUST_TEST_COHORT_IDS.filter((id) => definitions[id].packages.includes(pkg));
+  if (owners.length !== 1) throw new Error(`test binary requires one cohort: ${pkg}/${binary}`);
+  return owners[0];
+}
+
 export function rustTestMatrix(metadata: CargoMetadata, selectedPackages: readonly string[]) {
   const workspace = new Set(workspaceGraph(metadata).names);
   for (const pkg of workspace) {

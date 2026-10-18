@@ -1,14 +1,23 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import os, { tmpdir } from "node:os";
+import path, { join } from "node:path";
 import { test } from "node:test";
 
 import {
   createArchiveReceipt,
   verifyArchiveReceipt,
-} from "../../tools/support/compat/github/rust-test-archive.mjs";
+  validateCohortBuildReceipt,
+  verifyCohortArchive,
+  verifyCohortExecution,
+  verifyCohortFiles,
+} from "../../tools/support/compat/github/rust-test-archive.ts";
+import {
+  RUST_TEST_COHORTS,
+  rustTestCohortForBinary,
+} from "../../tools/support/compat/github/rust-test-cohorts.ts";
 import { requireRustTier } from "../../tools/support/compat/github/require-rust-tier.ts";
 
 void test("Rust archives reject different source, baked paths, runner, nextest, and contents", async () => {
@@ -193,4 +202,295 @@ void test("archive compiler authority follows the exact committed reviewed patch
       );
     }
   }
+});
+
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
+const clone = (value) => structuredClone(value);
+const xml = (value) =>
+  value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+
+async function cohortFixture(t) {
+  const cwd = mkdtempSync(path.join(os.tmpdir(), "vize-cohort-receipt-"));
+  t.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const git = (...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+  git("init", "-q");
+  git("config", "user.name", "Archive Fixture");
+  git("config", "user.email", "archive@example.invalid");
+  writeFileSync(path.join(cwd, "rust-toolchain.toml"), '[toolchain]\nchannel = "1.99.1"\n');
+  git("add", "rust-toolchain.toml");
+  git("commit", "-qm", "fixture");
+  const context = {
+    cwd,
+    nextestVersion: "cargo-nextest 0.9.146 (fixture)",
+    rustcVersion: "rustc 1.99.1 (fixture)",
+    env: {
+      VIZE_TEST_REQUIRE_TSGO: "1",
+      VIZE_NUXT_CONFIG_ITERATIONS: "100",
+      GITHUB_RUN_ID: "123",
+      GITHUB_RUN_ATTEMPT: "2",
+    },
+  };
+  const inventory = [
+    ["vize_l0", "vize_l0"],
+    ["vize_canon", "diagnostics"],
+    ["vize_maestro", "vize_maestro"],
+    ["vize_glyph", "format"],
+    ["vize", "vize"],
+    ["vize", "lsp_future"],
+  ].map(([pkg, binary]) => ({
+    id: `${pkg}::${binary}`,
+    package: pkg,
+    binary,
+    cases: [
+      { name: 'module::case<&"Ω', ignored: false },
+      { name: "module::ignored", ignored: true },
+    ],
+  }));
+  inventory.push({ id: "empty", package: "vize_l1", binary: "empty", cases: [] });
+  const write = (relative, contents) => {
+    const absolute = path.join(cwd, relative);
+    mkdirSync(path.dirname(absolute), { recursive: true });
+    writeFileSync(absolute, contents);
+    return { path: relative, sha256: sha256(contents) };
+  };
+  const resources = [
+    "target/ci/helper-exe",
+    "target/ci/build/fixture/out/generated",
+    "target/ci/deps/shared.so",
+    "target/nextest/libdirs/host/libstd-fixture.so",
+    "target/ci/fixture/included-resource",
+  ].map((file) => write(file, `inert resource: ${file}`));
+  const archives = new Map();
+  const payloads = RUST_TEST_COHORTS.map(({ id: cohort, filter }) => {
+    const binaries = inventory.filter(
+      (item) => rustTestCohortForBinary(item.package, item.binary) === cohort,
+    );
+    const binaryFiles = binaries.map((item, index) => ({
+      id: item.id,
+      ...write(`target/ci/deps/${cohort}-${index}`, `inert binary: ${item.id}`),
+    }));
+    const archive = path.join(cwd, `${cohort}.tar.zst`);
+    writeFileSync(archive, `inert archive: ${cohort}`);
+    archives.set(cohort, archive);
+    return {
+      cohort,
+      filter,
+      archiveSha256: sha256(readFileSync(archive)),
+      binaryIds: binaries.map((item) => item.id),
+      binaryFiles,
+      files: [...binaryFiles.map(({ path, sha256 }) => ({ path, sha256 })), ...resources],
+    };
+  });
+  const legacy = await createArchiveReceipt(archives.get("compiler"), context);
+  const { archiveSha256: _, ...source } = legacy;
+  const common = {
+    ...source,
+    schemaVersion: 4,
+    producerRun: "123",
+    producerAttempt: 2,
+    inventory,
+    payloads,
+  };
+  const junit = (cohort) =>
+    `<testsuites>${inventory
+      .filter((item) => rustTestCohortForBinary(item.package, item.binary) === cohort)
+      .flatMap((item) =>
+        item.cases
+          .filter((entry) => !entry.ignored)
+          .map((entry) => `<testcase classname="${xml(item.id)}" name="${xml(entry.name)}"/>`),
+      )
+      .join("")}</testsuites>`;
+  return { cwd, context, common, legacy, archives, junit };
+}
+
+void test("common schema 4 preserves five payloads, empty binaries and ignored identities", async (t) => {
+  const fixture = await cohortFixture(t);
+  const { common, context, archives, cwd, junit } = fixture;
+  assert.equal(validateCohortBuildReceipt(common), common);
+  assert.equal(common.inventory.length, 7);
+  assert.equal(common.payloads.flatMap((item) => item.binaryIds).length, 7);
+  assert.equal(common.inventory.filter((item) => item.cases.length === 0).length, 1);
+  for (const { cohort } of common.payloads) {
+    await verifyCohortArchive(common, archives.get(cohort), cohort, context);
+    verifyCohortFiles(common, cohort, cwd);
+    verifyCohortExecution(common, cohort, junit(cohort));
+  }
+  assert.equal(
+    common.inventory.flatMap((item) => item.cases).filter((item) => item.ignored).length,
+    6,
+  );
+  await verifyArchiveReceipt(fixture.legacy, archives.get("compiler"), context);
+  assert.throws(() => validateCohortBuildReceipt(fixture.legacy), /schema 4/);
+});
+
+void test("common receipt refuses missing, duplicate, foreign or changed cohort custody", async (t) => {
+  const { common } = await cohortFixture(t);
+  const mutations = {
+    "unknown schema": (copy) => {
+      copy.schemaVersion = 5;
+    },
+    "missing cohort": (copy) => {
+      copy.payloads.pop();
+    },
+    "duplicate cohort": (copy) => {
+      copy.payloads[1].cohort = "compiler";
+    },
+    "foreign cohort": (copy) => {
+      copy.payloads[0].cohort = "future";
+    },
+    "changed filter": (copy) => {
+      copy.payloads[0].filter = "all()";
+    },
+    "missing binary": (copy) => {
+      copy.inventory.shift();
+    },
+    "duplicate binary": (copy) => {
+      copy.inventory.push(copy.inventory[0]);
+    },
+    "foreign package": (copy) => {
+      copy.inventory[0].package = "vize_future";
+    },
+    "duplicate test": (copy) => {
+      copy.inventory[0].cases.push(copy.inventory[0].cases[0]);
+    },
+    "invalid ignored": (copy) => {
+      copy.inventory[0].cases[0].ignored = "false";
+    },
+    "empty test name": (copy) => {
+      copy.inventory[0].cases[0].name = "";
+    },
+    "foreign binary selection": (copy) => {
+      copy.payloads[0].binaryIds.push("foreign");
+    },
+    "missing binary mapping": (copy) => {
+      copy.payloads[0].binaryFiles.pop();
+    },
+    "foreign binary mapping": (copy) => {
+      copy.payloads[0].binaryFiles[0].id = "foreign";
+    },
+    "changed binary mapping hash": (copy) => {
+      copy.payloads[0].binaryFiles[0].sha256 = "a".repeat(64);
+    },
+    "missing binary file": (copy) => {
+      copy.payloads[0].files.shift();
+    },
+    "duplicate resource": (copy) => {
+      copy.payloads[0].files.push(copy.payloads[0].files[0]);
+    },
+    "escaping resource": (copy) => {
+      copy.payloads[0].files[0].path = "target/../outside";
+    },
+    "bad archive hash": (copy) => {
+      copy.payloads[0].archiveSha256 = "wrong";
+    },
+  };
+  for (const [label, mutate] of Object.entries(mutations)) {
+    const copy = clone(common);
+    mutate(copy);
+    assert.throws(() => validateCohortBuildReceipt(copy), undefined, label);
+  }
+});
+
+void test("payload admission binds actual archive, source, run and runtime envelope", async (t) => {
+  const { common, archives, context } = await cohortFixture(t);
+  const archive = archives.get("compiler");
+  await assert.rejects(
+    verifyCohortArchive(common, archives.get("typechecker"), "compiler", context),
+  );
+  await assert.rejects(verifyCohortArchive(common, archive, "foreign", context));
+  for (const field of [
+    "sha",
+    "tree",
+    "workspaceRoot",
+    "platform",
+    "arch",
+    "cargoProfile",
+    "requireTsgo",
+    "nuxtIterations",
+  ]) {
+    const copy = clone(common);
+    copy[field] = "changed";
+    await assert.rejects(verifyCohortArchive(copy, archive, "compiler", context), undefined, field);
+  }
+  await assert.rejects(
+    verifyCohortArchive(common, archive, "compiler", {
+      ...context,
+      nextestVersion: "cargo-nextest 0.9.147 (fixture)",
+    }),
+  );
+  await assert.rejects(
+    verifyCohortArchive(common, archive, "compiler", {
+      ...context,
+      rustcVersion: "rustc 1.99.0 (fixture)",
+    }),
+  );
+  for (const env of [
+    { ...context.env, GITHUB_RUN_ID: "124" },
+    { ...context.env, GITHUB_RUN_ATTEMPT: "1" },
+    { ...context.env, VIZE_TEST_DISABLE_TSGO: "1" },
+    { ...context.env, VIZE_NUXT_CONFIG_ITERATIONS: "99" },
+  ])
+    await assert.rejects(verifyCohortArchive(common, archive, "compiler", { ...context, env }));
+  writeFileSync(archive, "changed archive bytes");
+  await assert.rejects(
+    verifyCohortArchive(common, archive, "compiler", context),
+    /digest mismatch/,
+  );
+});
+
+void test("extracted binary and resource bytes must remain present and unchanged", async (t) => {
+  const { common, cwd } = await cohortFixture(t);
+  for (const file of common.payloads[0].files) {
+    const absolute = path.join(cwd, file.path);
+    const original = readFileSync(absolute);
+    writeFileSync(absolute, "changed extracted bytes");
+    assert.throws(() => verifyCohortFiles(common, "compiler", cwd), /changed/);
+    rmSync(absolute);
+    assert.throws(() => verifyCohortFiles(common, "compiler", cwd), /ENOENT/);
+    writeFileSync(absolute, original);
+  }
+  verifyCohortFiles(common, "compiler", cwd);
+});
+
+void test("execution requires exact binary and test names, statuses and ignored disposition", async (t) => {
+  const { common, junit } = await cohortFixture(t);
+  const original = junit("compiler");
+  const caseTag = original.match(/<testcase\b[^>]*\/>/)[0];
+  for (const changed of [
+    original.replace(caseTag, ""),
+    original.replace(caseTag, caseTag + caseTag),
+    original.replace("module::case", "module::different"),
+    original.replace("vize_l0::vize_l0", "foreign::binary"),
+    original.replace("/>", "><failure/></testcase>"),
+    original.replace("/>", "><error/></testcase>"),
+    original.replace("/>", "><skipped/></testcase>"),
+    original.replace(
+      "</testsuites>",
+      '<testcase classname="vize_l0::vize_l0" name="module::ignored"/></testsuites>',
+    ),
+  ])
+    assert.throws(() => verifyCohortExecution(common, "compiler", changed));
+  for (const mutate of [
+    (copy) => {
+      copy.inventory[0].cases.shift();
+    },
+    (copy) => {
+      copy.inventory[0].cases.push({ name: "future::case", ignored: false });
+    },
+    (copy) => {
+      copy.inventory[0].cases[0].ignored = true;
+    },
+    (copy) => {
+      copy.inventory[0].cases[1].ignored = false;
+    },
+  ]) {
+    const copy = clone(common);
+    mutate(copy);
+    assert.throws(() => verifyCohortExecution(copy, "compiler", original));
+  }
+  verifyCohortExecution(
+    common,
+    "compiler",
+    original.replace("</testsuites>", "<![CDATA[<failure/>]]><!-- <testcase/> --></testsuites>"),
+  );
 });

@@ -1,13 +1,18 @@
 import { appendFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isRustTestCohort } from "./rust-test-cohorts.ts";
 
-type Context = { run: string; sha: string; repository: string };
+type Context = { run: string; sha: string; repository: string; cohort?: string };
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 export function archiveName(context: Context): string {
+  if (context.cohort !== undefined) {
+    if (!isRustTestCohort(context.cohort)) throw new Error("Unknown Rust archive cohort");
+    return `rust-test-archive-${context.run}-${context.sha}-${context.cohort}`;
+  }
   return `rust-test-archive-${context.run}-${context.sha}`;
 }
 
@@ -68,10 +73,15 @@ async function main(operation: string | undefined) {
     cleanArchiveDirectory(workspace);
     return;
   }
-  const context = {
+  const cohort = operation?.endsWith("-cohort") ? required("COHORT") : undefined;
+  if (cohort !== undefined && !isRustTestCohort(cohort)) {
+    throw new Error("Unknown Rust archive cohort");
+  }
+  const context: Context = {
     run: required("GITHUB_RUN_ID"),
     sha: required("GITHUB_SHA"),
     repository: required("GITHUB_REPOSITORY"),
+    ...(cohort === undefined ? {} : { cohort }),
   };
   if (
     !/^[1-9]\d*$/.test(context.run) ||
@@ -95,7 +105,7 @@ async function main(operation: string | undefined) {
       throw new Error(`Rust archive metadata request failed: HTTP ${response.status}`);
     return response.json();
   };
-  if (operation === "select") {
+  if (operation === "select" || operation === "select-cohort") {
     const inventory = await request(`runs/${context.run}/artifacts?per_page=100`);
     if (
       !isRecord(inventory) ||
@@ -107,7 +117,7 @@ async function main(operation: string | undefined) {
     const selected = selectArchive(inventory.artifacts, context);
     cleanArchiveDirectory(workspace);
     appendFileSync(required("GITHUB_OUTPUT"), `id=${selected.id}\ndigest=${selected.digest}\n`);
-  } else if (operation === "verify") {
+  } else if (operation === "verify" || operation === "verify-cohort") {
     requireDownload(env.RUST_ARCHIVE_FIRST_OUTCOME, env.RUST_ARCHIVE_RETRY_OUTCOME);
     const id = required("RUST_ARCHIVE_ID");
     if (!/^[1-9]\d*$/.test(id)) throw new Error("Invalid selected Rust artifact ID");

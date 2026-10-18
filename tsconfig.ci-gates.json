@@ -7,6 +7,8 @@
   "include": [],
   "files": [
     "tools/support/compat/github/rust-archive-download.ts",
+    "tools/support/compat/github/rust-test-archive.ts",
+    "tools/support/compat/github/rust-workspace-inventory.ts",
     "tests/tooling/rust-archive-download.test.ts",
     "tests/tooling/github-workflows-rust-source.test.ts",
     "tools/support/compat/github/require-needs-success.ts",

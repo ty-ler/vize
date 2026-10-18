@@ -68,6 +68,10 @@ jobs:
         if: ${{ inputs.run-rust }}
         with:
           tool: cargo-nextest@0.9.146
+      - name: Qualify pinned nextest cohort archive resources
+        if: ${{ inputs.run-rust }}
+        env: { VIZE_TEST_REAL_COHORT_ARCHIVES: "1" }
+        run: node --test tests/tooling/rust-cohort-archive-integration.test.ts
       - name: Build Rust workspace tests
         id: rust-test-build
         if: ${{ inputs.run-rust }}
@@ -79,24 +83,55 @@ jobs:
           touch "$timing_dir/build-started"
           phase_started=$SECONDS
           mkdir -p target/rust-test-archive
-          if node tools/support/compat/github/run-affected-rust.ts "$RUNNER_TEMP/rust-plan.json" cargo nextest archive @packages@ --cargo-profile ci --timings --archive-file target/rust-test-archive/tests.tar.zst; then phase_exit=0; else phase_exit=$?; fi
+          if node tools/support/compat/github/rust-test-archive.ts build-cohorts "$RUNNER_TEMP/rust-plan.json" target/rust-test-archive; then phase_exit=0; else phase_exit=$?; fi
           printf '{"phase":"build","elapsed_seconds":%d,"exit_code":%d}\n' "$((SECONDS - phase_started))" "$phase_exit" > "$timing_dir/build.json"
           if [[ "$phase_exit" == 0 ]]; then
-            node tools/support/compat/github/rust-test-archive.mjs stamp target/rust-test-archive/tests.tar.zst target/rust-test-archive/receipt.json
             cp target/rust-test-archive/receipt.json "$timing_dir/archive-receipt.json"
+            cp target/rust-test-archive/workspace-tests.json "$timing_dir/workspace-tests.json"
           fi
           exit "$phase_exit"
-      - name: List affected source-built tests
-        if: ${{ inputs.run-rust }}
-        # This diagnostic inventory reuses the producer's binaries. Each worker
-        # independently verifies and extracts the receipt-bound archive it runs.
-        run: node tools/support/compat/github/run-affected-rust.ts "$RUNNER_TEMP/rust-plan.json" cargo nextest list @packages@ --cargo-profile ci --profile full --message-format json > "$RUNNER_TEMP/rust-test-timings/workspace-tests.json"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ inputs.run-rust }}
         with:
-          name: rust-test-archive-${{ github.run_id }}-${{ github.sha }}
+          name: rust-test-archive-${{ github.run_id }}-${{ github.sha }}-compiler
           overwrite: true
-          path: target/rust-test-archive/
+          path: target/rust-test-archive/compiler/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ inputs.run-rust }}
+        with:
+          name: rust-test-archive-${{ github.run_id }}-${{ github.sha }}-typechecker
+          overwrite: true
+          path: target/rust-test-archive/typechecker/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ inputs.run-rust }}
+        with:
+          name: rust-test-archive-${{ github.run_id }}-${{ github.sha }}-language-server
+          overwrite: true
+          path: target/rust-test-archive/language-server/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ inputs.run-rust }}
+        with:
+          name: rust-test-archive-${{ github.run_id }}-${{ github.sha }}-lint-and-format
+          overwrite: true
+          path: target/rust-test-archive/lint-and-format/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ inputs.run-rust }}
+        with:
+          name: rust-test-archive-${{ github.run_id }}-${{ github.sha }}-cli-and-integrations
+          overwrite: true
+          path: target/rust-test-archive/cli-and-integrations/
           if-no-files-found: error
           compression-level: 0
           retention-days: 1
@@ -105,7 +140,7 @@ jobs:
         env:
           BUILD_OUTCOME: ${{ steps.rust-test-build.outcome }}
           RUN_OUTCOME: skipped
-          BUILD_COMMAND: node tools/support/compat/github/run-affected-rust.ts "$RUNNER_TEMP/rust-plan.json" cargo nextest archive @packages@ --cargo-profile ci --timings --archive-file target/rust-test-archive/tests.tar.zst
+          BUILD_COMMAND: node tools/support/compat/github/rust-test-archive.ts build-cohorts "$RUNNER_TEMP/rust-plan.json" target/rust-test-archive
           RUN_COMMAND: parallel Clippy and doctest job
           RUN_PHASE: doctests
           CARGO_TEST_PROFILE: ci
@@ -247,7 +282,7 @@ jobs:
         id: rust-archive
         if: ${{ github.event_name == 'merge_group' }}
         env: { GH_TOKEN: "${{ github.token }}" }
-        run: node tools/support/compat/github/rust-archive-download.ts select
+        run: node tools/support/compat/github/rust-archive-download.ts select-cohort
       - name: Download immutable Rust test archive
         id: rust-archive-first
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -280,10 +315,10 @@ jobs:
           RUST_ARCHIVE_DIGEST: ${{ steps.rust-archive.outputs.digest }}
           RUST_ARCHIVE_FIRST_OUTCOME: ${{ steps.rust-archive-first.outcome }}
           RUST_ARCHIVE_RETRY_OUTCOME: ${{ steps.rust-archive-retry.outcome }}
-        run: node tools/support/compat/github/rust-archive-download.ts verify
+        run: node tools/support/compat/github/rust-archive-download.ts verify-cohort
       - name: Verify Rust archive identity
         if: ${{ github.event_name == 'merge_group' }}
-        run: node tools/support/compat/github/rust-test-archive.mjs verify .artifacts/rust-test-archive/tests.tar.zst .artifacts/rust-test-archive/receipt.json
+        run: node tools/support/compat/github/rust-test-archive.ts verify-cohort .artifacts/rust-test-archive/tests.tar.zst .artifacts/rust-test-archive/receipt.json "$COHORT"
       - name: Hydrate the required ElementPlus projection fixture
         if: ${{ github.event_name == 'merge_group' && contains(fromJSON(inputs.rust-plan).packages, 'vize_canon') }}
         uses: ./.github/actions/hydrate-pinned-fixture
@@ -331,9 +366,13 @@ jobs:
           if cargo nextest run --archive-file .artifacts/rust-test-archive/tests.tar.zst --extract-to "$GITHUB_WORKSPACE" --extract-overwrite --workspace-remap "$GITHUB_WORKSPACE" --profile "$NEXTEST_PROFILE" -E "$NEXTEST_FILTER" --no-tests=pass; then phase_exit=0; else phase_exit=$?; fi
           printf '{"phase":"workspace-cohort","cohort":"%s","elapsed_seconds":%d,"exit_code":%d}\n' "$COHORT" "$((SECONDS - phase_started))" "$phase_exit" > "target/nextest/$NEXTEST_PROFILE/timing.json"
           exit "$phase_exit"
+      - name: Verify the complete cohort and extracted resource closure
+        if: ${{ !cancelled() && github.event_name == 'merge_group' }}
+        run: node tools/support/compat/github/rust-test-archive.ts verify-files "$GITHUB_WORKSPACE" .artifacts/rust-test-archive/receipt.json "$COHORT" target/nextest/full/junit.xml
       - name: Verify actual typechecker fixture observations
         if: ${{ !cancelled() && github.event_name == 'merge_group' && contains(fromJSON(inputs.rust-plan).packages, 'vize_canon') }}
-        run: vp node tests/differential/typechecker-shards.ts worker target/nextest/full/typechecker-fixtures .artifacts/rust-test-archive/receipt.json target/nextest/full/junit.xml "$COHORT"
+        run: |
+          vp node tests/differential/typechecker-shards.ts worker target/nextest/full/typechecker-fixtures .artifacts/rust-test-archive/receipt.json target/nextest/full/junit.xml "$COHORT" 4
       - name: Upload Rust cohort results
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -384,7 +423,7 @@ jobs:
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           node tools/support/compat/github/select-rust-workers.mjs verify target/differential/typechecker/worker-selection.json .artifacts/typechecker-workers
-          vp node tests/differential/typechecker-shards.ts aggregate .artifacts/typechecker-workers target/differential/typechecker
+          vp node tests/differential/typechecker-shards.ts aggregate .artifacts/typechecker-workers target/differential/typechecker 4
       - name: Upload typechecker shared corpus evidence
         if: ${{ !cancelled() && github.event_name == 'merge_group' && inputs.run-rust && needs.pr-rust-shard.result == 'success' && contains(fromJSON(inputs.rust-plan).packages, 'vize_canon') }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

@@ -6,7 +6,37 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 
-export const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+export type InventoryBinary = {
+  id: string;
+  package: string;
+  binary: string;
+  cases: { name: string; ignored: boolean }[];
+};
+type InventoryReceipt = {
+  schema: string;
+  schemaVersion: number;
+  cargoProfile: string;
+  rawFile: string;
+  rawSha256: string;
+  source: ReturnType<typeof workspaceFingerprint>;
+  binaries: InventoryBinary[];
+};
+type ExecutionReceipt = {
+  source: InventoryReceipt["source"];
+  sourceSha: string;
+  cargoProfile: string;
+  runner: string;
+  inventoryOnly: boolean;
+  status: string;
+  phases: { name: string; exitCode: number; args: string[] }[];
+  execution: { runId: string; attempt: string };
+};
+const object = (value: unknown): Record<string, unknown> => {
+  assert(value && typeof value === "object" && !Array.isArray(value));
+  return value as Record<string, unknown>;
+};
+export const digest = (bytes: string | Uint8Array) =>
+  createHash("sha256").update(bytes).digest("hex");
 const sourceFiles = [
   "Cargo.toml",
   "Cargo.lock",
@@ -25,9 +55,13 @@ const runtimeKeys = [
   "CARGO_ENCODED_RUSTFLAGS",
   "CARGO_TARGET_DIR",
 ];
-const git = (...args) => execFileSync("git", args, { encoding: "utf8" }).trim();
+const git = (...args: string[]) => execFileSync("git", args, { encoding: "utf8" }).trim();
 
-export function inferWorkspaceProfileDefaults(manifest, cargoConfig, env = {}) {
+export function inferWorkspaceProfileDefaults(
+  manifest: string,
+  cargoConfig: string,
+  env: NodeJS.ProcessEnv = {},
+) {
   // Only the execution runner needs TOML; the aggregate intentionally runs
   // without a dependency install and only validates the retained receipts.
   const TOML = createRequire(import.meta.url)("@iarna/toml");
@@ -105,28 +139,32 @@ export function workspaceFingerprint(env = process.env) {
   };
 }
 
-export function normalizeWorkspaceInventory(list) {
-  const suites = list["rust-suites"];
+export function normalizeWorkspaceInventory(list: unknown): InventoryBinary[] {
+  const suites = object(list)["rust-suites"];
   assert.ok(suites && typeof suites === "object" && !Array.isArray(suites));
-  const binaries = Object.entries(suites)
-    .map(([id, suite]) => {
+  const binaries = Object.entries(object(suites))
+    .map(([id, item]) => {
+      const suite = object(item);
       assert.equal(suite["binary-id"], id);
       assert.equal(suite.status, "listed", `full inventory omits binary ${id}`);
-      assert.equal(typeof suite["package-name"], "string");
-      assert.equal(typeof suite["binary-name"], "string");
+      const pkg = suite["package-name"],
+        binary = suite["binary-name"];
+      assert(typeof pkg === "string");
+      assert(typeof binary === "string");
       assert.ok(suite.testcases && typeof suite.testcases === "object");
-      const cases = Object.entries(suite.testcases)
-        .map(([name, value]) => {
+      const cases = Object.entries(object(suite.testcases))
+        .map(([name, item]) => {
+          const value = object(item);
           assert.equal(
-            value["filter-match"]?.status,
+            object(value["filter-match"]).status,
             "matches",
             `full inventory excludes ${id}/${name}`,
           );
-          assert.equal(typeof value.ignored, "boolean");
+          assert(typeof value.ignored === "boolean");
           return { name, ignored: value.ignored };
         })
         .sort((a, b) => a.name.localeCompare(b.name, "en"));
-      return { id, package: suite["package-name"], binary: suite["binary-name"], cases };
+      return { id, package: pkg, binary, cases };
     })
     .sort((a, b) => a.id.localeCompare(b.id, "en"));
   assert.ok(
@@ -136,8 +174,8 @@ export function normalizeWorkspaceInventory(list) {
   return binaries;
 }
 
-export function readWorkspaceInventory(file) {
-  const receipt = JSON.parse(readFileSync(file, "utf8"));
+export function readWorkspaceInventory(file: string) {
+  const receipt: InventoryReceipt = JSON.parse(readFileSync(file, "utf8"));
   assert.equal(receipt.schema, "vize.rust.workspace-inventory");
   assert.equal(receipt.schemaVersion, 1);
   assert.ok(["test", "ci"].includes(receipt.cargoProfile));
@@ -145,14 +183,14 @@ export function readWorkspaceInventory(file) {
   const raw = readFileSync(path.join(path.dirname(file), receipt.rawFile));
   assert.equal(digest(raw), receipt.rawSha256, "raw workspace inventory digest mismatch");
   assert.deepEqual(
-    normalizeWorkspaceInventory(JSON.parse(raw)),
+    normalizeWorkspaceInventory(JSON.parse(raw.toString("utf8"))),
     receipt.binaries,
     "raw workspace inventory differs from receipt",
   );
   return receipt;
 }
 
-export function compareWorkspaceInventories(before, after) {
+export function compareWorkspaceInventories(before: InventoryReceipt, after: InventoryReceipt) {
   assert.equal(before.cargoProfile, "test");
   assert.equal(after.cargoProfile, "ci");
   assert.deepEqual(after.source, before.source, "inventory source/compiler/runtime mismatch");
@@ -163,7 +201,7 @@ export function compareWorkspaceInventories(before, after) {
   );
 }
 
-export function requireFullWorkspaceJobs(needs) {
+export function requireFullWorkspaceJobs(needs: unknown) {
   assert.ok(needs && typeof needs === "object" && !Array.isArray(needs));
   assert.deepEqual(
     Object.keys(needs).sort(),
@@ -171,13 +209,19 @@ export function requireFullWorkspaceJobs(needs) {
     "missing full Rust qualification job",
   );
   for (const [name, job] of Object.entries(needs))
-    assert.equal(job?.result, "success", `${name} did not succeed`);
+    assert.equal(object(job).result, "success", `${name} did not succeed`);
 }
 
-function attributes(text) {
-  const decode = (value) =>
+function attributes(text: string) {
+  const decode = (value: string) =>
     value.replace(/&(?:quot|apos|lt|gt|amp|#\d+|#x[\da-f]+);/gi, (entity) => {
-      const named = { "&quot;": '"', "&apos;": "'", "&lt;": "<", "&gt;": ">", "&amp;": "&" };
+      const named: Record<string, string> = {
+        "&quot;": '"',
+        "&apos;": "'",
+        "&lt;": "<",
+        "&gt;": ">",
+        "&amp;": "&",
+      };
       return (
         named[entity] ??
         String.fromCodePoint(
@@ -192,7 +236,13 @@ function attributes(text) {
   );
 }
 
-export function verifyWorkspaceExecution(receipt, timing, junit, expectedSha, cargoProfile = "ci") {
+export function verifyWorkspaceExecution(
+  receipt: InventoryReceipt,
+  timing: ExecutionReceipt,
+  junit: string,
+  expectedSha: string,
+  cargoProfile = "ci",
+) {
   assert.equal(receipt.source.sha, expectedSha, "workspace result is not this source head");
   assert.deepEqual(timing.source, receipt.source, "execution/inventory source or runtime mismatch");
   assert.deepEqual(receipt.source.inferredProfileDefaults, {
@@ -247,7 +297,12 @@ export function verifyWorkspaceExecution(receipt, timing, junit, expectedSha, ca
       ["test", "--locked", "--workspace", "--profile", cargoProfile, "--doc"],
     ],
   );
-  const expected = receipt.binaries
+  verifyInventoryJUnit(receipt.binaries, junit);
+}
+
+/** Exact executed names, shared by full-workspace and cohort archive receipts. */
+export function verifyInventoryJUnit(binaries: InventoryBinary[], junit: string) {
+  const expected = binaries
     .flatMap((binary) =>
       binary.cases
         .filter((test) => !test.ignored)
@@ -272,8 +327,8 @@ export function verifyWorkspaceExecution(receipt, timing, junit, expectedSha, ca
   );
 }
 
-function executionReceipt(file) {
-  const timing = JSON.parse(readFileSync(file, "utf8"));
+function executionReceipt(file: string) {
+  const timing: ExecutionReceipt = JSON.parse(readFileSync(file, "utf8"));
   assert.match(timing.execution.runId, /^\d+$/);
   assert.match(timing.execution.attempt, /^\d+$/);
   if (process.env.GITHUB_RUN_ID)
@@ -301,7 +356,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     for (const [file, receipt, timingFile] of [
       [first, before, "workspace-reference-timing.json"],
       [second, after, "workspace-timing.json"],
-    ]) {
+    ] as const) {
       const timing = executionReceipt(path.join(path.dirname(file), timingFile));
       if (originalExecution) assert.deepEqual(timing.execution, originalExecution);
       else originalExecution = timing.execution;

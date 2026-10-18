@@ -3,8 +3,9 @@ import fs from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { test } from "node:test";
+import { test, type TestContext } from "node:test";
 import {
+  RUST_TEST_COHORTS,
   RUST_TEST_COHORT_IDS,
   type RustTestCohortId,
 } from "../../tools/support/compat/github/rust-test-cohorts.ts";
@@ -214,15 +215,30 @@ test("complete legacy-only observations stay in the denominator with zero native
   });
 });
 
-test("named-worker reconciliation rejects missing workers, stale sources and duplicate execution", (t) => {
+function namedWorkerReconciliation(schemaVersion: 3 | 4, t: TestContext) {
   const directory = fs.mkdtempSync(path.join(tmpdir(), "vize-typechecker-accounting-"));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const artifacts = path.join(directory, "artifacts");
   const outputDir = path.join(directory, "output");
   const { sha, tree, toolchain } = typecheckerSourceIdentity(root);
+  const inventory = [
+    ["vize_l1", "vize_l1"],
+    ["vize_canon", "fix_history_diagnostics"],
+    ["vize_maestro", "vize_maestro"],
+    ["vize_glyph", "vize_glyph"],
+    ["vize", "vize"],
+  ].map(([pkg, binary], index) => ({
+    id: index === 1 ? "vize_canon::fix_history_diagnostics" : pkg,
+    package: pkg,
+    binary,
+    cases: (index === 1 ? Object.values(TYPECHECKER_TESTS) : [`case_${index}`]).map((name) => ({
+      name,
+      ignored: false,
+    })),
+  }));
   const actualReceipt = Buffer.from(
     JSON.stringify({
-      schemaVersion: 3,
+      schemaVersion,
       sha,
       tree,
       cargoProfile: "ci",
@@ -232,6 +248,32 @@ test("named-worker reconciliation rejects missing workers, stale sources and dup
       disableTsgo: null,
       nuxtIterations: "100",
       archiveSha256: "0".repeat(64),
+      ...(schemaVersion === 3
+        ? {}
+        : {
+            producerRun: "123",
+            producerAttempt: 1,
+            inventory,
+            payloads: RUST_TEST_COHORTS.map(({ id: cohort, filter }, index) => ({
+              cohort,
+              filter,
+              archiveSha256: "0".repeat(64),
+              binaryIds: [inventory[index].id],
+              binaryFiles: [
+                {
+                  id: inventory[index].id,
+                  path: `target/ci/${cohort}`,
+                  sha256: index === 1 ? binarySha256 : "0".repeat(64),
+                },
+              ],
+              files: [
+                {
+                  path: `target/ci/${cohort}`,
+                  sha256: index === 1 ? binarySha256 : "0".repeat(64),
+                },
+              ],
+            })),
+          }),
     }),
   );
   const assignment = (Object.keys(TYPECHECKER_TESTS) as Array<keyof typeof TYPECHECKER_TESTS>).map(
@@ -242,7 +284,17 @@ test("named-worker reconciliation rejects missing workers, stale sources and dup
     const destination = path.join(artifacts, `rust-test-cohort-${cohort}-123-1`);
     fs.mkdirSync(path.join(destination, "typechecker-fixtures"), { recursive: true });
     const tests = captures.map((item) => item.test);
-    const xml = Buffer.from(tests.map((name) => junit(name)).join("\n"));
+    const xml = Buffer.from(
+      schemaVersion === 3
+        ? tests.map((name) => junit(name)).join("\n")
+        : inventory[RUST_TEST_COHORT_IDS.indexOf(cohort)].cases
+            .map(
+              ({ name }) =>
+                `<testcase classname="${inventory[RUST_TEST_COHORT_IDS.indexOf(cohort)].id}" name="${name}"/>`,
+            )
+            .join("\n") +
+            (cohort === "typechecker" ? "" : tests.map((name) => junit(name)).join("\n")),
+    );
     fs.writeFileSync(path.join(destination, "junit.xml"), xml);
     fs.writeFileSync(
       path.join(destination, "typechecker-fixtures/worker.json"),
@@ -261,7 +313,12 @@ test("named-worker reconciliation rejects missing workers, stale sources and dup
     );
   };
   const run = () =>
-    aggregateTypecheckerWorkers({ repoRoot: root, artifactRoot: artifacts, outputDir });
+    aggregateTypecheckerWorkers({
+      repoRoot: root,
+      artifactRoot: artifacts,
+      outputDir,
+      ...(schemaVersion === 3 ? {} : { receiptSchema: 4 }),
+    });
   for (const cohort of RUST_TEST_COHORT_IDS)
     if (cohort !== "cli-and-integrations")
       write(cohort, cohort === "typechecker" ? assignment : []);
@@ -299,7 +356,7 @@ test("named-worker reconciliation rejects missing workers, stale sources and dup
     ["worker", "manifestSha256"],
     ["worker", "junitSha256"],
     ["capture", "binarySha256"],
-    ["receipt", "archiveSha256"],
+    ["receipt", schemaVersion === 3 ? "archiveSha256" : "payloads"],
     ["receipt", "requireTsgo"],
   ]) {
     run();
@@ -345,16 +402,31 @@ test("named-worker reconciliation rejects missing workers, stale sources and dup
   fs.renameSync(compilerDirectory, duplicateDirectory);
   const duplicatePacket = path.join(duplicateDirectory, "typechecker-fixtures/worker.json");
   const compilerPacket = fs.readFileSync(duplicatePacket);
+  const duplicateJUnit = path.join(duplicateDirectory, "junit.xml");
+  const compilerJUnit = fs.readFileSync(duplicateJUnit);
   fs.writeFileSync(
     duplicatePacket,
-    JSON.stringify({ ...JSON.parse(compilerPacket.toString()), cohort: "typechecker" }),
+    schemaVersion === 3
+      ? JSON.stringify({ ...JSON.parse(compilerPacket.toString()), cohort: "typechecker" })
+      : first,
   );
+  if (schemaVersion === 4)
+    fs.copyFileSync(
+      path.join(path.dirname(path.dirname(packet("typechecker"))), "junit.xml"),
+      duplicateJUnit,
+    );
   assert.throws(run, /every named Rust cohort must appear exactly once/);
   absent();
   fs.writeFileSync(duplicatePacket, compilerPacket);
+  fs.writeFileSync(duplicateJUnit, compilerJUnit);
   fs.renameSync(duplicateDirectory, compilerDirectory);
   write("cli-and-integrations", [assignment[0]]);
-  assert.throws(run, /duplicate captured test body/);
+  assert.throws(
+    run,
+    schemaVersion === 3
+      ? /duplicate captured test body/
+      : /executed workspace case identities differ/,
+  );
   write("cli-and-integrations", []);
   const last = packet("cli-and-integrations");
   const stale = JSON.parse(fs.readFileSync(last, "utf8"));
@@ -362,4 +434,8 @@ test("named-worker reconciliation rejects missing workers, stale sources and dup
   fs.writeFileSync(last, JSON.stringify(stale));
   assert.throws(run);
   absent();
-});
+}
+
+for (const schemaVersion of [3, 4] as const)
+  test(`schema ${schemaVersion} named-worker reconciliation rejects missing workers, stale sources and duplicate execution`, (t) =>
+    namedWorkerReconciliation(schemaVersion, t));

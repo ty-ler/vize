@@ -9,25 +9,39 @@ import { parse } from "yaml";
 import {
   createArchiveReceipt,
   verifyArchiveReceipt,
-} from "../../tools/support/compat/github/rust-test-archive.mjs";
+} from "../../tools/support/compat/github/rust-test-archive.ts";
 
 import { selectArchive } from "../../tools/support/compat/github/rust-archive-download.ts";
+import { RUST_TEST_COHORT_IDS } from "../../tools/support/compat/github/rust-test-cohorts.ts";
 
 // Only the merge queue still transfers a receipt-bound archive to its shards.
-for (const job of ["merge-rust-source"]) {
-  void test(`${job} failed-only retry selects its completed producer's exact archive`, async () => {
+for (const cohort of RUST_TEST_COHORT_IDS) {
+  const job = "merge-rust-source";
+  void test(`${cohort} failed-only retry selects its completed producer's exact archive`, async () => {
     const workflow = parse(
       readFileSync(new URL("../../.github/workflows/pr-rust-checks.yml", import.meta.url), "utf8"),
     );
-    const upload = workflow.jobs[job].steps.find((step) =>
-      step.uses?.startsWith("actions/upload-artifact@"),
+    const uploads = workflow.jobs[job].steps.filter(
+      (step) =>
+        step.uses?.startsWith("actions/upload-artifact@") &&
+        step.with.name.startsWith("rust-test-archive-"),
     );
+    assert.deepEqual(
+      uploads.map((step) => step.with.name),
+      RUST_TEST_COHORT_IDS.map(
+        (id) => `rust-test-archive-${"${{ github.run_id }}"}-${"${{ github.sha }}"}-${id}`,
+      ),
+    );
+    const upload = uploads.find((step) => step.with.name.endsWith(`-${cohort}`));
     assert.ok(upload);
     const consumer = workflow.jobs["pr-rust-shard"];
     assert.ok(consumer);
     const selector = consumer.steps.find((step) => step.id === "rust-archive");
     assert.ok(selector);
-    assert.equal(selector.run, "node tools/support/compat/github/rust-archive-download.ts select");
+    assert.equal(
+      selector.run,
+      "node tools/support/compat/github/rust-archive-download.ts select-cohort",
+    );
     const downloads = consumer.steps.filter((step) =>
       step.uses?.startsWith("actions/download-artifact@"),
     );
@@ -90,6 +104,7 @@ for (const job of ["merge-rust-source"]) {
           run: context.runId,
           sha: context.sha,
           repository: "owner/repo",
+          cohort,
         });
       const directories = new Map([[artifact.id, directory]]);
       assert.deepEqual(select(retry), { id: artifact.id, digest: artifact.digest });
@@ -123,6 +138,7 @@ for (const job of ["merge-rust-source"]) {
           run: retry.runId,
           sha: retry.sha,
           repository: "owner/repo",
+          cohort,
         }),
         { id: 18, digest: replacementArtifact.digest },
       );
@@ -132,6 +148,7 @@ for (const job of ["merge-rust-source"]) {
             run: retry.runId,
             sha: retry.sha,
             repository: "owner/repo",
+            cohort,
           }),
         /Exactly one immutable Rust archive/,
       );
