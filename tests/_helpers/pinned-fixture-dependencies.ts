@@ -12,6 +12,8 @@ import {
   type PinnedFixtureSource,
 } from "./pinned-fixture-source.ts";
 
+const commandMaxBuffer = 256 * 1024 * 1024;
+
 type FileIdentity = {
   path: string;
   realPath: string;
@@ -19,6 +21,12 @@ type FileIdentity = {
   sha256: string;
 };
 type FileEvidence = FileIdentity & { contentsBase64: string };
+type RuntimeIdentityOutput = {
+  path: string;
+  kind: "missing" | "regular" | "symlink" | "other";
+  sizeBytes?: number;
+  file?: FileEvidence;
+};
 
 type DependencyPlan = {
   root: string;
@@ -64,6 +72,50 @@ function fileIdentity(file: string, bytes = fs.readFileSync(file)): FileIdentity
 function evidence(file: string): FileEvidence {
   const bytes = fs.readFileSync(file);
   return { ...fileIdentity(file, bytes), contentsBase64: bytes.toString("base64") };
+}
+
+function readRuntimeIdentityOutput(file: string): FileEvidence {
+  const before = fs.lstatSync(file);
+  assert.ok(before.isFile(), "runtime identity output must be a regular file");
+  const descriptor = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
+  try {
+    const identity = (stat: fs.Stats) => [
+      stat.dev,
+      stat.ino,
+      stat.mode,
+      stat.nlink,
+      stat.size,
+      stat.mtimeMs,
+      stat.ctimeMs,
+    ];
+    const opened = fs.fstatSync(descriptor);
+    assert.ok(opened.isFile());
+    assert.equal(opened.nlink, 1, "runtime identity output must be freshly owned");
+    assert.deepEqual(identity(opened), identity(before));
+    assert.ok(
+      opened.size <= commandMaxBuffer,
+      "runtime identity output exceeds the subprocess transport limit",
+    );
+    const bytes = Buffer.allocUnsafe(opened.size);
+    let offset = 0;
+    while (offset < bytes.length) {
+      const count = fs.readSync(descriptor, bytes, offset, bytes.length - offset, null);
+      assert.ok(count > 0, "runtime identity output must be complete");
+      offset += count;
+    }
+    assert.equal(
+      fs.readSync(descriptor, Buffer.allocUnsafe(1), 0, 1, null),
+      0,
+      "runtime identity output grew during read",
+    );
+    assert.deepEqual(identity(fs.fstatSync(descriptor)), identity(before));
+    assert.deepEqual(identity(fs.lstatSync(file)), identity(before));
+    const output = { ...fileIdentity(file, bytes), contentsBase64: bytes.toString("base64") };
+    assert.deepEqual(identity(fs.lstatSync(file)), identity(before));
+    return output;
+  } finally {
+    fs.closeSync(descriptor);
+  }
 }
 
 /** Authenticate the complete archive before any installer or authored script can run. */
@@ -219,6 +271,7 @@ export function preparePinnedFixtureDependencies(
     node: { version: process.version, executable: fileIdentity(process.execPath) },
     environmentCli: fileIdentity(environmentCli),
     actualManager: "",
+    runtimeIdentityOutputs: [] as RuntimeIdentityOutput[],
     authoredStubs: plan.stubs,
     commands: [] as CommandEvidence[],
     generatedStubs: [] as FileEvidence[],
@@ -230,15 +283,15 @@ export function preparePinnedFixtureDependencies(
     assertPinnedFixtureFiles(plan.sourceDir, source);
     assertPinnedFixtureFiles(root, source);
   };
-  const run = (args: string[], timeout: number): Buffer => {
+  const run = (args: string[], timeout: number, commandEnv = env): Buffer => {
     originalsUnchanged();
     const argv = [...prefix, ...args];
     const result = spawnSync(environmentCli, argv, {
       cwd: root,
-      env,
+      env: commandEnv,
       stdio: ["ignore", "pipe", "pipe"],
       timeout,
-      maxBuffer: 256 * 1024 * 1024,
+      maxBuffer: commandMaxBuffer,
     });
     receipt.commands.push({
       executable: environmentCli,
@@ -263,17 +316,70 @@ export function preparePinnedFixtureDependencies(
   };
   receipt.actualManager = run(["--version"], 120_000).toString("utf8").trim();
   assert.equal(receipt.actualManager, plan.managerVersion);
-  const runtime = JSON.parse(
-    run(
-      [
-        "exec",
-        "node",
-        "-e",
-        "process.stdout.write(JSON.stringify({version:process.version,executable:require('node:fs').realpathSync(process.execPath)}))",
-      ],
-      120_000,
-    ).toString("utf8"),
-  );
+  const runtimeDirectory = fs.mkdtempSync(path.join(root, ".vize-node-identity-"));
+  const runtimePath = path.join(runtimeDirectory, "runtime.json");
+  const runtimeEnvironment = { ...env };
+  // pnpm's reader gives this inherited variable priority over the explicit CLI setting.
+  delete runtimeEnvironment.pnpm_config_verify_deps_before_run;
+  let runtime: { version: string; executable: string };
+  try {
+    let committed: FileEvidence | undefined;
+    let probeSucceeded = false;
+    try {
+      run(
+        [
+          "--config.verify-deps-before-run=false",
+          "exec",
+          "node",
+          "-e",
+          "const fs=require('node:fs');const target=process.argv[1];" +
+            "fs.writeFileSync(target+'.tmp',JSON.stringify({version:process.version,executable:fs.realpathSync(process.execPath)}),{flag:'wx',mode:0o600});" +
+            "fs.renameSync(target+'.tmp',target)",
+          runtimePath,
+        ],
+        120_000,
+        runtimeEnvironment,
+      );
+      probeSucceeded = true;
+    } finally {
+      // Read channel bytes only after verified success; failed children retain metadata only.
+      try {
+        for (const file of [runtimePath + ".tmp", runtimePath]) {
+          const stat = fs.lstatSync(file, { throwIfNoEntry: false });
+          const output: RuntimeIdentityOutput = {
+            path: file,
+            kind: stat
+              ? stat.isFile()
+                ? "regular"
+                : stat.isSymbolicLink()
+                  ? "symlink"
+                  : "other"
+              : "missing",
+          };
+          if (stat) output.sizeBytes = stat.size;
+          receipt.runtimeIdentityOutputs.push(output);
+          if (!stat || !probeSucceeded) continue;
+          output.file = readRuntimeIdentityOutput(file);
+          if (file === runtimePath) committed = output.file;
+        }
+      } finally {
+        save();
+      }
+    }
+    assert.deepEqual(
+      fs.readdirSync(runtimeDirectory),
+      ["runtime.json"],
+      "runtime identity must commit its complete result atomically",
+    );
+    assert.ok(committed, "runtime identity result is required");
+    runtime = JSON.parse(Buffer.from(committed.contentsBase64, "base64").toString("utf8"));
+    assert.deepEqual(Object.keys(runtime).sort(), ["executable", "version"]);
+    assert.equal(typeof runtime.version, "string");
+    assert.equal(typeof runtime.executable, "string");
+    assert.ok(path.isAbsolute(runtime.executable));
+  } finally {
+    fs.rmSync(runtimeDirectory, { recursive: true, force: true });
+  }
   assert.equal(
     runtime.version,
     process.version,
