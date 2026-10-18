@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -105,7 +106,14 @@ test("parallel registry provider probes preserve every counter and expose only w
       const body =
         index % 2
           ? { name, "dist-tags": { latest: version, beta: version, rc: version } }
-          : { name, version };
+          : {
+              name,
+              version,
+              dist: {
+                tarball: `https://registry.npmjs.org/${name}/-/fixture-${version}.tgz`,
+                integrity: `sha512-${createHash("sha512").update("fixture npm archive\n").digest("base64")}`,
+              },
+            };
       assert.equal(result.value.stdout, `${JSON.stringify(body)}VIZE_HTTP_STATUS:200`);
       assert.equal(result.value.stderr, "");
     }
