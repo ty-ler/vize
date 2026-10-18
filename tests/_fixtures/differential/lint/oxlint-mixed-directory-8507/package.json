@@ -1,2 +1,0 @@
-{ "name": "repro", "private": true, "type": "module",
-  "devDependencies": { "oxlint": "1.81.0", "oxlint-plugin-vize": "0.441.0" } }

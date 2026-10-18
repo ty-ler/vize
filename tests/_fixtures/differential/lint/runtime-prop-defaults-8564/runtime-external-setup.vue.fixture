@@ -1,3 +1,0 @@
-<script setup src="./foreign.js">
-const props = defineProps({ value: { required: true, default: 1 } });
-</script>
