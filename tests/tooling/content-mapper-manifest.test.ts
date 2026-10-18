@@ -63,7 +63,9 @@ test("native mapper fixtures preserve the complete production capability contrac
     .typescript.contentMapper;
   const testRoot = path.join(root, "crates/vize/tests");
   const contracts: Array<{ source: string; manifest: Record<string, unknown> }> = [];
-  for (const relative of fs.readdirSync(testRoot, { recursive: true }).sort()) {
+  for (const relative of fs
+    .readdirSync(testRoot, { recursive: true })
+    .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0))) {
     if (!relative.startsWith("content_mapper") || !relative.endsWith(".rs")) continue;
     const source = fs.readFileSync(path.join(testRoot, relative), "utf8");
     for (const match of source.matchAll(
