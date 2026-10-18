@@ -278,6 +278,15 @@ impl LspProcess {
                 return status;
             }
             if Instant::now() >= deadline {
+                if self.passive.is_some() {
+                    let evidence = self.terminal_evidence();
+                    self.passive.as_mut().unwrap().record_exit_deadline(
+                        self.child.as_ref().unwrap().id(),
+                        PROCESS_EXIT_TIMEOUT,
+                        self.stdin.is_some(),
+                        evidence,
+                    );
+                }
                 let transport = if self.stdin.is_some() {
                     " while stdin remained open"
                 } else {
@@ -333,7 +342,9 @@ impl LspProcess {
 impl Drop for LspProcess {
     fn drop(&mut self) {
         self.shutdown();
-        if let Some(passive) = self.passive.take() {
+        if let Some(passive) = self.passive.take()
+            && passive.retains_terminal()
+        {
             passive.persist_reporting_error(self.terminal_evidence());
         }
     }

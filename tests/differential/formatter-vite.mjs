@@ -8,7 +8,7 @@ import {
   nativeHistoryDirectory,
   nativeHistoryReceipt,
   validateNativeHistoryBuild,
-} from "../../npm/native/scripts/formatter-history-build.mjs";
+} from "../../npm/native/scripts/formatter-history-build.mts";
 import { viteConfigurationPlans, originalViteSources } from "./formatter-vite-source.mjs";
 import {
   qualifyPublicCore,
@@ -240,7 +240,7 @@ export async function runPublicViteFormatter(root) {
                 persist();
               }
               assert.deepEqual(pass.observationErrors, []);
-              currentAddon(root, receipt, require);
+              custody.observe();
               const nativeLoads = pass.loads.loads.filter(
                 (load) => load.realpath === fs.realpathSync(custody.local),
               );

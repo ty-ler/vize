@@ -7,9 +7,10 @@ use File::Path qw(make_path);
 use JSON::PP;
 use Time::HiRes ();
 
-my %KNOWN = map { $_ => 1 } (
-    '4f2de678286401759b3fb4475bafe35b8f32b4b3a07d92642bbf37eadc9b34a4',
-    'a82f731365ad69d5c4c15f5e18fba4584bf3b7b839960172a76c3462b5114bf2',
+my %KNOWN = (
+    '4f2de678286401759b3fb4475bafe35b8f32b4b3a07d92642bbf37eadc9b34a4' => 'native-7.0.2',
+    'a82f731365ad69d5c4c15f5e18fba4584bf3b7b839960172a76c3462b5114bf2' => 'native-7.0.2',
+    '77dd575e73107c00cc95cbccc3764ab7210089b5634f75e219b61632bd5d230b' => 'content-mapper-d6c4',
 );
 my $CONTRACT = 'a8641e61d1469332cccbd06eb2cbc7a520c17485c53abaefb2e965676902c183';
 my $JSON = JSON::PP->new->utf8->canonical;
@@ -41,6 +42,9 @@ sub new {
         my $bytes = <$file>;
         die 'changed native initialization contract' unless Digest::SHA::sha256_hex($bytes) eq $CONTRACT;
         $expected = $JSON->decode($bytes);
+        if ($candidate eq 'content-mapper-d6c4') {
+            $expected->{serverInfo} = { name => 'typescript', version => '7.1.0-dev' };
+        }
     }
     return bless { actual => $actual, identity => $identity, candidate => $candidate ? 1 : 0,
         expected => $expected, pending => { client => '', server => '' }, errors => [],

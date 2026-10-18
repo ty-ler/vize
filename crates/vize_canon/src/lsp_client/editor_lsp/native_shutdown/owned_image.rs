@@ -103,14 +103,14 @@ fn image_digest(pid: u32) -> Option<vize_l0::String> {
     Some(digest)
 }
 
-pub(super) fn eof_capability(observer: &ProcessObserver) -> bool {
+pub(super) fn eof_capability(observer: &ProcessObserver, contract: super::EofContract) -> bool {
     let Some(pid) = live_pid(&observer.receipts()) else {
         return false;
     };
     let Some(digest) = image_digest(pid) else {
         return false;
     };
-    live_pid(&observer.receipts()) == Some(pid) && super::known_binary(digest.as_str())
+    live_pid(&observer.receipts()) == Some(pid) && contract.accepts_image(digest.as_str())
 }
 
 #[cfg(test)]
@@ -187,7 +187,10 @@ mod tests {
             );
             denied.push(complete_receipt(&row));
         }
-        assert!(!eof_capability(&ProcessObserver::default()));
+        assert!(!eof_capability(
+            &ProcessObserver::default(),
+            super::super::EofContract::Native702
+        ));
         assert_eq!(image_digest(std::process::id()), None);
         assert_eq!(image_digest(u32::MAX), None);
         capture(
@@ -332,7 +335,10 @@ mod tests {
         assert!(row.stderr_error.is_none() && row.process_error.is_none());
         assert!(!row.timed_out && !row.kill_requested);
         assert!(row.exit_status.unwrap().success());
-        assert!(!eof_capability(&session.process_observer));
+        assert!(!eof_capability(
+            &session.process_observer,
+            super::super::EofContract::Native702
+        ));
         assert_eq!(image_digest(pid), None);
         assert_eq!(fs::read_to_string(wrapper).unwrap(), body);
         capture(

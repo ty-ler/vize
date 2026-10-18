@@ -99,10 +99,12 @@ pub(super) fn assert_native_termination(trace_dir: &Path, pid: &str) -> Result<(
     {
         return Err(refused());
     }
-    let expected: Value = serde_json::from_str(include_str!(
-        "../../../../../../tests/fixtures/native-proxy-initialize.json"
-    ))
-    .map_err(|error| error.to_string())?;
+    let expected = known_initialize_contract(
+        packet
+            .get("identity")
+            .and_then(|identity| identity.get("sha256"))
+            .and_then(Value::as_str),
+    )?;
     if packet["wholeInitializeResponse"]["result"] != expected
         || packet["wholeInitializeResponse"]["id"] != packet["wholeInitializeRequest"]["id"]
         || packet["wholeShutdownResponse"]["id"] != packet["wholeShutdownRequest"]["id"]
@@ -150,4 +152,66 @@ fn native_proxy_preserves_whole_frames_and_foreign_process_refusals() {
         output.status.success(),
         "whole framing/foreign native controls failed: {output:?}"
     );
+}
+
+fn known_initialize_contract(image: Option<&str>) -> Result<Value, String> {
+    let mut expected: Value = serde_json::from_str(include_str!(
+        "../../../../../../tests/fixtures/native-proxy-initialize.json"
+    ))
+    .map_err(|error| error.to_string())?;
+    match image {
+        Some(
+            "4f2de678286401759b3fb4475bafe35b8f32b4b3a07d92642bbf37eadc9b34a4"
+            | "a82f731365ad69d5c4c15f5e18fba4584bf3b7b839960172a76c3462b5114bf2",
+        ) => {}
+        Some("77dd575e73107c00cc95cbccc3764ab7210089b5634f75e219b61632bd5d230b") => {
+            let server_info = expected
+                .get_mut("serverInfo")
+                .ok_or_else(|| "trusted initialization contract has no serverInfo".to_string())?;
+            *server_info = serde_json::json!({ "name": "typescript", "version": "7.1.0-dev" });
+        }
+        _ => return Err("unknown native initialization image".to_string()),
+    }
+    Ok(expected)
+}
+
+#[test]
+fn native_initialize_contracts_require_the_exact_whole_image_pair() {
+    let old: Value = serde_json::from_str(include_str!(
+        "../../../../../../tests/fixtures/native-proxy-initialize.json"
+    ))
+    .expect("immutable original initialization contract");
+    let mut current = old.clone();
+    *current.get_mut("serverInfo").expect("trusted serverInfo") =
+        serde_json::json!({ "name": "typescript", "version": "7.1.0-dev" });
+    for (image, contract) in [
+        (
+            "4f2de678286401759b3fb4475bafe35b8f32b4b3a07d92642bbf37eadc9b34a4",
+            &old,
+        ),
+        (
+            "a82f731365ad69d5c4c15f5e18fba4584bf3b7b839960172a76c3462b5114bf2",
+            &old,
+        ),
+        (
+            "77dd575e73107c00cc95cbccc3764ab7210089b5634f75e219b61632bd5d230b",
+            &current,
+        ),
+    ] {
+        let expected = known_initialize_contract(Some(image)).expect("known exact image");
+        assert_eq!(&expected, contract);
+        assert_ne!(&expected, if contract == &old { &current } else { &old });
+        let mut changed = contract.clone();
+        changed
+            .as_object_mut()
+            .expect("whole contract")
+            .remove("capabilities");
+        assert_ne!(expected, changed);
+    }
+    for unknown in [None, Some(""), Some("77dd"), Some("foreign")] {
+        assert_eq!(
+            known_initialize_contract(unknown),
+            Err("unknown native initialization image".to_string())
+        );
+    }
 }
