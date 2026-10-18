@@ -5,7 +5,9 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use serde::Deserialize;
-use vize_canon::{BatchTypeChecker, BatchTypeCheckerOptions, BatchTypeCheckerTrait};
+use vize_canon::{
+    BatchTypeChecker, BatchTypeCheckerOptions, BatchTypeCheckerTrait, CompilerConfigurationSnapshot,
+};
 use vize_carton::corsa_resolver::{CorsaResolveRequest, resolve_corsa_executable};
 use vize_l0::String;
 
@@ -73,6 +75,46 @@ impl Drop for InjectedFixtureFile {
     }
 }
 
+// This is a separate pre-cold disk observation, not an export of private consumed stamps.
+fn assert_configuration_readiness(repo_root: &Path, fixture_root: &Path) {
+    let config = fixture_root.join("playground/tsconfig.json");
+    let attempt = CompilerConfigurationSnapshot::capture_attempt(fixture_root, Some(&config));
+    let observations = attempt.observations.paths();
+    let disk = observations.iter().map(|path| {
+        let metadata = fs::symlink_metadata(path);
+        let state = match metadata {
+            Ok(meta) if meta.is_symlink() => serde_json::json!({
+                "kind": "symlink", "target": fs::read_link(path).map_err(|error| error.to_string()),
+                "freshReadBytes": fs::read(path).map_err(|error| error.to_string()),
+            }),
+            Ok(meta) if meta.is_file() => serde_json::json!({
+                "kind": "file", "freshReadBytes": fs::read(path).map_err(|error| error.to_string()),
+            }),
+            Ok(meta) => serde_json::json!({"kind": if meta.is_dir() { "directory" } else { "other" }}),
+            Err(error) => serde_json::json!({"kind": "metadata-error", "errorKind": vize_l0::cstr!("{:?}", error.kind()), "error": error.to_string()}),
+        };
+        serde_json::json!({"path": path, "state": state})
+    }).collect::<Vec<_>>();
+    let changed = attempt.observations.changed_paths();
+    let output = artifact::output_dir(repo_root);
+    fs::create_dir_all(&output).expect("readiness evidence directory should exist");
+    fs::write(output.join("compiler-readiness.json"), serde_json::to_vec_pretty(&serde_json::json!({
+        "schemaVersion": 1, "config": config, "fixtureRoot": fixture_root,
+        "qualification": "public candidate paths and separate fresh disk reads before cold timer; not consumed byte stamps",
+        "privateOriginalStampsExported": false,
+        "dependencies": attempt.dependencies, "observationPaths": observations,
+        "freshDiskObservations": disk, "changedPaths": changed,
+        "outcome": attempt.outcome.as_ref().map(|_| "ready").map_err(|error| error.to_string()),
+    })).expect("readiness evidence should serialize")).expect("readiness evidence should write");
+    attempt
+        .outcome
+        .expect("authored Tier-L compiler configuration must resolve before cold scan");
+    assert!(
+        changed.is_empty(),
+        "Tier-L compiler configuration changed during readiness capture"
+    );
+}
+
 #[test]
 #[ignore = "runs the pinned Tier-L fixture in the per-PR Vue parity lane"]
 fn vben_batch_incremental_session_reuses_exact_materialized_delta() {
@@ -114,6 +156,8 @@ fn vben_batch_incremental_session_reuses_exact_materialized_delta() {
         "Corsa binary is missing: {}",
         corsa_path.display()
     );
+
+    assert_configuration_readiness(&repo_root, &fixture_root);
 
     let injected_path = fixture_root.join(INJECTED_FILE);
     let injected = InjectedFixtureFile::create(injected_path.clone());
