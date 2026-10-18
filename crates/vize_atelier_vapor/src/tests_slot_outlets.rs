@@ -113,3 +113,81 @@ fn test_compile_slot_outlet_static_and_spread_props() {
     assert_parses_as_module(&code);
     insta::assert_snapshot!(code.as_str());
 }
+
+#[test]
+fn forwarding_slot_roots_match_the_retained_lane_and_runtime_flags() {
+    // Exact RC.9 compiler-vapor boundaries: a stable sibling prevents
+    // forwarding, while an outlet-only root inherits its owner's fallback.
+    for (source, expected) in [
+        ("<slot></slot>", [0, 0, 0]),
+        ("<Comp><slot></slot></Comp>", [1, 0, 1]),
+        ("<Comp><div><slot></slot></div></Comp>", [0, 0, 0]),
+        ("<Comp><slot></slot><b>tail</b></Comp>", [0, 0, 0]),
+        ("<Comp><!--x--><slot></slot></Comp>", [1, 0, 1]),
+        (
+            "<Comp><slot></slot><slot name=\"other\"></slot></Comp>",
+            [0, 2, 1],
+        ),
+        ("<Comp><slot v-if=\"ok\"></slot></Comp>", [1, 0, 1]),
+        (
+            "<Comp><slot v-for=\"item in items\" :key=\"item\"></slot></Comp>",
+            [0, 1, 1],
+        ),
+        (
+            "<Comp><slot><slot name=\"other\"></slot></slot></Comp>",
+            [2, 0, 1],
+        ),
+        ("<Comp><Child><slot></slot></Child></Comp>", [1, 0, 1]),
+        (
+            "<Comp><component :is=\"which\"><slot></slot></component></Comp>",
+            [1, 0, 2],
+        ),
+    ] {
+        let allocator = vize_carton::Allocator::new();
+        let status = crate::l3::lower_source_for_vapor(
+            &allocator,
+            source,
+            crate::l3::VaporL3BridgeOptions {
+                ssr: false,
+                custom_renderer: false,
+                experimental_in_tag_comments: false,
+                experimental_patterned_template: false,
+                template_syntax: vize_atelier_core::TemplateSyntaxMode::Standard,
+                has_custom_elements: false,
+                prefixed_binding_metadata: false,
+                retained_lane: false,
+                inline: false,
+            },
+        );
+        assert!(
+            matches!(status, crate::l3::VaporL3BridgeStatus::Accepted(_)),
+            "the native regression must be admitted: {source}"
+        );
+        let native = compile_vapor(&allocator, source, Default::default());
+        let retained = compile_vapor(
+            &allocator,
+            source,
+            crate::VaporCompilerOptions {
+                davinci_retained_lane: true,
+                ..Default::default()
+            },
+        );
+        assert_eq!(native.error_messages, Vec::<String>::new(), "{source}");
+        assert_eq!(retained.error_messages, Vec::<String>::new(), "{source}");
+        assert_eq!(native.code, retained.code, "{source}");
+        assert_parses_as_module(&native.code);
+        assert_eq!(
+            [
+                native.code.matches("4 /* FORWARDED */").count(),
+                native
+                    .code
+                    .matches("12 /* FORWARDED, SHARED_FALLBACK */")
+                    .count(),
+                native.code.matches("_extend(").count(),
+            ],
+            expected,
+            "{source}: complete generated code:\n{}",
+            native.code
+        );
+    }
+}
