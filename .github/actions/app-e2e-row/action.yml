@@ -142,6 +142,11 @@ runs:
           vp run --filter './npm/framework/nuxt' build -- \
           vp run --filter './npm/framework/musea-nuxt' build
 
+    - name: Verify authored HMR client module identities
+      if: inputs.profile == 'full' && inputs.suite == 'dev' && inputs.shard == 'misskey'
+      shell: bash
+      run: node --test tests/tooling/app-hmr-client-module-identity.test.ts
+
     - name: Stabilize Ubuntu package archive
       if: inputs.needs-playwright == 'true'
       uses: ./.github/actions/setup-ubuntu-archive
