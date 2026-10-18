@@ -1,7 +1,7 @@
 {
   "schema": "vize.native-smoke-packed-config-extension.v1",
   "beforeSha256": "26890094723c79ee46b27c710b42feed3d5a660f98c382246cf19458000aeaa3",
-  "afterSha256": "b6f688ff03c256dc67b3dd9106c0d12fb61f171898316aabbe863b20ec388a95",
+  "afterSha256": "7f741a5fa360e5b77dcbc9cbea07213c0c3a61ba0407ebefc315a40e6be6ba59",
   "scope": "exact named bounded manual extension; immutable historical recipes/hash remain independently checked",
   "hunks": [
     {
@@ -34,11 +34,11 @@
     },
     {
       "before": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n",
-      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: b064aef9c07dc369251882acaf2897a4aaff5e3d\n    steps: *fresh-install-steps\n"
+      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: 25baaebfbba439d1ae9661df2bcfb3b1744c0580\n    steps: *fresh-install-steps\n"
     }
   ],
   "producer": {
-    "head": "b064aef9c07dc369251882acaf2897a4aaff5e3d",
+    "head": "25baaebfbba439d1ae9661df2bcfb3b1744c0580",
     "composedBase": "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b",
     "priorProducer": "820bf6b5d688c77f8edea6ba18ff6f86f76bffae",
     "scope": "Reviewed whole source custody; the finite sourceOnlyRust partition excludes tooling primary source bytes, while producer HEAD/build identity stays bound; qualification unexecuted.",
@@ -466,7 +466,7 @@
       "tools/support/release/preflight_pinned_evidence_tests.rs": "c49afb6721b4a8eff80cbca59c3824f0e13e57c86247da6d81a1a7071bd3a4ed",
       "crates/vize_canon/tests/support/tier_l_incremental_failure.rs": "cadbdb5e9481bf509a8887c3d2c7f41164b61c67ca3dbce930090933ddd9d27e",
       "crates/vize_canon/tests/support/tier_l_incremental_failure_tests.rs": "8dbf69bd6a5bd8094fbf5f16022d26920bd0573ef23ce571f8b0e32fc4b03cef",
-      "crates/vize_canon/tests/tier_l_incremental.rs": "3b83014f9c1586bbadf8d07f3d96f6ba16ffc26ce78ac32fc939807f2cd3b442"
+      "crates/vize_canon/tests/tier_l_incremental.rs": "666c9b924f9c5cbc0d5cb0e712e68deec92acd34bf974913ddb141a02e5b2fda"
     },
     "previousFrozenProducer": "c8855589af88f3804686959377d29e85e3d7a4f4",
     "earlierFrozenProducer": "9654d136f504765f0dfbdb1e17cf806e0b967878",
