@@ -376,6 +376,7 @@ export function compileTemplate() { return {code: "render()", errors: [], tips: 
 });
 
 void test("Inspector packets survive malformed, failed and signalled children before every original assertion", async () => {
+  const readPacket = (file: string) => JSON.parse(readFileSync(file, "utf8"));
   const root = realpathSync(mkdtempSync(path.join(os.tmpdir(), "vize-inspector-parent-")));
   const executable = path.join(root, "synthetic-inspector");
   writeFileSync(
@@ -395,8 +396,10 @@ else { process.stdout.write(JSON.stringify({schema:"vize.inspector.compare",targ
     "VIZE_INSPECT_OUTPUT_DIR",
     "VIZE_INSPECTOR_NODE",
     "VIZE_INSPECT_TEST_MODE",
+    "VIZE_INSPECTOR_COLLECT_ALL_TARGETS",
   ];
   const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  delete process.env.VIZE_INSPECTOR_COLLECT_ALL_TARGETS;
   process.env.VIZE_BIN = executable;
   process.env.VIZE_APP_CHECK_CAPTURE_DIR = path.join(root, "capture");
   process.env.VIZE_INSPECT_OUTPUT_DIR = path.join(root, "explicit-report");
@@ -423,7 +426,7 @@ else { process.stdout.write(JSON.stringify({schema:"vize.inspector.compare",targ
       const directory = path.join(root, "capture/inspector", mode);
       const [entry] = readdirSync(directory);
       const invocation = path.join(directory, entry);
-      const packet = JSON.parse(readFileSync(path.join(invocation, "process.json"), "utf8"));
+      const packet = readPacket(path.join(invocation, "process.json"));
       assert.equal(packet.cwd, root);
       assert.equal(packet.command, executable);
       assert.deepEqual(packet.args, [
@@ -456,25 +459,37 @@ else { process.stdout.write(JSON.stringify({schema:"vize.inspector.compare",targ
       if (mode === "signal") assert.equal(packet.signal, "SIGTERM");
     }
     process.env.VIZE_INSPECT_TEST_MODE = "budget";
-    assert.throws(
-      () => assertInspectorCompareBudgets(app("budget"), [{ ...budget, officialErrors: 1 }]),
-      /official errors/,
-    );
-    assert.equal(
-      JSON.parse(readFileSync(path.join(root, "explicit-report/dom.json"), "utf8")).summary
-        .officialErrors,
-      0,
-    );
+    const wrongCount = { ...budget, officialErrors: 1 };
+    const refused = [wrongCount, { ...wrongCount, target: "ssr" as const }];
+    assert.throws(() => assertInspectorCompareBudgets(app("budget"), refused), /official errors/);
+    assert.equal(readdirSync(path.join(root, "capture/inspector/budget")).length, 1);
+    assert.equal(readPacket(path.join(root, "explicit-report/dom.json")).summary.officialErrors, 0);
     delete process.env.VIZE_INSPECT_OUTPUT_DIR;
-    for (const name of ["first-app", "second-app"])
+    for (const mode of ["invalid", "1"]) {
+      process.env.VIZE_INSPECTOR_COLLECT_ALL_TARGETS = mode;
+      if (mode === "1") delete process.env.VIZE_APP_CHECK_CAPTURE_DIR;
+      const reason = mode === "1" ? /requires capture/ : /invalid Inspector/;
+      assert.throws(() => assertInspectorCompareBudgets(app(mode), refused), reason);
+    }
+    process.env.VIZE_APP_CHECK_CAPTURE_DIR = path.join(root, "capture");
+    assert.throws(
+      () => assertInspectorCompareBudgets(app("collected"), refused),
+      (error) =>
+        error instanceof AggregateError &&
+        error.errors.length === 2 &&
+        error.errors.every((entry) => /official errors/.test(entry.message)),
+    );
+    const collected = path.join(root, "capture/inspector/collected");
+    for (const target of ["dom", "ssr"])
+      assert.equal(readPacket(path.join(collected, `${target}.json`)).target, target);
+    delete process.env.VIZE_INSPECTOR_COLLECT_ALL_TARGETS;
+    for (const name of ["first-app", "second-app"]) {
       assertInspectorCompareBudgets(app(name), [budget, { ...budget, target: "ssr" }]);
-    for (const name of ["first-app", "second-app"])
       for (const target of ["dom", "ssr"]) {
-        const report = JSON.parse(
-          readFileSync(path.join(root, "capture/inspector", name, `${target}.json`), "utf8"),
-        );
+        const report = readPacket(path.join(root, "capture/inspector", name, `${target}.json`));
         assert.equal(report.target, target);
       }
+    }
   } finally {
     for (const key of keys) {
       if (previous[key] === undefined) delete process.env[key];

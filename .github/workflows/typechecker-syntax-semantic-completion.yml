@@ -7,9 +7,9 @@ on:
         required: true
         type: string
       scope:
-        description: Full qualification or the original pinned ReKa component contract
+        description: Full qualification, pinned ReKa contract, or the three original Inspector comparisons
         type: choice
-        options: [all, reka-pininput]
+        options: [all, reka-pininput, inspector]
         default: all
 permissions:
   contents: read
@@ -23,7 +23,7 @@ env:
   QUALIFIER_SCOPE: ${{ inputs.scope }}
 jobs:
   native-syntax-completion:
-    runs-on: ${{ inputs.scope == 'reka-pininput' && 'ubuntu-24.04' || 'blacksmith-32vcpu-ubuntu-2404' }}
+    runs-on: ${{ inputs.scope != 'all' && 'ubuntu-24.04' || 'blacksmith-32vcpu-ubuntu-2404' }}
     timeout-minutes: 105
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -37,22 +37,27 @@ jobs:
           mkdir -p target/native-syntax-completion
           git rev-parse HEAD > target/native-syntax-completion/source.sha
           git ls-files -s > target/native-syntax-completion/whole-source-index.txt
-          case "$QUALIFIER_SCOPE" in all|reka-pininput) ;; *) exit 1 ;; esac
-          if [[ "$QUALIFIER_SCOPE" == reka-pininput ]]; then test "$QUALIFIER_SHA" = "$GITHUB_SHA"; fi
+          case "$QUALIFIER_SCOPE" in all|reka-pininput|inspector) ;; *) exit 1 ;; esac
+          if [[ "$QUALIFIER_SCOPE" != all ]]; then test "$QUALIFIER_SHA" = "$GITHUB_SHA"; fi
       - name: Hydrate only the original pinned ReKa source
         if: inputs.scope == 'reka-pininput'
         run: git submodule update --init --depth 1 -- tests/_fixtures/_git/reka-ui
+      - name: Hydrate only the three original Inspector sources
+        if: inputs.scope == 'inspector'
+        run: >-
+          git submodule update --init --depth 1 --
+          tests/_fixtures/_git/elk tests/_fixtures/_git/npmx.dev tests/_fixtures/_git/vuefes-2025
       - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
-        if: inputs.scope == 'reka-pininput'
+        if: inputs.scope != 'all'
         with: { node-version-file: package.json, cache: true, run-install: false }
       - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
-        if: inputs.scope == 'reka-pininput'
+        if: inputs.scope != 'all'
         with: { toolchain: stable }
       - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
-        if: inputs.scope == 'reka-pininput'
+        if: inputs.scope != 'all'
         with: { wild-version: "0.9.0" }
       - uses: ./.github/actions/setup-rust-sticky-cache
-        if: inputs.scope == 'reka-pininput'
+        if: inputs.scope != 'all'
         with: { key: test-scripts, cache-key-suffix: "${{ runner.os }}-${{ runner.arch }}" }
       - name: Prepare original ReKa providers and the source CLI
         if: inputs.scope == 'reka-pininput'
@@ -73,6 +78,25 @@ jobs:
         run: |
           set -euo pipefail
           node --test tests/snapshots/check/reka-ui.ts 2>&1 | tee target/native-syntax-completion/reka-component-controls.log
+      - name: Prepare existing root providers and the Inspector CLI
+        if: inputs.scope == 'inspector'
+        run: |
+          set -euo pipefail
+          mkdir -p target/native-syntax-completion/inspector-source-inputs
+          git rev-parse HEAD > target/native-syntax-completion/source.sha
+          git ls-files -s > target/native-syntax-completion/whole-source-index.txt
+          git submodule status -- tests/_fixtures/_git/elk tests/_fixtures/_git/npmx.dev tests/_fixtures/_git/vuefes-2025 > target/native-syntax-completion/inspector-source-inputs/gitlinks.txt
+          cp --parents .gitmodules Cargo.lock pnpm-lock.yaml pnpm-workspace.yaml package.json tests/package.json target/native-syntax-completion/inspector-source-inputs/
+          vp install --frozen-lockfile --prefer-offline --filter . --filter './tests...'
+          cargo build --locked --profile ci -p vize
+      - name: All six original Inspector comparisons with unchanged budgets
+        if: inputs.scope == 'inspector'
+        env:
+          VIZE_APP_CHECK_CAPTURE_DIR: ${{ github.workspace }}/target/native-syntax-completion/inspector-packets
+          VIZE_INSPECTOR_COLLECT_ALL_TARGETS: "1"
+        run: |
+          set -euo pipefail
+          node --test --test-concurrency=1 tests/snapshots/inspect/elk.ts tests/snapshots/inspect/npmx.ts tests/snapshots/inspect/vuefes.ts 2>&1 | tee target/native-syntax-completion/inspector-comparisons.log
       - name: Original complete App E2E check row, sharing its native build
         if: inputs.scope == 'all'
         env:

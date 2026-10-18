@@ -47,14 +47,28 @@ export function assertInspectorCompareBudgets(
 ): void {
   requireVizeBin();
 
+  const collectAll = process.env.VIZE_INSPECTOR_COLLECT_ALL_TARGETS;
+  assert.ok(collectAll === undefined || collectAll === "1", "invalid Inspector collection mode");
+  assert.ok(
+    !collectAll || process.env.VIZE_APP_CHECK_CAPTURE_DIR,
+    "Inspector collection requires capture",
+  );
+  const failures: unknown[] = [];
   for (const budget of budgets) {
-    const report = runInspectorCompare(app, budget.target);
-    assert.equal(report.schema, "vize.inspector.compare");
-    assert.equal(report.target, budget.target);
-    assert.ok(report.summary.fileCount > 0, `${app.name}:${budget.target} should inspect files`);
-    writeInspectorReport(app.name, budget.target, report);
-    assertBudget(report, budget, app.name);
+    try {
+      const report = runInspectorCompare(app, budget.target);
+      assert.equal(report.schema, "vize.inspector.compare");
+      assert.equal(report.target, budget.target);
+      assert.ok(report.summary.fileCount > 0, `${app.name}:${budget.target} should inspect files`);
+      writeInspectorReport(app.name, budget.target, report);
+      assertBudget(report, budget, app.name);
+    } catch (error) {
+      if (!collectAll) throw error;
+      failures.push(error);
+    }
   }
+  if (failures.length)
+    throw new AggregateError(failures, `${app.name} Inspector comparisons failed`);
 }
 
 function runInspectorCompare(app: AppConfig, target: "dom" | "ssr"): InspectorCompareReport {
