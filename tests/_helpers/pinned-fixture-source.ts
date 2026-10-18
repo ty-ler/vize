@@ -39,7 +39,13 @@ export function readPinnedFixtureSource(
   const revision = git(sourceDir, ["rev-parse", "HEAD"]).trim();
   assert.equal(revision, expectedRevision, "fixture checkout must match the owning Gitlink");
   const gitlinks: PinnedFixtureSource["gitlinks"] = [];
-  const blobs = git(sourceDir, ["ls-tree", "-r", "-z", revision])
+  // Bound this complete inventory explicitly; execFileSync throws on overflow,
+  // so truncated output can never authenticate a partial source tree.
+  const blobs = execFileSync("git", ["ls-tree", "-r", "-z", revision], {
+    cwd: sourceDir,
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  })
     .split("\0")
     .filter(Boolean)
     .flatMap((record): FixtureBlob[] => {

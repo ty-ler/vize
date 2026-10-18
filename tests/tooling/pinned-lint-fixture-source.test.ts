@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -61,6 +62,67 @@ test("dependency setup may add installed files while all original blobs stay exa
     fs.writeFileSync(path.join(root, "node_modules", "installed.json"), '{"version":"1.0.0"}');
     assert.equal(source.blobs.length, 4);
     assertPinnedFixtureFiles(root, source);
+  });
+});
+
+test("a complete pinned Git tree larger than the default pipe buffer retains its final blob and digest", () => {
+  withFixture((root) => {
+    const object = execFileSync("git", ["hash-object", "-w", "--stdin"], {
+      cwd: root,
+      encoding: "utf8",
+      input: "large fixture original\n",
+    }).trim();
+    const blobs = Array.from({ length: 8192 }, (_, index) => ({
+      path: `file-${String(index).padStart(5, "0")}-${"a".repeat(80)}.vue`,
+      mode: "100644",
+      object,
+    }));
+    const records = blobs
+      .map((blob) => `${blob.mode} blob ${blob.object}\t${blob.path}\0`)
+      .join("");
+    assert.ok(Buffer.byteLength(records) > 1024 * 1024);
+    assert.ok(Buffer.byteLength(records) < 64 * 1024 * 1024);
+    const tree = execFileSync("git", ["mktree", "-z"], {
+      cwd: root,
+      encoding: "utf8",
+      input: records,
+    }).trim();
+    const pin = git(root, [
+      "-c",
+      "user.name=Vize",
+      "-c",
+      "user.email=vize@example.com",
+      "commit-tree",
+      tree,
+      "-m",
+      "large source inventory",
+    ]);
+    git(root, ["update-ref", "HEAD", pin]);
+    assert.throws(
+      () =>
+        execFileSync("git", ["ls-tree", "-r", "-z", pin], {
+          cwd: root,
+          encoding: "utf8",
+          maxBuffer: 1024 * 1024,
+        }),
+      { code: "ENOBUFS" },
+    );
+    const source = readPinnedFixtureSource(root, pin);
+    assert.deepEqual(source, {
+      revision: pin,
+      blobs,
+      gitlinks: [],
+      inventorySha256: createHash("sha256")
+        .update(JSON.stringify({ blobs, gitlinks: [] }))
+        .digest("hex"),
+    });
+    assert.equal(source.blobs.at(-1)?.path, blobs.at(-1)?.path);
+    assert.notEqual(
+      source.inventorySha256,
+      createHash("sha256")
+        .update(JSON.stringify({ blobs: blobs.slice(0, -1), gitlinks: [] }))
+        .digest("hex"),
+    );
   });
 });
 

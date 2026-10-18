@@ -10,7 +10,7 @@ import {
 } from "./native-packed-config-extension.ts";
 
 export function verifyPackedProducerHistory(root: string, workflowProducer: unknown): void {
-  const producer = "6e846aeea2a841737216d7d574f2d7d754cc8549";
+  const producer = "a838ef2c326d8fe866f2438e98f6897d6a29ba13";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
