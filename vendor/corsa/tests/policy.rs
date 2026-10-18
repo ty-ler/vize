@@ -113,3 +113,31 @@ fn contains_word(line: &str, word: &str) -> bool {
 fn is_ident(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || byte == b'_'
 }
+
+// These full shipping modules have an explicit ownership/evidence contract.
+// Public owned receipts retain their Vec/String API; the measured preclose
+// access check must avoid copying them on an alive owner. The original lexical
+// rule above remains unchanged, including the actual locked registry runtime.
+#[test]
+fn moved_process_modules_have_complete_allocation_contract_membership() {
+    let root = workspace_root();
+    let directory = root.join("vendor/corsa_core/src/process");
+    let mut actual = Vec::new();
+    for entry in fs::read_dir(directory).unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        assert!(
+            entry.file_type().unwrap().is_file(),
+            "physical source required"
+        );
+        assert!(path.extension().is_some_and(|extension| extension == "rs"));
+        actual.push(entry.file_name().into_string().unwrap());
+    }
+    actual.sort();
+    assert_eq!(
+        actual,
+        ["guard.rs", "lifetime.rs", "owned.rs", "preclose.rs"]
+    );
+    let receipt = root.join("vendor/corsa_core/src/process_receipt.rs");
+    assert!(fs::symlink_metadata(receipt).unwrap().file_type().is_file());
+}

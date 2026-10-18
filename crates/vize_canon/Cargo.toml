@@ -104,6 +104,11 @@ required-features = ["legacy-differential"]
 name = "empty_vue_star_exports"
 required-features = ["native"]
 
+[[test]]
+name = "corsa_process_allocation"
+harness = false
+required-features = ["native"]
+
 [[bench]]
 name = "package_route"
 harness = false

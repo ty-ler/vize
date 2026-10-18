@@ -12,6 +12,54 @@ runs:
         node tools/support/compat/github/checked-corsa-source.ts
         node --test tools/support/compat/github/checked-corsa-*.test.ts
         cargo fetch --locked
+    - name: Compare original copying and borrowed preclose allocation with whole custody
+      shell: bash
+      run: |
+        set -euo pipefail
+        output="$RUNNER_TEMP/native-preclose-allocation"
+        mkdir -p "$output"
+        original=406a0c412eda661aabadf954e5cf02df58db22e9
+        actor_head="$(git rev-parse HEAD)"
+        paths=(vendor/corsa_core/src/process/guard.rs vendor/corsa_core/src/process/lifetime.rs vendor/corsa_core/src/process_receipt.rs)
+        git diff --exit-code
+        git fetch --no-tags --depth=1 origin "$original"
+        test "$(git rev-parse "$original^{commit}")" = "$original"
+        restore_source() {
+          for path in "${paths[@]}"; do git show "$actor_head:$path" > "$path"; done
+        }
+        trap restore_source EXIT
+        for path in "${paths[@]}"; do git show "$original:$path" > "$path"; done
+        ORIGINAL_SOURCE="$original" ACTOR_HEAD="$actor_head" OUTPUT="$output" node --input-type=module <<'JS'
+        import assert from 'node:assert/strict';
+        import { execFileSync } from 'node:child_process';
+        import { createHash } from 'node:crypto';
+        import { readFileSync, writeFileSync } from 'node:fs';
+        const paths = ['vendor/corsa_core/src/process/guard.rs', 'vendor/corsa_core/src/process/lifetime.rs', 'vendor/corsa_core/src/process_receipt.rs'];
+        const git = (...args) => execFileSync('git', args);
+        const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+        assert.deepEqual(git('diff', '--name-only').toString().trim().split('\n').sort(), [...paths].sort());
+        const files = paths.map(path => {
+          const bytes = readFileSync(path);
+          assert.deepEqual(bytes, git('show', process.env.ORIGINAL_SOURCE + ':' + path));
+          return { path, sha256: sha(bytes) };
+        });
+        const actor = 'crates/vize_canon/tests/corsa_process_allocation.rs';
+        const manifest = 'crates/vize_canon/Cargo.toml';
+        for (const path of [actor, manifest]) assert.deepEqual(readFileSync(path), git('show', process.env.ACTOR_HEAD + ':' + path));
+        writeFileSync(process.env.OUTPUT + '/counterpart-source.json', JSON.stringify({ originalThreeBodies: process.env.ORIGINAL_SOURCE, actorHead: process.env.ACTOR_HEAD, currentCensusValidated: false, custody: 'Only these three immutable original Git bodies replace current source during copying; current census was validated before overlay and will be revalidated after restoration.', files, actorSha256: sha(readFileSync(actor)), manifestSha256: sha(readFileSync(manifest)) }, null, 2) + '\n');
+        JS
+        VIZE_CORSA_ALLOCATION_ARM=copying cargo test --locked --profile ci -p vize_canon --test corsa_process_allocation -- --exact borrowed_preclose_preserves_full_custody_without_discarded_copy_allocations --nocapture 2>&1 | tee "$output/copying.log"
+        grep -Fx 'borrowed_preclose_preserves_full_custody_without_discarded_copy_allocations: PASS (copying)' "$output/copying.log"
+        restore_source
+        trap - EXIT
+        git diff --exit-code
+        node tools/support/compat/github/checked-corsa-source.ts
+        VIZE_CORSA_ALLOCATION_ARM=borrowed cargo test --locked --profile ci -p vize_canon --test corsa_process_allocation -- --exact borrowed_preclose_preserves_full_custody_without_discarded_copy_allocations --nocapture 2>&1 | tee "$output/borrowed.log"
+        grep -Fx 'borrowed_preclose_preserves_full_custody_without_discarded_copy_allocations: PASS (borrowed)' "$output/borrowed.log"
+        for case in process::guard::tests::borrowed_precheck_keeps_first_fault_before_alive_or_consumed_child process::lifetime::preclose_tests::borrowed_metadata_access_keeps_exact_copying_refusal_order process_receipt::tests::borrowed_receipt_access_preserves_all_ordered_busy_and_poison_refusals; do
+          cargo test --locked --profile ci -p vize_corsa_core --lib "$case" -- --exact --nocapture --test-threads=1 2>&1 | tee -a "$output/lock-order.log"
+        done
+        test "$(grep -cF 'test result: ok. 1 passed; 0 failed; 0 ignored;' "$output/lock-order.log")" = 3
     - name: Test poisoned actual owned process lock and exact reaping
       shell: bash
       env:
@@ -122,6 +170,7 @@ runs:
           ${{ runner.temp }}/native-snapshot-source
           ${{ runner.temp }}/native-setup-drop-test.log
           ${{ runner.temp }}/native-owned-process-poison-test.log
+          ${{ runner.temp }}/native-preclose-allocation/
           ${{ runner.temp }}/native-preclose-epochs-test.log
           ${{ runner.temp }}/native-failed-project-open-test.log
           ${{ runner.temp }}/native-recovery-publication-test.log

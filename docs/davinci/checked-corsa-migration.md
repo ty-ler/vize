@@ -226,3 +226,29 @@ catalog must include core, JSON-RPC, client, LSP, orchestrator and facade before
 their Vize consumers. Namespace/trusted-publisher authorization and actual public
 consumer acceptance remain separate gates. An omitted catalog or an unauthenticated
 new namespace is not a releasable completion of either original PR.
+
+## Moved process custody and allocation contract
+
+The imported thirteen-file shorthand policy and locked runtime check remain
+unchanged. They are a source-style ratchet, not a proof that every operation
+allocates zero: compact strings, inline buffers and ordinary clones may allocate.
+The physical guard/lifetime/owned/preclose module census must remain complete.
+The receipt-access helper is also part of this explicit lifecycle contract.
+
+An alive preclose probe validates the same ordered child, stderr, terminal,
+observer, collection and receipt locks before try_wait, without constructing a
+discarded owned snapshot. Busy and poisoned custody keep their first original
+error. The terminal-positive path still captures the complete owned snapshot.
+Public receipt types, raw errors and binary stderr remain unchanged.
+
+The native Canon action measures the whole live probe with preowned long errors
+and binary stderr through the existing L0 allocator. Its isolated old arm uses
+the actual immutable406a three production bodies and identical test actor.
+It must preserve Ok(None) and show real copy allocations; the repaired arm must
+preserve that verdict with zero allocation calls/bytes in the measured window.
+Counter liveness, token-free clone negatives, exact mutex refusal ordering and
+complete terminal ownership remain mandatory. Raw outputs and source identities
+are retained. Owned terminal snapshots and failure evidence may allocate; no
+whole-module zero guarantee, timing improvement or public registry acceptance
+is implied. These controls are authored source until genuine Actions executes
+the exact source and its immutable counterfactual.
