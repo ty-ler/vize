@@ -30,11 +30,12 @@ impl NativeShutdown {
         }
         // Cancellation before proof delivery freezes active, too. A retry
         // cannot observe the child killed by an intervening close as predead.
-        let index = self.epochs.len();
         self.epochs.push((Arc::clone(bridge), None));
-        self.epochs[index].1 = probe()
-            .await
-            .filter(|epoch| Arc::ptr_eq(epoch.bridge(), bridge));
+        if let Some((_, classification)) = self.epochs.last_mut() {
+            *classification = probe()
+                .await
+                .filter(|epoch| Arc::ptr_eq(epoch.bridge(), bridge));
+        }
     }
 }
 

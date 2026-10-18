@@ -155,9 +155,27 @@ fn with_preclose(
     preclose: Option<&NativePreCloseEpoch>,
 ) -> NativeRetirementOutcome {
     if let Some(epoch) = preclose {
-        outcome.receipt["preexistingEpoch"] = epoch.receipt();
+        attach_preclose_receipt(&mut outcome, epoch.receipt());
     }
     outcome
+}
+
+/// Invalid receipt shapes remain observable and cannot release the retirement ledger.
+fn attach_preclose_receipt(outcome: &mut NativeRetirementOutcome, preclose: serde_json::Value) {
+    if let Some(receipt) = outcome.receipt.as_object_mut() {
+        receipt.insert("preexistingEpoch".into(), preclose);
+    } else {
+        outcome.custody_complete = false;
+        outcome.raw_errors.push(cstr!(
+            "Cannot attach preclose custody to a non-object retirement receipt"
+        ));
+        outcome.receipt = serde_json::json!({
+            "invalidReceipt": outcome.receipt,
+            "preexistingEpoch": preclose,
+            "custody_complete": false,
+            "raw_errors": outcome.raw_errors,
+        });
+    }
 }
 
 /// One nonblocking executor serves all retired epochs. Configuration discovery
@@ -199,4 +217,51 @@ fn closer() -> Result<&'static mpsc::UnboundedSender<Job>, &'static String> {
                 .map_err(|error| cstr!("Cannot start retired native close executor: {error}"))
         })
         .as_ref()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{NativeRetirementOutcome, attach_preclose_receipt};
+    use serde_json::json;
+    use vize_l0::cstr;
+
+    #[test]
+    fn preclose_receipt_preserves_the_complete_object_and_frozen_epoch() {
+        let original = json!({"children": [{"raw_errors": ["original RPC failure"], "stderr": [0, 255]}], "raw_errors": ["original RPC failure"], "custody_complete": true});
+        let epoch = json!({"criterion": "frozen epoch", "children": [{"stderr": [0, 255]}]});
+        let mut outcome = NativeRetirementOutcome {
+            custody_complete: true,
+            raw_errors: vec![cstr!("original RPC failure")],
+            receipt: original,
+        };
+        attach_preclose_receipt(&mut outcome, epoch.clone());
+        assert_eq!(
+            json!({"custody_complete": outcome.custody_complete, "raw_errors": outcome.raw_errors, "receipt": outcome.receipt}),
+            json!({"custody_complete": true, "raw_errors": ["original RPC failure"], "receipt": {"children": [{"raw_errors": ["original RPC failure"], "stderr": [0, 255]}], "raw_errors": ["original RPC failure"], "custody_complete": true, "preexistingEpoch": epoch}}),
+        );
+    }
+
+    #[test]
+    fn preclose_receipt_refuses_non_objects_and_publishes_all_original_evidence() {
+        for original in [
+            json!(null),
+            json!(false),
+            json!(17),
+            json!("invalid"),
+            json!([]),
+            json!([0, 255]),
+        ] {
+            let epoch = json!({"criterion": "frozen epoch", "children": [{"stderr": [0, 255]}]});
+            let mut outcome = NativeRetirementOutcome {
+                custody_complete: true,
+                raw_errors: vec![cstr!("original RPC failure")],
+                receipt: original.clone(),
+            };
+            attach_preclose_receipt(&mut outcome, epoch.clone());
+            assert_eq!(
+                json!({"custody_complete": outcome.custody_complete, "raw_errors": outcome.raw_errors, "receipt": outcome.receipt}),
+                json!({"custody_complete": false, "raw_errors": ["original RPC failure", "Cannot attach preclose custody to a non-object retirement receipt"], "receipt": {"invalidReceipt": original, "preexistingEpoch": epoch, "custody_complete": false, "raw_errors": ["original RPC failure", "Cannot attach preclose custody to a non-object retirement receipt"]}}),
+            );
+        }
+    }
 }
