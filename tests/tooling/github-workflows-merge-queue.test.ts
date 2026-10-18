@@ -1,3 +1,4 @@
+import { serialFullQualificationJobSources as checkWorkflowJobSources } from "./support/full-rust-differential.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { parse } from "yaml";
@@ -5,7 +6,7 @@ import { aggregateNeedsResults } from "../../tools/support/compat/github/require
 import { requireRustTier } from "../../tools/support/compat/github/require-rust-tier.ts";
 import { canonicalSourceReport } from "../../tools/support/compat/github/canonical-corpus-selection.mjs";
 import { rustDifferentialLanes } from "../../tools/support/compat/github/rust-differential-lanes.ts";
-import { checkWorkflowJobSources, readRepoFile } from "./support/github-workflows.ts";
+import { readRepoFile } from "./support/github-workflows.ts";
 type Step = {
   name?: string;
   if?: string;

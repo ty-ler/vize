@@ -1,3 +1,4 @@
+import { serialFullQualificationJobSources as checkWorkflowJobSources } from "./support/full-rust-differential.ts";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -7,7 +8,7 @@ import { test } from "node:test";
 import { pathToFileURL } from "node:url";
 import { parse } from "yaml";
 
-import { checkWorkflowJobSources, readRepoFile, root } from "./support/github-workflows.ts";
+import { readRepoFile, root } from "./support/github-workflows.ts";
 
 test("full native workspace tests hydrate the actual pinned Element Plus gitlink first", () => {
   const job = parse(checkWorkflowJobSources()).jobs["rust-native-differential"];

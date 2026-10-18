@@ -1,10 +1,11 @@
+import { serialFullQualificationJobSources as checkWorkflowJobSources } from "./support/full-rust-differential.ts";
 import assert from "node:assert/strict";
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { test } from "node:test";
 import { parse } from "yaml";
 import { aggregateNeedsResults } from "../../tools/support/compat/github/require-needs-success.ts";
 import { sourceInventoryLanes } from "../../tools/support/compat/davinci/source-inventories.ts";
-import { checkWorkflowJobSources, readRepoFile, root } from "./support/github-workflows.ts";
+import { readRepoFile, root } from "./support/github-workflows.ts";
 const CORE = ["fmt-rust", "check-js", "security-audit", "node-engine-compat", "check-vize-apps"];
 const PR_JOBS = [
   "iteration-plan",

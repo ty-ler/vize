@@ -8,9 +8,11 @@ import {
   requiredWorkflowJobNames,
 } from "../../tools/support/compat/github/release-preflight-evidence.mjs";
 import { checkWorkflowJobSources, readRepoFile } from "./support/github-workflows.ts";
+import { restoreSerialFullDifferential } from "./support/full-rust-differential.ts";
 
 type Step = { name?: string; uses?: string; run?: string; if?: string; env?: object };
 type Job = {
+  [key: string]: unknown;
   if?: string;
   needs?: string[];
   env?: object;
@@ -21,6 +23,10 @@ const workflow = parse(checkWorkflowJobSources()) as {
   jobs: Record<string, Job>;
 };
 const jobs = workflow.jobs;
+// This strict inverse validates every new actual role before preserving the
+// original serial command/setup assertions without changing their fixture.
+const serialJobs = structuredClone(jobs);
+restoreSerialFullDifferential(serialJobs);
 const producers = [
   "rust-clippy-portability",
   "rust-davinci-allocations",
@@ -144,7 +150,7 @@ test("release profile retains legacy nineteen roles and the real editor, tooling
   }
   assert.equal(jobs["semver-checks"].strategy?.matrix?.crate?.length, 12);
   for (const id of producers) {
-    assert.equal(jobs[id].needs, undefined, `${id} must run independently`);
+    assert.equal(serialJobs[id].needs, undefined, `${id} must run independently`);
     assert.equal(condition(jobs[id].if, "schedule", "refs/heads/main", false), true);
     assert.equal(condition(jobs[id].if, "pull_request", "refs/pull/1/merge", false), false);
   }
@@ -247,9 +253,9 @@ test("parallel Rust jobs preserve every original step, command byte and runtime 
   const setup = original.steps.slice(0, firstCommand);
   const tasks: Step[] = [];
   for (const id of producers) {
-    assert.deepEqual(jobs[id].env, original.env, `${id} changed runtime settings`);
-    assert.deepEqual(jobs[id].steps.slice(0, firstCommand), setup, `${id} changed setup`);
-    tasks.push(...jobs[id].steps.slice(firstCommand));
+    assert.deepEqual(serialJobs[id].env, original.env, `${id} changed runtime settings`);
+    assert.deepEqual(serialJobs[id].steps.slice(0, firstCommand), setup, `${id} changed setup`);
+    tasks.push(...serialJobs[id].steps.slice(firstCommand));
   }
   assert.deepEqual(tasks, original.steps.slice(firstCommand));
   const aggregate = jobs["clippy-and-test"];

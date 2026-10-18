@@ -1,12 +1,9 @@
+import { serialFullQualificationJobSources as checkWorkflowJobSources } from "./support/full-rust-differential.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { differentialSteps } from "../../tools/support/compat/github/rust-differential-lanes.ts";
 
-import {
-  checkWorkflowJobSources,
-  readRepoFile,
-  workflowJobBody,
-} from "./support/github-workflows.ts";
+import { readRepoFile, workflowJobBody } from "./support/github-workflows.ts";
 
 // P3-17: the production-reach gate rides the required rust-native-differential job,
 // its floors live in reach-budgets.toml [reach] for exactly the measured shapes,

@@ -15,6 +15,12 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import { parse } from "yaml";
+import {
+  fullDifferentialMatrix,
+  fullDifferentialSteps,
+  rustDifferentialLanes,
+} from "../../tools/support/compat/github/rust-differential-lanes.ts";
+import { restoreSerialFullDifferential } from "./support/full-rust-differential.ts";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const workflow = (path) => parse(readFileSync(join(root, path), "utf8"));
@@ -106,7 +112,7 @@ function selectedSteps(lane) {
 }
 const quote = (value) => `'${String(value).replaceAll("'", "'\\''")}'`;
 
-function fixture(lane) {
+function fixture(lane, fullMode) {
   const cwd = realpathSync(mkdtempSync(join(tmpdir(), "vize-rust-differential-")));
   const git = (...args) => execFileSync(realGit, args, { cwd, encoding: "utf8" }).trim();
   git("init", "-q");
@@ -141,17 +147,19 @@ exec "$NODE" -e 'const fs=require("node:fs"),assert=require("node:assert/strict"
 `,
     { mode: 0o755 },
   );
-  const script = selectedSteps(lane)
-    .map((step) => {
-      const env = Object.entries(step.env ?? {})
-        .map(
-          ([key, value]) =>
-            `export ${key}=${quote(String(value).replaceAll("${{ matrix.lane }}", lane))}`,
-        )
+  const script = fullMode
+    ? `${["program", "sfc-project"].includes(lane) ? `git submodule update --init --depth 1 -- ${fixturePath}\n` : ""}node ${runnerPath} ${fullMode === "all" ? "--all" : `--full-lane ${lane}`}`
+    : selectedSteps(lane)
+        .map((step) => {
+          const env = Object.entries(step.env ?? {})
+            .map(
+              ([key, value]) =>
+                `export ${key}=${quote(String(value).replaceAll("${{ matrix.lane }}", lane))}`,
+            )
+            .join("\n");
+          return `(\n${env}\n${step.run}\n)`;
+        })
         .join("\n");
-      return `(\n${env}\n${step.run}\n)`;
-    })
-    .join("\n");
   const execute = (failure) => {
     const env = {
       ...process.env,
@@ -252,5 +260,112 @@ await test("selected sibling lanes keep pinned hydration, oracle environments an
     } finally {
       f.cleanup();
     }
+  }
+});
+
+await test("all full matrix commands equal the original complete recipe and propagate child failures", () => {
+  const matrix = fullDifferentialMatrix();
+  assert.deepEqual(
+    matrix.lane,
+    rustDifferentialLanes.filter((lane) => !lane.navigation).map((lane) => lane.name),
+  );
+  assert.equal(matrix.lane.length, 11);
+  assert.deepEqual(
+    matrix.lane.flatMap(fullDifferentialSteps),
+    rustDifferentialLanes.flatMap((lane) => lane.steps),
+  );
+  assert.throws(() => fullDifferentialSteps("navigation"));
+  assert.throws(() => fullDifferentialSteps("none"));
+  const normalize = (call) => ({
+    args: call.args,
+    tsgo: call.tsgo,
+    disable: call.disable,
+    iterations: call.iterations,
+    production: call.production,
+    corpus: Boolean(call.corpus),
+  });
+  const fullCalls = [];
+  for (const lane of matrix.lane) {
+    const f = fixture(lane, "full");
+    try {
+      const result = f.execute("no-such-command");
+      assert.equal(result.status, 0, result.stderr);
+      const expected = fullDifferentialSteps(lane).map((step) => ({
+        args: step.args,
+        tsgo: "1",
+        disable: undefined,
+        iterations: "100",
+        production: step.env?.VIZE_VUE_RUNTIME_PRODUCTION,
+        corpus: Boolean(step.workspaceCorpus),
+      }));
+      assert.deepEqual(f.calls().map(normalize), expected);
+      fullCalls.push(...f.calls().map(normalize));
+    } finally {
+      f.cleanup();
+    }
+  }
+  const all = fixture("ssr", "all");
+  try {
+    const result = all.execute("no-such-command");
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(fullCalls, all.calls().map(normalize));
+  } finally {
+    all.cleanup();
+  }
+  const failed = fixture("program", "full");
+  try {
+    const result = failed.execute("source_folding::tests::");
+    assert.equal(result.status, 42, result.stderr);
+    assert.equal(failed.calls().length, 1, "no later feature command runs after failure");
+  } finally {
+    failed.cleanup();
+  }
+});
+
+await test("parallel workflow inverse refuses missing coverage, advisory results and receipt bypasses", () => {
+  const jobs = workflow(".github/workflows/full-qualification.yml").jobs;
+  restoreSerialFullDifferential(structuredClone(jobs));
+  const mutations = [
+    (j) => {
+      delete j["full-native-ssr"];
+    },
+    (j) => {
+      j["full-native-navigation"].if = "false";
+    },
+    (j) => {
+      j["full-native-ssr"]["continue-on-error"] = true;
+    },
+    (j) => {
+      j["full-rust-differential"].strategy["fail-fast"] = true;
+    },
+    (j) => {
+      j["full-rust-differential"].strategy.matrix = { lane: ["program"] };
+    },
+    (j) => {
+      j["full-rust-differential"].strategy["max-parallel"] = 8;
+    },
+    (j) => {
+      j["full-rust-differential"].steps[1].with.role = "none";
+    },
+    (j) => {
+      j["full-native-ssr"].env.VIZE_TEST_DISABLE_TSGO = "1";
+    },
+    (j) => {
+      j["rust-native-differential"].needs.pop();
+    },
+    (j) => {
+      j["rust-native-differential"].steps.pop();
+    },
+    (j) => {
+      j["rust-native-differential"].steps[3].with["merge-multiple"] = true;
+    },
+    (j) => {
+      j["rust-native-differential"].steps[3].with.pattern = "full-rust-differential-*";
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(jobs);
+    mutate(changed);
+    assert.throws(() => restoreSerialFullDifferential(changed));
   }
 });

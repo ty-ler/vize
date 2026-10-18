@@ -1,3 +1,13 @@
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  createFullDifferentialReceipt,
+  fullDifferentialProducers,
+  fullDifferentialRoles,
+  readFullDifferentialReceipts,
+  verifyFullDifferentialReceipts,
+} from "../../tools/support/compat/github/full-rust-differential.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
@@ -5,6 +15,7 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { parse } from "yaml";
 import { checkWorkflowJobSources, readRepoFile, root } from "./support/github-workflows.ts";
+import { restoreSerialFullDifferential } from "./support/full-rust-differential.ts";
 
 type Step = {
   name?: string;
@@ -16,6 +27,7 @@ type Step = {
   "continue-on-error"?: boolean;
 };
 type Job = {
+  [key: string]: unknown;
   if?: string;
   needs?: string[];
   env?: Record<string, string>;
@@ -31,7 +43,11 @@ const seed = parse(readRepoFile(".github", "workflows", "rust-pr-target-seed.yml
   jobs: Record<string, Job>;
 };
 const workspace = check.jobs["full-rust-workspace"];
-const tail = check.jobs["rust-native-differential"];
+// Validate the complete parallel transformation before reusing the unchanged
+// original-tail assertions and immutable whole-job witness below.
+const serialJobs = structuredClone(check.jobs);
+restoreSerialFullDifferential(serialJobs);
+const tail = serialJobs["rust-native-differential"];
 const aggregate = check.jobs["clippy-and-test"];
 const producerNames = [
   "rust-clippy-portability",
@@ -152,7 +168,7 @@ void test("the same-name Rust aggregate requires every independent producer to s
     "${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}",
   );
   for (const name of producerNames) {
-    const producer = check.jobs[name];
+    const producer = serialJobs[name];
     assert.equal(producer.needs, undefined, `${name} must start independently`);
     assert.equal(
       producer.if,
@@ -230,6 +246,7 @@ void test("expensive original-profile comparison is opt-in and requested parity 
 void test("full-only extraction preserves all seventeen complete original job objects", () => {
   const full = parse(readRepoFile(".github/workflows/full-qualification.yml"));
   const original = structuredClone(full.jobs);
+  restoreSerialFullDifferential(original);
   assert.deepEqual(original["nuxt-module-qualification"], {
     name: "Nuxt module qualification",
     uses: "./.github/workflows/nuxt3-module-build.yml",
@@ -302,4 +319,132 @@ void test("full-only extraction preserves all seventeen complete original job ob
     createHash("sha256").update(JSON.stringify(original)).digest("hex"),
     "4bf5e456fd55af86066c8587c7fb04e665ac9cf7c7441912ff7b384582659d41",
   );
+});
+
+void test("only complete current-source full-role results authorize the unchanged canonical gate", () => {
+  assert.deepEqual(fullDifferentialProducers, [
+    "full-rust-differential",
+    "full-native-navigation",
+    "full-native-ssr",
+  ]);
+  const env = {
+    GITHUB_SHA: "a".repeat(40),
+    GITHUB_RUN_ID: "77",
+    GITHUB_RUN_ATTEMPT: "2",
+    GITHUB_EVENT_NAME: "workflow_dispatch",
+    VIZE_TEST_REQUIRE_TSGO: "1",
+    VIZE_NUXT_CONFIG_ITERATIONS: "100",
+  };
+  const roles = fullDifferentialRoles();
+  const rows = roles.map((role) =>
+    createFullDifferentialReceipt(role, "success", {
+      ...env,
+      GITHUB_JOB:
+        role === "native-navigation"
+          ? "full-native-navigation"
+          : role === "native-ssr"
+            ? "full-native-ssr"
+            : "full-rust-differential",
+    }),
+  );
+  const needs = Object.fromEntries(
+    fullDifferentialProducers.map((id) => [id, { result: "success" }]),
+  );
+  verifyFullDifferentialReceipts(rows, needs, env);
+  verifyFullDifferentialReceipts(
+    rows.map((row) => ({ ...row, event: "schedule" })),
+    needs,
+    { ...env, GITHUB_EVENT_NAME: "schedule" },
+  );
+  for (let i = 0; i < rows.length; i++) {
+    assert.throws(() =>
+      verifyFullDifferentialReceipts(
+        rows.filter((_, n) => n !== i),
+        needs,
+        env,
+      ),
+    );
+    const duplicate = structuredClone(rows);
+    duplicate[i] = duplicate[(i + 1) % rows.length];
+    assert.throws(() => verifyFullDifferentialReceipts(duplicate, needs, env));
+    for (const status of ["failure", "cancelled", "skipped", "in_progress"]) {
+      const changed = structuredClone(rows);
+      changed[i].status = status;
+      assert.throws(() => verifyFullDifferentialReceipts(changed, needs, env));
+    }
+  }
+  for (const id of fullDifferentialProducers) {
+    const missing = structuredClone(needs);
+    delete missing[id];
+    assert.throws(() => verifyFullDifferentialReceipts(rows, missing, env));
+    for (const result of ["failure", "cancelled", "skipped", "in_progress"])
+      assert.throws(() =>
+        verifyFullDifferentialReceipts(rows, { ...needs, [id]: { result } }, env),
+      );
+  }
+  for (const [key, value] of [
+    ["sourceSha", "b".repeat(40)],
+    ["runId", "78"],
+    ["attempt", 1],
+    ["producer", "foreign"],
+    ["event", "pull_request"],
+    ["role", "none"],
+    ["recipe", []],
+    ["runtime", {}],
+  ] as const) {
+    const changed = structuredClone(rows);
+    Reflect.set(changed[0], key, value);
+    assert.throws(() => verifyFullDifferentialReceipts(changed, needs, env));
+  }
+  const directory = mkdtempSync(join(tmpdir(), "full-differential-receipts-"));
+  const prefix = `full-rust-differential-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}-${env.GITHUB_SHA}-`;
+  try {
+    for (const row of rows) {
+      mkdirSync(join(directory, prefix + row.role));
+      writeFileSync(join(directory, prefix + row.role, `${row.role}.json`), JSON.stringify(row));
+    }
+    const verify = (selectedEnv = env) => {
+      const bundle = readFullDifferentialReceipts(directory, selectedEnv);
+      verifyFullDifferentialReceipts(bundle.rows, needs, selectedEnv, bundle.producerAttempts);
+    };
+    verify();
+    mkdirSync(join(directory, "unexpected-artifact"));
+    assert.throws(() => readFullDifferentialReceipts(directory, env));
+    rmSync(join(directory, "unexpected-artifact"), { recursive: true });
+    const rerunEnv = { ...env, GITHUB_RUN_ATTEMPT: "3" };
+    verify(rerunEnv); // Same-run successful roles may retain their actual producer attempt.
+    const attemptDirectory = (attempt: number) =>
+      join(directory, prefix.replace("-2-", `-${attempt}-`) + roles[0]);
+    mkdirSync(attemptDirectory(3));
+    writeFileSync(
+      join(attemptDirectory(3), `${roles[0]}.json`),
+      JSON.stringify({ ...rows[0], attempt: 3, status: "failure" }),
+    );
+    assert.throws(() => verify(rerunEnv), "new failure cannot fall back to old success");
+    rmSync(attemptDirectory(3), { recursive: true });
+    mkdirSync(attemptDirectory(4));
+    writeFileSync(
+      join(attemptDirectory(4), `${roles[0]}.json`),
+      JSON.stringify({ ...rows[0], attempt: 4 }),
+    );
+    assert.throws(() => verify(rerunEnv), "future producer attempt refuses");
+    rmSync(attemptDirectory(4), { recursive: true });
+    mkdirSync(attemptDirectory(1));
+    writeFileSync(
+      join(attemptDirectory(1), `${roles[0]}.json`),
+      JSON.stringify({ ...rows[0], attempt: 1, status: "failure" }),
+    );
+    verify(); // Retain the original failed attempt while using its actual successful successor.
+    const file = join(directory, prefix + roles[0], `${roles[0]}.json`);
+    const bytes = readFileSync(file);
+    rmSync(file);
+    symlinkSync(join(directory, prefix + roles[1], `${roles[1]}.json`), file);
+    assert.throws(() => readFullDifferentialReceipts(directory, env));
+    rmSync(file);
+    writeFileSync(file, bytes);
+    writeFileSync(join(directory, prefix + roles[0], "extra.json"), "{}");
+    assert.throws(() => readFullDifferentialReceipts(directory, env));
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });

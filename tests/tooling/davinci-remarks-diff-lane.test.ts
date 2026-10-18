@@ -1,12 +1,9 @@
+import { serialFullQualificationJobSources as checkWorkflowJobSources } from "./support/full-rust-differential.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { differentialSteps } from "../../tools/support/compat/github/rust-differential-lanes.ts";
 
-import {
-  checkWorkflowJobSources,
-  readRepoFile,
-  workflowJobBody,
-} from "./support/github-workflows.ts";
+import { readRepoFile, workflowJobBody } from "./support/github-workflows.ts";
 
 // TS-32 (P3-13): the corpus remarks-diff rides the required rust-native-differential
 // job beside the sibling feature-gated L1-to-L2 corpus lanes, and the plan's

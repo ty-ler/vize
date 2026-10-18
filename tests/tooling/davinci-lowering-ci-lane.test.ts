@@ -1,12 +1,9 @@
+import { serialFullQualificationJobSources as checkWorkflowJobSources } from "./support/full-rust-differential.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { rustDifferentialLanes } from "../../tools/support/compat/github/rust-differential-lanes.ts";
 
-import {
-  checkWorkflowJobSources,
-  readRepoFile,
-  workflowJobBody,
-} from "./support/github-workflows.ts";
+import { readRepoFile, workflowJobBody } from "./support/github-workflows.ts";
 
 const s1ToL2LoweringCorpusCommand =
   "cargo test -p vize_l1_to_l2 --features legacy-differential --test davinci_lowering_corpus -- --nocapture";
