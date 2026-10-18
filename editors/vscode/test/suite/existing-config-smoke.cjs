@@ -157,11 +157,23 @@ async function runExistingConfigurationContentChangeSmoke() {
     };
     retain("before");
     const changeStart = readLogEntries(logPath).length;
+    const writeClocks = [];
+    const recordWriteClock = (event) => {
+      writeClocks.push({
+        event,
+        time: new Date().toISOString(),
+        monotonicNs: process.hrtime.bigint().toString(),
+        pid,
+        uri: uri.toString(),
+      });
+    };
     try {
+      recordWriteClock("write-begin");
       await vscode.workspace.fs.writeFile(
         uri,
         Buffer.from('{"compilerOptions":{"strict":true}}\n'),
       );
+      recordWriteClock("write-complete");
       entries = await waitForLogEntries(
         logPath,
         (next) =>
@@ -197,6 +209,10 @@ async function runExistingConfigurationContentChangeSmoke() {
         Array.from({ length: previousInitializations }, () => options),
       );
     } finally {
+      fs.writeFileSync(
+        `${packetPrefix}.write-clock.jsonl`,
+        writeClocks.map((record) => JSON.stringify(record) + "\n").join(""),
+      );
       retain("after");
     }
     await disableVizeAndWaitForShutdown(logPath);
