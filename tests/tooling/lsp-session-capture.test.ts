@@ -11,7 +11,7 @@ import { sha256 } from "../differential/harness.mjs";
 import { decodeFrames, frameMessage } from "../differential/lsp-wire.ts";
 import { resolveVizeLaunchCommand, type VerifiedLspLaunch } from "./support/lsp/launch.ts";
 import { LspSession } from "./support/lsp/session.ts";
-import { LspSessionCapture } from "./support/lsp/session-capture.ts";
+import { LspSessionCapture, type LspRequestTiming } from "./support/lsp/session-capture.ts";
 import { recordLspClientWire, spawnLspSessionProcess } from "./support/lsp/session-process.ts";
 
 function fixture() {
@@ -291,7 +291,13 @@ process.stdin.on("data", chunk => {
     const observation = JSON.parse(
       fs.readFileSync(path.join(directory, "observation.json"), "utf8"),
     );
-    const timing = observation.requestTiming;
+    const timing = observation.requestTiming as {
+      wallAnchor: string;
+      monotonicAnchorNs: string;
+      truncated: boolean;
+      omittedEvents: number;
+      events: Array<LspRequestTiming & { elapsedMs: number }>;
+    };
     assert.ok(Number.isFinite(Date.parse(timing.wallAnchor)));
     assert.match(timing.monotonicAnchorNs, /^\d+$/);
     assert.equal(timing.truncated, false);

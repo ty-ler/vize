@@ -10,7 +10,7 @@ import {
 } from "./native-packed-config-extension.ts";
 
 export function verifyPackedProducerHistory(root: string, workflowProducer: unknown): void {
-  const producer = "a838ef2c326d8fe866f2438e98f6897d6a29ba13";
+  const producer = "5d06ba0104467b86173ee46b58527e38920fa954";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -23,7 +23,7 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
   const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
   const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
   const files = Object.keys(witness.producer.files);
-  assert.equal(files.length, 421);
+  assert.equal(files.length, 424);
   assert.equal(new Set(files).size, files.length);
   const changedRust = git(
     "diff",
@@ -36,7 +36,7 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     .trim()
     .split("\n")
     .filter((file) => file.endsWith(".rs"));
-  assert.equal(changedRust.length, 435);
+  assert.equal(changedRust.length, 438);
   const roleBytes = fs.readFileSync(path.join(root, witness.producer.sourceOnlyRust.path));
   assert.equal(digest(roleBytes), witness.producer.sourceOnlyRust.sha256);
   const roles = JSON.parse(roleBytes.toString());
@@ -255,8 +255,20 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     "tests/_fixtures/differential/linter/computed-suppression-reka/NavigationMenuContentImpl.vue.fixture",
     "tests/_fixtures/differential/lsp/component-native-events/checked-native.expected.json",
   ];
+  const addedReceiptInputs = [
+    "crates/vize_canon/tests/support/tier_l_incremental_failure.rs",
+    "crates/vize_canon/tests/support/tier_l_incremental_failure_tests.rs",
+    "crates/vize_canon/tests/tier_l_incremental.rs",
+  ];
   assert.deepEqual(
-    files.filter((file) => ![...addedDiagnosticInputs, ...addedForwardInputs].includes(file)),
+    files.filter((file) => addedReceiptInputs.includes(file)),
+    addedReceiptInputs,
+  );
+  assert.deepEqual(
+    files.filter(
+      (file) =>
+        ![...addedDiagnosticInputs, ...addedForwardInputs, ...addedReceiptInputs].includes(file),
+    ),
     Object.keys(previousDiagnostic.producer.files),
   );
   const changedDiagnosticInputs = Object.keys(previousDiagnostic.producer.files).filter(
@@ -339,7 +351,7 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
   assert.equal(priorPrefix.producer.head, functionalPrefix.producer);
   assert.equal(Object.keys(priorPrefix.producer.files).length, 392);
   assert.deepEqual(
-    files.filter((file) => !addedForwardInputs.includes(file)),
+    files.filter((file) => ![...addedForwardInputs, ...addedReceiptInputs].includes(file)),
     Object.keys(priorPrefix.producer.files),
   );
   assert.deepEqual(
