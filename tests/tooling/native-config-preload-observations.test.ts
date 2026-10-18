@@ -371,10 +371,14 @@ test("private timing envelope preserves real Vite values, factory counts, ACK or
         `import {appendFileSync} from 'node:fs';
         export default () => {
           appendFileSync(${JSON.stringify(counter)}, 'once\\n');
-          ${failure ? "throw new Error('timed authored failure');" : "return {vue:{languageServer:{hover:false}}};"}
+          ${failure ? "throw Object.assign(new Error('timed authored failure'), {stack:'Error: timed authored failure\\n    at authored timing fixture'});" : "return {vue:{languageServer:{hover:false}}};"}
         };`,
       );
-      const outcomes = [];
+      const outcomes: Array<
+        Pick<Awaited<ReturnType<typeof observedNative>>, "status" | "value" | "stderr"> & {
+          phases: string[][];
+        }
+      > = [];
       for (const trace of [false, true]) {
         const phases: string[][] = [];
         const result = await observedNative(
@@ -419,8 +423,17 @@ test("private timing envelope preserves real Vite values, factory counts, ACK or
       }
       assert.deepEqual(outcomes[1], outcomes[0]);
       assert.equal(outcomes[0].status, failure ? 1 : 0);
-      if (failure) assert.match(outcomes[0].stderr, /timed authored failure/);
-      else assert.equal(outcomes[0].value.config.languageServer.hover, false);
+      if (failure) {
+        assert.match(outcomes[0].stderr, /timed authored failure/);
+        const changed = {
+          ...outcomes[1],
+          stderr: outcomes[1].stderr.replaceAll(
+            "timed authored failure",
+            "different authored failure",
+          ),
+        };
+        assert.throws(() => assert.deepEqual(changed, outcomes[0]), { code: "ERR_ASSERTION" });
+      } else assert.equal(outcomes[0].value.config.languageServer.hover, false);
     }
     assert.equal(await readFile(counter, "utf8"), "once\nonce\nonce\nonce\n");
   });
