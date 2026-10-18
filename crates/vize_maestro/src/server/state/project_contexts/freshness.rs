@@ -329,17 +329,31 @@ impl ServerState {
         {
             return owner.configuration_watch_paths();
         }
-        let mut roots = self
-            .configuration_records()
-            .into_iter()
-            .map(|(key, _)| key.root)
-            .collect::<Vec<_>>();
-        roots.sort();
-        roots.dedup();
-        let mut paths = roots
+        // One current snapshot supplies every retained/failed observation. A
+        // per-root call would clone all records again for each workspace owner.
+        let records = self.configuration_records();
+        let roots = records
             .iter()
-            .flat_map(|root| self.configuration_watch_paths_for_root(root))
+            .map(|(key, _)| key.root.clone())
+            .collect::<vize_l0::FxHashSet<_>>();
+        let mut paths = records
+            .into_iter()
+            .flat_map(|(_, record)| record.paths())
             .collect::<Vec<_>>();
+        if roots.iter().any(|root| self.is_primary_boundary(root)) {
+            paths.extend(
+                self.project_contexts
+                    .config_dependencies
+                    .read()
+                    .iter()
+                    .cloned(),
+            );
+        }
+        for (key, context) in self.project_contexts.contexts.lock().iter() {
+            if roots.contains(&key.root) {
+                paths.extend(context.config_dependencies());
+            }
+        }
         paths.sort();
         paths.dedup();
         paths
