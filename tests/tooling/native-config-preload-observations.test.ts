@@ -7,7 +7,10 @@ import { dirname, join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 import { test } from "node:test";
 
-import { importConfigModuleWithDependencies } from "../../crates/vize_carton/src/config/loader/module-runtime.mjs";
+import {
+  configModuleEvaluationTimings,
+  importConfigModuleWithDependencies,
+} from "../../crates/vize_carton/src/config/loader/module-runtime.mjs";
 
 const require = createRequire(import.meta.url);
 const vite = dirname(require.resolve("vite/package.json"));
@@ -391,8 +394,27 @@ test("private timing envelope preserves real Vite values, factory counts, ACK or
         const timings = result.value.configEvaluationTimings;
         if (!trace) assert.equal(timings, undefined);
         else {
+          const split = timings.filter((row: { phase: string }) =>
+            row.phase.startsWith("public_load_"),
+          );
+          if (split.length) {
+            assert.deepEqual(
+              split.map((row: { phase: string }) => row.phase),
+              ["public_load_until_owned_resolve", "public_load_after_owned_resolve"],
+            );
+            const load = timings.find(
+              (row: { phase: string }) => row.phase === "public_load",
+            ).elapsedMs;
+            assert.equal(
+              Math.abs(split[0].elapsedMs + split[1].elapsedMs - load) <=
+                Number.EPSILON * Math.max(1, load) * 4,
+              true,
+            );
+          }
           assert.deepEqual(
-            timings.map((row: { phase: string }) => row.phase),
+            timings
+              .filter((row: { phase: string }) => !row.phase.startsWith("public_load_"))
+              .map((row: { phase: string }) => row.phase),
             [
               "engine_selection_with_ack",
               "engine_import",
@@ -436,5 +458,30 @@ test("private timing envelope preserves real Vite values, factory counts, ACK or
       } else assert.equal(outcomes[0].value.config.languageServer.hover, false);
     }
     assert.equal(await readFile(counter, "utf8"), "once\nonce\nonce\nonce\n");
+  });
+});
+
+test("public-load split stays UNKNOWN when no owned resolve was observed", async () => {
+  await project(async (root, selected) => {
+    await mkdir(join(root, "node_modules"));
+    await symlink(vite, join(root, "node_modules/vite"), "junction");
+    await writeFile(selected, "export default {value:93};");
+    const previous = process.env.VIZE_TRACE_EDITOR_PREPARATION;
+    process.env.VIZE_TRACE_EDITOR_PREPARATION = "1";
+    try {
+      const loaded = await importConfigModuleWithDependencies(selected, () => ({
+        deregister() {},
+      }));
+      assert.deepEqual(loaded.namespace.default, { value: 93 });
+      const rows = configModuleEvaluationTimings(loaded)!;
+      assert.equal(rows.filter((row) => row.phase === "public_load").length, 1);
+      assert.deepEqual(
+        rows.filter((row) => row.phase.startsWith("public_load_")),
+        [],
+      );
+    } finally {
+      if (previous === undefined) delete process.env.VIZE_TRACE_EDITOR_PREPARATION;
+      else process.env.VIZE_TRACE_EDITOR_PREPARATION = previous;
+    }
   });
 });

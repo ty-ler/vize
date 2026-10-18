@@ -23,12 +23,31 @@ export function configModuleEvaluationTimings(value) {
   return configEvaluationTimings.get(value)?.map((row) => ({ ...row }));
 }
 
-function beginConfigTiming(rows, phase) {
+function beginConfigTiming(rows, phase, boundary) {
   const start = rows ? performance.now() : undefined;
   let finished = false;
+  if (boundary) boundary.active = true;
   return () => {
     if (start !== undefined && !finished) {
-      rows.push({ phase, elapsedMs: performance.now() - start, processId: process.pid });
+      const end = performance.now();
+      rows.push({ phase, elapsedMs: end - start, processId: process.pid });
+      if (boundary) {
+        boundary.active = false;
+        // No observed resolution means UNKNOWN: never fabricate zero or guess
+        // an SDK-generated path outside our already-owned private directory.
+        if (boundary.resolvedAt !== undefined) {
+          rows.push({
+            phase: "public_load_until_owned_resolve",
+            elapsedMs: boundary.resolvedAt - start,
+            processId: process.pid,
+          });
+          rows.push({
+            phase: "public_load_after_owned_resolve",
+            elapsedMs: end - boundary.resolvedAt,
+            processId: process.pid,
+          });
+        }
+      }
       finished = true;
     }
   };
@@ -116,6 +135,7 @@ async function captureConfigEvaluation(
   observeDependencies,
   ownedAdapter,
   timings,
+  boundary,
 ) {
   const files = new Set([configPath]);
   const requestedFiles = new Set();
@@ -134,6 +154,11 @@ async function captureConfigEvaluation(
             const result = nextResolve(specifier, context);
             if (result.url.startsWith("file:")) {
               const path = fileURLToPath(result.url);
+              if (boundary?.active && boundary.resolvedAt === undefined && isPrivate(path)) {
+                // Diagnostic only, after the same successful nextResolve. No
+                // extra resolution/read and no change to dependency ownership.
+                boundary.resolvedAt = performance.now();
+              }
               // Vite's generated module owns config execution, but its build engine
               // and private adapters are not authored configuration dependencies.
               if (owners.has(result.url) || owners.has(context.parentURL) || isPrivate(path)) {
@@ -220,6 +245,7 @@ export async function importConfigModuleWithDependencies(
   beforeRead,
 ) {
   const timings = process.env.VIZE_TRACE_EDITOR_PREPARATION === "1" ? [] : undefined;
+  const boundary = timings ? { active: false, resolvedAt: undefined } : undefined;
   const finishTotal = beginConfigTiming(timings, "module_total");
   const finishSelection = beginConfigTiming(timings, "engine_selection_with_ack");
   let selectionFinished = false;
@@ -324,7 +350,7 @@ export async function importConfigModuleWithDependencies(
           } finally {
             finishAck();
           }
-          const finishLoad = beginConfigTiming(timings, "public_load");
+          const finishLoad = beginConfigTiming(timings, "public_load", boundary);
           let loaded;
           try {
             loaded = await loadConfigFromFile(
@@ -351,6 +377,7 @@ export async function importConfigModuleWithDependencies(
         observe,
         adapter,
         timings,
+        boundary,
       );
       return result;
     } catch (error) {
