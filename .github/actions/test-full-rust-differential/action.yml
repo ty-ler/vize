@@ -1,0 +1,64 @@
+name: Test one complete full Rust differential role
+description: Run the original native setup and one full recipe without affected-package selection
+inputs:
+  role:
+    description: One normative full differential lane or native-navigation or native-ssr
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
+      with: { toolchain: stable, components: clippy }
+    - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
+      with: { wild-version: "0.9.0" }
+    - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+      with:
+        node-version-file: "package.json"
+        cache: true
+        run-install: true
+    - uses: ./.github/actions/setup-rust-sticky-cache
+      with:
+        key: clippy-test
+        cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
+    - uses: ./.github/actions/setup-rust-script
+    - name: Install Pkl CLI and hydrate pinned native fixture
+      shell: bash
+      run: npm install --global @pkl-community/pkl@0.27.2 && git submodule update --init --force --depth 1 -- tests/_fixtures/_git/element-plus
+    - name: Hydrate pinned Element Plus fixture
+      shell: bash
+      run: git submodule update --init --depth 1 -- tests/_fixtures/_git/element-plus
+    - name: Test native Program and Vue navigation responses
+      id: navigation
+      if: ${{ inputs.role == 'native-navigation' }}
+      env: { VIZE_TEST_REQUIRE_TSGO: "1" }
+      uses: ./.github/actions/test-native-navigation
+    - name: Test fresh native SSR modules
+      id: ssr
+      if: ${{ inputs.role == 'native-ssr' }}
+      env: { VIZE_TEST_REQUIRE_TSGO: "1" }
+      uses: ./.github/actions/test-native-ssr
+    - name: Test complete feature-enabled differential lane
+      id: features
+      if: ${{ inputs.role != 'native-navigation' && inputs.role != 'native-ssr' }}
+      shell: bash
+      env: { VIZE_TEST_REQUIRE_TSGO: "1", DIFFERENTIAL_LANE: "${{ inputs.role }}" }
+      run: node tools/support/compat/github/rust-differential-lanes.ts --full-lane "$DIFFERENTIAL_LANE"
+    - name: Record actual full differential outcome
+      if: ${{ always() }}
+      shell: bash
+      env:
+        VIZE_TEST_REQUIRE_TSGO: "1"
+        DIFFERENTIAL_ROLE: ${{ inputs.role }}
+        DIFFERENTIAL_OUTCOME: ${{ steps.navigation.outcome != 'skipped' && steps.navigation.outcome || steps.ssr.outcome != 'skipped' && steps.ssr.outcome || steps.features.outcome }}
+      run: node tools/support/compat/github/full-rust-differential.ts record "$DIFFERENTIAL_ROLE" "$DIFFERENTIAL_OUTCOME"
+    - name: Preserve source-bound full differential result
+      if: ${{ always() }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: full-rust-differential-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}-${{ inputs.role }}
+        path: ${{ runner.temp }}/full-rust-differential/${{ inputs.role }}.json
+        if-no-files-found: error
+        retention-days: 7
+    - uses: ./.github/actions/retain-sfc-runtime
+      if: ${{ always() }}
+      with: { suffix: "-${{ inputs.role }}" }

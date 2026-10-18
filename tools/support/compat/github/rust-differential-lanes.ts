@@ -160,11 +160,34 @@ export function differentialSteps(lane: string, packages: readonly string[]): St
   return selected.steps.filter((step) => packages.includes(step.package));
 }
 
+/** Full qualification never accepts an affected-package subset. */
+export function fullDifferentialMatrix() {
+  const navigation = rustDifferentialLanes.filter((lane) => lane.navigation);
+  const lanes = rustDifferentialLanes.filter((lane) => !lane.navigation);
+  if (
+    navigation.length !== 1 ||
+    navigation[0].name !== "navigation" ||
+    navigation[0].steps.length ||
+    lanes.some((lane) => !lane.steps.length) ||
+    new Set(lanes.map((lane) => lane.name)).size !== lanes.length
+  )
+    throw new Error("invalid complete full differential recipe");
+  return { lane: lanes.map(({ name }) => name) };
+}
+
+export function fullDifferentialSteps(name: string): readonly Step[] {
+  const lane = rustDifferentialLanes.find((lane) => lane.name === name && !lane.navigation);
+  if (!lane || lane.steps.length === 0) throw new Error(`unknown full differential lane: ${name}`);
+  return lane.steps;
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const args = process.argv.slice(2);
   let steps: Step[];
   if (args.length === 1 && args[0] === "--all") {
     steps = rustDifferentialLanes.flatMap((lane) => lane.steps);
+  } else if (args.length === 2 && args[0] === "--full-lane") {
+    steps = [...fullDifferentialSteps(args[1])];
   } else {
     if (args.length !== 2) throw new Error("expected --all or a lane and Rust plan path");
     const [lane, planPath] = args;
