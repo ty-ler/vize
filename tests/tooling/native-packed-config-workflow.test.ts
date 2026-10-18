@@ -1,6 +1,5 @@
 import { verifyPackedProducerHistory } from "./support/native-packed-config-history.ts";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { spawnSync, execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
