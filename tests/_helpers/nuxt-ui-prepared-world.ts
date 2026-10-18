@@ -6,6 +6,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { inspect } from "node:util";
 import { fixtureIdentity } from "./nuxt-ui-fixture-identity.ts";
+import { withViteNodeRequestBudget } from "../app/dev/nuxt-ui-vite-node.ts";
 
 type Phase = "candidate" | "reference";
 const CONFIG = "playgrounds/nuxt/nuxt.config.ts";
@@ -36,7 +37,7 @@ function write(directory: string, name: string, value: unknown): void {
 
 export function configureNuxtUiAuthority(configPath: string): void {
   if (!phase()) return;
-  let config = fs.readFileSync(configPath, "utf8");
+  let config = withViteNodeRequestBudget(fs.readFileSync(configPath, "utf8"));
   const helper = fileURLToPath(new URL("./nuxt-ui-compiler-authority.ts", import.meta.url));
   assert.ok(config.includes(COMPILER), "candidate compiler configuration changed");
   assert.ok(config.includes("    '@nuxt/ui'\n  ],"), "pinned upstream module roster changed");

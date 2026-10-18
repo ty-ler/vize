@@ -14,6 +14,8 @@ import {
   stockNuxtUiCompilerConfig,
 } from "../_helpers/nuxt-ui-prepared-world.ts";
 
+import { withViteNodeRequestBudget } from "../app/dev/nuxt-ui-vite-node.ts";
+
 const PREPARE =
   "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt prepare playgrounds/nuxt && nuxt prepare docs && pnpm dev:vue:build";
 const BUILD = "pnpm --filter './playgrounds/vue' build";
@@ -35,7 +37,7 @@ function write(root: string, file: string, value: string | object) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, typeof value === "string" ? value : JSON.stringify(value));
 }
-function fixture() {
+function fixture(config = ORIGINAL) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "nuxt-prepared-world-"));
   const cwd = path.join(root, "fixture"),
     authority = path.join(root, "authority");
@@ -48,7 +50,7 @@ function fixture() {
     scripts: { "dev:prepare": PREPARE, "dev:vue:build": BUILD },
   });
   write(cwd, "playgrounds/nuxt/package.json", { dependencies: { "@nuxt/ui": "workspace:*" } });
-  write(cwd, CONFIG, ORIGINAL);
+  write(cwd, CONFIG, config);
   write(cwd, "pnpm-lock.yaml", "whole pinned lock\n");
   write(cwd, ".vize-fixture-source.json", { commit: "3dbca020969582d577c7df9698dc8cd484f76dc1" });
   write(
@@ -312,6 +314,42 @@ test("an unprepared native phase refuses before executing even one preparation c
     );
     assert.deepEqual(f.calls, []);
     assert.equal(fs.existsSync(path.join(f.authority, "prepared-world-identity.json")), false);
+  } finally {
+    f.cleanup();
+  }
+});
+
+test("the existing startup request budget is canonical before either compiler config is sealed", () => {
+  // This existing Vite block is the actual late-write boundary from run39149845484.
+  const source = ORIGINAL.replace(
+    "};\n",
+    "  compatibilityDate: '2024-07-09',\n  vite: {\n    optimizeDeps: { include: ['@ai-sdk/vue', 'tailwind-variants'] },\n  },\n};\n",
+  );
+  const f = fixture(source);
+  try {
+    const candidate = fs.readFileSync(path.join(f.authority, "candidate-config.ts"), "utf8");
+    const stock = fs.readFileSync(path.join(f.cwd, CONFIG), "utf8");
+    assert.equal(candidate.split("viteNode: { requestTimeout: 600000 },").length, 2);
+    assert.equal(
+      candidate,
+      withViteNodeRequestBudget(candidate),
+      "the original later startup writer is now an exact no-op",
+    );
+    assert.equal(stock, stockNuxtUiCompilerConfig(candidate));
+    assert.equal(stock, withViteNodeRequestBudget(stock));
+    prepareNuxtUiSelectedApp(f.cwd, (_command, _args, cwd) => {
+      assert.equal(fs.readFileSync(path.join(cwd, CONFIG), "utf8"), stock);
+    });
+    sealNuxtUiPhase(f.cwd);
+    assert.equal(fs.readFileSync(path.join(f.authority, "reference-config.ts"), "utf8"), stock);
+    f.stopped("reference");
+    process.env.VIZE_NUXT_UI_COMPILER_PHASE = "candidate";
+    resumeNuxtUiPreparedApp(f.cwd, (_command, _args, cwd) => {
+      assert.equal(fs.readFileSync(path.join(cwd, CONFIG), "utf8"), candidate);
+    });
+    sealNuxtUiPhase(f.cwd);
+    assert.equal(fs.readFileSync(path.join(f.cwd, CONFIG), "utf8"), candidate);
+    assert.equal(fs.readFileSync(path.join(f.authority, "candidate-config.ts"), "utf8"), candidate);
   } finally {
     f.cleanup();
   }
