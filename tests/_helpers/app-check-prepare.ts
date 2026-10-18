@@ -356,7 +356,7 @@ export function lockedProviders(source: Source) {
             "local authored package changed",
           );
         } else if (!version.startsWith("link:")) {
-          const alias = /^(.*)@(\d[^@]*)$/.exec(version);
+          const alias = version.startsWith("https://") ? null : /^(.*)@(\d[^@]*)$/.exec(version);
           let expectedVersion = alias?.[2] ?? version;
           if (version.startsWith("https://")) {
             const resolved = lock.packages[`${name}@${version}`];

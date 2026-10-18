@@ -159,3 +159,12 @@ test("tarball packages cannot borrow an ambient physical provider or omit author
     fs.rmSync(f.root, { recursive: true });
   }
 });
+
+test("an HTTPS locator containing registry alias syntax still binds the requested package name", () => {
+  const f = fixture("kuromoji", "https://example.invalid/source@1.2.3", "0.0.1");
+  try {
+    unchanged(f, () => assert.ok(lockedProviders(f.source).includes(f.packageFile)));
+  } finally {
+    fs.rmSync(f.root, { recursive: true });
+  }
+});
