@@ -18,6 +18,9 @@ use super::{
     utils::remap_serialized_uris,
 };
 
+mod diagnostic_response;
+pub(super) mod native_diagnostics;
+
 /// The Arc owns the actual remote snapshot, not merely its opaque handle.
 /// Project metadata and URI translations belong to that same captured revision.
 pub(crate) struct InitialDiagnosticsRead {
@@ -159,8 +162,31 @@ impl InitialDiagnosticsRead {
                 }
             }
         }
-        self.trace_route("read", "unsupported", None);
-        Ok(None)
+        if !self.file_supported {
+            self.trace_route("read", "unsupported", None);
+            return Ok(None);
+        }
+        crate::corsa_bridge::native_operation::checkpoint()?;
+        // Standard native 7.0.2 has compiler-kind endpoints, not the optional
+        // aggregate SDK methods. This read retains this same snapshot lease;
+        // no project selection, overlay update or live disk read occurs here.
+        self.trace_route("compiler_kinds", "entered", None);
+        let result = native_diagnostics::read(
+            &self.client,
+            &self.snapshot,
+            &self.project,
+            &self.document_uri,
+        )?;
+        self.trace_route(
+            "compiler_kinds",
+            if result.is_some() {
+                "complete"
+            } else {
+                "unsupported"
+            },
+            None,
+        );
+        Ok(result.map(|diagnostics| self.remap(diagnostics)))
     }
 
     fn trace_route(&self, route: &str, event: &str, error: Option<&CorsaError>) {

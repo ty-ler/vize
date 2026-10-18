@@ -1,4 +1,9 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import { parse } from "yaml";
 import { readRepoFile } from "./support/github-workflows.ts";
@@ -151,4 +156,83 @@ test("the current PR native runtime lane remains connected to required source an
       "./.github/actions/test-native-selected-template",
     ],
   );
+});
+
+test("native compiler-kind read qualification preserves the complete original snapshot command", () => {
+  const action = parse(readRepoFile(".github", "actions", "test-native-canon", "action.yml")) as {
+    runs: { steps: Array<{ name: string; run?: string; env?: Record<string, string> }> };
+  };
+  const step = action.runs.steps[0];
+  assert.equal(step.name, "Test complete native snapshot text and owner refusals");
+  assert.deepEqual(step.env, {
+    VIZE_TEST_REQUIRE_TSGO: "1",
+    VIZE_SNAPSHOT_SOURCE_CAPTURE_DIR: "${{ runner.temp }}/native-snapshot-source",
+  });
+  assert.deepEqual(step.run?.trim().split("\n"), [
+    "unset VIZE_TEST_DISABLE_TSGO",
+    "cargo test --locked --profile ci -p vize_canon --lib lsp_client::editor_lsp::snapshot_source::tests::native::actual_native_snapshot_retains_complete_stdlib_and_overlay_text_with_owner_refusals -- --ignored --exact --nocapture",
+  ]);
+  const real = action.runs.steps[1];
+  assert.equal(
+    real.name,
+    "Test real compiler-kind diagnostics against complete native pull packets",
+  );
+  assert.deepEqual(real.env, step.env);
+  assert.ok(
+    real.run?.includes(
+      'cargo test --locked --profile ci -p vize_canon --lib lsp_client::editor_lsp::snapshot_source::tests::native::actual_native_compiler_kind_reads_match_whole_ts_and_generated_vue_pull_packets -- --ignored --exact --nocapture --color never >"$capture/test.stdout" 2>"$capture/test.stderr"',
+    ),
+  );
+  assert.ok(real.run?.includes("if (status !== 0) process.exit(status);"));
+  assert.ok(real.run?.includes("if (executed !== 1) throw new Error"));
+  assert.ok(real.run?.includes("1 passed; 0 failed; 0 ignored;"));
+  assert.ok(real.run?.includes("'provider.json', 'source.ts.json', 'View.vue.ts.json'"));
+  assert.ok(real.run?.includes("stdoutSha256: digest(stdout), stderrSha256: digest(stderr)"));
+});
+
+test("the actual compiler-kind carrier refuses zero execution and preserves whole output/status", () => {
+  const action = parse(readRepoFile(".github", "actions", "test-native-canon", "action.yml")) as {
+    runs: { steps: Array<{ run?: string }> };
+  };
+  const source = action.runs.steps[1].run?.match(/<<'NODE'\n([\s\S]*?)\nNODE/)?.[1];
+  assert.ok(source);
+  const name =
+    "lsp_client::editor_lsp::snapshot_source::tests::native::actual_native_compiler_kind_reads_match_whole_ts_and_generated_vue_pull_packets";
+  const full = `test ${name} ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 123 filtered out; finished in 0.01s\n`;
+  for (const [stdout, status, provider, expected] of [
+    [full, 0, true, 0],
+    [full.replace("1 passed", "0 passed"), 0, true, 1],
+    [full.replace(name, "another_test"), 0, true, 1],
+    [full, 17, true, 17],
+    [full, 0, false, 1],
+  ] as const) {
+    const directory = mkdtempSync(join(tmpdir(), "vize-native-carrier-"));
+    const stderr = "whole authored compiler stderr\n";
+    try {
+      writeFileSync(join(directory, "test.stdout"), stdout);
+      writeFileSync(join(directory, "test.stderr"), stderr);
+      writeFileSync(join(directory, "test.status"), `${status}\n`);
+      for (const file of [
+        "source.ts.json",
+        "View.vue.ts.json",
+        ...(provider ? ["provider.json"] : []),
+      ]) {
+        writeFileSync(join(directory, file), "{}\n");
+      }
+      const child = spawnSync(process.execPath, ["--input-type=module", "-", directory], {
+        input: source,
+        encoding: "utf8",
+      });
+      assert.equal(child.status, expected, child.stderr);
+      const receipt = JSON.parse(readFileSync(join(directory, "test-run.json"), "utf8"));
+      assert.equal(receipt.status, status);
+      assert.equal(receipt.name, name);
+      assert.equal(receipt.stdoutSha256, createHash("sha256").update(stdout).digest("hex"));
+      assert.equal(receipt.stderrSha256, createHash("sha256").update(stderr).digest("hex"));
+      assert.equal(readFileSync(join(directory, "test.stdout"), "utf8"), stdout);
+      assert.equal(readFileSync(join(directory, "test.stderr"), "utf8"), stderr);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  }
 });

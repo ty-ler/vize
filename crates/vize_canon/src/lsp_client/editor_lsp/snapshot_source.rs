@@ -18,6 +18,15 @@ mod protocol;
 #[cfg(test)]
 mod tests;
 
+/// Decode an already-owned response without minting another native snapshot.
+/// The caller retains the actual managed lease and exact project/file identity.
+pub(crate) fn decode_snapshot_text<'a>(
+    encoded: &'a EncodedPayload,
+    expected_name: &str,
+) -> Result<&'a str, SourceTextRefusal> {
+    protocol::source_text(encoded.as_bytes(), expected_name).map(|(text, _, _)| text)
+}
+
 /// A bounded refusal leaves the entire original response available for audit.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SourceTextRefusal {

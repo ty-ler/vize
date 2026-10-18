@@ -9,6 +9,156 @@ use serde_json::json;
 use std::{path::Path, process::Command};
 
 #[test]
+#[ignore = "requires the locked native 7.0.2 runtime; Actions qualification only"]
+fn actual_native_compiler_kind_reads_match_whole_ts_and_generated_vue_pull_packets() {
+    use crate::{
+        batch::{ImportRewriter, generate_vue_document_virtual_ts},
+        lsp_client::initial_diagnostics::native_diagnostics,
+        virtual_ts::VirtualTsOptions,
+    };
+    use corsa::runtime::block_on;
+    use lsp_types::{DocumentDiagnosticReport, DocumentDiagnosticReportResult};
+
+    let repo = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap();
+    let executable = vize_carton::corsa_resolver::resolve_corsa_executable(
+        vize_carton::corsa_resolver::CorsaResolveRequest {
+            explicit_path: std::env::var_os("CORSA_PATH").as_deref().map(Path::new),
+            project_root: Some(repo),
+        },
+    )
+    .unwrap()
+    .canonicalize()
+    .unwrap();
+    let version = Command::new(&executable).arg("--version").output().unwrap();
+    assert!(version.status.success());
+    assert_eq!(version.stdout, b"Version 7.0.2\n");
+    assert_eq!(version.stderr, b"");
+    // Real dependency lookup remains under the authenticated repository install.
+    // No synthetic package links, replacement SDK or hand-authored generated TS.
+    let parent = repo.join("tests/target/vize-tests");
+    std::fs::create_dir_all(&parent).unwrap();
+    let directory = tempfile::tempdir_in(&parent).unwrap();
+    let root = directory.path().canonicalize().unwrap();
+    let config = root.join("tsconfig.json");
+    let config_bytes = br#"{"compilerOptions":{"strict":true,"target":"ESNext","module":"ESNext","moduleResolution":"Bundler","types":[],"declaration":true,"noEmit":true},"files":["source.ts","View.vue.ts"]}"#;
+    std::fs::write(&config, config_bytes).unwrap();
+    let script = "export const value: string = 1;\r\n";
+    let source = root.join("source.ts");
+    let host = root.join("View.vue");
+    let authored = "<script lang=\"ts\">\nexport const value: string = 1;\n</script>";
+    let generated = generate_vue_document_virtual_ts(
+        &host,
+        authored,
+        &VirtualTsOptions::default(),
+        &ImportRewriter::new(),
+        false,
+    )
+    .unwrap();
+    std::fs::write(&source, "export const value: number = 1;\r\n").unwrap();
+    std::fs::write(&host, authored).unwrap();
+    let virtual_path = root.join("View.vue.ts");
+    std::fs::write(&virtual_path, generated.code.as_bytes()).unwrap();
+    let disk = std::fs::read(&source).unwrap();
+    let mut editor = EditorLspSession::spawn_with_config(
+        executable.to_str().unwrap(),
+        &root,
+        &root,
+        Some(&config),
+    )
+    .unwrap();
+    for (path, text) in [(&source, script), (&virtual_path, generated.code.as_str())] {
+        let uri = path_to_file_uri(path);
+        editor.mirror(&uri, text).unwrap();
+    }
+    editor.ready_workspace_request().unwrap();
+    let client = editor.configured_api.as_ref().unwrap().client.clone();
+    let snapshot = block_on(client.update_snapshot(Default::default())).unwrap();
+    let [project] = snapshot.projects.as_slice() else {
+        panic!("one configured native project required")
+    };
+    assert_eq!(Path::new(&project.config_file_name), config);
+    let capture =
+        std::path::PathBuf::from(std::env::var_os("VIZE_SNAPSHOT_SOURCE_CAPTURE_DIR").unwrap())
+            .join("compiler-kinds");
+    std::fs::create_dir_all(&capture).unwrap();
+    std::fs::write(capture.join("source.disk.ts"), &disk).unwrap();
+    std::fs::write(capture.join("source.overlay.ts"), script).unwrap();
+    std::fs::write(capture.join("View.vue"), authored).unwrap();
+    std::fs::write(capture.join("View.vue.ts"), generated.code.as_bytes()).unwrap();
+    std::fs::write(capture.join("tsconfig.json"), config_bytes).unwrap();
+    let binary_sha = hash(&std::fs::read(&executable).unwrap());
+    let package = executable
+        .ancestors()
+        .find(|path| path.join("package.json").is_file())
+        .unwrap();
+    let package_bytes = std::fs::read(package.join("package.json")).unwrap();
+    let package_json: serde_json::Value = serde_json::from_slice(&package_bytes).unwrap();
+    assert_eq!(package_json["name"], "@typescript/typescript-linux-x64");
+    assert_eq!(package_json["version"], "7.0.2");
+    std::fs::write(
+        capture.join("provider.json"),
+        serde_json::to_vec_pretty(&json!({
+            "runtimePath":executable,"runtimeSha256":binary_sha,
+            "versionStdout":version.stdout,"versionStderr":version.stderr,
+            "package":package_json,"packageSha256":hash(&package_bytes),
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    for (path, text) in [(&source, script), (&virtual_path, generated.code.as_str())] {
+        let uri = path_to_file_uri(path);
+        let actual = native_diagnostics::read(&client, &snapshot, project, &uri)
+            .unwrap()
+            .expect("real lower compiler methods must complete, not fall through");
+        let DocumentDiagnosticReportResult::Report(DocumentDiagnosticReport::Full(legacy)) =
+            editor.diagnostics(&uri).unwrap()
+        else {
+            panic!("whole native pull packet required")
+        };
+        let evidence = json!({"uri":uri,"snapshot":snapshot.handle,"project":project,
+            "runtimePath":executable,"runtimeSha256":binary_sha,
+            "sourceSha256":hash(text.as_bytes()),"lower":actual,
+            "nativePull":legacy.full_document_diagnostic_report.items});
+        std::fs::write(
+            capture.join(
+                vize_l0::cstr!("{}.json", path.file_name().unwrap().to_str().unwrap()).as_str(),
+            ),
+            serde_json::to_vec_pretty(&evidence).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(actual, legacy.full_document_diagnostic_report.items);
+        let identifier = text.find("value: string").unwrap();
+        let prefix = text.get(..identifier).unwrap();
+        let line = prefix.bytes().filter(|byte| *byte == b'\n').count();
+        let column = prefix
+            .rsplit_once('\n')
+            .map_or(prefix, |(_, last)| last)
+            .encode_utf16()
+            .count();
+        assert_eq!(
+            serde_json::to_value(&actual).unwrap(),
+            json!([{
+                "range":{"start":{"line":line,"character":column},"end":{"line":line,"character":column+5}},
+                "severity":1,"code":2322,"source":"ts",
+                "message":"Type 'number' is not assignable to type 'string'."
+            }])
+        );
+    }
+    block_on(snapshot.release()).unwrap();
+    assert_eq!(std::fs::read(&source).unwrap(), disk);
+    assert_eq!(std::fs::read(&host).unwrap(), authored.as_bytes());
+    assert_eq!(
+        std::fs::read(&virtual_path).unwrap(),
+        generated.code.as_bytes()
+    );
+    assert_eq!(std::fs::read(&config).unwrap(), config_bytes);
+}
+
+#[test]
 #[ignore = "requires the locked native 7.0.2 runtime; existing native-phase Actions executes it"]
 fn actual_native_snapshot_retains_complete_stdlib_and_overlay_text_with_owner_refusals() {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR"))
