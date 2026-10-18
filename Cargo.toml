@@ -284,6 +284,10 @@ incremental = false
 [profile.release.package.vize]
 strip = "symbols"
 
+# Optimize full-byte fingerprints for ordinary development and inherited CI/test builds.
+[profile.dev.package.sha2]
+opt-level = 3
+
 [profile.ci]
 inherits = "dev"
 debug = false
