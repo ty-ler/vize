@@ -197,9 +197,13 @@ export async function prepareCandidate(
 }
 
 /** Same byte change the pin verifier accepts. A fixture without a lock is unchanged. */
-function rewriteWorkspaceLock(oldVersion: string, newVersion: string): boolean {
-  if (!pathExists("Cargo.lock")) return true;
-  const before = readFileToString("Cargo.lock");
+export function rewriteWorkspaceLock(
+  oldVersion: string,
+  newVersion: string,
+  lockfile = "Cargo.lock",
+): boolean {
+  if (!pathExists(lockfile)) return true;
+  const before = readFileToString(lockfile);
   if (before === null) return false;
   let packageName = "";
   let changed = false;
@@ -222,5 +226,5 @@ function rewriteWorkspaceLock(oldVersion: string, newVersion: string): boolean {
     return line;
   });
   if (!changed) return false;
-  return tryWriteStringToFile("Cargo.lock", lines.join("\n"));
+  return tryWriteStringToFile(lockfile, lines.join("\n"));
 }
