@@ -93,6 +93,10 @@ const names = [
   "keyed-multiple-roots",
 ];
 
+function nodeRecord(node: DomNode) {
+  return { type: node.nodeType, name: node.nodeName, text: node.nodeValue };
+}
+
 function nodes(host: Host): DomNode[] {
   const walker = host.ownerDocument.createTreeWalker(host, 0xffffffff);
   const result: DomNode[] = [];
@@ -304,14 +308,13 @@ export async function observeKeyedTemplates(input: Packet, seams: Seams) {
     profile: Profile,
   ) {
     const diagnostics: { phase: string; channel: string; message: string }[] = [];
-    const assertNoDiagnostics = () => assert.deepEqual(diagnostics, []);
     let phase = "server";
+    const recordDiagnostic = (channel: string, message: unknown) =>
+      diagnostics.push({ phase, channel, message: String(message) });
     const originalWarn = console.warn,
       originalError = console.error;
-    console.warn = (...args: unknown[]) =>
-      diagnostics.push({ phase, channel: "warn", message: args.map(String).join(" ") });
-    console.error = (...args: unknown[]) =>
-      diagnostics.push({ phase, channel: "error", message: args.map(String).join(" ") });
+    console.warn = (...args: unknown[]) => recordDiagnostic("warn", args.map(String).join(" "));
+    console.error = (...args: unknown[]) => recordDiagnostic("error", args.map(String).join(" "));
     globalThis.__vizeKeyedLifecycle = [];
     const bodyChildren = document.body.childNodes.length;
     let app: ReturnType<Runtime["createSSRApp"]> | undefined;
@@ -325,6 +328,11 @@ export async function observeKeyedTemplates(input: Packet, seams: Seams) {
       diagnostics,
       phase,
     };
+    const captureFailure = (key: string, cause: unknown) => {
+      const err = cause instanceof Error ? cause : new Error(JSON.stringify(cause));
+      observation[key] = { name: err.name, message: err.message, stack: err.stack };
+      return err;
+    };
     report.current = observation;
     try {
       const server = await component(
@@ -337,24 +345,19 @@ export async function observeKeyedTemplates(input: Packet, seams: Seams) {
       );
       observation.server = server;
       const serverApp = profile.vue.createSSRApp(server.root, { initial });
-      serverApp.config.warnHandler = (message) =>
-        diagnostics.push({ phase, channel: "handler-warn", message });
-      serverApp.config.errorHandler = (error) =>
-        diagnostics.push({ phase, channel: "handler-error", message: String(error) });
+      serverApp.config.warnHandler = (message) => recordDiagnostic("handler-warn", message);
+      serverApp.config.errorHandler = (error) => recordDiagnostic("handler-error", error);
       const html = await profile.renderer.renderToString(serverApp);
       observation.html = html;
       assert.deepEqual(globalThis.__vizeKeyedLifecycle, []);
-      assertNoDiagnostics();
+      assert.deepEqual(diagnostics, []);
       phase = "hydrate";
       host = document.createElement("div");
       document.body.appendChild(host);
       host.innerHTML = html;
       const before = nodes(host);
-      observation.serverNodes = before.map((n) => ({
-        type: n.nodeType,
-        name: n.nodeName,
-        text: n.nodeValue,
-      }));
+      const parents = before.map((n) => n.parentNode);
+      observation.serverNodes = before.map(nodeRecord);
       const client = await component(
         name,
         profile.clientTarget,
@@ -370,10 +373,8 @@ export async function observeKeyedTemplates(input: Packet, seams: Seams) {
           : profile.client.createSSRApp;
       assert(create, "the required hydration target must be available");
       app = create(client.root, { initial });
-      app.config.warnHandler = (message) =>
-        diagnostics.push({ phase, channel: "handler-warn", message });
-      app.config.errorHandler = (error) =>
-        diagnostics.push({ phase, channel: "handler-error", message: String(error) });
+      app.config.warnHandler = (message) => recordDiagnostic("handler-warn", message);
+      app.config.errorHandler = (error) => recordDiagnostic("handler-error", error);
       if (profile.clientTarget === "vapor") {
         assert(profile.client.vaporInteropPlugin);
         app.use(profile.client.vaporInteropPlugin);
@@ -381,9 +382,19 @@ export async function observeKeyedTemplates(input: Packet, seams: Seams) {
       app.mount(host);
       await profile.client.nextTick();
       const after = nodes(host);
-      assert.equal(after.length, before.length, "all existing server nodes remain");
-      after.forEach((n, i) => assert.strictEqual(n, before[i], `server node ${i} reused`));
-      assertNoDiagnostics();
+      const graph = {
+        nodes: after.map(nodeRecord),
+        parents: after.map((n) => after.findIndex((p) => p === n.parentNode)),
+        adoption: before.map((n, i) => [after.indexOf(n), n.parentNode === parents[i]]),
+      };
+      observation.hydrationGraph = graph;
+      const retained = after.filter((n) => before.includes(n));
+      before.forEach((n, i) => assert.strictEqual(n, retained[i], `server node ${i} reused`));
+      assert.deepEqual(
+        graph.adoption.map(([, parent]) => parent),
+        before.map(() => true),
+      );
+      assert.deepEqual(diagnostics, []);
       assert.equal(host.querySelector("[data-value]")?.textContent, initial);
       assert.equal(host.querySelector("[data-tail]")?.textContent, "tail");
       observation.hydratedHtml = host.innerHTML;
@@ -411,12 +422,11 @@ export async function observeKeyedTemplates(input: Packet, seams: Seams) {
       assert.equal(valueReused, name === "unkeyed-component", "only unkeyed value retained");
       assert.equal(oldValueConnected, valueReused, "replaced keyed value detached");
       assert.equal(tailReused, true, "following sibling is the same physical node");
-      assertNoDiagnostics();
+      assert.deepEqual(diagnostics, []);
       observation.updatedHtml = host.innerHTML;
       observation.updatedLifecycle = [...globalThis.__vizeKeyedLifecycle];
     } catch (error) {
-      failure = error instanceof Error ? error : new Error(JSON.stringify(error));
-      observation.failure = { name: failure.name, message: failure.message, stack: failure.stack };
+      failure = captureFailure("failure", error);
     } finally {
       phase = "unmount";
       let cleanupFailure: unknown;
@@ -433,20 +443,12 @@ export async function observeKeyedTemplates(input: Packet, seams: Seams) {
       }
       try {
         assert.equal(document.body.childNodes.length, bodyChildren, "owned DOM completely removed");
-        assertNoDiagnostics();
+        assert.deepEqual(diagnostics, []);
       } catch (error) {
         cleanupFailure ??= error;
       }
       if (cleanupFailure) {
-        const cleanup =
-          cleanupFailure instanceof Error
-            ? cleanupFailure
-            : new Error(JSON.stringify(cleanupFailure));
-        observation.cleanupFailure = {
-          name: cleanup.name,
-          message: cleanup.message,
-          stack: cleanup.stack,
-        };
+        const cleanup = captureFailure("cleanupFailure", cleanupFailure);
         failure ??= cleanup;
       }
     }
@@ -473,6 +475,7 @@ export async function observeKeyedTemplates(input: Packet, seams: Seams) {
             for (const key of [
               "html",
               "hydratedHtml",
+              "hydrationGraph",
               "updatedHtml",
               "updatedIdentity",
               "hydratedLifecycle",
