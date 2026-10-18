@@ -232,6 +232,9 @@ jobs:
           cache: true
           cache-save: false
           run-install: true
+      - name: Test original App check provider custody
+        if: ${{ inputs.run-source-contracts && matrix.cohort == fromJSON(inputs.rust-plan).testMatrix.include[0].cohort }}
+        run: node --test tests/tooling/app-check-prepare.test.ts
       - uses: taiki-e/install-action@184183c2401be73c3bf42c2e61268aa5855379c1 # v2
         with:
           tool: cargo-nextest@0.9.146

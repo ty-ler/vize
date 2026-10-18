@@ -5,6 +5,7 @@ import * as path from "node:path";
 
 import type { AppConfig } from "../../_helpers/apps.ts";
 import { CORSA_BIN, VIZE_BIN } from "../../_helpers/apps.ts";
+import { originalAppCheckEnvironment } from "../../_helpers/app-check-custody.ts";
 
 export interface VizeCheckSummary {
   fileCount: number;
@@ -103,11 +104,12 @@ function runVizeCheckJson(
   checkConfig: NonNullable<AppConfig["check"]>,
   patterns: string[],
   timeoutMs: number,
+  env: NodeJS.ProcessEnv,
 ): VizeCheckResult {
   const cmd = buildVizeCheckCommand(checkConfig, patterns);
   console.log(`Running: ${cmd}`);
 
-  const stdout = readCommandStdout(cmd, checkConfig.cwd, timeoutMs);
+  const stdout = readCommandStdout(cmd, checkConfig.cwd, timeoutMs, env);
   return JSON.parse(stdout) as VizeCheckResult;
 }
 
@@ -118,9 +120,16 @@ export function runCrashFreeVizeCheck(
   const checkConfig = app.check!;
   const timeoutMs = options.timeoutMs ?? 300_000;
 
+  const env = originalAppCheckEnvironment(app);
   const startedAt = performance.now();
-  const parsed = runVizeCheckJson(checkConfig, checkConfig.patterns, timeoutMs);
-  const durationMs = performance.now() - startedAt;
+  let parsed: VizeCheckResult, completedAt: number;
+  try {
+    parsed = runVizeCheckJson(checkConfig, checkConfig.patterns, timeoutMs, env);
+  } finally {
+    completedAt = performance.now();
+    originalAppCheckEnvironment(app);
+  }
+  const durationMs = completedAt - startedAt;
 
   assert.ok((parsed.fileCount ?? 0) > 0, "check fileCount should be > 0");
   assert.ok(durationMs < timeoutMs, `check should finish before ${timeoutMs}ms`);
@@ -158,6 +167,7 @@ export function runVizeCheckWithInjectedTypeError(
 ): InjectedTypeErrorSummary {
   const checkConfig = app.check!;
   const timeoutMs = options.timeoutMs ?? 300_000;
+  const env = originalAppCheckEnvironment(app);
   const relativeDir = firstExistingPatternBase(checkConfig.cwd, checkConfig.patterns);
   const relativeFile = path.posix.join(
     relativeDir.replaceAll(path.sep, "/"),
@@ -196,7 +206,7 @@ const __vizeIntentionalTypeError: number = "not-a-number";
   }
 
   try {
-    const clean = runVizeCheckJson(effectiveCheckConfig, [relativeFile], timeoutMs);
+    const clean = runVizeCheckJson(effectiveCheckConfig, [relativeFile], timeoutMs, env);
     const cleanFile = (clean.files ?? []).find(
       (file) => file.file?.replaceAll("\\", "/") === relativeFile,
     );
@@ -208,7 +218,7 @@ const __vizeIntentionalTypeError: number = "not-a-number";
 
     fs.writeFileSync(absoluteFile, brokenSource, "utf-8");
     const startedAt = performance.now();
-    const parsed = runVizeCheckJson(effectiveCheckConfig, [relativeFile], timeoutMs);
+    const parsed = runVizeCheckJson(effectiveCheckConfig, [relativeFile], timeoutMs, env);
     const durationMs = performance.now() - startedAt;
     const files = parsed.files ?? [];
     const injected = files.find((file) => file.file?.replaceAll("\\", "/") === relativeFile);
@@ -225,7 +235,7 @@ const __vizeIntentionalTypeError: number = "not-a-number";
 
     fs.writeFileSync(absoluteFile, cleanSource, "utf-8");
     const repairStartedAt = performance.now();
-    const repaired = runVizeCheckJson(effectiveCheckConfig, [relativeFile], timeoutMs);
+    const repaired = runVizeCheckJson(effectiveCheckConfig, [relativeFile], timeoutMs, env);
     const repairDurationMs = performance.now() - repairStartedAt;
     assert.deepEqual(
       repaired,
@@ -252,6 +262,7 @@ const __vizeIntentionalTypeError: number = "not-a-number";
     if (absoluteTempTsconfig) {
       fs.rmSync(absoluteTempTsconfig, { force: true });
     }
+    originalAppCheckEnvironment(app);
   }
 }
 
