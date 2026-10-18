@@ -339,3 +339,57 @@ test("release rewrites aliased fork pins while preserving upstream versions", ()
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout, input.replaceAll("0.430.0", "0.430.1"));
 });
+
+// The versioned-input law above remains the historical release compatibility contract.
+test("release keeps the native age wildcard stable while advancing exact catalog pins", () => {
+  const before = [
+    "minimumReleaseAge: 1440",
+    "minimumReleaseAgeExclude:",
+    '  - "hono@4.13.7"',
+    '  - "@vizejs/native-*"',
+    '  - "@vizejs/not-native@0.106.0"',
+    "catalogs:",
+    "  other:",
+    '    "@vizejs/native-darwin-arm64": "0.106.0"',
+    "  native-binaries:",
+    '    "@vizejs/native-darwin-arm64": "0.106.0"',
+    '    "@vizejs/native-linux-x64-gnu": "0.106.0"',
+    "peerDependencyRules:",
+    "  allowAny: []",
+    "",
+  ].join("\n");
+  const expected = [
+    "minimumReleaseAge: 1440",
+    "minimumReleaseAgeExclude:",
+    '  - "hono@4.13.7"',
+    '  - "@vizejs/native-*"',
+    '  - "@vizejs/not-native@0.106.0"',
+    "catalogs:",
+    "  other:",
+    '    "@vizejs/native-darwin-arm64": "0.106.0"',
+    "  native-binaries:",
+    '    "@vizejs/native-darwin-arm64": "0.107.0"',
+    '    "@vizejs/native-linux-x64-gnu": "0.107.0"',
+    "peerDependencyRules:",
+    "  allowAny: []",
+    "",
+  ].join("\n");
+  const first = runReleaseCommand("release", [
+    "--print-workspace-catalog-update",
+    writeTempFile(before),
+    "0.106.0",
+    "0.107.0",
+  ]);
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(first.stderr, "");
+  assert.equal(first.stdout, expected);
+  const repeated = runReleaseCommand("release", [
+    "--print-workspace-catalog-update",
+    writeTempFile(first.stdout),
+    "0.106.0",
+    "0.107.0",
+  ]);
+  assert.equal(repeated.status, 0, repeated.stderr);
+  assert.equal(repeated.stderr, "");
+  assert.equal(repeated.stdout, expected);
+});

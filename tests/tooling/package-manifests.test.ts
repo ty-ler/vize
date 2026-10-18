@@ -38,15 +38,19 @@ function collectNativeBinaryCatalogPins(workspaceYaml: string): Record<string, s
   return pins;
 }
 
-function minimumReleaseAgeExcludeVersions(workspaceYaml: string, packageName: string): string[] {
+function assertNativeReleaseAgeWildcard(workspaceYaml: string): void {
   const exclude = (parse(workspaceYaml) as { minimumReleaseAgeExclude?: unknown })
     .minimumReleaseAgeExclude;
   assert.ok(Array.isArray(exclude), "minimumReleaseAgeExclude must be an array");
   for (const entry of exclude)
     assert.equal(typeof entry, "string", "minimumReleaseAgeExclude entries must be strings");
-  const entry = (exclude as string[]).find((candidate) => candidate.startsWith(`${packageName}@`));
-  assert.ok(entry, `${packageName} is missing from minimumReleaseAgeExclude`);
-  return entry.slice(packageName.length + 1).split(" || ");
+  assert.deepEqual(
+    (exclude as string[]).filter(
+      (entry) => entry.startsWith("@vizejs/native-") || entry === "@vizejs/*" || entry === "*",
+    ),
+    ["@vizejs/native-*"],
+    "native release-age exclusions must use one package-name wildcard without version pins",
+  );
 }
 
 function readRepoFile(filePath: string): string {
@@ -97,6 +101,7 @@ test("native package catalog pins and generated loader version checks stay align
   assert.ok(nativePackage.version);
 
   const workspaceYaml = fs.readFileSync(path.join(root, "pnpm-workspace.yaml"), "utf-8");
+  assertNativeReleaseAgeWildcard(workspaceYaml);
   const workspacePins = collectNativeBinaryCatalogPins(workspaceYaml);
   const nativeOptionalDependencies = Object.entries(
     nativePackage.optionalDependencies ?? {},
@@ -124,10 +129,6 @@ test("native package catalog pins and generated loader version checks stay align
       lockfile,
       new RegExp(`['"]?${escapedName}['"]?:\\n\\s+specifier: ${escapeRegExp(catalogVersion)}\\n`),
       `${name} lockfile catalog specifier should match @vizejs/native version`,
-    );
-    assert.ok(
-      minimumReleaseAgeExcludeVersions(workspaceYaml, name).includes(catalogVersion),
-      `${name} ${catalogVersion} should be allowed by minimumReleaseAgeExclude`,
     );
   }
 
@@ -458,4 +459,20 @@ test("workspace TypeScript package builds use vp pack", () => {
   );
   const rootTasks = readRepoFile("tools/config/vite-plus/tasks/build.ts");
   assert.match(rootTasks, /vscodeExtensionPackageBin\("vite-plus", "vp"\)[\s\S]*pack/);
+});
+
+test("native release-age policy refuses broad scopes and restored version lists", () => {
+  for (const exclusions of [
+    [],
+    ["@vizejs/*"],
+    ["@vizejs/native-*", "@vizejs/*"],
+    ["@vizejs/native-*", "*"],
+    ["@vizejs/native-darwin-arm64@0.471.0"],
+    ["@vizejs/native-*", "@vizejs/native-darwin-arm64@0.471.0"],
+    [42],
+  ]) {
+    assert.throws(() =>
+      assertNativeReleaseAgeWildcard(JSON.stringify({ minimumReleaseAgeExclude: exclusions })),
+    );
+  }
 });
