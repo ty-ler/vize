@@ -123,3 +123,68 @@ function digest(): ProjectionDigest {
     mappingsSha256: "a".repeat(64),
   };
 }
+
+test("exact Content Mapper stress retains provider and whole native streams before strict failure upload", () => {
+  const workflow = parse(
+    fs.readFileSync(path.join(root, ".github/workflows/content-mapper-conformance.yml"), "utf8"),
+  ) as {
+    jobs: Record<
+      string,
+      {
+        steps: Array<{
+          name?: string;
+          run?: string;
+          env?: Record<string, string>;
+          if?: string;
+          uses?: string;
+        }>;
+      }
+    >;
+  };
+  const steps = workflow.jobs["exact-tsgo-project"].steps;
+  const named = (name: string) => {
+    const matches = steps.filter((step) => step.name === name);
+    assert.equal(matches.length, 1);
+    return matches[0];
+  };
+  const provider = named("Preserve exact editor provider");
+  const stress = named("Stress exact editor lifecycle");
+  const capture = named("Preserve exact editor lifecycle streams");
+  const upload = named("Preserve installed Content Mapper smoke evidence");
+  assert.deepEqual(stress.env, {
+    TSGO_PATH: "${{ runner.temp }}/tsgo",
+    VIZE_TEST_CONTENT_MAPPER_TSGO: "${{ runner.temp }}/tsgo",
+    NEXTEST_PROFILE: "full",
+  });
+  assert.deepEqual(stress.run?.trim().split("\n"), [
+    "for iteration in $(seq 1 20); do",
+    "  cargo test -p vize_maestro -- --quiet",
+    '  echo "Content Mapper Maestro lifecycle cycle $iteration/20 passed"',
+    "done",
+  ]);
+  assert.deepEqual(provider.run?.trim().split("\n"), [
+    'evidence="$RUNNER_TEMP/content-mapper-smoke/native-editor"',
+    'mkdir -p "$evidence"',
+    'cp "$RUNNER_TEMP/tsgo" "$evidence/tsgo"',
+    'sha256sum "$RUNNER_TEMP/tsgo" "$evidence/tsgo" > "$evidence/provider.sha256"',
+    'go version -m "$evidence/tsgo" > "$evidence/go-build-info.txt"',
+  ]);
+  assert.equal(capture.if, "always()");
+  assert.deepEqual(capture.run?.trim().split("\n"), [
+    'evidence="$RUNNER_TEMP/content-mapper-smoke/native-editor"',
+    'mkdir -p "$evidence"',
+    "if [ -d target/nextest/full/native-proxy-termination ]; then",
+    '  cp -R target/nextest/full/native-proxy-termination "$evidence/"',
+    "fi",
+  ]);
+  assert.equal(upload.if, "always()");
+  assert.deepEqual(
+    [provider, stress, capture, upload].map((step) => steps.indexOf(step)),
+    [
+      steps.indexOf(stress) - 1,
+      steps.indexOf(stress),
+      steps.indexOf(stress) + 1,
+      steps.indexOf(stress) + 2,
+    ],
+  );
+});
