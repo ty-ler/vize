@@ -265,6 +265,7 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
   assert.deepEqual(changedDiagnosticInputs, [
     "Cargo.lock",
     "Cargo.toml",
+    "crates/vize/tests/check_tsconfig_bom_cli.rs",
     "crates/vize/tests/lint_legacy_instance_api_cli.rs",
     "crates/vize/tests/lint_preset_scope_cli.rs",
     "crates/vize/tests/support/legacy_instance_cli.rs",
@@ -348,6 +349,7 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     [
       "Cargo.lock",
       "Cargo.toml",
+      "crates/vize/tests/check_tsconfig_bom_cli.rs",
       "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown/tests.rs",
     ],
   );
