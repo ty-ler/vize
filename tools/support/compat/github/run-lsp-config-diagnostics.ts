@@ -24,6 +24,7 @@ const sourcePaths = [
   "tests/_fixtures/vue-ecosystem-fixtures.json",
   "tests/differential/build-receipt.ts",
   "tests/tooling/lsp-startup-local-interactive.test.ts",
+  "tests/tooling/native-config-preload-observations.test.ts",
   "crates/vize/tests/lsp_symlink_workspace_staging_cli.rs",
   "crates/vize/tests/lsp_completion_sibling_overlay_cli.rs",
   "crates/vize/tests/lsp_component_attribute_authority_cli.rs",

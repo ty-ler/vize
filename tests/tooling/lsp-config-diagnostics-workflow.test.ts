@@ -210,6 +210,7 @@ test("startup diagnostics retain the production producer and unchanged scale-one
     "crates/vize_maestro/src/server/state/project_contexts/config_reload.rs",
     "crates/vize_maestro/src/server/state/project_contexts/current.rs",
     "crates/vize_maestro/src/server/state.rs",
+    "tests/tooling/native-config-preload-observations.test.ts",
     "crates/vize_maestro/src/server/initial_diagnostics/open_importer_tests.rs",
     "crates/vize_maestro/src/server/initial_diagnostics/tests.rs",
     "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs",

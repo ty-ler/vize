@@ -159,6 +159,8 @@ evaluated = { config: config ?? {}, dependencies, watchDependencies: attemptedDe
         phase: std::string::String,
         elapsed_ms: f64,
         process_id: u32,
+        #[serde(default, rename = "cpuProfile")]
+        cpu_profile: Option<serde_json::Value>,
     }
 
     #[derive(serde::Deserialize)]
@@ -198,6 +200,12 @@ evaluated = { config: config ?? {}, dependencies, watchDependencies: attemptedDe
                     "vize_config_evaluation: process_id={} phase={} elapsed_ms={}",
                     timing.process_id, timing.phase, timing.elapsed_ms
                 );
+                if let Some(profile) = &timing.cpu_profile {
+                    eprintln!(
+                        "vize_config_cpu_profile: process_id={} packet={}",
+                        timing.process_id, profile
+                    );
+                }
             }
         }
     }

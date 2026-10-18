@@ -53,6 +53,40 @@ function beginConfigTiming(rows, phase, boundary) {
   };
 }
 
+// Diagnostic only: retain the complete sampling packet, never an evaluated value.
+// Setup/stop costs are separate; samples also include the adjacent host call edges.
+async function beginPublicLoadProfile() {
+  const started = performance.now();
+  let session;
+  const close = () => {
+    try {
+      session?.disconnect();
+    } catch {}
+  };
+  try {
+    const { Session } = await import("node:inspector/promises");
+    session = new Session();
+    session.connect();
+    await session.post("Profiler.enable");
+    await session.post("Profiler.start");
+    const setupMs = performance.now() - started;
+    return async () => {
+      const stopping = performance.now();
+      try {
+        const { profile } = await session.post("Profiler.stop");
+        return { status: "recorded", setupMs, stopMs: performance.now() - stopping, profile };
+      } catch (error) {
+        return { status: "unavailable", setupMs, reason: String(error) };
+      } finally {
+        close();
+      }
+    };
+  } catch (error) {
+    close();
+    return async () => ({ status: "unavailable", reason: String(error) });
+  }
+}
+
 export function configModuleFailureArtifacts(error) {
   return configFailureArtifacts.get(error)?.map(([owned, source]) => [owned, source]) ?? [];
 }
@@ -350,6 +384,7 @@ export async function importConfigModuleWithDependencies(
           } finally {
             finishAck();
           }
+          const finishProfile = timings ? await beginPublicLoadProfile() : undefined;
           const finishLoad = beginConfigTiming(timings, "public_load", boundary);
           let loaded;
           try {
@@ -363,6 +398,9 @@ export async function importConfigModuleWithDependencies(
             );
           } finally {
             finishLoad();
+            if (finishProfile) {
+              timings.find((row) => row.phase === "public_load").cpuProfile = await finishProfile();
+            }
           }
           if (!loaded) throw new Error(`Vite did not load the selected config: ${configPath}`);
           return {

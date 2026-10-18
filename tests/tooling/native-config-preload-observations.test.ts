@@ -426,6 +426,16 @@ test("private timing envelope preserves real Vite values, factory counts, ACK or
               "module_total",
             ],
           );
+          const profile = timings.find(
+            (row: { phase: string }) => row.phase === "public_load",
+          ).cpuProfile;
+          assert.equal(profile.status, "recorded");
+          assert.ok(Array.isArray(profile.profile.nodes) && profile.profile.nodes.length > 0);
+          assert.ok(
+            Array.isArray(profile.profile.samples) && Array.isArray(profile.profile.timeDeltas),
+          );
+          assert.equal(profile.profile.samples.length, profile.profile.timeDeltas.length);
+          assert.ok(profile.setupMs >= 0 && profile.stopMs >= 0);
           const total = timings.at(-1).elapsedMs;
           for (const row of timings) {
             assert.equal(typeof row.elapsedMs, "number");
