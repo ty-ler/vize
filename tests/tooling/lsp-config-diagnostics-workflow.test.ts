@@ -114,7 +114,7 @@ test("startup diagnostics retain the production producer and unchanged scale-one
   assert.equal(
     steps[localControls].run,
     "set +e\n" +
-      "node --test --test-concurrency=1 tests/tooling/lsp-startup-local-interactive.test.ts tests/tooling/lsp-initial-diagnostics-version.test.ts tests/tooling/native-config-preload-observations.test.ts > target/vize-tests/lsp-config-diagnostics/controls.stdout 2> target/vize-tests/lsp-config-diagnostics/controls.stderr\n" +
+      "node --test --test-concurrency=1 tests/tooling/lsp-startup-local-interactive.test.ts tests/tooling/lsp-initial-diagnostics-version.test.ts tests/tooling/native-config-preload-observations.test.ts tests/tooling/native-config-compile-cache.test.ts > target/vize-tests/lsp-config-diagnostics/controls.stdout 2> target/vize-tests/lsp-config-diagnostics/controls.stderr\n" +
       "status=$?\n" +
       "cat target/vize-tests/lsp-config-diagnostics/controls.stdout\n" +
       "cat target/vize-tests/lsp-config-diagnostics/controls.stderr >&2\n" +
@@ -198,6 +198,7 @@ test("startup diagnostics retain the production producer and unchanged scale-one
   // This qualification must retain the new IPC/admission authority as well as
   // its original workloads; capturing only the old main pipeline hides drift.
   for (const sourcePath of [
+    "crates/vize_carton/Cargo.toml",
     "crates/vize_carton/src/config/loader/js.rs",
     "crates/vize_carton/src/config/loader/failure_identity.rs",
     "crates/vize_carton/src/config/loader/js_observation.rs",
@@ -211,6 +212,9 @@ test("startup diagnostics retain the production producer and unchanged scale-one
     "crates/vize_maestro/src/server/state/project_contexts/current.rs",
     "crates/vize_maestro/src/server/state.rs",
     "tests/tooling/native-config-preload-observations.test.ts",
+    "tests/tooling/native-config-compile-cache.test.ts",
+    "tests/tooling/config-host-boundary.test.ts",
+    "tests/tooling/support/davinci-host-imports.ts",
     "crates/vize_maestro/src/server/initial_diagnostics/open_importer_tests.rs",
     "crates/vize_maestro/src/server/initial_diagnostics/tests.rs",
     "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs",

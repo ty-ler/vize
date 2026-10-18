@@ -22,13 +22,14 @@ pub(super) fn parse_js_config_observed(
     observed: &mut Vec<PathBuf>,
     complete: &mut bool,
     before_read: &mut BeforeConfigRead<'_>,
+    compile_cache: Option<&Path>,
 ) -> Result<ConfigDocument, Box<dyn std::error::Error>> {
     let EvaluatedConfig {
         path: config_path,
         json,
         dependencies,
         policy,
-    } = evaluate_js_config_with_dependencies(path, observed, complete, before_read)?;
+    } = evaluate_js_config_with_dependencies(path, observed, complete, before_read, compile_cache)?;
 
     // Public Vite settings permit flat entry arrays. Normalize only that shape
     // with the same pure Rust projection used by vize/config; ordinary objects
@@ -65,6 +66,7 @@ fn evaluate_js_config_with_dependencies(
     observed: &mut Vec<PathBuf>,
     complete: &mut bool,
     before_read: &mut BeforeConfigRead<'_>,
+    compile_cache: Option<&Path>,
 ) -> Result<EvaluatedConfig, Box<dyn std::error::Error>> {
     *complete = false;
     let config_path = if path.is_absolute() {
@@ -87,7 +89,9 @@ fn evaluate_js_config_with_dependencies(
 import { dirname } from "node:path";
 
 const configPath = process.argv[1];
-const observing = process.argv[2] === "--observe-config-inputs";
+const observing = process.argv[2] === "--observe-config-inputs" || process.argv[3] === "--observe-config-inputs";
+// Existing wrappers retain their argv shape; the session adds one private path before the marker.
+enableConfigCompileCache(process.argv[3] === "--observe-config-inputs" ? process.argv[2] : undefined);
 const acknowledgements = observing ? process.stdin[Symbol.asyncIterator]() : undefined;
 const beforeRead = observing ? async (paths) => {
   const payload = Buffer.from(JSON.stringify(paths));
@@ -143,6 +147,9 @@ evaluated = { config: config ?? {}, dependencies, watchDependencies: attemptedDe
         .arg(script)
         .arg(&config_path)
         .current_dir(config_path.parent().unwrap_or_else(|| Path::new(".")));
+    if let Some(directory) = compile_cache {
+        command.arg(directory);
+    }
     let trace = std::env::var_os("VIZE_TRACE_EDITOR_PREPARATION").is_some_and(|value| value == "1");
     let started = trace.then(std::time::Instant::now);
     let output = if let Some(observe) = before_read.as_deref_mut() {

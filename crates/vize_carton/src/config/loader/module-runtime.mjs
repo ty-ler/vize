@@ -14,6 +14,25 @@ import {
 } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+// Optional compiled artifacts only; no imported namespace or evaluated config is retained.
+export function enableConfigCompileCache(directory) {
+  if (!directory || typeof nodeModule.enableCompileCache !== "function") return;
+  if (
+    [
+      "NODE_COMPILE_CACHE",
+      "NODE_DISABLE_COMPILE_CACHE",
+      "NODE_COMPILE_CACHE_PORTABLE",
+      "NODE_V8_COVERAGE",
+    ].some((name) => Object.hasOwn(process.env, name)) ||
+    process.env.NODE_OPTIONS?.includes("coverage")
+  )
+    return;
+  // The parent owns this private directory until every fresh child has exited.
+  // Uses Node's standard source-checksum/version contract, not Canon input identity.
+  // Normal process exit flushes compiled code before the parent releases its lease.
+  return nodeModule.enableCompileCache(directory);
+}
+
 // Failure identity is host metadata; never attach it to authored exports/errors.
 const configFailureArtifacts = new WeakMap();
 const configEvaluationTimings = new WeakMap();

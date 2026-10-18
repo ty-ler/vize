@@ -1,3 +1,4 @@
+export function enableConfigCompileCache(directory?: string): unknown;
 type ConfigModule = Record<string, unknown>;
 
 /** Private loader-host clocks in milliseconds; module_total encloses the other rows. */

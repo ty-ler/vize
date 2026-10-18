@@ -240,7 +240,10 @@ impl ServerState {
                 let mut before = vize_canon::ConfigurationObservations::capture(
                     &self.configuration_vite_paths_for_root(&key.root),
                 );
-                let loaded = super::load_observed_lsp_config_snapshot(Some(&key.root));
+                let loaded = super::load_observed_lsp_config_snapshot(
+                    Some(&key.root),
+                    &self.configuration_evaluation_session(),
+                );
                 before.extend(&loaded.before);
                 let post_read = super::config_reload::ConfigurationPostRead::new(
                     &loaded.loaded.watch_dependencies,
