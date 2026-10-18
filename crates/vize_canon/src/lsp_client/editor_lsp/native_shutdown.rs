@@ -1,4 +1,4 @@
-//! Native 7.0.2 shutdown capability, bound to actual binary and initialize bytes.
+//! Native EOF shutdown capability, bound to whole binary/initialize pairs.
 
 use corsa_lsp::{LspClient, process::ProcessObserver};
 use lsp_types::request::Shutdown;
@@ -13,6 +13,48 @@ use std::{
 const LINUX_X64: &str = "4f2de678286401759b3fb4475bafe35b8f32b4b3a07d92642bbf37eadc9b34a4";
 const DARWIN_ARM64: &str = "a82f731365ad69d5c4c15f5e18fba4584bf3b7b839960172a76c3462b5114bf2";
 
+// Exact upstream d6c4afdd, Go 1.26.6 linux/amd64, noembed and trimpath.
+// Whole image and initialize evidence: Content Mapper run 39124809180.
+const CONTENT_MAPPER_D6C_LINUX_X64: &str =
+    "77dd575e73107c00cc95cbccc3764ab7210089b5634f75e219b61632bd5d230b";
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EofContract {
+    Native702,
+    ContentMapperD6c,
+}
+
+impl EofContract {
+    fn accepts_image(self, digest: &str) -> bool {
+        match self {
+            Self::Native702 => known_binary(digest),
+            Self::ContentMapperD6c => digest == CONTENT_MAPPER_D6C_LINUX_X64,
+        }
+    }
+}
+
+fn eof_contract(initialized: &Value) -> Option<EofContract> {
+    if known_initialize(initialized) {
+        Some(EofContract::Native702)
+    } else if content_mapper_contract().as_ref() == Some(initialized) {
+        Some(EofContract::ContentMapperD6c)
+    } else {
+        None
+    }
+}
+
+fn content_mapper_contract() -> Option<Value> {
+    // Build only the trusted expected response. Incoming responses are never
+    // normalized: every capability and all metadata must match the whole pair.
+    let mut expected = known_contract();
+    let server_info = expected.get_mut("serverInfo")?;
+    *server_info = serde_json::json!({
+        "name": "typescript",
+        "version": "7.1.0-dev"
+    });
+    Some(expected)
+}
+
 #[cfg(target_os = "linux")]
 mod owned_image;
 
@@ -21,20 +63,20 @@ pub(super) fn eof_capability(
     initialized: &Value,
     observer: &ProcessObserver,
 ) -> bool {
-    if !known_initialize(initialized) {
+    let Some(contract) = eof_contract(initialized) else {
         return false;
-    }
+    };
     if let Ok(digest) = File::open(executable).and_then(image_digest) {
         let digest: vize_l0::String = digest
             .iter()
             .map(|byte| vize_l0::cstr!("{byte:02x}"))
             .collect();
-        if known_binary(digest.as_str()) {
+        if contract.accepts_image(digest.as_str()) {
             return true;
         }
     }
     #[cfg(target_os = "linux")]
-    return owned_image::eof_capability(observer);
+    return owned_image::eof_capability(observer, contract);
     #[cfg(not(target_os = "linux"))]
     {
         let _ = observer;
