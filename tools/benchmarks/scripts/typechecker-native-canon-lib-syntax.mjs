@@ -25,6 +25,7 @@ const reserved = new Set([
   "ignore",
   "derive",
   "expect",
+  "doc",
 ]);
 
 export function pairedTokens(source) {
@@ -54,6 +55,12 @@ export function normalizeAttribute(attribute) {
   return attribute.replace(/"(?:\\.|[^"\\])*"|\s+/gu, (part) => (part.startsWith('"') ? part : ""));
 }
 
+// Accept only the inert outer built-in attribute, without merging identifier
+// tokens as whitespace normalization would (for example, `h idden`).
+function isHiddenDocumentation(attribute) {
+  return /^#\s*\[\s*doc\s*\(\s*hidden\s*\)\s*\]$/u.test(attribute);
+}
+
 function flatten(items) {
   return items.flatMap((item) => [item, ...(item.children ? flatten(item.children) : [])]);
 }
@@ -68,6 +75,7 @@ export function validateScopeAuthority(items, { library = false } = {}) {
         if (
           /^#\[cfg\([\s\S]+\)\]$/u.test(normalized) ||
           normalized === "#[test]" ||
+          isHiddenDocumentation(attr) ||
           /^#\[expect\([\s\S]+\)\]$/u.test(normalized)
         )
           continue;
@@ -118,6 +126,10 @@ export function validateRegistrationSyntax(source, items) {
     assert.equal(tokens[bracket]?.value, "[", "opaque attribute syntax");
     const end = pairs.get(bracket);
     const attr = source.slice(tokens[index].start, tokens[end].end);
+    if (isHiddenDocumentation(attr)) {
+      index = end;
+      continue;
+    }
     const key = tokens[bracket + 1]?.value;
     assert.ok(
       ["(", "=", "]"].includes(tokens[bracket + 2]?.value),

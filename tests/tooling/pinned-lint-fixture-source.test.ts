@@ -1,10 +1,17 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 
+import { preparePinnedFixtureWorkspace } from "../_helpers/realworld-patch.ts";
+
+import {
+  preparePinnedFixtureDependencies,
+  readPinnedFixtureDependencyPlan,
+} from "../_helpers/pinned-fixture-dependencies.ts";
 import {
   assertPinnedFixtureFiles,
   exportPinnedFixtureGitlinks,
@@ -55,6 +62,67 @@ test("dependency setup may add installed files while all original blobs stay exa
     fs.writeFileSync(path.join(root, "node_modules", "installed.json"), '{"version":"1.0.0"}');
     assert.equal(source.blobs.length, 4);
     assertPinnedFixtureFiles(root, source);
+  });
+});
+
+test("a complete pinned Git tree larger than the default pipe buffer retains its final blob and digest", () => {
+  withFixture((root) => {
+    const object = execFileSync("git", ["hash-object", "-w", "--stdin"], {
+      cwd: root,
+      encoding: "utf8",
+      input: "large fixture original\n",
+    }).trim();
+    const blobs = Array.from({ length: 8192 }, (_, index) => ({
+      path: `file-${String(index).padStart(5, "0")}-${"a".repeat(80)}.vue`,
+      mode: "100644",
+      object,
+    }));
+    const records = blobs
+      .map((blob) => `${blob.mode} blob ${blob.object}\t${blob.path}\0`)
+      .join("");
+    assert.ok(Buffer.byteLength(records) > 1024 * 1024);
+    assert.ok(Buffer.byteLength(records) < 64 * 1024 * 1024);
+    const tree = execFileSync("git", ["mktree", "-z"], {
+      cwd: root,
+      encoding: "utf8",
+      input: records,
+    }).trim();
+    const pin = git(root, [
+      "-c",
+      "user.name=Vize",
+      "-c",
+      "user.email=vize@example.com",
+      "commit-tree",
+      tree,
+      "-m",
+      "large source inventory",
+    ]);
+    git(root, ["update-ref", "HEAD", pin]);
+    assert.throws(
+      () =>
+        execFileSync("git", ["ls-tree", "-r", "-z", pin], {
+          cwd: root,
+          encoding: "utf8",
+          maxBuffer: 1024 * 1024,
+        }),
+      { code: "ENOBUFS" },
+    );
+    const source = readPinnedFixtureSource(root, pin);
+    assert.deepEqual(source, {
+      revision: pin,
+      blobs,
+      gitlinks: [],
+      inventorySha256: createHash("sha256")
+        .update(JSON.stringify({ blobs, gitlinks: [] }))
+        .digest("hex"),
+    });
+    assert.equal(source.blobs.at(-1)?.path, blobs.at(-1)?.path);
+    assert.notEqual(
+      source.inventorySha256,
+      createHash("sha256")
+        .update(JSON.stringify({ blobs: blobs.slice(0, -1), gitlinks: [] }))
+        .digest("hex"),
+    );
   });
 });
 
@@ -148,3 +216,144 @@ test(
     });
   },
 );
+
+function withDependencyArchive(run: (root: string, archive: string, pin: string) => void): void {
+  withFixture((root) => {
+    fs.writeFileSync(
+      path.join(root, "package.json"),
+      '{"name":"create-vue","packageManager":"pnpm@11.10.0"}\n',
+    );
+    fs.writeFileSync(path.join(root, ".npmrc"), "engine-strict=true\n");
+    git(root, ["add", "package.json", ".npmrc"]);
+    git(root, [
+      "-c",
+      "user.name=Vize",
+      "-c",
+      "user.email=vize@example.com",
+      "commit",
+      "-qm",
+      "closure",
+    ]);
+    const pin = git(root, ["rev-parse", "HEAD"]);
+    const archive = fs.mkdtempSync(path.join(os.tmpdir(), "vize-dependency-archive-"));
+    try {
+      for (const { path: file } of readPinnedFixtureSource(root, pin).blobs) {
+        fs.copyFileSync(path.join(root, file), path.join(archive, file));
+      }
+      run(root, archive, pin);
+    } finally {
+      fs.rmSync(archive, { recursive: true, force: true });
+    }
+  });
+}
+
+test("dependency planning retains every source blob separately from the declared corpus and original install inputs", () => {
+  withDependencyArchive((root, archive, pin) => {
+    const source = readPinnedFixtureSource(root, pin);
+    const plan = readPinnedFixtureDependencyPlan(archive, root, source, ["Original.vue"]);
+    assert.deepEqual(plan.source, source);
+    assert.equal(plan.source.blobs.length, 5);
+    assert.deepEqual(
+      plan.declaredCorpus.blobs,
+      source.blobs.filter(({ path }) => path === "Original.vue"),
+    );
+    assert.equal(plan.managerVersion, "11.10.0");
+    assert.equal(plan.packageManager, "pnpm@11.10.0");
+    assert.deepEqual(plan.stubs, []);
+    assert.deepEqual(plan.modules, [
+      { importer: "package.json", specifier: "@tsconfig/node24/tsconfig.json" },
+    ]);
+    assert.deepEqual(
+      plan.originalInputs.map(({ path: file, contentsBase64 }) => ({
+        file: path.basename(file),
+        contents: Buffer.from(contentsBase64, "base64").toString("utf8"),
+      })),
+      [
+        { file: ".npmrc", contents: "engine-strict=true\n" },
+        {
+          file: "package.json",
+          contents: '{"name":"create-vue","packageManager":"pnpm@11.10.0"}\n',
+        },
+        { file: "pnpm-lock.yaml", contents: "lockfileVersion: '9.0'\n" },
+      ],
+    );
+    assert.equal(fs.existsSync(path.join(archive, "node_modules")), false);
+  });
+});
+
+test("dependency preparation refuses upstream writes, untrusted corpus and foreign dependencies before launching installers", () => {
+  withDependencyArchive((root, archive, pin) => {
+    const source = readPinnedFixtureSource(root, pin);
+    assert.throws(
+      () => preparePinnedFixtureDependencies(root, root, source, ["Original.vue"]),
+      /never modify the upstream checkout/,
+    );
+    assert.throws(
+      () => preparePinnedFixtureDependencies(archive, root, source, ["untracked.vue"]),
+      /must belong to the original source/,
+    );
+    assert.throws(
+      () =>
+        preparePinnedFixtureDependencies(archive, root, source, ["Original.vue", "Original.vue"]),
+      /must be unique/,
+    );
+    fs.mkdirSync(path.join(archive, "node_modules"));
+    assert.throws(
+      () => preparePinnedFixtureDependencies(archive, root, source, ["Original.vue"]),
+      /without foreign node_modules/,
+    );
+    fs.rmdirSync(path.join(archive, "node_modules"));
+    for (const file of [".npmrc", "pnpm-lock.yaml", "vite.config.ts"]) {
+      const original = fs.readFileSync(path.join(archive, file));
+      fs.appendFileSync(path.join(archive, file), "changed\n");
+      assert.throws(
+        () => preparePinnedFixtureDependencies(archive, root, source, ["Original.vue"]),
+        /original fixture bytes changed/,
+      );
+      fs.writeFileSync(path.join(archive, file), original);
+    }
+    assert.equal(
+      fs.existsSync(path.join(archive, ".vize-pinned-fixture-dependencies.json")),
+      false,
+    );
+    assertPinnedFixtureFiles(root, source);
+  });
+});
+
+test("an explicit repository root keeps fixture authority and output inside that checkout", () => {
+  withFixture((source, pin) => {
+    const repository = fs.mkdtempSync(path.join(os.tmpdir(), "vize-pinned-root-"));
+    let fixture: ReturnType<typeof preparePinnedFixtureWorkspace> | undefined;
+    try {
+      const fixturePath = "tests/_fixtures/_git/isolated";
+      const upstream = path.join(repository, fixturePath);
+      fs.cpSync(source, upstream, { recursive: true });
+      fs.writeFileSync(
+        path.join(repository, "tests/_fixtures/vue-ecosystem-fixtures.json"),
+        JSON.stringify({
+          projects: [{ id: "isolated", displayName: "isolated", fixturePath, revision: pin }],
+        }),
+      );
+      fixture = preparePinnedFixtureWorkspace({
+        repositoryRoot: repository,
+        fixtureId: "isolated",
+        includePaths: ["Original.vue"],
+      });
+      assert.equal(fixture.upstreamDir, upstream);
+      assert.equal(fixture.entry.revision, pin);
+      assert.ok(
+        fixture.workspaceDir.startsWith(
+          path.join(repository, "target/vize-tests/realworld-patches"),
+        ),
+      );
+      assert.equal(
+        fixture.read("Original.vue"),
+        fs.readFileSync(path.join(source, "Original.vue"), "utf8"),
+      );
+      assert.equal(git(upstream, ["status", "--porcelain"]), "");
+    } finally {
+      fixture?.dispose();
+      fs.rmSync(repository, { recursive: true, force: true });
+    }
+  });
+});

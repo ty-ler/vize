@@ -29,6 +29,48 @@ await test("the authored current target closure contains both active original li
   qualifyCanonLibCommands(workflow);
 });
 
+await test("only the exact inert outer doc(hidden) shape preserves the complete library scope", () => {
+  const expected = qualifyCanonLibScope(actual);
+  for (const file of [library, integration]) {
+    for (const attribute of ["#[doc(hidden)]", "# [ doc ( hidden ) ]"]) {
+      assert.deepEqual(
+        qualifyCanonLibScope(source(append(file, `${attribute} fn documented_carrier() {}`))),
+        expected,
+      );
+    }
+  }
+  assert.throws(
+    () =>
+      qualifyCanonLibScope(
+        source(append(integration, `#[doc(hidden)] #[test] fn ${canonLibFilters[0]}() {}`)),
+      ),
+    /outside-library selected/u,
+  );
+});
+
+await test("malformed, nested and unknown documentation attributes cannot hide registration authority", () => {
+  for (const text of [
+    "#[doc] fn carrier() {}",
+    '#[doc = "hidden"] fn carrier() {}',
+    "#[doc(hidden, test)] fn carrier() {}",
+    "#[doc(hidden(test))] fn carrier() {}",
+    "#[doc(hidden = true)] fn carrier() {}",
+    "#[doc(h idden)] fn carrier() {}",
+    "#[d oc(hidden)] fn carrier() {}",
+    "#[foreign::doc(hidden)] fn carrier() {}",
+    "#[cfg_attr(unix, doc(hidden))] fn carrier() {}",
+    "#![doc(hidden)] fn carrier() {}",
+    "#[doc(hidden)] #[foreign::test] fn carrier() {}",
+    "#[doc(hidden)] mod carrier { #[foreign::test] fn generated() {} }",
+    "use foreign::doc;",
+    "use foreign::provider as doc;",
+  ]) {
+    for (const file of [library, integration]) {
+      assert.throws(() => qualifyCanonLibScope(source(append(file, text))));
+    }
+  }
+});
+
 for (const filter of canonLibFilters) {
   await test(`an integration function matching ${filter} refuses library-only selection`, () => {
     assert.throws(

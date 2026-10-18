@@ -33,6 +33,11 @@ const installedSmokeMigrationContracts = [
   "tests/tooling/release/release-smoke-typescript-parity.test.ts",
   "tests/tooling/release/release-smoke-typescript-runtime.test.ts",
 ];
+// The installed config campaign launches its real child harness dynamically.
+// Keep its evidence contract broad until that subprocess closure is audited.
+const installedConfigEvidenceContracts = [
+  "tests/tooling/release/release-smoke-config-evidence.test.ts",
+];
 // The immutable generated consumer imports its installed native provider dynamically.
 // Its two callers must retain the planner's conservative broad fallback.
 const dynamicPublisherContracts = [
@@ -73,6 +78,7 @@ void test("audited release contracts have complete imports and leave unresolved 
     ...stablePatchContracts,
     ...sharedPublisherContracts,
     ...installedSmokeMigrationContracts,
+    ...installedConfigEvidenceContracts,
     "tests/tooling/release/release-public-atomic-original.test.ts",
     "tests/tooling/release/release-signing.test.ts",
     "tests/tooling/release/retirement-qualification.test.ts",
@@ -103,7 +109,10 @@ void test("installed smoke migration contracts retain unreviewed broad inputs", 
   const plans = ["davinci/vize_l1/src/parser.rs", "crates/vize_maestro/src/server.rs"].map(
     (input) => ({ input, plan: planToolingTests([input]) }),
   );
-  for (const contract of installedSmokeMigrationContracts) {
+  for (const contract of [
+    ...installedSmokeMigrationContracts,
+    ...installedConfigEvidenceContracts,
+  ]) {
     assert.equal(
       toolingTestScopes.some((entry) =>
         entry.tests.some((pattern) => matchesGlob(contract, pattern)),

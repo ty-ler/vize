@@ -1,4 +1,6 @@
 const fs = require("node:fs");
+const path = require("node:path");
+const { fileURLToPath, pathToFileURL } = require("node:url");
 
 exports.sendInitializeResponse = function sendInitializeResponse(
   id,
@@ -31,3 +33,101 @@ exports.sendInitializeResponse = function sendInitializeResponse(
     send(response);
   }
 };
+
+exports.createCapabilities = function createCapabilities(activeInitializationOptions) {
+  const capabilities = {
+    codeActionProvider: true,
+    codeLensProvider: {
+      resolveProvider: false,
+    },
+    completionProvider: {
+      resolveProvider: false,
+      triggerCharacters: [".", "<", ":"],
+    },
+    definitionProvider: true,
+    documentFormattingProvider: true,
+    documentHighlightProvider: true,
+    documentLinkProvider: {
+      resolveProvider: false,
+    },
+    documentSymbolProvider: true,
+    foldingRangeProvider: true,
+    hoverProvider: true,
+    inlayHintProvider: true,
+    referencesProvider: true,
+    renameProvider: {
+      prepareProvider: true,
+    },
+    semanticTokensProvider: {
+      full: true,
+      legend: {
+        tokenModifiers: ["vue"],
+        tokenTypes: ["vueComponent", "vueDirective"],
+      },
+      range: false,
+    },
+    signatureHelpProvider: {
+      triggerCharacters: ["(", ","],
+    },
+    textDocumentSync: 1,
+    workspaceSymbolProvider: true,
+  };
+  if (activeInitializationOptions.autoInsert === true) {
+    capabilities.experimental = {
+      autoInsertionProvider: {
+        triggerCharacters: ["}", "=", ">", "/", "\\w"],
+        configurationSections: [["vize.autoInsert.bracketSpacing"]],
+      },
+    };
+  }
+  return capabilities;
+};
+
+// Keep the broad default for existing fixtures. Known-file content-edit cases
+// mirror native config_watchers::watcher with an explicit parent/filename pair.
+exports.createConfigurationWatchRegistration = function createConfigurationWatchRegistration(
+  workspaceRootUri,
+  requestId,
+  configurationWatchUri,
+) {
+  const globPattern = configurationWatchUri
+    ? configurationFileGlob(configurationWatchUri)
+    : {
+        baseUri: workspaceRootUri,
+        pattern:
+          "**/{vite.config.ts,vite.config.mts,vite.config.cts,vite.config.js,vite.config.mjs,vite.config.cjs,tsconfig.json,jsconfig.json,tsconfig.*.json}",
+      };
+  return {
+    id: requestId,
+    jsonrpc: "2.0",
+    method: "client/registerCapability",
+    params: {
+      registrations: [
+        {
+          id: "vize-config-watch-1",
+          method: "workspace/didChangeWatchedFiles",
+          registerOptions: {
+            watchers: [
+              {
+                kind: 7,
+                globPattern,
+              },
+            ],
+          },
+        },
+      ],
+    },
+  };
+};
+
+function configurationFileGlob(uri) {
+  const filename = fileURLToPath(uri);
+  const escapes = { "[": "[[]", "]": "[]]", "{": "[{]", "}": "[}]", "?": "[?]", "*": "[*]" };
+  return {
+    baseUri: pathToFileURL(path.dirname(filename) + path.sep).href,
+    pattern: Array.from(
+      path.basename(filename),
+      (character) => escapes[character] ?? (character.trim() === "" ? `[${character}]` : character),
+    ).join(""),
+  };
+}
