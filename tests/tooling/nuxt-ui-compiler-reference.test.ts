@@ -21,8 +21,14 @@ async function observe(plugins: CompilerPluginOption[], isServer: boolean) {
   let pending: void | Promise<void>;
   const config = { plugins };
   nuxtUiCompilerAuthority(undefined, {
-    hook(_name, hook) {
-      pending = hook(config, { isServer });
+    hook(name, hook) {
+      if (name === "vite:configResolved") {
+        const resolved = hook as (
+          config: { plugins: CompilerPluginOption[] },
+          lane: { isServer: boolean },
+        ) => void | Promise<void>;
+        pending = resolved(config, { isServer });
+      }
     },
   });
   await pending!;

@@ -6,6 +6,11 @@ import { fileURLToPath } from "node:url";
 import { inspect } from "node:util";
 
 import { fixtureIdentity } from "./nuxt-ui-fixture-identity.ts";
+import {
+  retainNuxtUiGeneratedOutput,
+  observeNuxtUiModuleGraphs,
+  type ModuleGraphHooks,
+} from "./nuxt-ui-output-authority.ts";
 export { fixtureIdentity } from "./nuxt-ui-fixture-identity.ts";
 
 type Phase = "candidate" | "reference";
@@ -181,6 +186,7 @@ export function sealNuxtUiCandidate(cwd: string): void {
   assert.ok(directory);
   const identity = fixtureIdentity(cwd);
   write(directory, "candidate-identity.json", identity);
+  retainNuxtUiGeneratedOutput(cwd, path.join(directory, "candidate-generated-output"), identity);
   fs.copyFileSync(path.join(cwd, CONFIG), path.join(directory, "candidate-config.ts"));
   fs.copyFileSync(
     path.join(cwd, "pnpm-lock.yaml"),
@@ -270,20 +276,27 @@ async function pluginLeaves(options: CompilerPluginOption[]): Promise<CompilerPl
   return leaves;
 }
 type Lane = { isClient?: boolean; isServer?: boolean };
+type NuxtHooks = ModuleGraphHooks & {
+  "vite:configResolved": (
+    config: { plugins: CompilerPluginOption[]; root?: string; cacheDir?: string },
+    context: Lane,
+  ) => void | Promise<void>;
+};
 type Nuxt = {
-  hook: (
-    name: "vite:configResolved",
-    hook: (
-      config: { plugins: CompilerPluginOption[]; root?: string; cacheDir?: string },
-      context: Lane,
-    ) => void | Promise<void>,
-  ) => void;
+  hook: <K extends keyof NuxtHooks>(name: K, callback: NuxtHooks[K]) => void;
 };
 export function nuxtUiCompilerAuthority(_options: unknown, nuxt: Nuxt): void {
   const directory = authorityDirectory();
   const current = phase();
   assert.ok(directory && current);
   const session = path.join(directory, current, `session-${process.pid}-${randomUUID()}`);
+  observeNuxtUiModuleGraphs(
+    {
+      onServer: (callback) => nuxt.hook("vite:serverCreated", callback),
+      onClose: (callback) => nuxt.hook("close", callback),
+    },
+    session,
+  );
   let serial = 0;
   nuxt.hook("vite:configResolved", async (config, context) => {
     write(session, `plugin-options-${serial++}.json`, {

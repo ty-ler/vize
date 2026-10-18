@@ -12,6 +12,11 @@ import {
   stockNuxtUiCompilerConfig,
   summarizeNuxtUiTransforms,
 } from "../../_helpers/nuxt-ui-compiler-authority.ts";
+import {
+  compareNuxtUiAuthoredIdentity,
+  retainNuxtUiGeneratedOutput,
+  verifyNuxtUiGeneratedOutputUnused,
+} from "../../_helpers/nuxt-ui-output-authority.ts";
 
 const root = path.resolve("target/app-e2e-logs/nuxt-ui-reference");
 const tests = path.resolve("tests");
@@ -172,7 +177,24 @@ await assertStopped("reference");
 const baseline = JSON.parse(fs.readFileSync(path.join(root, "candidate-identity.json"), "utf8"));
 const after = fixtureIdentity(cwd);
 write("reference-final-identity.json", after);
-assert.deepEqual(after, baseline, "reference must not reinstall or mutate source/providers");
+const generated = retainNuxtUiGeneratedOutput(
+  cwd,
+  path.join(root, "reference-generated-output"),
+  after,
+);
+const moduleGraphs = verifyNuxtUiGeneratedOutputUnused(root, cwd);
+write("generated-output-module-graph-admission.json", moduleGraphs);
+const generatedDelta = compareNuxtUiAuthoredIdentity(baseline, after);
+write("generated-output-delta.json", {
+  schema: 1,
+  producer: generated.producer,
+  namespace: generated.namespace,
+  before: baseline.source.filter((file: { path: string }) =>
+    file.path.startsWith("playgrounds/vue/dist/"),
+  ),
+  after: generated.files,
+  delta: generatedDelta,
+});
 const candidateConfig = fs.readFileSync(path.join(root, "candidate-config.ts"), "utf8");
 const referenceConfig = fs.readFileSync(path.join(cwd, "playgrounds/nuxt/nuxt.config.ts"), "utf8");
 assert.equal(referenceConfig, stockNuxtUiCompilerConfig(candidateConfig));
@@ -206,6 +228,7 @@ write("paired-result.json", {
   candidate,
   reference,
   samePhysicalProvidersAndAuthoredSource: true,
+  generatedOutput: { namespace: generated.namespace, delta: generatedDelta, moduleGraphs },
   actualSelectTransforms: transforms,
   wholeHtml: html,
   wholeHtmlEqual,
