@@ -1,8 +1,9 @@
 /** Offline refusal laws. No Cargo or native child process is launched. */
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { test } from "node:test";
+import { test, type TestContext } from "node:test";
 import {
   ALIASES,
   OWNED,
@@ -19,7 +20,7 @@ import {
   sourceManifest,
   verifyMinimalStoryTest,
 } from "./checked-corsa-source-consumers.ts";
-import { verifySource } from "./checked-corsa-source.ts";
+import { verifySource, ownedCorsaReader } from "./checked-corsa-source.ts";
 import {
   root,
   VERSION,
@@ -126,9 +127,105 @@ await test("source provider and filtered/unrelated minimal test output are refus
   ])
     assert.throws(() => verifyMinimalStoryTest(output), /one exact regression/u);
 });
+function sourceRepository(t: TestContext) {
+  const directory = temporary(t);
+  const git = (args: string[]) =>
+    execFileSync("git", ["--no-replace-objects", ...args], {
+      cwd: directory,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  git(["init", "--quiet"]);
+  const commit = () => {
+    git(["add", "."]);
+    git([
+      "-c",
+      "user.name=Source Fixture",
+      "-c",
+      "user.email=source-fixture@example.invalid",
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "--quiet",
+      "-m",
+      "fixture",
+    ]);
+    return git(["rev-parse", "HEAD"]).toString().trim();
+  };
+  return { directory, git, commit };
+}
+await test("real Git reader preserves raw bodies and refuses fresh physical, HEAD and replacement drift", (t) => {
+  const { directory, git, commit } = sourceRepository(t);
+  const relative = "nested/member.rs",
+    file = path.join(directory, relative);
+  const first = "pub const VALUE: u8 = 1;\n",
+    second = "pub const VALUE: u8 = 2;\n";
+  write(directory, relative, first);
+  const before = commit();
+  write(directory, relative, second);
+  const head = commit(),
+    reader = ownedCorsaReader(directory, before, head);
+  const body = (side: string, name = relative) => {
+    const value = reader(side, name);
+    assert.ok(value);
+    return value;
+  };
+  assert.equal(body("before").body.toString(), first);
+  assert.equal(body("after").body.toString(), second);
+  const changed = body("after");
+  changed.body.fill(0);
+  changed.mode = "100755";
+  assert.equal(body("after").body.toString(), second);
+  assert.equal(reader("before", "absent.rs"), null);
+  for (const bad of ["../member.rs", "/member.rs", "a//b", "./member.rs", "nested\\member.rs"])
+    assert.throws(() => reader("after", bad));
+  assert.throws(() => reader("foreign", relative));
+  write(directory, relative, "foreign bytes\n");
+  assert.throws(() => body("after"));
+  write(directory, relative, second);
+  for (const mode of [0o755, 0o600, 0o4644]) {
+    fs.chmodSync(file, mode);
+    assert.throws(() => body("after"));
+  }
+  fs.chmodSync(file, 0o644);
+  const foreign = path.join(directory, "foreign.rs");
+  fs.writeFileSync(foreign, "foreign\n");
+  fs.unlinkSync(file);
+  fs.symlinkSync(foreign, file);
+  assert.throws(() => body("after"));
+  fs.unlinkSync(file);
+  fs.mkdirSync(file);
+  assert.throws(() => body("after"));
+  fs.rmdirSync(file);
+  assert.throws(() => body("after"));
+  write(directory, relative, second);
+  const ancestor = path.dirname(file),
+    moved = path.join(directory, "moved");
+  fs.renameSync(ancestor, moved);
+  fs.symlinkSync(moved, ancestor, "dir");
+  assert.throws(() => body("after"));
+  fs.unlinkSync(ancestor);
+  fs.renameSync(moved, ancestor);
+  git(["replace", head, before]);
+  assert.equal(git(["show", `${head}:${relative}`]).toString(), second);
+  assert.equal(
+    execFileSync("git", ["show", `${head}:${relative}`], { cwd: directory }).toString(),
+    first,
+  );
+  assert.throws(() => body("after"), /replacement refs/u);
+  assert.throws(() => ownedCorsaReader(directory, before, head), /replacement refs/u);
+  git(["replace", "-d", head]);
+  fs.chmodSync(file, 0o755);
+  const executable = commit();
+  assert.throws(() => body("after"), /HEAD changed/u);
+  fs.chmodSync(file, 0o644);
+  assert.throws(
+    () => ownedCorsaReader(directory, before, executable)("after", relative),
+    /regular raw/u,
+  );
+});
 await test("complete six-package source census and licenses reject every substitution", (t) => {
-  const directory = temporary(t),
-    rows = ["package\tpath\tbytes\tsha256"];
+  const { directory, commit } = sourceRepository(t);
+  const rows = ["package\tpath\tbytes\tsha256"];
   for (const alias of ALIASES)
     for (const [relative, body] of [
       ["LICENSE", "MIT License\ncomplete upstream notice\n"],
@@ -139,6 +236,7 @@ await test("complete six-package source census and licenses reject every substit
     }
   const census = rows.join("\n") + "\n";
   write(directory, "vendor/corsa-source.tsv", census);
+  commit();
   verifySource(directory);
   write(
     directory,
@@ -148,8 +246,10 @@ await test("complete six-package source census and licenses reject every substit
       "\t9007199254740993\t",
     ),
   );
+  commit();
   assert.throws(() => verifySource(directory));
   write(directory, "vendor/corsa-source.tsv", census);
+  commit();
   write(directory, "vendor/corsa/src/lib.rs", "changed");
   assert.throws(() => verifySource(directory));
   write(directory, "vendor/corsa/src/lib.rs", "pub fn original() {}\n");
@@ -157,14 +257,17 @@ await test("complete six-package source census and licenses reject every substit
   assert.throws(() => verifySource(directory));
   fs.unlinkSync(path.join(directory, "vendor/corsa/extra"));
   write(directory, "vendor/corsa-source.tsv", census + rows[1] + "\n");
+  commit();
   assert.throws(() => verifySource(directory));
   write(
     directory,
     "vendor/corsa-source.tsv",
     census.replace("corsa_core\tLICENSE", "corsa_core\t../LICENSE"),
   );
+  commit();
   assert.throws(() => verifySource(directory));
   write(directory, "vendor/corsa-source.tsv", census);
+  commit();
   const target = path.join(directory, "vendor/corsa/src/lib.rs");
   fs.unlinkSync(target);
   fs.symlinkSync(path.join(directory, "vendor/corsa_core/src/lib.rs"), target);
@@ -181,6 +284,7 @@ await test("complete six-package source census and licenses reject every substit
       `corsa\tLICENSE\t${Buffer.byteLength("MIT License\nchanged notice\n")}\t${digest(Buffer.from("MIT License\nchanged notice\n"))}`,
     ),
   );
+  commit();
   assert.throws(() => verifySource(directory));
 });
 
