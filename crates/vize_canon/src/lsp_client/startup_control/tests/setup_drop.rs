@@ -4,19 +4,31 @@ use futures::FutureExt;
 use serde_json::{Value, json};
 use std::{path::Path, sync::mpsc};
 
-const PROCESS: &str = r#"#!/usr/bin/env python3
-import os,pathlib,subprocess,sys,time
-root=pathlib.Path(os.getcwd())
-if '--hold-stderr' in sys.argv:
-    os.write(2,b'descendant-held\n')
-    (root/'descendant.pid').write_text(str(os.getpid()))
-    while not (root/'release-stderr').exists(): time.sleep(.005)
-    os.write(2,b'descendant-release\n')
-else:
-    os.write(2,b'owned-start\n')
-    (root/'owner.pid').write_text(str(os.getpid()))
-    subprocess.Popen([sys.executable,__file__,'--hold-stderr'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL)
-    while True: time.sleep(.005)
+const PROCESS: &str = r#"#!/usr/bin/env node
+import fs from "node:fs";
+import { spawn } from "node:child_process";
+import { setTimeout as sleep } from "node:timers/promises";
+import { fileURLToPath } from "node:url";
+
+function publishPid(name: string): void {
+  const pending = `${name}.pending`;
+  fs.writeFileSync(pending, String(process.pid));
+  fs.renameSync(pending, name);
+}
+
+if (process.argv.includes("--hold-stderr")) {
+  fs.writeSync(2, "descendant-held\n");
+  publishPid("descendant.pid");
+  while (!fs.existsSync("release-stderr")) await sleep(5);
+  fs.writeSync(2, "descendant-release\n");
+} else {
+  fs.writeSync(2, "owned-start\n");
+  publishPid("owner.pid");
+  spawn(process.execPath, [fileURLToPath(import.meta.url), "--hold-stderr"], {
+    stdio: ["ignore", "ignore", "inherit"],
+  });
+  while (true) await sleep(5);
+}
 "#;
 const FAULT: &str = "injected transport setup failure after actual owned process birth";
 
@@ -60,7 +72,7 @@ fn absent_before_cleanup(before: &Value) -> Value {
 fn post_spawn_setup_drop_keeps_finalizer_poll_nonblocking_and_preserves_full_custody() {
     let root = tempfile::tempdir().unwrap();
     let _release = ReleaseOnDrop(root.path().to_owned());
-    let executable = root.path().join("owned-setup");
+    let executable = root.path().join("owned-setup.ts");
     std::fs::write(&executable, PROCESS).unwrap();
     std::fs::set_permissions(&executable, std::fs::Permissions::from_mode(0o755)).unwrap();
     let observer = ProcessObserver::default();
