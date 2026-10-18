@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -59,31 +60,64 @@ export function assertInspectorCompareBudgets(
 function runInspectorCompare(app: AppConfig, target: "dom" | "ssr"): InspectorCompareReport {
   const check = app.check;
   assert.ok(check, `${app.name} should define check fixtures`);
-
-  const result = spawnSync(
-    VIZE_BIN,
-    [
-      "inspector",
-      ...check.patterns,
-      "--format",
-      "compare",
-      "--target",
-      target,
-      "--template-syntax",
-      "quirks",
-    ],
-    {
-      cwd: check.cwd,
-      encoding: "utf8",
-      env: {
-        ...process.env,
-        LANG: "C",
-        LC_ALL: "C",
-      },
-      maxBuffer: 512 * 1024 * 1024,
-      timeout: 300_000,
+  const capture = inspectorCaptureDirectory(app.name);
+  if (capture) fs.mkdirSync(capture, { recursive: true });
+  const invocation = capture ? fs.mkdtempSync(path.join(capture, `${target}-`)) : undefined;
+  const args = [
+    "inspector",
+    ...check.patterns,
+    "--format",
+    "compare",
+    "--target",
+    target,
+    "--template-syntax",
+    "quirks",
+  ];
+  const beforeImage = invocation ? inspectorImage() : undefined;
+  const startedAt = performance.now();
+  const raw = spawnSync(VIZE_BIN, args, {
+    cwd: check.cwd,
+    encoding: invocation ? null : "utf8",
+    env: {
+      ...process.env,
+      LANG: "C",
+      LC_ALL: "C",
+      ...(invocation ? { VIZE_INSPECTOR_CAPTURE_DIR: path.join(invocation, "official") } : {}),
     },
-  );
+    maxBuffer: 512 * 1024 * 1024,
+    timeout: 300_000,
+  });
+  const durationMs = performance.now() - startedAt;
+  const result = {
+    ...raw,
+    stdout: Buffer.isBuffer(raw.stdout) ? raw.stdout.toString("utf8") : raw.stdout,
+    stderr: Buffer.isBuffer(raw.stderr) ? raw.stderr.toString("utf8") : raw.stderr,
+  };
+  if (invocation) {
+    fs.writeFileSync(path.join(invocation, "stdout.txt"), raw.stdout ?? "");
+    fs.writeFileSync(path.join(invocation, "stderr.txt"), raw.stderr ?? "");
+    fs.writeFileSync(
+      path.join(invocation, "process.json"),
+      JSON.stringify(
+        {
+          command: VIZE_BIN,
+          args,
+          cwd: check.cwd,
+          status: result.status,
+          signal: result.signal,
+          error: result.error?.message ?? null,
+          durationMs,
+          timeoutMs: 300_000,
+          beforeImage,
+          afterImage: inspectorImage(),
+          officialNodeOverride: process.env.VIZE_INSPECTOR_NODE ?? null,
+          parentNodeEnv: process.env.NODE_ENV ?? null,
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+  }
 
   if (result.error != null) {
     throw result.error;
@@ -124,7 +158,10 @@ function writeInspectorReport(
   target: "dom" | "ssr",
   report: InspectorCompareReport,
 ): void {
-  const outputRoot = inspectorReportDirectory(appName, process.env.VIZE_INSPECT_OUTPUT_DIR);
+  const outputRoot = inspectorReportDirectory(
+    appName,
+    process.env.VIZE_INSPECT_OUTPUT_DIR ?? inspectorCaptureDirectory(appName),
+  );
   fs.mkdirSync(outputRoot, { recursive: true });
 
   fs.writeFileSync(path.join(outputRoot, `${target}.json`), JSON.stringify(report, null, 2) + "\n");
@@ -163,4 +200,24 @@ export function inspectorReportDirectory(appName: string, outputDirectory?: stri
 
 function sanitizeName(name: string): string {
   return name.replace(/[^a-z0-9._-]+/gi, "-").replace(/^-|-$/g, "");
+}
+
+function inspectorCaptureDirectory(appName: string): string | undefined {
+  const root = process.env.VIZE_APP_CHECK_CAPTURE_DIR;
+  if (!root) return undefined;
+  const name = sanitizeName(appName);
+  assert.ok(name && name !== "." && name !== "..", "invalid inspector capture application");
+  return path.join(root, "inspector", name);
+}
+
+function inspectorImage() {
+  try {
+    return {
+      file: VIZE_BIN,
+      physical: fs.realpathSync(VIZE_BIN),
+      sha256: createHash("sha256").update(fs.readFileSync(VIZE_BIN)).digest("hex"),
+    };
+  } catch (error) {
+    return { file: VIZE_BIN, error: String(error) };
+  }
 }
