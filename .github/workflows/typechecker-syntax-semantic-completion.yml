@@ -6,6 +6,11 @@ on:
         description: Complete immutable commit SHA for the composed source
         required: true
         type: string
+      scope:
+        description: Full qualification or the original pinned ReKa component contract
+        type: choice
+        options: [all, reka-pininput]
+        default: all
 permissions:
   contents: read
 concurrency:
@@ -15,9 +20,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   CARGO_TERM_COLOR: always
   QUALIFIER_SHA: ${{ inputs.source_ref }}
+  QUALIFIER_SCOPE: ${{ inputs.scope }}
 jobs:
   native-syntax-completion:
-    runs-on: blacksmith-32vcpu-ubuntu-2404
+    runs-on: ${{ inputs.scope == 'reka-pininput' && 'ubuntu-24.04' || 'blacksmith-32vcpu-ubuntu-2404' }}
     timeout-minutes: 105
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -31,7 +37,44 @@ jobs:
           mkdir -p target/native-syntax-completion
           git rev-parse HEAD > target/native-syntax-completion/source.sha
           git ls-files -s > target/native-syntax-completion/whole-source-index.txt
+          case "$QUALIFIER_SCOPE" in all|reka-pininput) ;; *) exit 1 ;; esac
+          if [[ "$QUALIFIER_SCOPE" == reka-pininput ]]; then test "$QUALIFIER_SHA" = "$GITHUB_SHA"; fi
+      - name: Hydrate only the original pinned ReKa source
+        if: inputs.scope == 'reka-pininput'
+        run: git submodule update --init --depth 1 -- tests/_fixtures/_git/reka-ui
+      - uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1
+        if: inputs.scope == 'reka-pininput'
+        with: { node-version-file: package.json, cache: true, run-install: false }
+      - uses: dtolnay/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # stable
+        if: inputs.scope == 'reka-pininput'
+        with: { toolchain: stable }
+      - uses: wild-linker/action@0bbbfa5df4380cab8e63cb8505a1ce65e1d10203 # v0.9.0
+        if: inputs.scope == 'reka-pininput'
+        with: { wild-version: "0.9.0" }
+      - uses: ./.github/actions/setup-rust-sticky-cache
+        if: inputs.scope == 'reka-pininput'
+        with: { key: test-scripts, cache-key-suffix: "${{ runner.os }}-${{ runner.arch }}" }
+      - name: Prepare original ReKa providers and the source CLI
+        if: inputs.scope == 'reka-pininput'
+        env:
+          VIZE_APP_CHECK_CAPTURE_DIR: ${{ github.workspace }}/target/native-syntax-completion/reka-packets
+        run: |
+          set -euo pipefail
+          mkdir -p target/native-syntax-completion
+          git rev-parse HEAD > target/native-syntax-completion/source.sha
+          git ls-files -s > target/native-syntax-completion/whole-source-index.txt
+          vp install --frozen-lockfile --prefer-offline --filter . --filter './tests...'
+          node tests/_helpers/reka-check-prepare.ts
+          cargo build --locked --profile ci -p vize
+      - name: Original ReKa snapshot and four public component controls
+        if: inputs.scope == 'reka-pininput'
+        env:
+          VIZE_APP_CHECK_CAPTURE_DIR: ${{ github.workspace }}/target/native-syntax-completion/reka-packets
+        run: |
+          set -euo pipefail
+          node --test tests/snapshots/check/reka-ui.ts 2>&1 | tee target/native-syntax-completion/reka-component-controls.log
       - name: Original complete App E2E check row, sharing its native build
+        if: inputs.scope == 'all'
         env:
           VIZE_APP_CHECK_CAPTURE_DIR: ${{ github.workspace }}/target/native-syntax-completion/original-app-packets
         uses: ./.github/actions/app-e2e-row
@@ -46,7 +89,7 @@ jobs:
           worktree-id: ci-app-e2e-full-check-all
           artifact-stem: full-check-all
       - name: Actual generator and native completion controls
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.scope == 'all' }}
         env:
           VIZE_TEST_REQUIRE_TSGO: "1"
           VIZE_TEST_REQUIRE_PIN_INPUT_FIXTURE: "1"
