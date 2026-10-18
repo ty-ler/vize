@@ -16,6 +16,7 @@ pub(crate) mod spanned_props;
 mod transition_group;
 mod transparent_builtin;
 mod vnode;
+mod vnode_control;
 
 use vize_atelier_core::{
     DirectiveNode, ElementNode, ElementType, ExpressionNode, ForNode, IfNode, PropNode,

@@ -142,7 +142,7 @@ pub(super) fn selection(
             experimental,
             template_syntax: TemplateSyntaxMode::Standard,
             has_custom_elements: false,
-            slotted: true,
+            context: crate::SsrSfcContext::new(true),
             frozen: Some((&root, &frozen)),
         },
     )
@@ -196,6 +196,72 @@ fn refused_fixtures_stay_on_the_legacy_lane_with_parity() {
                 "{context}: expected the legacy lane, got {selected:?}"
             );
             assert_parity(source, &options, &experimental, &context);
+        }
+    }
+}
+
+use crate::{SsrSfcContext, compile::compile_ssr_on_lane_with_context};
+
+fn comment_arguments(code: &str) -> std::vec::Vec<&str> {
+    code.split("_createCommentVNode(")
+        .skip(1)
+        .map(|tail| tail.split(')').next().unwrap_or_default())
+        .collect()
+}
+
+#[test]
+fn conditional_vnode_metadata_matches_both_lanes_in_each_host_build() {
+    let cases: &[(&str, &[&str], &[&str])] = &[
+        (
+            "<Foo><span v-if=\"show\">yes</span></Foo>",
+            &["\"v-if\", true"],
+            &["\"\", true"],
+        ),
+        (
+            "<Foo><span v-if=\"show\">yes</span><b v-else>no</b></Foo>",
+            &[],
+            &[],
+        ),
+        ("<Foo><!----></Foo>", &["\"\""], &["\"\""]),
+        (
+            "<Foo><!--authored--></Foo>",
+            &["\"authored\""],
+            &["\"authored\""],
+        ),
+    ];
+    for (set, mut options, mut experimental) in option_sets() {
+        options.comments = true;
+        experimental.source_map = true;
+        experimental.source_map_filename = Some("Conditional.vue".into());
+        for &(source, development, production) in cases {
+            assert!(matches!(
+                selection(source, &options, &experimental),
+                SsrL4Selection::Emitted(_)
+            ));
+            for (is_development, expected) in [(true, development), (false, production)] {
+                let compile = |lane| {
+                    let allocator = Allocator::new();
+                    let (_, errors, result) = compile_ssr_on_lane_with_context(
+                        &allocator,
+                        source,
+                        options.clone(),
+                        TemplateSyntaxMode::Standard,
+                        CustomElementMatcher::default(),
+                        experimental.clone(),
+                        SsrSfcContext::new(true).with_development(is_development),
+                        lane,
+                    );
+                    assert!(errors.is_empty(), "{set}/{source}: {errors:?}");
+                    result
+                };
+                let native = compile(SsrLane::Selected);
+                let retained = compile(SsrLane::LegacyOnly);
+                assert_eq!(native.code, retained.code, "{set}/{source}");
+                assert_eq!(native.preamble, retained.preamble, "{set}/{source}");
+                assert_eq!(native.map, retained.map, "{set}/{source}");
+                assert!(native.map.is_some());
+                assert_eq!(comment_arguments(&native.code), expected, "{set}/{source}");
+            }
         }
     }
 }
