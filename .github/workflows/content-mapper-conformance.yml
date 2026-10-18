@@ -121,13 +121,6 @@ jobs:
           node tools/commands/release/npm/smoke-release-install.ts --prepare-manifests --content-mapper-checks \
             npm/native npm/native/npm/* \
             npm/cli 2>&1 | tee "$VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR/smoke.log"
-      - name: Preserve installed Content Mapper smoke evidence
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: content-mapper-smoke-${{ github.sha }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/content-mapper-smoke/
-          retention-days: 7
       - name: Run standard project and declaration conformance
         env:
           VIZE_TEST_CONTENT_MAPPER_TSGO: ${{ runner.temp }}/tsgo
@@ -162,15 +155,38 @@ jobs:
           cargo test -p vize --test content_mapper_tsgo_declaration_lsp -- --nocapture
           cargo test -p vize --test content_mapper_tsgo_lsp_event_forms -- --nocapture
           cargo test -p vize_canon --test lsp_import_resolution -- --nocapture
+      - name: Preserve exact editor provider
+        run: |
+          evidence="$RUNNER_TEMP/content-mapper-smoke/native-editor"
+          mkdir -p "$evidence"
+          cp "$RUNNER_TEMP/tsgo" "$evidence/tsgo"
+          sha256sum "$RUNNER_TEMP/tsgo" "$evidence/tsgo" > "$evidence/provider.sha256"
+          go version -m "$evidence/tsgo" > "$evidence/go-build-info.txt"
       - name: Stress exact editor lifecycle
         env:
           TSGO_PATH: ${{ runner.temp }}/tsgo
           VIZE_TEST_CONTENT_MAPPER_TSGO: ${{ runner.temp }}/tsgo
+          NEXTEST_PROFILE: full
         run: |
           for iteration in $(seq 1 20); do
             cargo test -p vize_maestro -- --quiet
             echo "Content Mapper Maestro lifecycle cycle $iteration/20 passed"
           done
+      - name: Preserve exact editor lifecycle streams
+        if: always()
+        run: |
+          evidence="$RUNNER_TEMP/content-mapper-smoke/native-editor"
+          mkdir -p "$evidence"
+          if [ -d target/nextest/full/native-proxy-termination ]; then
+            cp -R target/nextest/full/native-proxy-termination "$evidence/"
+          fi
+      - name: Preserve installed Content Mapper smoke evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: content-mapper-smoke-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/content-mapper-smoke/
+          retention-days: 7
 
   event-rename:
     if: github.event_name == 'workflow_dispatch' && inputs.event-rename-only && !inputs.directive-owners-only && !inputs.official-css-options-only
