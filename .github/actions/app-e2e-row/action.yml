@@ -121,7 +121,7 @@ runs:
       if: inputs.suite == 'check'
       shell: bash
       run: |
-        node --test tests/tooling/app-check-prepare.test.ts
+        node --test tests/tooling/app-check-prepare.test.ts tests/tooling/app-check-locked-providers.test.ts
         node tests/_helpers/app-check-prepare.ts --prepare
 
     - name: Prepare original pinned ReKa providers

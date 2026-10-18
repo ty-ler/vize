@@ -5,6 +5,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse } from "yaml";
 
 import { inspectPrepareNode } from "./nuxt-check-runtime.ts";
 import { inspectRekaNpx } from "./reka-check-providers.ts";
@@ -22,7 +23,7 @@ import {
   checkPolicies,
   copyExactGeneratedFile,
   frozenInstallArgs,
-  lockedProviders,
+  assertFullDependencyInstall,
   observeSource,
   providerInventory,
   validateGeneratedGraph,
@@ -321,6 +322,62 @@ function resolveNaive(
 }
 
 /** Producer only: all original prerequisites run once before either B/H consumer. */
+export function lockedProviders(source: Source) {
+  const retained: string[] = [];
+  const lock = parse(fs.readFileSync(path.join(source.cwd, "pnpm-lock.yaml"), "utf8"));
+  assert.ok(lock.importers && lock.packages, "whole lock including resolved packages required");
+  assertFullDependencyInstall(
+    parse(fs.readFileSync(path.join(source.cwd, "node_modules/.modules.yaml"), "utf8")),
+  );
+  for (const entry of source.files.filter((entry) => /(^|\/)package\.json$/.test(entry.file))) {
+    const owner = path.dirname(entry.file),
+      importer = owner === "." ? "." : owner;
+    const manifest = JSON.parse(entry.bytes.toString("utf8"));
+    const locked = lock.importers[importer];
+    if (!locked) continue; // Non-workspace tool manifests are not package-manager importers.
+    for (const section of ["dependencies", "devDependencies"])
+      for (const name of Object.keys(manifest[section] ?? {})) {
+        const record = locked[section]?.[name];
+        if (source.manifest.pnpm?.overrides?.[name] === "-") {
+          assert.equal(record, undefined, "authored removed dependency unexpectedly resolved");
+          continue;
+        }
+        assert.ok(record, `missing locked ${importer}:${name}`);
+        const logical = path.join(source.cwd, owner, "node_modules", name);
+        const physical = fs.realpathSync(logical);
+        assert.ok(physical.startsWith(source.cwd + path.sep), `ambient ${name} provider`);
+        const packageFile = path.join(logical, "package.json"),
+          actual = readJson(packageFile);
+        const version = String(record.version).split("(")[0];
+        if (version.startsWith("file:")) {
+          assert.deepEqual(
+            fs.readFileSync(packageFile),
+            fs.readFileSync(path.join(source.cwd, owner, version.slice(5), "package.json")),
+            "local authored package changed",
+          );
+        } else if (!version.startsWith("link:")) {
+          const alias = /^(.*)@(\d[^@]*)$/.exec(version);
+          let expectedVersion = alias?.[2] ?? version;
+          if (version.startsWith("https://")) {
+            const resolved = lock.packages[`${name}@${version}`];
+            assert.equal(resolved?.resolution?.tarball, version, "locked tarball locator mismatch");
+            assert.ok(typeof resolved.version === "string" && resolved.version.length > 0);
+            expectedVersion = resolved.version;
+          }
+          assert.equal(actual.name, alias?.[1] ?? name);
+          assert.equal(actual.version, expectedVersion, `wrong locked ${name}`);
+        }
+        retained.push(packageFile);
+      }
+  }
+  retained.push(
+    path.join(source.cwd, "pnpm-lock.yaml"),
+    path.join(source.cwd, "node_modules/.modules.yaml"),
+    path.join(source.cwd, "node_modules/.pnpm/lock.yaml"),
+  );
+  return retained;
+}
+
 export function prepareAppCheckProviders(
   authorityRoot = repository,
   captureParent = process.env.RUNNER_TEMP ?? os.tmpdir(),
