@@ -17,7 +17,7 @@ export type PublishedSessionBinding = {
   receiptSha256: string;
   captureRoot: string;
 };
-import { LspSessionCapture } from "./session-capture.ts";
+import { LspSessionCapture, type LspRequestTiming } from "./session-capture.ts";
 import {
   newBaselineObserver,
   type BaselineObserver,
@@ -94,4 +94,12 @@ export function spawnLspSessionProcess(
 export function recordLspClientWire(child: ChildProcessWithoutNullStreams, frame: string): void {
   captures.get(child)?.append("client", Buffer.from(frame, "utf8"));
   baselines.get(child)?.append("client", Buffer.from(frame, "utf8"));
+}
+
+/** Passive request bookkeeping; no capture means no clock sampling or new observer. */
+export function recordLspRequestTiming(
+  child: ChildProcessWithoutNullStreams,
+  event: LspRequestTiming,
+): void {
+  captures.get(child)?.recordRequestTiming(event);
 }

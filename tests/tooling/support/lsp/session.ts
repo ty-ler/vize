@@ -144,11 +144,23 @@ export class LspSession {
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        lspProcess.recordLspRequestTiming(this.process, {
+          phase: "timeout-callback",
+          id,
+          method,
+          configuredTimeoutMs: timeoutMs,
+        });
         this.pending.delete(id);
         reject(new Error(`Timed out waiting for ${method}\n${this.stderr}`.trim()));
       }, timeoutMs);
 
       this.pending.set(id, { resolve, reject, method, timeout });
+      lspProcess.recordLspRequestTiming(this.process, {
+        phase: "request-before-write",
+        id,
+        method,
+        configuredTimeoutMs: timeoutMs,
+      });
       this.send({ jsonrpc: "2.0", id, method, params }, ...following(id));
     });
   }
@@ -288,6 +300,11 @@ export class LspSession {
     if (typeof message.id === "number" && message.method == null) {
       for (const observer of this.responseObservers) observer(message);
       const pending = this.pending.get(message.id);
+      lspProcess.recordLspRequestTiming(this.process, {
+        phase: "response-dispatch",
+        id: message.id,
+        pendingFound: pending != null,
+      });
       if (!pending) {
         return;
       }

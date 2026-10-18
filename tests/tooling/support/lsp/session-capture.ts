@@ -10,6 +10,15 @@ import { validatePublishedLaunch, type VerifiedPublishedLspLaunch } from "./publ
 import { linkSessionSourceOrigins, type SourceWitness } from "./session-source-links.ts";
 
 const MAX_CAPTURE_BYTES = 16 * 1024 * 1024;
+const MAX_TIMING_BYTES = 1024 * 1024;
+export type LspRequestTiming =
+  | {
+      phase: "request-before-write" | "timeout-callback";
+      id: number;
+      method: string;
+      configuredTimeoutMs: number;
+    }
+  | { phase: "response-dispatch"; id: number; pendingFound: boolean };
 const STREAMS = ["client", "server", "stderr"] as const;
 type Stream = (typeof STREAMS)[number];
 let nextSession = 0;
@@ -46,6 +55,13 @@ export class LspSessionCapture {
   private readonly chunks: Record<Stream, Buffer[]> = { client: [], server: [], stderr: [] };
   private readonly observedBytes: Record<Stream, number> = { client: 0, server: 0, stderr: 0 };
   private capturedBytes = 0;
+  private readonly timingAnchor = {
+    wallTime: new Date().toISOString(),
+    monotonicNs: process.hrtime.bigint(),
+  };
+  private readonly timingEvents: Array<LspRequestTiming & { elapsedMs: number }> = [];
+  private timingBytes = 0;
+  private timingObserved = 0;
   private error: string | null = null;
   private closed = false;
   private exitStatus: number | null = null;
@@ -92,6 +108,21 @@ export class LspSessionCapture {
       this.capturedBytes += retained;
     }
     if (this.closed) this.writeMetadata(this.exitStatus, this.signal, "process-closed");
+  }
+
+  recordRequestTiming(event: LspRequestTiming): void {
+    const row = {
+      ...event,
+      elapsedMs: Number(process.hrtime.bigint() - this.timingAnchor.monotonicNs) / 1e6,
+    };
+    this.timingObserved++;
+    // Retain only a complete prefix; overflow never affects wire capture or dispatch.
+    if (this.timingObserved !== this.timingEvents.length + 1) return;
+    const bytes = Buffer.byteLength(JSON.stringify(row), "utf8");
+    if (this.timingBytes + bytes <= MAX_TIMING_BYTES) {
+      this.timingEvents.push(row);
+      this.timingBytes += bytes;
+    }
   }
 
   processError(error: Error): void {
@@ -163,6 +194,18 @@ export class LspSessionCapture {
       argv: ["lsp"],
       clientWireMeaning: "attempted-existing-stdin-write",
       captureByteLimit: MAX_CAPTURE_BYTES,
+      requestTiming: {
+        wallAnchor: this.timingAnchor.wallTime,
+        monotonicAnchorNs: String(this.timingAnchor.monotonicNs),
+        meaning:
+          "passive client callback times; before-write is before the existing send, not server receipt; wall and monotonic anchors are sampled consecutively",
+        byteLimit: MAX_TIMING_BYTES,
+        capturedBytes: this.timingBytes,
+        observedEvents: this.timingObserved,
+        omittedEvents: this.timingObserved - this.timingEvents.length,
+        truncated: this.timingObserved !== this.timingEvents.length,
+        events: this.timingEvents,
+      },
       sourceWitnesses: this.witnesses,
       sourceOrigins: this.sourceOrigins,
       streams,

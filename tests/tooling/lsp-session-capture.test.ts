@@ -8,8 +8,9 @@ import { test } from "node:test";
 import { pathToFileURL } from "node:url";
 import { LEGACY_BUILD_RECIPE, writeBuildReceipt } from "../differential/build-receipt.ts";
 import { sha256 } from "../differential/harness.mjs";
-import { frameMessage } from "../differential/lsp-wire.ts";
+import { decodeFrames, frameMessage } from "../differential/lsp-wire.ts";
 import { resolveVizeLaunchCommand, type VerifiedLspLaunch } from "./support/lsp/launch.ts";
+import { LspSession } from "./support/lsp/session.ts";
 import { LspSessionCapture } from "./support/lsp/session-capture.ts";
 import { recordLspClientWire, spawnLspSessionProcess } from "./support/lsp/session-process.ts";
 
@@ -99,6 +100,13 @@ test("pending observations bind caller source and mark byte truncation and missi
     const read = () =>
       JSON.parse(fs.readFileSync(path.join(capture.directory, "observation.json"), "utf8"));
     assert.equal(read().state, "awaiting-process-close");
+    capture.recordRequestTiming({
+      phase: "request-before-write",
+      id: 1,
+      method: "x".repeat(1024 * 1024),
+      configuredTimeoutMs: 1,
+    });
+    capture.recordRequestTiming({ phase: "response-dispatch", id: 1, pendingFound: false });
     capture.append("client", Buffer.alloc(16 * 1024 * 1024 + 1, 65));
     capture.append("server", frameMessage({ jsonrpc: "2.0", id: 1, result: null }));
     capture.append("stderr", Buffer.from("late failure 🧪"));
@@ -113,6 +121,12 @@ test("pending observations bind caller source and mark byte truncation and missi
         sha256: sha256(fs.readFileSync(f.witness)),
       },
     ]);
+    assert.equal(observed.requestTiming.byteLimit, 1024 * 1024);
+    assert.equal(observed.requestTiming.capturedBytes, 0);
+    assert.equal(observed.requestTiming.observedEvents, 2);
+    assert.equal(observed.requestTiming.omittedEvents, 2);
+    assert.equal(observed.requestTiming.truncated, true);
+    assert.deepEqual(observed.requestTiming.events, []);
     assert.equal(observed.streams.client.capturedBytes, 16 * 1024 * 1024);
     assert.equal(observed.streams.client.observedBytes, 16 * 1024 * 1024 + 1);
     assert.equal(observed.streams.client.truncated, true);
@@ -224,6 +238,95 @@ test("legacy passive observations retain the snapshot caller and complete failed
     assert.deepEqual(observed.process, { exitStatus: 23, signal: null, error: null });
     assert.equal(observed.acceptance.nativeHandled, 0);
   } finally {
+    fs.rmSync(f.root, { recursive: true, force: true });
+  }
+});
+
+test("actual request timeout retains late whole NULL response and unmatched dispatch timing", async () => {
+  const f = fixture();
+  fs.writeFileSync(
+    f.binary,
+    `#!${process.execPath}
+if (process.argv[2] === "--version") { console.log("vize 1.0.0"); process.exit(0); }
+let buffer = Buffer.alloc(0), held;
+const send = message => {
+  const body = JSON.stringify({ jsonrpc: "2.0", ...message });
+  process.stdout.write("Content-Length: " + Buffer.byteLength(body) + "\\r\\n\\r\\n" + body);
+};
+process.stdin.on("data", chunk => {
+  buffer = Buffer.concat([buffer, chunk]);
+  while (true) {
+    const end = buffer.indexOf("\\r\\n\\r\\n"); if (end < 0) return;
+    const length = Number(buffer.subarray(0, end).toString().match(/Content-Length: (\\d+)/)[1]);
+    if (buffer.length < end + 4 + length) return;
+    const message = JSON.parse(buffer.subarray(end + 4, end + 4 + length));
+    buffer = buffer.subarray(end + 4 + length);
+    if (message.method === "hold") held = message.id;
+    else if (message.method === "release") {
+      send({ id: held, result: null }); send({ method: "released", params: { id: held } });
+    } else if (message.method === "exit") process.exit(0);
+    else send({ id: message.id, result: null });
+  }
+});
+`,
+    { mode: 0o755 },
+  );
+  writeBuildReceipt(f.root);
+  const session = new LspSession({ repoRoot: f.root, binary: f.binary });
+  const closed = once(session["process"], "close");
+  try {
+    assert.equal(await session.request("ready", null), null);
+    await assert.rejects(session.request("hold", { original: true }, 1), {
+      message: "Timed out waiting for hold",
+    });
+    const responses: unknown[] = [];
+    session.responseObservers.push((message) => responses.push(message));
+    session.notify("release", {});
+    assert.deepEqual(await session.waitForNotification("released"), { id: 2 });
+    assert.deepEqual(responses, [{ jsonrpc: "2.0", id: 2, result: null }]);
+    await session.shutdown();
+    assert.deepEqual(await closed, [0, null]);
+    const captures = path.join(f.root, "target/differential/lsp-sessions");
+    const directory = path.join(captures, fs.readdirSync(captures)[0]);
+    const observation = JSON.parse(
+      fs.readFileSync(path.join(directory, "observation.json"), "utf8"),
+    );
+    const timing = observation.requestTiming;
+    assert.ok(Number.isFinite(Date.parse(timing.wallAnchor)));
+    assert.match(timing.monotonicAnchorNs, /^\d+$/);
+    assert.equal(timing.truncated, false);
+    assert.equal(timing.omittedEvents, 0);
+    const events = timing.events.filter((event) => event.id === 2);
+    assert.deepEqual(
+      events.map(({ elapsedMs: _elapsedMs, ...event }) => event),
+      [
+        { phase: "request-before-write", id: 2, method: "hold", configuredTimeoutMs: 1 },
+        { phase: "timeout-callback", id: 2, method: "hold", configuredTimeoutMs: 1 },
+        { phase: "response-dispatch", id: 2, pendingFound: false },
+      ],
+    );
+    assert.ok(events.every((event) => Number.isFinite(event.elapsedMs) && event.elapsedMs >= 0));
+    assert.ok(
+      events[0].elapsedMs <= events[1].elapsedMs && events[1].elapsedMs <= events[2].elapsedMs,
+    );
+    assert.ok(
+      timing.events.some(
+        (event) => event.phase === "response-dispatch" && event.id === 1 && event.pendingFound,
+      ),
+    );
+    const client = decodeFrames(fs.readFileSync(path.join(directory, "client.bin"))).messages;
+    assert.deepEqual(
+      client.find((message) => message.id === 2),
+      { jsonrpc: "2.0", id: 2, method: "hold", params: { original: true } },
+    );
+    const server = decodeFrames(fs.readFileSync(path.join(directory, "server.bin"))).messages;
+    assert.deepEqual(
+      server.find((message) => message.id === 2),
+      { jsonrpc: "2.0", id: 2, result: null },
+    );
+    assert.equal(fs.readFileSync(path.join(directory, "stderr.bin"), "utf8"), "");
+  } finally {
+    await session.kill();
     fs.rmSync(f.root, { recursive: true, force: true });
   }
 });
