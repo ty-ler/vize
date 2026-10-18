@@ -299,6 +299,7 @@ impl ServerState {
         paths
     }
 
+    #[cfg(test)]
     pub(super) fn configuration_watch_paths_for_root(&self, root: &Path) -> Vec<PathBuf> {
         let mut paths = self
             .configuration_records()
