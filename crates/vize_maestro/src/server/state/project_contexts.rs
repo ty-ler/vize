@@ -434,7 +434,7 @@ mod asynchronous;
 mod capabilities;
 #[cfg(test)]
 mod config_dependencies;
-mod current;
+pub(super) mod current;
 #[cfg(test)]
 mod lock_order_tests;
 #[cfg(feature = "experimental-source-navigation")]

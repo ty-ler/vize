@@ -85,6 +85,8 @@ pub(crate) use native_names::{
     NativeLinkedNamesRoute, NativeLinkedNamesTicket, NativeNamesConfigurationError,
     NativeNamesParserTicket, NativeNamesSettings,
 };
+#[cfg(feature = "native")]
+pub(crate) use project_contexts::current::InitialConfigurationContinuation;
 
 #[cfg(feature = "native")]
 pub use batch_cache::BatchTypeCheckCache;

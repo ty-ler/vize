@@ -6,7 +6,7 @@ use super::{
 };
 use vize_canon::ConfigurationObservations;
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub(in crate::server::state) struct ConfigurationObservation {
     observations: ConfigurationObservations,
     before_inputs: ConfigurationObservations,
@@ -121,6 +121,10 @@ impl ConfigurationObservation {
     /// Retry eligibility is not evidence that every observed input changed.
     pub(super) fn retry_required(&self) -> bool {
         self.unverified || self.retry_unobservable
+    }
+
+    pub(super) fn admits_initial_continuation(&self) -> bool {
+        !self.rejected && !self.retry_unobservable
     }
 
     pub(super) fn changes(&self) -> Vec<PathBuf> {

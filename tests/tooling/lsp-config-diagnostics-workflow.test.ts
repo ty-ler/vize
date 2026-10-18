@@ -208,6 +208,10 @@ test("startup diagnostics retain the production producer and unchanged scale-one
     "crates/vize_maestro/src/server/workspace_files/config_watchers_lifecycle_tests.rs",
     "crates/vize_maestro/src/server/state/project_contexts/freshness.rs",
     "crates/vize_maestro/src/server/state/project_contexts/config_reload.rs",
+    "crates/vize_maestro/src/server/state/project_contexts/current.rs",
+    "crates/vize_maestro/src/server/state.rs",
+    "crates/vize_maestro/src/server/initial_diagnostics/open_importer_tests.rs",
+    "crates/vize_maestro/src/server/initial_diagnostics/tests.rs",
     "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs",
     "tests/tooling/support/vue-config-fixture.ts",
   ]) {
