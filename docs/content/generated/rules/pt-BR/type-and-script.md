@@ -1027,7 +1027,7 @@ render($slots.default)
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_dollar_scopedslots_api.rs#L44) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_dollar_scopedslots_api.rs#L45) · [Todas as regras](all.md)
 
 ### `script/no-deprecated-events-api`
 
@@ -1284,7 +1284,7 @@ Sinalizar um componente que aplica duas vezes seus atributos repassados
 [Incorreto](#script-no-duplicate-attr-inheritance-bad) · [Correto](#script-no-duplicate-attr-inheritance-good)
 
 Severidade padrão: `warning`  
-Predefinições: `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
+Predefinições: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
