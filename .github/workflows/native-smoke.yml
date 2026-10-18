@@ -200,7 +200,7 @@ jobs:
           import { execFileSync } from 'node:child_process';
           import fs from 'node:fs';
           import path from 'node:path';
-          import { verifySourceOnlyRust } from './tests/tooling/support/native-packed-config-source.ts';
+          import { verifySourceOnlyRust, verifyHistoricalProducerFiles } from './tests/tooling/support/native-packed-config-source.ts';
           const source = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
           const files = [
             '.github/workflows/native-smoke.yml', 'rust-toolchain.toml',
@@ -277,21 +277,14 @@ jobs:
           execFileSync('git', ['merge-base', '--is-ancestor', receipt.producer, source]);
           execFileSync('git', ['merge-base', '--is-ancestor', retirement.source, source]);
           execFileSync('git', ['merge-base', '--is-ancestor', retirement.retiredAt, receipt.producer]);
-          for (const [file, expected] of Object.entries(retirement.files)) {
+          for (const file of Object.keys(retirement.files)) {
             assert.equal(producerWitness.files[file], null, file);
-            assert.equal(createHash('sha256').update(execFileSync('git', ['show', `${retirement.source}:${file}`])).digest('hex'), expected, file);
-            assert.equal(execFileSync('git', ['ls-tree', '--name-only', retirement.retiredAt, '--', file], { encoding: 'utf8' }), '', file);
           }
           assert.match(receipt.producer ?? "", /^[0-9a-f]{40}$/u);
-          receipt.producerFiles = Object.fromEntries(producerFiles.map(file => {
-            if (producerAbsentFiles.includes(file)) {
-              assert.equal(execFileSync('git', ['ls-tree', '--name-only', receipt.producer, '--', file], { encoding: 'utf8' }), '', file);
-              assert.equal(fs.lstatSync(file, { throwIfNoEntry: false }), undefined, file);
-              return [file, null];
-            }
-            assert.match(producerWitness.files[file], /^[0-9a-f]{64}$/u);
-            return [file, createHash('sha256').update(execFileSync('git', ['show', `${receipt.producer}:${file}`])).digest('hex')];
-          }));
+          receipt.producerFiles = verifyHistoricalProducerFiles(process.cwd(), producerWitness);
+          for (const file of producerAbsentFiles) {
+            assert.equal(fs.lstatSync(file, { throwIfNoEntry: false }), undefined, file);
+          }
           fs.writeFileSync(path.join(process.env.PACKED_CONFIG_OUTPUT, 'source.json'), JSON.stringify(receipt, null, 2) + '\n');
           for (const file of producerFiles) {
             assert.equal(receipt.producerFiles[file], producerWitness.files[file], file);

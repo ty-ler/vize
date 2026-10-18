@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { verifyPackedProducerHistory } from "./support/native-packed-config-history.ts";
 import assert from "node:assert/strict";
 import { spawnSync, execFileSync } from "node:child_process";
@@ -13,6 +14,7 @@ import {
   verifyPackedProducerPreflight,
 } from "./support/native-packed-config-extension.ts";
 import { writeFakeCommand } from "./support/fake-command.ts";
+import { readPackedSourceIdentities } from "./support/native-packed-config-source.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const source = fs.readFileSync(path.join(root, ".github/workflows/native-smoke.yml"), "utf8");
@@ -226,4 +228,93 @@ void test("all reviewed producer files and deletion tombstones are bound", () =>
     (step: { name?: string }) => step.name === "Authenticate selected packed configuration source",
   ).run as string;
   verifyPackedProducerPreflight(script);
+});
+
+void test("immutable source batches bind every path, mode, byte and frame without cross-call reuse", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vize-source-batch-"));
+  const previousPath = process.env.PATH;
+  try {
+    const packetPath = path.join(directory, "packet.json");
+    const callsPath = path.join(directory, "calls.jsonl");
+    writeFakeCommand(
+      directory,
+      "git",
+      `
+      const fs = require('node:fs');
+      const packet = JSON.parse(fs.readFileSync(${JSON.stringify(packetPath)}, 'utf8'));
+      const input = fs.readFileSync(0, 'utf8');
+      fs.appendFileSync(${JSON.stringify(callsPath)}, JSON.stringify({ argv: process.argv.slice(2), input }) + '\\n');
+      process.stdout.write(Buffer.from(process.argv[2] === 'ls-tree' ? packet.tree : packet.batch, 'base64'));
+    `,
+    );
+    process.env.PATH = `${directory}${path.delimiter}${previousPath ?? ""}`;
+    const ref = "1".repeat(40);
+    const bytes = Buffer.from([97, 0, 98, 10]);
+    const oid = createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex");
+    const hash = createHash("sha256").update(bytes).digest("hex");
+    const tree = Buffer.from(`100644 blob ${oid}\ta.ts\0` + `100755 blob ${oid}\tb.ts\0`);
+    const frame = Buffer.concat([
+      Buffer.from(`${oid} blob ${bytes.length}\n`),
+      bytes,
+      Buffer.from("\n"),
+    ]);
+    const batch = Buffer.concat([frame, frame]);
+    const save = (treeBytes: Buffer, batchBytes: Buffer) =>
+      fs.writeFileSync(
+        packetPath,
+        JSON.stringify({
+          tree: treeBytes.toString("base64"),
+          batch: batchBytes.toString("base64"),
+        }),
+      );
+    save(tree, batch);
+    assert.deepEqual(
+      [...readPackedSourceIdentities(directory, ref, ["a.ts", "b.ts", "missing.ts"])],
+      [
+        ["a.ts", { mode: "100644", blob: oid, sha256: hash }],
+        ["b.ts", { mode: "100755", blob: oid, sha256: hash }],
+        ["missing.ts", null],
+      ],
+    );
+    assert.deepEqual(
+      fs
+        .readFileSync(callsPath, "utf8")
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line)),
+      [
+        { argv: ["ls-tree", "-rz", ref, "--", "a.ts", "b.ts", "missing.ts"], input: "" },
+        { argv: ["cat-file", "--batch"], input: `${oid}\n${oid}\n` },
+      ],
+    );
+    const wrongBody = Buffer.from(batch);
+    wrongBody[frame.length - 3] ^= 1;
+    const highBitHeader = Buffer.from(batch);
+    highBitHeader[0] += 128;
+    for (const [badTree, badBatch] of [
+      [Buffer.concat([tree, tree]), batch],
+      [Buffer.from(tree.toString().replace("a.ts", "unknown.ts")), batch],
+      [Buffer.from(tree.toString().replace("100644", "160000")), batch],
+      [tree.subarray(0, -1), batch],
+      [tree, Buffer.from(batch.toString().replace(oid, "2".repeat(40)))],
+      [tree, wrongBody],
+      [tree, highBitHeader],
+      [tree, batch.subarray(0, -1)],
+      [tree, Buffer.concat([batch, Buffer.from("extra")])],
+    ]) {
+      save(badTree, badBatch);
+      assert.throws(() =>
+        readPackedSourceIdentities(directory, ref, ["a.ts", "b.ts", "missing.ts"]),
+      );
+    }
+    // A new call must reread the immutable view, rather than return the earlier valid packet.
+    save(Buffer.alloc(0), Buffer.alloc(0));
+    assert.deepEqual([...readPackedSourceIdentities(directory, ref, ["a.ts"])], [["a.ts", null]]);
+    assert.throws(() => readPackedSourceIdentities(directory, ref, ["../a.ts"]));
+    assert.throws(() => readPackedSourceIdentities(directory, ref, ["a.ts", "a.ts"]));
+  } finally {
+    if (previousPath === undefined) delete process.env.PATH;
+    else process.env.PATH = previousPath;
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });

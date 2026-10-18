@@ -93,6 +93,68 @@ export interface SourceOnlyRust {
     }
   >;
 }
+/** One immutable reference view per call; no filesystem or cross-invocation cache. */
+export function readPackedSourceIdentities(
+  repository: string,
+  ref: string,
+  files: readonly string[],
+): Map<string, SourceIdentity | null> {
+  assert.match(ref, /^[0-9a-f]{40}$/u);
+  assert.ok(files.length > 0, "at least one exact source path is required");
+  assert.equal(new Set(files).size, files.length, "source paths are unique");
+  for (const file of files)
+    assert.ok(
+      file
+        .split("/")
+        .every((part) => part !== "" && part !== "." && part !== ".." && !/[\\\0]/u.test(part)),
+    );
+  const git = (args: string[], input?: string) =>
+    execFileSync("git", args, { cwd: repository, input, maxBuffer: 64 * 1024 * 1024 });
+  const tree = git(["ls-tree", "-rz", ref, "--", ...files]);
+  assert.deepEqual(Buffer.from(tree.toString("utf8")), tree, "literal UTF-8 source paths");
+  assert.ok(tree.length === 0 || tree.at(-1) === 0, "complete tree framing");
+  const rows = tree
+    .toString("utf8")
+    .split("\0")
+    .filter(Boolean)
+    .map((entry) => {
+      const match = /^(100644|100755|120000) blob ([0-9a-f]{40})\t([\s\S]+)$/u.exec(entry);
+      assert.ok(match && files.includes(match[3]), "exact requested blob path and mode");
+      return { mode: match[1], blob: match[2], file: match[3] };
+    });
+  assert.equal(new Set(rows.map((row) => row.file)).size, rows.length, "one tree entry per path");
+  const result = new Map<string, SourceIdentity | null>(files.map((file) => [file, null]));
+  if (rows.length === 0) return result;
+  const raw = git(["cat-file", "--batch"], rows.map((row) => row.blob).join("\n") + "\n");
+  let offset = 0;
+  for (const row of rows) {
+    const end = raw.indexOf(10, offset);
+    assert.ok(end > offset, "complete batch header");
+    const headerBytes = raw.subarray(offset, end);
+    const headerText = headerBytes.toString("ascii");
+    assert.deepEqual(Buffer.from(headerText, "ascii"), headerBytes, "literal ASCII batch header");
+    const header = /^([0-9a-f]{40}) blob (0|[1-9][0-9]*)$/u.exec(headerText);
+    assert.ok(header && header[1] === row.blob, "batch binds exact tree object");
+    const size = Number(header[2]);
+    assert.ok(Number.isSafeInteger(size) && end + 1 + size < raw.length, "complete batch body");
+    const bytes = raw.subarray(end + 1, end + 1 + size);
+    assert.equal(
+      createHash("sha1").update(`blob ${size}\0`).update(bytes).digest("hex"),
+      row.blob,
+      "whole Git blob identity",
+    );
+    offset = end + 1 + size;
+    assert.equal(raw[offset++], 10, "complete batch terminator");
+    result.set(row.file, {
+      mode: row.mode,
+      blob: row.blob,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    });
+  }
+  assert.equal(offset, raw.length, "no extra batch records or bytes");
+  return result;
+}
+
 export function readPackedProducerRetirement(
   repository: string,
   producer: Extension["producer"],
@@ -129,33 +191,12 @@ export function verifySourceOnlyRust(
   const git = (...args: string[]) => execFileSync("git", args, { cwd: repository });
   for (const ancestor of [roles.priorSource, roles.main])
     git("merge-base", "--is-ancestor", ancestor, producer.head);
-  const trees = new Map<string, Map<string, { mode: string; blob: string }>>();
-  const hashes = new Map<string, string>();
+  const views = new Map<string, Map<string, SourceIdentity | null>>();
   const identity = (ref: string, file: string): SourceIdentity | null => {
-    if (!trees.has(ref)) {
-      const tree = new Map<string, { mode: string; blob: string }>();
-      for (const entry of git("ls-tree", "-rz", ref, "--", ...names)
-        .toString()
-        .split("\0")
-        .filter(Boolean)) {
-        const match = /^(\d+) blob ([0-9a-f]+)\t([\s\S]+)$/u.exec(entry);
-        assert.ok(match);
-        tree.set(match[3], { mode: match[1], blob: match[2] });
-      }
-      trees.set(ref, tree);
-    }
-    const entry = trees.get(ref)?.get(file);
-    if (!entry) return null;
-    if (!hashes.has(entry.blob))
-      hashes.set(
-        entry.blob,
-        createHash("sha256")
-          .update(git("cat-file", "blob", entry.blob))
-          .digest("hex"),
-      );
-    const sha256 = hashes.get(entry.blob);
-    assert.ok(sha256);
-    return { ...entry, sha256 };
+    if (!views.has(ref)) views.set(ref, readPackedSourceIdentities(repository, ref, names));
+    const value = views.get(ref)?.get(file);
+    assert.notEqual(value, undefined, "every requested path has an explicit identity or absence");
+    return value ?? null;
   };
   for (const [file, row] of Object.entries(roles.files)) {
     assert.equal(row.compilerBound, false, file);
@@ -219,7 +260,7 @@ export function verifySourceOnlyRust(
 export function verifyHistoricalProducerFiles(
   repository: string,
   producer: Extension["producer"],
-): void {
+): Record<string, string | null> {
   const git = (...args: string[]) => execFileSync("git", args, { cwd: repository });
   const retirement = readPackedProducerRetirement(repository, producer);
   const absentFiles = [...producer.absentFiles, ...Object.keys(retirement.files)];
@@ -232,29 +273,42 @@ export function verifyHistoricalProducerFiles(
   );
   git("merge-base", "--is-ancestor", retirement.source, "HEAD");
   git("merge-base", "--is-ancestor", retirement.retiredAt, producer.head);
-  for (const [file, expected] of Object.entries(retirement.files)) {
-    assert.equal(
-      createHash("sha256")
-        .update(git("show", retirement.source + ":" + file))
-        .digest("hex"),
-      expected,
-      file,
-    );
-    assert.equal(git("ls-tree", "--name-only", retirement.retiredAt, "--", file).length, 0, file);
+  const requested = new Map<string, Set<string>>();
+  for (const [ref, names] of [
+    [retirement.source, Object.keys(retirement.files)],
+    [retirement.retiredAt, Object.keys(retirement.files)],
+    [producer.head, Object.keys(producer.files)],
+  ] as const) {
+    const namesForRef = requested.get(ref) ?? new Set<string>();
+    for (const file of names) namesForRef.add(file);
+    requested.set(ref, namesForRef);
   }
+  const views = new Map(
+    [...requested].map(([ref, names]) => [
+      ref,
+      readPackedSourceIdentities(repository, ref, [...names]),
+    ]),
+  );
+  const identity = (ref: string, file: string) => {
+    const value = views.get(ref)?.get(file);
+    assert.notEqual(value, undefined, "explicit observed path required");
+    return value ?? null;
+  };
+  for (const [file, expected] of Object.entries(retirement.files)) {
+    assert.equal(identity(retirement.source, file)?.sha256, expected, file);
+    assert.equal(identity(retirement.retiredAt, file), null, file);
+  }
+  const observed: Record<string, string | null> = {};
   for (const [file, expected] of Object.entries(producer.files)) {
+    const actual = identity(producer.head, file);
     if (absentFiles.includes(file)) {
       assert.equal(expected, null, file);
-      assert.equal(git("ls-tree", "--name-only", producer.head, "--", file).length, 0, file);
+      assert.equal(actual, null, file);
     } else {
       assert.match(expected ?? "", /^[0-9a-f]{64}$/u);
-      assert.equal(
-        createHash("sha256")
-          .update(git("show", producer.head + ":" + file))
-          .digest("hex"),
-        expected,
-        file,
-      );
+      assert.equal(actual?.sha256, expected, file);
     }
+    observed[file] = actual?.sha256 ?? null;
   }
+  return observed;
 }
