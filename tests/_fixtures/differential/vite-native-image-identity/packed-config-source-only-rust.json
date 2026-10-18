@@ -1,9 +1,9 @@
 {
   "schema": "vize.packed-config-source-only-rust.v1",
   "scope": "Finite CI/release tooling primary source bytes, explicitly compilerBound:false. Actual producer HEAD/build metadata and native-image receipts remain required; no blanket tools-prefix exclusion.",
-  "producer": "25baaebfbba439d1ae9661df2bcfb3b1744c0580",
+  "producer": "d42a6e518c03b03107b5a81b3755af0bf6e8ac52",
   "priorSource": "e0bc8fb50bdc28915167a3fbdceea86f00b65030",
-  "main": "7e1cdefb1f0c97243a26fd8f332386bbf299ed07",
+  "main": "31447d1ac9326ae87529f3da84d1c99f00d4f038",
   "latestDiagnostic": {
     "source": "3bfb3885f3328133968731873d2414773d00ee4a",
     "producer": "e0bc8fb50bdc28915167a3fbdceea86f00b65030",
@@ -61,6 +61,25 @@
       "main": null,
       "retiredAt": "ec6874e0a04c77ef1f33ae12ad7e565ba999b5eb"
     },
+    "tools/commands/fixtures/typecheck-divergence-report.rs": {
+      "compilerBound": false,
+      "prior": {
+        "mode": "100644",
+        "blob": "4d7a8ed8937dd134b50f22cf48beb75d93d0eb6c",
+        "sha256": "acea42a14decbd5ef087deb454ed33f80c7f88b194b476c54df56bb2ad835b8c"
+      },
+      "current": {
+        "mode": "100644",
+        "blob": "9c7e6a9169a8c6bd1936c746e5368152366312b7",
+        "sha256": "09513e8d471fd38661d295d0309709a7f45d0fa0c56a3984aaa73227052fc9e7"
+      },
+      "main": {
+        "mode": "100644",
+        "blob": "9c7e6a9169a8c6bd1936c746e5368152366312b7",
+        "sha256": "09513e8d471fd38661d295d0309709a7f45d0fa0c56a3984aaa73227052fc9e7"
+      },
+      "retiredAt": null
+    },
     "tools/commands/release/pr.rs": {
       "compilerBound": false,
       "prior": {
@@ -70,13 +89,13 @@
       },
       "current": {
         "mode": "100644",
-        "blob": "9cfd52ea64be249b32b929d12a9574e3e26be0a1",
-        "sha256": "e30ff07abe32ff8caa8057bef9daf197be4d91f4474717b5b59fe31199b63394"
+        "blob": "b72aa246027f78d41bf33f91d497805fe1ac4468",
+        "sha256": "d0a32c5ade1490e944663b3f5664adce6454e7c265e3baa4d894d4d258ea6ecb"
       },
       "main": {
         "mode": "100644",
-        "blob": "9cfd52ea64be249b32b929d12a9574e3e26be0a1",
-        "sha256": "e30ff07abe32ff8caa8057bef9daf197be4d91f4474717b5b59fe31199b63394"
+        "blob": "b72aa246027f78d41bf33f91d497805fe1ac4468",
+        "sha256": "d0a32c5ade1490e944663b3f5664adce6454e7c265e3baa4d894d4d258ea6ecb"
       },
       "retiredAt": null
     },
@@ -100,13 +119,13 @@
       },
       "current": {
         "mode": "100644",
-        "blob": "2810d3ce2d3708725534a1d55df1d3d751f361b8",
-        "sha256": "58bbcf575f49c22cce84798d8c775ee8217b0ec1816b780303e98fd8b4263b59"
+        "blob": "fa1af8d4a009924984d2db796ab75de3076eb4ba",
+        "sha256": "7d37dc2f28ae75307a2e832c6a50ddea6273ccd9b7918cdc420329f8c11c3ef5"
       },
       "main": {
         "mode": "100644",
-        "blob": "2810d3ce2d3708725534a1d55df1d3d751f361b8",
-        "sha256": "58bbcf575f49c22cce84798d8c775ee8217b0ec1816b780303e98fd8b4263b59"
+        "blob": "fa1af8d4a009924984d2db796ab75de3076eb4ba",
+        "sha256": "7d37dc2f28ae75307a2e832c6a50ddea6273ccd9b7918cdc420329f8c11c3ef5"
       },
       "retiredAt": null
     },
@@ -221,6 +240,25 @@
         "mode": "100644",
         "blob": "1bf4474e5b554586e9965e93cc37d01c0fd7d3d2",
         "sha256": "1d900c3bde7409af4b8c5335463022afa884dc0de1c9286f3acaf6e11630c174"
+      },
+      "retiredAt": null
+    },
+    "tools/support/release/pr_pin_integration.rs": {
+      "compilerBound": false,
+      "prior": {
+        "mode": "100644",
+        "blob": "4d4a7b5f63a5beea57cab4c2ba1a22ff578cd92c",
+        "sha256": "63e9de98009db9b47803457fe42fcc33a70f7e01cc74f649f97cec328f33aec5"
+      },
+      "current": {
+        "mode": "100644",
+        "blob": "987afd4312694e39161551327bc572cb6b9160c7",
+        "sha256": "9a840a302451e56c55f7d102d6520a5a2448f889020fc82883be335ab8b9de37"
+      },
+      "main": {
+        "mode": "100644",
+        "blob": "987afd4312694e39161551327bc572cb6b9160c7",
+        "sha256": "9a840a302451e56c55f7d102d6520a5a2448f889020fc82883be335ab8b9de37"
       },
       "retiredAt": null
     },
@@ -464,13 +502,13 @@
       },
       "current": {
         "mode": "100644",
-        "blob": "09db2f4fbcc6b5ab6b512690cbb0326a40f4f202",
-        "sha256": "7a24b954c998917c7962dd3609c363ceb081dd892b92cd14657f6449323ad3e8"
+        "blob": "53a0304f54fe40bb9e2a3d758a9f29ce837bc6f7",
+        "sha256": "0dfa6ff86eee141bc7fca5e6f3ba51592b8ec831c0ca6e71a42936598aec08a1"
       },
       "main": {
         "mode": "100644",
-        "blob": "09db2f4fbcc6b5ab6b512690cbb0326a40f4f202",
-        "sha256": "7a24b954c998917c7962dd3609c363ceb081dd892b92cd14657f6449323ad3e8"
+        "blob": "53a0304f54fe40bb9e2a3d758a9f29ce837bc6f7",
+        "sha256": "0dfa6ff86eee141bc7fca5e6f3ba51592b8ec831c0ca6e71a42936598aec08a1"
       },
       "retiredAt": null
     },
@@ -483,13 +521,13 @@
       },
       "current": {
         "mode": "100644",
-        "blob": "3f35ebb8ec31aa087098095ad7b3cb33fb4843f7",
-        "sha256": "7fd102d107f5cd9daffe44fae31a0cff0634d67a1be3e3ca2b0907a60b0c3887"
+        "blob": "056aa9c6797f35dbd4f5d512b12e555428280064",
+        "sha256": "7118eb91228de8acb89ef950cac1c478c1ea7eb784c64640a905afe7225311d7"
       },
       "main": {
         "mode": "100644",
-        "blob": "3f35ebb8ec31aa087098095ad7b3cb33fb4843f7",
-        "sha256": "7fd102d107f5cd9daffe44fae31a0cff0634d67a1be3e3ca2b0907a60b0c3887"
+        "blob": "056aa9c6797f35dbd4f5d512b12e555428280064",
+        "sha256": "7118eb91228de8acb89ef950cac1c478c1ea7eb784c64640a905afe7225311d7"
       },
       "retiredAt": null
     },
@@ -502,13 +540,13 @@
       },
       "current": {
         "mode": "100644",
-        "blob": "b1de20069b0b806079273b4541b9cde449dc8f48",
-        "sha256": "52d9673931b808be7942d9dd6a33c6d12a013078c18c6af19335658e82f6412f"
+        "blob": "62d89fbdd2789e19656cf18efcb73028e72598fc",
+        "sha256": "57d28997648171cba9c506f4d0f7b4ce071d12feb8f4ea6b3ef9b702b01ea862"
       },
       "main": {
         "mode": "100644",
-        "blob": "b1de20069b0b806079273b4541b9cde449dc8f48",
-        "sha256": "52d9673931b808be7942d9dd6a33c6d12a013078c18c6af19335658e82f6412f"
+        "blob": "62d89fbdd2789e19656cf18efcb73028e72598fc",
+        "sha256": "57d28997648171cba9c506f4d0f7b4ce071d12feb8f4ea6b3ef9b702b01ea862"
       },
       "retiredAt": null
     },
@@ -597,13 +635,13 @@
       },
       "current": {
         "mode": "100644",
-        "blob": "006d09810ea8c5b94fc171ac3a6ffcf424411e15",
-        "sha256": "eea2342968ce4568463a3c11bb65c5a725dbdfe39ae372a24dbc33875d502413"
+        "blob": "3abccffce54b74c1e6aedb27474ddfa0c33df701",
+        "sha256": "d2865cc1beeaf1ae629a61ed28e5a461e0080479d89668583d76c90b8369c263"
       },
       "main": {
         "mode": "100644",
-        "blob": "006d09810ea8c5b94fc171ac3a6ffcf424411e15",
-        "sha256": "eea2342968ce4568463a3c11bb65c5a725dbdfe39ae372a24dbc33875d502413"
+        "blob": "3abccffce54b74c1e6aedb27474ddfa0c33df701",
+        "sha256": "d2865cc1beeaf1ae629a61ed28e5a461e0080479d89668583d76c90b8369c263"
       },
       "retiredAt": null
     },
@@ -623,6 +661,51 @@
         "mode": "100644",
         "blob": "f3a6f88f4dcca88ff1840157275bda3d83381ca7",
         "sha256": "c49afb6721b4a8eff80cbca59c3824f0e13e57c86247da6d81a1a7071bd3a4ed"
+      },
+      "retiredAt": null
+    },
+    "tools/support/typecheck_baseline_usability.rs": {
+      "compilerBound": false,
+      "prior": null,
+      "current": {
+        "mode": "100644",
+        "blob": "de970648ac352fc997f61468a801b053f833777e",
+        "sha256": "abc91022ff03962a3bb83b1276c52d32501e00b085c60711cd4075697bd86651"
+      },
+      "main": {
+        "mode": "100644",
+        "blob": "de970648ac352fc997f61468a801b053f833777e",
+        "sha256": "abc91022ff03962a3bb83b1276c52d32501e00b085c60711cd4075697bd86651"
+      },
+      "retiredAt": null
+    },
+    "tools/support/typecheck_mutation_recovery.rs": {
+      "compilerBound": false,
+      "prior": null,
+      "current": {
+        "mode": "100644",
+        "blob": "64625086b244ea68562f09640f3502833a4f8a54",
+        "sha256": "53ddc7129baeda5ae3a44b21641e38314359e4932b74c26cde6aacfa810617ef"
+      },
+      "main": {
+        "mode": "100644",
+        "blob": "64625086b244ea68562f09640f3502833a4f8a54",
+        "sha256": "53ddc7129baeda5ae3a44b21641e38314359e4932b74c26cde6aacfa810617ef"
+      },
+      "retiredAt": null
+    },
+    "tools/support/typecheck_project_deadline.rs": {
+      "compilerBound": false,
+      "prior": null,
+      "current": {
+        "mode": "100644",
+        "blob": "22a672a876957a2a11da28c58f5ea6d3224f2e1f",
+        "sha256": "241e5f7514826f111a58c582af7a2f15a4417a910d5e2aeca7a137ccc4e19135"
+      },
+      "main": {
+        "mode": "100644",
+        "blob": "22a672a876957a2a11da28c58f5ea6d3224f2e1f",
+        "sha256": "241e5f7514826f111a58c582af7a2f15a4417a910d5e2aeca7a137ccc4e19135"
       },
       "retiredAt": null
     }

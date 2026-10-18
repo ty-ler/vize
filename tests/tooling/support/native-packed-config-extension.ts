@@ -62,7 +62,7 @@ export function verifyPackedProducerPreflight(script: string): void {
     assert.ok(match);
     const sourceFiles = runInNewContext(match[1]) as string[];
     const producerFiles = Object.keys(witness.producer.files);
-    assert.equal(producerFiles.length, 424);
+    assert.equal(producerFiles.length, 540);
     const actualRepository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
     const originalRoles = JSON.parse(
       fs.readFileSync(path.join(actualRepository, witness.producer.sourceOnlyRust.path), "utf8"),

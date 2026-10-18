@@ -1,3 +1,4 @@
+import { verifyPackedCompileTimeInputs } from "./native-packed-config-source.ts";
 /** Complete immutable packed-producer history; current admission stays in the real guard. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -10,7 +11,7 @@ import {
 } from "./native-packed-config-extension.ts";
 
 export function verifyPackedProducerHistory(root: string, workflowProducer: unknown): void {
-  const producer = "25baaebfbba439d1ae9661df2bcfb3b1744c0580";
+  const producer = "d42a6e518c03b03107b5a81b3755af0bf6e8ac52";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -23,7 +24,7 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
   const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
   const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
   const files = Object.keys(witness.producer.files);
-  assert.equal(files.length, 424);
+  assert.equal(files.length, 540);
   assert.equal(new Set(files).size, files.length);
   const changedRust = git(
     "diff",
@@ -36,18 +37,19 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     .trim()
     .split("\n")
     .filter((file) => file.endsWith(".rs"));
-  assert.equal(changedRust.length, 438);
+  assert.equal(changedRust.length, 546);
   const roleBytes = fs.readFileSync(path.join(root, witness.producer.sourceOnlyRust.path));
   assert.equal(digest(roleBytes), witness.producer.sourceOnlyRust.sha256);
   const roles = JSON.parse(roleBytes.toString());
   assert.equal(roles.producer, producer);
   assert.equal(roles.priorSource, "e0bc8fb50bdc28915167a3fbdceea86f00b65030");
-  assert.equal(roles.main, "7e1cdefb1f0c97243a26fd8f332386bbf299ed07");
+  assert.equal(roles.main, "31447d1ac9326ae87529f3da84d1c99f00d4f038");
   const sourceOnly = Object.keys(roles.files);
   assert.deepEqual(sourceOnly, [
     "tools/commands/ci/github/release-preflight.rs",
     "tools/commands/ci/source-file-lengths.rs",
     "tools/commands/fixtures/lint-divergence-report.rs",
+    "tools/commands/fixtures/typecheck-divergence-report.rs",
     "tools/commands/release/pr.rs",
     "tools/support/lint_divergence_surface.rs",
     "tools/support/release/pr_ci.rs",
@@ -57,6 +59,7 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     "tools/support/release/pr_pin_body_tests.rs",
     "tools/support/release/pr_pin_budget_tests.rs",
     "tools/support/release/pr_pin_candidate.rs",
+    "tools/support/release/pr_pin_integration.rs",
     "tools/support/release/pr_pin_lock.rs",
     "tools/support/release/pr_pin_lock_tests.rs",
     "tools/support/release/pr_pin_metadata.rs",
@@ -79,6 +82,9 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     "tools/support/release/pr_tests.rs",
     "tools/support/release/pr_watch.rs",
     "tools/support/release/preflight_pinned_evidence_tests.rs",
+    "tools/support/typecheck_baseline_usability.rs",
+    "tools/support/typecheck_mutation_recovery.rs",
+    "tools/support/typecheck_project_deadline.rs",
   ]);
   for (const row of Object.values(roles.files) as { compilerBound: boolean }[])
     assert.equal(row.compilerBound, false);
@@ -107,6 +113,19 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
       "tests/_fixtures/content-mapper/escaton-nested-flow-9433.json",
       "tests/_fixtures/differential/linter/computed-suppression-reka/NavigationMenuContentImpl.vue.fixture",
       "tests/_fixtures/differential/lsp/component-native-events/checked-native.expected.json",
+      "tests/_fixtures/content-mapper/with-defaults-surplus.json",
+      "crates/vize_canon/src/virtual_ts/component_prop_helpers.txt",
+      "tests/_fixtures/differential/lsp/component-native-events/public-input-prelude-before-9498.txt",
+      "crates/vize_armature/tests/_fixtures/empty_attribute_value_witness.bin",
+      "crates/vize_armature/tests/_fixtures/tokenizer_parser_fixtures.bin",
+      "tests/_fixtures/content-mapper/escaton-public-props-9498.json",
+      "crates/vize_canon/tests/fixtures/projection-carriers-svg-9200.json",
+      "tests/_fixtures/differential/lsp/lint-hover-severity/responses.authored.json",
+      "tests/_fixtures/differential/lsp/lint-hover-severity/App.vue.txt",
+      "crates/vize_maestro/tests/fixtures/split_script_checker.virtual.ts.txt",
+      "tests/_fixtures/differential/lint/native-svg-content/cases.json",
+      "tests/_fixtures/differential/lint/native-svg-content/FacetBarChart.vue",
+      "tests/_fixtures/differential/lint/native-svg-content/TimelineChartDepSizeSvgSlot.vue",
     ],
   );
   assert.deepEqual(witness.producer.cargoInputs, ["Cargo.lock", "Cargo.toml"]);
@@ -149,6 +168,27 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     ].sort((left: string, right: string) => left.localeCompare(right)),
   );
   assert.equal(Object.values(witness.producer.files).filter((value) => value === null).length, 101);
+  // Past composition laws compare two immutable checkpoints; current admission is
+  // independently checked above and by the real selected-source guard.
+  const checkpoint = witness.producer.previousFunctionalSource;
+  assert.equal(checkpoint.source, "1999a60c7688494cb952b1855e95aa10ab80fcfa");
+  const checkpointBytes = git("show", checkpoint.source + ":" + witnessPath);
+  assert.equal(digest(checkpointBytes), checkpoint.witnessSha256);
+  const checkpointWitness = JSON.parse(checkpointBytes.toString());
+  assert.equal(checkpointWitness.producer.head, checkpoint.producer);
+  assert.equal(Object.keys(checkpointWitness.producer.files).length, 424);
+  assert.ok(Object.keys(checkpointWitness.producer.files).every((file) => files.includes(file)));
+  const checkpointRoleBytes = git(
+    "show",
+    checkpoint.source + ":" + witness.producer.sourceOnlyRust.path,
+  );
+  assert.equal(digest(checkpointRoleBytes), checkpoint.sourceOnlySha256);
+  const checkpointRoles = JSON.parse(checkpointRoleBytes.toString());
+  assert.equal(
+    digest(git("show", checkpoint.source + ":.github/workflows/native-smoke.yml")),
+    checkpoint.workflowSha256,
+  );
+  const checkpointFiles = Object.keys(checkpointWitness.producer.files);
   const qualification = witness.producer.previousQualification;
   assert.equal(qualification.source, retirement.source);
   assert.equal(qualification.producer, "c45e0901fc05cfa51c50d167ac97a34ec466dd18");
@@ -265,14 +305,14 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     addedReceiptInputs,
   );
   assert.deepEqual(
-    files.filter(
+    checkpointFiles.filter(
       (file) =>
         ![...addedDiagnosticInputs, ...addedForwardInputs, ...addedReceiptInputs].includes(file),
     ),
     Object.keys(previousDiagnostic.producer.files),
   );
   const changedDiagnosticInputs = Object.keys(previousDiagnostic.producer.files).filter(
-    (file) => previousDiagnostic.producer.files[file] !== witness.producer.files[file],
+    (file) => previousDiagnostic.producer.files[file] !== checkpointWitness.producer.files[file],
   );
   assert.deepEqual(changedDiagnosticInputs, [
     "Cargo.lock",
@@ -351,12 +391,14 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
   assert.equal(priorPrefix.producer.head, functionalPrefix.producer);
   assert.equal(Object.keys(priorPrefix.producer.files).length, 392);
   assert.deepEqual(
-    files.filter((file) => ![...addedForwardInputs, ...addedReceiptInputs].includes(file)),
+    checkpointFiles.filter(
+      (file) => ![...addedForwardInputs, ...addedReceiptInputs].includes(file),
+    ),
     Object.keys(priorPrefix.producer.files),
   );
   assert.deepEqual(
     Object.keys(priorPrefix.producer.files).filter(
-      (file) => priorPrefix.producer.files[file] !== witness.producer.files[file],
+      (file) => priorPrefix.producer.files[file] !== checkpointWitness.producer.files[file],
     ),
     [
       "Cargo.lock",
@@ -372,37 +414,12 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     functionalPrefix.source + ":" + witness.producer.sourceOnlyRust.path,
   );
   assert.equal(digest(prefixRoleBytes), functionalPrefix.sourceOnlySha256);
-  assert.deepEqual(JSON.parse(prefixRoleBytes.toString()).files, roles.files);
+  assert.deepEqual(JSON.parse(prefixRoleBytes.toString()).files, checkpointRoles.files);
   assert.equal(
     digest(git("show", functionalPrefix.source + ":.github/workflows/native-smoke.yml")),
     functionalPrefix.workflowSha256,
   );
-  assert.deepEqual(witness.producer.additionalCompileTimeInputs, [
-    {
-      path: "crates/vize/src/commands/inspector/official_compiler.ts",
-      source: "crates/vize/src/commands/inspector/compare.rs",
-      role: "production-cli-embedded",
-      incomingChanged: true,
-    },
-    {
-      path: "tests/_fixtures/content-mapper/escaton-nested-flow-9433.json",
-      source: "crates/vize_canon/src/virtual_ts/tests/vif_chain.rs",
-      role: "cargo-test-embedded",
-      incomingChanged: true,
-    },
-    {
-      path: "tests/_fixtures/differential/linter/computed-suppression-reka/NavigationMenuContentImpl.vue.fixture",
-      source: "crates/vize_patina/tests/computed_suppression_history.rs",
-      role: "cargo-test-embedded",
-      incomingChanged: true,
-    },
-    {
-      path: "tests/_fixtures/differential/lsp/component-native-events/checked-native.expected.json",
-      source: "crates/vize/tests/support/event_completion_project.rs",
-      role: "cargo-test-embedded",
-      incomingChanged: false,
-    },
-  ]);
+  verifyPackedCompileTimeInputs(witness.producer);
   verifyHistoricalProducerFiles(root, witness.producer);
   const original = witness.producer.previousFreeze;
   assert.equal(original.source, "f7ee25f5db27bd210db07f514837b9f4c1b65054");

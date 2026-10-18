@@ -11,6 +11,7 @@ export const SOURCE_ONLY_RUST_NAMES = [
   "tools/commands/ci/github/release-preflight.rs",
   "tools/commands/ci/source-file-lengths.rs",
   "tools/commands/fixtures/lint-divergence-report.rs",
+  "tools/commands/fixtures/typecheck-divergence-report.rs",
   "tools/commands/release/pr.rs",
   "tools/support/lint_divergence_surface.rs",
   "tools/support/release/pr_ci.rs",
@@ -20,6 +21,7 @@ export const SOURCE_ONLY_RUST_NAMES = [
   "tools/support/release/pr_pin_body_tests.rs",
   "tools/support/release/pr_pin_budget_tests.rs",
   "tools/support/release/pr_pin_candidate.rs",
+  "tools/support/release/pr_pin_integration.rs",
   "tools/support/release/pr_pin_lock.rs",
   "tools/support/release/pr_pin_lock_tests.rs",
   "tools/support/release/pr_pin_metadata.rs",
@@ -42,6 +44,9 @@ export const SOURCE_ONLY_RUST_NAMES = [
   "tools/support/release/pr_tests.rs",
   "tools/support/release/pr_watch.rs",
   "tools/support/release/preflight_pinned_evidence_tests.rs",
+  "tools/support/typecheck_baseline_usability.rs",
+  "tools/support/typecheck_mutation_recovery.rs",
+  "tools/support/typecheck_project_deadline.rs",
 ] as const;
 
 export interface Extension {
@@ -311,4 +316,131 @@ export function verifyHistoricalProducerFiles(
     observed[file] = actual?.sha256 ?? null;
   }
   return observed;
+}
+
+/** Exact reviewed embedded inputs, distinguishing Cargo tests from production consumers. */
+export function verifyPackedCompileTimeInputs(producer: {
+  additionalCompileTimeInputs: unknown;
+  mainCompileTimeInputBase: unknown;
+  mainCompileTimeInputs: unknown;
+}): void {
+  assert.deepEqual(producer.additionalCompileTimeInputs, [
+    {
+      path: "crates/vize/src/commands/inspector/official_compiler.ts",
+      source: "crates/vize/src/commands/inspector/compare.rs",
+      role: "production-cli-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/content-mapper/escaton-nested-flow-9433.json",
+      source: "crates/vize_canon/src/virtual_ts/tests/vif_chain.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/differential/linter/computed-suppression-reka/NavigationMenuContentImpl.vue.fixture",
+      source: "crates/vize_patina/tests/computed_suppression_history.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/differential/lsp/component-native-events/checked-native.expected.json",
+      source: "crates/vize/tests/support/event_completion_project.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: false,
+    },
+  ]);
+  assert.equal(producer.mainCompileTimeInputBase, "7e1cdefb1f0c97243a26fd8f332386bbf299ed07");
+  assert.deepEqual(producer.mainCompileTimeInputs, [
+    {
+      path: "tests/_fixtures/content-mapper/with-defaults-surplus.json",
+      source: "crates/vize/tests/content_mapper_tsgo_cli.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/content-mapper/with-defaults-surplus.json",
+      source: "crates/vize_canon/tests/with_defaults_surplus.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "crates/vize_canon/src/virtual_ts/component_prop_helpers.txt",
+      source: "crates/vize/tests/support/event_completion_witness.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/differential/lsp/component-native-events/public-input-prelude-before-9498.txt",
+      source: "crates/vize/tests/support/event_completion_witness.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "crates/vize_armature/tests/_fixtures/empty_attribute_value_witness.bin",
+      source: "crates/vize_armature/src/parser/tokenizer_empty_value_witness.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "crates/vize_armature/tests/_fixtures/tokenizer_parser_fixtures.bin",
+      source: "crates/vize_armature/src/parser/tokenizer_empty_value_witness.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: false,
+    },
+    {
+      path: "tests/_fixtures/content-mapper/escaton-public-props-9498.json",
+      source: "crates/vize_canon/tests/public_component_input_props.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "crates/vize_canon/tests/fixtures/projection-carriers-svg-9200.json",
+      source: "crates/vize_canon/tests/support/projection_carriers.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/differential/lsp/lint-hover-severity/responses.authored.json",
+      source: "crates/vize_maestro/src/server/handlers/tests/requests/responses.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/differential/lsp/lint-hover-severity/App.vue.txt",
+      source: "crates/vize_maestro/src/server/handlers/tests/requests/responses.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "crates/vize_maestro/tests/fixtures/split_script_checker.virtual.ts.txt",
+      source: "crates/vize_maestro/tests/split_script_checker.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/differential/lint/native-svg-content/cases.json",
+      source: "crates/vize_patina/tests/v_html_on_unknown_lowercase_components.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/differential/lint/native-svg-content/FacetBarChart.vue",
+      source: "crates/vize_patina/tests/v_html_on_unknown_lowercase_components.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/differential/lint/native-svg-content/TimelineChartDepSizeSvgSlot.vue",
+      source: "crates/vize_patina/tests/v_html_on_unknown_lowercase_components.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "crates/vize_canon/src/virtual_ts/component_prop_helpers.txt",
+      source: "crates/vize_canon/src/virtual_ts/helpers/preamble.rs",
+      role: "production-canon-embedded",
+      incomingChanged: true,
+    },
+  ]);
 }
