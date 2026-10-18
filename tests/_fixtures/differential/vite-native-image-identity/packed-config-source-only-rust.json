@@ -1,7 +1,7 @@
 {
   "schema": "vize.packed-config-source-only-rust.v1",
   "scope": "Finite CI/release tooling primary source bytes, explicitly compilerBound:false. Actual producer HEAD/build metadata and native-image receipts remain required; no blanket tools-prefix exclusion.",
-  "producer": "ed71d1f9150a60b3a280155077b4f30863e6062c",
+  "producer": "8e50ef28b93435d1681dd274ab88399daa5503e2",
   "priorSource": "e0bc8fb50bdc28915167a3fbdceea86f00b65030",
   "main": "fd761ab5d299f580951ad191b6f129404cadc25c",
   "latestDiagnostic": {

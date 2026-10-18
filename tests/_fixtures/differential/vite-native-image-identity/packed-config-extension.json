@@ -1,7 +1,7 @@
 {
   "schema": "vize.native-smoke-packed-config-extension.v1",
   "beforeSha256": "26890094723c79ee46b27c710b42feed3d5a660f98c382246cf19458000aeaa3",
-  "afterSha256": "2f5859d4c527c193adc95272122c5358e9284857ed33d0dbcba2404f54a32603",
+  "afterSha256": "f502b4ad02852d5d158a918ffed1023de5733f528403174726fe3b81d2ceed71",
   "scope": "exact named bounded manual extension; immutable historical recipes/hash remain independently checked",
   "hunks": [
     {
@@ -34,11 +34,11 @@
     },
     {
       "before": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n",
-      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: ed71d1f9150a60b3a280155077b4f30863e6062c\n    steps: *fresh-install-steps\n"
+      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: 8e50ef28b93435d1681dd274ab88399daa5503e2\n    steps: *fresh-install-steps\n"
     }
   ],
   "producer": {
-    "head": "ed71d1f9150a60b3a280155077b4f30863e6062c",
+    "head": "8e50ef28b93435d1681dd274ab88399daa5503e2",
     "composedBase": "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b",
     "priorProducer": "820bf6b5d688c77f8edea6ba18ff6f86f76bffae",
     "scope": "Reviewed whole source custody; the finite sourceOnlyRust partition excludes tooling primary source bytes, while producer HEAD/build identity stays bound; qualification unexecuted.",
@@ -116,7 +116,7 @@
       "crates/vize_canon/src/batch/virtual_project/tests/pnpm_workspace_routes_lifecycle.rs": "3e343921338e094dca26a9c860fe10b6ff7b9f8e5655ea21bce7423e530a62d9",
       "crates/vize_canon/src/batch/virtual_project/tests/pnpm_workspace_shadow_cleanup.rs": "f4352cc7c9428aa59a19d6b3ae6fdc84423948a02de69fb3a8c5b8d5d8fb2014",
       "crates/vize_canon/src/batch/virtual_project/tsconfig_gen.rs": "0f5ae30f7bea82147d50c3747cc1cf339c02bd82ec81898b6974e4796bc3b35e",
-      "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_inputs.rs": "d3757574b7a061c418171e52c1e4a1154ad0e3bfdc8476adec52e94685ddbaf5",
+      "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_inputs.rs": "68ff18b9e09ecb58c7caf826a0fef4a5ef716e93ab027b756ee50530d732a748",
       "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_options.rs": "d9efac64bb386ba1053ec71d215ee833a8838d36dfab8da16439e63ad6436da6",
       "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot.rs": "43163dd8008c2b17b3de9cbe737539d0d4355dd8beee9be022959d9d1e7ca93f",
       "crates/vize_canon/src/batch/virtual_project/tsconfig_gen/compiler_snapshot_tests.rs": "86d254d20f827ca68bd93bb36623878d93a486be969bbe3f2f99072e9352f25b",
@@ -536,7 +536,7 @@
     },
     "sourceOnlyRust": {
       "path": "tests/_fixtures/differential/vite-native-image-identity/packed-config-source-only-rust.json",
-      "sha256": "65b88d027acf2e9ea80c6b72ee238040c3cf7ce794591576d00a6019494eec33"
+      "sha256": "500de018958a2f767ec59a18c350041ae01bfc940358964c28298cc555fb61f0"
     },
     "previousComposition": {
       "source": "ecb83f915f53aaf82b4b04980e26cd36b4f43f62",
