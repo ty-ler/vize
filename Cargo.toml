@@ -227,12 +227,12 @@ insta = { version = "=1.49.0", features = ["toml"] }
 criterion = "=0.8.2"
 
 # Checked Corsa dependencies; aliases preserve the existing Rust module names.
-corsa_core = { package = "vize_corsa_core", version = "=0.463.0", path = "vendor/corsa_core" }
-corsa_jsonrpc = { package = "vize_corsa_jsonrpc", version = "=0.463.0", path = "vendor/corsa_jsonrpc" }
-corsa_client = { package = "vize_corsa_client", version = "=0.463.0", path = "vendor/corsa_client" }
-corsa_lsp = { package = "vize_corsa_lsp", version = "=0.463.0", path = "vendor/corsa_lsp" }
-corsa_orchestrator = { package = "vize_corsa_orchestrator", version = "=0.463.0", path = "vendor/corsa_orchestrator" }
-corsa = { package = "vize_corsa", version = "=0.463.0", path = "vendor/corsa" }
+corsa_core = { package = "vize_corsa_core", version = "=0.467.0", path = "vendor/corsa_core" }
+corsa_jsonrpc = { package = "vize_corsa_jsonrpc", version = "=0.467.0", path = "vendor/corsa_jsonrpc" }
+corsa_client = { package = "vize_corsa_client", version = "=0.467.0", path = "vendor/corsa_client" }
+corsa_lsp = { package = "vize_corsa_lsp", version = "=0.467.0", path = "vendor/corsa_lsp" }
+corsa_orchestrator = { package = "vize_corsa_orchestrator", version = "=0.467.0", path = "vendor/corsa_orchestrator" }
+corsa = { package = "vize_corsa", version = "=0.467.0", path = "vendor/corsa" }
 corsa_runtime = { package = "corsa_runtime", version = "=1.14.2" }
 
 # Shared lint contract. A member opts in with `[lints] workspace = true` once it

@@ -4357,7 +4357,7 @@ dependencies = [
 
 [[package]]
 name = "vize_corsa"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "base64",
  "corsa_runtime",
@@ -4373,7 +4373,7 @@ dependencies = [
 
 [[package]]
 name = "vize_corsa_client"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "base64",
  "corsa_runtime",
@@ -4389,7 +4389,7 @@ dependencies = [
 
 [[package]]
 name = "vize_corsa_core"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "base64",
  "compact_str",
@@ -4403,7 +4403,7 @@ dependencies = [
 
 [[package]]
 name = "vize_corsa_jsonrpc"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "corsa_runtime",
  "log",
@@ -4415,7 +4415,7 @@ dependencies = [
 
 [[package]]
 name = "vize_corsa_lsp"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "corsa_runtime",
  "lsp-types 0.97.0",
@@ -4427,7 +4427,7 @@ dependencies = [
 
 [[package]]
 name = "vize_corsa_orchestrator"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "corsa_runtime",
  "log",

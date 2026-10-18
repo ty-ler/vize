@@ -112,7 +112,7 @@ test("TS-40 baselines are wired into exact Content Mapper CI", () => {
       "cargo test -p vize --test davinci_ts40_projection_cli -- --nocapture",
       "cargo test -p vize_maestro --test davinci_ts40_projection -- --nocapture",
       'VIZE_TEMPLATE_EMIT_TS40_CAPTURE="$RUNNER_TEMP/content-mapper-smoke/ts40-legacy" cargo test -p vize_maestro --features legacy --test davinci_ts40_projection -- --nocapture',
-      "node --test tests/tooling/davinci-ts40-projection.test.ts",
+      "node --test tests/tooling/davinci-ts40-projection.test.ts tests/tooling/content-mapper-manifest.test.ts",
     ],
   );
 });

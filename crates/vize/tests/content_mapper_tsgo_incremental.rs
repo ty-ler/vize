@@ -45,6 +45,7 @@ fn install_packages(project_root: &Path) {
             "name": "vize",
             "private": true,
             "typescript": { "contentMapper": {
+                "dynamicConfig": true,
                 "exec": [env!("CARGO_BIN_EXE_vize"), "content-mapper"],
                 "compilerOptions": ["noUnusedLocals"],
             } },

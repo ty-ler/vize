@@ -44,6 +44,7 @@ fn install_mapper_manifest(project_root: &Path) {
         "private": true,
         "typescript": {
             "contentMapper": {
+                "dynamicConfig": true,
                 "exec": [env!("CARGO_BIN_EXE_vize"), "content-mapper"],
                 "compilerOptions": ["noUnusedLocals"],
             },

@@ -65,6 +65,7 @@ fn install_mapper_and_vue(root: &Path, vue: &Path) {
             "private": true,
             "typescript": {
                 "contentMapper": {
+                    "dynamicConfig": true,
                     "exec": [env!("CARGO_BIN_EXE_vize"), "content-mapper"],
                     "compilerOptions": ["noUnusedLocals"]
                 }
