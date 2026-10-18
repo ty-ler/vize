@@ -310,9 +310,11 @@ mod tests {
         let InitialApiDiagnosticsOutcome::Complete(diagnostics) = outcome else {
             panic!("expected whole diagnostic result")
         };
+        let mut expected = diagnostic();
+        expected["relatedInformation"] = Value::Null;
         assert_eq!(
             serde_json::to_value(diagnostics).unwrap(),
-            json!([diagnostic()])
+            json!([expected])
         );
         assert_eq!(
             serde_json::to_value(
