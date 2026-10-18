@@ -101,6 +101,23 @@ runs:
         for (const file of ['without-editor/prepared-vs-native.json', 'without-editor/materialized-tsconfig.json', 'without-editor/materialized-ui-package.json', 'with-editor/prepared-vs-native.json', 'with-editor/materialized-tsconfig.json', 'with-editor/materialized-ui-package.json']) {
           JSON.parse(readFileSync(join(directory, file), 'utf8'));
         }
+        for (const world of ['ordered-without-editor', 'ordered-with-editor']) {
+          for (const file of ['prepared-vs-native.json', 'materialized-tsconfig.json', 'materialized-ui-package.json', 'world.json', 'other-before-app/world.json', 'other-before-app/materialized-tsconfig.json', 'other-prepared-vs-native.json']) {
+            JSON.parse(readFileSync(join(directory, world, file), 'utf8'));
+          }
+          let observations = 0;
+          for (const file of ['materialized-ui-package.json', 'materialized-ui-package.absent.json']) {
+            let value;
+            try { value = JSON.parse(readFileSync(join(directory, world, 'other-before-app', file), 'utf8')); }
+            catch (error) { if (error.code === 'ENOENT') continue; throw error; }
+            if (file === 'materialized-ui-package.absent.json' &&
+                (value.status !== 'absent-after-materialization' || typeof value.path !== 'string' || value.path.length === 0)) {
+              throw new Error('invalid first-world UI absence observation');
+            }
+            observations++;
+          }
+          if (observations !== 1) throw new Error('exactly one first-world UI package observation required');
+        }
         NODE
     - name: Test nested sibling narrowing with the actual CLI
       shell: bash

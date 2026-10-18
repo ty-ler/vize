@@ -18,6 +18,30 @@ type Step = {
 type Workflow = {
   jobs: Record<string, { steps: Step[]; needs?: string | string[]; uses?: string }>;
 };
+const memberlessEvidenceFiles = [
+  "without-editor/materialized-tsconfig.json",
+  "without-editor/materialized-ui-package.json",
+  "without-editor/prepared-vs-native.json",
+  "with-editor/materialized-tsconfig.json",
+  "with-editor/materialized-ui-package.json",
+  "with-editor/prepared-vs-native.json",
+  "ordered-without-editor/prepared-vs-native.json",
+  "ordered-without-editor/materialized-tsconfig.json",
+  "ordered-without-editor/materialized-ui-package.json",
+  "ordered-without-editor/world.json",
+  "ordered-without-editor/other-before-app/world.json",
+  "ordered-without-editor/other-before-app/materialized-tsconfig.json",
+  "ordered-without-editor/other-prepared-vs-native.json",
+  "ordered-with-editor/prepared-vs-native.json",
+  "ordered-with-editor/materialized-tsconfig.json",
+  "ordered-with-editor/materialized-ui-package.json",
+  "ordered-with-editor/world.json",
+  "ordered-with-editor/other-before-app/world.json",
+  "ordered-with-editor/other-before-app/materialized-tsconfig.json",
+  "ordered-with-editor/other-prepared-vs-native.json",
+  "ordered-without-editor/other-before-app/materialized-ui-package.json",
+  "ordered-with-editor/other-before-app/materialized-ui-package.json",
+] as const;
 const actionPath = "./.github/actions/upload-formatter-api-corpus-evidence";
 const action = parse(readRepoFile(actionPath.slice(2), "action.yml")) as {
   inputs: { shard: { default: string } };
@@ -215,6 +239,12 @@ test("memberless preparation is enrolled after real Vue installation and require
       "'without-editor/prepared-vs-native.json', 'without-editor/materialized-tsconfig.json', 'without-editor/materialized-ui-package.json', 'with-editor/prepared-vs-native.json', 'with-editor/materialized-tsconfig.json', 'with-editor/materialized-ui-package.json'",
     ),
   );
+  assert.ok(law.run?.includes("['ordered-without-editor', 'ordered-with-editor']"));
+  assert.ok(
+    law.run?.includes(
+      "'other-before-app/world.json', 'other-before-app/materialized-tsconfig.json', 'other-prepared-vs-native.json'",
+    ),
+  );
   const retention = steps.find(
     (step) => step.name === "Preserve actual native inputs and responses",
   );
@@ -238,14 +268,7 @@ test("the actual compiler-kind carrier refuses zero execution and preserves whol
           "const name = 'lsp_client::editor_lsp::configured_project::shared_transport",
         ),
       ),
-      [
-        "without-editor/materialized-tsconfig.json",
-        "without-editor/materialized-ui-package.json",
-        "without-editor/prepared-vs-native.json",
-        "with-editor/materialized-tsconfig.json",
-        "with-editor/materialized-ui-package.json",
-        "with-editor/prepared-vs-native.json",
-      ],
+      memberlessEvidenceFiles,
     ],
   ] as const) {
     assert.ok(step);
@@ -288,6 +311,56 @@ test("the actual compiler-kind carrier refuses zero execution and preserves whol
       } finally {
         rmSync(directory, { recursive: true, force: true });
       }
+    }
+  }
+});
+
+test("ordered preparation requires exactly one complete first-world UI observation", () => {
+  const action = parse(readRepoFile(".github", "actions", "test-native-canon", "action.yml")) as {
+    runs: { steps: Array<{ run?: string }> };
+  };
+  const name =
+    "lsp_client::editor_lsp::configured_project::shared_transport::tests::native::replay::actual_memberless_vue_preparation_reattaches_same_editor_owner";
+  const step = action.runs.steps.find((step) => step.run?.includes(`const name = '${name}'`));
+  assert.ok(step);
+  const source = step.run?.match(/<<'NODE'\n([\s\S]*?)\nNODE/)?.[1];
+  assert.ok(source);
+  for (const [mode, expected] of [
+    ["missing", 1],
+    ["both", 1],
+    ["typed-absence", 0],
+    ["invalid-absence", 1],
+  ] as const) {
+    const directory = mkdtempSync(join(tmpdir(), "vize-first-world-ui-"));
+    try {
+      for (const file of memberlessEvidenceFiles) {
+        mkdirSync(dirname(join(directory, file)), { recursive: true });
+        writeFileSync(join(directory, file), "{}\n");
+      }
+      const world = join(directory, "ordered-without-editor", "other-before-app");
+      if (mode !== "both") rmSync(join(world, "materialized-ui-package.json"));
+      if (mode !== "missing")
+        writeFileSync(
+          join(world, "materialized-ui-package.absent.json"),
+          JSON.stringify({
+            status: mode === "invalid-absence" ? "unknown" : "absent-after-materialization",
+            path: "/native/project/node_modules/ui/package.json",
+          }),
+        );
+      writeFileSync(
+        join(directory, "test.stdout"),
+        `test ${name} ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.1s\n`,
+      );
+      writeFileSync(join(directory, "test.stderr"), "whole first-world custody stderr\n");
+      writeFileSync(join(directory, "test.status"), "0\n");
+      const child: SpawnSyncReturns<string> = spawnSync(
+        process.execPath,
+        ["--input-type=module", "-", directory],
+        { input: source, encoding: "utf8" },
+      );
+      assert.equal(child.status, expected, child.stderr);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
     }
   }
 });

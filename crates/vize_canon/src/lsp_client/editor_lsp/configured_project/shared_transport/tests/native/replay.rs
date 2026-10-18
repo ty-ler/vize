@@ -141,7 +141,9 @@ fn actual_memberless_vue_preparation_reattaches_same_editor_owner() {
     use sha2::{Digest, Sha256};
     use std::{os::unix::fs::symlink, path::Path};
 
-    for independent_editor in [false, true] {
+    for (independent_editor, ordered) in
+        [(false, false), (true, false), (false, true), (true, true)]
+    {
         let repo = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .unwrap()
@@ -163,10 +165,11 @@ fn actual_memberless_vue_preparation_reattaches_same_editor_owner() {
         let capture =
             std::path::PathBuf::from(std::env::var_os("VIZE_SNAPSHOT_SOURCE_CAPTURE_DIR").unwrap())
                 .join("memberless-preparation")
-                .join(if independent_editor {
-                    "with-editor"
-                } else {
-                    "without-editor"
+                .join(match (ordered, independent_editor) {
+                    (false, false) => "without-editor",
+                    (false, true) => "with-editor",
+                    (true, false) => "ordered-without-editor",
+                    (true, true) => "ordered-with-editor",
                 });
         fs::create_dir_all(&capture).unwrap();
         let mut authored = Vec::new();
@@ -231,6 +234,48 @@ fn actual_memberless_vue_preparation_reattaches_same_editor_owner() {
         let options = crate::virtual_ts::VirtualTsOptions::default();
         let routes = crate::PackageRouteResolver::default();
         let config = app.join("tsconfig.json");
+        let mut intermediate_owner = None;
+        let prior_request = if ordered {
+            let other = app.join("Other.vue");
+            let other_text = fs::read_to_string(&other).unwrap();
+            let mut prior = build_vue_virtual_project_with_overlays_and_options_and_package_routes(
+                &other,
+                &other_text,
+                Default::default(),
+                &[],
+                CorsaProjectEnvironment {
+                    virtual_ts_options: &options,
+                    package_routes: &routes,
+                    project_root: Some(&app),
+                    tsconfig_path: Some(&config),
+                    editor_session: &mirror,
+                },
+            )
+            .unwrap();
+            let prior_root = prior.session_project_root.as_ref().unwrap();
+            prior
+                .host
+                .source_catalog
+                .extend_native_project_documents(prior_root, &mut prior.documents);
+            client
+                .synchronize_materialized_project(
+                    prior_root,
+                    prior.session_config_path.as_deref(),
+                    &prior.materialized_changes,
+                )
+                .unwrap();
+            let documents = prior
+                .documents
+                .iter()
+                .map(|(uri, text)| (uri.as_str(), text.as_str()))
+                .collect::<Vec<_>>();
+            client.did_open_batch_fast(&documents).unwrap();
+            intermediate_owner = Some(only_owner(prior_root, &native));
+            capture_prepared_world(&capture.join("other-before-app"), &prior, &client);
+            Some(prior.host.request_uri)
+        } else {
+            None
+        };
         let mut project = build_vue_virtual_project_with_overlays_and_options_and_package_routes(
             &host,
             &text,
@@ -258,6 +303,9 @@ fn actual_memberless_vue_preparation_reattaches_same_editor_owner() {
             )
             .unwrap();
         control::assert_reaped(&initial_owner);
+        if let Some(previous) = &intermediate_owner {
+            control::assert_reaped(previous);
+        }
         if let Some(previous) = &independent_owner {
             control::assert_reaped(previous);
         }
@@ -271,6 +319,26 @@ fn actual_memberless_vue_preparation_reattaches_same_editor_owner() {
             .map(|(uri, text)| (uri.as_str(), text.as_str()))
             .collect::<Vec<_>>();
         client.did_open_batch_fast(&documents).unwrap();
+        assert!(
+            materialized_root
+                .join("node_modules/ui/package.json")
+                .is_file()
+        );
+        capture_prepared_world(&capture, &project, &client);
+        // The retained CLI trace constructs Other then App, then reads Other
+        // and App from the same final snapshot before the diagnostic ACK.
+        let prior_prepared = prior_request.as_ref().map(|uri| {
+            let read = client
+                .prepare_initial_diagnostics_read(uri)
+                .unwrap()
+                .unwrap();
+            let result = read
+                .run()
+                .unwrap()
+                .expect("all Other compiler kinds must complete");
+            assert!(client.initial_diagnostics_read_is_current(&read));
+            result
+        });
         let uri = &project.host.request_uri;
         // This is the exact production preparation/run route, before an editor
         // query can acknowledge/reload a different program or repair the answer.
@@ -306,30 +374,6 @@ fn actual_memberless_vue_preparation_reattaches_same_editor_owner() {
             .as_ref()
             .unwrap()
             .session;
-        for (index, (document_uri, generated)) in project.documents.iter().enumerate() {
-            fs::write(
-                capture.join(vize_l0::cstr!("generated-{index}.ts").as_str()),
-                generated.as_bytes(),
-            )
-            .unwrap();
-            fs::write(
-                capture.join(vize_l0::cstr!("generated-{index}.uri").as_str()),
-                document_uri.as_bytes(),
-            )
-            .unwrap();
-        }
-        for (source, name) in [
-            (
-                project.session_config_path.as_ref().unwrap().clone(),
-                "materialized-tsconfig.json",
-            ),
-            (
-                materialized_root.join("node_modules/ui/package.json"),
-                "materialized-ui-package.json",
-            ),
-        ] {
-            fs::write(capture.join(name), fs::read(source).unwrap()).unwrap();
-        }
         let receipt = json!({
             "runtime":native, "versionStdout":version.stdout, "versionStderr":version.stderr,
             "runtimeSha256Bytes":Sha256::digest(fs::read(&native).unwrap()).to_vec(),
@@ -338,15 +382,35 @@ fn actual_memberless_vue_preparation_reattaches_same_editor_owner() {
             "initialOwner":{"pid":initial_owner.pid,"birth":initial_owner.birth},
             "independentEditorBeforeReplacement":independent_owner.as_ref().map(|owner| json!({"pid":owner.pid,"birth":owner.birth})),
             "materializedRoot":materialized_root,"attached":true,
+            "intermediateOwner":intermediate_owner.as_ref().map(|owner| json!({"pid":owner.pid,"birth":owner.birth})),
             "currentOwner":{"pid":owner.pid,"birth":owner.birth},"attachment":attachment,
             "project":prepared_project,"snapshot":snapshot.handle,
             "prepared":prepared,"nativePull":report.full_document_diagnostic_report.items,
+            "orderedOtherThenApp":ordered,"priorPrepared":prior_prepared,
         });
         fs::write(
             capture.join("prepared-vs-native.json"),
             serde_json::to_vec_pretty(&receipt).unwrap(),
         )
         .unwrap();
+        if let Some(prior_uri) = &prior_request {
+            let DocumentDiagnosticReportResult::Report(DocumentDiagnosticReport::Full(prior_pull)) =
+                client
+                    .diagnostics_via_editor_lsp(prior_uri, &texts)
+                    .unwrap()
+            else {
+                panic!("complete same-owner Other packet required")
+            };
+            assert_eq!(only_owner(materialized_root, &native), owner);
+            assert!(client.project_session_attached_to_editor);
+            fs::write(capture.join("other-prepared-vs-native.json"), serde_json::to_vec_pretty(&json!({
+                "uri":prior_uri,"prepared":prior_prepared,"nativePull":prior_pull.full_document_diagnostic_report.items,
+            })).unwrap()).unwrap();
+            assert_eq!(
+                prior_prepared.as_ref().unwrap(),
+                &prior_pull.full_document_diagnostic_report.items
+            );
+        }
         assert_eq!(prepared, report.full_document_diagnostic_report.items);
         // Independent original source contract: no unresolved UI package, though
         // genuine generated helper hints remain in the full equality above.
@@ -368,5 +432,62 @@ fn actual_memberless_vue_preparation_reattaches_same_editor_owner() {
         );
         assert!(!root.join("ui/UiButton.vue.ts").exists());
         assert!(!root.join("ui/UiButton.d.vue.ts").exists());
+    }
+}
+
+/// Retain the actual admitted graph/delta; disk observations are made after
+/// materialization, and are not presented as consumed-byte observations.
+fn capture_prepared_world(
+    capture: &std::path::Path,
+    project: &crate::corsa_bridge::CorsaVueVirtualProject,
+    client: &CorsaProjectClient,
+) {
+    fs::create_dir_all(capture).unwrap();
+    let root = project.session_project_root.as_ref().unwrap();
+    let session = client.session.as_ref().unwrap();
+    fs::write(capture.join("world.json"), serde_json::to_vec_pretty(&serde_json::json!({
+        "project":session.project(),"snapshot":session.snapshot().handle,
+        "documents":project.documents,"clientDocuments":client.document_texts,
+        "delta":{"changed":project.materialized_changes.changed,"created":project.materialized_changes.created,
+            "deleted":project.materialized_changes.deleted,"topologyChanged":project.materialized_changes.topology_changed},
+        "catalog":project.host.materialized_sources.iter().map(|source| serde_json::json!({
+            "sourcePath":source.source_path,"materializedPath":source.materialized_path,
+            "source":source.source,"code":source.code,
+        })).collect::<Vec<_>>(),
+    })).unwrap()).unwrap();
+    for (index, (uri, code)) in project.documents.iter().enumerate() {
+        fs::write(
+            capture.join(vize_l0::cstr!("generated-{index}.ts").as_str()),
+            code.as_bytes(),
+        )
+        .unwrap();
+        fs::write(
+            capture.join(vize_l0::cstr!("generated-{index}.uri").as_str()),
+            uri.as_bytes(),
+        )
+        .unwrap();
+    }
+    fs::write(
+        capture.join("materialized-tsconfig.json"),
+        fs::read(project.session_config_path.as_ref().unwrap()).unwrap(),
+    )
+    .unwrap();
+    let package = root.join("node_modules/ui/package.json");
+    match fs::read(&package) {
+        Ok(bytes) => fs::write(capture.join("materialized-ui-package.json"), bytes).unwrap(),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            fs::write(
+                capture.join("materialized-ui-package.absent.json"),
+                serde_json::to_vec(
+                    &serde_json::json!({"path":package,"status":"absent-after-materialization"}),
+                )
+                .unwrap(),
+            )
+            .unwrap();
+        }
+        Err(error) => panic!(
+            "cannot capture materialized UI manifest {}: {error}",
+            package.display()
+        ),
     }
 }
