@@ -295,8 +295,19 @@ void test("full-only extraction preserves all seventeen complete original job ob
     },
     run: 'node tests/differential/typechecker-workspace.ts verify "$SOURCE_SHA" .artifacts/rust-full-workspace "$GITHUB_RUN_ID" "$PRODUCER_ATTEMPT"',
   });
+  const clippySteps = original["rust-clippy-portability"].steps.filter(
+    (step: Step) => step.name === "Clippy",
+  );
+  assert.equal(clippySteps.length, 1);
+  const command = clippySteps[0].run;
+  assert.ok(typeof command === "string");
+  const currentChecker = "node tools/commands/ci/check-workspace-lints.ts --check";
+  const historicalChecker = "rust-script tools/commands/ci/check-workspace-lints.rs --check";
+  assert.equal(command.split(currentChecker).length, 2);
+  assert.equal(command.includes(historicalChecker), false);
+  clippySteps[0].run = command.replace(currentChecker, historicalChecker);
   // Git source 3d93303: exact complete 17 original job objects, in authored order.
-  // Only the explicitly asserted observation additions and Nuxt caller invert.
+  // Only asserted observations, the Nuxt caller and reviewed checker migration invert.
   assert.equal(Object.keys(original).length, 17);
   assert.equal(
     createHash("sha256").update(JSON.stringify(original)).digest("hex"),
