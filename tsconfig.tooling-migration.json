@@ -7,6 +7,8 @@
   "include": [],
   "files": [
     "tests/_helpers/nuxt-ui-compiler-authority.ts",
+    "tests/_helpers/nuxt-ui-prepared-world.ts",
+    "tests/tooling/nuxt-ui-prepared-world.test.ts",
     "tests/_helpers/nuxt-ui-output-authority.ts",
     "tests/_helpers/nuxt-ui-graph-records.ts",
     "tests/tooling/nuxt-ui-graph-records.test.ts",
