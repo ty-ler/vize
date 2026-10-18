@@ -68,10 +68,14 @@ impl CorsaProjectClient {
         // The editor owner may still be live. Reap the previous API process
         // before the replacement can exist, including its initialization IPC.
         self.retire_project_session()?;
-        if self.shared_editor_transport {
+        let transport_replaced = if self.shared_editor_transport {
             self.cwd = project_root.clone();
             self.replace_project_transport(&config_path, &project_root)?;
+            true
         } else {
+            self.try_replace_shared_project_transport(&config_path, &project_root, &project_root)?
+        };
+        if !transport_replaced {
             let (session, capabilities) = match spawn_project_session(
                 self.executable.as_str(),
                 &project_root,
