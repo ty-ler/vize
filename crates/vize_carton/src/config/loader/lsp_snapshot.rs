@@ -190,6 +190,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn compiled_code_directory_is_private_and_removed_with_its_session() {
+        use super::{ConfigEvaluationSession, create_compile_cache};
         use std::os::unix::fs::PermissionsExt;
         let session = ConfigEvaluationSession::default();
         let directory = session
