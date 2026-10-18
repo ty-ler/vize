@@ -5,6 +5,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { VIZE_BIN, requireVizeBin, type AppConfig } from "./apps.ts";
+import {
+  assertInspectorFileCoverage,
+  inspectorOriginalInputs,
+  type InspectorSourceAuthority,
+} from "./inspector-original-inputs.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +49,7 @@ interface InspectorCompareReport {
 export function assertInspectorCompareBudgets(
   app: AppConfig,
   budgets: InspectorDiffBudget[],
+  sourceAuthority?: InspectorSourceAuthority,
 ): void {
   requireVizeBin();
 
@@ -56,11 +62,24 @@ export function assertInspectorCompareBudgets(
   const failures: unknown[] = [];
   for (const budget of budgets) {
     try {
-      const report = runInspectorCompare(app, budget.target);
+      const { report, invocation } = runInspectorCompare(
+        app,
+        budget.target,
+        sourceAuthority !== undefined,
+      );
       assert.equal(report.schema, "vize.inspector.compare");
       assert.equal(report.target, budget.target);
       assert.ok(report.summary.fileCount > 0, `${app.name}:${budget.target} should inspect files`);
       writeInspectorReport(app.name, budget.target, report);
+      if (sourceAuthority) {
+        assert.ok(app.check, "original Inspector source patterns are required");
+        assert.ok(invocation, "original-source qualification requires same-child custody");
+        const expected = inspectorOriginalInputs(REPO_ROOT, app.check, sourceAuthority, invocation);
+        const input = JSON.parse(
+          fs.readFileSync(path.join(invocation, "official/input.json"), "utf8"),
+        );
+        assertInspectorFileCoverage(report, expected, input);
+      }
       assertBudget(report, budget, app.name);
     } catch (error) {
       if (!collectAll) throw error;
@@ -71,10 +90,16 @@ export function assertInspectorCompareBudgets(
     throw new AggregateError(failures, `${app.name} Inspector comparisons failed`);
 }
 
-function runInspectorCompare(app: AppConfig, target: "dom" | "ssr"): InspectorCompareReport {
+function runInspectorCompare(
+  app: AppConfig,
+  target: "dom" | "ssr",
+  forceCapture = false,
+): { report: InspectorCompareReport; invocation?: string } {
   const check = app.check;
   assert.ok(check, `${app.name} should define check fixtures`);
-  const capture = inspectorCaptureDirectory(app.name);
+  const capture =
+    inspectorCaptureDirectory(app.name) ??
+    (forceCapture ? inspectorReportDirectory(app.name) : undefined);
   if (capture) fs.mkdirSync(capture, { recursive: true });
   const invocation = capture ? fs.mkdtempSync(path.join(capture, `${target}-`)) : undefined;
   const args = [
@@ -142,7 +167,7 @@ function runInspectorCompare(app: AppConfig, target: "dom" | "ssr"): InspectorCo
     `${app.name}:${target} inspector compare failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
   );
 
-  return JSON.parse(result.stdout) as InspectorCompareReport;
+  return { report: JSON.parse(result.stdout) as InspectorCompareReport, invocation };
 }
 
 function assertBudget(
