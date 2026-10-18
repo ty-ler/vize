@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createRequire, stripTypeScriptTypes } from "node:module";
-import type { Component } from "vue";
+import type { Component, Plugin } from "vue";
 import type { Window } from "happy-dom";
 
 type Document = Window["document"];
@@ -13,6 +13,7 @@ type DomNode = NonNullable<ReturnType<Document["createTreeWalker"]>["currentNode
 type Target = "dom" | "ssr" | "vapor" | "vapor-ssr";
 type Runtime = typeof import("vue") & {
   createVaporSSRApp?: typeof import("vue").createSSRApp;
+  vaporInteropPlugin?: Plugin;
 };
 type Compiler = typeof import("vue/compiler-sfc");
 type Renderer = typeof import("vue/server-renderer");
@@ -173,6 +174,11 @@ export async function observeKeyedTemplates(input: Packet, seams: Seams) {
     typeof seams.vapor.createVaporSSRApp,
     "function",
     "required supported Vapor hydration API",
+  );
+  assert.equal(
+    typeof seams.vapor.vaporInteropPlugin,
+    "function",
+    "required supported Vapor VDOM interop plugin",
   );
   const profiles: Profile[] = [
     {
@@ -368,6 +374,10 @@ export async function observeKeyedTemplates(input: Packet, seams: Seams) {
         diagnostics.push({ phase, channel: "handler-warn", message });
       app.config.errorHandler = (error) =>
         diagnostics.push({ phase, channel: "handler-error", message: String(error) });
+      if (profile.clientTarget === "vapor") {
+        assert(profile.client.vaporInteropPlugin);
+        app.use(profile.client.vaporInteropPlugin);
+      }
       app.mount(host);
       await profile.client.nextTick();
       const after = nodes(host);

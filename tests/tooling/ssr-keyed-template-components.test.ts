@@ -123,3 +123,24 @@ test("keyed template carrier refuses unavailable Vapor hydration instead of skip
   );
   assert.equal(calls, 0);
 });
+
+test("keyed template carrier refuses unavailable Vapor VDOM interop instead of skipping", async () => {
+  let calls = 0;
+  const forbidden = () => {
+    calls++;
+    throw new Error("must not evaluate admission placeholders");
+  };
+  const seams = {
+    vue: { version: "3.6.0-rc.9" },
+    vapor: { version: "3.6.0-rc.9", createVaporSSRApp: forbidden },
+    compiler: { version: "3.6.0-rc.9" },
+    reference: forbidden,
+    evaluate: forbidden,
+    evaluateModule: forbidden,
+  } as unknown as Parameters<typeof observeKeyedTemplates>[1];
+  await assert.rejects(
+    observeKeyedTemplates(input(), seams),
+    /required supported Vapor VDOM interop plugin/,
+  );
+  assert.equal(calls, 0);
+});
