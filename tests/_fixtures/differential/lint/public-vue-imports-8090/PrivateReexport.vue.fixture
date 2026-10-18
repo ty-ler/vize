@@ -1,4 +1,0 @@
-<script setup lang="ts">
-export { isString } from '@vue/shared'
-</script>
-<template><div>ok</div></template>

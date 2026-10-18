@@ -1,4 +1,0 @@
-<script setup lang="ts">
-export declare class Helper {}
-</script>
-<template><div /></template>
