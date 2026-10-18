@@ -18,6 +18,7 @@ const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("he
 const readJson = (file: string) => JSON.parse(fs.readFileSync(file, "utf8"));
 export type Policy = {
   name: string;
+  directory?: string;
   pin: string;
   manager: string;
   minimumNode: number[];
@@ -33,8 +34,9 @@ export const checkPolicies: readonly Policy[] = [
   },
   {
     name: "npmx.dev",
-    pin: "c9e8be91e61eeeae956e2068722caa09e293cc68",
-    manager: "11.20.0",
+    directory: "npmx-check",
+    pin: "dc0319f8cb61e79e504a8d542b44badcb1384676",
+    manager: "11.22.0",
     minimumNode: [24, 4, 0],
     hooks: [
       ["exec", "vp", "run", "generate:lexicons"],
@@ -170,7 +172,7 @@ export function validateGeneratedGraph(graph: GeneratedGraph, source: Source, ca
 }
 
 export function observeSource(authorityRoot: string, policy: Policy): Source {
-  const relative = `tests/_fixtures/_git/${policy.name}`;
+  const relative = `tests/_fixtures/_git/${policy.directory ?? policy.name}`;
   const cwd = fs.realpathSync(path.join(authorityRoot, relative));
   assert.equal(cwd, path.join(authorityRoot, relative), "original fixture physical root required");
   assert.equal(
@@ -410,7 +412,7 @@ export function originalAppCheckEnvironment(
   const original = path.join(root, "tests/_fixtures/_git/voicevox");
   const policy = checkPolicies.find(({ name }) => name === app.name);
   if (policy) {
-    const cwd = path.join(root, "tests/_fixtures/_git", policy.name);
+    const cwd = path.join(root, "tests/_fixtures/_git", policy.directory ?? policy.name);
     const expected = policy.name === "misskey" ? path.join(cwd, "packages/frontend") : cwd;
     // Misskey's historical visual-worktree snapshot is separate from original-source acceptance.
     if (policy.name !== "misskey" || app.check?.cwd === expected) {

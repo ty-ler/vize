@@ -662,101 +662,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
-name = "corsa"
-version = "1.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d581851ddaa32172c3e87cb394446cae00814fc069fd6204bb5336b8a1db3f66"
-dependencies = [
- "base64",
- "corsa_client",
- "corsa_core",
- "corsa_jsonrpc",
- "corsa_lsp",
- "corsa_orchestrator",
- "corsa_runtime",
- "lsp-types 0.97.0",
- "serde_json",
-]
-
-[[package]]
-name = "corsa_client"
-version = "1.14.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6802ed0ecfaa0b996876aa53aa4a60b632672615e36875730448a32c337c60a6"
-dependencies = [
- "base64",
- "corsa_core",
- "corsa_jsonrpc",
- "corsa_runtime",
- "log",
- "lsp-types 0.97.0",
- "parking_lot",
- "phf 0.14.0",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "corsa_core"
-version = "1.14.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4eeeb06c2dd6362c03dd2af55c3f321ab126aa82552a2149a2400d83f8b25f5c"
-dependencies = [
- "base64",
- "compact_str",
- "memchr",
- "rustc-hash",
- "serde",
- "serde_json",
- "smallvec",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "corsa_jsonrpc"
-version = "1.14.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0bccf76530df29150679711819ab037359ac4a73c5e659bbc5f36de9c385e72a"
-dependencies = [
- "corsa_core",
- "corsa_runtime",
- "log",
- "parking_lot",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "corsa_lsp"
-version = "1.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5223d92bf4e87bee6e4aae2c85948894fb7a92618fc5264d7f8ce7c599212f8"
-dependencies = [
- "corsa_core",
- "corsa_jsonrpc",
- "corsa_runtime",
- "lsp-types 0.97.0",
- "parking_lot",
- "serde",
-]
-
-[[package]]
-name = "corsa_orchestrator"
-version = "1.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "870bf975c5e7bce2be4df321cec1aa8a51193a0e09e560a023d9989215f686af"
-dependencies = [
- "corsa_client",
- "corsa_core",
- "corsa_lsp",
- "corsa_runtime",
- "log",
- "parking_lot",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "corsa_runtime"
 version = "1.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -990,7 +895,7 @@ dependencies = [
 
 [[package]]
 name = "davinci_harness"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "davinci_test_support",
@@ -1010,7 +915,7 @@ dependencies = [
 
 [[package]]
 name = "davinci_test_support"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "regex-lite",
  "serde_json",
@@ -4121,11 +4026,9 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vize"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "clap",
- "corsa",
- "corsa_lsp",
  "davinci_test_support",
  "dirs",
  "futures",
@@ -4159,6 +4062,8 @@ dependencies = [
  "vize_atelier_vapor",
  "vize_canon",
  "vize_carton",
+ "vize_corsa",
+ "vize_corsa_lsp",
  "vize_croquis",
  "vize_croquis_cf",
  "vize_curator",
@@ -4179,7 +4084,7 @@ dependencies = [
 
 [[package]]
 name = "vize_armature"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "compact_str",
  "criterion",
@@ -4201,7 +4106,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_core"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "compact_str",
  "criterion",
@@ -4233,7 +4138,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_dom"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4252,7 +4157,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_jsx"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "insta",
@@ -4280,7 +4185,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_sfc"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4325,7 +4230,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_ssr"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4349,7 +4254,7 @@ dependencies = [
 
 [[package]]
 name = "vize_atelier_vapor"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4380,7 +4285,7 @@ dependencies = [
 
 [[package]]
 name = "vize_benchmarks"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "vize",
@@ -4390,10 +4295,8 @@ dependencies = [
 
 [[package]]
 name = "vize_canon"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
- "corsa",
- "corsa_lsp",
  "criterion",
  "dashmap 6.2.1",
  "dirs",
@@ -4423,6 +4326,8 @@ dependencies = [
  "vize_atelier_jsx",
  "vize_atelier_sfc",
  "vize_carton",
+ "vize_corsa",
+ "vize_corsa_lsp",
  "vize_croquis",
  "vize_l0",
  "vize_l1",
@@ -4436,7 +4341,7 @@ dependencies = [
 
 [[package]]
 name = "vize_carton"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "davinci_test_support",
  "globset",
@@ -4451,8 +4356,93 @@ dependencies = [
 ]
 
 [[package]]
+name = "vize_corsa"
+version = "0.467.0"
+dependencies = [
+ "base64",
+ "corsa_runtime",
+ "lsp-types 0.97.0",
+ "serde_json",
+ "tempfile",
+ "vize_corsa_client",
+ "vize_corsa_core",
+ "vize_corsa_jsonrpc",
+ "vize_corsa_lsp",
+ "vize_corsa_orchestrator",
+]
+
+[[package]]
+name = "vize_corsa_client"
+version = "0.467.0"
+dependencies = [
+ "base64",
+ "corsa_runtime",
+ "log",
+ "lsp-types 0.97.0",
+ "parking_lot",
+ "phf 0.14.0",
+ "serde",
+ "serde_json",
+ "vize_corsa_core",
+ "vize_corsa_jsonrpc",
+]
+
+[[package]]
+name = "vize_corsa_core"
+version = "0.467.0"
+dependencies = [
+ "base64",
+ "compact_str",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "vize_corsa_jsonrpc"
+version = "0.467.0"
+dependencies = [
+ "corsa_runtime",
+ "log",
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "vize_corsa_core",
+]
+
+[[package]]
+name = "vize_corsa_lsp"
+version = "0.467.0"
+dependencies = [
+ "corsa_runtime",
+ "lsp-types 0.97.0",
+ "parking_lot",
+ "serde",
+ "vize_corsa_core",
+ "vize_corsa_jsonrpc",
+]
+
+[[package]]
+name = "vize_corsa_orchestrator"
+version = "0.467.0"
+dependencies = [
+ "corsa_runtime",
+ "log",
+ "lsp-types 0.97.0",
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "vize_corsa_client",
+ "vize_corsa_core",
+ "vize_corsa_lsp",
+]
+
+[[package]]
 name = "vize_croquis"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "dashmap 6.2.1",
@@ -4487,7 +4477,7 @@ dependencies = [
 
 [[package]]
 name = "vize_croquis_cf"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4514,7 +4504,7 @@ dependencies = [
 
 [[package]]
 name = "vize_curator"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "davinci_test_support",
  "insta",
@@ -4540,7 +4530,7 @@ dependencies = [
 
 [[package]]
 name = "vize_doctor"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "globset",
@@ -4556,7 +4546,7 @@ dependencies = [
 
 [[package]]
 name = "vize_fresco"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "compact_str",
  "criterion",
@@ -4581,7 +4571,7 @@ dependencies = [
 
 [[package]]
 name = "vize_glyph"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4606,7 +4596,7 @@ dependencies = [
 
 [[package]]
 name = "vize_incremental"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "salsa",
  "toml",
@@ -4620,7 +4610,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l0"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "bitflags 2.13.2",
  "compact_str",
@@ -4651,7 +4641,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l0_derive"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4660,7 +4650,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l1"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "cssparser",
  "davinci_harness",
@@ -4678,7 +4668,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l1_to_l2"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4710,7 +4700,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l2"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "oxc_ast",
  "oxc_span",
@@ -4721,7 +4711,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l2_to_l3"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "davinci_test_support",
  "insta",
@@ -4736,7 +4726,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l3"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "oxc_ast",
  "oxc_span",
@@ -4751,7 +4741,7 @@ dependencies = [
 
 [[package]]
 name = "vize_l4"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "oxc_span",
  "oxc_syntax",
@@ -4766,7 +4756,7 @@ dependencies = [
 
 [[package]]
 name = "vize_lightningcss"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "ahash",
  "assert_cmd",
@@ -4804,7 +4794,7 @@ dependencies = [
 
 [[package]]
 name = "vize_maestro"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "async-trait",
  "dashmap 6.2.1",
@@ -4852,7 +4842,7 @@ dependencies = [
 
 [[package]]
 name = "vize_marquette"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "insta",
  "serde",
@@ -4864,7 +4854,7 @@ dependencies = [
 
 [[package]]
 name = "vize_musea"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "criterion",
  "davinci_harness",
@@ -4879,7 +4869,7 @@ dependencies = [
 
 [[package]]
 name = "vize_oxc_formatter"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "cow-utils",
  "fast-glob",
@@ -4905,7 +4895,7 @@ dependencies = [
 
 [[package]]
 name = "vize_oxc_parser"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "bitflags 2.13.2",
  "compact_str",
@@ -4931,7 +4921,7 @@ dependencies = [
 
 [[package]]
 name = "vize_parcel_sourcemap"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "base64-simd 0.7.0",
  "data-url",
@@ -4943,9 +4933,8 @@ dependencies = [
 
 [[package]]
 name = "vize_patina"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
- "corsa",
  "criterion",
  "cssparser",
  "davinci_harness",
@@ -4969,6 +4958,7 @@ dependencies = [
  "vize_atelier_sfc",
  "vize_canon",
  "vize_carton",
+ "vize_corsa",
  "vize_croquis",
  "vize_glyph",
  "vize_l0",
@@ -4982,7 +4972,7 @@ dependencies = [
 
 [[package]]
 name = "vize_relief"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "oxc_ast",
  "oxc_ast_visit",
@@ -4997,7 +4987,7 @@ dependencies = [
 
 [[package]]
 name = "vize_test_runner"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "pklrust",
  "serde",
@@ -5010,7 +5000,7 @@ dependencies = [
 
 [[package]]
 name = "vize_vitrine"
-version = "0.463.0"
+version = "0.467.0"
 dependencies = [
  "getrandom 0.3.4",
  "glob",

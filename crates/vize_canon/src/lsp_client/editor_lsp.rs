@@ -15,7 +15,7 @@ use super::{
     language_id::for_uri as language_id_for_uri,
 };
 use corsa::runtime::block_on;
-use corsa_lsp::{LspClient, LspOverlay, LspSpawnConfig, VirtualDocument};
+use corsa_lsp::{LspClient, LspOverlay, LspSpawnConfig, VirtualDocument, process::ProcessObserver};
 use lsp_types::{DocumentDiagnosticReportResult, Uri};
 use serde_json::Value;
 use std::{
@@ -43,11 +43,14 @@ mod materialized;
 mod native_shutdown;
 mod native_vue;
 mod original_program;
+mod process_close;
+mod process_receipt;
 mod project_configuration;
 mod project_identity;
 mod readiness;
 mod requests;
 mod responder;
+mod retirement;
 mod retry;
 pub mod snapshot_source;
 mod synchronize;
@@ -64,15 +67,19 @@ use responder::spawn_responder;
 /// A reusable `--lsp --stdio` session for standard diagnostics and editor
 /// requests.
 pub(super) struct EditorLspSession {
+    startup_control: Option<super::startup_control::StartupControl>,
+    startup_registration: Option<super::startup_control::Registration>,
     client: LspClient,
+    process_observer: ProcessObserver,
     overlay: LspOverlay,
     stop: Arc<AtomicBool>,
     responder: Option<std::thread::JoinHandle<()>>,
     configured_api: Option<project_configuration::DiagnosingApi>,
     closed: bool,
-    /// Only a full known native image and its actual initialize contract may
-    /// use acknowledged Shutdown followed by EOF instead of an Exit race.
+    /// Only the full native image and actual initialize contract select ACK then EOF.
     shutdown_to_eof: bool,
+    #[cfg(test)]
+    native_initialize_response: Value,
     /// Last text mirrored into the server, keyed by session document URI.
     documents: FxHashMap<String, String>,
     issued_completions: completion_resolve::IssuedCompletions,
@@ -92,34 +99,87 @@ pub(super) struct EditorLspSession {
 }
 
 impl EditorLspSession {
+    #[cfg(test)]
     fn spawn(executable: &str, cwd: &Path, project_root: &Path) -> Result<Self, String> {
-        let client = block_on(LspClient::spawn(
-            LspSpawnConfig::new(executable).with_cwd(cwd.to_path_buf()),
-        ))
-        .map_err(|error| cstr!("Failed to start Corsa editor LSP session: {error}"))?;
+        Self::spawn_with_control(executable, cwd, project_root, None)
+    }
+
+    fn spawn_with_control(
+        executable: &str,
+        cwd: &Path,
+        project_root: &Path,
+        control: Option<super::startup_control::StartupControl>,
+    ) -> Result<Self, String> {
+        let mut session = Self::spawn_initializing(executable, cwd, project_root, control)?;
+        session.finish_startup()?;
+        Ok(session)
+    }
+
+    fn finish_startup(&mut self) -> Result<(), String> {
+        if let Some(control) = &self.startup_control {
+            control.check_admission()?;
+        }
+        self.startup_registration.take();
+        Ok(())
+    }
+
+    fn spawn_initializing(
+        executable: &str,
+        cwd: &Path,
+        project_root: &Path,
+        startup_control: Option<super::startup_control::StartupControl>,
+    ) -> Result<Self, String> {
+        let process_observer = ProcessObserver::default();
+        let mut spawn = LspSpawnConfig::new(executable).with_cwd(cwd.to_path_buf());
+        spawn.command = spawn
+            .command
+            .with_process_observer(process_observer.clone());
+        let (client, registration) = match &startup_control {
+            Some(control) => {
+                let (client, registration) =
+                    control.spawn_editor(spawn, process_observer.clone())?;
+                (client, Some(registration))
+            }
+            None => (
+                block_on(LspClient::spawn(spawn))
+                    .map_err(|error| cstr!("Failed to start Corsa editor LSP session: {error}"))?,
+                None,
+            ),
+        };
         let stop = Arc::new(AtomicBool::new(false));
         let responder = spawn_responder(client.clone(), stop.clone());
 
         let initialized = match initialize_lsp_client(&client, project_root) {
-            Ok(initialized) => initialized,
+            Ok(response) => response,
             Err(error) => {
+                crate::lsp_client::retirement::ownership_error(
+                    &client.process_ownership(),
+                    cstr!("native editor initialization failed: {error}").as_str(),
+                );
                 stop.store(true, Ordering::Relaxed);
                 let _ = block_on(client.close());
                 let _ = responder.join();
+                let _ = process_receipt::report(&process_observer, false, false);
                 return Err(error);
             }
         };
-        let shutdown_to_eof = native_shutdown::eof_capability(Path::new(executable), &initialized);
+        let shutdown_to_eof =
+            native_shutdown::eof_capability(Path::new(executable), &initialized, &process_observer);
         crate::corsa_session_cache::note_typescript_project_init();
 
         Ok(Self {
+            startup_control,
+            startup_registration: registration,
             overlay: client.overlay(),
             client,
+            process_observer,
             stop,
             responder: Some(responder),
             configured_api: None,
             closed: false,
             shutdown_to_eof,
+            #[cfg(test)]
+            native_initialize_response: initialized,
             documents: Default::default(),
             issued_completions: Default::default(),
             document_generation: 0,
@@ -276,70 +336,5 @@ impl EditorLspSession {
                 .request::<RawWillRenameFilesRequest>(will_rename_files_request_params(renames)),
         )
         .map_err(|error| cstr!("Failed to request editor LSP workspace/willRenameFiles: {error}"))
-    }
-
-    /// Complete the authenticated native or standard foreign LSP lifecycle
-    /// before closing and reaping the owned process. The responder remains alive
-    /// until `shutdown` returns so server-initiated requests cannot deadlock the
-    /// final response.
-    fn shutdown(&mut self) -> Result<(), String> {
-        if self.closed {
-            return Ok(());
-        }
-
-        let mut first_error = None;
-        if let Err(error) = block_on(native_shutdown::close(&self.client, self.shutdown_to_eof)) {
-            first_error = Some(cstr!(
-                "Failed to gracefully close editor LSP process: {error}"
-            ));
-        }
-        self.finish_close(first_error)
-    }
-
-    /// Tear down the editor process without waiting for a protocol shutdown
-    /// response. Workspace file events use this path when the reusable editor
-    /// project view has to be discarded before the next semantic request; a
-    /// stuck old server must not block the foreground LSP notification queue.
-    fn discard(&mut self) -> Result<(), String> {
-        if self.closed {
-            return Ok(());
-        }
-
-        let mut first_error = None;
-        if let Err(error) = block_on(self.client.close()) {
-            first_error = Some(cstr!("Failed to close editor LSP process: {error}"));
-        }
-        self.finish_close(first_error)
-    }
-
-    fn finish_close(&mut self, mut first_error: Option<String>) -> Result<(), String> {
-        // The owning process is already reaped: its socket peer must close
-        // before the SDK joins the attached full-duplex reader.
-        if let Some(api) = self.configured_api.take()
-            && let Err(error) = api.close_attachment()
-            && first_error.is_none()
-        {
-            first_error = Some(configured_project::configuration_error(error));
-        }
-        self.stop.store(true, Ordering::Relaxed);
-        if let Some(responder) = self.responder.take()
-            && responder.join().is_err()
-            && first_error.is_none()
-        {
-            first_error = Some(cstr!("Editor LSP responder panicked during shutdown"));
-        }
-        self.closed = true;
-        self.issued_completions.invalidate();
-
-        match first_error {
-            Some(error) => Err(error),
-            None => Ok(()),
-        }
-    }
-}
-
-impl Drop for EditorLspSession {
-    fn drop(&mut self) {
-        let _ = self.shutdown();
     }
 }

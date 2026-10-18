@@ -143,8 +143,25 @@ test("Content Mapper conformance pins and runs the exact upstream project path",
   assert.match(job, /cp "\$binary" "npm\/\$target\/"/);
   assert.match(
     job,
-    /VIZE_TEST_CONTENT_MAPPER_TSGO: \$\{\{ runner\.temp \}\}\/tsgo[\s\S]*smoke-release-install\.rs --prepare-manifests --content-mapper-checks[\s\S]*npm\/native npm\/native\/npm\/\*[\s\S]*npm\/cli/,
+    /VIZE_TEST_CONTENT_MAPPER_TSGO: \$\{\{ runner\.temp \}\}\/tsgo[\s\S]*node tools\/commands\/release\/npm\/smoke-release-install\.ts --prepare-manifests --content-mapper-checks[\s\S]*npm\/native npm\/native\/npm\/\*[\s\S]*npm\/cli/,
   );
+  const captureDir = "${{ runner.temp }}/content-mapper-smoke";
+  const smoke = steps.find(
+    (step) => step.name === "Run standard tsgo through fresh-installed package tarballs",
+  );
+  assert.equal(smoke?.env?.VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR, captureDir);
+  assert.match(smoke?.run ?? "", /set -euo pipefail/);
+  const evidence = "source-sha.txt provider-source-sha.txt provider.sha256 smoke.log";
+  for (const file of evidence.split(" ")) assert.ok(smoke?.run?.includes(file));
+  const captures = steps.filter((step) => step.uses?.startsWith("actions/upload-artifact@"));
+  const action = "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a";
+  const policies = captures.map((step) => [step.if, step.uses]);
+  assert.deepEqual(policies, [["always()", action]]);
+  assert.deepEqual(captures[0].with, {
+    name: "content-mapper-smoke-${{ github.sha }}-${{ github.run_attempt }}",
+    path: `${captureDir}/`,
+    "retention-days": 7,
+  });
   const packageRouteSteps = steps.flatMap((step, index) =>
     PACKAGE_ROUTE_COMMANDS.every((command) => step.run?.includes(command)) ? [index] : [],
   );

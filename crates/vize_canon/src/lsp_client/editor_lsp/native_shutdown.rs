@@ -1,9 +1,6 @@
-//! ACK-to-EOF capability bound to the complete native image and initialize result.
-//!
-//! Data contract retained from the independently owned #9239 shutdown repair;
-//! no SDK/package migration or process-observer dependency is needed here.
+//! Native 7.0.2 shutdown capability, bound to actual binary and initialize bytes.
 
-use corsa_lsp::LspClient;
+use corsa_lsp::{LspClient, process::ProcessObserver};
 use lsp_types::request::Shutdown;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -16,18 +13,33 @@ use std::{
 const LINUX_X64: &str = "4f2de678286401759b3fb4475bafe35b8f32b4b3a07d92642bbf37eadc9b34a4";
 const DARWIN_ARM64: &str = "a82f731365ad69d5c4c15f5e18fba4584bf3b7b839960172a76c3462b5114bf2";
 
-pub(super) fn eof_capability(executable: &Path, initialized: &Value) -> bool {
+#[cfg(target_os = "linux")]
+mod owned_image;
+
+pub(super) fn eof_capability(
+    executable: &Path,
+    initialized: &Value,
+    observer: &ProcessObserver,
+) -> bool {
     if !known_initialize(initialized) {
         return false;
     }
-    let Ok(digest) = File::open(executable).and_then(image_digest) else {
-        return false;
-    };
-    let digest: vize_l0::String = digest
-        .iter()
-        .map(|byte| vize_l0::cstr!("{byte:02x}"))
-        .collect();
-    known_binary(digest.as_str())
+    if let Ok(digest) = File::open(executable).and_then(image_digest) {
+        let digest: vize_l0::String = digest
+            .iter()
+            .map(|byte| vize_l0::cstr!("{byte:02x}"))
+            .collect();
+        if known_binary(digest.as_str()) {
+            return true;
+        }
+    }
+    #[cfg(target_os = "linux")]
+    return owned_image::eof_capability(observer);
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = observer;
+        false
+    }
 }
 
 fn image_digest(mut image: impl Read) -> io::Result<[u8; 32]> {

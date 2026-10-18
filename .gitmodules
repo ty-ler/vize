@@ -10,6 +10,11 @@
 	path = tests/_fixtures/_git/npmx.dev
 	url = https://github.com/npmx-dev/npmx.dev
 
+[submodule "tests/_fixtures/_git/npmx-check"]
+	path = tests/_fixtures/_git/npmx-check
+	url = https://github.com/npmx-dev/npmx.dev
+	shallow = true
+
 [submodule "tests/_fixtures/_git/vuefes-2025"]
 	path = tests/_fixtures/_git/vuefes-2025
 	url = https://github.com/vuejs-jp/vuefes-2025-website.git

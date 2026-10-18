@@ -18,6 +18,7 @@ export { LspRequestError };
  */
 export class LspSession {
   private readonly process: ChildProcessWithoutNullStreams;
+  private readonly closed: Promise<void>;
   private readonly pending = new Map<
     JsonRpcId,
     {
@@ -48,6 +49,8 @@ export class LspSession {
     this.process = sourceBinding
       ? lspProcess.spawnBoundLspSessionProcess(sourceBinding)
       : lspProcess.spawnLspSessionProcess();
+
+    this.closed = new Promise((resolve) => this.process.once("close", () => resolve()));
 
     this.process.stdout.on("data", (chunk: Buffer) => {
       this.buffer = Buffer.concat([this.buffer, chunk]);
@@ -201,6 +204,24 @@ export class LspSession {
     });
   }
 
+  /** End the real transport without a kill fallback; lifetime gates judge the original exit. */
+  async finishInput(
+    mode: "exit" | "eof",
+    timeoutMs = 5000,
+  ): Promise<{
+    exitCode: number | null;
+    signal: NodeJS.Signals | null;
+  }> {
+    const exited = this.waitForExit(timeoutMs);
+    if (mode === "exit") this.notify("exit", undefined);
+    else this.process.stdin.end();
+    assert.ok(
+      await exited,
+      `vize lsp did not finish ${mode} within ${timeoutMs}ms\n${this.stderr}`,
+    );
+    return { exitCode: this.process.exitCode, signal: this.process.signalCode };
+  }
+
   async shutdown(): Promise<void> {
     if (this.process.killed) {
       return;
@@ -216,6 +237,20 @@ export class LspSession {
         await this.kill().catch(() => undefined);
       }
     }
+  }
+
+  /** Wait for the actual stdio EOF after shutdown, without changing shutdown callers. */
+  async waitForClosed(timeoutMs = 5000): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(
+        () => reject(new Error(`Timed out waiting for vize lsp stdio to close\n${this.stderr}`)),
+        timeoutMs,
+      );
+      void this.closed.then(() => {
+        clearTimeout(timeout);
+        resolve();
+      });
+    });
   }
 
   /**

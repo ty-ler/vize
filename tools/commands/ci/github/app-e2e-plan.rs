@@ -201,6 +201,8 @@ fn row(
 
 #[rustfmt::skip]
 fn full_rows() -> Vec<Row> {
+    let mut check = CHECK_FIXTURES.to_vec();
+    check.push("npmx-check");
     let lint = CHECK_FIXTURES
         .iter()
         .copied()
@@ -222,7 +224,7 @@ fn full_rows() -> Vec<Row> {
         row("full", "preview", "npmx", "test:preview:npmx", &["npmx.dev"], false, "10m"),
         row("full", "preview", "vuefes", "test:preview:vuefes", &["vuefes-2025"], false, "10m"),
         row("full", "build", "all", "test:build", &["elk", "misskey", "npmx.dev", "vuefes-2025"], false, "10m"),
-        row("full", "check", "all", "test:check", CHECK_FIXTURES, false, "75m"),
+        row("full", "check", "all", "test:check", &check, false, "75m"),
         row("full", "lint", "all", "test:lint", &lint, false, "10m"),
     ]
 }

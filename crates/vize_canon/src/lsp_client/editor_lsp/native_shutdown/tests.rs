@@ -109,11 +109,16 @@ fn eof_requires_both_full_physical_image_and_complete_initialize_contract() {
     assert!(!known_initialize(&changed));
     let temp = tempfile::tempdir().unwrap();
     let fake = temp.path().join("native");
+    let observer = corsa_lsp::process::ProcessObserver::default();
     fs::write(&fake, b"Version 7.0.2\n").unwrap();
-    assert!(!eof_capability(&fake, &initialized));
+    assert!(!eof_capability(&fake, &initialized, &observer));
     fs::write(&fake, b"Version 7.0.2\n\0\xff").unwrap();
-    assert!(!eof_capability(&fake, &initialized));
-    assert!(!eof_capability(&temp.path().join("absent"), &initialized));
+    assert!(!eof_capability(&fake, &initialized, &observer));
+    assert!(!eof_capability(
+        &temp.path().join("absent"),
+        &initialized,
+        &observer
+    ));
     for digest in [
         "",
         "4f2de678",

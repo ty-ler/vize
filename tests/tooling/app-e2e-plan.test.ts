@@ -222,7 +222,13 @@ test("planned tasks, fixtures, and mutable identities are exact and unique", () 
         "test:build",
         ["elk", "misskey", "npmx.dev", "vuefes-2025"].map((id) => `tests/_fixtures/_git/${id}`),
       ],
-      ["full", "check", "all", "test:check", checkFixturePaths],
+      [
+        "full",
+        "check",
+        "all",
+        "test:check",
+        [...checkFixturePaths, "tests/_fixtures/_git/npmx-check"],
+      ],
       [
         "full",
         "lint",

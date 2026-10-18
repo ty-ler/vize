@@ -39,3 +39,41 @@ snapshots and the workflow step from
   lengths of provider files rather than checking type checker behaviour.
 
 Golden diagnostics, budgets and the injected-error controls are unchanged.
+
+## Separate current npmX App check input
+
+The historical npmX Gitlink remains at
+`c9e8be91e61eeeae956e2068722caa09e293cc68`. Its authored Lunaria preview
+returned HTTP 404 again in [App run 39117259493](https://github.com/ubugeeei-prod/vize/actions/runs/39117259493).
+The compact same-commit URL also returned 404; the stable package with the
+same version has different archive integrity. No replacement reconstructs
+that original frozen graph. Its old diagnostics and unavailable archive
+remain historical, unqualified evidence.
+
+The separate `npmx-check` Gitlink selects the real upstream program at
+[`dc0319f8cb61e79e504a8d542b44badcb1384676`](https://github.com/npmx-dev/npmx.dev/commit/dc0319f8cb61e79e504a8d542b44badcb1384676).
+Only App typecheck and its unchanged injected-error controls select it.
+The original Gitlink, lint dependency migration, differential corpus,
+Inspector inputs and all diagnostic snapshots and budgets stay intact.
+This is a new upstream program, with 238 changed files including 48 Vue
+files, rather than a dependency substitution for the old program.
+
+Its whole authored graph declares Node 24, pnpm 11.22.0 with a SHA512 pin,
+and Lunaria 0.2.0. The CLI workspace requires Node >=24.4.0. The full frozen
+lock, root/CLI/docs manifests, workspace policies, patches and source hooks
+are upstream inputs. The existing producer runs the same source-preserving
+lexicon/sprite and root/docs Nuxt preparations, once per fresh campaign.
+It does not run `vp config`, which may rewrite authored source. The original
+source guards and installed/generated provider inventory remain mandatory.
+
+Qualification must compare both authorized native CLI subjects against this
+same physical prepared program and provider graph. Resolve Naive once per
+campaign; neither subject resolves, installs or reruns generation. Hold the
+harness, options and Corsa binary fixed, seal the complete graph before and
+after each subject, and retain whole raw diagnostics. Keep the original
+CLEAN, genuine TS2322 and repair assertions. The original Misskey source
+and its mutable visual snapshot remain separate authorities; complete
+Misskey and ReKa comparisons must name their actual input graphs.
+
+This source preparation earns no runtime or snapshot acceptance. A future
+matched B/H campaign and independent whole-output review are required.

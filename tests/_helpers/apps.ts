@@ -1141,7 +1141,7 @@ export const npmxApp: AppConfig = {
     readyPattern: /Listening on/,
   },
   check: {
-    cwd: path.join(GIT_DIR, "npmx.dev"),
+    cwd: path.join(GIT_DIR, "npmx-check"),
     patterns: ["app/**/*.vue"],
   },
   lint: {

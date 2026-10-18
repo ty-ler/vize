@@ -184,6 +184,7 @@ void emojiFromPublicInstance;
                             "options": {},
                             "manifest": {
                                 "name": "vize",
+                                "dynamicConfig": true,
                                 "exec": [env!("CARGO_BIN_EXE_vize"), "content-mapper"],
                                 "compilerOptions": ["noUnusedLocals"]
                             }

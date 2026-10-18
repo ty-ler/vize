@@ -19,6 +19,7 @@ import {
   forwardVoicevoxMetadata,
   frozenInstallArgs,
   providerInventory,
+  originalAppCheckEnvironment,
   validateGeneratedGraph,
   validateManager,
   type GeneratedGraph,
@@ -132,12 +133,12 @@ function fixture() {
   };
 }
 
-test("the fixture authorities keep all four original pins and exact PM versions", () => {
+test("the App authorities separate current npmX from the preserved original source pins", () => {
   assert.deepEqual(
     checkPolicies.map(({ name, pin, manager }) => ({ name, pin, manager })),
     [
       { name: "naive-ui", pin: "b26496a26536918204722cb9b9e5dd9bfe31c893", manager: "11.10.0" },
-      { name: "npmx.dev", pin: "c9e8be91e61eeeae956e2068722caa09e293cc68", manager: "11.20.0" },
+      { name: "npmx.dev", pin: "dc0319f8cb61e79e504a8d542b44badcb1384676", manager: "11.22.0" },
       { name: "voicevox", pin: "0a7fcc8523410ad294b51b70a46575c4d21371ac", manager: "10.28.2" },
       { name: "misskey", pin: "810faa8e5db4bbf9d6d408a61df148559340ee99", manager: "10.30.1" },
     ],
@@ -147,13 +148,20 @@ test("the fixture authorities keep all four original pins and exact PM versions"
     assert.throws(() => validateManager({ packageManager: "pnpm@10" }, policy));
     assert.throws(() => validateManager({ packageManager: "pnpm@9.0.0" }, policy));
   }
+  assert.equal(checkPolicies[1].directory, "npmx-check");
+  assert.throws(() => validateManager({ packageManager: "pnpm@11.20.0" }, checkPolicies[1]));
+  const legacy = fs.realpathSync(new URL("../_fixtures/_git/npmx.dev", import.meta.url));
+  assert.throws(
+    () => originalAppCheckEnvironment({ name: "npmx.dev", check: { cwd: legacy } }, {}),
+    /original check root required/,
+  );
   const digest = "ab".repeat(64);
   assert.equal(
-    validateManager({ packageManager: `pnpm@11.20.0+sha512.${digest}` }, checkPolicies[1]),
+    validateManager({ packageManager: `pnpm@11.22.0+sha512.${digest}` }, checkPolicies[1]),
     digest,
   );
   assert.throws(() =>
-    validateManager({ packageManager: "pnpm@11.20.0+sha512.ab" }, checkPolicies[1]),
+    validateManager({ packageManager: "pnpm@11.22.0+sha512.ab" }, checkPolicies[1]),
   );
 });
 

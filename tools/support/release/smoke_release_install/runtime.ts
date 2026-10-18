@@ -187,6 +187,17 @@ export function assertInstalledMapperContract(installDir: string): void {
     throw new Error(`cannot stat ${packageRoot}: ${String(error)}`);
   }
   if (stat.isSymbolicLink()) throw new Error(`${packageRoot} must not be a symlink`);
+  const captureDir = process.env.VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR;
+  if (captureDir) {
+    const filename = path.join(packageRoot, "package.json");
+    const limit = 1024 * 1024;
+    if (fs.statSync(filename).size > limit)
+      throw new Error(`${filename} exceeds the 1 MiB smoke capture limit`);
+    const bytes = fs.readFileSync(filename);
+    if (bytes.length > limit) throw new Error(`${filename} exceeds the 1 MiB smoke capture limit`);
+    fs.mkdirSync(captureDir, { recursive: true });
+    fs.writeFileSync(path.join(captureDir, "installed-vize.package.json"), bytes);
+  }
   const manifest = readPackageJson(packageRoot);
   const typescript = manifest.typescript;
   const contract =
@@ -197,6 +208,7 @@ export function assertInstalledMapperContract(installDir: string): void {
     !isDeepStrictEqual(contract, {
       exec: ["node", "./bin/vize", "content-mapper"],
       compilerOptions: ["noUnusedLocals"],
+      dynamicConfig: true,
     })
   ) {
     throw new Error(

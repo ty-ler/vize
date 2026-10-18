@@ -17,6 +17,7 @@ runs:
           tests/_fixtures/_git/misskey \
           tests/_fixtures/_git/naive-ui \
           tests/_fixtures/_git/npmx.dev \
+          tests/_fixtures/_git/npmx-check \
           tests/_fixtures/_git/nuxt-ui \
           tests/_fixtures/_git/primevue \
           tests/_fixtures/_git/reka-ui \

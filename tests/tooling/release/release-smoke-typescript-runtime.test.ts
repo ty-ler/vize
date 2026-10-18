@@ -12,10 +12,14 @@ import {
 } from "../../../tools/support/release/smoke_release_install/runtime.ts";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
-const contract = {
-  exec: ["node", "./bin/vize", "content-mapper"],
-  compilerOptions: ["noUnusedLocals"],
-};
+const productionManifest = fs.readFileSync(path.join(root, "npm/cli/package.json"));
+const contract = (
+  JSON.parse(productionManifest.toString("utf8")) as {
+    typescript: {
+      contentMapper: { exec: string[]; compilerOptions: string[]; dynamicConfig: true };
+    };
+  }
+).typescript.contentMapper;
 const diagnostics = [
   ["errors/Broken.vue", "TS2322"],
   ["errors/JavaScriptConsumer.js", "TS2322"],
@@ -44,6 +48,7 @@ function fixture(run: (f: ReturnType<typeof setup>) => void): void {
     PATH: `${path.dirname(process.execPath)}${path.delimiter}${process.env.PATH ?? ""}`,
     VIZE_REPO_ROOT: root,
     VIZE_TEST_CONTENT_MAPPER_TSGO: f.tsgo,
+    VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR: "",
     VIZE_SMOKE_RUNTIME_TEST_LOG: f.log,
     VIZE_SMOKE_RUNTIME_TEST_FAULT: "",
   };
@@ -131,11 +136,20 @@ if (args.includes("tsconfig.emit.json")) {
 `;
 
 test("installed mapper accepts the exact production contract", () => {
-  fixture(({ install }) => assertInstalledMapperContract(install));
+  fixture((f) => {
+    fs.writeFileSync(path.join(f.pkg, "package.json"), productionManifest);
+    assertInstalledMapperContract(f.install);
+  });
 });
 for (const [name, value] of [
   ["corrupted exec", { ...contract, exec: ["node", "./bin/missing", "content-mapper"] }],
-  ["missing compilerOptions", { exec: contract.exec }],
+  ["missing compilerOptions", { exec: contract.exec, dynamicConfig: true }],
+  ["missing dynamicConfig", { exec: contract.exec, compilerOptions: contract.compilerOptions }],
+  ["false dynamicConfig", { ...contract, dynamicConfig: false }],
+  ["string dynamicConfig", { ...contract, dynamicConfig: "true" }],
+  ["numeric dynamicConfig", { ...contract, dynamicConfig: 1 }],
+  ["null dynamicConfig", { ...contract, dynamicConfig: null }],
+  ["unknown field", { ...contract, unexpected: true }],
   ["retired extensions", { ...contract, extensions: { ".vue": ".tsx" } }],
 ] as const) {
   test(`installed mapper rejects ${name}`, () =>
@@ -147,6 +161,37 @@ for (const [name, value] of [
       );
     }));
 }
+for (const outcome of ["accepted", "rejected", "invalid JSON"] as const) {
+  test(`installed mapper captures raw manifest bytes before ${outcome} validation`, () =>
+    fixture((f) => {
+      const capture = path.join(f.temporary, "capture");
+      process.env.VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR = capture;
+      const bytes =
+        outcome === "accepted"
+          ? productionManifest
+          : outcome === "rejected"
+            ? Buffer.from(
+                '{ "name":"vize", "version":"0", "typescript":{"contentMapper":null}, "note":"新規" }\r\n',
+              )
+            : Buffer.from([0xff, 0x0a]);
+      fs.writeFileSync(path.join(f.pkg, "package.json"), bytes);
+      if (outcome === "accepted") assertInstalledMapperContract(f.install);
+      else assert.throws(() => assertInstalledMapperContract(f.install));
+      assert.deepEqual(fs.readFileSync(path.join(capture, "installed-vize.package.json")), bytes);
+      assert.equal(fs.existsSync(f.log), false);
+    }));
+}
+test("installed mapper refuses an oversized capture", () =>
+  fixture((f) => {
+    const capture = path.join(f.temporary, "capture");
+    process.env.VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR = capture;
+    fs.writeFileSync(path.join(f.pkg, "package.json"), Buffer.alloc(1024 * 1024 + 1, 32));
+    assert.throws(
+      () => assertInstalledMapperContract(f.install),
+      /exceeds the 1 MiB smoke capture limit/,
+    );
+    assert.equal(fs.existsSync(capture), false);
+  }));
 test("installed mapper rejects the retired top-level contract", () =>
   fixture((f) => {
     fs.writeFileSync(

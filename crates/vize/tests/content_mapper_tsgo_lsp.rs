@@ -92,6 +92,7 @@ fn standard_tsgo_lsp_accepts_authored_vue_content_mapper_contribution() {
                             "options": {},
                             "manifest": {
                                 "name": "vize",
+                                "dynamicConfig": true,
                                 "exec": [env!("CARGO_BIN_EXE_vize"), "content-mapper"],
                                 "compilerOptions": ["noUnusedLocals"]
                             }

@@ -147,7 +147,7 @@ test("release profile retains all nineteen named jobs and the real editor, tooli
   }
 });
 
-test("parallel Rust jobs preserve every original step, command byte and runtime setting", () => {
+test("parallel Rust jobs preserve original steps and settings with the TypeScript lint checker", () => {
   const original = (
     parse(
       readRepoFile("tests", "_fixtures", "ci", "check-clippy-and-test.original.yml.txt"),
@@ -162,7 +162,20 @@ test("parallel Rust jobs preserve every original step, command byte and runtime 
     assert.deepEqual(jobs[id].steps.slice(0, firstCommand), setup, `${id} changed setup`);
     tasks.push(...jobs[id].steps.slice(firstCommand));
   }
-  assert.deepEqual(tasks, original.steps.slice(firstCommand));
+  // Keep the historical workflow fixture intact while qualifying the reviewed
+  // checker migration. Every other command byte and step still compares whole.
+  const oldChecker = "rust-script tools/commands/ci/check-workspace-lints.rs --check";
+  const currentChecker = "node tools/commands/ci/check-workspace-lints.ts --check";
+  const originalTasks = original.steps.slice(firstCommand);
+  assert.equal(originalTasks.filter((step) => step.run?.includes(oldChecker)).length, 1);
+  const expectedTasks = originalTasks.map((step) => {
+    if (!step.run?.includes(oldChecker)) return step;
+    assert.equal(step.name, "Clippy");
+    assert.equal(step.run.split(oldChecker).length, 2);
+    assert.equal(step.run.includes(currentChecker), false);
+    return { ...step, run: step.run.replace(oldChecker, currentChecker) };
+  });
+  assert.deepEqual(tasks, expectedTasks);
   const aggregate = jobs["clippy-and-test"];
   assert.deepEqual(aggregate.needs, producers);
   assert.equal(

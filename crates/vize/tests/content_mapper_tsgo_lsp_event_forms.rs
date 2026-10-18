@@ -159,6 +159,7 @@ fn standard_tsgo_lsp_maps_event_symbol_navigation() {
                             "options": {},
                             "manifest": {
                                 "name": "vize",
+                                "dynamicConfig": true,
                                 "exec": [env!("CARGO_BIN_EXE_vize"), "content-mapper"],
                                 "compilerOptions": ["noUnusedLocals"]
                             }
