@@ -4,7 +4,11 @@ import { test } from "node:test";
 import { parse } from "yaml";
 import { aggregateNeedsResults } from "../../tools/support/compat/github/require-needs-success.ts";
 import { sourceInventoryLanes } from "../../tools/support/compat/davinci/source-inventories.ts";
-import { readRepoFile, root } from "./support/github-workflows.ts";
+import { checkWorkflowJobSources, readRepoFile, root } from "./support/github-workflows.ts";
+const FULL_ONLY =
+  "${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}";
+const ALWAYS_FULL_ONLY =
+  "${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}";
 const CORE = ["fmt-rust", "check-js", "security-audit", "node-engine-compat", "check-vize-apps"];
 const PR_JOBS = [
   "iteration-plan",
@@ -12,7 +16,6 @@ const PR_JOBS = [
   "pr-source-checks",
   "instruction-counts",
   "level-dependency-direction",
-  "release-integration-catalog",
 ];
 const FULL_SUITE_JOBS = [
   "nix-flake",
@@ -30,23 +33,18 @@ const FULL_SUITE_JOBS = [
   "branch-coverage",
   "playground-test",
 ];
-type Job = {
-  if?: string;
+type Step = Partial<Record<"name" | "if" | "run" | "uses", string>> & {
+  "continue-on-error"?: boolean;
+  env?: Record<string, string>;
+  with?: Record<string, string>;
+};
+type Job = Partial<Record<"if" | "uses", string>> & {
   needs?: string[] | string;
   outputs?: Record<string, string>;
-  steps?: Array<{
-    name?: string;
-    "continue-on-error"?: boolean;
-    if?: string;
-    run?: string;
-    env?: Record<string, string>;
-    uses?: string;
-    with?: Record<string, string>;
-  }>;
+  steps?: Step[];
   "timeout-minutes"?: number | string;
-  uses?: string;
 };
-const workflow = parse(readRepoFile(".github", "workflows", "check.yml")) as {
+const workflow = parse(checkWorkflowJobSources()) as {
   on?: Record<string, unknown>;
   jobs?: Record<string, Job>;
   concurrency?: { group?: string; "cancel-in-progress"?: boolean };
@@ -91,16 +89,13 @@ test("source gates cover iteration events while full qualification runs on sched
       job === "source-coverage"
         ? "${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !(inputs.release-qualification && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/tags/v')))) }}"
         : job === "clippy-and-test" || job === "test-js-packages"
-          ? "${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}"
+          ? ALWAYS_FULL_ONLY
           : job === "test-scripts"
             ? "${{ !cancelled() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}"
-            : "${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}",
+            : FULL_ONLY,
     );
   }
-  assert.equal(
-    workflow.jobs?.["nix-flake"]?.if,
-    "${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}",
-  );
+  assert.equal(workflow.jobs?.["nix-flake"]?.if, FULL_ONLY);
   assert.equal(
     workflow.jobs?.["semver-checks"]?.if,
     "${{ github.event_name == 'workflow_dispatch' && (startsWith(github.ref, 'refs/heads/release/v') || startsWith(github.ref, 'refs/tags/v')) }}",
@@ -146,16 +141,10 @@ test("source gates cover iteration events while full qualification runs on sched
     checkSteps.find((step) => step.name === "Check fast JS/TS")?.if,
     "${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' || github.event_name == 'push' }}",
   );
-  assert.equal(
-    checkSteps.find((step) => step.name === "Check JS/TS")?.if,
-    "${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}",
-  );
+  assert.equal(checkSteps.find((step) => step.name === "Check JS/TS")?.if, FULL_ONLY);
   const inventory = checkSteps.find((step) => step.name === "Check Davinci source inventories");
   assert.ok(inventory);
-  assert.equal(
-    inventory.if,
-    "${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}",
-  );
+  assert.equal(inventory.if, FULL_ONLY);
   assert.equal(inventory.uses, "./.github/actions/check-level-inventories");
   const inventoryAction = parse(
     readRepoFile(".github", "actions", "check-level-inventories", "action.yml"),
@@ -301,19 +290,16 @@ test("report CLI propagates required check and planner failures", () => {
 test("full JS qualification retains independent native builds and strictly gates all full events", () => {
   const full = workflow.jobs?.["full-js-report"];
   assert.ok(full);
-  assert.equal(
-    full.if,
-    "${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}",
-  );
-  const fullJobs = [
-    "test-js-packages",
-    "build-js-packages",
-    "test-scripts",
-    "full-source-cli",
-    "check-js",
-    "instruction-counts",
-  ];
+  assert.equal(full.if, ALWAYS_FULL_ONLY);
+  const fullJobs = ["full-qualification", "check-js", "instruction-counts"];
   assert.deepEqual(full.needs, fullJobs);
+  const callee = parse(readRepoFile(".github", "workflows", "full-qualification.yml")) as {
+    jobs: Record<string, Job & { "continue-on-error"?: boolean }>;
+  };
+  for (const id of ["test-js-packages", "build-js-packages", "test-scripts", "full-source-cli"]) {
+    assert.ok(callee.jobs[id], `missing transitive original full dependency ${id}`);
+    assert.notEqual(callee.jobs[id]["continue-on-error"], true, id);
+  }
   const caller = full.steps?.at(-1);
   assert.equal(caller?.uses, "./.github/actions/report-full-js-qualification");
   assert.deepEqual(caller?.with, { "needs-json": "${{ toJSON(needs) }}" });
