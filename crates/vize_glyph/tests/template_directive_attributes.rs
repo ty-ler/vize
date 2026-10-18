@@ -328,3 +328,153 @@ fn sfc_complex_nuxt_template_converges_with_unsorted_attributes() {
     assert_eq!(first.code, second.code, "fmt; fmt must be a no-op");
     assert_eq!(second.code, third.code, "fmt must stay at its fixed point");
 }
+
+#[test]
+fn dynamic_directive_arrows_keep_the_complete_l1_name_and_following_attributes() {
+    let options = FormatOptions {
+        print_width: 500,
+        sort_attributes: false,
+        normalize_directive_shorthands: false,
+        ..FormatOptions::default()
+    };
+    for name in [
+        ":[(name=>name)(outside)]",
+        "@[(name=>name)(outside)].stop",
+        "#[(name=>name)(outside)]",
+        "v-bind:[(name=>name)(outside)].camel",
+        "v-on:[keys[(name=>name)(outside)]]",
+        ":[`prefix${(name=>name)(outside)}`]",
+    ] {
+        let source = format!("<Card {name}=\"value\" title=\"next\"></Card>");
+        let first = format_template(&source, &options).unwrap();
+        assert_eq!(first.as_str(), source);
+        assert_eq!(format_template(&first, &options).unwrap(), first);
+    }
+}
+
+#[test]
+fn sfc_dynamic_directive_arrow_keeps_comments_crlf_and_formatter_options() {
+    let source = "<template>\r\n  <!-- retained -->\r\n  <Card v-bind:[(name=>name)(outside)]=\"value\" id=\"next\"></Card>\r\n</template>\r\n";
+    let options = FormatOptions {
+        print_width: 500,
+        end_of_line: vize_glyph::EndOfLine::Crlf,
+        sort_attributes: false,
+        ..FormatOptions::default()
+    };
+    let expected = "<template>\r\n  <!-- retained -->\r\n  <Card :[(name=>name)(outside)]=\"value\" id=\"next\"></Card>\r\n</template>\r\n";
+    let first = format_sfc(source, &options).unwrap();
+    assert_eq!(first.code.as_str(), expected);
+    assert!(first.changed);
+    let second = format_sfc(&first.code, &options).unwrap();
+    assert_eq!(second.code, first.code);
+    assert!(!second.changed);
+}
+
+#[test]
+fn l1_dynamic_name_framing_keeps_layout_profiles_and_refusal_boundaries_separate() {
+    let options = FormatOptions {
+        print_width: 20,
+        use_tabs: true,
+        single_attribute_per_line: true,
+        bracket_same_line: true,
+        sort_attributes: false,
+        ..FormatOptions::default()
+    };
+    let source = "<Card :[(name=>name)(outside)]=\"value\" id=\"next\"></Card>";
+    // At width 20 the existing value-layout policy owns the quote break as
+    // well as the attribute break; a long name does not bypass that policy.
+    let expected = "<Card\n\t:[(name=>name)(outside)]=\"\n\t\tvalue\n\t\"\n\tid=\"next\"></Card>";
+    let first = format_template(source, &options).unwrap();
+    assert_eq!(first.as_str(), expected);
+    assert_eq!(format_template(&first, &options).unwrap(), first);
+
+    let wide = FormatOptions {
+        print_width: 80,
+        ..options
+    };
+    let expected = "<Card\n\t:[(name=>name)(outside)]=\"value\"\n\tid=\"next\"></Card>";
+    let first = format_template(source, &wide).unwrap();
+    assert_eq!(first.as_str(), expected);
+    assert_eq!(format_template(&first, &wide).unwrap(), first);
+
+    let options = FormatOptions {
+        print_width: 500,
+        sort_attributes: false,
+        normalize_directive_shorthands: false,
+        ..FormatOptions::default()
+    };
+    for source in [
+        "<Card :[keys[index]=\"value\" id=\"next\"></Card>",
+        "<Card :[keys[index] next=\"kept\"></Card>",
+        "<Card :[keys['broken next=\"kept\"></Card>",
+        "<Card data-[index]=\"plain\" :name.foo[bar]=\"value\"></Card>",
+        "<Card v-custom[key]=\"opaque\" id=\"next\"></Card>",
+    ] {
+        let first = format_template(source, &options).unwrap();
+        assert_eq!(first.as_str(), source);
+        assert_eq!(format_template(&first, &options).unwrap(), first);
+    }
+}
+
+#[test]
+fn assignment_line_breaks_preserve_literal_directive_and_component_values() {
+    let options = FormatOptions {
+        print_width: 500,
+        sort_attributes: false,
+        ..FormatOptions::default()
+    };
+    for tag in ["div", "Card"] {
+        let expected =
+            format!("<{tag} title=\"hello world\" :value=\"message\" @click=\"handler\"></{tag}>");
+        for newline in ["\n", "\r\n"] {
+            for (before, after) in [(newline, ""), ("", newline), (newline, newline)] {
+                let source = format!(
+                    "<{tag} title{before}={after}\"hello world\" :value{before}={after}\"message\" @click{before}={after}\"handler\"></{tag}>"
+                );
+                let first = format_template(&source, &options).unwrap();
+                assert_eq!(first.as_str(), expected);
+                assert_eq!(format_template(&first, &options).unwrap(), first);
+            }
+        }
+    }
+}
+
+#[test]
+fn assignment_trivia_keeps_boolean_neighbors_and_unquoted_values() {
+    let options = FormatOptions {
+        sort_attributes: false,
+        ..FormatOptions::default()
+    };
+    for newline in ["\n", "\r\n"] {
+        for (source, expected) in [
+            (
+                format!("<div hidden{newline}title{newline}={newline}hello inert>body</div>"),
+                "<div hidden title=\"hello\" inert>body</div>",
+            ),
+            (
+                format!("<div hidden{newline}inert>body</div>"),
+                "<div hidden inert>body</div>",
+            ),
+        ] {
+            let first = format_template(&source, &options).unwrap();
+            assert_eq!(first.as_str(), expected);
+            assert_eq!(format_template(&first, &options).unwrap(), first);
+        }
+    }
+}
+
+#[test]
+fn sfc_assignment_trivia_keeps_authored_quoted_newlines_and_crlf() {
+    let source = "<template>\r\n  <!-- retained -->\r\n  <div title\r\n=\r\n\"first\r\nsecond\">text</div>\r\n</template>\r\n";
+    let expected = "<template>\r\n  <!-- retained -->\r\n  <div\r\n    title=\"first\r\nsecond\"\r\n  >text</div>\r\n</template>\r\n";
+    let options = FormatOptions {
+        end_of_line: vize_glyph::EndOfLine::Crlf,
+        ..FormatOptions::default()
+    };
+    let first = format_sfc(source, &options).unwrap();
+    assert_eq!(first.code.as_str(), expected);
+    assert!(first.changed);
+    let second = format_sfc(&first.code, &options).unwrap();
+    assert_eq!(second.code, first.code);
+    assert!(!second.changed);
+}

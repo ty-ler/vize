@@ -5,6 +5,8 @@ pub mod codegen;
 mod compile;
 #[cfg(feature = "legacy-differential")]
 pub mod differential;
+#[cfg(test)]
+mod empty_directive_tests;
 pub mod errors;
 mod l4;
 pub mod options;
