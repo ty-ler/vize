@@ -5,6 +5,10 @@ import { parse } from "yaml";
 
 import { aggregateCheckReportResults } from "../../tools/support/compat/github/require-needs-success.ts";
 import { readRepoFile, root } from "./support/github-workflows.ts";
+import {
+  selectedSources,
+  validateDiagnosticContext,
+} from "../../tools/benchmarks/scripts/instruction-paired-diagnostic.ts";
 
 type Job = {
   "continue-on-error"?: boolean;
@@ -227,4 +231,116 @@ test("formatter caps fail closed on every source and are enforced for every actu
   assert.equal(enforce?.["continue-on-error"], undefined);
   assert.doesNotMatch(enforce?.run ?? "", /hashFiles|\|\| true|continue-on-error/);
   assert.ok(steps.indexOf(enforce) > steps.indexOf(verify));
+});
+
+test("the selected paired diagnostic is opt-in and keeps the original required measurement gates", () => {
+  assert.deepEqual(instructionWorkflow.on?.workflow_dispatch, {
+    inputs: {
+      paired_9497_diagnostic: {
+        description: "Capture selected parent/candidate machine code for #9497 (not acceptance)",
+        type: "boolean",
+        default: false,
+      },
+    },
+  });
+  assert.equal(instructionWorkflow.on?.workflow_call, null);
+  const gate = instructionWorkflow.jobs?.["instruction-counts"];
+  assert.ok(gate);
+  const steps = gate.steps ?? [];
+  const before = steps.find(
+    (step) =>
+      step.name ===
+      "Capture the explicitly selected diagnostic parent before the original measurement",
+  );
+  const after = steps.find(
+    (step) =>
+      step.name ===
+      "Retain the selected candidate executable and disassembly before enforcing the original caps",
+  );
+  for (const step of [before, after]) {
+    assert.ok(step);
+    assert.equal(
+      step.if,
+      "github.event_name == 'workflow_dispatch' && inputs.paired_9497_diagnostic",
+    );
+    assert.equal(step["continue-on-error"], undefined);
+  }
+  const measure = steps.findIndex(
+    (step) => step.name === "Measure each stage three times without Criterion sampling",
+  );
+  assert.ok(steps.indexOf(before!) < measure && measure < steps.indexOf(after!));
+  assert.ok(
+    steps.indexOf(before!) <
+      steps.findIndex(
+        (step) =>
+          step.name ===
+          "Measure original formatter routines three times without Criterion sampling",
+      ),
+    "both original producers must run after selection of the same candidate source",
+  );
+  const enforce = steps.findIndex((step) => step.name === "Enforce pinned ceilings");
+  assert.ok(steps.indexOf(after!) < enforce);
+  assert.equal(
+    gate.env?.VIZE_INSTRUCTION_REBUILD,
+    "${{ github.event_name == 'workflow_dispatch' && inputs.paired_9497_diagnostic && '1' || '' }}",
+  );
+  assert.deepEqual(
+    steps.find(
+      (step) =>
+        step.with?.name ===
+        "instruction-paired-diagnostic-${{ github.sha }}-${{ github.run_attempt }}",
+    ),
+    {
+      uses: "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+      if: "${{ always() && github.event_name == 'workflow_dispatch' && inputs.paired_9497_diagnostic }}",
+      with: {
+        name: "instruction-paired-diagnostic-${{ github.sha }}-${{ github.run_attempt }}",
+        path: "${{ runner.temp }}/instruction-paired-diagnostic",
+        "if-no-files-found": "error",
+        "retention-days": 30,
+      },
+    },
+  );
+});
+
+test("paired source roles reject implicit baseline promotion and unbound actor inputs", () => {
+  const context = {
+    actor: { commit: "a".repeat(40), tree: "b".repeat(40), parents: [selectedSources.parent] },
+    workspace: "/home/runner/_work/vize/vize",
+    runnerTemp: "/home/runner/_work/_temp",
+    selectedSources: { ...selectedSources },
+  };
+  assert.doesNotThrow(() => validateDiagnosticContext(context, "workflow_dispatch", "1"));
+  for (const event of ["pull_request", "merge_group", "workflow_call", "schedule"])
+    assert.throws(() => validateDiagnosticContext(context, event, "1"), /explicit dispatch/);
+  assert.throws(
+    () => validateDiagnosticContext(context, "workflow_dispatch", ""),
+    /rebuild protocol/,
+  );
+  for (const role of ["parent", "candidate"] as const) {
+    assert.throws(() =>
+      validateDiagnosticContext(
+        { ...context, selectedSources: { ...selectedSources, [role]: "c".repeat(40) } },
+        "workflow_dispatch",
+        "1",
+      ),
+    );
+    assert.throws(() =>
+      validateDiagnosticContext(
+        { ...context, actor: { ...context.actor, commit: selectedSources[role] } },
+        "workflow_dispatch",
+        "1",
+      ),
+    );
+  }
+  assert.throws(() =>
+    validateDiagnosticContext({ ...context, workspace: "." }, "workflow_dispatch", "1"),
+  );
+  assert.throws(() =>
+    validateDiagnosticContext(
+      { ...context, runnerTemp: context.workspace },
+      "workflow_dispatch",
+      "1",
+    ),
+  );
 });

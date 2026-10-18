@@ -4,6 +4,11 @@ on:
   # Check calls the measurement once per queue candidate and scheduled run.
   # Avoid a second standalone PR run of the same instruction campaign.
   workflow_dispatch:
+    inputs:
+      paired_9497_diagnostic:
+        description: "Capture selected parent/candidate machine code for #9497 (not acceptance)"
+        type: boolean
+        default: false
   workflow_call:
 
 permissions:
@@ -26,6 +31,7 @@ jobs:
     env:
       # Reusable workflows retain the caller's workflow name.
       MEASURE: ${{ github.event_name == 'merge_group' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.workflow == 'Level instruction counts' }}
+      VIZE_INSTRUCTION_REBUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.paired_9497_diagnostic && '1' || '' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -56,12 +62,20 @@ jobs:
         run: |
           cargo test --locked -p davinci_harness --lib
           cargo test --locked -p davinci_harness --lib --features instruction-counts
+      - name: Capture the explicitly selected diagnostic parent before the original measurement
+        if: github.event_name == 'workflow_dispatch' && inputs.paired_9497_diagnostic
+        run: |
+          cp tools/benchmarks/scripts/instruction-paired-diagnostic.ts "${RUNNER_TEMP}/instruction-paired-actor.ts"
+          node "${RUNNER_TEMP}/instruction-paired-actor.ts" before
       - name: Measure original formatter routines three times without Criterion sampling
         if: env.MEASURE == 'true'
         run: node tools/benchmarks/scripts/instruction-counts.mjs --formatter --collect --out "${RUNNER_TEMP}/formatter-instruction-counts"
       - name: Measure each stage three times without Criterion sampling
         if: env.MEASURE == 'true'
         run: node tools/benchmarks/scripts/instruction-counts.mjs --collect --out "${RUNNER_TEMP}/instruction-counts"
+      - name: Retain the selected candidate executable and disassembly before enforcing the original caps
+        if: github.event_name == 'workflow_dispatch' && inputs.paired_9497_diagnostic
+        run: node "${RUNNER_TEMP}/instruction-paired-actor.ts" after
       - name: Verify pinned registry and immutable base ratchet
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
@@ -118,6 +132,16 @@ jobs:
           path: ${{ runner.temp }}/instruction-counts
           if-no-files-found: warn
           retention-days: 30
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.paired_9497_diagnostic }}
+        with:
+          name: instruction-paired-diagnostic-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/instruction-paired-diagnostic
+          if-no-files-found: error
+          retention-days: 30
+      - name: Restore the separate actor checkout after selected-source diagnostics
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.paired_9497_diagnostic }}
+        run: node "${RUNNER_TEMP}/instruction-paired-actor.ts" restore
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ always() && env.MEASURE == 'true' }}
         with:
