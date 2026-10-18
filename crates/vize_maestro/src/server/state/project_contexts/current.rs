@@ -322,7 +322,16 @@ mod tests {
 
     #[test]
     fn initial_continuation_rechecks_physical_and_queue_identity_after_its_first_read() {
-        for control in ["config", "source", "routing", "replacement"] {
+        #[derive(Clone, Copy, Debug)]
+        enum Mutation {
+            Config,
+            Source,
+            Routing,
+            Replacement,
+        }
+        use Mutation::{Config, Replacement, Routing, Source};
+
+        for control in [Config, Source, Routing, Replacement] {
             let directory = tempfile::tempdir().unwrap();
             let config = directory.path().join("vite.config.mjs");
             std::fs::write(&config, "export default {vue:{}};").unwrap();
@@ -350,27 +359,24 @@ mod tests {
                 .value()
                 .clone();
             super::super::lock_order_tests::at_initial_continuation(move || match control {
-                "config" => {
-                    std::fs::write(config, "export default {vue:{name:'changed'}};").unwrap()
-                }
-                "source" => changed.documents.open(
+                Config => std::fs::write(config, "export default {vue:{name:'changed'}};").unwrap(),
+                Source => changed.documents.open(
                     changed_uri,
                     "<template>changed</template>".into(),
                     1,
                     "vue".into(),
                 ),
-                "routing" => {
+                Routing => {
                     let _change = changed.project_routing_change();
                 }
-                "replacement" => {
+                Replacement => {
                     changed.project_contexts.contexts.lock().insert(
                         key.clone(),
                         Arc::new(super::super::registry::ProjectContext::new(key)),
                     );
                 }
-                _ => unreachable!(),
             });
-            assert!(receipt.validate(&owner, &uri, 1).is_none(), "{control}");
+            assert!(receipt.validate(&owner, &uri, 1).is_none(), "{control:?}");
         }
     }
 

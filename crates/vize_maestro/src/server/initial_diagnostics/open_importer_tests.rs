@@ -119,14 +119,26 @@ fn one_queued_open_reuses_its_owner_but_the_next_public_operation_confirms_unkno
 
 #[test]
 fn queued_open_receipt_refuses_changed_source_version_reopen_config_and_failed_repairs() {
+    #[derive(Clone, Copy, Eq, PartialEq)]
+    enum Edit {
+        Source,
+        Version,
+        Reopen,
+        Config,
+        FailedRepair,
+        Marker,
+        OtherApp,
+    }
+    use Edit::{Config, FailedRepair, Marker, OtherApp, Reopen, Source, Version};
+
     for control in [
-        "source",
-        "version",
-        "reopen",
-        "config",
-        "failed-repair",
-        "marker",
-        "other-app",
+        Source,
+        Version,
+        Reopen,
+        Config,
+        FailedRepair,
+        Marker,
+        OtherApp,
     ] {
         let fixture = queued_open();
         let (uri, sync) = fixture.pending.lock().take_sync().unwrap();
@@ -139,37 +151,37 @@ fn queued_open_receipt_refuses_changed_source_version_reopen_config_and_failed_r
         assert_eq!(factory_count(&fixture), "once\n");
         let mut target = uri.clone();
         match control {
-            "source" | "version" => server.state.documents.open(
+            Source | Version => server.state.documents.open(
                 uri.clone(),
                 "<template>changed</template>".into(),
-                if control == "version" { 2 } else { 1 },
+                if control == Version { 2 } else { 1 },
                 "vue".into(),
             ),
-            "reopen" => {
+            Reopen => {
                 server.state.documents.close(&uri);
                 server
                     .state
                     .documents
                     .open(uri.clone(), "<template />".into(), 1, "vue".into());
             }
-            "config" => {
+            Config => {
                 file(
                     fixture.root.path(),
                     "app/policy.mjs",
                     "export const hover = false;",
                 );
             }
-            "failed-repair" => {
+            FailedRepair => {
                 file(
                     fixture.root.path(),
                     "app/policy.mjs",
                     "export const hover = ;",
                 );
             }
-            "marker" => {
+            Marker => {
                 std::fs::remove_file(fixture.root.path().join("app/vite.config.mjs")).unwrap()
             }
-            "other-app" => {
+            OtherApp => {
                 file(
                     fixture.root.path(),
                     "other/vite.config.mjs",
@@ -181,7 +193,6 @@ fn queued_open_receipt_refuses_changed_source_version_reopen_config_and_failed_r
                     .documents
                     .open(target.clone(), "<template />".into(), 1, "vue".into());
             }
-            _ => unreachable!(),
         }
         let (_, typed) = fixture
             .pending
@@ -193,7 +204,7 @@ fn queued_open_receipt_refuses_changed_source_version_reopen_config_and_failed_r
             typed.version,
             typed.continuation.as_ref(),
         ));
-        if control == "failed-repair" {
+        if control == FailedRepair {
             assert!(std::ptr::eq(previous.state.as_ref(), next.state.as_ref()));
             assert!(next.state.lsp_features().hover);
             assert_eq!(factory_count(&fixture), "once\n");
@@ -211,10 +222,10 @@ fn queued_open_receipt_refuses_changed_source_version_reopen_config_and_failed_r
         } else {
             assert_eq!(
                 next.state.lsp_features().hover,
-                !matches!(control, "config" | "other-app")
+                !matches!(control, Config | OtherApp)
             );
         }
-        if matches!(control, "marker" | "other-app") {
+        if matches!(control, Marker | OtherApp) {
             assert!(!std::ptr::eq(previous.state.as_ref(), next.state.as_ref()));
             assert_eq!(factory_count(&fixture), "once\n");
         } else {
