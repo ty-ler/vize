@@ -98,3 +98,58 @@ fn successful_or_disarmed_drop_does_not_add_a_metrics_stage() {
     });
     assert!(!output.exists());
 }
+
+#[test]
+fn scan_unwind_retains_whole_root_order_and_each_materialized_identity() {
+    let temp = tempfile::tempdir().unwrap();
+    let output = temp.path().join("receipt");
+    let root = temp.path().join("fixture");
+    let first = root.join("First.vue");
+    let second = root.join("Second.vue");
+    let support = temp.path().join("outside.ts");
+    let first_virtual = temp.path().join("mirror/First.vue.ts");
+    let support_virtual = temp.path().join("mirror/outside.ts");
+    let selected = vec![second.clone(), first.clone()];
+    let failure = std::panic::catch_unwind(|| {
+        let mut guard = receipt(output.clone());
+        guard.begin(0);
+        guard.scanned_inputs(
+            &root,
+            "source-revision",
+            &selected,
+            [
+                (first.as_path(), first_virtual.as_path(), "alpha"),
+                (support.as_path(), support_virtual.as_path(), "support\n"),
+                (first.as_path(), first_virtual.as_path(), "beta"),
+            ],
+        );
+        panic!("unchanged scale assertion");
+    })
+    .unwrap_err();
+    assert_eq!(
+        failure.downcast_ref::<&str>(),
+        Some(&"unchanged scale assertion")
+    );
+    let raw: Value =
+        serde_json::from_slice(&fs::read(output.join("failure.json")).unwrap()).unwrap();
+    assert_eq!(
+        raw["scannedInputs"],
+        json!({
+            "sourceRevision": "source-revision",
+            "compiledGithubSha": option_env!("GITHUB_SHA"),
+            "fixtureRoot": root,
+            "selectedRoots": selected,
+            "materializedFiles": [
+                {"originalPath":first,"fixtureRelativePath":"First.vue","virtualPath":first_virtual,
+                 "contentBytes":5,"contentSha256":"8ed3f6ad685b959ead7022518e1af76cd816f8e8ec7ccdda1ed4018e8f2223f8"},
+                {"originalPath":support,"fixtureRelativePath":null,"virtualPath":support_virtual,
+                 "contentBytes":8,"contentSha256":"c05b56ab6d3d07ccca6778ebd799bf98dfa2b7f10dd43601f0938f04e5070878"},
+                {"originalPath":first,"fixtureRelativePath":"First.vue","virtualPath":first_virtual,
+                 "contentBytes":4,"contentSha256":"f44e64e75f3948e9f73f8dfa94721c4ce8cbb4f265c4790c702b2d41cfbf2753"},
+            ],
+        })
+    );
+    assert_eq!(raw["lanes"][0]["state"], "IN_PROGRESS");
+    assert!(raw["fileCount"].is_null());
+    assert!(!output.join("metrics.json").exists());
+}

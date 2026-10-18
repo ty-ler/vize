@@ -1,10 +1,15 @@
 //! Preserve completed work when an unchanged Tier-L assertion unwinds.
 
-use std::{fs, io::Write, path::PathBuf};
+use std::{
+    fs,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 use vize_canon::IncrementalCheckMetrics;
-use vize_l0::String;
+use vize_l0::{String, cstr};
 
 use super::artifact::BatchIncrementalBudget;
 
@@ -18,6 +23,7 @@ pub(super) struct FailureReceipt {
     budget: BatchIncrementalBudget,
     budget_scale: f64,
     file_count: Option<usize>,
+    scanned_inputs: Option<Value>,
     completed: [Option<(u128, IncrementalCheckMetrics)>; 3],
     running: Option<usize>,
     armed: bool,
@@ -40,6 +46,7 @@ impl FailureReceipt {
             budget,
             budget_scale,
             file_count: None,
+            scanned_inputs: None,
             completed: [None; 3],
             running: None,
             armed: true,
@@ -48,6 +55,40 @@ impl FailureReceipt {
 
     pub(super) fn begin(&mut self, lane: usize) {
         self.running = Some(lane);
+    }
+
+    /// Snapshot the existing scan result before its unchanged scale assertions.
+    /// No source discovery, filesystem reread or native query is performed.
+    pub(super) fn scanned_inputs<'a>(
+        &mut self,
+        fixture_root: &Path,
+        source_revision: &str,
+        selected: &[PathBuf],
+        materialized: impl IntoIterator<Item = (&'a Path, &'a Path, &'a str)>,
+    ) {
+        let files = materialized
+            .into_iter()
+            .map(|(original, virtual_path, content)| {
+                let digest: String = Sha256::digest(content.as_bytes())
+                    .iter()
+                    .map(|byte| cstr!("{byte:02x}"))
+                    .collect();
+                json!({
+                    "originalPath": original,
+                    "fixtureRelativePath": original.strip_prefix(fixture_root).ok(),
+                    "virtualPath": virtual_path,
+                    "contentBytes": content.len(),
+                    "contentSha256": digest,
+                })
+            })
+            .collect::<Vec<_>>();
+        self.scanned_inputs = Some(json!({
+            "sourceRevision": source_revision,
+            "compiledGithubSha": option_env!("GITHUB_SHA"),
+            "fixtureRoot": fixture_root,
+            "selectedRoots": selected,
+            "materializedFiles": files,
+        }));
     }
 
     pub(super) fn complete(
@@ -85,6 +126,7 @@ impl FailureReceipt {
             "fixture": { "id": self.fixture_id, "revision": self.revision, "injectedFile": self.injected_file },
             "budget": self.budget, "budgetScale": self.budget_scale,
             "fileCount": self.file_count, "lanes": lanes,
+            "scannedInputs": self.scanned_inputs,
             "nativeProgramCount": null, "nativeStartupCpu": null,
         });
         fs::create_dir_all(&self.output_dir)?;

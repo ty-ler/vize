@@ -134,11 +134,24 @@ fn vben_batch_incremental_session_reuses_exact_materialized_delta() {
         budget_scale,
     );
     failure.begin(0);
+    let source_revision = git_revision(&repo_root);
     let cold_started = Instant::now();
     let vue_paths = collect_vue_paths(&fixture_root);
     checker
         .scan_paths(&vue_paths)
         .expect("Tier-L scan should succeed");
+    failure.scanned_inputs(
+        &fixture_root,
+        &source_revision,
+        &vue_paths,
+        checker.virtual_files().into_iter().map(|file| {
+            (
+                file.original_path.as_path(),
+                file.virtual_path.as_path(),
+                file.content.as_str(),
+            )
+        }),
+    );
     assert_eq!(
         checker
             .virtual_files()
