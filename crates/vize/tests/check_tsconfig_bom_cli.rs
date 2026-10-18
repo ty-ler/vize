@@ -102,10 +102,15 @@ fn capture_malformed(name: &str, actual: &Value) {
     }
 }
 
-fn expected_malformed(root: &Path, forced_color: bool) -> Value {
+fn expected_malformed(root: &Path, group: &str, forced_color: bool) -> Value {
     // #9334 rejects an invalid selected project before input collection. Keep
     // the original packets in MALFORMED; author this successor independently
     // from the current subprocess response, including its complete JSON bytes.
+    let malformed_source = if group == "extended" {
+        root.join("configs/base.json")
+    } else {
+        root.join("tsconfig.json")
+    };
     let prefix = if forced_color {
         "\x1b[31mError:\x1b[0m"
     } else {
@@ -117,7 +122,7 @@ fn expected_malformed(root: &Path, forced_color: bool) -> Value {
         "stderr": cstr!(
             "{prefix} Failed to resolve TypeScript configuration `{}`: Configuration error: cannot parse tsconfig {}: JSON parse error: EOF while parsing a value at line 1 column 20\n",
             root.join("tsconfig.json").display(),
-            root.join("tsconfig.json").display()
+            malformed_source.display()
         ),
     })
 }
@@ -235,7 +240,7 @@ fn malformed_plain_and_bom_configs_report_whole_early_root_admission_failure() {
                 capture_malformed("malformed-runtime.json", &json!(actual));
                 assert_eq!(
                     output,
-                    expected_malformed(&root, false),
+                    expected_malformed(&root, group, false),
                     "{group}/{variant}/explicit={explicit}"
                 );
             }
@@ -284,7 +289,7 @@ fn malformed_whole_packets_obey_controlled_plain_and_forced_color_policies() {
                     capture_malformed("malformed-color-runtime.json", &json!(actual));
                     assert_eq!(
                         forced,
-                        expected_malformed(&root, true),
+                        expected_malformed(&root, group, true),
                         "{group}/{variant}/{explicit}/{overrides:?}"
                     );
                     let controlled = packet(plain_output(&mut command));
@@ -292,7 +297,7 @@ fn malformed_whole_packets_obey_controlled_plain_and_forced_color_policies() {
                     capture_malformed("malformed-color-runtime.json", &json!(actual));
                     assert_eq!(
                         controlled,
-                        expected_malformed(&root, false),
+                        expected_malformed(&root, group, false),
                         "{group}/{variant}/{explicit}/{overrides:?}"
                     );
                 }
