@@ -71,7 +71,13 @@ async function loadFormatter(roots) {
       importFromRoots("prettier/plugins/estree", roots),
       importFromRoots("prettier/plugins/typescript", roots),
     ]);
-    return { prettier, parserBabel, parserEstree, parserTypescript };
+    const exportedApi = (module, name) => (name in module ? module : (module.default ?? module));
+    return {
+      prettier: exportedApi(prettier, "format"),
+      parserBabel: exportedApi(parserBabel, "parsers"),
+      parserEstree: exportedApi(parserEstree, "printers"),
+      parserTypescript: exportedApi(parserTypescript, "parsers"),
+    };
   } catch {
     return null;
   }

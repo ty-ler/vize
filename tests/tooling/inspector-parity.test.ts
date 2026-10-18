@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import {
   chmodSync,
+  copyFileSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -295,4 +299,102 @@ test("fixed Gitlink authority rejects original deletion, rename, byte drift and 
       else process.env[key] = previous[key];
     }
   }
+});
+
+test("Inspector formats real CommonJS Prettier output in both complete target routes", async (t) => {
+  const root = realpathSync(mkdtempSync(path.join(tmpdir(), "inspector-commonjs-")));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const require = createRequire(new URL("../package.json", import.meta.url));
+  const packageFile = require.resolve("prettier/package.json");
+  const packageBytes = readFileSync(packageFile);
+  const version = JSON.parse(packageBytes.toString("utf8")).version;
+  const prettierRoot = path.join(root, "node_modules/prettier");
+  mkdirSync(path.join(prettierRoot, "plugins"), { recursive: true });
+  writeFileSync(path.join(prettierRoot, "package.json"), packageBytes);
+  const providers = ["standalone", "plugins/babel", "plugins/estree", "plugins/typescript"].map(
+    (entry) => {
+      const file = require.resolve(`prettier/${entry}`);
+      const bytes = readFileSync(file);
+      copyFileSync(file, path.join(prettierRoot, `${entry}.js`));
+      return { specifier: `prettier/${entry}`, file, bytes };
+    },
+  );
+  const prettier = require("prettier/standalone");
+  const estree = require("prettier/plugins/estree");
+  const embedded = readFileSync(
+    new URL("../../crates/vize/src/commands/inspector/official_compiler.ts", import.meta.url),
+    "utf8",
+  );
+  for (const target of ["dom", "ssr"]) {
+    for (const parser of ["babel", "typescript"]) {
+      const typescript = parser === "typescript";
+      const raw = typescript ? "const answer:number=1" : "const answer={value:1}";
+      const expected = typescript
+        ? "const answer: number = 1;\n"
+        : "const answer = { value: 1 };\n";
+      const source = typescript
+        ? '<script setup lang="ts">const answer:number=1</script><template>{{answer}}</template>'
+        : "<script setup>const answer={value:1}</script><template>{{answer.value}}</template>";
+      const directory = path.join(root, `${target}-${parser}`);
+      const input = JSON.stringify({
+        target,
+        moduleRoot: fileURLToPath(new URL("../", import.meta.url)),
+        files: [{ path: "Original.vue", source, vizeCode: raw }],
+      });
+      const result = spawnSync(process.execPath, ["--input-type=module", "-e", embedded], {
+        cwd: root,
+        env: { ...process.env, VIZE_INSPECTOR_CAPTURE_DIR: directory },
+        input,
+        encoding: "utf8",
+        timeout: 30_000,
+      });
+      assert.ifError(result.error);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.signal, null);
+      assert.equal(result.stderr, "");
+      const report = JSON.parse(result.stdout);
+      assert.equal(report.files.length, 1);
+      const file = report.files[0];
+      assert.equal(file.path, "Original.vue");
+      assert.equal(file.parser, parser);
+      assert.equal(file.official.error, null);
+      assert.deepEqual(file.official.warnings, []);
+      assert.equal(file.vizeFormattedCode, expected);
+      assert.notEqual(file.official.formattedCode, file.official.code);
+      assert.equal(
+        file.official.formattedCode,
+        await prettier.format(file.official.code, {
+          parser,
+          plugins: [require(`prettier/plugins/${typescript ? "typescript" : "babel"}`), estree],
+          semi: true,
+          singleQuote: false,
+          printWidth: 100,
+        }),
+      );
+      assert.equal(readFileSync(path.join(directory, "input.json"), "utf8"), input);
+      const receipt = JSON.parse(readFileSync(path.join(directory, "receipt.json"), "utf8"));
+      assert.deepEqual(receipt.pendingImports, []);
+      assert.equal(receipt.formatEvents.length, 2);
+      assert.ok(receipt.formatEvents.every((event: any) => event.status === "formatted"));
+      for (const provider of providers) {
+        const loaded = receipt.imports.find(
+          (entry: any) => entry.specifier === provider.specifier && entry.status === "loaded",
+        );
+        assert.ok(loaded);
+        assert.equal(loaded.package.name, "prettier");
+        assert.equal(loaded.package.version, version);
+        assert.equal(loaded.root, root);
+        assert.equal(
+          loaded.image.sha256,
+          createHash("sha256").update(provider.bytes).digest("hex"),
+        );
+        assert.deepEqual(
+          readFileSync(path.join(directory, loaded.image.retainedBytes)),
+          provider.bytes,
+        );
+      }
+    }
+  }
+  for (const provider of providers) assert.deepEqual(readFileSync(provider.file), provider.bytes);
+  assert.deepEqual(readFileSync(packageFile), packageBytes);
 });
