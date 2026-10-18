@@ -65,6 +65,7 @@
     "naive-ui": "2.44.1",
     "pixelmatch": "7.2.0",
     "pngjs": "catalog:content",
+    "prettier": "catalog:repo-tooling",
     "primevue": "4.5.5",
     "pug": "catalog:pug-oracle",
     "quasar": "2.19.3",

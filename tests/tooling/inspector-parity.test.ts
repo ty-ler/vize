@@ -115,6 +115,30 @@ test("Inspector policy admission proves disjointness and refuses possibly exclud
   assert.throws(() => assertInspectorPolicyDisjoint("*.log", ["app/cache.log/Child.vue"]));
 });
 
+test("Inspector policy proves literal suffixes and required path components without ignoring matches", () => {
+  const members = ["app/App.vue", "app/nested/Child.vue"];
+  assertInspectorPolicyDisjoint("*~\n*swp\n*swo\n*storybook.log\n**/__screenshots__/**\n", members);
+  assertInspectorPolicyDisjoint("**/generated-assets/**\n*.backup-copy\n", members);
+  for (const [policy, member] of [
+    ["*~", "app~/Child.vue"],
+    ["*swp", "app/tempswp/Child.vue"],
+    ["*storybook.log", "app/mystorybook.log/Child.vue"],
+    ["**/__screenshots__/**", "app/__screenshots__/Shot.vue"],
+    ["**/generated-assets/**", "generated-assets/App.vue"],
+    ["**/Child.vue", "Child.vue"],
+    ["**/Child.vue", "app/nested/Child.vue"],
+    ["app/**", "app/nested/Child.vue"],
+    ["*.backup-copy", "app/archive.backup-copy/Child.vue"],
+    ["**/{absent,app}/**", "app/App.vue"],
+    ["**/[a]pp/**", "app/App.vue"],
+    ["**/a?p/**", "app/App.vue"],
+  ])
+    assert.throws(
+      () => assertInspectorPolicyDisjoint(policy, [member]),
+      /may exclude original input/,
+    );
+});
+
 test("fixed Gitlink authority rejects original deletion, rename, byte drift and unknown policies", (t) => {
   const repository = realpathSync(mkdtempSync(path.join(tmpdir(), "inspector-fixed-world-")));
   t.after(() => rmSync(repository, { recursive: true, force: true }));

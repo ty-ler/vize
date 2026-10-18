@@ -83,7 +83,12 @@ export function assertInspectorPolicyDisjoint(policy: string, candidates: readon
     );
     const prefix = pattern.split(/[?*[\]{}]/, 1)[0];
     const literal = prefix === pattern;
-    const suffix = /^\*\.[A-Za-z0-9._-]+$/.test(pattern) ? pattern.slice(1) : null;
+    const suffix = /^\*[^/?*[\]{}]+$/.test(pattern) ? pattern.slice(1) : null;
+    // Every literal component is necessary even when ** spans zero or more directories.
+    const required =
+      pattern.includes("/") && !/[?[\]{}]/.test(pattern)
+        ? pattern.split("/").filter((part) => part && !part.includes("*"))
+        : [];
     assert.ok(
       candidates.every((candidate) => {
         const parts = candidate.split("/");
@@ -92,6 +97,7 @@ export function assertInspectorPolicyDisjoint(policy: string, candidates: readon
             ? candidate !== pattern && !candidate.startsWith(`${pattern}/`)
             : !parts.includes(pattern);
         if (suffix) return !parts.some((part) => part.endsWith(suffix));
+        if (required.some((part) => !parts.includes(part))) return true;
         return (
           Boolean(prefix) &&
           (anchored
