@@ -1,4 +1,0 @@
-<script setup lang="ts">
-import { ref as chosen } from '@vue/runtime-core'
-</script>
-<template><div>ok</div></template>

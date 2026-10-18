@@ -1,5 +1,0 @@
-<script setup lang="ts">
-// 日本語
-export const answer = 42;
-export default {};
-</script>

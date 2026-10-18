@@ -1,7 +1,0 @@
-<script lang="ts">
-export interface WidgetProps { count: number }
-</script>
-<script setup lang="ts">
-defineProps<WidgetProps>()
-</script>
-<template><span /></template>

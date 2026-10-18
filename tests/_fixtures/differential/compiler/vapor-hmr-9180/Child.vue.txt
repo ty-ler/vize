@@ -1,6 +1,0 @@
-<script setup>
-defineProps({ label: String });
-const revision = 'first';
-</script>
-
-<template><p class="child">{{ label }}:{{ revision }}</p></template>

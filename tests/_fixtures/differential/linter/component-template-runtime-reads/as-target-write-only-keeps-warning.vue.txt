@@ -1,4 +1,0 @@
-<script setup lang="ts">
-import Child from "./Child.vue";
-</script>
-<template><Control @click="(Child as unknown) = value" /></template>
