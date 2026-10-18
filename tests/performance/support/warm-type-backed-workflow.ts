@@ -182,8 +182,8 @@ if (process.argv[2] === "prepare") {
           : pair
             ? "Immutable ancestor/head source qualification only; six named Corsa registry-to-owned package identities with complete source locks and metadata, unchanged external graph/runtime/toolchain, identical shipping release recipe and original400 protocol. No release-cut, published-artifact or source-effect attribution credit."
             : harnessOnly
-              ? "Same production source; closed reviewed harness-only delta and unchanged original inputs/locks. Qualification only, no performance or source-effect gain."
-              : "Actual common ancestor and current source, only owned prepared-surface, readiness-ack, shared editor reference-options, document-batch transfer, streamed workspace-symbol producer, event navigation/rename ownership or exact authenticated path-host move delta or exact authenticated timing-observer host move delta or complete authenticated default-migration slice; one worker, identical release recipe, original400 inputs and current locked runtime",
+              ? "Same production source and unchanged original workload inputs/locks; harness-only observation. No closed historical source-admission, performance gain or source-effect attribution credit."
+              : "Source observation at actual common ancestor and current head; one worker, identical release recipe, original400 inputs, source locks and one recorded native runtime. No closed historical source-admission, performance gain or source-effect attribution credit.",
       },
       null,
       2,

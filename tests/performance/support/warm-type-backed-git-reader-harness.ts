@@ -1,17 +1,3 @@
-import { gitBodyDigest } from "./warm-type-backed-path-host.ts";
-import {
-  gitReaderIncomingGuard,
-  qualifyGitReaderIncomingHarness,
-} from "./warm-type-backed-git-reader-incoming.ts";
-import {
-  gitReaderNoDeepGuard,
-  qualifyGitReaderNoDeepHarness,
-} from "./warm-type-backed-git-reader-nodeep.ts";
-import {
-  gitReaderSetupGuard,
-  qualifyGitReaderSetupHarness,
-} from "./warm-type-backed-git-reader-setup.ts";
-
 export const gitReaderReviewedSource = "7e5630229d0d34c8b25e423544bad275fb67b925";
 export const gitReaderOriginalSource = "5459e40a23ca7e647ace8ebd20e1fe00c9294437";
 export const gitReaderHarnessPairs: ReadonlyArray<readonly [string, string | null, string | null]> =
@@ -70,55 +56,4 @@ export function qualifyGitReaderHarness(
     completeBodyPairs: gitReaderHarnessPairs.length,
     files: required,
   };
-}
-
-/** Keep every inherited classifier and refusal when this exact repair is absent. */
-export function gitReaderHarness(
-  changed: readonly string[],
-  alreadyQualified: ReadonlySet<string>,
-  root: string,
-  before: string,
-  after: string,
-): ReadonlySet<string> {
-  const inherited = new Set([
-    ...alreadyQualified,
-    ...changed.filter((file) =>
-      /^tests\/performance\/support\/warm-type-backed-[a-z-]+\.ts$/u.test(file),
-    ),
-  ]);
-  const qualified = qualifyGitReaderHarness(changed, inherited, (side, file) =>
-    gitBodyDigest(root, side === "before" ? before : after, file),
-  );
-  const incoming =
-    !qualified &&
-    gitBodyDigest(root, before, gitReaderIncomingGuard) === null &&
-    gitBodyDigest(root, after, gitReaderIncomingGuard) ===
-      "931d2770c0f1fafe5465fec409e720918bf8e71b0df5e759d61feec81baa0fba"
-      ? qualifyGitReaderIncomingHarness(changed, inherited, (side, file) =>
-          gitBodyDigest(root, side === "before" ? before : after, file),
-        )
-      : null;
-  const nodeep =
-    !qualified &&
-    !incoming &&
-    gitBodyDigest(root, before, gitReaderNoDeepGuard) === null &&
-    gitBodyDigest(root, after, gitReaderNoDeepGuard) ===
-      "ad25378cc7272fb2fde533d6a6796a9462dec3d3e157217abef13a5a69cf6a96"
-      ? qualifyGitReaderNoDeepHarness(changed, inherited, (side, file) =>
-          gitBodyDigest(root, side === "before" ? before : after, file),
-        )
-      : null;
-  const setup =
-    !qualified &&
-    !incoming &&
-    !nodeep &&
-    gitBodyDigest(root, before, gitReaderSetupGuard) === null &&
-    gitBodyDigest(root, after, gitReaderSetupGuard) ===
-      "16fa61566684e0aa675186be50aa6405c3c88d223c7ad19a1d3747bf4cfad5e6"
-      ? qualifyGitReaderSetupHarness(changed, inherited, (side, file) =>
-          gitBodyDigest(root, side === "before" ? before : after, file),
-        )
-      : null;
-  const accepted = qualified ?? incoming ?? nodeep ?? setup;
-  return accepted ? new Set([...alreadyQualified, ...accepted.files]) : alreadyQualified;
 }
