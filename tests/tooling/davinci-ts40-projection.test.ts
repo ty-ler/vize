@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
@@ -186,5 +188,168 @@ test("exact Content Mapper stress retains provider and whole native streams befo
       steps.indexOf(stress) + 1,
       steps.indexOf(stress) + 2,
     ],
+  );
+});
+
+test("native EOF observer admits only each complete authenticated provider and initialization pair", () => {
+  const fixtures = path.join(root, "crates/vize_maestro/tests/fixtures");
+  const oldContract = JSON.parse(
+    fs.readFileSync(path.join(fixtures, "native-proxy-initialize.json"), "utf8"),
+  ) as Record<string, unknown>;
+  const currentContract = {
+    ...oldContract,
+    serverInfo: { name: "typescript", version: "7.1.0-dev" },
+  };
+  const canonical = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value !== null && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value)
+          .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+          .map(([key, item]) => [key, canonical(item)]),
+      );
+    }
+    return value;
+  };
+  // Whole actual d6c initialization from run 39124809180, not a reduced capability vector.
+  assert.equal(
+    createHash("sha256")
+      .update(JSON.stringify(canonical(currentContract)))
+      .digest("hex"),
+    "88c1fd90c52b92e6f30cbeddc40efec0438bdaa2884b97283986ec9e6be82c4f",
+  );
+  const digests = [
+    "4f2de678286401759b3fb4475bafe35b8f32b4b3a07d92642bbf37eadc9b34a4",
+    "a82f731365ad69d5c4c15f5e18fba4584bf3b7b839960172a76c3462b5114bf2",
+    "77dd575e73107c00cc95cbccc3764ab7210089b5634f75e219b61632bd5d230b",
+    "0".repeat(64),
+  ];
+  type Row = {
+    digest: string;
+    result: unknown;
+    initialized: number;
+    acknowledged?: number;
+    translated?: number;
+    ack?: unknown;
+    exit?: unknown;
+  };
+  const rows: Row[] = [];
+  for (const [index, digest] of digests.entries()) {
+    for (const [profile, result] of [oldContract, currentContract].entries()) {
+      rows.push({
+        digest,
+        result,
+        initialized: Number(index === 2 ? profile === 1 : index < 2 && profile === 0),
+      });
+    }
+  }
+  const replaceAt = (
+    value: unknown,
+    route: string[],
+    replacement: unknown,
+    remove: boolean,
+  ): unknown => {
+    if (route.length === 0) return replacement;
+    const copy = structuredClone(value) as Record<string, unknown>;
+    let parent = copy;
+    for (const key of route.slice(0, -1)) parent = parent[key] as Record<string, unknown>;
+    const key = route.at(-1)!;
+    if (remove) delete parent[key];
+    else parent[key] = replacement;
+    return copy;
+  };
+  const collect = (value: unknown, route: string[] = []): string[][] => [
+    route,
+    ...(value !== null && typeof value === "object"
+      ? Object.entries(value).flatMap(([key, item]) => collect(item, [...route, key]))
+      : []),
+  ];
+  for (const [profile, contract] of [oldContract, currentContract].entries()) {
+    const digest = digests[profile === 0 ? 0 : 2];
+    const routes = collect(contract);
+    assert.ok(routes.length > 80);
+    for (const route of routes) {
+      rows.push({ digest, result: replaceAt(contract, route, null, false), initialized: 0 });
+      if (route.length)
+        rows.push({ digest, result: replaceAt(contract, route, null, true), initialized: 0 });
+    }
+    rows.push({ digest, result: { ...contract, extra: true }, initialized: 0 });
+    for (const ack of [
+      { jsonrpc: "2.0", id: "12", result: null },
+      { jsonrpc: "2.0", id: 12, result: false },
+      { jsonrpc: "2.0", id: 12, error: { code: -1, message: "whole refusal" } },
+    ])
+      rows.push({ digest, result: contract, initialized: 1, acknowledged: 0, translated: 0, ack });
+    rows.push({
+      digest,
+      result: contract,
+      initialized: 1,
+      translated: 0,
+      exit: { jsonrpc: "2.0", method: "exit", params: null },
+    });
+  }
+  const harness = String.raw`use strict;
+use warnings;
+use JSON::PP;
+my ($fixture, $contract) = @ARGV;
+require $fixture;
+my $json = JSON::PP->new->utf8->canonical;
+my $rows = $json->decode(do { local $/; <STDIN> });
+my @out;
+sub frame { my $body = $json->encode($_[0]); return 'Content-Length: '.length($body)."\r\n\r\n".$body; }
+for my $row (@$rows) {
+    no warnings qw(redefine once);
+    local *NativeProxyLifecycle::file_identity = sub { return { sha256 => $row->{digest}, stat => [1] }; };
+    local *NativeProxyLifecycle::process_identity = sub { return { pid => 71, birth => 91 }; };
+    my $p = NativeProxyLifecycle->new('/explicit-synthetic-image-seam', $contract);
+    for my $pair (
+        ['client', { jsonrpc => '2.0', id => 11, method => 'initialize', params => {} }],
+        ['server', { jsonrpc => '2.0', id => 11, result => $row->{result} }],
+        ['client', { jsonrpc => '2.0', id => 12, method => 'shutdown' }],
+        ['server', $row->{ack} // { jsonrpc => '2.0', id => 12, result => undef }],
+        ['client', $row->{exit} // { jsonrpc => '2.0', method => 'exit' }],
+    ) {
+        for my $f ($p->frames($pair->[0], frame($pair->[1]))) {
+            $pair->[0] eq 'client' ? $p->client(@$f, 71) : $p->server($f->[1], 71);
+        }
+    }
+    push @out, { candidate => $p->{candidate}, expected => $p->{expected},
+        initialized => $p->{initialized} // 0, acknowledged => $p->{acknowledged} // 0,
+        translated => $p->{translated}, errors => $p->{errors} };
+}
+print $json->encode(\@out);
+`;
+  const output = spawnSync(
+    "perl",
+    [
+      "-e",
+      harness,
+      path.join(fixtures, "native-proxy-lifecycle.pl"),
+      path.join(fixtures, "native-proxy-initialize.json"),
+    ],
+    {
+      input: JSON.stringify(rows),
+      encoding: "utf8",
+      maxBuffer: 4 * 1024 * 1024,
+    },
+  );
+  assert.equal(output.status, 0, output.stderr);
+  assert.equal(output.signal, null);
+  assert.equal(output.stderr, "");
+  const actual = JSON.parse(output.stdout) as unknown[];
+  assert.equal(actual.length, rows.length);
+  assert.deepEqual(
+    actual,
+    rows.map((row) => {
+      const known = row.digest !== digests[3];
+      return {
+        candidate: Number(known),
+        expected: known ? (row.digest === digests[2] ? currentContract : oldContract) : null,
+        initialized: row.initialized,
+        acknowledged: known ? (row.acknowledged ?? 1) : 0,
+        translated: row.translated ?? row.initialized,
+        errors: [],
+      };
+    }),
   );
 });
