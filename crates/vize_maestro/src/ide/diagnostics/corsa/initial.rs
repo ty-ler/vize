@@ -124,6 +124,13 @@ impl DiagnosticService {
             .map_err(|error| (Arc::clone(&bridge), error))?;
         #[cfg(test)]
         state.record_editor_project_open("diagnostics", uri, &content, &opened);
+        if std::env::var_os("VIZE_TRACE_EDITOR_PREPARATION").as_deref()
+            == Some(std::ffi::OsStr::new("1"))
+        {
+            tracing::info!(target: "vize_editor_preparation", phase = "initial_api_read",
+                event = "host_request_binding", host_uri = %uri,
+                request_uri = %opened.request_uri, revision);
+        }
         let request = bridge
             .prepare_initial_api_diagnostics(&opened.request_uri)
             .await

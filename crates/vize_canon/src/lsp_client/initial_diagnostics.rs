@@ -51,7 +51,7 @@ impl CorsaProjectClient {
         }
         let document_uri = self.session_document_uri(uri);
         let session = self.project_session()?;
-        Ok(Some(InitialDiagnosticsRead {
+        let read = InitialDiagnosticsRead {
             client: session.client().clone(),
             snapshot: session.snapshot_lease(),
             project: session.project().clone(),
@@ -64,7 +64,9 @@ impl CorsaProjectClient {
             external_document_uris: self.external_document_uris.clone(),
             file_supported: self.supports_file_diagnostics_api(),
             project_supported: self.supports_project_diagnostics_api(),
-        }))
+        };
+        read.trace_route("capture", "prepared", None);
+        Ok(Some(read))
     }
 
     pub(crate) fn replace_initial_diagnostics_cache(
@@ -106,14 +108,21 @@ impl InitialDiagnosticsRead {
     /// its awaiting caller cancels. Results never touch the mutable client.
     pub(crate) fn run(&self) -> Result<Option<Vec<Diagnostic>>, String> {
         if self.file_supported {
+            self.trace_route("file", "entered", None);
             match block_on(self.client.get_diagnostics_for_file(
                 self.snapshot.handle.clone(),
                 self.project.id.clone(),
                 uri_document_identifier(self.document_uri.as_str()),
             )) {
-                Ok(response) => return Ok(Some(self.remap(flatten_file_diagnostics(&response)))),
-                Err(CorsaError::Unsupported(_)) => {}
+                Ok(response) => {
+                    self.trace_route("file", "complete", None);
+                    return Ok(Some(self.remap(flatten_file_diagnostics(&response))));
+                }
+                Err(error @ CorsaError::Unsupported(_)) => {
+                    self.trace_route("file", "unsupported", Some(&error));
+                }
                 Err(error) => {
+                    self.trace_route("file", "failed", None);
                     return Err(cstr!("Failed to request Corsa file diagnostics: {error}"));
                 }
             }
@@ -122,6 +131,7 @@ impl InitialDiagnosticsRead {
         // behalf of the retired caller, or switch it to an editor transport.
         crate::corsa_bridge::native_operation::checkpoint()?;
         if self.project_supported {
+            self.trace_route("project", "entered", None);
             match block_on(
                 self.client.get_diagnostics_for_project(
                     self.snapshot.handle.clone(),
@@ -129,6 +139,7 @@ impl InitialDiagnosticsRead {
                 ),
             ) {
                 Ok(response) => {
+                    self.trace_route("project", "complete", None);
                     let diagnostics = response
                         .files
                         .iter()
@@ -137,15 +148,35 @@ impl InitialDiagnosticsRead {
                         .unwrap_or_default();
                     return Ok(Some(self.remap(diagnostics)));
                 }
-                Err(CorsaError::Unsupported(_)) => {}
+                Err(error @ CorsaError::Unsupported(_)) => {
+                    self.trace_route("project", "unsupported", Some(&error));
+                }
                 Err(error) => {
+                    self.trace_route("project", "failed", None);
                     return Err(cstr!(
                         "Failed to request Corsa project diagnostics: {error}"
                     ));
                 }
             }
         }
+        self.trace_route("read", "unsupported", None);
         Ok(None)
+    }
+
+    fn trace_route(&self, route: &str, event: &str, error: Option<&CorsaError>) {
+        if crate::corsa_bridge::preparation_trace::enabled() {
+            tracing::info!(target: "vize_editor_preparation", phase = "initial_api_read",
+                route, event, logical_uri = %self.uri, request_uri = %self.document_uri,
+                project = self.project.id.as_str(), config = self.project.config_file_name.as_str(),
+                snapshot = self.snapshot.handle.as_str(),
+                capability_endpoint = self.capabilities.runtime.capability_endpoint,
+                raw_file = self.capabilities.diagnostics.file,
+                raw_project = self.capabilities.diagnostics.project,
+                raw_snapshot = self.capabilities.diagnostics.snapshot,
+                raw_overlay = self.capabilities.overlay.update_snapshot_overlay_changes,
+                effective_file = self.file_supported, effective_project = self.project_supported,
+                sdk_error = ?error);
+        }
     }
 
     fn remap(&self, diagnostics: Vec<Diagnostic>) -> Vec<Diagnostic> {

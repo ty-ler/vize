@@ -153,6 +153,7 @@ impl MaestroServer {
         .await
         {
             Ok(Some(mut prepared)) => {
+                trace_initial_api(world, "prepared", None);
                 if !world.owns_bridge(&self.state, &prepared.bridge) {
                     return None;
                 }
@@ -168,6 +169,7 @@ impl MaestroServer {
                 if !world.is_current(&self.state) {
                     return None;
                 }
+                trace_initial_api(world, "legacy_fallback", Some("prepare_none"));
                 let diagnostics = DiagnosticService::collect_async_from_sync(
                     &self.state,
                     &world.uri,
@@ -177,6 +179,7 @@ impl MaestroServer {
                 return world.is_current(&self.state).then_some(diagnostics);
             }
             Err((bridge, error)) => {
+                trace_initial_api(world, "prepare_failed", None);
                 drop(scope);
                 InitialRead::Failed(bridge, error)
             }
@@ -255,8 +258,12 @@ impl MaestroServer {
                     return None;
                 }
                 match outcome {
-                    Ok(InitialApiDiagnosticsOutcome::Stale) => return None,
+                    Ok(InitialApiDiagnosticsOutcome::Stale) => {
+                        trace_initial_api(world, "stale", None);
+                        return None;
+                    }
                     Ok(InitialApiDiagnosticsOutcome::Complete(native)) => {
+                        trace_initial_api(world, "complete", None);
                         let diagnostics = prepared.complete(native);
                         if prepared.revision != world.revision
                             || !world.owns_bridge(&self.state, &prepared.bridge)
@@ -272,6 +279,7 @@ impl MaestroServer {
                         diagnostics
                     }
                     Ok(InitialApiDiagnosticsOutcome::Unsupported) => {
+                        trace_initial_api(world, "legacy_fallback", Some("unsupported"));
                         // Preserve the runtime's existing unsupported policy.
                         DiagnosticService::collect_async_from_sync(
                             &self.state,
@@ -281,6 +289,7 @@ impl MaestroServer {
                         .await
                     }
                     Ok(InitialApiDiagnosticsOutcome::Failed(error)) | Err(error) => {
+                        trace_initial_api(world, "recovery", None);
                         DiagnosticService::recover_initial_api_diagnostics(
                             &self.state,
                             &world.uri,
@@ -307,5 +316,15 @@ impl MaestroServer {
             }
         };
         world.is_current(&self.state).then_some(diagnostics)
+    }
+}
+
+fn trace_initial_api(world: &InitialApiWorld, event: &str, reason: Option<&str>) {
+    if std::env::var_os("VIZE_TRACE_EDITOR_PREPARATION").as_deref()
+        == Some(std::ffi::OsStr::new("1"))
+    {
+        tracing::info!(target: "vize_editor_preparation", phase = "initial_api_read",
+            event, reason, host_uri = %world.uri, version = world.version,
+            revision = world.revision);
     }
 }
