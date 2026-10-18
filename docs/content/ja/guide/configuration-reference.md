@@ -26,6 +26,10 @@ Vite 内の相対パスは、選択された Vite の `root` を基準にしま�
 はコマンドの作業ディレクトリを基準にします。直接渡したプラグインのオプションと
 明示的なエディタの機能スイッチは、共有設定を上書きします。
 
+Rust CLI の `check`、`lint`、`lsp`、`fmt` も、コマンドの設定を上記のファイル名と優先順位で読み込みます。
+
+<span id="typescript-設定"></span>
+
 ## TypeScript の設定
 
 ```ts
@@ -47,6 +51,8 @@ export default defineConfig({
 `musea`、`experimentals`、`dialect`、`name`、`entries` を受け付けます。ネイティブのオプション名を使い、未知のキーは
 エラーになります。コンパイルモードは[コンパイラのリファレンス](./compiler-configuration-reference.md)、
 Lint の型付きオプションは[ルールオプション](../rules/options.md)を参照してください。
+
+<span id="vue-タイプの解決"></span>
 
 ## Vue の型解決
 
@@ -109,6 +115,8 @@ TypeScript 標準の `extends`（パッケージと配列の形式を含む）�
 
 Vue 2.7・Nuxt 2 への対応は、別途 `legacy` ビルドで有効にする機能です。`vue.typeChecker.legacyVue2` によって Nuxt 2 のテンプレートグローバルが追加されます。
 
+<span id="試験的なフラット-エントリ"></span>
+
 ## 実験的なフラットエントリ
 
 モノレポでは、パッケージごとの TypeScript プロジェクトと Vite 設定を使います。`vue.entries` には `basePath`、`files`、`ignores`、`linter` を指定でき、一致する Vue Lint の設定を上書きします。ネイティブの共有設定は Vite オブジェクトの `vue:` に置き、配列を Vite 設定としてエクスポートしないでください。スコープ別のコンパイラ設定が必要な JavaScript 統合では、プラグインのインライン `config` を使います。
@@ -144,6 +152,11 @@ export default defineConfig(vpConfig).withVue(vueConfig);
 
 TypeScript 標準の `extends` と Vite の設定関数は引き続き利用できます。
 
+## コンパイラの詳細
+
+[コンパイラオプションと構文](./compiler-configuration-reference.md)に全オプション、
+テンプレート構文、JSX/TSX の出力モード、単独 HTML の方言検出をまとめています。
+
 ## 静的解析のオプション
 
 Vue Lint は `vue.linter`、言語サーバーは `vue.languageServer` に設定します。
@@ -151,6 +164,8 @@ Vue のルールは `vue.linter.rules`、Oxlint のルールは従来どおり `
 クロスファイル解析と型付き Lint は[Lint の実行](./lint-execution.md)、
 型付きルールオプションは[ルールオプション](../rules/options.md)を参照してください。
 未知のルールオプションはエラーになります。
+
+<span id="lint-rule-options"></span>
 
 一部のルールは、`vue.linter.ruleOptions` で型付きの設定を受け取ります。全項目は
 [ルール オプション](../rules/options.md)を参照してください。診断の重大度は

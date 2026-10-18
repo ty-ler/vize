@@ -146,3 +146,5 @@ TypeScript 標準の `extends` とプロジェクトの `references` は引き�
 
 > [!NOTE]
 > CLI とエディターは既存の Vite・TypeScript プロジェクト設定を読み込みます。廃止された専用設定は移行してから削除してください。
+
+[共有設定のリファレンス](./configuration-reference.md)に、検索規則、Vite・TypeScript 設定、スコープ別の設定、Vue の型解決、LSP・Musea の設定をまとめています。コンパイラの設定と構文は[コンパイラのリファレンス](./compiler-configuration-reference.md)、実験的な機能は[実験的な機能のガイド](./experimentals.md)を参照してください。

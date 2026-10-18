@@ -7,7 +7,7 @@ title: Vue の設定を共有する
 # Vue の設定を共有する
 
 ネイティブの Vue 設定を `vite.config.ts` の `vue` にまとめます。コンパイラ、
-CLI、エディタで同じオプション名を使えます。ビルド、型チェック、Lint、整形を
+CLI、エディターで同じオプション名を使えます。ビルド、型チェック、lint、整形を
 まとめて実行するには、[Vite+ 連携](./vite-plus.md)から始めてください。
 
 ## 設定を一つにまとめる
@@ -31,8 +31,8 @@ export default defineConfig({
 `vue` では、ネイティブの `compiler`、`typeChecker`、`linter`、`formatter`、
 `languageServer`、`globalTypes`、`files`、`ignores`、`basePath`、`lib` を使います。
 `version`、`vite`、`musea`、`experimentals`、`dialect`、`name`、`entries` も指定できます。コンパイラと整形のセクションには
-`enabled` はありません。型チェッカー、Linter、言語サーバーでは、ネイティブと
-同じ `enabled` を使えます。未知のキーを canonical な `vue` に置くとエラーになります。
+`enabled` はありません。型チェッカー、リンター、言語サーバーでは、ネイティブと
+同じ `enabled` を使えます。`vue` に未対応のキーを指定するとエラーになります。
 
 ## 既存の Vite+ 設定を使う
 
@@ -76,9 +76,9 @@ export default defineConfig({
 });
 ```
 
-canonical な entry に置けるのは、現在 `basePath`、`files`、`ignores`、`linter` だけです。
-ほかのセクションと `version` はプロジェクト全体に指定し、entry に置くとエラーになります。
-CLI のスコープ付き Lint は従来の動作を保ちます。エディタでのファイル単位のスコープ適用と、
+`vue.entries` の各エントリに指定できるのは、現在 `basePath`、`files`、`ignores`、`linter` だけです。
+ほかのセクションと `version` はプロジェクト全体に指定し、エントリに置くとエラーになります。
+CLI のスコープ別の lint は従来どおり動作します。エディターでのファイル単位のスコープ適用と、
 ほかのセクションのスコープ対応は未完了です。
 
 ## TypeScript プロジェクトの設定

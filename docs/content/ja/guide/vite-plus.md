@@ -3,6 +3,8 @@ title: Vite+ 統合
 description: vite.config.ts に Vue コンパイル・型チェック・lint・フォーマットをまとめる。
 ---
 
+<!-- Reviewed translation; source: guide/vite-plus.md; scope: complete document -->
+
 # Vite+ 統合
 
 Vite+ と Vize を1つの `vite.config.ts` で設定します。
@@ -18,7 +20,7 @@ import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
 export default defineConfig({});
 ```
 
-既存の Vue plugin の import と `vue()` を削除します。
+既存の Vue プラグインの import と `vue()` を削除します。
 [移行ガイド](./migration.md)にそのまま使える差分を記載しています。
 CLI、エディタ、統合タスクは `vite.config.*` と `tsconfig.json` を共有します。
 
@@ -121,11 +123,11 @@ Vize は Vue ファイル、Oxfmt はその他のファイルをフォーマッ�
 `fmt.ignorePatterns` は両方に適用されます。
 `vue.linter.enabled: false` でネイティブ lint を無効にできます。
 `lint.vue: false`・`fmt.vue: false` を使う場合は、対応する共有ネイティブ設定がツールを明示的に有効化しないようにします。
-`vue.compiler` を省略して `compiler: false` を指定すると、既存の Vue compiler plugin を保持します。
+`vue.compiler` を省略して `compiler: false` を指定すると、既存の Vue コンパイラプラグインを保持します。
 
 ## 次の設定
 
 - [移行](./migration.md) — 既存の import・plugin・script から置き換える。
 - [設定](./configuration.md) — 必要な設定場所を選ぶ。
 - [型宣言・共有設定・editor の詳細（英語）](../../guide/vite-plus.md) — `pack.vue`、fluent API と高度なオプション。
-- [エディター設定（英語）](../../guide/vite-plus-editor.md) — エディターと統合設定の役割。
+- [エディター設定](./vite-plus-editor.md) — エディターと統合設定の役割。
