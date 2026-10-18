@@ -18,6 +18,11 @@ on:
         required: false
         default: ""
         type: string
+      qualification_deadline:
+        description: Original absolute full-Check qualification deadline in Unix milliseconds
+        required: false
+        default: ""
+        type: string
       pinned:
         description: Publish an immutable source cut after a protected version integration
         required: false
@@ -356,12 +361,13 @@ jobs:
             npm/plugin-sdk
   candidate-preflight:
     needs: candidate
-    permissions: { actions: write, contents: read, issues: read, pull-requests: read }
+    permissions: { actions: read, contents: read, issues: read, pull-requests: read }
     uses: ./.github/workflows/release-preflight.yml
     with:
       release_pr: ${{ inputs.release_pr }}
       tag_name: ${{ inputs.tag_name }}
       pinned: ${{ inputs.pinned }}
+      qualification_deadline: ${{ inputs.qualification_deadline }}
   candidate-ready:
     name: Release candidate ready
     needs:
@@ -494,6 +500,7 @@ jobs:
         build-release-packages,
         release-npm-native,
         release-npm-cli,
+        release-npm-unplugin,
         smoke-release-packages,
         release-preflight,
       ]
@@ -590,7 +597,7 @@ jobs:
   release-npm-plugin-sdk:
     name: Release @vizejs/plugin-sdk to npm
     runs-on: ubuntu-24.04
-    needs: [build-release-packages, release-npm-native, smoke-release-packages, release-preflight]
+    needs: [build-release-packages, smoke-release-packages, release-preflight]
     timeout-minutes: 15
     environment: npm
     permissions: { contents: read, id-token: write }
@@ -651,7 +658,14 @@ jobs:
   release-npm-vite-plugin-musea:
     name: Release @vizejs/vite-plugin-musea to npm
     runs-on: ubuntu-24.04
-    needs: [build-release-packages, release-npm-native, smoke-release-packages, release-preflight]
+    needs:
+      [
+        build-release-packages,
+        release-npm-native,
+        release-npm-vite-plugin,
+        smoke-release-packages,
+        release-preflight,
+      ]
     timeout-minutes: 15
     environment: npm
     permissions: { contents: read, id-token: write }
@@ -681,7 +695,7 @@ jobs:
   release-npm-musea-nuxt:
     name: Release @vizejs/musea-nuxt to npm
     runs-on: ubuntu-24.04
-    needs: [build-release-packages, release-npm-native, smoke-release-packages, release-preflight]
+    needs: [build-release-packages, smoke-release-packages, release-preflight]
     timeout-minutes: 15
     environment: npm
     permissions: { contents: read, id-token: write }
@@ -719,7 +733,6 @@ jobs:
         release-npm-vite-plugin,
         release-npm-oxlint-plugin,
         release-npm-vite-plugin-musea,
-        release-npm-musea-nuxt,
         release-npm-nuxt-lint-config,
         release-npm-cli,
         smoke-release-packages,
@@ -897,28 +910,12 @@ jobs:
               ( cd "$(dirname "$artifact")" && sha256sum "$(basename "$artifact")" ) > "${artifact}.sha256"
             fi
           done
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with: { node-version-file: "package.json", package-manager-cache: false }
       - name: Sign release artifacts (keyless)
         env:
           COSIGN_YES: "true"
-        run: |
-          for artifact in \
-            cli-artifacts/*.tar.gz \
-            cli-artifacts/*.zip \
-            editor-extension-artifacts/editors/vscode/dist/*.vsix \
-            editor-extension-artifacts/*.tar.gz \
-            vize-${RELEASE_TAG_NAME}-cyclonedx.sbom.json \
-            vize-${RELEASE_TAG_NAME}-spdx.sbom.json; do
-            if [ -f "$artifact" ]; then
-              echo "Signing $artifact"
-              cosign sign-blob --yes \
-                --bundle "${artifact}.cosign.bundle" \
-                --output-certificate "${artifact}.pem" \
-                --output-signature "${artifact}.sig" \
-                "$artifact"
-            fi
-          done
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with: { node-version-file: "package.json", package-manager-cache: false }
+        run: node tools/support/release/sign_release_artifacts.ts "$RELEASE_TAG_NAME"
       - name: Generate notes for the exact published version range
         env:
           GH_TOKEN: ${{ github.token }}

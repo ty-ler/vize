@@ -470,7 +470,8 @@ mod tests {
             base.display()
         );
         let attempt = CompilerConfigurationSnapshot::capture_attempt(&app, Some(&config));
-        assert!(attempt.dependencies.contains(&base));
+        let expected_dependencies = vec![config.clone(), base.clone()];
+        assert_eq!(attempt.dependencies, expected_dependencies);
         for error in [
             attempt.outcome.err().unwrap(),
             snapshot_tsconfig_compiler_options(&app, &config).unwrap_err(),
@@ -484,7 +485,7 @@ mod tests {
         )
         .unwrap();
         let admitted = CompilerConfigurationSnapshot::capture(&app, Some(&config)).unwrap();
-        assert!(admitted.dependencies().contains(&base));
+        assert_eq!(admitted.dependencies(), expected_dependencies);
         assert_eq!(
             snapshot_tsconfig_compiler_options(&app, &config).unwrap(),
             serde_json::json!({"strict":true,"strictNullChecks":false})
