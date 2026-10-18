@@ -46,10 +46,11 @@ fn actual_native_compiler_kind_reads_match_whole_ts_and_generated_vue_pull_packe
     let config = root.join("tsconfig.json");
     let config_bytes = br#"{"compilerOptions":{"strict":true,"target":"ESNext","module":"ESNext","moduleResolution":"Bundler","types":[],"declaration":true,"noEmit":true},"files":["source.ts","View.vue.ts"]}"#;
     std::fs::write(&config, config_bytes).unwrap();
-    let script = "export const value: string = 1;\r\n";
+    let script = "/*😀\u{2028}\u{2029}*/ export const value: string = 1;\r\n";
     let source = root.join("source.ts");
     let host = root.join("View.vue");
-    let authored = "<script lang=\"ts\">\nexport const value: string = 1;\n</script>";
+    let authored =
+        "<script lang=\"ts\">\n/*😀\u{2028}\u{2029}*/ export const value: string = 1;\n</script>";
     let generated = generate_vue_document_virtual_ts(
         &host,
         authored,
@@ -110,6 +111,7 @@ fn actual_native_compiler_kind_reads_match_whole_ts_and_generated_vue_pull_packe
     )
     .unwrap();
     for (path, text) in [(&source, script), (&virtual_path, generated.code.as_str())] {
+        assert_eq!(text.match_indices("/*😀\u{2028}\u{2029}*/").count(), 1);
         let uri = path_to_file_uri(path);
         let actual = native_diagnostics::read(&client, &snapshot, project, &uri)
             .unwrap()
@@ -131,22 +133,55 @@ fn actual_native_compiler_kind_reads_match_whole_ts_and_generated_vue_pull_packe
         )
         .unwrap();
         assert_eq!(actual, legacy.full_document_diagnostic_report.items);
-        let identifier = text.find("value: string").unwrap();
-        let prefix = text.get(..identifier).unwrap();
-        let line = prefix.bytes().filter(|byte| *byte == b'\n').count();
-        let column = prefix
-            .rsplit_once('\n')
-            .map_or(prefix, |(_, last)| last)
-            .encode_utf16()
-            .count();
-        assert_eq!(
-            serde_json::to_value(&actual).unwrap(),
-            json!([{
-                "range":{"start":{"line":line,"character":column},"end":{"line":line,"character":column+5}},
-                "severity":1,"code":2322,"source":"ts",
-                "message":"Type 'number' is not assignable to type 'string'."
-            }])
-        );
+        let packet = |marker: &str, offset: usize, width: usize, code, severity, message: &str| {
+            let positions = text
+                .match_indices(marker)
+                .map(|(offset, _)| offset)
+                .collect::<Vec<_>>();
+            let [position] = positions.as_slice() else {
+                panic!("exactly one authored diagnostic marker required: {marker}")
+            };
+            let prefix = text.get(..position + offset).unwrap();
+            let line = prefix.bytes().filter(|byte| *byte == b'\n').count();
+            let column = prefix
+                .rsplit_once('\n')
+                .map_or(prefix, |(_, last)| last)
+                .encode_utf16()
+                .count();
+            json!({"range":{"start":{"line":line,"character":column},
+                "end":{"line":line,"character":column+width}},
+                "severity":severity,"code":code,"source":"ts","message":message})
+        };
+        let mut expected = vec![packet(
+            "value: string",
+            0,
+            5,
+            2322,
+            1,
+            "Type 'number' is not assignable to type 'string'.",
+        )];
+        if path == &virtual_path {
+            // Native suggestion diagnostics include these four genuine unused
+            // Canon helper declarations, in source order. Retain the whole set.
+            for name in [
+                "__Ref",
+                "__VizePrettify",
+                "__VizeComponentFallthroughProps",
+                "__VizeComponentMissingInputGuard",
+            ] {
+                let marker = vize_l0::cstr!("type {name}<");
+                let message = vize_l0::cstr!("'{name}' is declared but never used.");
+                expected.push(packet(
+                    &marker,
+                    5,
+                    name.encode_utf16().count(),
+                    6196,
+                    4,
+                    &message,
+                ));
+            }
+        }
+        assert_eq!(serde_json::to_value(&actual).unwrap(), json!(expected));
     }
     block_on(snapshot.release()).unwrap();
     assert_eq!(std::fs::read(&source).unwrap(), disk);

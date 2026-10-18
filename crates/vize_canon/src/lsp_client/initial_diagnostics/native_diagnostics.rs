@@ -48,6 +48,7 @@ pub(in crate::lsp_client) fn read(
             checkpoint()?;
             let response = block_on(client.raw_json_request(method, params.clone()))
                 .map_err(|error| classify(method, error))?;
+            super::trace_kind(&params, method, &response);
             // Native NewDiagnosticResponses(nil) serializes a successful null.
             // It is empty for THIS kind only; every remaining kind must succeed.
             if !response.is_null() {
@@ -85,6 +86,7 @@ pub(in crate::lsp_client) fn read(
                     )));
                 }
             };
+            super::trace_source(&params, name, text);
             texts.insert(
                 name.into(),
                 SnapshotText::new(text).map_err(Failure::Failed)?,
@@ -150,11 +152,10 @@ fn classify(method: &str, error: CorsaError) -> Failure {
 
 #[cfg(test)]
 mod tests {
+    use super::String;
     use super::{
         ApiClient, CorsaError, Diagnostic, Value, block_on, cstr, json, read, required_kinds,
     };
-
-    use super::String;
     const URI: &str = "file:///workspace/a%20%23.ts";
     const KINDS: [&str; 4] = [
         "getSyntacticDiagnostics",

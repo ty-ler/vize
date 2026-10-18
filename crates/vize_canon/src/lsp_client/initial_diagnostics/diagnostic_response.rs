@@ -1,7 +1,7 @@
 //! Wire-to-pull-diagnostic conversion for native 7.0.2, without an AST/disk view.
 //!
 //! Primary contract: microsoft/typescript-go@2bd066d87f5bafd315be9f40889d0a60b9e58e0b
-//! internal/api/proto.go, internal/ls/lsconv/converters.go and
+//! internal/api/proto.go, internal/ls/lsconv/{converters,linemap}.go and
 //! internal/diagnosticwriter/diagnosticwriter.go (MIT, Copyright Microsoft).
 //! This mirrors Vize's private PULL client, not the different push converter.
 
@@ -164,7 +164,9 @@ impl SnapshotText {
                     .checked_add(1)
                     .ok_or_else(|| cstr!("Native UTF16 source exceeds u32"))?;
             }
-            if matches!(unit, 10 | 13 | 0x2028 | 0x2029) {
+            // Native lsconv.ComputeLSPLineStarts uses CR/LF/CRLF only.
+            // ECMAScript LS/PS remain ordinary UTF16 columns in LSP.
+            if matches!(unit, 10 | 13) {
                 line_starts.push(len);
             }
         }
@@ -335,15 +337,23 @@ mod tests {
             (4, 0, 4),
             (5, 1, 0),
             (7, 1, 2),
-            (8, 2, 0),
-            (10, 3, 0),
-            (12, 4, 0),
-            (13, 4, 1),
+            (8, 1, 3),
+            (10, 2, 0),
+            (12, 3, 0),
+            (13, 3, 1),
         ] {
             assert_eq!(text.position(offset).unwrap(), Position::new(line, column));
         }
         assert!(text.position(14).is_err());
         assert!(text.position(-1).is_err());
+        let separators = SnapshotText::new("a\u{2028}😀\u{2029}z").unwrap();
+        for offset in 0..=6 {
+            assert_eq!(
+                separators.position(offset).unwrap(),
+                Position::new(0, offset as u32)
+            );
+        }
+        assert!(separators.position(7).is_err());
         let empty = SnapshotText::new("").unwrap();
         assert_eq!(empty.position(0).unwrap(), Position::new(0, 0));
         assert!(empty.position(1).is_err());
