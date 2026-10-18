@@ -1,5 +1,0 @@
-<script setup lang="ts">
-function unrelated($foreign: { label: string }) { return $foreign.label }
-void unrelated
-</script>
-<template><p>{{ $foreign.label }}</p></template>

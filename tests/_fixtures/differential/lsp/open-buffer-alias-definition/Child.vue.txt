@@ -1,1 +1,0 @@
-<template><button>Child</button></template>
