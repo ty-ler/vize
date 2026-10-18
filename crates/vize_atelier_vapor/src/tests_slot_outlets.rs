@@ -118,29 +118,40 @@ fn test_compile_slot_outlet_static_and_spread_props() {
 fn forwarding_slot_roots_match_the_retained_lane_and_runtime_flags() {
     // Exact RC.9 compiler-vapor boundaries: a stable sibling prevents
     // forwarding, while an outlet-only root inherits its owner's fallback.
-    for (source, expected) in [
-        ("<slot></slot>", [0, 0, 0]),
-        ("<Comp><slot></slot></Comp>", [1, 0, 1]),
-        ("<Comp><div><slot></slot></div></Comp>", [0, 0, 0]),
-        ("<Comp><slot></slot><b>tail</b></Comp>", [0, 0, 0]),
-        ("<Comp><!--x--><slot></slot></Comp>", [1, 0, 1]),
+    // Preserve direct-outlet loop refusal, and independently require native
+    // admission for its equivalent authored template-loop neighbor.
+    for (source, expected, legacy_reason) in [
+        ("<slot></slot>", [0, 0, 0], None),
+        ("<Comp><slot></slot></Comp>", [1, 0, 1], None),
+        ("<Comp><div><slot></slot></div></Comp>", [0, 0, 0], None),
+        ("<Comp><slot></slot><b>tail</b></Comp>", [0, 0, 0], None),
+        ("<Comp><!--x--><slot></slot></Comp>", [1, 0, 1], None),
         (
             "<Comp><slot></slot><slot name=\"other\"></slot></Comp>",
             [0, 2, 1],
+            None,
         ),
-        ("<Comp><slot v-if=\"ok\"></slot></Comp>", [1, 0, 1]),
+        ("<Comp><slot v-if=\"ok\"></slot></Comp>", [1, 0, 1], None),
         (
             "<Comp><slot v-for=\"item in items\" :key=\"item\"></slot></Comp>",
             [0, 1, 1],
+            Some(crate::l3::LegacyReason::ControlFlow),
         ),
         (
             "<Comp><slot><slot name=\"other\"></slot></slot></Comp>",
             [2, 0, 1],
+            None,
         ),
-        ("<Comp><Child><slot></slot></Child></Comp>", [1, 0, 1]),
+        ("<Comp><Child><slot></slot></Child></Comp>", [1, 0, 1], None),
         (
             "<Comp><component :is=\"which\"><slot></slot></component></Comp>",
             [1, 0, 2],
+            None,
+        ),
+        (
+            "<Comp><template v-for=\"item in items\" :key=\"item\"><slot></slot></template></Comp>",
+            [0, 1, 1],
+            None,
         ),
     ] {
         let allocator = vize_carton::Allocator::new();
@@ -159,11 +170,17 @@ fn forwarding_slot_roots_match_the_retained_lane_and_runtime_flags() {
                 inline: false,
             },
         );
-        assert!(
-            matches!(status, crate::l3::VaporL3BridgeStatus::Accepted(_)),
-            "the native regression must be admitted: {source}"
-        );
-        let native = compile_vapor(&allocator, source, Default::default());
+        match legacy_reason {
+            None => assert!(
+                matches!(status, crate::l3::VaporL3BridgeStatus::Accepted(_)),
+                "the native regression must be admitted: {source}"
+            ),
+            Some(reason) => assert!(
+                matches!(status, crate::l3::VaporL3BridgeStatus::Legacy(actual) if actual == reason),
+                "the unsupported direct outlet must retain exact {reason:?}: {source}"
+            ),
+        }
+        let selected = compile_vapor(&allocator, source, Default::default());
         let retained = compile_vapor(
             &allocator,
             source,
@@ -172,22 +189,22 @@ fn forwarding_slot_roots_match_the_retained_lane_and_runtime_flags() {
                 ..Default::default()
             },
         );
-        assert_eq!(native.error_messages, Vec::<String>::new(), "{source}");
+        assert_eq!(selected.error_messages, Vec::<String>::new(), "{source}");
         assert_eq!(retained.error_messages, Vec::<String>::new(), "{source}");
-        assert_eq!(native.code, retained.code, "{source}");
-        assert_parses_as_module(&native.code);
+        assert_eq!(selected.code, retained.code, "{source}");
+        assert_parses_as_module(&selected.code);
         assert_eq!(
             [
-                native.code.matches("4 /* FORWARDED */").count(),
-                native
+                selected.code.matches("4 /* FORWARDED */").count(),
+                selected
                     .code
                     .matches("12 /* FORWARDED, SHARED_FALLBACK */")
                     .count(),
-                native.code.matches("_extend(").count(),
+                selected.code.matches("_extend(").count(),
             ],
             expected,
             "{source}: complete generated code:\n{}",
-            native.code
+            selected.code
         );
     }
 }
