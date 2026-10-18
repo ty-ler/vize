@@ -1,5 +1,6 @@
 name: Check
 on:
+  workflow_dispatch: {}
   push:
     branches: [main, davinci]
   pull_request:
@@ -29,7 +30,7 @@ jobs:
     # gate after playground-test. The flake itself rarely changes between
     # PRs, so run it on push-to-main (catches merge regressions within
     # minutes) and on the daily schedule, not on every PR.
-    if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'workflow_dispatch' && (github.event_name != 'pull_request') }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3 # v31
@@ -41,6 +42,7 @@ jobs:
       - name: Check flake
         run: nix flake check
   fmt-rust:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 10
     steps:
@@ -51,6 +53,7 @@ jobs:
       - name: Format Rust
         run: cargo fmt --all -- --check
   check-js:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 15
     env:
@@ -69,7 +72,7 @@ jobs:
         run: vp run --filter './npm/native' build:debug && vp run --workspace-root check:ci
   semver-checks:
     name: cargo-semver-checks (${{ matrix.crate }})
-    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+    if: ${{ github.event_name != 'workflow_dispatch' && (github.event_name == 'pull_request' || github.event_name == 'push') }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 25
     permissions:
@@ -131,6 +134,7 @@ jobs:
             cargo semver-checks check-release --package ${{ matrix.crate }} "${SEMVER_ARGS[@]}"
           fi
   security-audit:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 20
     env:
@@ -155,6 +159,7 @@ jobs:
       - name: Audit Rust dependencies
         run: cargo audit --deny warnings
   node-engine-compat:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 20
     strategy:
@@ -176,6 +181,7 @@ jobs:
         run: node --test tests/tooling/node-engine-matrix.test.ts tests/tooling/package-manifests.test.ts
 
   check-vize-apps:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 20
     env:
@@ -224,8 +230,134 @@ jobs:
         with:
           key: vue-parity
           cache-key-suffix: ${{ runner.os }}-${{ runner.arch }}
+      - name: Authenticate historical source before the unchanged parity action
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        run: |
+          git fetch --depth=1 --no-tags --no-write-fetch-head origin fe05980f73a27d4be3c0bbe8512f47fc1f70120a
+          python3 - <<'PYTHON'
+          import hashlib, json, os, pathlib, stat, subprocess
+          root = pathlib.Path.cwd()
+          output = root / "target/vize-tests/metrics/historical-tier-l-authority"
+          output.mkdir(parents=True, exist_ok=True)
+          def git(*args):
+              return subprocess.check_output(["git", *args])
+          base = "fe05980f73a27d4be3c0bbe8512f47fc1f70120a"
+          assert git("rev-parse", base + "^{tree}").decode().strip() == "8f68375044f646a0c02d9720ec390dbaa678a4f5"
+          changed = git("diff", "--name-only", "-z", base, "HEAD").split(b"\0")[:-1]
+          assert changed == [b".github/workflows/check.yml", b"crates/vize_canon/tests/tier_l_incremental.rs"], changed
+          assert not git("diff", "--name-only", "HEAD"), "tracked checkout differs from its producer commit"
+          action = ".github/actions/check-vue-parity/action.yml"
+          assert (root / action).read_bytes() == git("show", base + ":" + action)
+          rows = []
+          for item in git("ls-tree", "-rz", "--full-tree", "HEAD").split(b"\0")[:-1]:
+              header, name = item.split(b"\t", 1)
+              mode, kind, oid = header.decode().split()
+              path = root / name.decode("utf-8")
+              row = {"path": name.decode("utf-8"), "gitMode": mode, "gitKind": kind, "gitObject": oid}
+              if kind == "blob":
+                  data = os.fsencode(os.readlink(path)) if path.is_symlink() else path.read_bytes()
+                  row.update(sha256=hashlib.sha256(data).hexdigest(), byteLength=len(data), modeUnix=stat.S_IMODE(path.lstat().st_mode))
+              rows.append(row)
+          fixture = "tests/_fixtures/_git/vue-vben-admin"
+          assert next(row for row in rows if row["path"] == fixture)["gitObject"] == "748b182e440863711dc9624924e92440f5ddc4d3"
+          locks = {}
+          for name in ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "Cargo.lock", "rust-toolchain.toml", action]:
+              data = (root / name).read_bytes()
+              assert data == git("show", base + ":" + name)
+              locks[name] = {"bytes": list(data), "sha256": hashlib.sha256(data).hexdigest()}
+          receipt = {"boundary": "before-original-parity-action-not-after-its-hydration", "historicalSource": base,
+                     "historicalTree": git("rev-parse", base + "^{tree}").decode().strip(),
+                     "producerHead": git("rev-parse", "HEAD").decode().strip(), "producerTree": git("rev-parse", "HEAD^{tree}").decode().strip(),
+                     "changedPaths": [name.decode() for name in changed], "sourceTree": rows, "oldLocksAndAction": locks,
+                     "statusBytes": list(git("status", "--porcelain=v1", "--untracked-files=all", "-z")),
+                     "scope": "historical original vue-parity job only; not current product Full qualification"}
+          (output / "before-action.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          PYTHON
+          {
+            rustc --version --verbose
+            cargo --version
+            node --version
+            vp --version
+            uname -a
+          } > target/vize-tests/metrics/historical-tier-l-authority/toolchain-before-action.txt 2>&1
       - uses: ./.github/actions/check-vue-parity
+      - name: Retain post-action physical and provider authority
+        if: ${{ always() && github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        run: |
+          node --input-type=module <<'JAVASCRIPT'
+          import fs from "node:fs";
+          import path from "node:path";
+          import crypto from "node:crypto";
+          import { execFileSync } from "node:child_process";
+          import assert from "node:assert/strict";
+          const root = process.cwd();
+          const directory = path.join(root, "target/vize-tests/metrics/historical-tier-l-authority");
+          fs.mkdirSync(directory, { recursive: true });
+          const hash = (data) => crypto.createHash("sha256").update(data).digest("hex");
+          const fixture = path.join(root, "tests/_fixtures/_git/vue-vben-admin");
+          const rows = [];
+          const walk = (name) => {
+            const metadata = fs.lstatSync(name);
+            const row = { path: name, modeUnix: metadata.mode, directory: metadata.isDirectory(), symlinkTarget: null };
+            if (metadata.isSymbolicLink()) row.symlinkTarget = fs.readlinkSync(name);
+            else if (metadata.isFile()) {
+              const data = fs.readFileSync(name);
+              Object.assign(row, { byteLength: data.length, diskSha256: hash(data) });
+            }
+            rows.push(row);
+            if (metadata.isDirectory()) for (const child of fs.readdirSync(name).sort()) walk(path.join(name, child));
+          };
+          const receipt = { boundary: "after-entire-original-parity-action", observedAt: new Date().toISOString(),
+            fixtureDiskObservations: rows, providerScope: "explicit executable/owning package only; not all installed node_modules",
+            providerAuthority: "observed executable/package hashes and declared old-lock integrity; no archive-byte comparison",
+            sourceStatusBytes: [...execFileSync("git", ["status", "--porcelain=v1", "--untracked-files=all", "-z"])] };
+          try { walk(fixture); } catch (error) { receipt.fixtureInventoryError = String(error); }
+          const entryPath = path.join(root, "target/vize-tests/metrics/vben-batch-incremental/tier-l-entry-world.json");
+          let failure;
+          try {
+            const entry = JSON.parse(fs.readFileSync(entryPath, "utf8"));
+            const packageBytes = Buffer.from(entry.providerPackage.bytes);
+            const installed = JSON.parse(packageBytes.toString("utf8"));
+            const yaml = await import("yaml");
+            const key = `${installed.name}@${installed.version}`;
+            const documents = yaml.parseAllDocuments(fs.readFileSync("pnpm-lock.yaml", "utf8"));
+            for (const document of documents) assert.equal(document.errors.length, 0, "original lock document must parse");
+            const matching = documents.map((document, ordinal) => ({ lock: document.toJS(), ordinal }))
+              .filter(({ lock }) => Object.hasOwn(lock.packages ?? {}, key));
+            assert.equal(matching.length, 1, "one original lock document must own the provider");
+            const { lock, ordinal: lockDocument } = matching[0];
+            const locked = lock.packages[key];
+            const importer = lock.importers["."];
+            const direct = importer.optionalDependencies?.[installed.name] ?? importer.dependencies?.[installed.name] ?? importer.devDependencies?.[installed.name];
+            assert.equal(direct?.version, installed.version, "provider version must match original locked root dependency");
+            assert.ok(locked?.resolution?.integrity, "provider must retain original package integrity authority");
+            const nativeBytes = fs.readFileSync(entry.nativeExecutable.path);
+            const currentPackageBytes = fs.readFileSync(entry.providerPackage.path);
+            receipt.provider = { package: installed, lockDocument, lockedPackage: locked, lockedRootDependency: direct,
+              nativeExecutable: { path: entry.nativeExecutable.path, byteLength: nativeBytes.length, sha256: hash(nativeBytes) },
+              packagePath: entry.providerPackage.path, packageSha256: hash(currentPackageBytes) };
+            assert.equal(hash(nativeBytes), entry.nativeExecutable.sha256, "provider bytes changed after Tier-L entry");
+            assert.equal(hash(currentPackageBytes), entry.providerPackage.sha256, "provider package changed after Tier-L entry");
+          } catch (error) { receipt.providerVerificationError = String(error); failure = error; }
+          fs.writeFileSync(path.join(directory, "after-action.json"), JSON.stringify(receipt, null, 2) + "\n");
+          if (receipt.fixtureInventoryError) throw new Error(receipt.fixtureInventoryError);
+          if (failure) throw failure;
+          JAVASCRIPT
+      - name: Always upload historical membership and authority
+        if: ${{ always() && github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: historical-tier-l-membership-${{ github.sha }}
+          include-hidden-files: true
+          path: |
+            target/vize-tests/metrics/historical-tier-l-authority/
+            target/vize-tests/metrics/vben-batch-incremental/
+          if-no-files-found: error
+          retention-days: 7
   test-scripts:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     # Restoration of the original setup after the trim in #519 broke
     # main: lsp-smoke.test.ts launches `vize lsp` (falls back to
@@ -263,18 +395,21 @@ jobs:
       - name: Test release scripts
         run: vp run --workspace-root test:scripts
   editor-extensions:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: ./.github/actions/package-editor-extensions
   editor-host-smoke:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: ./.github/actions/vscode-host-smoke
   build-js-packages:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 30
     env:
@@ -320,6 +455,7 @@ jobs:
           retention-days: 7
 
   test-js-packages:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 45
     env:
@@ -346,6 +482,7 @@ jobs:
         run: vp run --workspace-root test:js
 
   clippy-and-test:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 45
     env:
@@ -383,6 +520,7 @@ jobs:
         env: { VIZE_TEST_REQUIRE_TSGO: "1" }
         run: cargo test --workspace && cargo test -p vize_s1_to_s2 --features davinci-differential --test davinci_lowering_corpus -- --nocapture && cargo test -p vize_s1_to_s2 --features davinci-differential --test davinci_dom_corpus -- --nocapture && cargo test -p vize_atelier_jsx --features davinci-differential --lib vdom::s2_differential::s2_vdom_admitted_cases_match_relief_codegen -- --exact && cargo test -p vize --features legacy --test check_nuxt_tsconfig_isolation_cli && cargo test -p vize_atelier_core --features legacy --test davinci_s2_transform_vue2 && cargo test -p vize_vitrine --no-default-features --features wasm
   coverage:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 30
     steps:
@@ -409,7 +547,7 @@ jobs:
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 40
     # Source coverage is a push/daily trend metric; fixture and compiler/lint gates stay per PR.
-    if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'workflow_dispatch' && (github.event_name != 'pull_request') }}
     env:
       NODE_OPTIONS: "--disable-warning=DEP0040 --disable-warning=DEP0169"
       VIZE_NUXT_CONFIG_ITERATIONS: "100"
@@ -464,6 +602,7 @@ jobs:
           retention-days: 14
 
   branch-coverage:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 45
     # Run the strict nightly gate before merge as well as on main. A main-only
@@ -522,6 +661,7 @@ jobs:
           retention-days: 14
 
   playground-test:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 30
     needs:
@@ -620,7 +760,7 @@ jobs:
     name: test-report
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 5
-    if: ${{ always() && github.event_name == 'pull_request' }}
+    if: ${{ github.event_name != 'workflow_dispatch' && (always() && github.event_name == 'pull_request') }}
     needs:
       - nix-flake
       - fmt-rust
@@ -663,7 +803,7 @@ jobs:
     name: test-report-comment
     runs-on: blacksmith-32vcpu-ubuntu-2404
     timeout-minutes: 5
-    if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+    if: ${{ github.event_name != 'workflow_dispatch' && (always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}
     needs:
       - test-report
     permissions:
