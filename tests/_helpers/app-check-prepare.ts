@@ -135,6 +135,27 @@ function command(
   return evidence;
 }
 
+export function packageManagerEnvironment(inherited: NodeJS.ProcessEnv, campaign: string) {
+  const env = { ...inherited };
+  for (const key of Object.keys(env))
+    if (/^(npm_config_|pnpm_|corepack_)/i.test(key)) delete env[key];
+  const user = path.join(campaign, "user.npmrc"),
+    global = path.join(campaign, "global.npmrc");
+  for (const file of [user, global]) {
+    if (!fs.existsSync(file)) fs.writeFileSync(file, "", { flag: "wx" });
+    assert.equal(fs.readFileSync(file, "utf8"), "", "ambient PM configuration refused");
+  }
+  Object.assign(env, {
+    NPM_CONFIG_USERCONFIG: user,
+    NPM_CONFIG_GLOBALCONFIG: global,
+    NPM_CONFIG_REGISTRY: "https://registry.npmjs.org/",
+    NPM_CONFIG_CACHE: path.join(campaign, "npm-cache"),
+    HUSKY: "0",
+    SKIP_INSTALL_SIMPLE_GIT_HOOKS: "1",
+  });
+  return env;
+}
+
 function runtime(policy: Policy, campaign: string) {
   const binary =
     policy.name === "misskey" ? process.env.VIZE_APP_CHECK_PREPARE_NODE22 : process.execPath;
@@ -147,19 +168,7 @@ function runtime(policy: Policy, campaign: string) {
       (version[1] === policy.minimumNode[1] && version[2] >= policy.minimumNode[2]),
     "preparation Node is older than authored engine",
   );
-  const env = { ...selected.env };
-  for (const key of Object.keys(env))
-    if (/^(npm_config_|pnpm_|corepack_)/i.test(key)) delete env[key];
-  const empty = path.join(campaign, "empty.npmrc");
-  if (!fs.existsSync(empty)) fs.writeFileSync(empty, "", { flag: "wx" });
-  Object.assign(env, {
-    NPM_CONFIG_USERCONFIG: empty,
-    NPM_CONFIG_GLOBALCONFIG: empty,
-    NPM_CONFIG_REGISTRY: "https://registry.npmjs.org/",
-    NPM_CONFIG_CACHE: path.join(campaign, "npm-cache"),
-    HUSKY: "0",
-    SKIP_INSTALL_SIMPLE_GIT_HOOKS: "1",
-  });
+  const env = packageManagerEnvironment(selected.env, campaign);
   fs.writeFileSync(
     path.join(campaign, `${policy.name}-runtime.json`),
     JSON.stringify(selected.observation, null, 2),

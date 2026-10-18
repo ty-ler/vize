@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -22,8 +23,13 @@ import {
   validateManager,
   type GeneratedGraph,
 } from "../_helpers/app-check-custody.ts";
-import { preparationMode, prepareAppCheckProviders } from "../_helpers/app-check-prepare.ts";
+import {
+  packageManagerEnvironment,
+  preparationMode,
+  prepareAppCheckProviders,
+} from "../_helpers/app-check-prepare.ts";
 import { blobOid } from "../_helpers/nuxt-check-source.ts";
+import { inspectRekaNpx } from "../_helpers/reka-check-providers.ts";
 
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 // Synthetic archive/lock guard vectors only: no real PM, native or App acceptance.
@@ -419,5 +425,56 @@ test("consumers reject a replaced receipt or changed whole retained process evid
     );
   } finally {
     f.cleanup();
+  }
+});
+
+test("package managers receive distinct empty user and global configs without ambient settings", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "vize-app-manager-env-"));
+  const inherited = {
+    PATH: process.env.PATH,
+    npm_config_registry: "https://invalid.example/",
+    PNPM_HOME: "/ambient/pnpm",
+    COREPACK_HOME: "/ambient/corepack",
+  };
+  try {
+    const env = packageManagerEnvironment(inherited, root);
+    assert.equal(env.PATH, inherited.PATH);
+    assert.equal(env.npm_config_registry, undefined);
+    assert.equal(env.PNPM_HOME, undefined);
+    assert.equal(env.COREPACK_HOME, undefined);
+    assert.equal(inherited.npm_config_registry, "https://invalid.example/");
+    const user = env.NPM_CONFIG_USERCONFIG!,
+      global = env.NPM_CONFIG_GLOBALCONFIG!;
+    assert.notEqual(fs.realpathSync(user), fs.realpathSync(global));
+    assert.equal(fs.readFileSync(user, "utf8"), "");
+    assert.equal(fs.readFileSync(global, "utf8"), "");
+    assert.equal(env.NPM_CONFIG_REGISTRY, "https://registry.npmjs.org/");
+    assert.deepEqual(packageManagerEnvironment(inherited, root), env);
+    // Real npm config loading, without a network request or package installation.
+    const npm = inspectRekaNpx(env);
+    const cli = path.join(path.dirname(npm.cli), "npm-cli.js");
+    const probe = (configuration: NodeJS.ProcessEnv) =>
+      spawnSync(process.execPath, [cli, "config", "get", "registry"], {
+        cwd: root,
+        env: configuration,
+        encoding: "utf8",
+        timeout: 5_000,
+      });
+    const original = probe({ ...env, NPM_CONFIG_GLOBALCONFIG: user });
+    assert.equal(original.error, undefined);
+    assert.equal(original.status, 1);
+    assert.match(original.stderr, /double-loading config/);
+    const corrected = probe(env);
+    assert.equal(corrected.error, undefined);
+    assert.equal(corrected.status, 0, corrected.stderr);
+    assert.equal(corrected.stdout.trim(), "https://registry.npmjs.org/");
+
+    fs.writeFileSync(global, "registry=https://invalid.example/\n");
+    assert.throws(
+      () => packageManagerEnvironment(inherited, root),
+      /ambient PM configuration refused/,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
