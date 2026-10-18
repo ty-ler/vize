@@ -16,7 +16,7 @@ fn required_semantic_completion_does_not_report_runtime_degradation() {
         (
             OBSERVED_EXIT_WARNINGS,
             OBSERVED_NATIVE_SHA256,
-            Ok(ShutdownObservation::KnownObservedExitWarnings),
+            Err("unrecognized native stderr or image"),
         ),
         (
             OBSERVED_EXIT_WARNINGS,
@@ -103,14 +103,13 @@ fn required_semantic_completion_does_not_report_runtime_degradation() {
     assert_eq!(
         shutdown_observation,
         ShutdownObservation::Clean,
-        "authenticated native shutdown must now be clean; complete stdout={stdout:?}; stderr={stderr:?}"
+        "the checked native owner must close both actual Batch sessions without stderr warnings; complete stdout={stdout:?}; stderr={stderr:?}"
     );
 }
 
 #[derive(Debug, PartialEq, Eq)]
 enum ShutdownObservation {
     Clean,
-    KnownObservedExitWarnings,
 }
 
 fn observe_shutdown(
@@ -119,12 +118,6 @@ fn observe_shutdown(
 ) -> Result<ShutdownObservation, &'static str> {
     match (stderr, native_sha256) {
         ("", _) => Ok(ShutdownObservation::Clean),
-        // Precisely the physical Linux x64 native 7.0.2 image observed in run
-        // 38925869757. These two Batch exits are a known current limitation,
-        // NOT desired clean shutdown. #9239 owns ACK -> EOF without filtering.
-        (OBSERVED_EXIT_WARNINGS, OBSERVED_NATIVE_SHA256) => {
-            Ok(ShutdownObservation::KnownObservedExitWarnings)
-        }
         _ => Err("unrecognized native stderr or image"),
     }
 }
