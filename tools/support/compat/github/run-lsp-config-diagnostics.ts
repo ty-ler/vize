@@ -119,6 +119,7 @@ const sourcePaths = [
   "crates/vize_maestro/src/server/state/project_contexts.rs",
   "crates/vize_maestro/src/server/state/project_contexts/config_reload.rs",
   "crates/vize_maestro/src/server/state/project_contexts/current.rs",
+  "crates/vize_maestro/src/server/state/project_contexts/current_tests.rs",
   "crates/vize_maestro/src/server/state/project_contexts/freshness.rs",
   "crates/vize_maestro/src/server/state/project_contexts/freshness_tests.rs",
   "crates/vize_maestro/src/server/state/project_contexts/lock_order_tests.rs",
