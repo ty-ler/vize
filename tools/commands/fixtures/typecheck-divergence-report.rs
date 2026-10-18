@@ -4,6 +4,7 @@
 //! edition = "2024"
 //!
 //! [dependencies]
+//! libc = "0.2"
 //! pathdiff = "0.2"
 //! regex = "1"
 //! serde = { version = "1", features = ["derive"] }
@@ -17,21 +18,24 @@ use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     env, fs,
-    io::Read,
     path::{Path, PathBuf},
-    process::{Command, ExitCode, Stdio},
-    thread,
+    process::{Command, ExitCode},
     time::{Duration, Instant},
 };
 
-#[cfg(unix)]
-use std::os::unix::process::CommandExt;
-
+#[path = "../../support/typecheck_baseline_usability.rs"]
+mod baseline_usability;
 #[path = "../../support/common.rs"]
 mod common;
+#[path = "../../support/typecheck_project_deadline.rs"]
+mod project_deadline;
+use project_deadline::ProjectContext;
 
 #[derive(Debug)]
 struct Args {
+    deadline_worker: Option<String>,
+    deadline_state: Option<PathBuf>,
+    deadline_budget_ms: Option<u64>,
     budget_mode: String,
     documented_differences: PathBuf,
     registry: PathBuf,
@@ -58,16 +62,43 @@ fn run() -> Result<(), String> {
         );
         return Ok(());
     }
+    if let Some(id) = &args.deadline_worker {
+        let project = selected
+            .iter()
+            .find(|p| p.get("id").and_then(Value::as_str) == Some(id))
+            .ok_or("worker project was not selected by the original registry/shard")?;
+        let directory = args
+            .deadline_state
+            .clone()
+            .ok_or("missing worker evidence directory")?;
+        let context = ProjectContext::worker(
+            directory.clone(),
+            args.deadline_budget_ms.ok_or("missing worker budget")?,
+        )?;
+        let result = write_project_artifact(&root, &args, project, &context);
+        project_deadline::atomic_json(
+            &directory.join("worker-result.json"),
+            &match result {
+                Ok(artifact) => json!({"ok":true,"artifact":artifact}),
+                Err(error) => json!({"ok":false,"error":error}),
+            },
+        )?;
+        return Ok(());
+    }
+    if args.deadline_state.is_some() || args.deadline_budget_ms.is_some() {
+        return Err("private worker state requires a supervised project".into());
+    }
     let mut artifacts = Vec::new();
     let mut failures = Vec::new();
     for project in selected {
-        match write_project_artifact(&root, &args, project) {
-            Ok(artifact) => {
+        match supervise_project(&root, &args, project) {
+            Ok(Some(artifact)) => {
                 if let Some(detail) = budget_failure_detail(&artifact) {
                     failures.push(detail);
                 }
                 artifacts.push(artifact);
             }
+            Ok(None) => failures.push(format!("Typecheck divergence baseline is unusable for {} — {INSTRUMENT_FAILURE_CLASSIFICATION}: whole-project deadline exhausted",project_string(project,"id")?)),
             Err(error) => return Err(error),
         }
     }
@@ -82,7 +113,74 @@ fn run() -> Result<(), String> {
     Ok(())
 }
 
-fn write_project_artifact(root: &Path, args: &Args, project: &Value) -> Result<Value, String> {
+fn supervise_project(root: &Path, args: &Args, project: &Value) -> Result<Option<Value>, String> {
+    let started = Instant::now();
+    validate_performance(project)?;
+    let id = project_string(project, "id")?;
+    let budget_ms = project
+        .pointer("/typecheckPerformance/hangTimeoutMs")
+        .and_then(Value::as_u64)
+        .ok_or("missing project deadline")?;
+    quarantine_previous_typecheck_artifacts(&args.report_dir, &id)?;
+    let executable = env::current_exe().map_err(|e| e.to_string())?;
+    let report = args.report_dir.join(format!("{id}-typechecker.json"));
+    let directory = project_deadline::state_directory(
+        &args.report_dir,
+        &json!({"project":project,"parentPid":std::process::id(),"budgetMs":budget_ms,"producer":executable,"producerSha256":sha256_bytes(&fs::read(&executable).map_err(|e|e.to_string())?),"registrySha256":sha256_bytes(&fs::read(&args.registry).map_err(|e|e.to_string())?),"vizeReportSha256":sha256_bytes(&fs::read(report).map_err(|e|e.to_string())?)}),
+    )?;
+    let remaining = Duration::from_millis(budget_ms)
+        .checked_sub(started.elapsed())
+        .ok_or("project deadline exhausted during supervisor preparation")?;
+    let mut command = Command::new(executable);
+    command
+        .current_dir(root)
+        .args(env::args().skip(1))
+        .args(["--deadline-worker", &id, "--deadline-state"])
+        .arg(&directory)
+        .args(["--deadline-budget-ms", &remaining.as_millis().to_string()]);
+    let timed_out = match project_deadline::supervise(
+        &mut command,
+        &directory,
+        started,
+        Duration::from_millis(budget_ms),
+    ) {
+        Ok(timed_out) => timed_out,
+        Err(error) => {
+            quarantine_previous_typecheck_artifacts(&args.report_dir, &id)?;
+            return Err(error);
+        }
+    };
+    if timed_out {
+        quarantine_previous_typecheck_artifacts(&args.report_dir, &id)?;
+        project_deadline::atomic_json(
+            &directory.join("deadline-result.json"),
+            &json!({"schema":"vize.fixtureTypecheckProjectDeadline","version":1,"project":id,"completed":false,"instrumentFailure":true,"budgetMs":budget_ms,"elapsedMs":started.elapsed().as_millis()}),
+        )?;
+        return Ok(None);
+    }
+    let result = common::read_json(directory.join("worker-result.json"))?;
+    match result["ok"].as_bool() {
+        Some(true) => Ok(Some(
+            result
+                .get("artifact")
+                .ok_or("missing worker artifact")?
+                .clone(),
+        )),
+        Some(false) => Err(result["error"]
+            .as_str()
+            .ok_or("missing worker failure")?
+            .to_string()),
+        None => Err("invalid worker result".into()),
+    }
+}
+
+fn write_project_artifact(
+    root: &Path,
+    args: &Args,
+    project: &Value,
+    context: &ProjectContext,
+) -> Result<Value, String> {
+    context.phase("project preparation")?;
     validate_performance(project)?;
     let project_id = project_string(project, "id")?;
     quarantine_previous_typecheck_artifacts(&args.report_dir, &project_id)?;
@@ -114,6 +212,7 @@ fn write_project_artifact(root: &Path, args: &Args, project: &Value) -> Result<V
         &typecheck_source_roots,
     )?;
     let vue_tsc_version = run_capture_limited(
+        context,
         &args.vue_tsc_bin,
         &["--version".to_string()],
         root,
@@ -163,6 +262,7 @@ fn write_project_artifact(root: &Path, args: &Args, project: &Value) -> Result<V
         eprintln!("[typecheck-divergence] run projectId={project_id} command=baseline");
     }
     let baseline = run_baseline_command(
+        context,
         &args.vue_tsc_bin,
         &baseline_args,
         &fixture_root,
@@ -186,6 +286,7 @@ fn write_project_artifact(root: &Path, args: &Args, project: &Value) -> Result<V
         )
     } else {
         run_baseline_command(
+            context,
             &args.vue_tsc_bin,
             &coverage_args,
             &fixture_root,
@@ -202,7 +303,7 @@ fn write_project_artifact(root: &Path, args: &Args, project: &Value) -> Result<V
     }
     // Keep original streams for successful and rejected comparisons alike:
     // hashes bind evidence, but cannot explain provider/configuration drift.
-    let observations = json!({
+    let mut observations = json!({
         "schema": "vize.fixtureTypecheckObservations",
         "version": 1,
         "project": project_id,
@@ -233,9 +334,11 @@ fn write_project_artifact(root: &Path, args: &Args, project: &Value) -> Result<V
         .join(format!("{project_id}-typecheck-observations.json"));
     common::write_json_pretty(&observations_path, &observations)?;
     println!("Wrote {}", display_relative(root, &observations_path));
+    context.phase("reviewed difference ledger")?;
     let documented_differences = read_documented_differences(&args.documented_differences)?;
     let expected_documented_differences =
         select_documented_differences(&documented_differences, &project_id, &fixture_root)?;
+    context.phase("diagnostic comparison")?;
     let divergence = compare_typecheck_diagnostics(
         project_id.clone(),
         &fixture_root,
@@ -244,6 +347,7 @@ fn write_project_artifact(root: &Path, args: &Args, project: &Value) -> Result<V
         &typecheck_source_roots,
         &documented_differences,
     )?;
+    context.phase("program coverage interpretation")?;
     let coverage = if let Some(reason) = baseline
         .run_error
         .as_deref()
@@ -258,17 +362,159 @@ fn write_project_artifact(root: &Path, args: &Args, project: &Value) -> Result<V
             &typecheck_source_roots,
         )?
     };
+    context.phase("baseline configuration interpretation")?;
     let configuration = if let Some(reason) = baseline.run_error.as_deref() {
         unavailable_baseline_configuration(reason)
     } else {
         evaluate_baseline_configuration(&baseline.run.output)?
     };
+    context.phase("baseline ambient interpretation")?;
     let ambient = if let Some(reason) = coverage_baseline.run_error.as_deref() {
         unavailable_baseline_ambient_environment(reason)
     } else {
         evaluate_baseline_ambient_environment(&coverage_baseline.run.output, &fixture_root)?
     };
+    // A diagnostic exit alone is not an unusable baseline: semantic findings are
+    // the comparison's input. Ask the same official provider for diagnostics
+    // before semantic checking only when the existing instrument checks passed.
+    if baseline.run_error.is_none()
+        && matches!(baseline.run.status, 1 | 2)
+        && coverage["verdict"] == "usable"
+        && configuration["verdict"] == "usable"
+        && ambient_unusable_reason(&ambient).is_none()
+    {
+        let reject = |kind: &str,
+                      reason: String,
+                      diagnostics: Vec<Value>|
+         -> Result<Value, String> {
+            baseline_usability::retain_failure(
+                &args.report_dir,
+                project,
+                &summary["evidence"],
+                &observations_path,
+                kind,
+                &reason,
+                &diagnostics,
+            )?;
+            Err(format!(
+                "Typecheck divergence baseline is unusable for {project_id} — {INSTRUMENT_FAILURE_CLASSIFICATION}: {reason}"
+            ))
+        };
+        match baseline_usability::parse_diagnostics(&baseline.run.output) {
+            Ok(diagnostics) if !diagnostics.is_empty() => {}
+            Ok(_) => {
+                return reject(
+                    "missing-full-baseline-diagnostics",
+                    "vue-tsc returned a diagnostic status without diagnostics".to_string(),
+                    Vec::new(),
+                );
+            }
+            Err(error) => return reject("malformed-full-baseline-output", error, Vec::new()),
+        }
+        let source_path = fixture_root.join(&source_project);
+        let authority =
+            match baseline_usability::configuration_snapshot(&baseline_config.path, &source_path) {
+                Ok(value) => value,
+                Err(error) => return reject("configuration-authority-failure", error, Vec::new()),
+            };
+        observations["preSemanticAuthorityBefore"] = authority.clone();
+        project_deadline::atomic_json(&observations_path, &observations)?;
+        if authority["configSha256"].as_str() != Some(sha256(&baseline_config.source).as_str())
+            || authority["sourceConfigSha256"].as_str() != Some(sha256(&source_config).as_str())
+        {
+            return reject(
+                "configuration-authority-failure",
+                "baseline configuration changed before pre-semantic checking".to_string(),
+                Vec::new(),
+            );
+        }
+        let mut probe_args = baseline_args.clone();
+        probe_args.push("--noCheck".to_string());
+        let probe = match context.capture(
+            &args.vue_tsc_bin,
+            &probe_args,
+            &fixture_root,
+            timeout_ms,
+            "vue-tsc pre-semantic baseline",
+        ) {
+            Ok(value) => value,
+            Err(error) => {
+                observations["preSemantic"] = json!({
+                    "command": display_command(&args.vue_tsc_bin, &probe_args),
+                    "providerVersion": vue_tsc_version,
+                    "configSha256": sha256(&baseline_config.source),
+                    "exitCode": Value::Null,
+                    "runError": error,
+                    "stdout": Value::Null,
+                    "stderr": Value::Null,
+                });
+                project_deadline::atomic_json(&observations_path, &observations)?;
+                return reject("provider-process-failure", error, Vec::new());
+            }
+        };
+        observations["preSemantic"] = json!({
+            "command": display_command(&args.vue_tsc_bin, &probe_args),
+            "providerVersion": vue_tsc_version,
+            "configSha256": sha256(&baseline_config.source),
+            "exitCode": probe.status.code(),
+            "processStatus": probe.status.to_string(),
+            "runError": Value::Null,
+            "stdout": probe.stdout,
+            "stderr": probe.stderr,
+        });
+        project_deadline::atomic_json(&observations_path, &observations)?;
+        let authority_after =
+            match baseline_usability::configuration_snapshot(&baseline_config.path, &source_path) {
+                Ok(value) => value,
+                Err(error) => return reject("configuration-authority-failure", error, Vec::new()),
+            };
+        observations["preSemanticAuthorityAfter"] = authority_after.clone();
+        project_deadline::atomic_json(&observations_path, &observations)?;
+        if authority_after != authority {
+            return reject(
+                "configuration-authority-failure",
+                "baseline configuration changed during pre-semantic checking".to_string(),
+                Vec::new(),
+            );
+        }
+        let parsed =
+            baseline_usability::parse_diagnostics(&format!("{}\n{}", probe.stdout, probe.stderr));
+        if !probe.status.success() || !matches!(&parsed, Ok(diagnostics) if diagnostics.is_empty())
+        {
+            let (kind, reason) = if !matches!(probe.status.code(), Some(0 | 1 | 2)) {
+                (
+                    "provider-process-failure",
+                    format!(
+                        "vue-tsc pre-semantic checking returned unsupported process status {}",
+                        probe.status
+                    ),
+                )
+            } else if let Err(error) = &parsed {
+                ("malformed-provider-output", error.clone())
+            } else if probe.status.success() {
+                (
+                    "provider-status-disagreement",
+                    "vue-tsc returned pre-semantic diagnostics with a successful status"
+                        .to_string(),
+                )
+            } else if matches!(&parsed, Ok(diagnostics) if diagnostics.is_empty()) {
+                (
+                    "missing-provider-diagnostics",
+                    "vue-tsc pre-semantic checking failed without diagnostics".to_string(),
+                )
+            } else {
+                (
+                    "pre-semantic-diagnostics",
+                    "vue-tsc pre-semantic diagnostics prevent a usable semantic baseline"
+                        .to_string(),
+                )
+            };
+            return reject(kind, reason, parsed.unwrap_or_default());
+        }
+    }
+    context.phase("mutation selection")?;
     let mutation_oracle = create_seeded_mutation_oracle(MutationContext {
+        context,
         project,
         fixture_root: &fixture_root,
         vize_report: &vize_run.payload["parsed"],
@@ -279,6 +525,7 @@ fn write_project_artifact(root: &Path, args: &Args, project: &Value) -> Result<V
         vue_tsc_bin: &args.vue_tsc_bin,
         documented_differences: &documented_differences,
     })?;
+    context.phase("final ledger and budget")?;
     let ledger_error = reject_stale_documented_differences(
         &project_id,
         &expected_documented_differences,
@@ -294,6 +541,7 @@ fn write_project_artifact(root: &Path, args: &Args, project: &Value) -> Result<V
         &mutation_oracle,
         &ambient,
     )?;
+    context.phase("report serialization")?;
     let artifact = json!({
         "schema": "vize.fixtureTypecheckDivergenceRun",
         "version": 7,
@@ -376,6 +624,7 @@ fn quarantine_previous_typecheck_artifacts(
         ("typecheck-divergence.md", "comparison.md"),
         ("typecheck-observations.json", "observations.json"),
         ("typecheck-divergence-failure.json", "failure.json"),
+        ("baseline-unusable.json", "baseline-unusable.json"),
     ] {
         let filename = format!("{project_id}-{suffix}");
         let path = report_dir.join(&filename);
@@ -861,6 +1110,7 @@ struct CapturedToolRun {
 }
 
 struct MutationContext<'a> {
+    context: &'a ProjectContext,
     project: &'a Value,
     fixture_root: &'a Path,
     vize_report: &'a Value,
@@ -1097,6 +1347,7 @@ fn collect_vue_tsc_diagnostics(
 ) -> Result<DiagnosticInput, String> {
     let positioned = Regex::new(r"^(.+)\((\d+),(\d+)\): (error|warning) TS(\d+): (.+)$").unwrap();
     let project = Regex::new(r"^(error|warning) TS(\d+): (.+)$").unwrap();
+    let diagnostic_marker = Regex::new(r"\b(?:error|warning) TS\d+:").unwrap();
     let mut diagnostics = Vec::new();
     let mut excluded_non_vue_count = 0;
     let mut excluded_project_count = 0;
@@ -1137,10 +1388,7 @@ fn collect_vue_tsc_diagnostics(
             excluded_project_count += 1;
             continue;
         }
-        if Regex::new(r"\b(?:error|warning) TS\d+:")
-            .unwrap()
-            .is_match(line)
-        {
+        if diagnostic_marker.is_match(line) {
             invalid_divergence(&format!("unparseable vue-tsc diagnostic: {line}"))?;
         }
     }
@@ -1607,6 +1855,12 @@ fn observe_mutation_candidate(
         code: 2322,
         message: "Type 'number' is not assignable to type 'string'.".to_string(),
     };
+    let lease = ctx.context.mutation(
+        ctx.fixture_root,
+        &source_path,
+        candidate.clean_source.as_bytes(),
+        candidate.broken_source.as_bytes(),
+    )?;
     let result = (|| -> Result<Value, String> {
         common::write_text(&source_path, &candidate.clean_source)?;
         let clean = observe_mutation_state(ctx, candidate, "clean", &source_path)?;
@@ -1616,7 +1870,7 @@ fn observe_mutation_candidate(
         let repaired = observe_mutation_state(ctx, candidate, "repaired", &source_path)?;
         summarize_mutation_observations(candidate, &diagnostic, &clean, &broken, &repaired)
     })();
-    let restore_result = common::write_text(&source_path, &candidate.clean_source);
+    let restore_result = ctx.context.restore(lease);
     match (result, restore_result) {
         (Ok(value), Ok(())) => Ok(value),
         (Err(error), Ok(())) => Ok(unusable_mutation(
@@ -1640,6 +1894,8 @@ fn observe_mutation_state(
     name: &str,
     source_path: &Path,
 ) -> Result<ObservedMutation, String> {
+    ctx.context
+        .phase(&format!("mutation {name}: {}", candidate.file))?;
     let source_bytes = fs::read(source_path)
         .map_err(|error| format!("cannot read {}: {error}", source_path.display()))?;
     let source_sha256 = sha256_bytes(&source_bytes);
@@ -1680,6 +1936,7 @@ fn run_vize_typecheck(
 ) -> Result<ToolRun, String> {
     let args = mutation_tool_args(ctx.project, candidate);
     let mut run = run_capture_limited(
+        ctx.context,
         ctx.vize_bin,
         &args,
         ctx.fixture_root,
@@ -1713,6 +1970,7 @@ fn run_vue_tsc_mutation(
 ) -> Result<ToolRun, String> {
     let args = mutation_baseline_args(ctx, candidate)?;
     run_capture_limited(
+        ctx.context,
         ctx.vue_tsc_bin,
         &args,
         ctx.fixture_root,
@@ -2986,6 +3244,7 @@ fn assert_source_unchanged(
 }
 
 fn run_baseline_command(
+    context: &ProjectContext,
     command: &Path,
     args: &[String],
     cwd: &Path,
@@ -2993,7 +3252,15 @@ fn run_baseline_command(
     label: &str,
     allowed_statuses: &[i32],
 ) -> Result<CapturedToolRun, String> {
-    match run_capture_limited(command, args, cwd, timeout_ms, label, allowed_statuses) {
+    match run_capture_limited(
+        context,
+        command,
+        args,
+        cwd,
+        timeout_ms,
+        label,
+        allowed_statuses,
+    ) {
         Ok(run) => Ok(CapturedToolRun {
             run,
             run_error: None,
@@ -3040,6 +3307,7 @@ fn captured_exit_code(captured: &CapturedToolRun) -> Value {
 }
 
 fn run_capture_limited(
+    context: &ProjectContext,
     command: &Path,
     args: &[String],
     cwd: &Path,
@@ -3047,117 +3315,23 @@ fn run_capture_limited(
     label: &str,
     allowed_statuses: &[i32],
 ) -> Result<ToolRun, String> {
-    let started = Instant::now();
-    let mut child_command = Command::new(command);
-    child_command
-        .args(args)
-        .current_dir(cwd)
-        .env("LANG", "C")
-        .env("LC_ALL", "C")
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-    #[cfg(unix)]
-    child_command.process_group(0);
-    let mut child = child_command
-        .spawn()
-        .map_err(|error| format!("{label} failed to run: {error}"))?;
-    let stdout = child
-        .stdout
-        .take()
-        .ok_or_else(|| format!("{label} failed to capture stdout"))?;
-    let stderr = child
-        .stderr
-        .take()
-        .ok_or_else(|| format!("{label} failed to capture stderr"))?;
-    let stdout_reader = thread::spawn(move || read_child_output(stdout));
-    let stderr_reader = thread::spawn(move || read_child_output(stderr));
-    let status = loop {
-        if let Some(status) = child
-            .try_wait()
-            .map_err(|error| format!("{label} failed to run: {error}"))?
-        {
-            break status;
-        }
-        if started.elapsed() >= Duration::from_millis(timeout_ms) {
-            kill_child_group(&mut child);
-            // Timeout artifacts only need the failure reason. Descendants may
-            // keep inherited stdio open, so this path must not join readers.
-            drop(stdout_reader);
-            drop(stderr_reader);
-            return Err(timeout_error(label, timeout_ms));
-        }
-        thread::sleep(Duration::from_millis(5));
-    };
-    let status = status.code().unwrap_or(1);
-    kill_child_process_group(child.id());
-    let stdout = join_output_reader(stdout_reader, label, "stdout")?;
-    let stderr = join_output_reader(stderr_reader, label, "stderr")?;
+    let run = context.capture(command, args, cwd, timeout_ms, label)?;
+    let status = run.status.code().unwrap_or(1);
     if !allowed_statuses.contains(&status) {
         return Err(format!("{label} exited with unsupported status {status}"));
     }
-    let stdout = String::from_utf8_lossy(&stdout).into_owned();
-    let stderr = String::from_utf8_lossy(&stderr).into_owned();
     Ok(ToolRun {
         command: display_command(command, args),
         status,
-        output: format!("{stdout}\n{stderr}"),
-        stdout,
-        stderr,
-        duration_ms: started.elapsed().as_millis(),
+        output: format!("{}\n{}", run.stdout, run.stderr),
+        stdout: run.stdout,
+        stderr: run.stderr,
+        duration_ms: run.duration_ms,
         parsed: None,
     })
 }
-
-fn read_child_output<R: Read>(mut pipe: R) -> Result<Vec<u8>, String> {
-    let mut output = Vec::new();
-    pipe.read_to_end(&mut output)
-        .map_err(|error| format!("failed to read child output: {error}"))?;
-    Ok(output)
-}
-
-fn join_output_reader(
-    reader: thread::JoinHandle<Result<Vec<u8>, String>>,
-    label: &str,
-    stream: &str,
-) -> Result<Vec<u8>, String> {
-    reader
-        .join()
-        .map_err(|_| format!("{label} {stream} reader panicked"))?
-        .map_err(|error| format!("{label} failed to run: {error}"))
-}
-
 fn timeout_error(label: &str, timeout_ms: u64) -> String {
     format!("{label} failed to run: spawn timed out after {timeout_ms}ms")
-}
-
-fn kill_child_group(child: &mut std::process::Child) {
-    kill_child_process_group(child.id());
-    let _ = child.kill();
-    let _ = child.wait();
-}
-
-#[cfg(unix)]
-fn kill_child_process_group(child_id: u32) {
-    let Ok(child_pid) = i32::try_from(child_id) else {
-        return;
-    };
-    // SAFETY: `child_pid` came from `Child::id`, and a negative pid asks the OS
-    // to signal the process group created by `process_group(0)` above.
-    unsafe {
-        let _ = kill(-child_pid, SIGKILL);
-    }
-}
-
-#[cfg(not(unix))]
-fn kill_child_process_group(_child_id: u32) {}
-
-#[cfg(unix)]
-const SIGKILL: i32 = 9;
-
-#[cfg(unix)]
-unsafe extern "C" {
-    fn kill(pid: i32, sig: i32) -> i32;
 }
 
 fn mutation_run_error(error: String) -> String {
@@ -3872,9 +4046,12 @@ fn diagnostic_mapping_unusable_reason(summary: &Value) -> Option<String> {
     ))
 }
 
+const INSTRUMENT_FAILURE_CLASSIFICATION: &str =
+    "instrument failure, the vue-tsc baseline did not measure Vize";
+
 fn describe_classification(artifact: &Value) -> String {
     if artifact.pointer("/budget/verdict").and_then(Value::as_str) == Some("unusable") {
-        "instrument failure, the vue-tsc baseline did not measure Vize".to_string()
+        INSTRUMENT_FAILURE_CLASSIFICATION.to_string()
     } else {
         format!(
             "Vize divergence, the vue-tsc baseline loaded cleanly over the same {} Vue files, against the fixture's own Vue runtime",
@@ -4014,6 +4191,9 @@ fn ratio_string(value: &Value, key: &str) -> String {
 
 fn parse_args(argv: Vec<String>, root: &Path) -> Result<Args, String> {
     let mut args = Args {
+        deadline_worker: None,
+        deadline_state: None,
+        deadline_budget_ms: None,
         budget_mode: "enforce".to_string(),
         documented_differences: root.join("tests/_fixtures/compat-documented-differences.json"),
         registry: root.join("tests/_fixtures/vue-ecosystem-fixtures.json"),
@@ -4036,6 +4216,13 @@ fn parse_args(argv: Vec<String>, root: &Path) -> Result<Args, String> {
                 .ok_or_else(|| format!("{arg} requires a value"))
         };
         match arg.as_str() {
+            "--deadline-worker" => args.deadline_worker = Some(value(&mut index)?),
+            "--deadline-state" => {
+                args.deadline_state = Some(absolutize(root, PathBuf::from(value(&mut index)?)))
+            }
+            "--deadline-budget-ms" => {
+                args.deadline_budget_ms = Some(positive_integer(&value(&mut index)?, arg)?)
+            }
             "--budget-mode" => args.budget_mode = parse_budget_mode(&value(&mut index)?)?,
             "--documented-differences" => {
                 args.documented_differences = absolutize(root, PathBuf::from(value(&mut index)?))
@@ -4928,5 +5115,95 @@ mod native_hint_contract_tests {
             assert!(validate_typechecker_output(&project, &report, 0, None, None).is_err());
             assert!(collect_vize_diagnostics(&report, &cwd).is_err());
         }
+    }
+}
+
+#[cfg(test)]
+mod native_baseline_contract_tests {
+    use super::*;
+
+    #[test]
+    fn large_baseline_continuations_preserve_whole_diagnostics_and_exclusions() {
+        let cwd = env::current_dir().unwrap();
+        let comparable = BTreeSet::from(["src/App.vue".to_string(), "src/Ω.vue".to_string()]);
+        let support = SupportVueClassifier::new(&cwd, &[]);
+        let mut output = "  continuation detail Ω😀\r\n".repeat(16_384);
+        output.push_str(concat!(
+            "αerror TS9999: part of a Unicode word\r\n",
+            "πwarning TS9999: also not a word boundary\r\n",
+            "src/App.vue(12,34): error TS2322: expected   string\r\n",
+            "src/Ω.vue(3,7): warning TS6133: unused  value\r\n",
+            "src/App.vue(12,34): error TS2322: expected string\r\n",
+            "src/helper.ts(2,3): error TS2345: TypeScript support\r\n",
+            "error TS2688: project-level diagnostic\r\n",
+            "../External.vue(1,1): warning TS6133: external\r\n",
+            "docs/.vitepress/Hidden.vue(1,1): warning TS6133: support\r\n",
+        ));
+        let actual = collect_vue_tsc_diagnostics(&output, &cwd, &comparable, &support).unwrap();
+        let app = Diagnostic {
+            file: "src/App.vue".to_string(),
+            severity: "error".to_string(),
+            line: 12,
+            column: 34,
+            code: 2322,
+            message: "expected string".to_string(),
+        };
+        assert_eq!(
+            actual.diagnostics,
+            vec![
+                app.clone(),
+                Diagnostic {
+                    file: "src/Ω.vue".to_string(),
+                    severity: "warning".to_string(),
+                    line: 3,
+                    column: 7,
+                    code: 6133,
+                    message: "unused value".to_string(),
+                },
+                app
+            ]
+        );
+        assert_eq!(
+            (
+                actual.excluded_non_vue_count,
+                actual.excluded_project_count,
+                actual.excluded_external_count,
+                actual.excluded_support_vue_count,
+            ),
+            (1, 1, 1, 1)
+        );
+    }
+
+    #[test]
+    fn baseline_marker_and_positioned_range_refusals_survive_ignored_lines() {
+        let cwd = env::current_dir().unwrap();
+        let comparable = BTreeSet::from(["src/App.vue".to_string()]);
+        let support = SupportVueClassifier::new(&cwd, &[]);
+        for line in [
+            "prefix error TS2322: malformed position",
+            "prefix warning TS6133: malformed position",
+            "Ω error TS１２３: Unicode decimal marker",
+        ] {
+            let output = format!("{}{line}\r\n", "  continuation Ω😀\r\n".repeat(256));
+            assert_eq!(
+                collect_vue_tsc_diagnostics(&output, &cwd, &comparable, &support)
+                    .err()
+                    .unwrap(),
+                divergence_error(&format!("unparseable vue-tsc diagnostic: {line}")),
+            );
+        }
+        assert_eq!(
+            collect_vue_tsc_diagnostics(
+                "src/App.vue(0,2): error TS2322: invalid line\r\n",
+                &cwd,
+                &comparable,
+                &support,
+            )
+            .err()
+            .unwrap(),
+            divergence_error(
+                "diagnostic range and code must be positive safe integers: src/App.vue"
+            ),
+        );
     }
 }

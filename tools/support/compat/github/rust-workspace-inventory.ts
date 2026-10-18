@@ -6,35 +6,37 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 
-export type InventoryBinary = {
+type Binary = {
   id: string;
   package: string;
   binary: string;
-  cases: { name: string; ignored: boolean }[];
+  cases: Array<{ name: string; ignored: boolean }>;
 };
-type InventoryReceipt = {
-  schema: string;
-  schemaVersion: number;
+export type InventoryBinary = Binary;
+type Inventory = Record<string, unknown> & {
   cargoProfile: string;
   rawFile: string;
   rawSha256: string;
-  source: ReturnType<typeof workspaceFingerprint>;
-  binaries: InventoryBinary[];
+  binaries: Binary[];
 };
-type ExecutionReceipt = {
-  source: InventoryReceipt["source"];
-  sourceSha: string;
-  cargoProfile: string;
-  runner: string;
-  inventoryOnly: boolean;
-  status: string;
-  phases: { name: string; exitCode: number; args: string[] }[];
-  execution: { runId: string; attempt: string };
+type Execution = { runId: string; attempt: string };
+type Timing = Record<string, unknown> & { execution: Execution };
+type Flags = { rustflags?: unknown; rustdocflags?: unknown };
+type TomlConfig = {
+  profile?: Record<string, Record<string, unknown>>;
+  build?: Flags;
+  target?: Record<string, Flags>;
 };
-const object = (value: unknown): Record<string, unknown> => {
-  assert(value && typeof value === "object" && !Array.isArray(value));
-  return value as Record<string, unknown>;
-};
+function row(value: unknown): asserts value is Record<string, unknown> {
+  assert.ok(value !== null && (typeof value === "object" || typeof value === "function"));
+}
+function text(value: unknown): asserts value is string {
+  assert.equal(typeof value, "string");
+}
+function sameBinaries(value: unknown, normalized: Binary[]): asserts value is Binary[] {
+  assert.deepEqual(normalized, value, "raw workspace inventory differs from receipt");
+}
+
 export const digest = (bytes: string | Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
 const sourceFiles = [
@@ -64,7 +66,9 @@ export function inferWorkspaceProfileDefaults(
 ) {
   // Only the execution runner needs TOML; the aggregate intentionally runs
   // without a dependency install and only validates the retained receipts.
-  const TOML = createRequire(import.meta.url)("@iarna/toml");
+  const TOML = createRequire(import.meta.url)("@iarna/toml") as {
+    parse: (source: string) => TomlConfig;
+  };
   const profiles = TOML.parse(manifest).profile ?? {};
   const config = TOML.parse(cargoConfig);
   assert.equal(profiles.ci?.inherits, "dev", "ci must inherit dev assertions");
@@ -139,32 +143,33 @@ export function workspaceFingerprint(env = process.env) {
   };
 }
 
-export function normalizeWorkspaceInventory(list: unknown): InventoryBinary[] {
-  const suites = object(list)["rust-suites"];
+export function normalizeWorkspaceInventory(list: unknown) {
+  row(list);
+  const suites = list["rust-suites"];
   assert.ok(suites && typeof suites === "object" && !Array.isArray(suites));
-  const binaries = Object.entries(object(suites))
-    .map(([id, item]) => {
-      const suite = object(item);
+  row(suites);
+  const binaries = Object.entries(suites)
+    .map(([id, suite]) => {
+      row(suite);
       assert.equal(suite["binary-id"], id);
       assert.equal(suite.status, "listed", `full inventory omits binary ${id}`);
-      const pkg = suite["package-name"],
-        binary = suite["binary-name"];
-      assert(typeof pkg === "string");
-      assert(typeof binary === "string");
+      const packageName = suite["package-name"],
+        binaryName = suite["binary-name"];
+      text(packageName);
+      text(binaryName);
       assert.ok(suite.testcases && typeof suite.testcases === "object");
-      const cases = Object.entries(object(suite.testcases))
-        .map(([name, item]) => {
-          const value = object(item);
-          assert.equal(
-            object(value["filter-match"]).status,
-            "matches",
-            `full inventory excludes ${id}/${name}`,
-          );
+      row(suite.testcases);
+      const cases = Object.entries(suite.testcases)
+        .map(([name, value]) => {
+          row(value);
+          const match = value["filter-match"];
+          row(match);
+          assert.equal(match.status, "matches", `full inventory excludes ${id}/${name}`);
           assert(typeof value.ignored === "boolean");
           return { name, ignored: value.ignored };
         })
         .sort((a, b) => a.name.localeCompare(b.name, "en"));
-      return { id, package: pkg, binary, cases };
+      return { id, package: packageName, binary: binaryName, cases };
     })
     .sort((a, b) => a.id.localeCompare(b.id, "en"));
   assert.ok(
@@ -174,23 +179,27 @@ export function normalizeWorkspaceInventory(list: unknown): InventoryBinary[] {
   return binaries;
 }
 
-export function readWorkspaceInventory(file: string) {
-  const receipt: InventoryReceipt = JSON.parse(readFileSync(file, "utf8"));
+export function readWorkspaceInventory(file: string): Inventory {
+  const receipt: unknown = JSON.parse(readFileSync(file, "utf8"));
+  row(receipt);
   assert.equal(receipt.schema, "vize.rust.workspace-inventory");
   assert.equal(receipt.schemaVersion, 1);
-  assert.ok(["test", "ci"].includes(receipt.cargoProfile));
-  assert.equal(path.basename(receipt.rawFile), receipt.rawFile);
-  const raw = readFileSync(path.join(path.dirname(file), receipt.rawFile));
-  assert.equal(digest(raw), receipt.rawSha256, "raw workspace inventory digest mismatch");
-  assert.deepEqual(
-    normalizeWorkspaceInventory(JSON.parse(raw.toString("utf8"))),
-    receipt.binaries,
-    "raw workspace inventory differs from receipt",
-  );
-  return receipt;
+  const { cargoProfile, rawFile, rawSha256, binaries } = receipt;
+  text(cargoProfile);
+  text(rawFile);
+  text(rawSha256);
+  assert.ok(["test", "ci"].includes(cargoProfile));
+  assert.equal(path.basename(rawFile), rawFile);
+  const raw = readFileSync(path.join(path.dirname(file), rawFile));
+  assert.equal(digest(raw), rawSha256, "raw workspace inventory digest mismatch");
+  sameBinaries(binaries, normalizeWorkspaceInventory(JSON.parse(raw.toString("utf8"))));
+  return { ...receipt, cargoProfile, rawFile, rawSha256, binaries };
 }
 
-export function compareWorkspaceInventories(before: InventoryReceipt, after: InventoryReceipt) {
+export function compareWorkspaceInventories(
+  before: { cargoProfile: unknown; source?: unknown; binaries: unknown },
+  after: { cargoProfile: unknown; source?: unknown; binaries: unknown },
+) {
   assert.equal(before.cargoProfile, "test");
   assert.equal(after.cargoProfile, "ci");
   assert.deepEqual(after.source, before.source, "inventory source/compiler/runtime mismatch");
@@ -202,14 +211,17 @@ export function compareWorkspaceInventories(before: InventoryReceipt, after: Inv
 }
 
 export function requireFullWorkspaceJobs(needs: unknown) {
+  row(needs);
   assert.ok(needs && typeof needs === "object" && !Array.isArray(needs));
   assert.deepEqual(
     Object.keys(needs).sort(),
     ["clippy-and-test", "full-rust-workspace"],
     "missing full Rust qualification job",
   );
-  for (const [name, job] of Object.entries(needs))
-    assert.equal(object(job).result, "success", `${name} did not succeed`);
+  for (const [name, job] of Object.entries(needs)) {
+    row(job);
+    assert.equal(job.result, "success", `${name} did not succeed`);
+  }
 }
 
 function attributes(text: string) {
@@ -237,12 +249,17 @@ function attributes(text: string) {
 }
 
 export function verifyWorkspaceExecution(
-  receipt: InventoryReceipt,
-  timing: ExecutionReceipt,
+  receipt: { source?: unknown; cargoProfile: unknown; binaries: Binary[] },
+  timing: unknown,
   junit: string,
-  expectedSha: string,
+  expectedSha: unknown,
   cargoProfile = "ci",
 ) {
+  row(receipt.source);
+  row(receipt.source.runtime);
+  row(timing);
+  const phases = timing.phases;
+  assert(Array.isArray(phases));
   assert.equal(receipt.source.sha, expectedSha, "workspace result is not this source head");
   assert.deepEqual(timing.source, receipt.source, "execution/inventory source or runtime mismatch");
   assert.deepEqual(receipt.source.inferredProfileDefaults, {
@@ -260,7 +277,10 @@ export function verifyWorkspaceExecution(
   assert.equal(timing.inventoryOnly, false);
   assert.equal(timing.status, "passed");
   assert.deepEqual(
-    timing.phases.map((phase) => [phase.name, phase.exitCode]),
+    phases.map((phase: unknown) => {
+      row(phase);
+      return [phase.name, phase.exitCode];
+    }),
     [
       ["inventory", 0],
       ["workspace", 0],
@@ -268,7 +288,10 @@ export function verifyWorkspaceExecution(
     ],
   );
   assert.deepEqual(
-    timing.phases.map((phase) => phase.args),
+    phases.map((phase: unknown) => {
+      row(phase);
+      return phase.args;
+    }),
     [
       [
         "nextest",
@@ -300,7 +323,7 @@ export function verifyWorkspaceExecution(
   verifyInventoryJUnit(receipt.binaries, junit);
 }
 
-/** Exact executed names, shared by full-workspace and cohort archive receipts. */
+/** Exact executed identities, shared by full-workspace and cohort receipts. */
 export function verifyInventoryJUnit(binaries: InventoryBinary[], junit: string) {
   const expected = binaries
     .flatMap((binary) =>
@@ -327,37 +350,58 @@ export function verifyInventoryJUnit(binaries: InventoryBinary[], junit: string)
   );
 }
 
-function executionReceipt(file: string) {
-  const timing: ExecutionReceipt = JSON.parse(readFileSync(file, "utf8"));
-  assert.match(timing.execution.runId, /^\d+$/);
-  assert.match(timing.execution.attempt, /^\d+$/);
-  if (process.env.GITHUB_RUN_ID)
-    assert.equal(
-      timing.execution.runId,
-      process.env.GITHUB_RUN_ID,
-      "execution is from another workflow run",
+// Explicit producerAttempt comes from the successful workspace job output,
+// never a downloaded-file selection or a rewritten report environment.
+function executionReceipt(file: string, producerAttempt?: string): Timing {
+  const timing: unknown = JSON.parse(readFileSync(file, "utf8"));
+  row(timing);
+  row(timing.execution);
+  const { runId, attempt } = timing.execution;
+  text(runId);
+  text(attempt);
+  assert.match(runId, /^\d+$/);
+  assert.match(attempt, /^\d+$/);
+  if (producerAttempt !== undefined) {
+    assert.match(producerAttempt, /^[1-9]\d*$/, "positive producer attempt required");
+    assert(
+      process.env.GITHUB_RUN_ID && process.env.GITHUB_RUN_ATTEMPT,
+      "actual report run/attempt required",
     );
+    assert.match(process.env.GITHUB_RUN_ID, /^[1-9]\d*$/);
+    assert.match(process.env.GITHUB_RUN_ATTEMPT, /^[1-9]\d*$/);
+    const producer = Number(producerAttempt),
+      current = Number(process.env.GITHUB_RUN_ATTEMPT);
+    assert(
+      Number.isSafeInteger(producer) && Number.isSafeInteger(current) && producer <= current,
+      "producer attempt exceeds actual report attempt",
+    );
+  }
+  if (process.env.GITHUB_RUN_ID)
+    assert.equal(runId, process.env.GITHUB_RUN_ID, "execution is from another workflow run");
   if (process.env.GITHUB_RUN_ATTEMPT)
     assert.equal(
-      timing.execution.attempt,
-      process.env.GITHUB_RUN_ATTEMPT,
+      attempt,
+      producerAttempt ?? process.env.GITHUB_RUN_ATTEMPT,
       "execution is from another workflow attempt",
     );
-  return timing;
+  return { ...timing, execution: { ...timing.execution, runId, attempt } };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const [mode, first, second] = process.argv.slice(2);
+  const [mode, first, second, producerAttempt, ...extra] = process.argv.slice(2);
+  assert.equal(extra.length, 0, "unexpected workspace inventory arguments");
   if (mode === "compare" && first && second) {
     const before = readWorkspaceInventory(first);
     const after = readWorkspaceInventory(second);
     compareWorkspaceInventories(before, after);
     let originalExecution;
-    for (const [file, receipt, timingFile] of [
+    row(after.source);
+    const executions: Array<[string, Inventory, string]> = [
       [first, before, "workspace-reference-timing.json"],
       [second, after, "workspace-timing.json"],
-    ] as const) {
-      const timing = executionReceipt(path.join(path.dirname(file), timingFile));
+    ];
+    for (const [file, receipt, timingFile] of executions) {
+      const timing = executionReceipt(path.join(path.dirname(file), timingFile), producerAttempt);
       if (originalExecution) assert.deepEqual(timing.execution, originalExecution);
       else originalExecution = timing.execution;
       verifyWorkspaceExecution(
@@ -376,6 +420,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     requireFullWorkspaceJobs(JSON.parse(process.env.NEEDS_JSON ?? "null"));
     const receipt = readWorkspaceInventory(path.join(second, "workspace-inventory-ci.json"));
     assert.equal(git("rev-parse", "HEAD"), first);
+    row(receipt.source);
+    row(receipt.source.files);
+    text(receipt.source.rustc);
     assert.equal(receipt.source.tree, git("rev-parse", "HEAD^{tree}"));
     assert.deepEqual(Object.keys(receipt.source.files).sort(), [...sourceFiles].sort());
     for (const [file, sha] of Object.entries(receipt.source.files))
@@ -386,14 +433,14 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     assert.ok(receipt.source.rustc.startsWith(`rustc ${channel} `));
     verifyWorkspaceExecution(
       receipt,
-      executionReceipt(path.join(second, "workspace-timing.json")),
+      executionReceipt(path.join(second, "workspace-timing.json"), producerAttempt),
       readFileSync(path.join(second, "workspace-junit-ci.xml"), "utf8"),
       first,
     );
     console.log("Complete same-source ci workspace inventory and execution verified.");
   } else {
     throw new Error(
-      "usage: rust-workspace-inventory.ts compare TEST_RECEIPT CI_RECEIPT | verify SHA RESULTS_DIRECTORY",
+      "usage: rust-workspace-inventory.ts compare TEST_RECEIPT CI_RECEIPT [PRODUCER_ATTEMPT] | verify SHA RESULTS_DIRECTORY [PRODUCER_ATTEMPT]",
     );
   }
 }

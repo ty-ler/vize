@@ -5,33 +5,25 @@ import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import {
+  loadOfficialFixture,
+  officialCases,
+  officialDiagnostics,
+  assertOfficialDiagnostics,
+  officialRunOptions,
+  verifyPublicInstallation,
+  resolveOfficialNativeImage,
+  officialActorInputs,
+  type Case,
+  type Fixture,
+} from "./official-fixtures.ts";
 import { preparePublishManifest } from "../../release/smoke_release_install/prepare.ts";
+import { derivePublicationPlan, readRawBlob } from "../../release/public_acceptance/plan.ts";
+import { verifyPublication } from "../../release/public_acceptance/registry.ts";
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
 const fixturePath = path.join(root, "tests/_fixtures/content-mapper/escaton-css-options.json");
-interface Original {
-  issue: number;
-  files: Record<string, string>;
-  baselineCodes: number[];
-  expectedCodes: number[];
-  expectedTerms: string[];
-  baselineTerms: string[];
-}
-interface Case {
-  name: string;
-  original: number;
-  files: Record<string, string>;
-  codes: number[];
-  terms?: string[];
-  build?: boolean;
-}
-const fixture = JSON.parse(fs.readFileSync(fixturePath, "utf8")) as {
-  typescript: string;
-  vue: string;
-  baselineVize: string;
-  originals: Original[];
-  controls: Case[];
-};
+const fixture = loadOfficialFixture(fixturePath);
 const digest = (bytes: string | Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 const identity = (file: string) => ({
   path: file,
@@ -102,19 +94,10 @@ function successful(result: ReturnType<typeof run>) {
 }
 
 export function officialCssCases(): Case[] {
-  return [
-    ...fixture.originals.map((row) => ({
-      name: `issue-${row.issue}`,
-      original: row.issue,
-      files: structuredClone(row.files),
-      codes: [...row.expectedCodes],
-      terms: [...row.expectedTerms],
-    })),
-    ...structuredClone(fixture.controls),
-  ];
+  return officialCases(fixture);
 }
 
-function check(install: string, row: Case, output: string, baseline = false) {
+function check(install: string, row: Case, output: string, suite: Fixture, baseline = false) {
   const project = path.join(output, row.name);
   fs.mkdirSync(project, { recursive: true });
   for (const [file, source] of Object.entries(row.files)) {
@@ -140,51 +123,10 @@ function check(install: string, row: Case, output: string, baseline = false) {
     ? [tsc, "--build", "tsconfig.json", "--runExternalCode", "--pretty", "false"]
     : [tsc, "--runExternalCode", "--noEmit", "-p", "tsconfig.json", "--pretty", "false"];
   const result = run(process.execPath, args, project, path.join(project, "process"));
-  const diagnostics = [
-    ...result.stdoutText.matchAll(/^([^\r\n]+)\((\d+),(\d+)\): error TS(\d+): (.*)$/gmu),
-  ].map((match) => ({
-    file: match[1],
-    line: Number(match[2]),
-    column: Number(match[3]),
-    code: Number(match[4]),
-    message: match[5],
-  }));
+  const original = suite.originals.find((original) => original.issue === row.original)!;
+  const diagnostics = officialDiagnostics(result.stdoutText);
   writeJson(path.join(project, "diagnostics.json"), diagnostics);
-  const original = fixture.originals.find((original) => original.issue === row.original)!;
-  const codes = baseline ? original.baselineCodes : row.codes;
-  assert.equal(result.signal, null, row.name);
-  assert.equal(result.error, null, row.name);
-  assert.equal(result.status, codes.length ? 2 : 0, `${row.name}; see ${project}`);
-  assert.equal(result.stderr.bytes, 0, row.name);
-  assert.deepEqual(
-    diagnostics.map((diagnostic) => diagnostic.code).sort((left, right) => left - right),
-    [...codes].sort((left, right) => left - right),
-    `${row.name}; see ${project}`,
-  );
-  const terms = baseline ? original.baselineTerms : (row.terms ?? []);
-  for (const term of terms)
-    assert.ok(
-      diagnostics.some((diagnostic) => diagnostic.message.includes(term)),
-      `${row.name} must retain the original diagnostic term ${term}`,
-    );
-  if (!codes.length) assert.equal(result.stdout.bytes, 0, row.name);
-  if (row.build)
-    assert.deepEqual(
-      diagnostics
-        .map((diagnostic) => diagnostic.file)
-        .sort((left, right) => left.localeCompare(right)),
-      ["strict-css/App.vue", "strict-props/App.vue"],
-    );
-  if (!baseline)
-    for (const diagnostic of diagnostics) {
-      const source = row.files[diagnostic.file];
-      assert.ok(source !== undefined, `diagnostic must name authored file: ${row.name}`);
-      const line = source.split(/\r?\n/u)[diagnostic.line - 1];
-      assert.ok(
-        line !== undefined && diagnostic.column >= 1 && diagnostic.column <= line.length + 1,
-        `diagnostic must map into authored source: ${row.name}`,
-      );
-    }
+  assertOfficialDiagnostics(row, original, baseline, result, diagnostics);
   return {
     name: row.name,
     original: row.original,
@@ -215,7 +157,7 @@ function install(directory: string, dependencies: Record<string, string>, eviden
   );
   return directory;
 }
-export async function installedIdentity(directory: string, output: string) {
+export async function installedIdentity(directory: string, output: string, probeNative = true) {
   const require = createRequire(path.join(directory, "package.json"));
   const records = ["typescript", "vue", "vize", "@vizejs/native"].map((name) => {
     const file = path.join(directory, "node_modules", name, "package.json");
@@ -261,21 +203,31 @@ export async function installedIdentity(directory: string, output: string) {
   );
   successful(version);
   assert.equal(version.stdoutText, `Version ${fixture.typescript}\n`);
-  const probe = run(
-    process.execPath,
-    [
-      "--input-type=commonjs",
-      "-e",
-      "require('@vizejs/native'); process.stdout.write(JSON.stringify(Object.keys(require.cache).filter(p => p.endsWith('.node'))))",
-    ],
-    directory,
-    path.join(output, "native-load"),
-  );
-  successful(probe);
-  const images = JSON.parse(probe.stdoutText) as string[];
-  const nativeImages = images.filter((file) => path.basename(file).startsWith("vize-vitrine."));
-  assert.equal(nativeImages.length, 1);
-  const nativeImage = fs.realpathSync.native(nativeImages[0]);
+  let nativeImage: string;
+  if (probeNative) {
+    const probe = run(
+      process.execPath,
+      [
+        "--input-type=commonjs",
+        "-e",
+        "require('@vizejs/native'); process.stdout.write(JSON.stringify(Object.keys(require.cache).filter(p => p.endsWith('.node'))))",
+      ],
+      directory,
+      path.join(output, "native-load"),
+    );
+    successful(probe);
+    const images = JSON.parse(probe.stdoutText) as string[];
+    const nativeImages = images.filter((file) => path.basename(file).startsWith("vize-vitrine."));
+    assert.equal(nativeImages.length, 1);
+    nativeImage = fs.realpathSync.native(nativeImages[0]);
+  } else {
+    nativeImage = resolveOfficialNativeImage(directory);
+    for (const file of ["native-binding.js", "native-targets.js"])
+      fs.copyFileSync(
+        path.join(directory, "node_modules/@vizejs/native", file),
+        path.join(output, file),
+      );
+  }
   const target = /^vize-vitrine\.([a-z0-9-]+)\.node$/u.exec(path.basename(nativeImage));
   assert.ok(target, "loaded image must identify its platform package");
   const platformName = `@vizejs/native-${target[1]}`;
@@ -305,8 +257,9 @@ export async function installedIdentity(directory: string, output: string) {
     compiler: identity(compiler),
     nativeImage: identity(nativeImage),
     lock: identity(path.join(directory, "package-lock.json")),
-    qualification:
-      "Actual installed module resolution and loaded image; no OS child PID or loader instrumentation claim",
+    qualification: probeNative
+      ? "Actual installed module resolution and loaded image; no OS child PID or loader instrumentation claim"
+      : "Installed/resolved native image and loader text only; loaded-image identity UNAVAILABLE; no direct native require probe",
   };
   writeJson(path.join(output, "installed-identity.json"), packet);
   return packet;
@@ -343,13 +296,22 @@ function packCurrentPackages(output: string) {
   return dependencies;
 }
 
-export async function main(args = process.argv.slice(2)) {
-  const option = (name: string) => {
-    const index = args.indexOf(name);
-    return index < 0 ? undefined : args[index + 1];
+function failure(name: string, error: unknown) {
+  return {
+    name,
+    error:
+      error instanceof Error
+        ? Object.fromEntries(
+            Object.getOwnPropertyNames(error).map((key) => [key, Reflect.get(error, key)]),
+          )
+        : String(error),
   };
+}
+
+export async function main(args = process.argv.slice(2)) {
+  const options = officialRunOptions(args, root, fixturePath);
   const output = path.resolve(
-    option("--output") ?? path.join(root, "target/vize-tests/official-css-options"),
+    options.output ?? path.join(root, "target/vize-tests/official-css-options"),
   );
   assert.ok(
     !fs.existsSync(output) || fs.readdirSync(output).length === 0,
@@ -357,35 +319,103 @@ export async function main(args = process.argv.slice(2)) {
   );
   fs.mkdirSync(output, { recursive: true });
   const pins = { typescript: fixture.typescript, vue: fixture.vue };
-  const baseline = install(
-    path.join(output, "baseline-install"),
-    { ...pins, vize: fixture.baselineVize },
-    path.join(output, "baseline-install-process"),
-  );
-  const baselineIdentity = await installedIdentity(
-    baseline,
-    path.join(output, "baseline-identity"),
-  );
-  assert.equal(
-    baselineIdentity.packages.find((pkg) => pkg.name === "vize")!.version,
-    fixture.baselineVize,
-  );
-  const baselineResults = fixture.originals.map((row) =>
-    check(
-      baseline,
-      {
-        name: `issue-${row.issue}`,
-        original: row.issue,
-        files: row.files,
-        codes: row.baselineCodes,
-      },
-      path.join(output, "baseline"),
-      true,
-    ),
-  );
+  const { fixturePaths, publicVersion } = options;
+  const authority = options.candidateOnly
+    ? officialActorInputs(JSON.parse(fs.readFileSync(options.publicInputs!, "utf8")))
+    : undefined;
+  const subjectFixtures: { path: string; sha256: string; head: string }[] = [];
+  const suites = fixturePaths.map((file) => {
+    if (!authority) return { file, fixture: loadOfficialFixture(file) };
+    const relative = path.relative(root, file).split(path.sep).join("/");
+    const bytes = readRawBlob(root, authority.subject.head, relative);
+    assert.equal(
+      digest(fs.readFileSync(file)),
+      digest(bytes),
+      "F fixture must equal selected H raw source",
+    );
+    subjectFixtures.push({ path: relative, sha256: digest(bytes), head: authority.subject.head });
+    return { file, fixture: loadOfficialFixture(file, bytes.toString("utf8")) };
+  });
+  const allCases = suites.flatMap((suite) => officialCases(suite.fixture));
+  assert.equal(new Set(allCases.map((row) => row.name)).size, allCases.length);
+  assert.ok(allCases.length, "nonempty owned fixture cases required");
+  if (options.candidateOnly) {
+    const { subject: inputs, actor } = authority!;
+    assert.equal(inputs.tag, `v${publicVersion}`);
+    const head = run("git", ["rev-parse", "HEAD"], root, path.join(output, "public-source"));
+    successful(head);
+    assert.equal(head.stdoutText.trim(), actor, "checkout must be trusted tooling actor F");
+    successful(
+      run(
+        "git",
+        ["--no-replace-objects", "merge-base", "--is-ancestor", inputs.head, actor],
+        root,
+        path.join(output, "subject-ancestry"),
+      ),
+    );
+    const status = run("git", ["status", "--porcelain"], root, path.join(output, "public-clean"));
+    successful(status);
+    assert.equal(status.stdoutText, "", "public actor requires its clean exact source");
+    successful(
+      run(
+        "git",
+        ["ls-files", "--error-unmatch", "--", ...fixturePaths],
+        root,
+        path.join(output, "public-owned-fixtures"),
+      ),
+    );
+    const publication = await verifyPublication(derivePublicationPlan(root, inputs.head), inputs);
+    writeJson(path.join(output, "public-publication.json"), publication);
+    writeJson(path.join(output, "selection.json"), {
+      mode: "published-explicit-candidate-only",
+      baseline: "NOT EXECUTED: no historical failure credit",
+      inputs,
+      actor,
+      subjectFixtures,
+      fixtures: suites.map((suite) => identity(suite.file)),
+      expectedCases: allCases.length,
+    });
+  }
+  const baselineVersions = new Map<string, string>();
+  const baselineResults = [],
+    baselineFailures = [];
+  for (const suite of suites) {
+    assert.equal(suite.fixture.typescript, pins.typescript);
+    assert.equal(suite.fixture.vue, pins.vue);
+    if (options.candidateOnly) continue;
+    const version = suite.fixture.baselineVize;
+    let baseline = baselineVersions.get(version);
+    if (!baseline) {
+      const suffix = baselineVersions.size ? "-" + version : "";
+      baseline = install(
+        path.join(output, "baseline-install" + suffix),
+        { ...pins, vize: version },
+        path.join(output, "baseline-install-process" + suffix),
+      );
+      const observed = await installedIdentity(
+        baseline,
+        path.join(output, "baseline-identity" + suffix),
+      );
+      assert.equal(observed.packages.find((pkg) => pkg.name === "vize")!.version, version);
+      baselineVersions.set(version, baseline);
+    }
+    for (const original of suite.fixture.originals) {
+      const row = officialCases(suite.fixture).find(
+        (row) => row.name === `issue-${original.issue}`,
+      )!;
+      try {
+        baselineResults.push(
+          check(baseline, row, path.join(output, "baseline"), suite.fixture, true),
+        );
+      } catch (error) {
+        baselineFailures.push(failure(row.name, error));
+      }
+    }
+  }
   writeJson(path.join(output, "baseline-results.json"), baselineResults);
-  if (args.includes("--baseline-only")) return;
-  const publicVersion = option("--public-version");
+  writeJson(path.join(output, "baseline-failures.json"), baselineFailures);
+  assert.deepEqual(baselineFailures, [], "all original public failures must reproduce");
+  if (options.baselineOnly) return;
   const source = run("git", ["rev-parse", "HEAD"], root, path.join(output, "source-identity"));
   successful(source);
   if (!publicVersion)
@@ -403,7 +433,9 @@ export async function main(args = process.argv.slice(2)) {
   const candidateIdentity = await installedIdentity(
     candidate,
     path.join(output, "candidate-identity"),
+    !options.candidateOnly,
   );
+  if (options.candidateOnly) await verifyPublicInstallation(candidate, output, candidateIdentity);
   if (publicVersion)
     assert.equal(
       candidateIdentity.packages.find((pkg) => pkg.name === "vize")!.version,
@@ -417,25 +449,20 @@ export async function main(args = process.argv.slice(2)) {
     );
   const results = [],
     failures = [];
-  for (const row of officialCssCases()) {
-    try {
-      results.push(check(candidate, row, path.join(output, "candidate")));
-    } catch (error) {
-      failures.push({
-        name: row.name,
-        error:
-          error instanceof Error
-            ? Object.fromEntries(
-                Object.getOwnPropertyNames(error).map((key) => [key, Reflect.get(error, key)]),
-              )
-            : String(error),
-      });
+  for (const suite of suites)
+    for (const row of officialCases(suite.fixture)) {
+      try {
+        results.push(check(candidate, row, path.join(output, "candidate"), suite.fixture));
+      } catch (error) {
+        failures.push(failure(row.name, error));
+      }
     }
-  }
   writeJson(path.join(output, "results.json"), {
     source: source.stdoutText.trim(),
+    ...(authority ? { actor: authority.actor, subject: authority.subject, subjectFixtures } : {}),
     kind: publicVersion ? "released-package" : "source-built-packed-candidate",
-    fixture: identity(fixturePath),
+    fixture: identity(fixturePaths[0]),
+    fixtures: suites.map((suite) => identity(suite.file)),
     results,
     failures,
   });

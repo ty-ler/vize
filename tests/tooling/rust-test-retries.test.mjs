@@ -19,7 +19,10 @@ for (const cohort of RUST_TEST_COHORT_IDS) {
   const job = "merge-rust-source";
   void test(`${cohort} failed-only retry selects its completed producer's exact archive`, async () => {
     const workflow = parse(
-      readFileSync(new URL("../../.github/workflows/pr-rust-checks.yml", import.meta.url), "utf8"),
+      readFileSync(
+        new URL("../../.github/workflows/pr-rust-products.yml", import.meta.url),
+        "utf8",
+      ),
     );
     const uploads = workflow.jobs[job].steps.filter(
       (step) =>

@@ -8,12 +8,13 @@ import { test } from "node:test";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
+import { runInNewContext } from "node:vm";
 import {
   requireDownload,
   selectArchive,
   validateArchive,
 } from "../../tools/support/compat/github/rust-archive-download.ts";
-import { readRepoFile } from "./support/github-workflows.ts";
+import { readRepoFile, guardedCohortPackaging } from "./support/github-workflows.ts";
 import { RUST_TEST_COHORT_IDS } from "../../tools/support/compat/github/rust-test-cohorts.ts";
 
 const context = { run: "123", sha: "a".repeat(40), repository: "owner/repo" };
@@ -81,7 +82,7 @@ test("only a clean first success or a single successful retry can qualify", () =
 });
 
 test("workflow bounds both attempts, pins the same ID and requires cleanup plus every original gate", () => {
-  const workflow = parse(readRepoFile(".github", "workflows", "pr-rust-checks.yml"));
+  const workflow = parse(readRepoFile(".github", "workflows", "pr-rust-products.yml"));
   const job = workflow.jobs["pr-rust-shard"];
   const first = job.steps.find((step: { id?: string }) => step.id === "rust-archive-first");
   const retry = job.steps.find((step: { id?: string }) => step.id === "rust-archive-retry");
@@ -190,4 +191,76 @@ test("actual selector cleans partial files and rejects metadata changes after a 
   await run("verify");
   current = { ...artifact, digest: `sha256:${"c".repeat(64)}` };
   await assert.rejects(run("verify"), /ID\/digest changed/);
+});
+
+void test("cohort probe and all five payload uploads retain the selected Rust truth table", () => {
+  const products = parse(readRepoFile(".github", "workflows", "pr-rust-products.yml")) as {
+    jobs: Record<string, Parameters<typeof guardedCohortPackaging>[0]>;
+  };
+  const producer = products.jobs["merge-rust-source"];
+  const guarded = guardedCohortPackaging(producer);
+  for (const event of ["merge_group", "pull_request", "workflow_dispatch"])
+    for (const runRust of [true, false])
+      for (const qualification of ["", "nonempty-qualification"]) {
+        // The complete exact three-variable producer predicate was validated above.
+        const selected = event === "merge_group" && runRust && qualification === "";
+        assert.deepEqual(
+          guarded.map(() => selected && runRust),
+          Array(6).fill(selected),
+        );
+      }
+  for (const original of guarded) {
+    for (const mutation of [
+      { if: undefined },
+      { if: "${{ always() }}" },
+      { "continue-on-error": true },
+    ]) {
+      const changed = structuredClone(producer);
+      const index = producer.steps!.indexOf(original);
+      Object.assign(changed.steps![index], mutation);
+      assert.throws(() => guardedCohortPackaging(changed));
+    }
+  }
+});
+
+test("actual job selectors keep ordinary workers and source checks while only footprint products can skip", () => {
+  const rustWorkflow = (name: string) =>
+    parse(readRepoFile(".github", "workflows", name)) as { jobs: Record<string, { if: string }> };
+  const source = rustWorkflow("pr-rust-checks.yml").jobs;
+  const products = rustWorkflow("pr-rust-products.yml").jobs;
+  const selector =
+    (job: { if: string }) =>
+    (context: Record<string, string | boolean>): unknown =>
+      runInNewContext(
+        `(${job.if
+          .slice(3, -2)
+          .replaceAll("github.event_name", "event")
+          .replaceAll("inputs.run-rust", "runRust")
+          .replaceAll("inputs.product-qualification", "product")
+          .replaceAll("needs.merge-rust-source.result", "result")
+          .replaceAll("always()", "true")
+          .replaceAll("cancelled()", "cancelled")})`,
+        context,
+      );
+  const archive = selector(products["merge-rust-source"]),
+    cohort = selector(products["pr-rust-shard"]);
+  const clippy = selector(source["pr-rust-build"]),
+    differential = selector(source["merge-rust-differential"]);
+  for (const event of ["pull_request", "merge_group"])
+    for (const runRust of [true, false])
+      for (const product of ["", "untrusted-nonempty"])
+        for (const result of ["success", "failure", "skipped"])
+          for (const cancelled of [true, false]) {
+            const args = { event, runRust, product, result, cancelled };
+            assert.equal(archive(args), event === "merge_group" && runRust && product === "");
+            assert.equal(
+              cohort(args),
+              !cancelled &&
+                runRust &&
+                product === "" &&
+                (event === "pull_request" || result === "success"),
+            );
+            assert.equal(clippy(args), runRust);
+            assert.equal(differential(args), event === "merge_group" && runRust);
+          }
 });

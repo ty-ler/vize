@@ -1,12 +1,24 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { parse } from "yaml";
-import { readRepoFile } from "./support/github-workflows.ts";
+import {
+  readRepoFile,
+  requireDailySourceContracts,
+  restoreCohortArchiveRecipe,
+  restoreCohortCorpusRecipe,
+  type DailyRustSourceWorkflow,
+  type DailySourceStep,
+} from "./support/github-workflows.ts";
 
 type Step = {
   id?: string;
   "timeout-minutes"?: number;
-  "continue-on-error"?: boolean | string;
+  "continue-on-error"?: boolean;
   name?: string;
   if?: string;
   run?: string;
@@ -32,62 +44,11 @@ const workflow = (name: string): Workflow => parse(readRepoFile(".github", "work
 const check = workflow("check.yml");
 const source = workflow("pr-source-checks.yml");
 const rust = workflow("pr-rust-checks.yml");
+const products = workflow("pr-rust-products.yml");
 const js = workflow("pr-js-checks.yml");
 const commands = (job: Job): string => (job.steps ?? []).map((step) => step.run ?? "").join("\n");
 const needs = (job: Job): string[] =>
   typeof job.needs === "string" ? [job.needs] : (job.needs ?? []);
-
-function guardedCohortPackaging(producer: Job) {
-  assert.equal(producer.if, "${{ github.event_name == 'merge_group' && inputs.run-rust }}");
-  const steps = producer.steps ?? [];
-  const probe = steps.filter(
-    (step) => step.name === "Qualify pinned nextest cohort archive resources",
-  );
-  const uploads = steps.filter((step) =>
-    String(step.with?.name ?? "").startsWith(
-      "rust-test-archive-${{ github.run_id }}-${{ github.sha }}-",
-    ),
-  );
-  assert.equal(probe.length, 1);
-  assert.equal(uploads.length, 5);
-  for (const step of [...probe, ...uploads]) {
-    assert.equal(step.if, "${{ inputs.run-rust }}");
-    assert.equal(step["continue-on-error"], undefined);
-  }
-  return [...probe, ...uploads];
-}
-
-void test("cohort probe and all five payload uploads retain the selected Rust truth table", () => {
-  const producer = rust.jobs["merge-rust-source"];
-  const guarded = guardedCohortPackaging(producer);
-  for (const [event, runRust, expected] of [
-    ["merge_group", true, true],
-    ["merge_group", false, false],
-    ["pull_request", true, false],
-    ["pull_request", false, false],
-    ["workflow_dispatch", true, false],
-  ] as const) {
-    // Evaluate the exact, validated two-variable predicates rather than grant
-    // an unrecognized workflow expression the expected selection.
-    const selected = event === "merge_group" && runRust;
-    assert.deepEqual(
-      guarded.map(() => selected && runRust),
-      Array(6).fill(expected),
-    );
-  }
-  for (const original of guarded) {
-    for (const mutation of [
-      { if: undefined },
-      { if: "${{ always() }}" },
-      { "continue-on-error": true },
-    ]) {
-      const changed = structuredClone(producer);
-      const index = producer.steps!.indexOf(original);
-      Object.assign(changed.steps![index], mutation);
-      assert.throws(() => guardedCohortPackaging(changed));
-    }
-  }
-});
 
 void test("required source reports include selected product gates and mandatory Rust acceptance", () => {
   const entry = check.jobs["pr-source-checks"];
@@ -97,6 +58,7 @@ void test("required source reports include selected product gates and mandatory 
   assert.ok(needs(check.jobs["test-report"]).includes("pr-source-checks"));
   for (const name of [
     "pr-rust-source",
+    "pr-rust-products",
     "pr-js-packages",
     "pr-native-runtime",
     "pr-playground-test",
@@ -116,6 +78,12 @@ void test("required source reports include selected product gates and mandatory 
   assert.equal(source.jobs["pr-rust-source"].with?.["run-rust"], true);
   assert.equal(
     source.jobs["pr-rust-source"].with?.["rust-plan"],
+    "${{ needs.pr-source-plan.outputs.rust-plan }}",
+  );
+  assert.equal(source.jobs["pr-rust-products"].uses, "./.github/workflows/pr-rust-products.yml");
+  assert.equal(source.jobs["pr-rust-products"].with?.["run-rust"], true);
+  assert.equal(
+    source.jobs["pr-rust-products"].with?.["rust-plan"],
     "${{ needs.pr-source-plan.outputs.rust-plan }}",
   );
   assert.equal(source.jobs["pr-js-packages"].uses, "./.github/workflows/pr-js-checks.yml");
@@ -155,7 +123,7 @@ void test("Clippy and doctests start beside affected cohort execution and stay r
   );
   assert.match(validation, /cargo test @packages@ --profile ci --doc/);
   assert.doesNotMatch(validation, /nextest archive/);
-  const producer = rust.jobs["merge-rust-source"];
+  const producer = products.jobs["merge-rust-source"];
   assert.match(producer.if ?? "", /github\.event_name == 'merge_group'/);
   assert.match(
     commands(producer),
@@ -178,18 +146,17 @@ void test("Clippy and doctests start beside affected cohort execution and stay r
     "node --test tests/tooling/rust-cohort-archive-integration.test.ts",
   );
   assert.deepEqual(producerSteps[probe].env, { VIZE_TEST_REAL_COHORT_ARCHIVES: "1" });
-  for (const name of [
-    "merge-rust-source",
-    "merge-rust-differential",
-    "pr-rust-build",
-    "pr-rust-shard",
-  ])
-    assert.ok(needs(rust.jobs["rust-source-report"]).includes(name), `${name} is required`);
-  assert.match(commands(rust.jobs["rust-source-report"]), /require-rust-tier\.ts/);
+  for (const [report, names] of [
+    [rust.jobs["rust-source-report"], ["merge-rust-differential", "pr-rust-build"]],
+    [products.jobs["rust-product-report"], ["merge-rust-source", "pr-rust-shard"]],
+  ] as const)
+    for (const name of names) assert.ok(needs(report).includes(name), `${name} is required`);
+  assert.match(commands(rust.jobs["rust-source-report"]), /require-rust-tier\.ts --source/);
+  assert.match(commands(products.jobs["rust-product-report"]), /require-rust-tier\.ts --products/);
 });
 
 void test("named Rust cohorts preserve filtered execution and receipt-bound queue archives", () => {
-  const workers = rust.jobs["pr-rust-shard"];
+  const workers = products.jobs["pr-rust-shard"];
   assert.equal(workers.strategy?.matrix, "${{ fromJSON(inputs.rust-plan).testMatrix }}");
   assert.equal(workers.strategy?.["fail-fast"], false);
   assert.equal(workers.env?.COHORT, "${{ matrix.cohort }}");
@@ -243,8 +210,17 @@ void test("named Rust cohorts preserve filtered execution and receipt-bound queu
 });
 
 void test("full repository ratchets and coverage remain scheduled or explicitly requested", () => {
-  for (const command of [/check-skeleton-todos\.rs --check/, /write-coverage-summary\.rs/]) {
-    const jobs = Object.values(check.jobs).filter((job) => command.test(commands(job)));
+  const caller = check.jobs["full-qualification"];
+  assert.equal(caller.uses, "./.github/workflows/full-qualification.yml");
+  assert.ok(caller.if?.includes("github.event_name == 'schedule'"));
+  assert.ok(caller.if?.includes("github.event_name == 'workflow_dispatch'"));
+  assert.ok(!caller.if?.includes("pull_request"));
+  const full = workflow("full-qualification.yml");
+  for (const [physical, command] of [
+    [full, /check-skeleton-todos\.rs --check/],
+    [check, /write-coverage-summary\.rs/],
+  ] as const) {
+    const jobs = Object.values(physical.jobs).filter((job) => command.test(commands(job)));
     assert.ok(jobs.length > 0, `${command} remains available in full checks`);
     for (const job of jobs) {
       assert.ok(job.if?.includes("github.event_name == 'schedule'"));
@@ -278,5 +254,199 @@ void test("trusted main and scheduled runs seed the CI profiles while candidate 
     assert.equal(mount.with?.commit, "${{ steps.cache-policy.outputs.sticky-commit }}");
     assert.ok(String(mount.with?.key).startsWith("${{ steps.cache-policy.outputs.sticky-"));
     assert.ok(mount.if?.includes("steps.cache-policy.outputs.sticky == 'true'"));
+  }
+});
+
+// Whole parsed producer vectors from 3d93303bb615c71987394528276bd1bed7e3bc40.
+// Current daily source policy is checked before reversing its command/evidence additions.
+// Every other producer field and the explicit product guard retain the historical whole digest.
+type RustJob = {
+  if: string;
+  needs: string[];
+  steps: Array<DailySourceStep & Record<string, unknown>>;
+};
+const workflowRoot = fileURLToPath(new URL("../../.github/workflows/", import.meta.url));
+const yaml = createRequire(import.meta.url)("yaml") as {
+  parse: (source: string) => DailyRustSourceWorkflow & { jobs: Record<string, RustJob> };
+};
+const rustWorkflow = (name: string) => yaml.parse(readFileSync(join(workflowRoot, name), "utf8"));
+const digest = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const productJobs = ["merge-rust-source", "pr-rust-shard"];
+const sourceJobs = ["merge-rust-differential", "pr-rust-build"];
+
+function requireSplitRustRecipes(
+  sourceWorkflow = rustWorkflow("pr-rust-checks.yml"),
+  productWorkflow = rustWorkflow("pr-rust-products.yml"),
+) {
+  const contracts = requireDailySourceContracts(
+    rustWorkflow("pr-source-checks.yml"),
+    sourceWorkflow,
+  );
+  const source = sourceWorkflow.jobs;
+  const products = productWorkflow.jobs;
+  assert.deepEqual(Object.keys(source), [...sourceJobs, "rust-source-report"]);
+  assert.deepEqual(Object.keys(products), [...productJobs, "rust-product-report"]);
+  const oldHashes = {
+    "merge-rust-source": "d607059b87aae591d6f83cb6be640da086eb70cda213fcbbef47732d9ff5a754",
+    "merge-rust-differential": "13c78bc5c1872dffc8af00f380e4b65177e524cf516b5914d808aa0bdea1194e",
+    "pr-rust-build": "b6196b2390e511fcbe60021124f07e84642e0d3d377d489316241575df3ffea5",
+    "pr-rust-shard": "fac12385c01201bbb2645d0424c6ceb5a3083aad90e58fdc8c4d605ffdc93397",
+  };
+  for (const [id, expected] of Object.entries(oldHashes)) {
+    const job = structuredClone(source[id] ?? products[id]);
+    if (productJobs.includes(id)) {
+      restoreCohortArchiveRecipe(job, id);
+      assert.equal(job.if.split(" && inputs.product-qualification == ''").length, 2);
+      job.if = job.if.replace(" && inputs.product-qualification == ''", "");
+    }
+    if (id === "pr-rust-build") {
+      job.steps[contracts].run =
+        "node --test --test-concurrency=1 tests/tooling/davinci-assertion-lint.test.ts tests/tooling/davinci-consumer-migration-surfaces.test.mjs tests/tooling/docs-reviewed-translations.test.ts";
+      job.steps.splice(contracts + 1, 1);
+    }
+    assert.equal(digest(job), expected, id);
+  }
+  for (const report of [source["rust-source-report"], products["rust-product-report"]]) {
+    assert.equal(report.if, "${{ always() && !contains(needs.*.result, 'cancelled') }}");
+    assert.equal(
+      digest(report.steps.slice(0, 3)),
+      "649b94e358e52ae35218f47ec18138006bbc76d571f9f8bbb0aa58af7156acc7",
+    );
+  }
+  assert.deepEqual(source["rust-source-report"].needs, sourceJobs);
+  assert.deepEqual(products["rust-product-report"].needs, productJobs);
+  assert.equal(source["rust-source-report"].steps.length, 4);
+  assert.equal(
+    source["rust-source-report"].steps[3].run,
+    "node tools/support/compat/github/require-rust-tier.ts --source",
+  );
+  const productReport = products["rust-product-report"];
+  assert.deepEqual(Reflect.get(productReport, "permissions"), {
+    contents: "read",
+    actions: "read",
+    "pull-requests": "read",
+  });
+  assert.equal(
+    productReport.steps[3].run,
+    "node tools/support/compat/github/require-rust-tier.ts --products",
+  );
+  assert.deepEqual(productReport.steps[3].env, {
+    RUN_RUST: "${{ inputs.run-rust }}",
+    NEEDS_JSON: "${{ toJSON(needs) }}",
+    PRODUCT_QUALIFICATION: "${{ inputs.product-qualification }}",
+    RELEASE_QUALIFICATION: "${{ inputs.release-qualification }}",
+    GH_TOKEN: "${{ github.token }}",
+  });
+  const artifactSteps = structuredClone(productReport.steps.slice(4));
+  for (const step of artifactSteps) {
+    assert.equal(typeof step.if, "string");
+    const guard = String(step.if);
+    assert.equal(guard.split(" && inputs.product-qualification == ''").length, 2);
+    step.if = guard.replace(" && inputs.product-qualification == ''", "");
+  }
+  restoreCohortCorpusRecipe(artifactSteps);
+  assert.equal(
+    digest(artifactSteps),
+    "f66b569dbbaa0f609d5dfa5bec576e5e4eab3dc845c7d74f19b4ff4c0b04a40e",
+  );
+}
+
+test("split Rust workflows preserve whole original producer and corpus recipes", () => {
+  requireSplitRustRecipes();
+});
+
+test("whole split preservation refuses changed current policy and unrelated producer fields", () => {
+  for (const mutation of [
+    "missing",
+    "extra",
+    "missing-step",
+    "extra-step",
+    "guard",
+    "setup",
+    "timeout",
+    "hidden",
+    "evidence-extra",
+  ]) {
+    const changed = rustWorkflow("pr-rust-checks.yml");
+    const job = changed.jobs["pr-rust-build"];
+    const contracts = job.steps.findIndex(
+      (step) => step.name === "Require current-tree source, API and reviewed-doc contracts",
+    );
+    const step = job.steps[contracts];
+    if (mutation === "missing")
+      step.run = step.run?.replace(" tests/tooling/docs-reviewed-translations.test.ts", "");
+    if (mutation === "extra") step.run += " tests/tooling/unregistered-contract.test.ts";
+    if (mutation === "missing-step") job.steps.splice(contracts, 1);
+    if (mutation === "extra-step") job.steps.push({ run: "echo unapproved" });
+    if (mutation === "guard") step.if = "${{ false }}";
+    if (mutation === "setup")
+      job.steps.splice(
+        job.steps.findIndex((value) => value.uses?.startsWith("actions/setup-node@")),
+        1,
+      );
+    if (mutation === "timeout") Reflect.set(job, "timeout-minutes", 999);
+    if (mutation === "hidden") job.steps[contracts + 1].with!["include-hidden-files"] = false;
+    if (mutation === "evidence-extra") job.steps[contracts + 1]["continue-on-error"] = true;
+    assert.throws(() => requireSplitRustRecipes(changed), assert.AssertionError, mutation);
+  }
+});
+
+test("whole cohort preservation refuses missing proof, changed payloads and unrelated recipe drift", () => {
+  for (const mutation of [
+    "probe-missing",
+    "probe-env",
+    "probe-order",
+    "payload-missing",
+    "payload-duplicate",
+    "payload-path",
+    "payload-advisory",
+    "build-argument",
+    "resource-skip",
+    "worker-args",
+    "corpus-args",
+    "extra-step",
+    "producer-input",
+  ]) {
+    const changed = rustWorkflow("pr-rust-products.yml");
+    const producer = changed.jobs["merge-rust-source"],
+      worker = changed.jobs["pr-rust-shard"];
+    const probe = producer.steps.find(
+      (step) => step.name === "Qualify pinned nextest cohort archive resources",
+    )!;
+    const payload = producer.steps.find((step) => String(step.with?.name).endsWith("-compiler"))!;
+    if (mutation === "probe-missing") producer.steps.splice(producer.steps.indexOf(probe), 1);
+    if (mutation === "probe-env")
+      Reflect.set(probe, "env", { VIZE_TEST_REAL_COHORT_ARCHIVES: "0" });
+    if (mutation === "probe-order") {
+      producer.steps.splice(producer.steps.indexOf(probe), 1);
+      producer.steps.push(probe);
+    }
+    if (mutation === "payload-missing") producer.steps.splice(producer.steps.indexOf(payload), 1);
+    if (mutation === "payload-duplicate") producer.steps.push(structuredClone(payload));
+    if (mutation === "payload-path") payload.with!.path = "target/foreign/";
+    if (mutation === "payload-advisory") payload["continue-on-error"] = true;
+    if (mutation === "build-argument")
+      producer.steps.find((step) => step.name === "Build Rust workspace tests")!.run +=
+        "echo unapproved\n";
+    if (mutation === "resource-skip")
+      worker.steps.find(
+        (step) => step.name === "Verify the complete cohort and extracted resource closure",
+      )!.if = "${{ false }}";
+    if (mutation === "worker-args")
+      worker.steps.find(
+        (step) => step.name === "Verify actual typechecker fixture observations",
+      )!.run = "echo bypass";
+    if (mutation === "corpus-args")
+      changed.jobs["rust-product-report"].steps.find((step) =>
+        step.run?.includes("typechecker-shards.ts aggregate"),
+      )!.run = "echo bypass";
+    if (mutation === "extra-step") worker.steps.push({ run: "echo unapproved" });
+    if (mutation === "producer-input")
+      producer.if = "${{ github.event_name == 'merge_group' && inputs.run-rust }}";
+    assert.throws(
+      () => requireSplitRustRecipes(undefined, changed),
+      assert.AssertionError,
+      mutation,
+    );
   }
 });
