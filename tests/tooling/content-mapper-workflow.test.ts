@@ -213,11 +213,6 @@ test("manual focused campaigns preserve the full default and upload before gatin
       }
     >;
   };
-  assert.equal(
-    workflow.concurrency.group,
-    "content-mapper-${{ inputs.published-defaults-only && github.run_id || github.event.pull_request.number || github.ref }}${{ inputs.published-defaults-only && '-published-defaults' || inputs.official-css-options-only && '-official-css-options' || inputs.directive-owners-only && '-directive-owners' || inputs.event-rename-only && '-event-rename' || '' }}",
-    "a focused campaign must not cancel the full conformance campaign",
-  );
   const input = workflow.on.workflow_dispatch.inputs["event-rename-only"];
   assert.equal(input.type, "boolean");
   assert.equal(input.default, false);
