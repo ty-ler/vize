@@ -7,6 +7,9 @@ use crate::template::{
     helpers::{byte_at, is_tag_name_char, is_whitespace, parse_closing_tag},
 };
 use vize_l0::{String, ToCompactString};
+use vize_l1::markup::{
+    DirectivePrefix, DirectiveSyntax, VueDirectives, lex::dynamic_argument_boundary,
+};
 
 impl TemplateFormatter<'_> {
     /// Parse an opening tag into structured attributes.
@@ -120,6 +123,26 @@ impl TemplateFormatter<'_> {
         let name_start = pos;
         while pos < len {
             let b = byte_at(source, pos);
+            // The compiler's L1 lexer owns dynamic-argument boundaries. In
+            // particular, an arrow's `=>` belongs to this name, not the HTML
+            // assignment/tag end. Plain names and modifier text keep their
+            // original framing; this does not parse or normalize the argument.
+            if b == b'['
+                && let Some(prefix) = text.get(name_start..pos)
+                && let Ok(Some(head)) = VueDirectives.decompose(prefix, 0)
+                && head.arg.is_none()
+                && head.modifiers.start == head.modifiers.end
+                && (head.prefix != DirectivePrefix::Full
+                    || head.name.start != head.name.end && prefix.ends_with(':'))
+            {
+                let (end, closed) =
+                    dynamic_argument_boundary(text.get(pos + 1..).unwrap_or_default());
+                pos += 1 + end + usize::from(closed);
+                if !closed {
+                    break;
+                }
+                continue;
+            }
             if is_whitespace(b) || b == b'>' || b == b'/' || b == b'=' {
                 break;
             }
@@ -138,7 +161,7 @@ impl TemplateFormatter<'_> {
 
         // Skip whitespace before '='
         let mut val_pos = pos;
-        while val_pos < len && matches!(byte_at(source, val_pos), b' ' | b'\t') {
+        while val_pos < len && is_whitespace(byte_at(source, val_pos)) {
             val_pos += 1;
         }
 
@@ -147,7 +170,7 @@ impl TemplateFormatter<'_> {
             val_pos += 1; // skip '='
 
             // Skip whitespace after '='
-            while val_pos < len && matches!(byte_at(source, val_pos), b' ' | b'\t') {
+            while val_pos < len && is_whitespace(byte_at(source, val_pos)) {
                 val_pos += 1;
             }
 

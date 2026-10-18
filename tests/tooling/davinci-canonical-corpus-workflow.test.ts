@@ -67,10 +67,11 @@ await test("selection covers pinned inputs, drivers and real producers in both c
     "tools/support/compat/github/canonical-corpus-observer.mjs",
     "tools/support/compat/github/canonical-corpus-workers.mjs",
     "tools/support/compat/github/canonical-corpus-jobs.ts",
-    "tools/support/compat/github/canonical-corpus-native-walk.mjs",
+    "tools/support/compat/github/canonical-corpus-native-walk.ts",
     "tools/support/compat/github/canonical-corpus-finite-walk.mjs",
     "tests/tooling/davinci-canonical-corpus-native-archive.test.mjs",
-    "tools/support/compat/github/canonical-corpus-logical-walk.mjs",
+    "tools/support/compat/github/canonical-corpus-logical-walk.ts",
+    "tools/support/compat/github/canonical-corpus-types.ts",
     "tools/support/compat/github/canonical-corpus-io-probe.mjs",
     "tools/support/compat/github/canonical-corpus-io-probe.rs",
     "tools/support/compat/github/canonical-corpus-shards.ts",
@@ -189,12 +190,15 @@ await test("ordinary source and queue reports require the strict reusable execut
   );
   assert.equal(corpus.on.workflow_call.inputs.davinci_dom_corpus_mode.default, "enforce");
   assert.deepEqual(corpus.permissions, { contents: "read" });
-  for (const job of [
-    corpus.jobs["davinci-dom-corpus"],
-    parse(readRepoFile(".github", "workflows", "check.yml")).jobs["pr-source-checks"],
-  ]) {
-    assert.deepEqual(job.permissions, { contents: "read", actions: "read", checks: "read" });
-  }
+  assert.deepEqual(corpus.jobs["davinci-dom-corpus"].permissions, {
+    contents: "read",
+    actions: "read",
+    checks: "read",
+  });
+  assert.deepEqual(
+    parse(readRepoFile(".github", "workflows", "check.yml")).jobs["pr-source-checks"].permissions,
+    { contents: "read", actions: "read", checks: "read", "pull-requests": "read" },
+  );
   assert.deepEqual(corpus.env, {
     CARGO_TERM_COLOR: "always",
     FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true,

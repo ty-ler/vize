@@ -166,31 +166,103 @@ test("release promotion rejects stale main and immutable tag conflicts atomicall
     "enqueue_records_only_authenticated_response_owner_before_fallible_postwrite_reads",
     "original_rust_readiness_adapter_preserves_pending_complete_packets_and_every_failure",
     "fresh_minor_policy_requires_every_queue_and_promotion_boundary_and_pin",
+    "prepared_normal_cut_reuses_whole_tree_without_another_worktree_or_graph_install",
+    "prepared_normal_cut_keeps_noninitial_and_moved_main_on_the_original_route",
+    "prepared_normal_cut_rejects_changed_owner_identity_and_revoked_lease_before_creation",
+    "prepared_normal_cut_refuses_hidden_changes_omitted_versions_and_raw_parent_substitution",
   ]) {
     assert.ok(result.stdout.includes(law), `actual Rust driver must execute ${law}`);
   }
 });
 
+void test("prepared integration reuse is confined to fresh exact-C preparation before unchanged full fallback", () => {
+  const start = readRepoFile("tools", "support", "release", "pr_pin_start.rs");
+  const integration = readRepoFile("tools", "support", "release", "pr_pin_integration.rs");
+  const fresh = start.slice(start.indexOf("fn start_selected("), start.indexOf("pub fn resume("));
+  const resume = start.slice(start.indexOf("pub fn resume("));
+  assert.equal(fresh.split("PreparedNormalCut::capture(").length, 2);
+  assert.ok(!resume.includes("PreparedNormalCut::capture("));
+  assert.match(resume, /budget\.as_ref\(\),\s*None,\s*&operator/);
+  const ordered = (source: string, tokens: string[]) => {
+    const positions = tokens.map((token) => source.indexOf(token));
+    positions.forEach((position, index) => assert.ok(position >= 0, tokens[index]));
+    positions.slice(1).forEach((position, index) => assert.ok(position > positions[index]!));
+  };
+  const tokens = [
+    "let mut main = github::fetch_main(root)?;",
+    "prepared.project(source, &main, root, &||",
+    "\n            main = github::fetch_main(root)?;",
+    "if main == source.cut {",
+    'return Err("Integration branch appeared during prepared-tree reuse".into());',
+    "return publish_integration(source, &branch, &head, budget, root);",
+    "let path = pr_start::pinned_integration_worktree(&main, root)?;",
+    'pr_start::prepare("patch", &path)?;',
+    "super::retire::prepare(bump, &candidate.tag, budget, &path)?;",
+    "metadata::verify_delta(",
+    "publish_integration(source, &branch, &head, budget, &path)",
+  ];
+  const route = integration.slice(integration.indexOf("pub(super) fn integration_pr("));
+  ordered(route, tokens);
+  for (const token of tokens) assert.throws(() => ordered(route.replace(token, ""), tokens));
+  assert.ok(!integration.includes("--force"));
+  assert.ok(!integration.includes("--force-with-lease"));
+  assert.ok(integration.includes('"{head}:refs/heads/{branch}"'));
+  assert.ok(integration.includes("operator.verify()"));
+  assert.ok(integration.includes('"commit-tree"'));
+});
+
+function assertOwnedWithdrawal(watch: string, queue: string, rollback: string, runner: string) {
+  assert.ok(
+    !watch.includes("--auto") &&
+      !queue.includes("--auto") &&
+      !rollback.includes("--auto") &&
+      !runner.includes("--auto"),
+  );
+  assert.equal(watch.split("queue::enqueue(").length, 2, "one native admission call site");
+  const required = watch.indexOf("pr_promote::checks_pass(candidate, root)?");
+  assert.ok(required >= 0 && required < watch.indexOf("queue::enqueue("));
+  assert.ok(watch.includes("if early_candidate.is_none() {\n                    let integration"));
+  const outcome = watch.indexOf("let result = (|| {");
+  const actualWatch = watch.indexOf("pub(super) fn watch(");
+  const finish = rollback.indexOf("pub(super) fn finish_owned_watch(");
+  assert.ok(finish >= 0 && outcome > actualWatch && actualWatch >= 0);
+  const call = /return finish_owned_watch\(\s*failure,\s*&context,/u.exec(watch);
+  assert.ok(call && call.index > watch.indexOf("})();", outcome));
+  assert.ok(rollback.slice(finish).includes("queue::cleanup("));
+  assert.ok(!rollback.slice(finish).includes("budget.check()"));
+  assert.ok(watch.includes("(&result, &early_candidate, &owned_queue)"));
+  assert.ok(watch.includes("Owned queue withdrawal refused; preserve its complete evidence"));
+}
+
 test("early queue admission waits ordinary required checks and retains finite owned withdrawal evidence", () => {
   const watch = readRepoFile("tools", "support", "release", "pr_pin_watch.rs");
   const queue = readRepoFile("tools", "support", "release", "pr_pin_queue.rs");
-  assert.ok(!watch.includes("--auto") && !queue.includes("--auto"));
-  assert.equal(watch.split("queue::enqueue(").length, 2, "one native admission call site");
-  assert.ok(
-    watch.indexOf("pr_promote::checks_pass(candidate, root)?") < watch.indexOf("queue::enqueue("),
-  );
-  assert.ok(watch.includes("if early_candidate.is_none() {\n                    let integration"));
-  const outcome = watch.indexOf("let result = (|| {");
-  const finish = watch.indexOf("pub(super) fn finish_owned_watch(");
-  const actualWatch = watch.indexOf("pub(super) fn watch(");
-  assert.ok(finish >= 0 && finish < actualWatch && outcome > actualWatch);
-  assert.ok(
-    watch.indexOf("return finish_owned_watch(failure, &context", outcome) >
-      watch.indexOf("})();", outcome),
-  );
-  assert.ok(!watch.slice(finish, actualWatch).includes("budget.check()"));
-  assert.ok(watch.includes("(&result, &early_candidate, &owned_queue)"));
-  assert.ok(watch.includes("Owned queue withdrawal refused; preserve its complete evidence"));
+  const runner = readRepoFile("tools", "support", "release", "pr_pin_process.rs");
+  const rollback = readRepoFile("tools", "support", "release", "pr_pin_rollback.rs");
+  const pin = readRepoFile("tools", "support", "release", "pr_pin.rs");
+  assert.match(queue, /#\[path = "pr_pin_process.rs"\]\s*mod process;/u);
+  assert.match(pin, /#\[path = "pr_pin_rollback.rs"\]\s*mod rollback;/u);
+  assert.ok(watch.includes("pub(super) use super::rollback::{Rollback, finish_owned_watch};"));
+  assertOwnedWithdrawal(watch, queue, rollback, runner);
+  for (const [changedWatch, changedQueue, changedRollback, changedRunner] of [
+    [watch.replace("pr_promote::checks_pass(candidate, root)?", "false"), queue, rollback, runner],
+    [watch.replace("queue::enqueue(", "unowned::enqueue("), queue, rollback, runner],
+    [watch.replace("return finish_owned_watch(", "return unowned_watch("), queue, rollback, runner],
+    [watch, queue + " --auto", rollback, runner],
+    [watch, queue, rollback + " --auto", runner],
+    [
+      watch,
+      queue,
+      rollback.replace("pub(super) fn finish_owned_watch(", "fn foreign_finish("),
+      runner,
+    ],
+    [watch, queue, rollback.replace("queue::cleanup(", "unowned::cleanup("), runner],
+    [watch, queue, rollback + " budget.check()", runner],
+    [watch, queue, rollback, runner + " --auto"],
+  ])
+    assert.throws(() =>
+      assertOwnedWithdrawal(changedWatch, changedQueue, changedRollback, changedRunner),
+    );
   const operator = parse(readRepoFile(".github", "workflows", "release-operator.yml"));
   const invocation = operator.jobs.operator.steps.find(
     (step: { env?: Record<string, string> }) => step.env?.GH_TOKEN,
