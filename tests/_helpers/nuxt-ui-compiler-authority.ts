@@ -1,15 +1,16 @@
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
 import * as fs from "node:fs";
-import { createRequire } from "node:module";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { inspect } from "node:util";
+
+import { fixtureIdentity } from "./nuxt-ui-fixture-identity.ts";
+export { fixtureIdentity } from "./nuxt-ui-fixture-identity.ts";
 
 type Phase = "candidate" | "reference";
-type Entry = { path: string; bytes: number; sha256: string };
 const CONFIG = "playgrounds/nuxt/nuxt.config.ts";
 const COMPILER = "compiler: {\n      handleNodeModulesVue: false,\n    }";
-const GENERATED = new Set(["node_modules", ".git", ".nuxt", ".output", ".vize", ".cache", ".vite"]);
 const TARGET =
   /\/(?:Select|SelectRoot|SelectValue|Primitive|Slot)\.(?:vue(?:\.tsx?)?|[cm]?js)(?:\?|$)/;
 const sha256 = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex");
@@ -34,88 +35,6 @@ export function authorityDirectory(): string | undefined {
 function write(directory: string, name: string, value: unknown): void {
   fs.mkdirSync(directory, { recursive: true });
   fs.writeFileSync(path.join(directory, name), `${JSON.stringify(value, null, 2)}\n`);
-}
-
-function inventory(root: string, excluded: ReadonlySet<string>): Entry[] {
-  const entries: Entry[] = [];
-  function visit(directory: string): void {
-    for (const name of fs.readdirSync(directory).sort()) {
-      if (excluded.has(name)) continue;
-      const file = path.join(directory, name);
-      const stat = fs.lstatSync(file);
-      assert.ok(!stat.isSymbolicLink(), `authority refuses unowned symlink: ${file}`);
-      if (stat.isDirectory()) visit(file);
-      else if (stat.isFile()) {
-        const bytes = fs.readFileSync(file);
-        entries.push({
-          path: path.relative(root, file),
-          bytes: bytes.length,
-          sha256: sha256(bytes),
-        });
-      } else assert.fail(`authority needs regular source files: ${file}`);
-    }
-  }
-  visit(root);
-  return entries;
-}
-
-function packageRoot(name: string, importer: string): string {
-  const require = createRequire(importer);
-  let resolved: string;
-  try {
-    resolved = require.resolve(`${name}/package.json`);
-  } catch {
-    resolved = require.resolve(name);
-  }
-  let directory = path.dirname(fs.realpathSync(resolved));
-  for (;;) {
-    const file = path.join(directory, "package.json");
-    if (fs.existsSync(file) && JSON.parse(fs.readFileSync(file, "utf8")).name === name)
-      return directory;
-    const parent = path.dirname(directory);
-    assert.notEqual(parent, directory, `missing genuine package ${name}`);
-    directory = parent;
-  }
-}
-
-export function fixtureIdentity(cwd: string) {
-  const actual = fs.realpathSync(cwd);
-  const playground = path.join(actual, "playgrounds/nuxt/package.json");
-  const nuxt = packageRoot("nuxt", playground);
-  const builder = packageRoot("@nuxt/vite-builder", path.join(nuxt, "package.json"));
-  const plugin = packageRoot("@vitejs/plugin-vue", path.join(builder, "package.json"));
-  const vue = packageRoot("vue", playground);
-  const providers = [
-    ["nuxt", nuxt],
-    ["@nuxt/vite-builder", builder],
-    ["@vitejs/plugin-vue", plugin],
-    ["vue", vue],
-    ["@vue/compiler-sfc", packageRoot("@vue/compiler-sfc", path.join(plugin, "package.json"))],
-    ["@vue/server-renderer", packageRoot("@vue/server-renderer", path.join(vue, "package.json"))],
-    ["reka-ui", packageRoot("reka-ui", path.join(actual, "package.json"))],
-  ].map(([name, directory]) => {
-    assert.ok(name && directory);
-    const stat = fs.statSync(directory);
-    const manifest = JSON.parse(fs.readFileSync(path.join(directory, "package.json"), "utf8"));
-    return {
-      name,
-      directory,
-      inode: stat.ino,
-      device: stat.dev,
-      version: manifest.version,
-      files: inventory(directory, new Set(["node_modules"])),
-    };
-  });
-  const stat = fs.statSync(actual);
-  const source = inventory(actual, GENERATED).filter((entry) => entry.path !== CONFIG);
-  return {
-    cwd: actual,
-    inode: stat.ino,
-    device: stat.dev,
-    providers,
-    source,
-    fixture: JSON.parse(fs.readFileSync(path.join(actual, ".vize-fixture-source.json"), "utf8")),
-  };
 }
 
 export function configureNuxtUiAuthority(configPath: string): void {
@@ -339,14 +258,25 @@ export type CompilerPlugin = {
   transform?: Hook | { handler: Hook; [key: string]: unknown };
   load?: LoadHook | { handler: LoadHook; [key: string]: unknown };
 };
+type PluginValue = CompilerPlugin | CompilerPluginOption[] | false | null | undefined;
+export type CompilerPluginOption = PluginValue | Promise<PluginValue>;
+async function pluginLeaves(options: CompilerPluginOption[]): Promise<CompilerPlugin[]> {
+  const leaves: CompilerPlugin[] = [];
+  for (const input of options) {
+    const option = await input;
+    if (Array.isArray(option)) leaves.push(...(await pluginLeaves(option)));
+    else if (option) leaves.push(option);
+  }
+  return leaves;
+}
 type Lane = { isClient?: boolean; isServer?: boolean };
 type Nuxt = {
   hook: (
     name: "vite:configResolved",
     hook: (
-      config: { plugins: CompilerPlugin[]; root?: string; cacheDir?: string },
+      config: { plugins: CompilerPluginOption[]; root?: string; cacheDir?: string },
       context: Lane,
-    ) => void,
+    ) => void | Promise<void>,
   ) => void;
 };
 export function nuxtUiCompilerAuthority(_options: unknown, nuxt: Nuxt): void {
@@ -355,14 +285,38 @@ export function nuxtUiCompilerAuthority(_options: unknown, nuxt: Nuxt): void {
   assert.ok(directory && current);
   const session = path.join(directory, current, `session-${process.pid}-${randomUUID()}`);
   let serial = 0;
-  nuxt.hook("vite:configResolved", (config, context) => {
+  nuxt.hook("vite:configResolved", async (config, context) => {
+    write(session, `plugin-options-${serial++}.json`, {
+      context,
+      root: config.root,
+      cacheDir: config.cacheDir,
+      raw: inspect(config.plugins, {
+        depth: null,
+        showHidden: true,
+        customInspect: false,
+        maxArrayLength: null,
+        maxStringLength: null,
+      }),
+    });
+    const plugins = await pluginLeaves(config.plugins);
     const isNative = (plugin: CompilerPlugin) =>
       plugin.name === "vite-plugin-vize" ||
       plugin.name?.startsWith("vite-plugin-vize:") ||
       plugin.name?.startsWith("vize:");
-    const owners = config.plugins.filter(
+    const owners = plugins.filter(
       (plugin) => plugin && (plugin.name === "vite:vue" || isNative(plugin)),
     );
+    write(session, `plugins-${serial++}.json`, {
+      context,
+      root: config.root,
+      cacheDir: config.cacheDir,
+      names: plugins.map((plugin) => plugin.name),
+      owners: owners.map((plugin) => ({
+        name: plugin.name,
+        version: plugin.api?.version,
+        compilerVersion: plugin.api?.options?.compiler?.version,
+      })),
+    });
     const stock = owners.filter((plugin) => plugin.name === "vite:vue");
     if (current === "reference") {
       assert.equal(stock.length, 1, "stock Nuxt must retain exactly one public vite:vue compiler");
@@ -372,17 +326,6 @@ export function nuxtUiCompilerAuthority(_options: unknown, nuxt: Nuxt): void {
         owners.some((plugin) => plugin.name === "vite-plugin-vize"),
         "candidate must use the native plugin",
       );
-    write(session, `plugins-${serial++}.json`, {
-      context,
-      root: config.root,
-      cacheDir: config.cacheDir,
-      names: config.plugins.map((plugin) => plugin?.name),
-      owners: owners.map((plugin) => ({
-        name: plugin.name,
-        version: plugin.api?.version,
-        compilerVersion: plugin.api?.options?.compiler?.version,
-      })),
-    });
     for (const plugin of owners) {
       function capture(
         operation: "load" | "transform",
