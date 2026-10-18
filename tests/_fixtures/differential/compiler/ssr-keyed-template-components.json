@@ -55,7 +55,7 @@
   ],
   "files": {
     "Value": "<script setup>\nimport { onMounted, onUnmounted } from \"vue\"\nimport { Primitive } from \"./Primitive\"\nconst props = defineProps({ value: { type: String, required: true } })\nonMounted(() => globalThis.__vizeKeyedLifecycle.push([\"mount\", props.value]))\nonUnmounted(() => globalThis.__vizeKeyedLifecycle.push([\"unmount\", props.value]))\n</script>\n<template><Primitive as=\"span\" :data-value=\"value\"><slot /></Primitive></template>\n",
-    "TriggerPush": "<template><button type=\"button\"><slot /></button></template>\n",
+    "TriggerPush": "<script setup>\nconst buttonType = \"button\"\n</script>\n<template><button :type=\"buttonType\"><slot /></button></template>\n",
     "TriggerVNode": "<script setup>\nimport { Primitive } from \"./Primitive\"\n</script>\n<template><Primitive as-child><Primitive as=\"button\" type=\"button\"><slot /></Primitive></Primitive></template>\n"
   },
   "cases": [
