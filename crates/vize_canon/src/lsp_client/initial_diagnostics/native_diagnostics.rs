@@ -154,13 +154,28 @@ mod tests {
         ApiClient, CorsaError, Diagnostic, Value, block_on, cstr, json, read, required_kinds,
     };
 
+    use super::String;
+    const URI: &str = "file:///workspace/a%20%23.ts";
+    const KINDS: [&str; 4] = [
+        "getSyntacticDiagnostics",
+        "getSemanticDiagnostics",
+        "getSuggestionDiagnostics",
+        "getDeclarationDiagnostics",
+    ];
+    fn diagnostic_methods(rows: &[Value]) -> Vec<&str> {
+        rows.iter()
+            .filter_map(|row| row["method"].as_str())
+            .filter(|method| {
+                !matches!(
+                    *method,
+                    "initialize" | "updateSnapshot" | "release" | "ping" | "test/finish"
+                )
+            })
+            .collect()
+    }
     #[test]
     fn captured_declaration_options_select_exact_ls_union_not_extra_scopes() {
-        let three = vec![
-            "getSyntacticDiagnostics",
-            "getSemanticDiagnostics",
-            "getSuggestionDiagnostics",
-        ];
+        let three = KINDS.iter().take(3).copied().collect::<Vec<_>>();
         let mut four = three.clone();
         four.push("getDeclarationDiagnostics");
         for options in [json!({}), json!({"declaration":false,"composite":null})] {
@@ -289,7 +304,10 @@ mod tests {
                     )
                     .unwrap();
                     if method == "release" {
-                        assert!(!released.contains(&params["handle"]));
+                        assert_eq!(
+                            params,
+                            json!({"handle":params["handle"], "snapshot":params["handle"]})
+                        );
                         released.push(params["handle"].clone());
                         if released.len() == if hold.is_some() { 2 } else { 1 } {
                             assert!(pending.is_none());
@@ -298,6 +316,11 @@ mod tests {
                     }
                 }
                 assert!(replies.is_empty());
+                released.sort_by(|left, right| left.as_str().cmp(&right.as_str()));
+                let expected = (1..=if hold.is_some() { 2 } else { 1 })
+                    .map(|revision| json!(cstr!("n{revision:016x}")))
+                    .collect::<Vec<_>>();
+                assert_eq!(released, expected);
                 observed
             });
             let client = block_on(ApiClient::connect_pipe(&path)).unwrap();
@@ -324,8 +347,8 @@ mod tests {
         let result = read(
             &peer.client,
             &snapshot,
-            &snapshot.projects[0],
-            "file:///workspace/a%20%23.ts",
+            snapshot.projects.first().unwrap(),
+            URI,
         );
         block_on(snapshot.release()).unwrap();
         (result, peer.finish())
@@ -348,23 +371,13 @@ mod tests {
                 .collect::<Vec<_>>();
             let (result, observed) = execute(json!({"declaration":declarations}), replies);
             assert_eq!(result.unwrap(), Some(vec![]));
-            let methods = observed
-                .iter()
-                .filter_map(|row| row["method"].as_str())
-                .filter(|method| method.ends_with("Diagnostics"))
-                .collect::<Vec<_>>();
-            assert_eq!(methods, expected);
+            assert_eq!(diagnostic_methods(&observed), expected);
         }
     }
     #[cfg(unix)]
     #[test]
     fn framed_partial_kind_missing_failure_and_malformed_never_become_empty_success() {
-        let kinds = [
-            "getSyntacticDiagnostics",
-            "getSemanticDiagnostics",
-            "getSuggestionDiagnostics",
-            "getDeclarationDiagnostics",
-        ];
+        let kinds = KINDS;
         for (index, kind) in kinds.iter().enumerate() {
             for response in [
                 json!({"error":{"code":-32601,"message":"method not found"}}),
@@ -376,7 +389,7 @@ mod tests {
             ] {
                 let missing =
                     response["error"]["code"] == -32601 || response["error"]["code"] == -32603;
-                let mut replies=kinds[..index].iter().map(|method|(*method,json!([
+                let mut replies=kinds.iter().take(index).map(|method|(*method,json!([
                     {"fileName":"/workspace/a #.ts","pos":0,"end":5,"code":2322,"category":1,"text":"must not publish partial"}
                 ]))).collect::<Vec<_>>();
                 replies.push((*kind, response));
@@ -386,14 +399,10 @@ mod tests {
                 } else {
                     assert!(result.is_err());
                 }
+                let methods = diagnostic_methods(&observed);
                 assert_eq!(
-                    observed
-                        .iter()
-                        .filter(|row| row["method"]
-                            .as_str()
-                            .is_some_and(|method| method.ends_with("Diagnostics")))
-                        .count(),
-                    index + 1
+                    methods,
+                    kinds.iter().take(index + 1).copied().collect::<Vec<_>>()
                 );
                 assert!(!observed.iter().any(|row| row["method"] == "getSourceFile"));
             }
@@ -439,14 +448,9 @@ mod tests {
         use crate::corsa_bridge::worker::BoundedWorker;
         use futures::FutureExt;
         use std::{sync::Arc, time::Duration};
-        let kinds = [
-            "getSyntacticDiagnostics",
-            "getSemanticDiagnostics",
-            "getSuggestionDiagnostics",
-            "getDeclarationDiagnostics",
-        ];
+        let kinds = KINDS;
         for (index, kind) in kinds.iter().enumerate() {
-            let prior = kinds[..index].iter().map(|method| (*method,json!([{
+            let prior = kinds.iter().take(index).map(|method| (*method,json!([{
             "fileName":"/workspace/a #.ts","pos":0,"end":5,"code":2322,"category":1,"text":"partial must not publish"
         }]))).collect();
             let peer = Peer::start(json!({"declaration":true}), prior, Some(*kind));
@@ -456,13 +460,9 @@ mod tests {
             let worker = BoundedWorker::new("lower diagnostic lease", ());
             let client = peer.client.clone();
             let owned = Arc::clone(&snapshot);
-            let mut pending = Box::pin(worker.submit_async(Duration::from_secs(10), move |_| {
-                read(
-                    &client,
-                    &owned,
-                    &owned.projects[0],
-                    "file:///workspace/a%20%23.ts",
-                )
+            let deadline = Duration::from_secs(10);
+            let mut pending = Box::pin(worker.submit_ready_async(deadline, move |_| {
+                read(&client, &owned, owned.projects.first().unwrap(), URI)
             }));
             assert!(pending.as_mut().now_or_never().is_none());
             peer.entered.recv_timeout(Duration::from_secs(10)).unwrap();
@@ -481,12 +481,11 @@ mod tests {
             assert!(!worker.is_draining());
             block_on(newer.release()).unwrap();
             let observed = peer.finish();
-            let methods = observed
-                .iter()
-                .filter_map(|row| row["method"].as_str())
-                .filter(|method| method.ends_with("Diagnostics"))
-                .collect::<Vec<_>>();
-            assert_eq!(methods, &kinds[..=index]);
+            let methods = diagnostic_methods(&observed);
+            assert_eq!(
+                methods,
+                kinds.iter().take(index + 1).copied().collect::<Vec<_>>()
+            );
             assert!(!observed.iter().any(|row| row["method"] == "getSourceFile"));
             let releases = observed
                 .iter()
