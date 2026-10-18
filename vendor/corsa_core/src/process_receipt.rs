@@ -63,6 +63,24 @@ impl ProcessObserver {
             .collect()
     }
 
+    /// Proof capture refuses poisoned or unavailable custody instead of recovering it.
+    pub(crate) fn try_receipts(&self) -> io::Result<Vec<ProcessReceipt>> {
+        let receipts = self.0.try_lock().map_err(|error| {
+            io::Error::other(format!("preclose stderr collection unavailable: {error}"))
+        })?;
+        receipts
+            .iter()
+            .map(|receipt| {
+                receipt
+                    .try_lock()
+                    .map(|receipt| receipt.clone())
+                    .map_err(|error| {
+                        io::Error::other(format!("preclose stderr receipt unavailable: {error}"))
+                    })
+            })
+            .collect()
+    }
+
     pub(crate) fn start(&self, pid: u32, stderr: ChildStderr) -> io::Result<ProcessObservation> {
         let receipt = Arc::new(Mutex::new(ProcessReceipt {
             pid,

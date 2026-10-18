@@ -94,6 +94,35 @@ impl ProcessTerminalObserver {
         self.snapshot_stderr(observation)
     }
 
+    /// Strict, nonblocking metadata capture used only for preclose proof.
+    pub(super) fn try_snapshot(&self) -> crate::Result<ProcessCloseObservation> {
+        let mut observation = self
+            .0
+            .observation
+            .try_lock()
+            .map_err(|error| {
+                crate::CorsaError::Protocol(
+                    format!("preclose terminal metadata unavailable: {error}").into(),
+                )
+            })?
+            .clone();
+        let observer = self
+            .0
+            .stderr_observer
+            .try_lock()
+            .map_err(|error| {
+                crate::CorsaError::Protocol(
+                    format!("preclose stderr observer unavailable: {error}").into(),
+                )
+            })?
+            .clone();
+        observation.stderr_receipts = observer
+            .map(|observer| observer.try_receipts())
+            .transpose()
+            .map_err(|error| crate::CorsaError::Protocol(error.to_string().into()))?;
+        Ok(observation)
+    }
+
     fn snapshot_stderr(&self, mut observation: ProcessCloseObservation) -> ProcessCloseObservation {
         // No live observer escapes the snapshot. Release metadata locks before
         // copying stderr so the published terminal and bytes are immutable.
@@ -218,6 +247,18 @@ pub enum ProcessOwnership {
 }
 
 impl ProcessLifetimeObserver {
+    /// Strict proof-only inventory; unavailable or poisoned custody is unknown.
+    pub fn try_unpublished(&self) -> crate::Result<Vec<ProcessTerminalObserver>> {
+        self.0
+            .try_lock()
+            .map(|collection| collection.pending.clone())
+            .map_err(|error| {
+                crate::CorsaError::Protocol(
+                    format!("preclose lifetime inventory unavailable: {error}").into(),
+                )
+            })
+    }
+
     pub fn unpublished(&self) -> Vec<ProcessTerminalObserver> {
         self.0
             .lock()
@@ -263,5 +304,63 @@ impl ProcessLifetimeObserver {
                     .any(|entry| Arc::ptr_eq(&entry.0, &observer.0)))
         });
         collection.published += (before - collection.pending.len()) as u64;
+    }
+}
+
+#[cfg(test)]
+mod preclose_tests {
+    use super::*;
+
+    #[test]
+    fn strict_unpublished_keeps_exact_tokens_and_refuses_busy_or_poisoned_inventory() {
+        let lifetime = ProcessLifetimeObserver::default();
+        let terminal = lifetime.observe(42, "exact-epoch".into());
+        let inventory = lifetime.try_unpublished().expect("available inventory");
+        assert_eq!(inventory.len(), 1);
+        assert!(inventory[0].same_owner(&terminal));
+        {
+            let _held = lifetime.0.lock().unwrap();
+            assert!(
+                lifetime.try_unpublished().is_err(),
+                "no blocking inventory lock"
+            );
+        }
+        let poisoned = lifetime.clone();
+        assert!(
+            std::thread::spawn(move || {
+                let _held = poisoned.0.lock().unwrap();
+                panic!("poison exact lifetime inventory");
+            })
+            .join()
+            .is_err()
+        );
+        assert!(
+            lifetime.try_unpublished().is_err(),
+            "proof cannot recover poison"
+        );
+        assert!(
+            lifetime.unpublished()[0].same_owner(&terminal),
+            "ordinary diagnostic policy stays unchanged"
+        );
+    }
+
+    #[test]
+    fn strict_terminal_snapshot_refuses_poisoned_metadata() {
+        let terminal = ProcessTerminalObserver::new(42, Default::default());
+        let poisoned = terminal.clone();
+        assert!(
+            std::thread::spawn(move || {
+                let _held = poisoned.0.observation.lock().unwrap();
+                panic!("poison terminal metadata");
+            })
+            .join()
+            .is_err()
+        );
+        assert!(terminal.try_snapshot().is_err());
+        assert_eq!(
+            terminal.snapshot().expected_pid,
+            42,
+            "ordinary diagnostic snapshot stays unchanged"
+        );
     }
 }

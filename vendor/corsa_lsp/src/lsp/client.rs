@@ -230,6 +230,11 @@ impl LspClient {
         corsa_core::ProcessOwnership::Owned(self.process.terminal_observer())
     }
 
+    /// Nonkilling proof capture; freeze the first result before any close action.
+    pub fn observe_preclose_terminal(&self) -> Result<Option<corsa_core::PreCloseTerminalProof>> {
+        self.process.observe_preclose_terminal()
+    }
+
     /// Creates a virtual-document overlay synchronized with this client.
     ///
     /// The overlay helps keep `didOpen`, `didChange`, and `didClose`

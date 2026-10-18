@@ -182,6 +182,8 @@ pub use lifetime::{
 };
 mod owned;
 pub use owned::OwnedProcess;
+mod preclose;
+pub use preclose::PreCloseTerminalProof;
 
 /// Waits for a child process to exit and forcefully terminates it after a timeout.
 ///

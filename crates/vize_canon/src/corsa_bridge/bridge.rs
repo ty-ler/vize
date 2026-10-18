@@ -41,6 +41,8 @@ pub struct CorsaBridge {
     /// Final server termination permanently closes startup admission.
     finalizing: Arc<AtomicBool>,
     startup_control: crate::lsp_client::startup_control::StartupControl,
+    /// Admission state is frozen once, before any final-exit owner probe.
+    exit_admission: std::sync::OnceLock<bool>,
     retirement: Arc<std::sync::Mutex<retirement::RetirementState>>,
     /// Whether the reusable editor LSP session may have read stale disk state.
     disk_project_state_dirty: AtomicBool,
@@ -57,8 +59,10 @@ pub struct CorsaBridge {
     shared_editor_transport: bool,
 }
 
+mod preclose;
 mod retirement;
 mod shutdown;
+pub use preclose::NativePreCloseEpoch;
 pub use retirement::NativeRetirementOutcome;
 
 #[expect(clippy::disallowed_types, reason = "dependency API uses std String")]
@@ -99,6 +103,7 @@ impl CorsaBridge {
             initialized: Arc::new(AtomicBool::new(false)),
             finalizing: Arc::new(AtomicBool::new(false)),
             startup_control: Default::default(),
+            exit_admission: Default::default(),
             retirement: Default::default(),
             disk_project_state_dirty: AtomicBool::new(false),
             profiler,

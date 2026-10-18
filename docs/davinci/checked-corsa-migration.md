@@ -193,7 +193,7 @@ behavioral obligations above and fresh qualification; counting matching lines,
 matching public function names or a green historical run cannot establish
 supersession. No whole-PR closure follows from the separately merged #9404 slice.
 
-The imported graph has 223 members: 191 unchanged upstream members, 19 checked
+The imported graph has 224 members: 191 unchanged upstream members, 20 checked
 overlays, six owned manifests, six retained complete MIT notices and one retained
 historical allocation-policy file. The six published upstream archives identify
 VCS commits `34bb731bdcaf5d4c154596b0c32912cbffd60b18` and
@@ -201,6 +201,16 @@ VCS commits `34bb731bdcaf5d4c154596b0c32912cbffd60b18` and
 the six retained notices match the complete upstream repository notice at both
 commits. Archive checksums, source membership and license provenance are source
 identity evidence, not compilation or native acceptance.
+
+Final exit freezes admission and probes every current owner before starting any
+cleanup. Only a non-killing `try_wait` on its exact retained child, with complete
+stderr and matching attachment identities, can prove a preexisting dead epoch.
+That epoch transfers to the existing retirement ledger with its whole failed
+status, protocol errors and stderr; retirement does not mean graceful success.
+Live, mixed, unknown and incomplete owner sets retain strict active shutdown.
+The first classification survives cancellation and cleanup retries, so a final
+close cannot kill a child and then relabel its own failure as earlier retirement.
+The preclose SDK API is a checked overlay; all 191 upstream members remain exact.
 
 The six SDK manifests inherit `workspace.package.version`; internal SDK edges
 inherit `workspace.dependencies`. Publishable root aliases use the same exact

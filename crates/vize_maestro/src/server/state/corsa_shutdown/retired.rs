@@ -8,12 +8,13 @@ use futures::{
 };
 use parking_lot::Mutex;
 use std::sync::{Arc, OnceLock};
-use vize_canon::{CorsaBridge, NativeRetirementOutcome};
+use vize_canon::{CorsaBridge, NativePreCloseEpoch, NativeRetirementOutcome};
 use vize_l0::{String, cstr};
 
 type Completion = Shared<BoxFuture<'static, Result<NativeRetirementOutcome, String>>>;
 type Job = (
     Arc<CorsaBridge>,
+    Option<NativePreCloseEpoch>,
     oneshot::Sender<Result<NativeRetirementOutcome, String>>,
 );
 
@@ -21,6 +22,7 @@ type Job = (
 struct Owner {
     bridge: Arc<CorsaBridge>,
     completion: Completion,
+    preclose: Option<NativePreCloseEpoch>,
 }
 
 #[derive(Default)]
@@ -35,6 +37,14 @@ pub(in crate::server::state) struct RetiredOwners(Arc<Mutex<State>>);
 impl RetiredOwners {
     /// The caller still holds the cached-owner slot. Never close IPC on this path.
     pub(in crate::server::state) fn retain_and_close(&self, bridge: Arc<CorsaBridge>) {
+        self.retain_owner(bridge, None);
+    }
+
+    pub(in crate::server::state) fn retain_preexisting(&self, epoch: NativePreCloseEpoch) {
+        self.retain_owner(Arc::clone(epoch.bridge()), Some(epoch));
+    }
+
+    fn retain_owner(&self, bridge: Arc<CorsaBridge>, preclose: Option<NativePreCloseEpoch>) {
         let mut state = self.0.lock();
         observe_completed(&mut state);
         if state
@@ -57,13 +67,14 @@ impl RetiredOwners {
         state.owners.push(Owner {
             bridge: bridge.clone(),
             completion,
+            preclose: preclose.clone(),
         });
         // A failed enqueue still leaves the exact owner and a failed completion
         // in the ledger. Final exit retries cleanup without erasing this error.
         match closer() {
             Ok(sender) => {
-                if let Err(error) = sender.unbounded_send((bridge, reply)) {
-                    let (_, reply) = error.into_inner();
+                if let Err(error) = sender.unbounded_send((bridge, preclose, reply)) {
+                    let (_, _, reply) = error.into_inner();
                     let _ = reply.send(Err(cstr!("Retired native close executor stopped")));
                 }
             }
@@ -97,6 +108,7 @@ impl RetiredOwners {
                         "Retired native cleanup retry failed: {error}; previous attempt: {prior:?}"
                     )
                 })?;
+            let retry = with_preclose(retry, owner.preclose.as_ref());
             publish(&retry);
             if retry.custody_complete {
                 Ok(())
@@ -138,6 +150,16 @@ fn publish(outcome: &NativeRetirementOutcome) {
     tracing::info!(receipt = %outcome.receipt, "retired native owner terminal custody");
 }
 
+fn with_preclose(
+    mut outcome: NativeRetirementOutcome,
+    preclose: Option<&NativePreCloseEpoch>,
+) -> NativeRetirementOutcome {
+    if let Some(epoch) = preclose {
+        outcome.receipt["preexistingEpoch"] = epoch.receipt();
+    }
+    outcome
+}
+
 /// One nonblocking executor serves all retired epochs. Configuration discovery
 /// keeps its own workers, and an abandoned RPC cannot block another owner close.
 fn closer() -> Result<&'static mpsc::UnboundedSender<Job>, &'static String> {
@@ -151,12 +173,14 @@ fn closer() -> Result<&'static mpsc::UnboundedSender<Job>, &'static String> {
                     let mut pool = LocalPool::new();
                     let spawner = pool.spawner();
                     pool.run_until(async move {
-                        while let Some((bridge, reply)) = jobs.next().await {
+                        while let Some((bridge, preclose, reply)) = jobs.next().await {
                             if let Err(error) = spawner.spawn_local(async move {
                                 let outcome =
                                     bridge.shutdown_for_retirement().await.map_err(|error| {
                                         cstr!("Retired native owner close failed: {error}")
                                     });
+                                let outcome = outcome
+                                    .map(|outcome| with_preclose(outcome, preclose.as_ref()));
                                 match &outcome {
                                     Ok(outcome) => publish(outcome),
                                     Err(error) => tracing::warn!(

@@ -84,8 +84,8 @@ pub mod orchestrator {
 /// Re-exports process spawning primitives.
 pub mod process {
     pub use corsa_core::{
-        AsyncChildGuard, CorsaCommand, ProcessCloseObservation, ProcessCloseReceipt,
-        ProcessLifetimeObserver, ProcessLifetimeSnapshot, ProcessOwnership,
+        AsyncChildGuard, CorsaCommand, PreCloseTerminalProof, ProcessCloseObservation,
+        ProcessCloseReceipt, ProcessLifetimeObserver, ProcessLifetimeSnapshot, ProcessOwnership,
         ProcessTerminalObserver,
     };
 }

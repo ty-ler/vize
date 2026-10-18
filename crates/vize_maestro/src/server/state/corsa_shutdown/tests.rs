@@ -4,6 +4,54 @@ use tower_lsp::lsp_types::Url;
 use vize_canon::CorsaBridge;
 
 #[test]
+fn failed_close_retry_keeps_the_original_active_epoch_and_first_failure() {
+    use std::cell::Cell;
+    let owner = ServerState::new();
+    let bridge = Arc::new(CorsaBridge::new());
+    let probes = Cell::new(0);
+    {
+        let mut state = owner.corsa_shutdown.try_lock().unwrap();
+        futures::executor::block_on(state.classify_once(&bridge, || async {
+            probes.set(probes.get() + 1);
+            None
+        }));
+        state.pending.push(Arc::clone(&bridge));
+        state.first_failure = Some("original active owner refused shutdown".into());
+        futures::executor::block_on(state.classify_once(&bridge, || async {
+            panic!("a failed close must never acquire a new predead classification")
+        }));
+    }
+    let error = futures::executor::block_on(owner.shutdown_corsa_project_contexts()).unwrap_err();
+    assert_eq!(error.as_str(), "original active owner refused shutdown");
+    assert_eq!(probes.get(), 1);
+    assert!(owner.corsa_shutdown.try_lock().unwrap().pending.is_empty());
+    assert_eq!(
+        futures::executor::block_on(owner.shutdown_corsa_project_contexts()).unwrap_err(),
+        error,
+    );
+}
+
+#[test]
+fn canceled_preclose_probe_is_active_on_retry_and_another_owner_has_its_own_probe() {
+    use super::NativeShutdown;
+    use futures::FutureExt;
+    let first = Arc::new(CorsaBridge::new());
+    let other = Arc::new(CorsaBridge::new());
+    let mut state = NativeShutdown::default();
+    let mut probe = Box::pin(state.classify_once(&first, futures::future::pending));
+    assert!(probe.as_mut().now_or_never().is_none());
+    drop(probe);
+    futures::executor::block_on(state.classify_once(&first, || async {
+        panic!("an undelivered initial proof remains active")
+    }));
+    futures::executor::block_on(state.classify_once(&other, || async { None }));
+    assert_eq!(state.epochs.len(), 2);
+    assert!(state.epochs.iter().all(|(_, epoch)| epoch.is_none()));
+    assert!(Arc::ptr_eq(&state.epochs[0].0, &first));
+    assert!(Arc::ptr_eq(&state.epochs[1].0, &other));
+}
+
+#[test]
 fn final_shutdown_drains_root_and_package_caches_before_retiring_contexts() {
     let root = tempfile::tempdir().unwrap();
     let package = root.path().join("packages/child");

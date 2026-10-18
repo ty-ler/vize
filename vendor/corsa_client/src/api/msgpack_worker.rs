@@ -182,6 +182,12 @@ impl MsgpackWorker {
         corsa_core::ProcessOwnership::Owned(self.process.terminal_observer())
     }
 
+    pub(crate) fn observe_preclose_terminal(
+        &self,
+    ) -> Result<Option<corsa_core::PreCloseTerminalProof>> {
+        self.process.observe_preclose_terminal()
+    }
+
     pub(crate) async fn close(&self) -> Result<()> {
         if let Some(sender) = self.tx.lock().take() {
             let _ = sender.try_send(WorkerCommand::Shutdown);

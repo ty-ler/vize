@@ -102,6 +102,25 @@ pub(super) fn spawn_api(
 }
 
 impl StartupControl {
+    /// Seal construction before probing any final-exit owner. An entered or
+    /// queued constructor cannot become evidence of a preexisting dead epoch.
+    pub(crate) fn freeze_for_exit(&self) -> bool {
+        match self.state.lock() {
+            Ok(mut state) => {
+                state.sealed = true;
+                state.spawning == 0
+                    && !state.aborting
+                    && state.in_progress == 0
+                    && state.pending.is_empty()
+                    && state.first_failure.is_none()
+            }
+            Err(poisoned) => {
+                poisoned.into_inner().sealed = true;
+                false
+            }
+        }
+    }
+
     fn lock(&self) -> MutexGuard<'_, State> {
         self.state.lock().unwrap_or_else(|error| error.into_inner())
     }
@@ -340,6 +359,12 @@ impl StartupControl {
     }
     pub(crate) fn unpublished_observers(&self) -> Vec<ProcessTerminalObserver> {
         self.lifetime.unpublished()
+    }
+
+    pub(crate) fn preclose_observers(&self) -> Result<Vec<ProcessTerminalObserver>, String> {
+        self.lifetime
+            .try_unpublished()
+            .map_err(|error| cstr!("Cannot prove the native preclose owner set: {error}"))
     }
 
     pub(crate) fn acknowledge_publication(&self, observers: &[ProcessTerminalObserver]) {

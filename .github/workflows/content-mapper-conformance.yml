@@ -111,10 +111,23 @@ jobs:
       - name: Run standard tsgo through fresh-installed package tarballs
         env:
           VIZE_TEST_CONTENT_MAPPER_TSGO: ${{ runner.temp }}/tsgo
+          VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR: ${{ runner.temp }}/content-mapper-smoke
         run: |
-          rust-script tools/commands/release/npm/smoke-release-install.rs --prepare-manifests --content-mapper-checks \
+          set -euo pipefail
+          mkdir -p "$VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR"
+          git rev-parse HEAD > "$VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR/source-sha.txt"
+          git -C typescript-content-mapper rev-parse HEAD > "$VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR/provider-source-sha.txt"
+          sha256sum "$VIZE_TEST_CONTENT_MAPPER_TSGO" > "$VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR/provider.sha256"
+          node tools/commands/release/npm/smoke-release-install.ts --prepare-manifests --content-mapper-checks \
             npm/native npm/native/npm/* \
-            npm/cli
+            npm/cli 2>&1 | tee "$VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR/smoke.log"
+      - name: Preserve installed Content Mapper smoke evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: content-mapper-smoke-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/content-mapper-smoke/
+          retention-days: 7
       - name: Run standard project and declaration conformance
         env:
           VIZE_TEST_CONTENT_MAPPER_TSGO: ${{ runner.temp }}/tsgo

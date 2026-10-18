@@ -5,7 +5,7 @@ use crate::process_receipt::{ProcessObservation, ProcessTermination};
 use crate::{CorsaError, Result, fast::CompactString};
 use std::{
     process::Child,
-    sync::{Mutex, TryLockError},
+    sync::{Arc, Mutex, TryLockError},
     time::Duration,
 };
 
@@ -58,6 +58,51 @@ impl AsyncChildGuard {
         }
     }
 
+    /// Observe an already-terminal exact child before any close action.
+    ///
+    /// This never signals a process. Callers must freeze their first result for
+    /// the owner epoch; later exit or shutdown must not reclassify an alive owner.
+    /// A consumed child cannot create new proof, even if cached status exists.
+    pub fn observe_preclose_terminal(
+        self: &Arc<Self>,
+    ) -> Result<Option<super::PreCloseTerminalProof>> {
+        let mut owned = self.child.try_lock().map_err(|error| {
+            CorsaError::Protocol(
+                format!("preclose exact child custody unavailable: {error}").into(),
+            )
+        })?;
+        let mut stderr = self.observation.try_lock().map_err(|error| {
+            CorsaError::Protocol(format!("preclose stderr custody unavailable: {error}").into())
+        })?;
+        // Unlike diagnostic snapshots, proof cannot recover poisoned metadata.
+        self.terminal.try_snapshot()?;
+        let child = owned.as_mut().ok_or_else(|| {
+            CorsaError::Protocol("preclose exact child was already consumed".into())
+        })?;
+        let status = child.try_wait().map_err(|error| {
+            CorsaError::Protocol(format!("preclose exact child try_wait failed: {error}").into())
+        })?;
+        let Some(status) = status else {
+            return Ok(None);
+        };
+        let pid = child.id();
+        // try_wait(Some) has already reaped this retained Child. Keep its actual
+        // status and all stderr custody, including unsuccessful exits and SIG9.
+        owned.take();
+        self.cache_termination_observation(
+            pid,
+            ProcessTermination {
+                status,
+                timed_out: false,
+                kill_requested: false,
+            },
+            Duration::from_secs(2),
+            stderr.take(),
+        )?;
+        let observation = self.terminal.try_snapshot()?;
+        super::preclose::PreCloseTerminalProof::new(Arc::clone(self), observation).map(Some)
+    }
+
     pub fn terminal_observer(&self) -> ProcessTerminalObserver {
         self.terminal.clone()
     }
@@ -75,6 +120,21 @@ impl AsyncChildGuard {
         terminal: ProcessTermination,
         drain: Duration,
     ) -> Result<()> {
+        let observation = self
+            .observation
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .take();
+        self.cache_termination_observation(pid, terminal, drain, observation)
+    }
+
+    fn cache_termination_observation(
+        &self,
+        pid: u32,
+        terminal: ProcessTermination,
+        drain: Duration,
+        observation: Option<ProcessObservation>,
+    ) -> Result<()> {
         let receipt = ProcessCloseReceipt {
             pid,
             status: terminal.status,
@@ -82,14 +142,9 @@ impl AsyncChildGuard {
             kill_requested: terminal.kill_requested,
             reaped: true,
         };
-        let outcome = self
-            .observation
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .take()
-            .map_or(Ok(()), |observation| {
-                observation.finish(pid, Ok(terminal), drain)
-            });
+        let outcome = observation.map_or(Ok(()), |observation| {
+            observation.finish(pid, Ok(terminal), drain)
+        });
         let error = outcome
             .as_ref()
             .err()
@@ -198,6 +253,82 @@ mod tests {
         process::{Command, Stdio},
         sync::Arc,
     };
+
+    #[test]
+    fn preclose_busy_or_poisoned_custody_never_manufactures_terminal_proof() {
+        let child = Command::new("sh")
+            .args(["-c", "exec cat"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("actual live child");
+        let process = Arc::new(AsyncChildGuard::new(child));
+        {
+            let _held = process.child.lock().unwrap();
+            assert!(
+                process.observe_preclose_terminal().is_err(),
+                "exact child lock is nonblocking"
+            );
+        }
+        {
+            let _held = process.observation.lock().unwrap();
+            assert!(
+                process.observe_preclose_terminal().is_err(),
+                "stderr custody lock is nonblocking"
+            );
+        }
+        let poisoned = Arc::clone(&process);
+        assert!(
+            std::thread::spawn(move || {
+                let _held = poisoned.child.lock().unwrap();
+                panic!("poison exact child custody before observation");
+            })
+            .join()
+            .is_err()
+        );
+        assert!(process.observe_preclose_terminal().is_err());
+        assert!(
+            process.terminal_observer().snapshot().terminal.is_none(),
+            "proof check never kills"
+        );
+        assert!(
+            process.abort_receipt().is_err(),
+            "cleanup retains original poison error"
+        );
+        assert!(process.terminal_observer().snapshot().custody_complete());
+        assert!(
+            process.observe_preclose_terminal().is_err(),
+            "cleanup status cannot become proof"
+        );
+    }
+
+    #[test]
+    fn preclose_poisoned_stderr_custody_is_unknown_until_explicit_cleanup() {
+        let child = Command::new("sh")
+            .args(["-c", "exec cat"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("actual live child");
+        let process = Arc::new(AsyncChildGuard::new(child));
+        let poisoned = Arc::clone(&process);
+        assert!(
+            std::thread::spawn(move || {
+                let _held = poisoned.observation.lock().unwrap();
+                panic!("poison stderr custody before observation");
+            })
+            .join()
+            .is_err()
+        );
+        assert!(process.observe_preclose_terminal().is_err());
+        assert!(process.terminal_observer().snapshot().terminal.is_none());
+        process
+            .abort_receipt()
+            .expect("existing cleanup recovers stderr lock");
+        assert!(process.observe_preclose_terminal().is_err());
+    }
 
     #[test]
     fn poisoned_owned_process_lock_still_kills_waits_and_reaps_with_explicit_poison_error() {

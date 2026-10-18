@@ -28,9 +28,9 @@ pub use error::{CorsaError, Result};
 pub use observability::{CorsaEvent, CorsaObserver, SharedObserver, observe};
 /// Child-process guard and reusable command template for Corsa.
 pub use process::{
-    AsyncChildGuard, CorsaCommand, OwnedProcess, ProcessCloseObservation, ProcessCloseReceipt,
-    ProcessLifetimeObserver, ProcessLifetimeSnapshot, ProcessOwnership, ProcessTerminalObserver,
-    terminate_child_process, wait_for_child_exit,
+    AsyncChildGuard, CorsaCommand, OwnedProcess, PreCloseTerminalProof, ProcessCloseObservation,
+    ProcessCloseReceipt, ProcessLifetimeObserver, ProcessLifetimeSnapshot, ProcessOwnership,
+    ProcessTerminalObserver, terminate_child_process, wait_for_child_exit,
 };
 pub use process_receipt::{ProcessObservation, ProcessObserver, ProcessReceipt};
 pub use rpc::RpcResponseError;

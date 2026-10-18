@@ -36,6 +36,21 @@ impl ClientDriver {
             Self::Msgpack { worker } => worker.process_ownership(),
         }
     }
+    pub(crate) fn observe_preclose_terminal(
+        &self,
+    ) -> Result<Option<corsa_core::PreCloseTerminalProof>> {
+        match self {
+            Self::JsonRpc {
+                process: Some(process),
+                ..
+            } => process.observe_preclose_terminal(),
+            Self::JsonRpc { process: None, .. } => Err(CorsaError::Protocol(
+                "preclose proof requires an owned child; attached transport has none".into(),
+            )),
+            Self::Msgpack { worker } => worker.observe_preclose_terminal(),
+        }
+    }
+
     pub(crate) async fn abort_startup(&self) -> Result<Option<corsa_core::ProcessCloseReceipt>> {
         match self {
             Self::JsonRpc {

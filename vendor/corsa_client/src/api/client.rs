@@ -476,6 +476,11 @@ impl ApiClient {
         self.driver.process_ownership()
     }
 
+    /// Nonkilling proof capture; freeze the first result before any close action.
+    pub fn observe_preclose_terminal(&self) -> Result<Option<corsa_core::PreCloseTerminalProof>> {
+        self.driver.observe_preclose_terminal()
+    }
+
     /// Abort an unfinished startup through its exact transport/process owner.
     /// Process close precedes release draining so a held handshake cannot
     /// prevent the owned child from being killed and reaped.
