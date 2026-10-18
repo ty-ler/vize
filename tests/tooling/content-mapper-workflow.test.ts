@@ -145,28 +145,21 @@ test("Content Mapper conformance pins and runs the exact upstream project path",
     job,
     /VIZE_TEST_CONTENT_MAPPER_TSGO: \$\{\{ runner\.temp \}\}\/tsgo[\s\S]*node tools\/commands\/release\/npm\/smoke-release-install\.ts --prepare-manifests --content-mapper-checks[\s\S]*npm\/native npm\/native\/npm\/\*[\s\S]*npm\/cli/,
   );
+  const captureDir = "${{ runner.temp }}/content-mapper-smoke";
   const smoke = steps.find(
     (step) => step.name === "Run standard tsgo through fresh-installed package tarballs",
   );
-  assert.equal(
-    smoke?.env?.VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR,
-    "${{ runner.temp }}/content-mapper-smoke",
-  );
+  assert.equal(smoke?.env?.VIZE_CONTENT_MAPPER_SMOKE_CAPTURE_DIR, captureDir);
   assert.match(smoke?.run ?? "", /set -euo pipefail/);
-  for (const evidence of "source-sha.txt provider-source-sha.txt provider.sha256 smoke.log".split(
-    " ",
-  ))
-    assert.ok(smoke?.run?.includes(evidence));
+  const evidence = "source-sha.txt provider-source-sha.txt provider.sha256 smoke.log";
+  for (const file of evidence.split(" ")) assert.ok(smoke?.run?.includes(file));
   const captures = steps.filter((step) => step.uses?.startsWith("actions/upload-artifact@"));
-  assert.equal(captures.length, 1);
-  assert.equal(captures[0].if, "always()");
-  assert.equal(
-    captures[0].uses,
-    "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
-  );
+  const action = "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a";
+  const policies = captures.map((step) => [step.if, step.uses]);
+  assert.deepEqual(policies, [["always()", action]]);
   assert.deepEqual(captures[0].with, {
     name: "content-mapper-smoke-${{ github.sha }}-${{ github.run_attempt }}",
-    path: "${{ runner.temp }}/content-mapper-smoke/",
+    path: `${captureDir}/`,
     "retention-days": 7,
   });
   const packageRouteSteps = steps.flatMap((step, index) =>
@@ -368,6 +361,12 @@ test("official TypeScript acceptance keeps the reported host and complete instal
   assert.match(build, /sha256sum npm\/native\/vize-vitrine\.linux-x64-gnu\.node/u);
   const run = job.steps.find((step) => step.id === "official")!;
   assert.match(run.run!, /node tools\/support\/compat\/content-mapper\/official-css-options\.ts/u);
+  for (const name of ["component-events", "component-props", "nested-flow-9433"]) {
+    const file = `tests/_fixtures/content-mapper/escaton-${name}.json`;
+    assert.ok(run.run!.includes(`--fixture ${file}`));
+    assert.ok(admission.includes(file));
+  }
+  assert.ok(admission.includes("tools/support/compat/content-mapper/official-fixtures.ts"));
   assert.equal("continue-on-error" in run, false);
   const upload = job.steps.find((step) => step.uses?.startsWith("actions/upload-artifact@"))!;
   assert.equal(upload.if, "always()");
