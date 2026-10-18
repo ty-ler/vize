@@ -2,6 +2,10 @@ name: App E2E row
 description: Run one validated App E2E planner row on an isolated runner
 
 inputs:
+  nuxt-ui-reference:
+    description: Pair the original Nuxt UI dev suite with a stock Vue reference without reinstalling
+    required: false
+    default: "false"
   profile:
     description: Planner profile
     required: true
@@ -174,6 +178,7 @@ runs:
       continue-on-error: true
       shell: bash
       env:
+        NUXT_UI_REFERENCE: ${{ inputs.nuxt-ui-reference }}
         PLAN_PROFILE: ${{ inputs.profile }}
         PLAN_SUITE: ${{ inputs.suite }}
         PLAN_SHARD: ${{ inputs.shard }}
@@ -185,12 +190,17 @@ runs:
       run: |
         set -euo pipefail
         mkdir -p target/app-e2e-logs
+        command=(vp run --no-cache --filter './tests' "$PLANNED_TASK")
+        if [[ "$NUXT_UI_REFERENCE" == 'true' ]]; then
+          test "$PLAN_PROFILE:$PLAN_SUITE:$PLAN_SHARD" = 'full:dev:nuxt-ui'
+          command=(node tests/app/dev/nuxt-ui-compiler-reference.ts)
+        fi
         timeout --signal=TERM --kill-after=15s "$PLANNED_TIMEOUT" \
-          vp run --no-cache --filter './tests' "$PLANNED_TASK" 2>&1 \
+          "${command[@]}" 2>&1 \
           | tee "target/app-e2e-logs/$PLAN_PROFILE-$PLAN_SUITE-$PLAN_SHARD.log"
 
     - name: Upload App E2E row artifacts
-      if: ${{ cancelled() || failure() || steps.run.outcome == 'failure' }}
+      if: ${{ cancelled() || failure() || steps.run.outcome == 'failure' || inputs.nuxt-ui-reference == 'true' }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: app-e2e-${{ inputs.artifact-stem }}-${{ github.run_id }}-${{ github.run_attempt }}

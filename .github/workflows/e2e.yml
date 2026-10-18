@@ -15,6 +15,11 @@ on:
         description: Full lowercase 40-character target SHA; --ref must point at it
         required: false
         type: string
+      nuxt_ui_reference:
+        description: Pair the original Nuxt UI dev tests with one stock Vue SSR reference in the same installation
+        required: false
+        default: false
+        type: boolean
       testbox_id:
         description: Blacksmith Testbox session ID
         required: false
@@ -315,6 +320,7 @@ jobs:
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
       - uses: ./.github/actions/app-e2e-row
         with:
+          nuxt-ui-reference: ${{ inputs.nuxt_ui_reference && matrix.suite == 'dev' && matrix.shard == 'nuxt-ui' }}
           profile: ${{ matrix.profile }}
           suite: ${{ matrix.suite }}
           shard: ${{ matrix.shard }}
