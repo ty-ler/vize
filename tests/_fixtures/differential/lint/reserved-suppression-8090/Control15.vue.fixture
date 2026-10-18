@@ -1,4 +1,0 @@
-<script lang="ts">
-// eslint-disable-next-line vue/no-reserved-props, vue/no-reserved-keys -- own public instance
-export default { data() { return { _private: 0 } } }
-</script>

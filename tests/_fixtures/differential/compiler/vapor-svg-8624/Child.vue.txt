@@ -1,2 +1,0 @@
-<script setup vapor></script>
-<template><span>unused</span></template>

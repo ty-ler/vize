@@ -1,1 +1,0 @@
-"<script setup lang=\"ts\" vapor>\nconst trigger = { id: \"slot-trigger\", label: \"Open\" };\n</script>\n\n<template>\n  <slot :props=\"trigger\" />\n</template>\n\n"
