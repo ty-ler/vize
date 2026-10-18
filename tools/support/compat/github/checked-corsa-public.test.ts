@@ -1,5 +1,7 @@
 /** Offline refusal laws. No Cargo or native child process is launched. */
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
@@ -13,6 +15,7 @@ import {
 import {
   PUBLIC,
   PublicAcceptance,
+  publicScope,
   archiveEvidence,
   checkOutsideWorkspace,
   publicEnvironment,
@@ -228,4 +231,31 @@ await test("public license/source/VCS/checksum and compiled-input mutations refu
   lock.package[0].checksum = digest(fs.readFileSync(archive));
   write(path.dirname(pkg.manifest_path), "src/lib.rs", "changed compiler input");
   assert.throws(() => archiveEvidence(pkg, home, lock, SHA, source));
+});
+
+await test("SDK-only bootstrap scope retains exactly six; default public acceptance still requires Canon", () => {
+  assert.equal(publicScope().size, 7);
+  assert.ok(publicScope().has("vize_canon"));
+  assert.deepEqual([...publicScope(false)], [...PUBLIC]);
+  const sdk = publicScope(true);
+  assert.equal(sdk.size, 6);
+  assert.equal(sdk.has("vize_canon"), false);
+  assert.deepEqual([...sdk].sort(), [...PUBLIC].filter((name) => name !== "vize_canon").sort());
+  sdk.clear();
+  assert.equal(publicScope(true).size, 6, "caller cannot mutate the shared six-name policy");
+  assert.throws(() => publicScope("yes" as unknown as boolean));
+});
+
+await test("both SDK-only and default CLI reject unknown flags before any Cargo process", () => {
+  const entry = fileURLToPath(new URL("./checked-corsa-public-consumer.ts", import.meta.url));
+  for (const mode of [[], ["--sdk-only"]]) {
+    const child = spawnSync(process.execPath, [entry, ...mode, "--unknown-bootstrap-waiver"], {
+      encoding: "utf8",
+      env: { ...process.env, PATH: "" },
+      timeout: 5000,
+    });
+    assert.equal(child.status, 1);
+    assert.match(child.stderr, /Unknown option/u);
+    assert.equal(child.stdout, "");
+  }
 });

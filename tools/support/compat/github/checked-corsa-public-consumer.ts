@@ -25,6 +25,11 @@ import {
   type Providers,
 } from "./checked-corsa-contract.ts";
 export const PUBLIC = new Set([...OWNED, "vize_canon"]);
+/** Bootstrap qualifies only six SDK crates; normal post-public acceptance stays seven. */
+export function publicScope(sdkOnly = false) {
+  requireThat(typeof sdkOnly === "boolean", "explicit SDK-only boolean required");
+  return new Set(sdkOnly ? OWNED : PUBLIC);
+}
 export function validateIdentity(version: string, sourceSha: string) {
   requireThat(
     /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$/u.test(version) &&
@@ -252,7 +257,14 @@ export class PublicAcceptance extends Acceptance {
     );
   }
 }
-export function runPublic(root: string, output: string, version: string, sourceSha: string) {
+export function runPublic(
+  root: string,
+  output: string,
+  version: string,
+  sourceSha: string,
+  sdkOnly = false,
+) {
+  const selected = publicScope(sdkOnly);
   validateIdentity(version, sourceSha);
   checkOutsideWorkspace(output, root);
   requireThat(!fs.existsSync(output), "public evidence directory must be new");
@@ -295,27 +307,30 @@ export function runPublic(root: string, output: string, version: string, sourceS
     metadataValues.push([metadata, consumer]);
   }
   runner.builds("public-six", consumer);
-  const manifest =
-    '[package]\nname = "public-canon-consumer"\nversion = "0.0.0"\nedition = "2024"\n[workspace]\n[dependencies]\nvize_canon = { version = "=' +
-    version +
-    '" }\n';
-  const canon = runner.consumer(
-    "public-canon-default",
-    manifest,
-    fs.readFileSync(path.join(root, "tests/_fixtures/ci/checked-canon-consumer/lib.rs")),
-  );
-  const metadata = runner.metadata("public-canon-default-metadata", canon);
-  graphs.push({
-    mode: "canon-default-native",
-    ...verifyPublicGraph(metadata, version, home, canon, false, true),
-    lockPackages: readToml(path.join(canon, "Cargo.lock")).package,
-  });
-  metadataValues.push([metadata, canon]);
-  runner.buildOnce("public-canon", "default-native", canon);
+  let canon: string | undefined;
+  if (!sdkOnly) {
+    const manifest =
+      '[package]\nname = "public-canon-consumer"\nversion = "0.0.0"\nedition = "2024"\n[workspace]\n[dependencies]\nvize_canon = { version = "=' +
+      version +
+      '" }\n';
+    canon = runner.consumer(
+      "public-canon-default",
+      manifest,
+      fs.readFileSync(path.join(root, "tests/_fixtures/ci/checked-canon-consumer/lib.rs")),
+    );
+    const metadata = runner.metadata("public-canon-default-metadata", canon);
+    graphs.push({
+      mode: "canon-default-native",
+      ...verifyPublicGraph(metadata, version, home, canon, false, true),
+      lockPackages: readToml(path.join(canon, "Cargo.lock")).package,
+    });
+    metadataValues.push([metadata, canon]);
+    runner.buildOnce("public-canon", "default-native", canon);
+  }
   const archives = new Map<string, unknown>();
   for (const [metadata, directory] of metadataValues)
     for (const pkg of metadata.packages) {
-      if (!PUBLIC.has(pkg.name) || archives.has(pkg.name)) continue;
+      if (!selected.has(pkg.name) || archives.has(pkg.name)) continue;
       const source = path.join(
         root,
         pkg.name === "vize_canon" ? "crates/vize_canon" : `vendor/${pkg.name.slice(5)}`,
@@ -325,12 +340,12 @@ export function runPublic(root: string, output: string, version: string, sourceS
         archiveEvidence(pkg, home, readToml(path.join(directory, "Cargo.lock")), sourceSha, source),
       );
     }
-  sameSet(archives.keys(), PUBLIC);
+  sameSet(archives.keys(), selected);
   requireThat(
     !["config", "config.toml"].some((name) => fs.existsSync(path.join(home, name))),
     "fresh Cargo home acquired dependency source configuration",
   );
-  for (const directory of [home, work, runner.output, consumer, canon])
+  for (const directory of [home, work, runner.output, consumer, ...(canon ? [canon] : [])])
     requireThat(
       !["config", "config.toml"].some((name) =>
         fs.existsSync(path.join(directory, ".cargo", name)),
@@ -352,9 +367,10 @@ export function runPublic(root: string, output: string, version: string, sourceS
         consumerBuilds: runner.consumerBuilds,
         graphs,
         archives: [...archives.values()],
-        publicRegistryAcceptance: true,
+        publicRegistryAcceptance: !sdkOnly,
+        ...(sdkOnly ? { sdkOnlyRegistryAcceptance: true } : {}),
         sixDefaultAndDistributedCompiledAndTested: true,
-        canonDefaultNativeCompiled: true,
+        canonDefaultNativeCompiled: !sdkOnly,
         cliVariantsCompiled: false,
         cliPackagePublishable: false,
         freshCargoHome: home,
@@ -372,6 +388,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       output: { type: "string" },
       version: { type: "string" },
       "source-sha": { type: "string" },
+      "sdk-only": { type: "boolean", default: false },
     },
   });
   requireThat(
@@ -383,5 +400,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     physicalPath(values.output),
     values.version,
     values["source-sha"],
+    values["sdk-only"],
   );
 }

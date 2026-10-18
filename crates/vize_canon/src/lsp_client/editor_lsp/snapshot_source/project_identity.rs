@@ -29,4 +29,5 @@ pub(super) fn matching_project<'snapshot>(
 }
 
 #[cfg(test)]
+#[path = "project_identity_tests.rs"]
 mod tests;

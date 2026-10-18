@@ -27,4 +27,5 @@ impl CorsaBridge {
 }
 
 #[cfg(test)]
+#[path = "shutdown_tests.rs"]
 mod tests;

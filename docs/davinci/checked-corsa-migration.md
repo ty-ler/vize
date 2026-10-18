@@ -152,6 +152,10 @@ After source and package/native Actions pass:
    its five feature builds remain independent source acceptance, and the
    installed release binary needs its own qualification. Archive/path
    acceptance cannot satisfy public-registry acceptance.
+   During first-publication bootstrap, `--sdk-only` verifies the six SDKs before
+   Canon is available. Its receipt explicitly grants no Canon or full public
+   acceptance. Normal release acceptance still requires the default seven-package
+   consumer, including Canon, after all dependencies are published.
 5. Run the release's unchanged original performance and application/editor
    qualification against the immutable release identity, then verify public
    installations. Keep the original #8675 failure evidence until every claimed
