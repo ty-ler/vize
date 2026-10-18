@@ -74,8 +74,8 @@ impl AsyncChildGuard {
         let mut stderr = self.observation.try_lock().map_err(|error| {
             CorsaError::Protocol(format!("preclose stderr custody unavailable: {error}").into())
         })?;
-        // Unlike diagnostic snapshots, proof cannot recover poisoned metadata.
-        self.terminal.try_snapshot()?;
+        // Validate the same custody before try_wait without copying discarded evidence.
+        self.terminal.try_check_custody_access()?;
         let child = owned.as_mut().ok_or_else(|| {
             CorsaError::Protocol("preclose exact child was already consumed".into())
         })?;
@@ -388,5 +388,111 @@ mod tests {
             )
             .unwrap();
         }
+    }
+
+    fn original_access_check(process: &AsyncChildGuard) -> Result<()> {
+        let mut owned = process.child.try_lock().map_err(|error| {
+            CorsaError::Protocol(
+                format!("preclose exact child custody unavailable: {error}").into(),
+            )
+        })?;
+        let _stderr = process.observation.try_lock().map_err(|error| {
+            CorsaError::Protocol(format!("preclose stderr custody unavailable: {error}").into())
+        })?;
+        process.terminal.try_snapshot()?;
+        owned.as_mut().ok_or_else(|| {
+            CorsaError::Protocol("preclose exact child was already consumed".into())
+        })?;
+        Ok(())
+    }
+
+    fn fault<T>(
+        process: &Arc<AsyncChildGuard>,
+        observer: &crate::ProcessObserver,
+        index: usize,
+        poison: bool,
+        read: impl FnOnce() -> T,
+    ) -> T {
+        if index >= 4 {
+            return observer.access_fault_for_test(index - 4, poison, read);
+        }
+        if index >= 2 {
+            return process
+                .terminal
+                .access_fault_for_test(index - 2, poison, read);
+        }
+        if poison {
+            let process = Arc::clone(process);
+            assert!(
+                std::thread::spawn(move || {
+                    if index == 0 {
+                        let _held = process.child.lock().unwrap();
+                        panic!("poison child custody");
+                    } else {
+                        let _held = process.observation.lock().unwrap();
+                        panic!("poison spawn stderr custody");
+                    }
+                })
+                .join()
+                .is_err()
+            );
+            read()
+        } else if index == 0 {
+            let _held = process.child.lock().unwrap();
+            read()
+        } else {
+            let _held = process.observation.lock().unwrap();
+            read()
+        }
+    }
+
+    #[test]
+    fn borrowed_precheck_keeps_first_fault_before_alive_or_consumed_child() {
+        let pair = |process: &Arc<AsyncChildGuard>| {
+            let old = original_access_check(process).unwrap_err().to_string();
+            let new = process.observe_preclose_terminal().unwrap_err().to_string();
+            assert_eq!(new, old, "whole original first-error precedence");
+        };
+        for index in 0..6 {
+            for poison in [false, true] {
+                let observer = crate::ProcessObserver::default();
+                let owned = crate::CorsaCommand::new("sh")
+                    .with_process_observer(observer.clone())
+                    .spawn_guarded(["-c", "exec cat"])
+                    .unwrap();
+                fault(&owned.process, &observer, index, poison, || {
+                    pair(&owned.process)
+                });
+                let _ = owned.process.abort_receipt();
+                assert!(
+                    owned
+                        .process
+                        .terminal_observer()
+                        .snapshot()
+                        .custody_complete()
+                );
+            }
+        }
+        for index in 0..5 {
+            let observer = crate::ProcessObserver::default();
+            let owned = crate::CorsaCommand::new("sh")
+                .with_process_observer(observer.clone())
+                .spawn_guarded(["-c", "exec cat"])
+                .unwrap();
+            fault(&owned.process, &observer, index + 1, true, || {
+                fault(&owned.process, &observer, index, false, || {
+                    pair(&owned.process)
+                });
+            });
+            let _ = owned.process.abort_receipt();
+        }
+        let observer = crate::ProcessObserver::default();
+        let owned = crate::CorsaCommand::new("sh")
+            .with_process_observer(observer.clone())
+            .spawn_guarded(["-c", "exec cat"])
+            .unwrap();
+        owned.process.abort_receipt().unwrap();
+        fault(&owned.process, &observer, 2, false, || pair(&owned.process));
+        pair(&owned.process);
     }
 }

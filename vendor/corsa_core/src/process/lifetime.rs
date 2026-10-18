@@ -84,6 +84,38 @@ impl ProcessTerminalObserver {
         }))
     }
 
+    #[cfg(test)]
+    pub(super) fn access_fault_for_test<T>(
+        &self,
+        index: usize,
+        poison: bool,
+        read: impl FnOnce() -> T,
+    ) -> T {
+        if poison {
+            let terminal = Arc::clone(&self.0);
+            assert!(
+                std::thread::spawn(move || {
+                    if index == 0 {
+                        let _held = terminal.observation.lock().unwrap();
+                        panic!("poison terminal metadata");
+                    } else {
+                        let _held = terminal.stderr_observer.lock().unwrap();
+                        panic!("poison stderr observer metadata");
+                    }
+                })
+                .join()
+                .is_err()
+            );
+            read()
+        } else if index == 0 {
+            let _held = self.0.observation.lock().unwrap();
+            read()
+        } else {
+            let _held = self.0.stderr_observer.lock().unwrap();
+            read()
+        }
+    }
+
     pub fn snapshot(&self) -> ProcessCloseObservation {
         let observation = self
             .0
@@ -92,6 +124,32 @@ impl ProcessTerminalObserver {
             .unwrap_or_else(|error| error.into_inner())
             .clone();
         self.snapshot_stderr(observation)
+    }
+
+    /// Check the original sequential custody locks without copying owned evidence.
+    pub(super) fn try_check_custody_access(&self) -> crate::Result<()> {
+        {
+            let _metadata = self.0.observation.try_lock().map_err(|error| {
+                crate::CorsaError::Protocol(
+                    format!("preclose terminal metadata unavailable: {error}").into(),
+                )
+            })?;
+        }
+        let observer = self
+            .0
+            .stderr_observer
+            .try_lock()
+            .map_err(|error| {
+                crate::CorsaError::Protocol(
+                    format!("preclose stderr observer unavailable: {error}").into(),
+                )
+            })?
+            .clone();
+        observer
+            .map(|observer| observer.try_check_receipt_access())
+            .transpose()
+            .map_err(|error| crate::CorsaError::Protocol(error.to_string().into()))?;
+        Ok(())
     }
 
     /// Strict, nonblocking metadata capture used only for preclose proof.
@@ -310,6 +368,42 @@ impl ProcessLifetimeObserver {
 #[cfg(test)]
 mod preclose_tests {
     use super::*;
+
+    #[test]
+    fn borrowed_metadata_access_keeps_exact_copying_refusal_order() {
+        fn paired(observer: &ProcessTerminalObserver) -> Option<String> {
+            let old = observer.try_snapshot().err().map(|e| e.to_string());
+            let new = observer
+                .try_check_custody_access()
+                .err()
+                .map(|e| e.to_string());
+            assert_eq!(new, old);
+            new
+        }
+        let observer = ProcessTerminalObserver::new(42, "long evidence".repeat(512).into());
+        observer.record_error("owned error".repeat(1024));
+        assert!(paired(&observer).is_none());
+        for index in [0, 1] {
+            for poison in [false, true] {
+                let observer = ProcessTerminalObserver::new(42, Default::default());
+                observer.access_fault_for_test(index, poison, || {
+                    assert!(paired(&observer).is_some());
+                });
+            }
+        }
+        let observer = ProcessTerminalObserver::new(42, Default::default());
+        observer.access_fault_for_test(1, true, || {
+            observer.access_fault_for_test(0, false, || {
+                let first = paired(&observer).unwrap();
+                let raw = observer.0.observation.try_lock().err().unwrap().to_string();
+                let expected = crate::CorsaError::Protocol(
+                    format!("preclose terminal metadata unavailable: {raw}").into(),
+                )
+                .to_string();
+                assert_eq!(first, expected);
+            });
+        });
+    }
 
     #[test]
     fn strict_unpublished_keeps_exact_tokens_and_refuses_busy_or_poisoned_inventory() {

@@ -81,6 +81,19 @@ impl ProcessObserver {
             .collect()
     }
 
+    /// Check the same ordered receipt locks without cloning a result vector.
+    pub(crate) fn try_check_receipt_access(&self) -> io::Result<()> {
+        let receipts = self.0.try_lock().map_err(|error| {
+            io::Error::other(format!("preclose stderr collection unavailable: {error}"))
+        })?;
+        for receipt in receipts.iter() {
+            let _receipt = receipt.try_lock().map_err(|error| {
+                io::Error::other(format!("preclose stderr receipt unavailable: {error}"))
+            })?;
+        }
+        Ok(())
+    }
+
     pub(crate) fn start(&self, pid: u32, stderr: ChildStderr) -> io::Result<ProcessObservation> {
         let receipt = Arc::new(Mutex::new(ProcessReceipt {
             pid,
@@ -226,4 +239,129 @@ pub(crate) struct ProcessTermination {
     pub(crate) status: ExitStatus,
     pub(crate) timed_out: bool,
     pub(crate) kill_requested: bool,
+}
+
+#[cfg(test)]
+impl ProcessObserver {
+    pub(crate) fn access_fault_for_test<T>(
+        &self,
+        index: usize,
+        poison: bool,
+        read: impl FnOnce() -> T,
+    ) -> T {
+        fn fault<T, U: Send + 'static>(
+            lock: Arc<Mutex<U>>,
+            poison: bool,
+            read: impl FnOnce() -> T,
+        ) -> T {
+            if poison {
+                assert!(
+                    thread::spawn(move || {
+                        let _held = lock.lock().unwrap();
+                        panic!("poison receipt custody");
+                    })
+                    .join()
+                    .is_err()
+                );
+                read()
+            } else {
+                let _held = lock.lock().unwrap();
+                read()
+            }
+        }
+        if index == 0 {
+            fault(Arc::clone(&self.0), poison, read)
+        } else {
+            let receipt = Arc::clone(&self.0.lock().unwrap()[index - 1]);
+            fault(receipt, poison, read)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fixture() -> ProcessObserver {
+        let observer = ProcessObserver::default();
+        for pid in [41, 42] {
+            observer
+                .0
+                .lock()
+                .unwrap()
+                .push(Arc::new(Mutex::new(ProcessReceipt {
+                    pid,
+                    completed: false,
+                    stderr: vec![0, 255, 1],
+                    stderr_complete: false,
+                    stderr_error: None,
+                    exit_status: None,
+                    process_error: None,
+                    timed_out: false,
+                    kill_requested: false,
+                    reaped: false,
+                    elapsed: Duration::ZERO,
+                })));
+        }
+        observer
+    }
+
+    fn paired(observer: &ProcessObserver) -> Option<(io::ErrorKind, String)> {
+        let old = observer
+            .try_receipts()
+            .err()
+            .map(|e| (e.kind(), e.to_string()));
+        let new = observer
+            .try_check_receipt_access()
+            .err()
+            .map(|e| (e.kind(), e.to_string()));
+        assert_eq!(new, old, "same first refusal and whole text");
+        new
+    }
+
+    #[test]
+    fn borrowed_receipt_access_preserves_all_ordered_busy_and_poison_refusals() {
+        assert!(paired(&ProcessObserver::default()).is_none());
+        let complete = fixture();
+        assert!(paired(&complete).is_none());
+        assert_eq!(complete.try_receipts().unwrap().len(), 2);
+        for index in 0..=2 {
+            for poison in [false, true] {
+                let observer = fixture();
+                observer.access_fault_for_test(index, poison, || {
+                    assert!(paired(&observer).is_some());
+                });
+            }
+        }
+        for first in [0, 1] {
+            let observer = fixture();
+            let receipts = observer.0.lock().unwrap().clone();
+            let second = Arc::clone(&receipts[1]);
+            assert!(
+                thread::spawn(move || {
+                    let _held = second.lock().unwrap();
+                    panic!("later receipt is poisoned");
+                })
+                .join()
+                .is_err()
+            );
+            if first == 0 {
+                let _held = observer.0.lock().unwrap();
+                let error = paired(&observer).unwrap();
+                let raw = observer.0.try_lock().err().unwrap().to_string();
+                assert_eq!(
+                    error.1,
+                    format!("preclose stderr collection unavailable: {raw}")
+                );
+            } else {
+                let _held = receipts[0].lock().unwrap();
+                let error = paired(&observer).unwrap();
+                let raw = receipts[0].try_lock().err().unwrap().to_string();
+                assert_eq!(
+                    error.1,
+                    format!("preclose stderr receipt unavailable: {raw}")
+                );
+            }
+        }
+    }
 }
