@@ -12,6 +12,7 @@ runs:
         node tools/support/compat/github/checked-corsa-source.ts
         node --test tools/support/compat/github/checked-corsa-*.test.ts
         node --test tests/tooling/typechecker-native-semantic-completion.test.ts
+        node --test tests/tooling/ascii-symbol-original-callers.test.ts
         cargo fetch --locked
     - name: Test poisoned actual owned process lock and exact reaping
       shell: bash

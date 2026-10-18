@@ -87,3 +87,83 @@ test("sealed whole SDK reader and original frames retain historical bodies and r
   assert.throws(() => originalAsciiCaller("f".repeat(40), entries[0].file, entries));
   assert.throws(() => originalAsciiCaller(manifest.originalSource, "unknown.ts", entries));
 });
+
+void test("the actual owned SDK/Reader whole frame remains distinct from every historical frame", () => {
+  const composed = retainedAsciiCallerFrame("owned-sdk-reader");
+  const receipt = qualifyAsciiOriginalCallers(composed);
+  assert.equal(receipt.kind, "owned-sdk-reader");
+  assert.equal(receipt.source, "fbdaa063d15302b8f2ff8693f57336cba007d056");
+  assert.equal(receipt.tree, "160337c9ffa80e18ae3d7b29b3d22a253cf3f290");
+  assert.equal(receipt.wholeCallerBodies, 10);
+  assert.equal(receipt.runtimeCredit, false);
+  for (const kind of ["original", "sdk", "reader"]) {
+    const historical = retainedAsciiCallerFrame(kind);
+    const workflow = historical.find((entry) =>
+      entry.file.endsWith("warm-type-backed-workflow.ts"),
+    );
+    assert.ok(workflow);
+    assert.throws(() =>
+      qualifyAsciiOriginalCallers(
+        composed.map((entry) => (entry.file === workflow.file ? workflow : entry)),
+      ),
+    );
+  }
+});
+
+await test("every fourth-frame caller keeps whole identity and rejects rehashes and partial custody", () => {
+  const entries = retainedAsciiCallerFrame("owned-sdk-reader");
+  assert.deepEqual(qualifyAsciiOriginalCallers(entries), {
+    authority: "complete-ascii-original-caller-source-frame",
+    kind: "owned-sdk-reader",
+    source: "fbdaa063d15302b8f2ff8693f57336cba007d056",
+    tree: "160337c9ffa80e18ae3d7b29b3d22a253cf3f290",
+    originalSource: manifest.originalSource,
+    wholeCallerBodies: 10,
+    runtimeCredit: false,
+    performanceCredit: false,
+  });
+  for (const entry of entries) {
+    assert.throws(() =>
+      qualifyAsciiOriginalCallers(entries.filter(({ file }) => file !== entry.file)),
+    );
+    assert.throws(() => qualifyAsciiOriginalCallers([...entries, entry]));
+    for (const mode of ["100755", "120000"])
+      assert.throws(() =>
+        qualifyAsciiOriginalCallers(
+          entries.map((item) => (item.file === entry.file ? { ...item, mode } : item)),
+        ),
+      );
+    const body = Buffer.from(entry.body);
+    body[0] ^= 1;
+    const blob = createHash("sha1").update(`blob ${body.length}\0`).update(body).digest("hex");
+    for (const replacement of [
+      { ...entry, body },
+      { ...entry, body, blob },
+      { ...entry, file: `foreign/${entry.file}` },
+      { ...entry, unregistered: true },
+    ])
+      assert.throws(() =>
+        qualifyAsciiOriginalCallers(
+          entries.map((item) => (item.file === entry.file ? replacement : item)),
+        ),
+      );
+  }
+  for (const kind of ["original", "sdk", "reader"]) {
+    const foreign = retainedAsciiCallerFrame(kind).filter((entry) =>
+      entries.some((item) => item.file === entry.file && item.blob !== entry.blob),
+    );
+    assert.ok(foreign.length > 0);
+    for (const entry of foreign)
+      assert.throws(() =>
+        qualifyAsciiOriginalCallers(
+          entries.map((item) => (item.file === entry.file ? entry : item)),
+        ),
+      );
+  }
+  entries[0].body.fill(0);
+  entries[0].mode = "100755";
+  assert.equal(
+    qualifyAsciiOriginalCallers(retainedAsciiCallerFrame("owned-sdk-reader")).kind,
+    "owned-sdk-reader",
+  );
+});
