@@ -161,7 +161,6 @@ No upstream comments, changes or namespace operations are necessary to review
 this source migration. An actual publication failure is a concrete release
 blocker; the read-only 404 result alone is not an authorization request.
 
-
 ## Supersession and source review boundary
 
 The original #8675 head is `df973f70687c8607c0dbef9c8b7b87acf00819ae`.
@@ -173,14 +172,14 @@ The composition review starts from main
 `cc501b931c96b5c7575a152c1729be5c835535f4` and preserves the separately merged
 #9404 batch-close and authenticated shutdown controls.
 
-| Original obligation | Current source and required proof |
-| --- | --- |
-| Parser abort requires the complete same-config semantic phase | Keep main's typed CLI outcome, full abnormal packet/refusal and fallback controls; run the frozen semantic corpus against the actual diagnosing owner. |
-| One diagnosing snapshot owns the selected configuration and complete source text | Use `SnapshotSourceOwner::project_matching` and the complete native descriptor; reject duplicate/foreign handles, changed options/roots, absent sources and released snapshots. The old test-only project selector is replaced by the production selector and its stronger refusal tests. |
-| Native shutdown retains protocol and terminal outcomes | Keep #9404's complete null/error/non-null/foreign-exit transcript test and unchanged TS peer. Production shutdown calls that same helper, then checks the owned terminal receipt. Never filter the historical Exit warning. |
-| Final exit owns unfinished and retired native processes | Admission leases, typed startup handles and the shared retirement ledger must survive setup failure, poisoned locks, context detachment and recovery. The shutdown response requires actual current and retired owner completion. |
-| SDK package graph works outside this workspace | Six owned package identities retain the original Rust aliases, exact workspace-version dependencies, default/distributed features and one unmodified registry runtime. Require independent path, normalized archive and eventual registry-only consumers. |
-| Original400 remains a real workload and termination gate | Preserve the complete frozen fixture tree, five input hashes and numerical workload limits. Qualify both immutable sources, unchanged non-Cargo locks and the exact six-provider graph; require actual final PID/birth disappearance. Source qualification grants no published-artifact or source-effect attribution credit. |
+| Original obligation                                                              | Current source and required proof                                                                                                                                                                                                                                                                                            |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parser abort requires the complete same-config semantic phase                    | Keep main's typed CLI outcome, full abnormal packet/refusal and fallback controls; run the frozen semantic corpus against the actual diagnosing owner.                                                                                                                                                                       |
+| One diagnosing snapshot owns the selected configuration and complete source text | Use `SnapshotSourceOwner::project_matching` and the complete native descriptor; reject duplicate/foreign handles, changed options/roots, absent sources and released snapshots. The old test-only project selector is replaced by the production selector and its stronger refusal tests.                                    |
+| Native shutdown retains protocol and terminal outcomes                           | Keep #9404's complete null/error/non-null/foreign-exit transcript test and unchanged TS peer. Production shutdown calls that same helper, then checks the owned terminal receipt. Never filter the historical Exit warning.                                                                                                  |
+| Final exit owns unfinished and retired native processes                          | Admission leases, typed startup handles and the shared retirement ledger must survive setup failure, poisoned locks, context detachment and recovery. The shutdown response requires actual current and retired owner completion.                                                                                            |
+| SDK package graph works outside this workspace                                   | Six owned package identities retain the original Rust aliases, exact workspace-version dependencies, default/distributed features and one unmodified registry runtime. Require independent path, normalized archive and eventual registry-only consumers.                                                                    |
+| Original400 remains a real workload and termination gate                         | Preserve the complete frozen fixture tree, five input hashes and numerical workload limits. Qualify both immutable sources, unchanged non-Cargo locks and the exact six-provider graph; require actual final PID/birth disappearance. Source qualification grants no published-artifact or source-effect attribution credit. |
 
 The earlier PR also contains large source-body capsules that authenticated its
 particular historical composition. They are not imported as an active product

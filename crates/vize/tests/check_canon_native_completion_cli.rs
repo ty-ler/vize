@@ -185,8 +185,8 @@ fn native_completion_cli_preserves_frozen_full_outputs_and_observable_failures()
     let repaired = run(&cli, &native, &ordinary, &dir, "repaired");
     // Retain every original/native packet before judging any complete output.
     assert_eq!(version.status.code(), Some(0));
-    assert!(
-        version.stdout.starts_with(b"Version "),
+    assert_eq!(
+        version.stdout, b"Version 7.0.2\n",
         "native version identity"
     );
     assert_eq!(version.stderr, b"");
