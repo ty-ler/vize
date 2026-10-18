@@ -7,16 +7,19 @@ import { createConnection } from "node:net";
 import { inspect } from "node:util";
 import {
   fixtureIdentity,
-  sealNuxtUiCandidate,
   stockNuxtUiCompilerConfig,
   summarizeNuxtUiTransforms,
 } from "../../_helpers/nuxt-ui-compiler-authority.ts";
 import {
   compareNuxtUiAuthoredIdentity,
-  retainNuxtUiGeneratedOutput,
   verifyNuxtUiGeneratedOutputUnused,
   summarizeNuxtUiWholeHtml,
 } from "../../_helpers/nuxt-ui-output-authority.ts";
+
+import {
+  sealNuxtUiPhase,
+  assertNuxtUiPlaygroundOutputAbsent,
+} from "../../_helpers/nuxt-ui-prepared-world.ts";
 
 const root = path.resolve("target/app-e2e-logs/nuxt-ui-reference");
 const tests = path.resolve("tests");
@@ -128,32 +131,6 @@ async function assertStopped(phase: string): Promise<void> {
   write(`${phase}-server-stopped.json`, { records, processGroupsAbsent: true, portClosed: true });
 }
 
-const candidate = await run(
-  "candidate",
-  "vp",
-  ["run", "--no-cache", "--filter", "./tests", "test:dev:nuxt-ui"],
-  process.cwd(),
-);
-assert.equal(
-  candidate.signal,
-  null,
-  "an interrupted original suite cannot start a reference phase",
-);
-assert.equal(candidate.error, undefined);
-await assertStopped("candidate");
-const { cwd } = JSON.parse(fs.readFileSync(path.join(root, "current-fixture.json"), "utf8"));
-process.env.VIZE_NUXT_UI_COMPILER_PHASE = "candidate";
-process.env.VIZE_NUXT_UI_COMPILER_AUTHORITY = root;
-sealNuxtUiCandidate(cwd);
-for (const [from, name] of [
-  ["app/results", "results"],
-  ["playwright-report", "report"],
-  ["app/screenshots", "screenshots"],
-]) {
-  const source = path.join(tests, from!);
-  if (fs.existsSync(source))
-    fs.cpSync(source, path.join(root, "candidate", name!), { recursive: true });
-}
 const cli = createRequire(path.join(tests, "package.json")).resolve("@playwright/test/cli");
 const reference = await run(
   "reference",
@@ -173,15 +150,54 @@ const reference = await run(
   ],
   tests,
 );
-await assertStopped("reference");
-const baseline = JSON.parse(fs.readFileSync(path.join(root, "candidate-identity.json"), "utf8"));
-const after = fixtureIdentity(cwd);
-write("reference-final-identity.json", after);
-const generated = retainNuxtUiGeneratedOutput(
-  cwd,
-  path.join(root, "reference-generated-output"),
-  after,
+assert.equal(
+  reference.signal,
+  null,
+  "an interrupted stock reference cannot start the original candidate suite",
 );
+assert.equal(reference.error, undefined);
+await assertStopped("reference");
+const { cwd } = JSON.parse(fs.readFileSync(path.join(root, "current-fixture.json"), "utf8"));
+process.env.VIZE_NUXT_UI_COMPILER_PHASE = "reference";
+process.env.VIZE_NUXT_UI_COMPILER_AUTHORITY = root;
+sealNuxtUiPhase(cwd);
+const candidate = await run(
+  "candidate",
+  "vp",
+  ["run", "--no-cache", "--filter", "./tests", "test:dev:nuxt-ui"],
+  process.cwd(),
+);
+assert.equal(
+  candidate.signal,
+  null,
+  "an interrupted original suite cannot yield paired acceptance",
+);
+assert.equal(candidate.error, undefined);
+await assertStopped("candidate");
+process.env.VIZE_NUXT_UI_COMPILER_PHASE = "candidate";
+process.env.VIZE_NUXT_UI_COMPILER_AUTHORITY = root;
+sealNuxtUiPhase(cwd);
+for (const [from, name] of [
+  ["app/results", "results"],
+  ["playwright-report", "report"],
+  ["app/screenshots", "screenshots"],
+]) {
+  const source = path.join(tests, from!);
+  if (fs.existsSync(source))
+    fs.cpSync(source, path.join(root, "candidate", name!), { recursive: true });
+}
+const baseline = JSON.parse(
+  fs.readFileSync(path.join(root, "prepared-world-identity.json"), "utf8"),
+);
+const after = fixtureIdentity(cwd);
+write("candidate-final-identity.json", after);
+assertNuxtUiPlaygroundOutputAbsent(cwd);
+assert.deepEqual(after, baseline, "both compiler phases retain every exact physical input");
+const generated = {
+  producer: "selected Nuxt preparation commands",
+  namespace: "playgrounds/vue/dist",
+  files: [],
+};
 const moduleGraphs = verifyNuxtUiGeneratedOutputUnused(root, cwd);
 write("generated-output-module-graph-admission.json", moduleGraphs);
 const generatedDelta = compareNuxtUiAuthoredIdentity(baseline, after);
@@ -196,7 +212,11 @@ write("generated-output-delta.json", {
   delta: generatedDelta,
 });
 const candidateConfig = fs.readFileSync(path.join(root, "candidate-config.ts"), "utf8");
-const referenceConfig = fs.readFileSync(path.join(cwd, "playgrounds/nuxt/nuxt.config.ts"), "utf8");
+const referenceConfig = fs.readFileSync(path.join(root, "reference-config.ts"), "utf8");
+assert.equal(
+  fs.readFileSync(path.join(cwd, "playgrounds/nuxt/nuxt.config.ts"), "utf8"),
+  candidateConfig,
+);
 assert.equal(referenceConfig, stockNuxtUiCompilerConfig(candidateConfig));
 const transforms = summarizeNuxtUiTransforms(root, cwd);
 const bodies = summarizeNuxtUiWholeHtml(root);
@@ -214,6 +234,8 @@ write("paired-result.json", {
   wholeHomeHtml: homeHtml,
   wholeHtmlEqual,
   configDifference: "public compiler: false only",
+  phaseOrder: ["reference", "candidate"],
+  selectedNuxtPreparation: true,
   referenceInvocations: 1,
   referenceRetries: 0,
   originalCandidateFailurePreserved: candidate.code !== 0,

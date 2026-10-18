@@ -9,7 +9,11 @@ import {
   ensureSymlink,
 } from "./vize-local-packages.ts";
 import { patchNuxtUiPlaygroundConfig } from "./nuxt-ui-config.ts";
-import { configureNuxtUiAuthority, prepareNuxtUiReference } from "./nuxt-ui-compiler-authority.ts";
+import {
+  configureNuxtUiAuthority,
+  resumeNuxtUiPreparedApp,
+  prepareNuxtUiSelectedApp,
+} from "./nuxt-ui-prepared-world.ts";
 import {
   FRONTEND_PHPCON_E2E_ENV,
   NPMX_E2E_ENV,
@@ -1833,14 +1837,7 @@ export const nuxtUiApp: AppConfig = {
   readyDelay: 10_000,
   startupTimeout: 600_000,
   setup() {
-    if (prepareNuxtUiReference(NUXT_UI_WORK_DIR)) {
-      execSync("npx -y pnpm@10 dev:prepare", {
-        cwd: NUXT_UI_WORK_DIR,
-        stdio: "inherit",
-        timeout: 900_000,
-      });
-      return;
-    }
+    if (resumeNuxtUiPreparedApp(NUXT_UI_WORK_DIR)) return;
     const nuxtUiDir = syncGitFixtureWorktree("nuxt-ui", "playground");
     const nuxtConfigPath = path.join(nuxtUiDir, "playgrounds", "nuxt", "nuxt.config.ts");
     const nuxtUiLinkPath = path.join(nuxtUiDir, "src", "runtime", "components", "Link.vue");
@@ -1862,11 +1859,13 @@ export const nuxtUiApp: AppConfig = {
     }
     configureNuxtUiAuthority(nuxtConfigPath);
     console.log("[nuxt-ui:setup] pnpm dev:prepare...");
-    execSync("npx -y pnpm@10 dev:prepare", {
-      cwd: nuxtUiDir,
-      stdio: "inherit",
-      timeout: 900_000,
-    });
+    if (!prepareNuxtUiSelectedApp(nuxtUiDir)) {
+      execSync("npx -y pnpm@10 dev:prepare", {
+        cwd: nuxtUiDir,
+        stdio: "inherit",
+        timeout: 900_000,
+      });
+    }
   },
   check: {
     cwd: path.join(GIT_DIR, "nuxt-ui"),

@@ -2,12 +2,9 @@ import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { fileURLToPath } from "node:url";
 import { inspect } from "node:util";
 
-import { fixtureIdentity } from "./nuxt-ui-fixture-identity.ts";
 import {
-  retainNuxtUiGeneratedOutput,
   captureNuxtUiAliveGraphResponse,
   observeNuxtUiModuleGraphs,
   type ModuleGraphHooks,
@@ -15,208 +12,21 @@ import {
 } from "./nuxt-ui-output-authority.ts";
 export { fixtureIdentity } from "./nuxt-ui-fixture-identity.ts";
 
-type Phase = "candidate" | "reference";
-const CONFIG = "playgrounds/nuxt/nuxt.config.ts";
-const COMPILER = "compiler: {\n      handleNodeModulesVue: false,\n    }";
+import { authorityDirectory, phase } from "./nuxt-ui-prepared-world.ts";
+export {
+  authorityDirectory,
+  configureNuxtUiAuthority,
+  removeOwnedNuxtUiCaches,
+  stockNuxtUiCompilerConfig,
+} from "./nuxt-ui-prepared-world.ts";
+
 const TARGET =
   /\/(?:Select|SelectRoot|SelectValue|Primitive|Slot)\.(?:vue(?:\.tsx?)?|[cm]?js)(?:\?|$)/;
 const sha256 = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex");
 
-function phase(): Phase | undefined {
-  const value = process.env.VIZE_NUXT_UI_COMPILER_PHASE;
-  assert.ok(value === undefined || value === "candidate" || value === "reference");
-  return value;
-}
-
-export function authorityDirectory(): string | undefined {
-  if (!phase()) return undefined;
-  const directory = process.env.VIZE_NUXT_UI_COMPILER_AUTHORITY;
-  assert.ok(
-    directory && path.isAbsolute(directory),
-    "paired reference needs an absolute authority directory",
-  );
-  fs.mkdirSync(directory, { recursive: true });
-  return directory;
-}
-
 function write(directory: string, name: string, value: unknown): void {
   fs.mkdirSync(directory, { recursive: true });
   fs.writeFileSync(path.join(directory, name), `${JSON.stringify(value, null, 2)}\n`);
-}
-
-export function configureNuxtUiAuthority(configPath: string): void {
-  if (!phase()) return;
-  let config = fs.readFileSync(configPath, "utf8");
-  const helper = fileURLToPath(import.meta.url);
-  assert.ok(config.includes(COMPILER), "candidate compiler configuration changed");
-  assert.ok(config.includes("    '@nuxt/ui'\n  ],"), "pinned upstream module roster changed");
-  config = `import { nuxtUiCompilerAuthority } from ${JSON.stringify(helper)};\n${config}`.replace(
-    "    '@nuxt/ui'\n  ],",
-    "    '@nuxt/ui',\n    nuxtUiCompilerAuthority,\n  ],",
-  );
-  fs.writeFileSync(configPath, config);
-  write(authorityDirectory()!, "current-fixture.json", {
-    cwd: path.resolve(path.dirname(configPath), "../.."),
-  });
-}
-
-export function prepareNuxtUiReference(cwd: string): boolean {
-  if (phase() !== "reference") return false;
-  const directory = authorityDirectory();
-  assert.ok(directory);
-  const baseline = JSON.parse(
-    fs.readFileSync(path.join(directory, "candidate-identity.json"), "utf8"),
-  );
-  assert.deepEqual(
-    fixtureIdentity(cwd),
-    baseline,
-    "same physical source, lock and installed providers required",
-  );
-  const configPath = path.join(cwd, CONFIG);
-  const config = fs.readFileSync(configPath, "utf8");
-  assert.equal(config, fs.readFileSync(path.join(directory, "candidate-config.ts"), "utf8"));
-  fs.writeFileSync(configPath, stockNuxtUiCompilerConfig(config));
-  const observedCacheDirectories = new Set<string>();
-  const candidate = path.join(directory, "candidate");
-  for (const session of fs.readdirSync(candidate).filter((name) => name.startsWith("session-"))) {
-    const sessionPath = path.join(candidate, session);
-    for (const name of fs.readdirSync(sessionPath).filter((name) => name.startsWith("plugins-"))) {
-      const record = JSON.parse(fs.readFileSync(path.join(sessionPath, name), "utf8"));
-      assert.ok(
-        typeof record.cacheDir === "string",
-        "actual candidate Vite cache path must be recorded",
-      );
-      const cache = path.resolve(record.cacheDir);
-      assert.ok(
-        cache.startsWith(`${fs.realpathSync(cwd)}${path.sep}`),
-        "refuse clearing caches outside the owned fixture",
-      );
-      assert.ok(
-        cache
-          .split(path.sep)
-          .some((segment) => [".nuxt", ".cache", ".vite", ".vize"].includes(segment)),
-      );
-      observedCacheDirectories.add(cache);
-    }
-  }
-  assert.ok(observedCacheDirectories.size > 0);
-  const caches = new Set(observedCacheDirectories);
-  function collectGenerated(parent: string): void {
-    for (const entry of fs.readdirSync(parent, { withFileTypes: true })) {
-      const file = path.join(parent, entry.name);
-      if (entry.name === "node_modules") {
-        for (const name of [".vite", ".cache"]) {
-          caches.add(path.join(file, name));
-        }
-      } else if ([".nuxt", ".output", ".vize", ".cache", ".vite"].includes(entry.name)) {
-        caches.add(file);
-      } else if (entry.isDirectory() && !entry.isSymbolicLink() && entry.name !== ".git")
-        collectGenerated(file);
-    }
-  }
-  collectGenerated(cwd);
-  const removed = removeOwnedNuxtUiCaches(cwd, caches);
-  assert.deepEqual(
-    fixtureIdentity(cwd),
-    baseline,
-    "cache removal must preserve every authored/provider byte",
-  );
-  write(directory, "reference-transition.json", {
-    option: "compiler: false",
-    removed,
-    observedCacheDirectories: [...observedCacheDirectories],
-    configBeforeSha256: sha256(config),
-    configAfterSha256: sha256(fs.readFileSync(configPath)),
-  });
-  fs.writeFileSync(path.join(directory, "reference-config.ts"), fs.readFileSync(configPath));
-  return true;
-}
-
-export function removeOwnedNuxtUiCaches(cwd: string, caches: Iterable<string>): string[] {
-  const logical = path.resolve(cwd);
-  const physical = fs.realpathSync(cwd);
-  function owned(cache: string): string | undefined {
-    const absolute = path.resolve(cache);
-    const relative = path.relative(
-      absolute.startsWith(`${logical}${path.sep}`) ? logical : physical,
-      absolute,
-    );
-    assert.ok(
-      relative &&
-        relative !== ".." &&
-        !relative.startsWith(`..${path.sep}`) &&
-        !path.isAbsolute(relative),
-      "cache must stay inside the owned physical fixture",
-    );
-    let cursor = physical;
-    for (const part of relative.split(path.sep)) {
-      cursor = path.join(cursor, part);
-      let stat: fs.Stats;
-      try {
-        stat = fs.lstatSync(cursor);
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
-        throw error;
-      }
-      assert.ok(!stat.isSymbolicLink(), "cache ancestor or leaf must not be a symlink");
-      assert.ok(stat.isDirectory(), "cache path must contain only owned directories");
-      assert.ok(
-        fs.realpathSync(cursor).startsWith(`${physical}${path.sep}`),
-        "physical cache escaped fixture",
-      );
-    }
-    return cursor;
-  }
-  const targets = [
-    ...new Set([...caches].map(owned).filter((file): file is string => file !== undefined)),
-  ];
-  const roots = targets.filter(
-    (target) =>
-      !targets.some((other) => other !== target && target.startsWith(`${other}${path.sep}`)),
-  );
-  for (const target of roots) fs.rmSync(target, { recursive: true });
-  return roots;
-}
-
-export function stockNuxtUiCompilerConfig(config: string): string {
-  assert.equal(config.split(COMPILER).length, 2, "exactly one public compiler option changes");
-  return config.replace(COMPILER, "compiler: false");
-}
-
-export function sealNuxtUiCandidate(cwd: string): void {
-  const directory = authorityDirectory();
-  assert.ok(directory);
-  const identity = fixtureIdentity(cwd);
-  write(directory, "candidate-identity.json", identity);
-  retainNuxtUiGeneratedOutput(cwd, path.join(directory, "candidate-generated-output"), identity);
-  fs.copyFileSync(path.join(cwd, CONFIG), path.join(directory, "candidate-config.ts"));
-  fs.copyFileSync(
-    path.join(cwd, "pnpm-lock.yaml"),
-    path.join(directory, "provider-pnpm-lock.yaml"),
-  );
-  const reka = identity.providers.find((provider) => provider.name === "reka-ui");
-  assert.ok(reka);
-  const modules = reka.files.filter(
-    (file) =>
-      /(?:SelectRoot|SelectValue|Primitive|Slot)\.(?:[cm]?js|vue)(?:\.map)?$/.test(file.path) ||
-      file.path === "package.json" ||
-      file.path === "dist/index.js",
-  );
-  for (const name of ["SelectRoot", "SelectValue", "Primitive", "Slot"]) {
-    assert.ok(
-      modules.some((file) => path.basename(file.path).startsWith(`${name}.`)),
-      `missing actual installed ${name}`,
-    );
-  }
-  for (const file of modules) {
-    const target = path.join(directory, "provider-reka-ui", file.path);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.copyFileSync(path.join(reka.directory, file.path), target);
-  }
-  fs.copyFileSync(
-    path.join(cwd, "src/runtime/components/Select.vue"),
-    path.join(directory, "upstream-Select.vue"),
-  );
 }
 
 export function captureNuxtUiServer(pid: number | undefined): void {
