@@ -123,6 +123,20 @@ pub(super) fn selection(
     options: &SsrCompilerOptions,
     experimental: &SsrCompilerExperimentalOptions,
 ) -> SsrL4Selection {
+    selection_in_context(
+        source,
+        options,
+        experimental,
+        crate::SsrSfcContext::new(true),
+    )
+}
+
+fn selection_in_context(
+    source: &str,
+    options: &SsrCompilerOptions,
+    experimental: &SsrCompilerExperimentalOptions,
+    context: crate::SsrSfcContext,
+) -> SsrL4Selection {
     let allocator = Allocator::new();
     let (root, errors, frozen) = vize_atelier_core::parser::Parser::with_options(
         &allocator,
@@ -142,7 +156,7 @@ pub(super) fn selection(
             experimental,
             template_syntax: TemplateSyntaxMode::Standard,
             has_custom_elements: false,
-            context: crate::SsrSfcContext::new(true),
+            context,
             frozen: Some((&root, &frozen)),
         },
     )
@@ -211,34 +225,45 @@ fn comment_arguments(code: &str) -> std::vec::Vec<&str> {
 
 #[test]
 fn conditional_vnode_metadata_matches_both_lanes_in_each_host_build() {
-    let cases: &[(&str, &[&str], &[&str])] = &[
+    let cases: &[(&str, bool, &[&str], &[&str])] = &[
         (
             "<Foo><span v-if=\"show\">yes</span></Foo>",
+            false,
             &["\"v-if\", true"],
             &["\"\", true"],
         ),
         (
             "<Foo><span v-if=\"show\">yes</span><b v-else>no</b></Foo>",
+            false,
             &[],
             &[],
         ),
-        ("<Foo><!----></Foo>", &["\"\""], &["\"\""]),
+        ("<Foo><!----></Foo>", true, &["\"\""], &["\"\""]),
         (
             "<Foo><!--authored--></Foo>",
+            true,
             &["\"authored\""],
             &["\"authored\""],
         ),
     ];
     for (set, mut options, mut experimental) in option_sets() {
-        options.comments = true;
         experimental.source_map = true;
         experimental.source_map_filename = Some("Conditional.vue".into());
-        for &(source, development, production) in cases {
-            assert!(matches!(
-                selection(source, &options, &experimental),
-                SsrL4Selection::Emitted(_)
-            ));
+        for &(source, comments, development, production) in cases {
+            options.comments = comments;
             for (is_development, expected) in [(true, development), (false, production)] {
+                let context = SsrSfcContext::new(true).with_development(is_development);
+                let selected = selection_in_context(source, &options, &experimental, context);
+                // Authored-comment preservation is an existing legacy option.
+                // Conditional metadata must still exercise actual native emission.
+                if comments {
+                    assert!(matches!(
+                        selected,
+                        SsrL4Selection::Legacy(super::LegacyReason::Options)
+                    ));
+                } else {
+                    assert!(matches!(selected, SsrL4Selection::Emitted(_)));
+                }
                 let compile = |lane| {
                     let allocator = Allocator::new();
                     let (_, errors, result) = compile_ssr_on_lane_with_context(
@@ -248,7 +273,7 @@ fn conditional_vnode_metadata_matches_both_lanes_in_each_host_build() {
                         TemplateSyntaxMode::Standard,
                         CustomElementMatcher::default(),
                         experimental.clone(),
-                        SsrSfcContext::new(true).with_development(is_development),
+                        context,
                         lane,
                     );
                     assert!(errors.is_empty(), "{set}/{source}: {errors:?}");
