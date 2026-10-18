@@ -26,8 +26,76 @@ const section =
   /<!-- First-copy reader example: start -->\n[\s\S]+?<!-- First-copy reader example: end -->\n\n/g;
 const fences = (source: string) =>
   [...source.matchAll(/^```[^\n]*\n([\s\S]*?)^```$/gm)].map((match) => match[1]);
+// Japanese prose was reviewed in #9522 (64f070766c3915698bd076574c7ba03dc07d7d98).
+// Its original eight code fences remain byte-identical to baseline.base.
+const reviewedJapaneseProse = "b565f137d2c726716ea9a1372eb6bde119b852581b432aef6d418ca66ff4dd03";
+const originalFenceHashes: Record<string, string> = {
+  "docs/content/guide/lib-pull.md":
+    "5837f9440664eec71cdb91d249f2335f811270fb6f98d79c0c4f371181ebf06f",
+  "docs/content/ja/guide/lib-pull.md":
+    "2d84439ab44279ef0fe1ef06c35c01c1e0682bc9c2f6d0ecfcf6aa715940e207",
+};
 
-await test("first-copy guides preserve every original byte and every native bookmark", () => {
+// Exact config-policy prose changes are inverted only for the historical whole-body check.
+// Current recipes are checked independently against the complete archived payload above.
+const canonicalLibProse: Record<string, [string, string][]> = {
+  "docs/content/guide/lib-pull.md": [
+    [
+      "2. shared `vue.lib` settings in your existing Vite configuration,\n",
+      "2. shared `vize.lib` settings in your existing Vite configuration,\n",
+    ],
+    [
+      "Move a removed dedicated `lib` section to `vue.lib`; see [Configuration](./configuration.md).\n",
+      "An existing dedicated `lib` section remains supported with the precedence described in [Configuration](./configuration.md).\n",
+    ],
+    [
+      "writes `vue.lib.uiDir` / `vue.lib.composableDir` in a new `vite.config.mjs` when no\n",
+      "writes `vize.lib.uiDir` / `vize.lib.composableDir` in a new `vite.config.mjs` when no\n",
+    ],
+    [
+      "a `vue.lib` snippet when settings still need to be added. An existing\n`lib` section is kept; `--force` prints a replacement snippet without modifying\nuser-owned JavaScript or TypeScript configuration.\n",
+      "a `vize.lib` snippet when settings still need to be added. Existing dedicated\nconfiguration users retain the same behavior: `init` appends `lib` to\n`vize.config.json` and prints a snippet for code or Pkl configurations. An existing\n`lib` section is kept; `--force` can replace it in a dedicated JSON configuration.\n",
+    ],
+  ],
+  "docs/content/ja/guide/lib-pull.md": [
+    [
+      "2. 既存の Vite 設定にある共通の `vue.lib` 設定\n",
+      "2. 既存の Vite 設定にある共通の `vize.lib` 設定\n",
+    ],
+    [
+      "廃止した専用設定からの移行は[設定ガイド](./configuration.md)を参照してください。\n",
+      "既存の専用設定の `lib` も利用できます。優先順位と公開済みバージョンの対応範囲は[設定ガイド](./configuration.md)を参照してください。\n",
+    ],
+    [
+      "`init` はソースディレクトリ（通常は `src/`、Nuxt 4 では `app/`）と TypeScript を検出します。設定がなければ、新しい `vite.config.mjs` に `vue.lib.uiDir` と `vue.lib.composableDir` を書き込みます。既存の Vite 設定は編集せず、設定を追加する必要があれば `vue.lib` のスニペットを表示します。\n",
+      "`init` はソースディレクトリ（通常は `src/`、Nuxt 4 では `app/`）と TypeScript を検出します。設定がなければ、新しい `vite.config.mjs` に `vize.lib.uiDir` と `vize.lib.composableDir` を書き込みます。既存の Vite 設定は編集せず、設定を追加する必要があれば `vize.lib` のスニペットを表示します。\n",
+    ],
+    [
+      "既存の `lib` は保持します。`--force` は置き換え用のスニペットを表示し、利用者の\nJavaScript や TypeScript の設定を書き換えません。`tsconfig.json` に\n`allowImportingTsExtensions` がなければ、その旨を表示します。取得したソースは兄弟ファイルを `./x.ts` として import します。\n",
+      "既存の専用設定では従来の動作を維持します。`vize.config.json` には `lib` を追加し、コードや Pkl の設定ではスニペットを表示します。既存の `lib` は保持し、専用 JSON の場合は `--force` で置き換えられます。`tsconfig.json` に `allowImportingTsExtensions` がなければ、その旨を表示します。取得したソースは兄弟ファイルを `./x.ts` として import します。\n",
+    ],
+  ],
+};
+
+function restoreReviewedLibCopy(source: string, path: string, originalCodes: string[]): string {
+  const codes = originalCodes.values();
+  let restored = source.replace(
+    /^(```[^\n]*\n)([\s\S]*?)(^```[^\n]*$)/gm,
+    (_, open: string, _code: string, close: string) => {
+      const code = codes.next();
+      assert.ok(!code.done);
+      return open + code.value + close;
+    },
+  );
+  assert.ok(codes.next().done);
+  for (const [current, original] of canonicalLibProse[path] ?? []) {
+    assert.equal(restored.split(current).length, 2, `${path}: exact config-policy inverse`);
+    restored = restored.replace(current, original);
+  }
+  return restored;
+}
+
+await test("first-copy guides preserve reviewed prose, all original code and every native bookmark", () => {
   assert.equal(baseline.base, "479402e2bd77a1c7b3a4025293b884965d6e2b46");
   for (const document of baseline.documents) {
     const source = read(document.path);
@@ -42,6 +110,20 @@ await test("first-copy guides preserve every original byte and every native book
       fences(archived).map(currentConfigExample),
       `${document.path}: complete current recipes retain the original registry and CLI payloads`,
     );
+    if (document.path === "docs/content/ja/guide/lib-pull.md")
+      assert.equal(
+        document.sha256,
+        "67cd464bdb5a871c97a49ade58d0475bb924ec10457e05efbc553d00877246bd",
+      );
+    const expectedProse = document.path.startsWith("docs/content/ja/")
+      ? reviewedJapaneseProse
+      : document.sha256;
+    assert.equal(
+      sha(restoreReviewedLibCopy(restored, document.path, fences(archived))),
+      expectedProse,
+      document.path,
+    );
+    assert.equal(sha(JSON.stringify(fences(archived))), originalFenceHashes[document.path]);
     assert.equal(fences(restored).length, 8);
     assert.equal(fences(source).length, 10);
     const rendered = native.transform(source, {});
