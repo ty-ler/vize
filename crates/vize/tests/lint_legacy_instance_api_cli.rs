@@ -14,7 +14,6 @@
 )]
 
 use serde_json::{Value, json};
-use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fs};
 
 #[path = "support/legacy_instance_cli.rs"]
@@ -22,7 +21,7 @@ mod legacy_instance_cli;
 #[path = "support/vite_config.rs"]
 mod vite_config;
 
-use legacy_instance_cli::run_cli_cases;
+use legacy_instance_cli::{digest, run_cli_cases};
 
 const FIXTURES: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -45,13 +44,6 @@ const COMPONENT_DECLARATION_BINDINGS_MANIFEST: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../tests/_fixtures/differential/lint/legacy-instance-apis-9217/template-component-declaration-bindings-cli.json"
 ));
-
-fn digest(bytes: &[u8]) -> String {
-    Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
-}
 
 #[test]
 fn all_original_legacy_api_controls_use_the_actual_cli_and_complete_json_formatter() {

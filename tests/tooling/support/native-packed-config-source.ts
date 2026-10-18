@@ -15,7 +15,16 @@ export const SOURCE_ONLY_RUST_NAMES = [
   "tools/support/lint_divergence_surface.rs",
   "tools/support/release/pr_ci.rs",
   "tools/support/release/pr_pin.rs",
+  "tools/support/release/pr_pin_body.rs",
+  "tools/support/release/pr_pin_body_observed_tests.rs",
+  "tools/support/release/pr_pin_body_tests.rs",
+  "tools/support/release/pr_pin_budget_tests.rs",
+  "tools/support/release/pr_pin_candidate.rs",
+  "tools/support/release/pr_pin_lock.rs",
+  "tools/support/release/pr_pin_lock_tests.rs",
   "tools/support/release/pr_pin_metadata.rs",
+  "tools/support/release/pr_pin_queue.rs",
+  "tools/support/release/pr_pin_queue_tests.rs",
   "tools/support/release/pr_pin_retire.rs",
   "tools/support/release/pr_pin_retire_archive.rs",
   "tools/support/release/pr_pin_retire_evidence.rs",
@@ -25,8 +34,12 @@ export const SOURCE_ONLY_RUST_NAMES = [
   "tools/support/release/pr_pin_retire_prequalification_archive_tests.rs",
   "tools/support/release/pr_pin_retire_source.rs",
   "tools/support/release/pr_pin_runs.rs",
+  "tools/support/release/pr_pin_start.rs",
   "tools/support/release/pr_pin_target_tests.rs",
   "tools/support/release/pr_pin_tests.rs",
+  "tools/support/release/pr_pin_watch.rs",
+  "tools/support/release/pr_promote.rs",
+  "tools/support/release/pr_tests.rs",
   "tools/support/release/pr_watch.rs",
   "tools/support/release/preflight_pinned_evidence_tests.rs",
 ] as const;
@@ -44,6 +57,13 @@ export interface Extension {
     sourceOnlyRust: { path: string; sha256: string };
     composedBase: string;
     historicalRenames: { from: string }[];
+    previousComposition: {
+      source: string;
+      producer: string;
+      witnessSha256: string;
+      sourceOnlySha256: string;
+      workflowSha256: string;
+    };
   };
 }
 interface Retirement {

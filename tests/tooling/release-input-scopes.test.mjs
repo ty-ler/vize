@@ -60,6 +60,9 @@ void test("audited release contracts have complete imports and leave unresolved 
   const historicalUnscoped = [
     "tests/tooling/release/legacy-check-qualification.test.ts",
     "tests/tooling/release/release-integration-catalog.test.ts",
+    "tests/tooling/release/release-integration-http.test.ts",
+    "tests/tooling/release/release-integration-qualification.test.ts",
+    "tests/tooling/release/release-integration-release.test.ts",
     "tests/tooling/release/release-notes.test.ts",
     "tests/tooling/release/release-preflight-full-js.test.ts",
     "tests/tooling/release/release-public-native-invocation.test.ts",
@@ -76,6 +79,8 @@ void test("audited release contracts have complete imports and leave unresolved 
     ...sharedPublisherContracts,
     ...installedSmokeMigrationContracts,
     ...installedConfigEvidenceContracts,
+    "tests/tooling/release/release-public-atomic-original.test.ts",
+    "tests/tooling/release/release-signing.test.ts",
     "tests/tooling/release/retirement-qualification.test.ts",
   ].sort();
   const inventory = [...scoped, ...expectedUnscoped].sort();

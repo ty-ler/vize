@@ -1,8 +1,16 @@
 //! Execute every legacy instance API case and retain its complete current and historical receipt.
 
-use super::{digest, vite_config};
+use super::vite_config;
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
+
+pub(super) fn digest(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
 
 pub(super) fn run_cli_cases(manifest: &Value, sources: &[Value], expected_count: usize) {
     let cases = manifest["cases"].as_array().unwrap();
@@ -152,4 +160,41 @@ pub(super) fn run_cli_cases(manifest: &Value, sources: &[Value], expected_count:
         "all {expected_count} CLI receipts were captured before this aggregate failure:\n{}",
         failures.join("\n")
     );
+}
+
+#[test]
+fn callback_return_ownership_keeps_all_six_whole_cli_packets() {
+    let manifest: Value = serde_json::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../tests/_fixtures/differential/lint/legacy-instance-apis-9217/callback-return-ownership-cli.json"
+    )))
+    .unwrap();
+    assert_eq!(
+        manifest["schema"],
+        "vize.lint.callback-return-ownership-cli"
+    );
+    assert_eq!(manifest["version"], 1);
+    for input in manifest["frozenInputs"].as_array().unwrap() {
+        let bytes =
+            fs::read(std::path::Path::new(super::FIXTURES).join(input["path"].as_str().unwrap()))
+                .unwrap();
+        assert_eq!(bytes.len() as u64, input["bytes"].as_u64().unwrap());
+        assert_eq!(digest(&bytes), input["sha256"].as_str().unwrap());
+    }
+    let sources = manifest["sources"].as_array().unwrap();
+    assert_eq!(
+        sources[0]["sourceSha256"],
+        manifest["ownership"]["originalSourceSha256"]
+    );
+    assert_eq!(
+        manifest["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|case| { case["expected"][0]["messages"].as_array().unwrap().len() })
+            .collect::<Vec<_>>(),
+        vec![4, 1, 1, 1, 1, 0],
+        "retain original four, argument identity, enclosing and mixed returns; $emit stays valid"
+    );
+    run_cli_cases(&manifest, sources, 6);
 }
