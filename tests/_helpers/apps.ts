@@ -9,6 +9,7 @@ import {
   ensureSymlink,
 } from "./vize-local-packages.ts";
 import { patchNuxtUiPlaygroundConfig } from "./nuxt-ui-config.ts";
+import { configureNuxtUiAuthority, prepareNuxtUiReference } from "./nuxt-ui-compiler-authority.ts";
 import {
   FRONTEND_PHPCON_E2E_ENV,
   NPMX_E2E_ENV,
@@ -1832,6 +1833,14 @@ export const nuxtUiApp: AppConfig = {
   readyDelay: 10_000,
   startupTimeout: 600_000,
   setup() {
+    if (prepareNuxtUiReference(NUXT_UI_WORK_DIR)) {
+      execSync("npx -y pnpm@10 dev:prepare", {
+        cwd: NUXT_UI_WORK_DIR,
+        stdio: "inherit",
+        timeout: 900_000,
+      });
+      return;
+    }
     const nuxtUiDir = syncGitFixtureWorktree("nuxt-ui", "playground");
     const nuxtConfigPath = path.join(nuxtUiDir, "playgrounds", "nuxt", "nuxt.config.ts");
     const nuxtUiLinkPath = path.join(nuxtUiDir, "src", "runtime", "components", "Link.vue");
@@ -1851,6 +1860,7 @@ export const nuxtUiApp: AppConfig = {
       );
       fs.writeFileSync(nuxtConfigPath, nuxtConfig);
     }
+    configureNuxtUiAuthority(nuxtConfigPath);
     console.log("[nuxt-ui:setup] pnpm dev:prepare...");
     execSync("npx -y pnpm@10 dev:prepare", {
       cwd: nuxtUiDir,

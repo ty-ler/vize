@@ -10,6 +10,7 @@ import {
   waitForServerReady,
 } from "../../_helpers/server";
 import { withViteNodeRequestBudget } from "./nuxt-ui-vite-node";
+import { captureNuxtUiServer } from "../../_helpers/nuxt-ui-compiler-authority.ts";
 
 const app = nuxtUiApp;
 
@@ -110,6 +111,7 @@ async function bootDevServer(): Promise<NuxtUiDevServerBoot> {
 
   console.log(`Starting dev server for ${app.name}...`);
   const devServer = startDevServer(app);
+  captureNuxtUiServer(devServer.pid);
   const startupLogStart = getProcessLogs(devServer).length;
   devServer.on("exit", (code) => {
     console.log(`[${app.name}] dev server exited with code ${code}`);
