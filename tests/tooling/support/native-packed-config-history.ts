@@ -10,7 +10,7 @@ import {
 } from "./native-packed-config-extension.ts";
 
 export function verifyPackedProducerHistory(root: string, workflowProducer: unknown): void {
-  const producer = "8e50ef28b93435d1681dd274ab88399daa5503e2";
+  const producer = "6e846aeea2a841737216d7d574f2d7d754cc8549";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -23,7 +23,7 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
   const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
   const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
   const files = Object.keys(witness.producer.files);
-  assert.equal(files.length, 392);
+  assert.equal(files.length, 421);
   assert.equal(new Set(files).size, files.length);
   const changedRust = git(
     "diff",
@@ -36,13 +36,13 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     .trim()
     .split("\n")
     .filter((file) => file.endsWith(".rs"));
-  assert.equal(changedRust.length, 410);
+  assert.equal(changedRust.length, 435);
   const roleBytes = fs.readFileSync(path.join(root, witness.producer.sourceOnlyRust.path));
   assert.equal(digest(roleBytes), witness.producer.sourceOnlyRust.sha256);
   const roles = JSON.parse(roleBytes.toString());
   assert.equal(roles.producer, producer);
   assert.equal(roles.priorSource, "e0bc8fb50bdc28915167a3fbdceea86f00b65030");
-  assert.equal(roles.main, "fd761ab5d299f580951ad191b6f129404cadc25c");
+  assert.equal(roles.main, "7e1cdefb1f0c97243a26fd8f332386bbf299ed07");
   const sourceOnly = Object.keys(roles.files);
   assert.deepEqual(sourceOnly, [
     "tools/commands/ci/github/release-preflight.rs",
@@ -101,8 +101,12 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     [
       "Cargo.lock",
       "Cargo.toml",
+      "crates/vize/src/commands/inspector/official_compiler.ts",
       "crates/vize_carton/src/config/loader/module-runtime.d.mts",
       "crates/vize_carton/src/config/loader/module-runtime.mjs",
+      "tests/_fixtures/content-mapper/escaton-nested-flow-9433.json",
+      "tests/_fixtures/differential/linter/computed-suppression-reka/NavigationMenuContentImpl.vue.fixture",
+      "tests/_fixtures/differential/lsp/component-native-events/checked-native.expected.json",
     ],
   );
   assert.deepEqual(witness.producer.cargoInputs, ["Cargo.lock", "Cargo.toml"]);
@@ -220,8 +224,39 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     "davinci/vize_l1_to_l2/src/lower/text/branch_gap.rs",
     "davinci/vize_l1_to_l2/src/lower/text/condense.rs",
   ];
+  const addedForwardInputs = [
+    "crates/vize/src/commands/inspector.rs",
+    "crates/vize/src/commands/inspector/compare.rs",
+    "crates/vize/src/commands/inspector/official_compiler.ts",
+    "crates/vize/tests/support/event_completion_project.rs",
+    "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown.rs",
+    "crates/vize_canon/src/sfc_typecheck/tests.rs",
+    "crates/vize_canon/src/virtual_ts/expressions/vif_chain.rs",
+    "crates/vize_canon/src/virtual_ts/expressions/vif_chain/emit.rs",
+    "crates/vize_canon/src/virtual_ts/generator/emits.rs",
+    "crates/vize_canon/src/virtual_ts/generator/generics.rs",
+    "crates/vize_canon/src/virtual_ts/generator/setup_helpers.rs",
+    "crates/vize_canon/src/virtual_ts/generator/setup_scope.rs",
+    "crates/vize_canon/src/virtual_ts/legacy_vue2_vuetify_tests.rs",
+    "crates/vize_canon/src/virtual_ts/scope/component_events.rs",
+    "crates/vize_canon/src/virtual_ts/scope/component_prop_checker/check_helpers.rs",
+    "crates/vize_canon/src/virtual_ts/scope/event_scope/component_scope.rs",
+    "crates/vize_canon/src/virtual_ts/tests.rs",
+    "crates/vize_canon/src/virtual_ts/tests/generic_module_type_exports.rs",
+    "crates/vize_canon/src/virtual_ts/tests/vif_chain.rs",
+    "crates/vize_canon/src/virtual_ts/type_dependencies.rs",
+    "crates/vize_canon/src/virtual_ts/unknown_props_tests.rs",
+    "crates/vize_canon/tests/component_event_arity.rs",
+    "crates/vize_canon/tests/empty_vue_star_exports/membership.rs",
+    "crates/vize_patina/src/context/eslint_directive.rs",
+    "crates/vize_patina/tests/computed_suppression_history.rs",
+    "crates/vize_vitrine/src/napi/sfc/parse.rs",
+    "tests/_fixtures/content-mapper/escaton-nested-flow-9433.json",
+    "tests/_fixtures/differential/linter/computed-suppression-reka/NavigationMenuContentImpl.vue.fixture",
+    "tests/_fixtures/differential/lsp/component-native-events/checked-native.expected.json",
+  ];
   assert.deepEqual(
-    files.filter((file) => !addedDiagnosticInputs.includes(file)),
+    files.filter((file) => ![...addedDiagnosticInputs, ...addedForwardInputs].includes(file)),
     Object.keys(previousDiagnostic.producer.files),
   );
   const changedDiagnosticInputs = Object.keys(previousDiagnostic.producer.files).filter(
@@ -292,6 +327,66 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     digest(git("show", composition.source + ":.github/workflows/native-smoke.yml")),
     composition.workflowSha256,
   );
+  const functionalPrefix = witness.producer.previousFunctionalPrefix;
+  assert.equal(functionalPrefix.source, "7874110f49090f8cde882d6765a0e28a494fbffa");
+  assert.equal(functionalPrefix.producer, "8e50ef28b93435d1681dd274ab88399daa5503e2");
+  git("merge-base", "--is-ancestor", functionalPrefix.producer, producer);
+  git("merge-base", "--is-ancestor", functionalPrefix.source, "HEAD");
+  const prefixBytes = git("show", functionalPrefix.source + ":" + witnessPath);
+  assert.equal(digest(prefixBytes), functionalPrefix.witnessSha256);
+  const priorPrefix = JSON.parse(prefixBytes.toString());
+  assert.equal(priorPrefix.producer.head, functionalPrefix.producer);
+  assert.equal(Object.keys(priorPrefix.producer.files).length, 392);
+  assert.deepEqual(
+    files.filter((file) => !addedForwardInputs.includes(file)),
+    Object.keys(priorPrefix.producer.files),
+  );
+  assert.deepEqual(
+    Object.keys(priorPrefix.producer.files).filter(
+      (file) => priorPrefix.producer.files[file] !== witness.producer.files[file],
+    ),
+    [
+      "Cargo.lock",
+      "Cargo.toml",
+      "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown/tests.rs",
+    ],
+  );
+  const prefixRoleBytes = git(
+    "show",
+    functionalPrefix.source + ":" + witness.producer.sourceOnlyRust.path,
+  );
+  assert.equal(digest(prefixRoleBytes), functionalPrefix.sourceOnlySha256);
+  assert.deepEqual(JSON.parse(prefixRoleBytes.toString()).files, roles.files);
+  assert.equal(
+    digest(git("show", functionalPrefix.source + ":.github/workflows/native-smoke.yml")),
+    functionalPrefix.workflowSha256,
+  );
+  assert.deepEqual(witness.producer.additionalCompileTimeInputs, [
+    {
+      path: "crates/vize/src/commands/inspector/official_compiler.ts",
+      source: "crates/vize/src/commands/inspector/compare.rs",
+      role: "production-cli-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/content-mapper/escaton-nested-flow-9433.json",
+      source: "crates/vize_canon/src/virtual_ts/tests/vif_chain.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/differential/linter/computed-suppression-reka/NavigationMenuContentImpl.vue.fixture",
+      source: "crates/vize_patina/tests/computed_suppression_history.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: true,
+    },
+    {
+      path: "tests/_fixtures/differential/lsp/component-native-events/checked-native.expected.json",
+      source: "crates/vize/tests/support/event_completion_project.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: false,
+    },
+  ]);
   verifyHistoricalProducerFiles(root, witness.producer);
   const original = witness.producer.previousFreeze;
   assert.equal(original.source, "f7ee25f5db27bd210db07f514837b9f4c1b65054");

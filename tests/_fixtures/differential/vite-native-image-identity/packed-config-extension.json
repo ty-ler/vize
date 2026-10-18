@@ -1,7 +1,7 @@
 {
   "schema": "vize.native-smoke-packed-config-extension.v1",
   "beforeSha256": "26890094723c79ee46b27c710b42feed3d5a660f98c382246cf19458000aeaa3",
-  "afterSha256": "f502b4ad02852d5d158a918ffed1023de5733f528403174726fe3b81d2ceed71",
+  "afterSha256": "5488f221529b04e6d214d4ba9110d938bd95e30235ba0a6d7d9779ace5e8efe3",
   "scope": "exact named bounded manual extension; immutable historical recipes/hash remain independently checked",
   "hunks": [
     {
@@ -34,17 +34,17 @@
     },
     {
       "before": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n",
-      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: 8e50ef28b93435d1681dd274ab88399daa5503e2\n    steps: *fresh-install-steps\n"
+      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: 6e846aeea2a841737216d7d574f2d7d754cc8549\n    steps: *fresh-install-steps\n"
     }
   ],
   "producer": {
-    "head": "8e50ef28b93435d1681dd274ab88399daa5503e2",
+    "head": "6e846aeea2a841737216d7d574f2d7d754cc8549",
     "composedBase": "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b",
     "priorProducer": "820bf6b5d688c77f8edea6ba18ff6f86f76bffae",
     "scope": "Reviewed whole source custody; the finite sourceOnlyRust partition excludes tooling primary source bytes, while producer HEAD/build identity stays bound; qualification unexecuted.",
     "files": {
-      "Cargo.lock": "673494a5a59104eaad765532c7d3e645e63b5b8f3c718caf57fa06df61afa060",
-      "Cargo.toml": "cd719b4fc6b6628cdf10b01b57a2699bcc6a8b9a1b641b144f9b91492b0a008a",
+      "Cargo.lock": "b1ead2045c4e8b330c929c5280331c2e9f3230aa5a102d0e4be89e3825bbcf66",
+      "Cargo.toml": "991d6866653db4ea06d0f9b483d5ae7c03e6e3988a709e6cc23317234dfd5097",
       "crates/vize/src/commands/check/runner.rs": "8e0d8309966f3c20d5a7374c9bbec25336d815c42d8ecc6585e6286b37843dcf",
       "crates/vize/src/commands/check/runner/direct.rs": "9577282e75a357e095dedf3a898fd3ac417a04bc5e1677b19da7c36b02acd903",
       "crates/vize/src/commands/check/runner/input_scope.rs": "a6790000390033bdf883e126ca251704d89694852271ad79ed4a1f7491825a0d",
@@ -55,6 +55,9 @@
       "crates/vize/src/commands/content_mapper/project_tests.rs": "f94e11c53e893d5e64c4aeb9ea86b659f10c6577b4a5a4618de23a39ba8e2735",
       "crates/vize/src/commands/content_mapper/test_support.rs": "d0c27de72c942a854926cb7903a2df0427c0f5fa87ce16bc8afc1298607b6ae3",
       "crates/vize/src/commands/content_mapper/tests.rs": "fb363b4c2789fd21112fc2fffdf227eb41df541717ef81ad8ec584b37413eeee",
+      "crates/vize/src/commands/inspector.rs": "ab74ecbeda58a3c568f99124f674f778aca53c9b03c8df0268e5c08aa4439bae",
+      "crates/vize/src/commands/inspector/compare.rs": "04df8481d3e24a2d90dc89f71421a7f28974e10bb9c9ff2a4a725c79219f36c4",
+      "crates/vize/src/commands/inspector/official_compiler.ts": "0146c5c8381921d1a15de0b5fd4f99cd8410232e41ea9a2cded16ce208eb2b73",
       "crates/vize/tests/check_flow_depth_isolation_cli.rs": "d2cb496c2d756395b69461b1dc3974aa82bbb3412194e44b189df1e6bf885197",
       "crates/vize/tests/check_tsconfig_bom_cli.rs": "782c6834140838434ec6db1b6f2355db82058134b868fe0f893386bb63fb9765",
       "crates/vize/tests/check_tsconfig_dependency_errors_cli.rs": "d2a5df692bb6c1ebbb4d7d2291509812b0bac2d40ffcdbd1d3181eccdbc6705b",
@@ -70,6 +73,7 @@
       "crates/vize/tests/lsp_bare_script_symbols_cli/incoming.rs": "41f76e11eed9afb5aaba047f3dc767c016dd372c925f0a8dedf5c0209d30c64c",
       "crates/vize/tests/lsp_bare_script_symbols_cli/session.rs": "5768ae61ee1f30d0d9a847e464a1d5bf4c20644f17243e46d616a7bc36d8dcde",
       "crates/vize/tests/lsp_completion_sibling_overlay_cli.rs": "5646c40db3bd11d0de8aa45cc72e6e53be60205346b11982e9fe60ec09f55929",
+      "crates/vize/tests/support/event_completion_project.rs": "6d114108c6d0cc465320045efa16ffbce424e7835a71874d7ce34adf12e925ca",
       "crates/vize/tests/support/legacy_instance_cli.rs": "f9f2229ea483c60f034a34e0721463f2b6c58524c1b0ace1e7ae9ecb595659b8",
       "crates/vize_armature/src/parser.rs": "aa5bcb224ec2fdc9a02ff5c7d680d975840e3c359798c294a7056ce151155a8b",
       "crates/vize_armature/src/parser/attribute.rs": "75a9a1157bf6f39e1022889ad578139bf4cdca1cf25ca3667a4b529b4a6a89e3",
@@ -151,24 +155,43 @@
       "crates/vize_canon/src/css_classes.rs": "fa0ccb519cf0bee1967eee29c5fadc40fe88c8043f1abe154bac8d4339be9d9c",
       "crates/vize_canon/src/lib.rs": "1d436b27dd45c072dc1cb7b15491e5bf25f8646cef318d2b4d77215db243a48c",
       "crates/vize_canon/src/lsp_client/bootstrap.rs": "66b892fd3cbc055b9a5fd2c09ff8dae35fe1724da074f31eda923b8b693d1c37",
-      "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown/tests.rs": "f352c8fe15815322540b2a7d7eb51a25d6e6fe10b4c8e08be782c031a8d84817",
+      "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown.rs": "904845b2bfcec8fa0a31b50b3d75b8ed9e0919e9aaff0356e8c08c79b4f6c80b",
+      "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown/tests.rs": "6b73b3d7f9c01cb678e2ca227fd9a74f4d287fc1ec50984c486b695eedb43020",
       "crates/vize_canon/src/lsp_client/editor_lsp/tests.rs": "3539fcaa4a5b217dfe6c0bdc3ee16d6d7d37d36916175e8a6040665cb493f35d",
       "crates/vize_canon/src/package_route.rs": "434f87379bfc4064e2fb61d0ebc2ceaf1cae7b808ce2b0aa6d1fdb36ede78b81",
       "crates/vize_canon/src/package_route/search.rs": "e30877caf6a9d7c9b6852643abf133b2f551fe7d234ba5ebae77e20ae1afa9a0",
       "crates/vize_canon/src/package_route/stamp.rs": "ad5c0f10c92bdecd656c1d75f0264c87c04ed046e820e824a812f4ad1130785e",
+      "crates/vize_canon/src/sfc_typecheck/tests.rs": "192f706f523736e1534317e52398a3f2780760bd91771d2c43d04d204c66232e",
       "crates/vize_canon/src/template_diagnostic_directives.rs": "8e32b3f5b4afed4fca5125198375be52692f94527ca34cf64c67dc6141c98674",
       "crates/vize_canon/src/template_diagnostic_directives/tests.rs": "704f97c25b4b427e7f419c21c2d683af92b2d60af25ffe782e01498ad333d83d",
+      "crates/vize_canon/src/virtual_ts/expressions/vif_chain.rs": "dea88ca4a34f75d013607671b27b7c605a783c778ce75d2c2a4c8cd2b73fa958",
+      "crates/vize_canon/src/virtual_ts/expressions/vif_chain/emit.rs": "5e3e7ab119d95f2c04d18b82782f8a9480d4920998a0b5a5cebf6204c487c59f",
       "crates/vize_canon/src/virtual_ts/generator.rs": "82c873fc2ed047d4b5ec48e5c40f4e5db0da76e24427fc9bc2c35319a43b3552",
+      "crates/vize_canon/src/virtual_ts/generator/emits.rs": "f14f37b02964345cc3f92134b808ef8ad78596c6f3dec436bf67c8d722fa6439",
+      "crates/vize_canon/src/virtual_ts/generator/generics.rs": "bdf6c3bae4c972df197c6ba70fe83f2112b6d5d5127a2177b1ad5f330336e010",
+      "crates/vize_canon/src/virtual_ts/generator/setup_helpers.rs": "e37bf56b6510597c08b321efac6aa85a8dac6f6460bd070c86f506025877708b",
       "crates/vize_canon/src/virtual_ts/generator/setup_props.rs": "7d19a43f596a61d3110b8e9344c9d72a94f34c6f7053dd2e5aa649134db46a27",
+      "crates/vize_canon/src/virtual_ts/generator/setup_scope.rs": "a0b591932b9645fa231af33708b8bc58aee494c4efa796393582882de574f456",
+      "crates/vize_canon/src/virtual_ts/legacy_vue2_vuetify_tests.rs": "82d9e83d274ac5ff2eafbc121c03c1c05c08340a12bda82e1c38080d98987b17",
       "crates/vize_canon/src/virtual_ts/scope.rs": "97e6753b8b9ebc1fab19d1d25337a73f49ce52bd50188d573be299224feac15a",
       "crates/vize_canon/src/virtual_ts/scope/closures.rs": "d091cbcc59a3400d651e3af9632ec38db8a5bf53c5ef037344bed1f3c2787784",
+      "crates/vize_canon/src/virtual_ts/scope/component_events.rs": "f272035986cefeff3ce4d60bc7fe45a798d65d2cb96b14840476941a873bc7cf",
+      "crates/vize_canon/src/virtual_ts/scope/component_prop_checker/check_helpers.rs": "51df008a393f1463e81dd2149522fcbe37b51b1b3ac6a28bb0cd644ac853d419",
       "crates/vize_canon/src/virtual_ts/scope/component_prop_navigation.rs": "80a5ae988aa53820e87060cbe2c83e77aadbc86e6773ec322fd9442c7949d0a8",
       "crates/vize_canon/src/virtual_ts/scope/component_props.rs": "fb3cc4b6307c8b866bb80fe3bc4a8e36424cd0db87f01b5cd32a54e3a569688d",
+      "crates/vize_canon/src/virtual_ts/scope/event_scope/component_scope.rs": "d98fcef05d04dd99c14aafeea49fda77eb24cf9c33a47cc0dda28932725ae5f1",
       "crates/vize_canon/src/virtual_ts/scope/root_owner_packets.rs": "dd7024a178631ed77c57d88a6e37773f599b0468908528ee66120db8128ddaf1",
       "crates/vize_canon/src/virtual_ts/scope/root_owner_packets/tests.rs": "2fb9e5982ecf65647a33ce812a6d4a341b9777ce66a49f29499c002614866b44",
       "crates/vize_canon/src/virtual_ts/scope/vif_guard.rs": "b6b6b26838aa06ccb33a431bcdabef435e838d037a7b5ea31b9a8f474e1acad2",
       "crates/vize_canon/src/virtual_ts/scope/vif_guard_chain.rs": "e9a6bf8f16cb926daf8c5468f3bdece3d662b5ab4c1bcc25b086e65432974e3e",
+      "crates/vize_canon/src/virtual_ts/tests.rs": "f5544b73387df1de0d94dd60045fbf24047d073e77e03f9d34de1ca9da63f903",
       "crates/vize_canon/src/virtual_ts/tests/auto_import_shadowing.rs": "374c07e80ef9b9448d0ac37bd71f65267af1aaf6431f5e39a2cf3384a731ba8b",
+      "crates/vize_canon/src/virtual_ts/tests/generic_module_type_exports.rs": "ca2756395ba4359350084074ecdddacbf748aa14b933dadbec93497ab77605c6",
+      "crates/vize_canon/src/virtual_ts/tests/vif_chain.rs": "5913dc99ba1d6931134736d29b4b8146837618c99fd3186710a5bc25a22ba90b",
+      "crates/vize_canon/src/virtual_ts/type_dependencies.rs": "00667398d0a96b012cec336b510cbd8a777915402a9fd03dc166d3b91d6554f3",
+      "crates/vize_canon/src/virtual_ts/unknown_props_tests.rs": "5f612513a14ba943bbf51aee87947c9a97bdd688164283e3a348e33caa6ce094",
+      "crates/vize_canon/tests/component_event_arity.rs": "ef6a30778474e830838c562ff2d7ff97c85b14dfb727b1f200136bad056d280e",
+      "crates/vize_canon/tests/empty_vue_star_exports/membership.rs": "d6e1e6e30795697920ffbd6d9b9220ddedd7bacffc0481f76f4e44831c6ba50d",
       "crates/vize_canon/tests/lsp_import_resolution.rs": "767378eaf5f3eb9956d38570521ca2a00fbf9a4b3794387e34f5720dd052595e",
       "crates/vize_canon/tests/lsp_import_resolution/compiler_snapshot.rs": "1d8e21c11135e2e1107d97954aa4d829478a9e6076f3c152dbf9beb2e1393c88",
       "crates/vize_carton/src/config.rs": "ffe11adb565a5e0802a43753a0267d75bb528a198ed3af3f83b407f60d6e4259",
@@ -270,6 +293,7 @@
       "crates/vize_maestro/src/server/workspace_folder_events.rs": "b2a6af6aa0b26d84330163d7fec4d6d820a7baf470612c3a11122f2a86e4c4fc",
       "crates/vize_patina/src/context.rs": "2c63e24aa4cfeb038407b51c22067607fc61b5b2186a25674556ff6ee81130c8",
       "crates/vize_patina/src/context/directives.rs": "471ce7ca56451f141c84979172dd7cb5c768252b1138b437b9f4976a9e9589bf",
+      "crates/vize_patina/src/context/eslint_directive.rs": "b326d07473a189b9720ffbbc2f20369ee50654e47954fd89d31a55ccc89da3c6",
       "crates/vize_patina/src/context/reporting.rs": "c851c19fdb4de33b6a0e45003cee441d93074115ce461b7bae8828810690fcb8",
       "crates/vize_patina/src/linter/corsa_session/paths.rs": "181ab5a06f4b47535b88e36ec9557cada2712eba5be6e01a2aa7212555176647",
       "crates/vize_patina/src/linter/engine.rs": "1695317d0b4910ba9f381552c6addceef79ad3a5911e1b0d4f0378a4c05a9ab6",
@@ -303,6 +327,7 @@
       "crates/vize_patina/src/rules/vue/no_non_component_keep_alive_child_tests.rs": "fb5a83e4a2a5442521f3b203a5f74d9fd5b8dd356969ddabbf2c39a20c812d1c",
       "crates/vize_patina/src/rules/vue/no_use_v_else_with_v_for/tests.rs": "2f5d744dedc7c1e3be80c556b8f3bdb3b06dd2f109f0433b3ba37e685ab1d1c6",
       "crates/vize_patina/src/rules/vue/v_slot_style/tests.rs": "955cab8e0297666b911c62e4c5d8f712ab06c2200cf2bf3163284ab8bb224c1a",
+      "crates/vize_patina/tests/computed_suppression_history.rs": "03c98855bb142396fc28b2977dc51c6714e361bfc9592f0acd4590e9bd6185e1",
       "crates/vize_patina/tests/legacy_instance_apis.rs": "3125e09df8dc26d1c83e840d78b02bf69afeab35790dda529233b2f1511d9c15",
       "crates/vize_patina/tests/scoped_slots_template.rs": "3f4e66f716a36477016ee906f7095d8c9cee5c8abb89642458b69009ff60d409",
       "crates/vize_vitrine/src/napi/lint/file_collection/oxlint_html_profile.rs": "568ca754304a0560dca84f83d98b2ab3e05961bfe2144d6eac589bdb469d71ef",
@@ -312,6 +337,7 @@
       "crates/vize_vitrine/src/napi/lint/file_collection/oxlint_html_profile/tests.rs": "ecc2d035a1c3ecf7afde0dc08488a7dffaa4e65b545b069b9ca4eb122d403c4a",
       "crates/vize_vitrine/src/napi/lint/file_collection/oxlint_html_profile/tests/git_metadata.rs": "38c5a62afc8c8cbb265ac7285b7abba32428ce9a85e84be3fa7defa8cf26fa5c",
       "crates/vize_vitrine/src/napi/lint/oxlint_html_binding/conversion.rs": "c99598608ebb66dc2436418d546f0b9c5d6d04ea43ee52d871c2ab43827d4bf8",
+      "crates/vize_vitrine/src/napi/sfc/parse.rs": "6b0ba03bfd0efa8f16f2a3611702cbbf934fa9ded27ea858469216b23c70ed6b",
       "davinci/vize_dialect_moonbit/examples/moonbit_check.rs": null,
       "davinci/vize_dialect_moonbit/src/cache.rs": null,
       "davinci/vize_dialect_moonbit/src/diagnostic.rs": null,
@@ -425,6 +451,9 @@
       "davinci/vize_l2/src/lang/moonbit/mod.rs": null,
       "davinci/vize_l2/src/lang/moonbit/scan.rs": null,
       "examples/volt-target/src/lib.rs": null,
+      "tests/_fixtures/content-mapper/escaton-nested-flow-9433.json": "c574c2f98551571ca07018b9c24df87dad594c1e66f42557369f1ea75ea88b74",
+      "tests/_fixtures/differential/linter/computed-suppression-reka/NavigationMenuContentImpl.vue.fixture": "5a92b27acfc737c1a836327d182b74afbfa5293f66dfb07772ce49519442d5a6",
+      "tests/_fixtures/differential/lsp/component-native-events/checked-native.expected.json": "a9f7896a5958b2428afef38a53083aee4b52a58c9d31b89449fb4971684dab34",
       "tools/commands/ci/github/release-preflight.rs": "b88ec1e97e02c29a92c54fe5b420ee0b0ede5daa8b91903c5bb26ca875570df2",
       "tools/commands/ci/source-file-lengths.rs": "9dd5a36138673c957cce9d90d4bf34d69f4564d4f6bfcbf3c6543eccd2105f15",
       "tools/commands/release/pr.rs": "e30ff07abe32ff8caa8057bef9daf197be4d91f4474717b5b59fe31199b63394",
@@ -536,7 +565,7 @@
     },
     "sourceOnlyRust": {
       "path": "tests/_fixtures/differential/vite-native-image-identity/packed-config-source-only-rust.json",
-      "sha256": "500de018958a2f767ec59a18c350041ae01bfc940358964c28298cc555fb61f0"
+      "sha256": "6a7bc1033975f19271067d78db0702b1b8232ad325d42f510f24cfe5574047f8"
     },
     "previousComposition": {
       "source": "ecb83f915f53aaf82b4b04980e26cd36b4f43f62",
@@ -545,6 +574,40 @@
       "sourceOnlySha256": "37f42b9c02c2481d6101ef5ea0e024ebfe194e3526a82fad349e8a52823134e1",
       "workflowSha256": "8755c2af65dc9b2fe08454b165afa377d442151a79aca3b9ca449f19da6e6436",
       "scope": "Prior frozen source composition and its complete history, without new CI, performance, merge or release credit."
+    },
+    "additionalCompileTimeInputs": [
+      {
+        "path": "crates/vize/src/commands/inspector/official_compiler.ts",
+        "source": "crates/vize/src/commands/inspector/compare.rs",
+        "role": "production-cli-embedded",
+        "incomingChanged": true
+      },
+      {
+        "path": "tests/_fixtures/content-mapper/escaton-nested-flow-9433.json",
+        "source": "crates/vize_canon/src/virtual_ts/tests/vif_chain.rs",
+        "role": "cargo-test-embedded",
+        "incomingChanged": true
+      },
+      {
+        "path": "tests/_fixtures/differential/linter/computed-suppression-reka/NavigationMenuContentImpl.vue.fixture",
+        "source": "crates/vize_patina/tests/computed_suppression_history.rs",
+        "role": "cargo-test-embedded",
+        "incomingChanged": true
+      },
+      {
+        "path": "tests/_fixtures/differential/lsp/component-native-events/checked-native.expected.json",
+        "source": "crates/vize/tests/support/event_completion_project.rs",
+        "role": "cargo-test-embedded",
+        "incomingChanged": false
+      }
+    ],
+    "previousFunctionalPrefix": {
+      "source": "7874110f49090f8cde882d6765a0e28a494fbffa",
+      "producer": "8e50ef28b93435d1681dd274ab88399daa5503e2",
+      "witnessSha256": "ec3290ac0a152d08d4788ebf91b8dcb79bf3b1b3e152cee658a1e06cb53c85f2",
+      "sourceOnlySha256": "500de018958a2f767ec59a18c350041ae01bfc940358964c28298cc555fb61f0",
+      "workflowSha256": "f502b4ad02852d5d158a918ffed1023de5733f528403174726fe3b81d2ceed71",
+      "scope": "Immutable original functional prefix before normally integrating signed v0.467.0 main; no new qualification or release acceptance credit."
     }
   }
 }
