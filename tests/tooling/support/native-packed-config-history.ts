@@ -10,7 +10,7 @@ import {
 } from "./native-packed-config-extension.ts";
 
 export function verifyPackedProducerHistory(root: string, workflowProducer: unknown): void {
-  const producer = "5d06ba0104467b86173ee46b58527e38920fa954";
+  const producer = "b064aef9c07dc369251882acaf2897a4aaff5e3d";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -363,6 +363,8 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
       "Cargo.toml",
       "crates/vize/tests/check_tsconfig_bom_cli.rs",
       "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown/tests.rs",
+      "crates/vize_maestro/src/server/state/project_contexts/freshness.rs",
+      "crates/vize_maestro/src/server/state/project_contexts/freshness_tests.rs",
     ],
   );
   const prefixRoleBytes = git(
