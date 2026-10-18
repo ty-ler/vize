@@ -96,6 +96,14 @@ void test("the actual manager version audit uses a manifest-free cwd and preserv
 });
 
 void test("the historical composed producer authenticates every whole source and moved test module", () => {
+  const script = steps.find(
+    (step: { name?: string }) => step.name === "Authenticate selected packed configuration source",
+  ).run as string;
+  assert.equal(
+    script.split("'tests/tooling/support/native-packed-config-main-inheritance.ts',").length,
+    2,
+    "the current/history authority itself is one required source receipt input",
+  );
   verifyPackedProducerHistory(
     root,
     workflow.jobs["packed-config-acceptance"].env.PACKED_CONFIG_PRODUCER,

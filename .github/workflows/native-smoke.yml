@@ -216,6 +216,7 @@ jobs:
             'tests/tooling/native-packed-config-workflow.test.ts',
             'tests/tooling/support/native-packed-config-extension.ts',
             'tests/tooling/support/native-packed-config-history.ts',
+            'tests/tooling/support/native-packed-config-main-inheritance.ts',
             'tests/tooling/support/native-packed-config-source.ts',
             'tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json',
             'tests/_fixtures/differential/vite-native-image-identity/packed-config-retired-rust.json',
@@ -445,5 +446,5 @@ jobs:
       PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}
       PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}
       # Updated only when the reviewed producer is deliberately frozen again.
-      PACKED_CONFIG_PRODUCER: d42a6e518c03b03107b5a81b3755af0bf6e8ac52
+      PACKED_CONFIG_PRODUCER: 492c7dc6d04f34b792066f4483f24745e97a9301
     steps: *fresh-install-steps

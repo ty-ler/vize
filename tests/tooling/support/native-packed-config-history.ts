@@ -1,3 +1,4 @@
+import { verifyPackedFunctionalMainInheritance } from "./native-packed-config-main-inheritance.ts";
 import { verifyPackedCompileTimeInputs } from "./native-packed-config-source.ts";
 /** Complete immutable packed-producer history; current admission stays in the real guard. */
 import assert from "node:assert/strict";
@@ -10,11 +11,14 @@ import {
   verifyHistoricalProducerFiles,
 } from "./native-packed-config-extension.ts";
 
-export function verifyPackedProducerHistory(root: string, workflowProducer: unknown): void {
+export function verifyPackedProducerHistory(root: string, currentWorkflowProducer: unknown): void {
+  const { witness, roleBytes, workflowProducer } = verifyPackedFunctionalMainInheritance(
+    root,
+    currentWorkflowProducer,
+  );
   const producer = "d42a6e518c03b03107b5a81b3755af0bf6e8ac52";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
-  const witness = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
   assert.equal(workflowProducer, producer);
   assert.equal(witness.producer.head, producer);
   assert.equal(witness.producer.composedBase, "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b");
@@ -38,7 +42,6 @@ export function verifyPackedProducerHistory(root: string, workflowProducer: unkn
     .split("\n")
     .filter((file) => file.endsWith(".rs"));
   assert.equal(changedRust.length, 546);
-  const roleBytes = fs.readFileSync(path.join(root, witness.producer.sourceOnlyRust.path));
   assert.equal(digest(roleBytes), witness.producer.sourceOnlyRust.sha256);
   const roles = JSON.parse(roleBytes.toString());
   assert.equal(roles.producer, producer);

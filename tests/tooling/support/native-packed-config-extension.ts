@@ -62,7 +62,7 @@ export function verifyPackedProducerPreflight(script: string): void {
     assert.ok(match);
     const sourceFiles = runInNewContext(match[1]) as string[];
     const producerFiles = Object.keys(witness.producer.files);
-    assert.equal(producerFiles.length, 540);
+    assert.equal(producerFiles.length, 547);
     const actualRepository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
     const originalRoles = JSON.parse(
       fs.readFileSync(path.join(actualRepository, witness.producer.sourceOnlyRust.path), "utf8"),
@@ -249,19 +249,27 @@ export function verifyPackedProducerPreflight(script: string): void {
       commit();
       assert.equal(execute().status, 0);
     }
-    const forgedNative = "crates/vize_canon/src/batch/virtual_project/materialize.rs";
-    fixtureRoles.files[forgedNative] = {
-      compilerBound: false,
-      prior: identity(retirementSource, forgedNative),
-      current: identity(producer, forgedNative),
-      main: identity(producer, forgedNative),
-      retiredAt: null,
-    };
-    saveWitness();
-    assert.notEqual(execute().status, 0, "rehashed native-as-false compiler role must be rejected");
-    delete fixtureRoles.files[forgedNative];
-    saveWitness();
-    assert.equal(execute().status, 0);
+    for (const forgedNative of [
+      "crates/vize_canon/src/batch/virtual_project/materialize.rs",
+      "crates/vize_canon/src/virtual_ts/scope/component_events/inference_helpers.rs",
+    ]) {
+      fixtureRoles.files[forgedNative] = {
+        compilerBound: false,
+        prior: identity(retirementSource, forgedNative),
+        current: identity(producer, forgedNative),
+        main: identity(producer, forgedNative),
+        retiredAt: null,
+      };
+      saveWitness();
+      assert.notEqual(
+        execute().status,
+        0,
+        "rehashed native-as-false compiler role must be rejected",
+      );
+      delete fixtureRoles.files[forgedNative];
+      saveWitness();
+      assert.equal(execute().status, 0);
+    }
     const sourceOnly = sourceOnlyFiles.find((file) => fixtureRoles.files[file].current !== null);
     assert.ok(sourceOnly);
     Reflect.set(fixtureRoles.files[sourceOnly], "compilerBound", true);
