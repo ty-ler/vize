@@ -16,6 +16,7 @@ use vize_l0::FxHashMap;
 
 use super::MaestroServer;
 
+mod api_read;
 mod preparation;
 mod retry;
 pub(super) use retry::RetainedDiagnostics;
@@ -293,7 +294,11 @@ fn run_worker(
                     .await;
                 phase.finish();
                 project
-                    .publish_diagnostics_if_version(&uri, job.version)
+                    .publish_initial_api_diagnostics_if_version(
+                        &uri,
+                        job.version,
+                        job.continuation.as_ref(),
+                    )
                     .await;
                 tracing::info!(
                     "finished initial type diagnostics for {} version {}",

@@ -146,6 +146,33 @@ test("startup diagnostics retain the production producer and unchanged scale-one
     steps[freshnessControls].run!,
     /run_required_rust_tests issued-candidates cargo test .*lsp_client::editor_lsp::completion_resolve::issued::tests:: -- --nocapture/,
   );
+  assert.ok(
+    steps[freshnessControls].run!.includes(
+      "run_required_rust_tests initial-api-read cargo test --locked --profile ci -p vize_canon --features legacy --lib corsa_bridge::bridge::initial_diagnostics::tests:: -- --nocapture\n",
+    ),
+  );
+  assert.ok(
+    steps[freshnessControls].run!.includes(
+      "run_required_rust_tests initial-api-dependencies cargo test --locked --profile ci -p vize_maestro --features legacy --lib server::importers::canonical::tests:: -- --nocapture\n",
+    ),
+  );
+  const apiReadSource = readRepoFile(
+    "crates/vize_canon/src/corsa_bridge/bridge/initial_diagnostics.rs",
+  );
+  assert.deepEqual(
+    [...apiReadSource.matchAll(/#\[test\]\n\s*fn (\w+)\(/g)].map((match) => match[1]),
+    [
+      "current_read_commits_whole_cache_only_after_foreground_lane_remains_usable",
+      "refreshed_snapshot_rejects_both_old_success_and_old_error_without_effects",
+      "cancelled_caller_keeps_real_snapshot_alive_until_entered_read_drains",
+      "dropped_session_owner_does_not_drop_a_workers_snapshot_or_admit_its_result",
+      "explicit_release_still_invalidates_the_remote_snapshot_without_double_release",
+    ],
+  );
+  assert.match(
+    readRepoFile("crates/vize_maestro/src/server/importers/canonical.rs"),
+    /#\[test\]\n    fn initial_graph_replacement_refuses_stale_stamp_and_restores_own_entry_on_crossing_change\(/,
+  );
   assert.match(steps[freshnessControls].run!, /--require-rust-tests/);
   assert.match(steps[freshnessControls].run!, /return "\$status"/);
   assert.ok(symlinkControls > completionControls);
@@ -171,11 +198,38 @@ test("startup diagnostics retain the production producer and unchanged scale-one
       'if [ "$status" -ne 0 ]; then\n  exit "$status"\nfi\nexit "$retain_status"\n',
   );
   const carrier = readRepoFile("tools/support/compat/github/run-lsp-config-diagnostics.ts");
+  const custodyBlock = carrier.split("const sourcePaths = [")[1]!.split("];")[0]!;
+  const custodyNames = [...custodyBlock.matchAll(/"([^"\n]+)"/g)].map((match) => match[1]);
+  assert.equal(custodyNames.length, 148);
+  assert.equal(
+    createHash("sha256")
+      .update(JSON.stringify(custodyNames.slice(0, 130)))
+      .digest("hex"),
+    "912708e6f41d1703c89fe6a0c7f335f92a9380a0de0b47bb3a96ea05cc02a7b8",
+  );
   assert.match(
     carrier,
     /process\.argv\[2\] === "--retain-rename-producer"[\s\S]*?retainIntegrationProducer\(path\.join\(directory, "rename\.stdout"\), directory, "rename-test"\)/,
   );
   for (const sourcePath of [
+    "Cargo.toml",
+    "crates/vize_canon/src/corsa_bridge.rs",
+    "crates/vize_canon/src/corsa_bridge/bridge.rs",
+    "crates/vize_canon/src/corsa_bridge/bridge/documents.rs",
+    "crates/vize_canon/src/lsp_client.rs",
+    "crates/vize_canon/src/lsp_client/diagnostics.rs",
+    "crates/vize_canon/src/lsp_client/diagnostics/virtual_overlay_diagnostics.rs",
+    "crates/vize_maestro/src/ide/diagnostics.rs",
+    "crates/vize_maestro/src/ide/diagnostics/corsa.rs",
+    "crates/vize_maestro/src/ide/diagnostics/corsa/collect.rs",
+    "crates/vize_maestro/src/ide/diagnostics/native.rs",
+    "crates/vize_maestro/src/ide/diagnostics/native/timeout.rs",
+    "crates/vize_maestro/src/server/diagnostic_publishing.rs",
+    "crates/vize_maestro/src/server/importers/canonical.rs",
+    "crates/vize_canon/src/corsa_bridge/bridge/initial_diagnostics.rs",
+    "crates/vize_canon/src/lsp_client/initial_diagnostics.rs",
+    "crates/vize_maestro/src/ide/diagnostics/corsa/initial.rs",
+    "crates/vize_maestro/src/server/initial_diagnostics/api_read.rs",
     "tests/_helpers/pinned-fixture-dependencies.ts",
     "tests/_helpers/pinned-fixture-source.ts",
     "tests/_helpers/lint-fixture-runtime.ts",

@@ -72,7 +72,7 @@ use crate::document::DocumentStore;
 use crate::virtual_code::{VirtualCodeGenerator, VirtualDocuments};
 
 #[cfg(feature = "native")]
-pub(crate) use corsa_requests::CorsaRequestStamp;
+pub(crate) use corsa_requests::{CorsaRequestScope, CorsaRequestStamp};
 pub use features::LspFeatureConfig;
 #[cfg(feature = "experimental-source-navigation")]
 pub(crate) use module_links::physical::{ModuleTargetGateError, ModuleTargetStamp};

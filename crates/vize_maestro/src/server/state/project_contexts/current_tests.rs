@@ -128,6 +128,10 @@ fn initial_continuation_rechecks_physical_and_queue_identity_after_its_first_rea
         assert!(Arc::ptr_eq(&current, &owner));
         assert!(owner.project_contexts.contexts.lock().is_empty());
         let receipt = current.initial_configuration_continuation(&uri, 1).unwrap();
+        assert!(receipt.owns_current_state(&current, &uri, 1));
+        assert!(!receipt.owns_current_state(&current, &uri, 2));
+        let other_owner = Arc::new(ServerState::new());
+        assert!(!receipt.owns_current_state(&other_owner, &uri, 1));
         assert!(receipt.validate(&owner, &uri, 1).is_some());
         let changed = owner.clone();
         let changed_uri = uri.clone();
@@ -220,4 +224,54 @@ fn primary_replacement_is_lazy_unique_and_respects_explicit_options() {
     owner.retire_project_contexts();
     assert!(owner.cached_project_states().is_empty());
     assert!(Arc::ptr_eq(&owner, &owner.current_primary_project_state()));
+}
+
+#[test]
+fn initial_api_entry_keeps_all_diagnostic_providers_off_even_when_native_typecheck_is_enabled() {
+    use crate::server::MaestroServer;
+    let directory = tempfile::tempdir().unwrap();
+    std::fs::write(directory.path().join("vite.config.mjs"), "export default {vue:{typeChecker:{corsaPath:'./vize-must-not-start-for-disabled-providers'}}};").unwrap();
+    let owner = Arc::new(ServerState::new());
+    owner.set_workspace_root(directory.path().to_path_buf());
+    owner.load_workspace_config(directory.path());
+    let uri = Url::from_file_path(directory.path().join("App.vue")).unwrap();
+    owner.documents.open(
+        uri.clone(),
+        "<script setup lang=\"ts\">const x: string = 1;</script>".into(),
+        1,
+        "vue".into(),
+    );
+    let current = owner
+        .document_project_state(&uri)
+        .unwrap_or_else(|| owner.clone());
+    let receipt = current.initial_configuration_continuation(&uri, 1).unwrap();
+    {
+        let mut features = current.lsp_features.write();
+        features.lint = false;
+        features.typecheck = false;
+        features.ecosystem = false;
+    }
+    current
+        .lsp_typecheck_enabled
+        .store(true, std::sync::atomic::Ordering::SeqCst);
+    assert!(current.is_lsp_typecheck_enabled());
+    assert!(!current.lsp_features().has_diagnostics());
+    assert!(receipt.owns_current_state(&current, &uri, 1));
+    let (service, _socket) = tower_lsp::LspService::new(MaestroServer::new);
+    let server = service.inner().with_project_state(current.clone());
+    futures::executor::block_on(server.publish_initial_api_diagnostics_if_version(
+        &uri,
+        1,
+        Some(&receipt),
+    ));
+    assert!(!current.has_corsa_bridge());
+    assert!(
+        current.corsa_init_failure().is_none(),
+        "disabled providers must not even attempt the configured missing backend"
+    );
+    assert!(
+        !current
+            .corsa_init_failed
+            .load(std::sync::atomic::Ordering::SeqCst)
+    );
 }

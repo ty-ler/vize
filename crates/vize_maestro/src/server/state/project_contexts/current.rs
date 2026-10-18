@@ -118,6 +118,18 @@ impl InitialConfigurationContinuation {
         self.owner_is_current(root, uri, version)
     }
 
+    /// Check only the original continuation's owner and revision identity.
+    /// Physical record validation stays in `continue_initial_configuration`.
+    pub(crate) fn owns_current_state(
+        &self,
+        state: &Arc<ServerState>,
+        uri: &Url,
+        version: i32,
+    ) -> bool {
+        self.owner_is_current(&state.configuration_owner(), uri, version)
+            .is_some_and(|owner| Arc::ptr_eq(&owner, state))
+    }
+
     pub(crate) fn root(&self) -> &std::path::Path {
         &self.key.root
     }
