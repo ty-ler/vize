@@ -4,6 +4,13 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { inspect } from "node:util";
 import { fixtureIdentity } from "./nuxt-ui-fixture-identity.ts";
+import {
+  GRAPH_MANIFEST,
+  writeNuxtUiGraphRecords,
+  readNuxtUiGraphRecords,
+  type GraphManifest,
+  type GraphSource,
+} from "./nuxt-ui-graph-records.ts";
 
 type Identity = ReturnType<typeof fixtureIdentity>;
 const OUTPUT = "playgrounds/vue/dist";
@@ -119,10 +126,10 @@ export type ModuleGraphHooks = {
   close: () => void;
 };
 
-export function snapshotNuxtUiModuleGraph(graph: Graph) {
+function moduleGraphSource(graph: Graph): Pick<GraphSource, "entries" | "modules"> {
   assert.ok(graph.idToModuleMap instanceof Map, "actual Vite module map required");
-  const modules: Module[] = [];
-  const indexes = new Map<Module, number>();
+  const modules: Module[] = [],
+    indexes = new Map<Module, number>();
   function include(module: Module) {
     if (!indexes.has(module)) {
       indexes.set(module, modules.length);
@@ -132,21 +139,46 @@ export function snapshotNuxtUiModuleGraph(graph: Graph) {
   for (const module of graph.idToModuleMap.values()) include(module);
   for (const module of modules) {
     assert.ok(module.importedModules instanceof Set && module.importers instanceof Set);
-    for (const related of [...module.importedModules, ...module.importers]) include(related);
+    for (const related of module.importedModules) include(related);
+    for (const related of module.importers) include(related);
   }
+  const edges = (values: Set<Module>): Iterable<number> => ({
+    *[Symbol.iterator]() {
+      for (const value of values) yield indexes.get(value) ?? -1;
+    },
+  });
   return {
-    entries: [...graph.idToModuleMap].map(([id, module]) => ({
-      id,
-      module: indexes.get(module) ?? -1,
-    })),
-    modules: modules.map((module) => ({
-      id: module.id,
-      url: module.url,
-      file: module.file,
-      type: module.type ?? null,
-      realFile: module.file && fs.existsSync(module.file) ? fs.realpathSync(module.file) : null,
-      importedModules: [...module.importedModules].map((value) => indexes.get(value) ?? -1),
-      importers: [...module.importers].map((value) => indexes.get(value) ?? -1),
+    entries: {
+      *[Symbol.iterator]() {
+        for (const [id, module] of graph.idToModuleMap)
+          yield { id, module: indexes.get(module) ?? -1 };
+      },
+    },
+    modules: {
+      *[Symbol.iterator]() {
+        for (const module of modules)
+          yield {
+            id: module.id,
+            url: module.url,
+            file: module.file,
+            type: module.type ?? null,
+            realFile:
+              module.file && fs.existsSync(module.file) ? fs.realpathSync(module.file) : null,
+            importedModules: edges(module.importedModules),
+            importers: edges(module.importers),
+          };
+      },
+    },
+  };
+}
+export function snapshotNuxtUiModuleGraph(graph: Graph) {
+  const source = moduleGraphSource(graph);
+  return {
+    entries: [...source.entries],
+    modules: [...source.modules].map((module) => ({
+      ...module,
+      importedModules: [...module.importedModules],
+      importers: [...module.importers],
     })),
   };
 }
@@ -180,14 +212,19 @@ export function observeNuxtUiModuleGraphs(
         server: index,
         lane,
         environment,
-        ...snapshotNuxtUiModuleGraph(graph),
+        ...moduleGraphSource(graph),
       }));
     });
     return { schema: 1, graphs };
   };
   hooks.onClose(() => {
-    fs.mkdirSync(directory, { recursive: true });
-    fs.writeFileSync(path.join(directory, "module-graphs.json"), JSON.stringify(snapshot()));
+    writeNuxtUiGraphRecords(path.join(directory, "close-diagnostic"), {
+      ...snapshot(),
+      live: false,
+      pid: process.pid,
+      phase: path.basename(path.dirname(directory)),
+      session: path.basename(directory),
+    });
   });
   const registered = new WeakSet<AliveViteServer>();
   return (server: AliveViteServer, lane: Lane) => {
@@ -222,8 +259,10 @@ export function observeNuxtUiModuleGraphs(
           session: path.basename(directory),
         };
         assert.ok(record.graphs.length > 0, "live Vite graph inventory must be nonempty");
-        const body = JSON.stringify(record);
-        fs.writeFileSync(path.join(directory, "module-graphs-live.json"), body);
+        const capture = fs.mkdtempSync(path.join(directory, "live-"));
+        const manifest = writeNuxtUiGraphRecords(capture, record);
+        const body = fs.readFileSync(path.join(capture, GRAPH_MANIFEST), "utf8");
+        assert.equal(JSON.parse(body).sha256, manifest.sha256);
         response.statusCode = 200;
         response.end(body);
       } catch (error) {
@@ -251,41 +290,76 @@ export function verifyNuxtUiGeneratedOutputUnused(directory: string, cwd: string
   const select = path.join(cwd, "src/runtime/components/Select.vue").replaceAll(path.sep, "/");
   const phases = (["candidate", "reference"] as const).map((phase) => {
     const phaseDirectory = path.join(directory, phase);
-    const records = fs
+    const records: {
+      file: string;
+      environment: string | null;
+      lane: { isServer?: boolean };
+      modules: number;
+      entries: number;
+      selected: boolean;
+    }[] = [];
+    const reference = (value: string | null) => {
+      if (value === null) return;
+      assert.equal(typeof value, "string", "module graph preserves exact provider identifiers");
+      const decoded = path.posix.normalize(
+        decodeURIComponent(value).replaceAll("\\", "/").split("?")[0]!,
+      );
+      assert.equal(
+        /(?:^|\/)playgrounds\/vue\/dist(?:\/|$|\?)/.test(decoded),
+        false,
+        "selected Nuxt module graph uses generated Vue playground output",
+      );
+    };
+    for (const session of fs
       .readdirSync(phaseDirectory)
-      .filter((name) => name.startsWith("session-"))
-      .flatMap((session) => {
-        const file = path.join(phaseDirectory, session, "module-graphs-live.json");
-        if (!fs.existsSync(file)) return [];
-        const record = JSON.parse(fs.readFileSync(file, "utf8")) as {
-          schema: number;
-          live: boolean;
-          pid: number;
-          graphs: { lane: Lane; environment: string | null }[];
-        };
+      .filter((name) => name.startsWith("session-"))) {
+      const parent = path.join(phaseDirectory, session);
+      for (const capture of fs.readdirSync(parent).filter((name) => name.startsWith("live-"))) {
+        const file = path.join(parent, capture, GRAPH_MANIFEST);
+        const selected = new Set<number>();
+        const record = readNuxtUiGraphRecords(
+          path.dirname(file),
+          JSON.parse(fs.readFileSync(file, "utf8")) as GraphManifest,
+          {
+            entry(_graph, _index, entry) {
+              reference(entry.id);
+            },
+            module(graph, _index, module) {
+              for (const value of [module.id, module.url, module.file, module.realFile])
+                reference(value);
+              if (
+                [module.id, module.file, module.realFile].some(
+                  (id) =>
+                    id !== null &&
+                    id
+                      .split("?")[0]!
+                      .replaceAll("\\", "/")
+                      .replace(/^\0vize(?:-ssr)?:/, "")
+                      .replace(/^\/@fs/, "")
+                      .replace(/(\.vue)\.tsx?$/, "$1") === select,
+                )
+              )
+                selected.add(graph);
+            },
+          },
+        );
         assert.equal(record.schema, 1);
         assert.equal(record.live, true, "actual live capture required");
+        assert.equal(record.phase, phase, "exact phase identity");
+        assert.equal(record.session, session, "exact session identity");
         assert.ok(Number.isSafeInteger(record.pid) && record.pid > 0);
-        return record.graphs.map((graph) => ({ file, ...graph })) as ({
-          file: string;
-          lane: Lane;
-          environment: string | null;
-        } & ReturnType<typeof snapshotNuxtUiModuleGraph>)[];
-      });
-    const selected = records.filter((record) =>
-      record.modules.some((module) =>
-        [module.id, module.file, module.realFile].some((id) => {
-          if (id === null) return false;
-          const pathname = id
-            .split("?")[0]!
-            .replaceAll("\\", "/")
-            .replace(/^\0vize(?:-ssr)?:/, "")
-            .replace(/^\/@fs/, "")
-            .replace(/(\.vue)\.tsx?$/, "$1");
-          return pathname === select;
-        }),
-      ),
-    );
+        for (const [index, graph] of record.graphs.entries())
+          records.push({
+            file,
+            environment: graph.environment,
+            lane: graph.lane,
+            modules: graph.modules,
+            entries: graph.entries,
+            selected: selected.has(index),
+          });
+      }
+    }
+    const selected = records.filter((record) => record.selected);
     for (const server of [false, true])
       assert.ok(
         selected.some(
@@ -296,46 +370,9 @@ export function verifyNuxtUiGeneratedOutputUnused(directory: string, cwd: string
         ),
         `${phase} requires nonempty actual Select module graphs in both lanes`,
       );
-    for (const record of records) {
-      const references = [
-        ...record.entries.map((entry) => entry.id),
-        ...record.modules.flatMap((module) => [
-          module.id,
-          module.url,
-          module.file,
-          module.realFile,
-        ]),
-      ];
-      for (const value of references) {
-        if (value === null) continue;
-        assert.equal(typeof value, "string", "module graph preserves exact provider identifiers");
-        const decoded = path.posix.normalize(
-          decodeURIComponent(value).replaceAll("\\", "/").split("?")[0]!,
-        );
-        assert.equal(
-          /(?:^|\/)playgrounds\/vue\/dist(?:\/|$|\?)/.test(decoded),
-          false,
-          "selected Nuxt module graph uses generated Vue playground output",
-        );
-      }
-      for (const entry of record.entries)
-        assert.ok(Number.isInteger(entry.module) && record.modules[entry.module]);
-      for (const module of record.modules)
-        for (const index of [...module.importedModules, ...module.importers])
-          assert.ok(
-            Number.isInteger(index) && record.modules[index],
-            "complete module graph edge closure",
-          );
-    }
     return {
       phase,
-      records: records.map((record) => ({
-        file: record.file,
-        environment: record.environment,
-        lane: record.lane,
-        modules: record.modules.length,
-        entries: record.entries.length,
-      })),
+      records: records.map(({ selected: _selected, ...record }) => record),
       actualSelectGraphs: selected.length,
       generatedNamespaceUsed: false,
     };
@@ -411,9 +448,14 @@ export async function captureNuxtUiAliveGraphResponse(
   assert.ok(Number.isSafeInteger(captured.pid) && captured.pid > 0);
   assert.match(captured.session, /^session-[0-9]+-[a-f0-9-]+$/);
   assert.equal(captured.session.split("-")[1], String(captured.pid));
+  assert.match(captured.capture, /^live-[A-Za-z0-9-]+$/);
   assert.equal(
-    fs.readFileSync(path.join(parent, captured.session, "module-graphs-live.json"), "utf8"),
+    fs.readFileSync(path.join(parent, captured.session, captured.capture, GRAPH_MANIFEST), "utf8"),
     body,
   );
-  assert.ok(captured.graphs.length > 0, "actual live graph inventory required");
+  const record = readNuxtUiGraphRecords(
+    path.join(parent, captured.session, captured.capture),
+    captured as GraphManifest,
+  );
+  assert.ok(record.graphs.length > 0, "actual live graph inventory required");
 }

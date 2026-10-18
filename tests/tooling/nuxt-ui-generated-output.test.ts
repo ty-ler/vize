@@ -3,6 +3,13 @@ import * as fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import {
+  writeNuxtUiGraphRecords,
+  readNuxtUiGraphRecords,
+  GRAPH_MANIFEST,
+  type GraphManifest,
+  type GraphData,
+} from "../_helpers/nuxt-ui-graph-records.ts";
 import { sourceInventory } from "../_helpers/nuxt-ui-fixture-identity.ts";
 import {
   compareNuxtUiAuthoredIdentity,
@@ -167,18 +174,34 @@ test("module graph observation is passive and retains complete edge closure at c
     );
     assert.ok(hooks["vite:serverCreated"] && hooks.close);
     hooks["vite:serverCreated"]({ moduleGraph: graph }, { isServer: true });
-    assert.equal(fs.existsSync(path.join(root, "module-graphs.json")), false);
+    assert.equal(fs.existsSync(path.join(root, "close-diagnostic", GRAPH_MANIFEST)), false);
     hooks.close();
     assert.equal(graph.idToModuleMap, before);
     assert.equal(graph.idToModuleMap.size, 1);
     assert.deepEqual([...select.importedModules], [primitive]);
-    const actual = JSON.parse(fs.readFileSync(path.join(root, "module-graphs.json"), "utf8"));
+    const closeDirectory = path.join(root, "close-diagnostic");
+    const modules: { id: string | null; importedModules: number[]; importers: number[] }[] = [];
+    const actual = readNuxtUiGraphRecords(
+      closeDirectory,
+      JSON.parse(
+        fs.readFileSync(path.join(closeDirectory, GRAPH_MANIFEST), "utf8"),
+      ) as GraphManifest,
+      {
+        module(_graph, _index, value) {
+          modules.push({ id: value.id, importedModules: [], importers: [] });
+        },
+        edge(_graph, module, direction, _index, target) {
+          modules[module]![direction].push(target);
+        },
+      },
+    );
+    assert.equal(actual.live, false, "close diagnostic can never admit a live capture");
     assert.deepEqual(
-      actual.graphs[0].modules.map((entry: { id: string }) => entry.id),
+      modules.map((entry) => entry.id),
       [select.id, primitive.id],
     );
     assert.deepEqual(
-      actual.graphs[0].modules.map((entry: { importedModules: number[]; importers: number[] }) => [
+      modules.map((entry: { importedModules: number[]; importers: number[] }) => [
         entry.importedModules,
         entry.importers,
       ]),
@@ -195,43 +218,41 @@ test("output non-use needs both actual Select graphs and refuses any output id, 
     fixture(cwd);
     const select = module(path.join(cwd, "src/runtime/components/Select.vue"));
     const graph = snapshotNuxtUiModuleGraph({ idToModuleMap: new Map([[select.id, select]]) });
-    const write = (extra: unknown[] = []) => {
+    const write = (extra: GraphData[] = []) => {
       for (const phase of ["candidate", "reference"])
-        file(
-          root,
-          `${phase}/session-1/module-graphs-live.json`,
-          JSON.stringify({
-            schema: 1,
-            live: true,
-            pid: 1,
-            graphs: [
-              { lane: { isClient: true }, environment: null, ...graph },
-              { lane: { isServer: true }, environment: null, ...graph },
-              ...extra,
-            ],
-          }),
-        );
+        writeNuxtUiGraphRecords(path.join(root, phase, "session-1/live-fixture"), {
+          schema: 1,
+          live: true,
+          pid: 1,
+          phase,
+          session: "session-1",
+          graphs: [
+            { lane: { isClient: true }, environment: null, ...graph },
+            { lane: { isServer: true }, environment: null, ...graph },
+            ...extra,
+          ],
+        });
     };
     write();
     assert.equal(verifyNuxtUiGeneratedOutputUnused(root, cwd).phases.length, 2);
     const lookalike = structuredClone(graph);
     Object.assign(lookalike.modules[0]!, { id: `${select.id}-unrelated`, file: null });
-    file(
-      root,
-      "reference/session-1/module-graphs-live.json",
-      JSON.stringify({
-        schema: 1,
-        live: true,
-        pid: 1,
-        graphs: [
-          { lane: { isClient: true }, environment: null, ...lookalike },
-          { lane: { isServer: true }, environment: null, ...lookalike },
-        ],
-      }),
-    );
+    writeNuxtUiGraphRecords(path.join(root, "reference/session-1/live-fixture"), {
+      schema: 1,
+      live: true,
+      pid: 1,
+      phase: "reference",
+      session: "session-1",
+      graphs: [
+        { lane: { isClient: true }, environment: null, ...lookalike },
+        { lane: { isServer: true }, environment: null, ...lookalike },
+      ],
+    });
     assert.throws(() => verifyNuxtUiGeneratedOutputUnused(root, cwd), /both lanes/);
     write();
-    fs.rmSync(path.join(root, "reference/session-1/module-graphs-live.json"));
+    fs.rmSync(path.join(root, "reference/session-1/live-fixture", GRAPH_MANIFEST));
+    assert.throws(() => verifyNuxtUiGeneratedOutputUnused(root, cwd), /ENOENT/);
+    fs.rmSync(path.join(root, "reference/session-1/live-fixture"), { recursive: true });
     file(root, "reference/session-1/module-graphs.json", JSON.stringify({ schema: 1, graphs: [] }));
     assert.throws(() => verifyNuxtUiGeneratedOutputUnused(root, cwd), /both lanes/);
     for (const field of ["id", "url", "file", "realFile"]) {
@@ -351,7 +372,7 @@ test("live graph capture works before close and ordinary requests retain their h
     );
     assert.equal(handlers.length, 1, "one middleware per actual server");
     assert.equal(typeof close, "function");
-    assert.equal(fs.existsSync(path.join(directory, "module-graphs.json")), false);
+    assert.equal(fs.existsSync(path.join(directory, "close-diagnostic", GRAPH_MANIFEST)), false);
     let next = 0,
       body = "";
     const response = {
@@ -371,10 +392,16 @@ test("live graph capture works before close and ordinary requests retain their h
     });
     assert.equal(response.statusCode, 200);
     assert.equal(next, 1);
-    const record = JSON.parse(body);
+    const manifest = JSON.parse(body) as GraphManifest;
+    const observed: { graph: number; id: string | null }[] = [];
+    const record = readNuxtUiGraphRecords(path.join(directory, manifest.capture), manifest, {
+      module(graph, _index, value) {
+        observed.push({ graph, id: value.id });
+      },
+    });
     assert.equal(record.live, true);
     assert.equal(record.pid, process.pid);
-    assert.equal(record.graphs[0].modules[0].id, select.id);
+    assert.equal(observed[0]!.id, select.id);
     assert.deepEqual(
       record.graphs.map((value: { lane: unknown }) => value.lane),
       [{ isClient: true }, { isServer: true, isClient: false }],
@@ -435,7 +462,7 @@ test("failed live graph responses retain the complete error and refuse admission
     assert.equal(record.live, false);
     assert.equal(record.failure.name, "AssertionError");
     assert.equal(record.failure.code, "ERR_ASSERTION");
-    assert.match(record.failure.stack, /snapshotNuxtUiModuleGraph/);
+    assert.match(record.failure.stack, /moduleGraphSource/);
     assert.match(record.failure.raw, /AssertionError/);
     await assert.rejects(
       captureNuxtUiAliveGraphResponse(root, "candidate", "http://127.0.0.1:5317", async () => ({
@@ -449,7 +476,13 @@ test("failed live graph responses retain the complete error and refuse admission
       .find((name) => name.startsWith("graph-response-"));
     assert.ok(raw);
     assert.equal(fs.readFileSync(path.join(root, "candidate", raw), "utf8"), body);
-    assert.equal(fs.existsSync(path.join(directory, "module-graphs-live.json")), false);
+    assert.equal(
+      fs
+        .readdirSync(directory)
+        .filter((name) => name.startsWith("live-"))
+        .some((name) => fs.existsSync(path.join(directory, name, GRAPH_MANIFEST))),
+      false,
+    );
   } finally {
     fs.rmSync(root, { recursive: true });
   }
