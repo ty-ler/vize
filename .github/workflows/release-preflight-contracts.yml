@@ -6,6 +6,9 @@ on:
       - ".github/workflows/release.yml"
       - ".github/workflows/release-operator.yml"
       - "tests/tooling/package-manifests.test.ts"
+      - "tests/tooling/release-cli.test.ts"
+      - "tests/tooling/support/release-command.ts"
+      - "tests/tooling/support/release-guard-fixture.ts"
       - "tests/tooling/bundler-plugin-manifests.test.ts"
       - "tests/tooling/davinci-plugin-sdk-release.test.ts"
       - "tests/tooling/github-workflows-release-publish.test.ts"
@@ -86,6 +89,7 @@ jobs:
           tests/tooling/drop-in-claim-scope.test.ts
           tests/tooling/github-workflows-full-rust.test.ts
           tests/tooling/package-manifests.test.ts
+          tests/tooling/release-cli.test.ts
           tests/tooling/bundler-plugin-manifests.test.ts
           tests/tooling/davinci-plugin-sdk-release.test.ts
       - name: Require exact concurrent npm publication fixture controls
