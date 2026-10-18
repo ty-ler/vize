@@ -179,6 +179,13 @@ runs:
         VIZE_CHECK_FIXTURES_BUDGET_CPU_FLOOR: ${{ env.VIZE_CHECK_FIXTURES_BUDGET_CPU_FLOOR }}
       run: vp run --no-cache --filter './tests' test:check:fixtures:cycles
 
+    - name: Prepare pinned Tier-L fixture configuration dependencies
+      shell: bash
+      env:
+        VIZE_TIER_L_FIXTURE: tests/_fixtures/_git/vue-vben-admin
+        VIZE_TIER_L_METRICS_DIR: target/vize-tests/metrics/vben-batch-incremental
+      run: node tests/_helpers/tier-l-fixture-readiness.ts
+
     - name: Check Tier-L batch incremental session reuse
       shell: bash
       env:

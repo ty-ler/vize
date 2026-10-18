@@ -190,8 +190,31 @@ test("Vue parity structurally gates compiler fixtures and incremental LSP behavi
     "the per-PR batch repair oracle must run every registered app",
   );
 
+  const fixtureConfiguration = steps.find(
+    (step) => step.name === "Prepare pinned Tier-L fixture configuration dependencies",
+  );
+  assert.ok(fixtureConfiguration);
+  assert.ok(cycles);
+  assert.deepEqual(fixtureConfiguration?.env, {
+    VIZE_TIER_L_FIXTURE: "tests/_fixtures/_git/vue-vben-admin",
+    VIZE_TIER_L_METRICS_DIR: "target/vize-tests/metrics/vben-batch-incremental",
+  });
+  assert.equal(fixtureConfiguration?.run, "node tests/_helpers/tier-l-fixture-readiness.ts");
+  assert.equal(fixtureConfiguration?.if, undefined, "configuration readiness must not be optional");
+  assert.equal(
+    steps.indexOf(fixtureConfiguration),
+    steps.indexOf(cycles) + 1,
+    "the complete original fixture and cycle predecessors run before preparation",
+  );
+
   const batchIncremental = steps.find(
     (step) => step.name === "Check Tier-L batch incremental session reuse",
+  );
+  assert.ok(batchIncremental);
+  assert.equal(
+    steps.indexOf(batchIncremental),
+    steps.indexOf(fixtureConfiguration) + 1,
+    "the original Tier-L command consumes the prepared same-root workspace",
   );
   assert.deepEqual(batchIncremental?.env, {
     VIZE_TIER_L_FIXTURE: "tests/_fixtures/_git/vue-vben-admin",
