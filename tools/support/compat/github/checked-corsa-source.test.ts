@@ -28,6 +28,8 @@ import {
   write,
   tarArchive,
   frozenPackageCommands,
+  defaultRefusalPackets,
+  runtimeLockText,
 } from "./checked-corsa-test-fixtures.ts";
 await test("Canon actual defaults and six independent source roots reach library builds", () => {
   assert.deepEqual(toml(sourceManifest("vize_canon", "/source/canon")).dependencies, {
@@ -187,6 +189,8 @@ await test("whole package acceptance executes every frozen phase before earning 
     release = path.join(directory, "source"),
     output = path.join(directory, "evidence");
   const workspace: string[] = [
+    "[workspace]",
+    'resolver = "3"',
     "[workspace.package]",
     `version = "${VERSION}"`,
     "[workspace.dependencies]",
@@ -199,13 +203,13 @@ await test("whole package acceptance executes every frozen phase before earning 
     write(
       release,
       `vendor/${alias}/Cargo.toml`,
-      `[package]\nname = "${name}"\nversion = "${VERSION}"\nlicense = "MIT"\n[lib]\nname = "${alias}"\n`,
+      `[package]\nname = "${name}"\nversion.workspace = true\nresolver = "2"\nexclude = [".cargo_vcs_info.json", "Cargo.toml.orig"]\nlicense = "MIT"\n[lib]\nname = "${alias}"\n`,
     );
     write(release, `vendor/${alias}/LICENSE`, "MIT License\ncomplete notice\n");
     write(release, `vendor/${alias}/src/lib.rs`, "pub fn whole_source() {}\n");
   }
   write(release, "Cargo.toml", workspace.join("\n") + "\n");
-  write(release, "Cargo.lock", "# frozen source lock\n");
+  write(release, "Cargo.lock", runtimeLockText());
   for (const relative of [
     "checked-corsa-consumer/Cargo.toml",
     "checked-corsa-consumer/src/lib.rs",
@@ -292,7 +296,15 @@ await test("whole package acceptance executes every frozen phase before earning 
           prefix = `vize_${alias}-${VERSION}`,
           manifest = fs.readFileSync(path.join(source, "Cargo.toml"));
         tarArchive(path.join(output, "package-target/package", `${prefix}.crate`), [
-          [`${prefix}/Cargo.toml`, manifest],
+          [
+            `${prefix}/Cargo.toml`,
+            Buffer.from(
+              manifest
+                .toString()
+                .replace("version.workspace = true", `version = "${VERSION}"`)
+                .replace('resolver = "2"', 'resolver = "3"'),
+            ),
+          ],
           [`${prefix}/Cargo.toml.orig`, manifest],
           [
             `${prefix}/.cargo_vcs_info.json`,
@@ -306,15 +318,9 @@ await test("whole package acceptance executes every frozen phase before earning 
       if (options.cwd.endsWith("default-feature-negative")) {
         status = 101;
         stdout =
-          JSON.stringify({
-            reason: "compiler-message",
-            message: {
-              level: "error",
-              code: { code: "E0432" },
-              message: "unresolved corsa::orchestrator::RaftConfig",
-              spans: [{ is_primary: true, file_name: "src/lib.rs" }],
-            },
-          }) + "\n";
+          defaultRefusalPackets(options.cwd, VERSION)
+            .map((row) => JSON.stringify(row))
+            .join("\n") + "\n";
       } else
         stdout =
           JSON.stringify({

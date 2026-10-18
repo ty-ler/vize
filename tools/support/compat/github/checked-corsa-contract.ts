@@ -285,6 +285,10 @@ export function archiveMembers(archive: string, prefix: string): Bodies {
       (type === "0" || type === "\0") && !field(header.subarray(157, 257)),
       "foreign/nonregular archive member",
     );
+    requireThat(
+      octal(header.subarray(100, 108)) === 0o644,
+      "archive regular member mode must be0644",
+    );
     const magic = field(header.subarray(257, 263));
     requireThat(["", "ustar", "ustar "].includes(magic), "unsupported TAR format");
     const tarPrefix = magic === "ustar" ? field(header.subarray(345, 500)) : "";
@@ -378,4 +382,114 @@ export function verifyGraph(
       features,
     };
   });
+}
+
+/** Cargo's only observed normalization of these six complete owned manifests. */
+export function verifyNormalizedManifest(
+  sourceFile: string,
+  workspaceFile: string,
+  alias: string,
+  actual: unknown,
+) {
+  const source = readToml(sourceFile),
+    workspace = readToml(workspaceFile).workspace;
+  const inheritedAlias = (name: string) => {
+    requireThat(ALIASES.includes(name), "unknown owned manifest alias");
+    assert.deepEqual(workspace.dependencies[name], {
+      package: `vize_${name}`,
+      version: `=${workspace.package.version}`,
+      path: `vendor/${name}`,
+    });
+    return workspace.dependencies[name];
+  };
+  inheritedAlias(alias);
+  requireThat(
+    physicalPath(sourceFile) ===
+      physicalPath(path.dirname(workspaceFile), "vendor", alias, "Cargo.toml"),
+    "owned source manifest path differs",
+  );
+  requireThat(
+    source.package.name === `vize_${alias}` && source.lib.name === alias,
+    "owned source package/lib mismatch",
+  );
+  assert.deepEqual(source.package.version, { workspace: true });
+  requireThat(
+    source.package.resolver === "2" && workspace.resolver === "3",
+    "unexpected owned resolver inheritance",
+  );
+  sameSet(source.package.exclude, [".cargo_vcs_info.json", "Cargo.toml.orig"]);
+  const expected = structuredClone(source);
+  expected.package.version = workspace.package.version;
+  expected.package.resolver = workspace.resolver;
+  for (const section of ["dependencies", "dev-dependencies", "build-dependencies"])
+    for (const [name, dependency] of Object.entries(expected[section] ?? {})) {
+      if (
+        !(
+          dependency &&
+          typeof dependency === "object" &&
+          "workspace" in dependency &&
+          dependency.workspace === true
+        )
+      )
+        continue;
+      assert.deepEqual(dependency, { workspace: true });
+
+      expected[section][name] = Object.fromEntries(
+        Object.entries(inheritedAlias(name)).filter(([key]) => key !== "path"),
+      );
+    }
+  assert.deepEqual(actual, expected, "complete normalized Cargo manifest differs");
+}
+
+type RegistryLock = {
+  package?: { name?: string; version?: string; source?: string; checksum?: string }[];
+};
+/** Read the consumer lock AFTER metadata; a copied seed lock is not this evidence. */
+export function verifyRegistryLock(metadata: Metadata, root: RegistryLock, consumer: RegistryLock) {
+  requireThat(
+    Array.isArray(root.package) && Array.isArray(consumer.package),
+    "complete registry lock packages required",
+  );
+  const tuple = (
+    a: { name?: string; version?: string; source?: string },
+    b: { name?: string; version?: string; source?: string },
+  ) => a.name === b.name && a.version === b.version && a.source === b.source;
+  const registry = metadata.packages.filter(
+    (pkg) =>
+      typeof pkg.source === "string" && pkg.source.startsWith("registry+") && !OWNED.has(pkg.name),
+  );
+  const seen = new Set<string>();
+  for (const pkg of registry) {
+    const key = stringifyJson([pkg.name, pkg.version, pkg.source]);
+    requireThat(!seen.has(key), "duplicate registry metadata tuple");
+    seen.add(key);
+    const expected = root.package.filter((entry) => tuple(entry, pkg));
+    const actual = consumer.package.filter((entry) => tuple(entry, pkg));
+    requireThat(
+      expected.length === 1 && actual.length === 1,
+      "registry tuple missing or ambiguous after metadata",
+    );
+    requireThat(
+      typeof expected[0].checksum === "string" &&
+        /^[a-f0-9]{64}$/u.test(expected[0].checksum) &&
+        actual[0].checksum === expected[0].checksum,
+      "registry checksum differs from current source lock",
+    );
+  }
+  for (const pkg of consumer.package.filter(
+    (entry) =>
+      typeof entry.source === "string" &&
+      entry.source.startsWith("registry+") &&
+      !OWNED.has(entry.name ?? ""),
+  )) {
+    const expected = root.package.filter((entry) => tuple(entry, pkg));
+    requireThat(
+      expected.length === 1 &&
+        expected[0].checksum === pkg.checksum &&
+        typeof pkg.checksum === "string" &&
+        /^[a-f0-9]{64}$/u.test(pkg.checksum),
+      "consumer lock introduced a foreign registry tuple/checksum",
+    );
+  }
+  return registry.length;
 }

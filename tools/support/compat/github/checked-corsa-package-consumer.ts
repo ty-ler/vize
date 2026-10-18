@@ -1,5 +1,6 @@
 /** Independent path and normalized Cargo archive qualification; never publishes. */
 import fs from "node:fs";
+import assert from "node:assert/strict";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -24,8 +25,11 @@ import {
   verifyConsumerBuild,
   verifyGraph,
   verifyPackagedSource,
+  verifyNormalizedManifest,
+  verifyRegistryLock,
   type Providers,
 } from "./checked-corsa-contract.ts";
+import { defaultRefusalPackets } from "./checked-corsa-test-fixtures.ts";
 import { qualifySourceConsumers } from "./checked-corsa-source-consumers.ts";
 export type CommandResult = {
   status: number | null;
@@ -140,7 +144,7 @@ export class Acceptance {
     return directory;
   }
   metadata(label: string, directory: string, features: string[] = [], locked = false) {
-    return parseJson(
+    const metadata = parseJson(
       this.command(
         label,
         [
@@ -155,7 +159,19 @@ export class Acceptance {
         directory,
       ),
     );
+    const bytes = fs.readFileSync(path.join(directory, "Cargo.lock"));
+    fs.writeFileSync(
+      path.join(this.output, `${label}.lock.json`),
+      stringifyJson({ sha256: digest(bytes), base64: bytes.toString("base64") }, 2) + "\n",
+    );
+    verifyRegistryLock(
+      metadata,
+      readToml(path.join(this.root, "Cargo.lock")),
+      toml(bytes.toString("utf8")),
+    );
+    return metadata;
   }
+
   cleanConsumer(label: string, directory: string) {
     const name = readToml(path.join(directory, "Cargo.toml")).package.name;
     this.command(
@@ -285,6 +301,7 @@ export class Acceptance {
         manifest = toml(bodies["Cargo.toml"].toString("utf8")),
         original = providers[name][0];
       const sourceMembers = verifyPackagedSource(path.dirname(original), bodies);
+      verifyNormalizedManifest(original, path.join(this.root, "Cargo.toml"), alias, manifest);
       requireThat(
         bodies["Cargo.toml.orig"].equals(fs.readFileSync(original)),
         "archive original manifest differs from source",
@@ -382,7 +399,7 @@ export class Acceptance {
       negative,
       101,
     );
-    verifyDefaultRefusal(diagnostics, negative);
+    verifyDefaultRefusal(diagnostics, negative, version);
     const sourceConsumers = qualifySourceConsumers(this, version, providers, verifyGraph);
     requireThat(
       !this.command("final-source-status", [
@@ -429,25 +446,17 @@ export const MODES: [string, string[]][] = [
   ["default", []],
   ["distributed", ["--features", "distributed"]],
 ];
-export function verifyDefaultRefusal(diagnostics: string, directory: string) {
-  const errors = jsonLines(diagnostics)
-    .filter((row) => row.reason === "compiler-message" && row.message.level === "error")
-    .map((row) => row.message);
-  requireThat(
-    errors.length === 1 &&
-      errors[0].code?.code === "E0432" &&
-      errors[0].message.includes("corsa::orchestrator::RaftConfig"),
-    "default build failed for a reason other than gated RaftConfig",
+export function verifyDefaultRefusal(diagnostics: string, directory: string, version: string) {
+  const packets = jsonLines(diagnostics).filter((row) =>
+    ["compiler-message", "build-finished"].includes(row.reason),
   );
-  requireThat(
-    errors[0].spans.some(
-      (span: any) =>
-        span.is_primary &&
-        path.resolve(directory, span.file_name) === path.resolve(directory, "src/lib.rs"),
-    ),
-    "negative diagnostic must originate in the independent refusal consumer",
+  assert.deepEqual(
+    packets,
+    defaultRefusalPackets(directory, version),
+    "complete default refusal packet differs from the authenticated RaftConfig diagnostic",
   );
 }
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { values } = parseArgs({
     options: {

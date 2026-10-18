@@ -19,6 +19,8 @@ import {
   verifyConsumerBuild,
   verifyGraph,
   verifyPackagedSource,
+  verifyNormalizedManifest,
+  verifyRegistryLock,
   type Bodies,
   type Metadata,
   type Providers,
@@ -35,6 +37,10 @@ import {
   temporary,
   write,
   tarArchive,
+  defaultRefusalPackets,
+  defaultRefusalCounterexamples,
+  runtimeLockFixture,
+  runtimeLockText,
 } from "./checked-corsa-test-fixtures.ts";
 function graph() {
   const providers: Providers = Object.fromEntries(
@@ -317,7 +323,7 @@ await test("default refusal must be the one exact E0432 from the independent roo
       spans: [{ is_primary: true, file_name: "src/lib.rs" }],
     },
   };
-  verifyDefaultRefusal(JSON.stringify(message), "/negative");
+  assert.throws(() => verifyDefaultRefusal(JSON.stringify(message), "/negative", VERSION));
   for (const change of [
     { ...message, message: { ...message.message, code: { code: "E0308" } } },
     {
@@ -326,8 +332,13 @@ await test("default refusal must be the one exact E0432 from the independent roo
     },
     { ...message, message: { ...message.message, message: "unrelated" } },
   ])
-    assert.throws(() => verifyDefaultRefusal(JSON.stringify(change), "/negative"));
-  assert.throws(() => verifyDefaultRefusal("", "/negative"));
+    assert.throws(() => verifyDefaultRefusal(JSON.stringify(change), "/negative", VERSION));
+  assert.throws(() => verifyDefaultRefusal("", "/negative", VERSION));
+  const packets = defaultRefusalPackets("/negative", VERSION),
+    encode = (rows: unknown[]) => rows.map((row) => JSON.stringify(row)).join("\n");
+  verifyDefaultRefusal(encode(packets), "/negative", VERSION);
+  for (const changed of defaultRefusalCounterexamples("/negative", VERSION))
+    assert.throws(() => verifyDefaultRefusal(encode(changed), "/negative", VERSION));
 });
 
 await test("Python integer JSON stays exact and unsafe TOML integers fail closed", () => {
@@ -364,4 +375,111 @@ await test("original Python ASCII pretty bytes and newline are retained", (t) =>
   );
   for (const separator of ["\u2028", "\u2029", "\u0085", "\v", "\f"])
     assert.throws(() => jsonLines(`{"value":"before${separator}after"}`));
+});
+
+await test("logical regular TAR members retain0644 after GNU/PAX processing", (t) => {
+  const archive = path.join(temporary(t), "mode.crate");
+  for (const mode of [0o755, 0o600, 0o4644]) {
+    tarArchive(archive, [["crate-1/src/lib.rs", Buffer.from("whole"), "0", mode]]);
+    assert.throws(() => archiveMembers(archive, "crate-1"), /mode/u);
+  }
+  tarArchive(archive, [
+    ["long", Buffer.from("crate-1/src/lib.rs\0"), "L", 0o755],
+    ["placeholder", Buffer.from("whole")],
+  ]);
+  assert.deepEqual(
+    { ...archiveMembers(archive, "crate-1") },
+    { "src/lib.rs": Buffer.from("whole") },
+  );
+});
+await test("complete normalized manifests preserve every field beyond the finite Cargo inheritance", (t) => {
+  const directory = temporary(t),
+    file = path.join(directory, "vendor/corsa/Cargo.toml"),
+    workspace = path.join(directory, "Cargo.toml");
+  write(
+    directory,
+    "Cargo.toml",
+    `[workspace]\nresolver="3"\n[workspace.package]\nversion="${VERSION}"\n[workspace.dependencies]\ncorsa_core={package="vize_corsa_core",version="=${VERSION}",path="vendor/corsa_core"}\ncorsa={package="vize_corsa",version="=${VERSION}",path="vendor/corsa"}\n`,
+  );
+  const source =
+    '[package]\nname="vize_corsa"\nversion.workspace=true\nresolver="2"\nexclude=[".cargo_vcs_info.json","Cargo.toml.orig"]\nlicense="MIT"\n[lib]\nname="corsa"\n[dependencies]\ncorsa_core={workspace=true}\n[features]\ndefault=[]\n';
+  write(directory, "vendor/corsa/Cargo.toml", source);
+  const normalized = toml(
+    `[package]\nname="vize_corsa"\nversion="${VERSION}"\nresolver="3"\nexclude=[".cargo_vcs_info.json","Cargo.toml.orig"]\nlicense="MIT"\n[lib]\nname="corsa"\n[dependencies]\ncorsa_core={package="vize_corsa_core",version="=${VERSION}"}\n[features]\ndefault=[]\n`,
+  );
+  verifyNormalizedManifest(file, workspace, "corsa", normalized);
+  for (const mutate of [
+    (value: typeof normalized) => {
+      value.features.default = ["unexpected"];
+    },
+    (value: typeof normalized) => {
+      value.package.publish = false;
+    },
+    (value: typeof normalized) => {
+      value.dependencies.corsa_core.optional = true;
+    },
+    (value: typeof normalized) => {
+      delete value.package.exclude;
+    },
+  ]) {
+    const changed = clone(normalized);
+    mutate(changed);
+    assert.throws(() => verifyNormalizedManifest(file, workspace, "corsa", changed));
+  }
+  write(
+    directory,
+    "vendor/corsa/Cargo.toml",
+    source.replace("version.workspace=true", `version="${VERSION}"`),
+  );
+  assert.throws(() => verifyNormalizedManifest(file, workspace, "corsa", normalized));
+});
+await test("metadata verifies the actual post-command consumer lock and retains it before refusal", (t) => {
+  const directory = temporary(t),
+    metadata = graph().metadata,
+    lock = runtimeLockFixture();
+  assert.equal(verifyRegistryLock(metadata, lock, lock), 1);
+  for (const mutate of [
+    (value: typeof lock) => {
+      value.package[0].checksum = "a".repeat(64);
+    },
+    (value: typeof lock) => {
+      value.package[0].version = "1.14.0";
+    },
+    (value: typeof lock) => {
+      value.package.push(clone(value.package[0]));
+    },
+    (value: typeof lock) => {
+      value.package = [];
+    },
+  ]) {
+    const changed = clone(lock);
+    mutate(changed);
+    assert.throws(() => verifyRegistryLock(metadata, lock, changed));
+  }
+  assert.throws(() => verifyRegistryLock(metadata, toml("# frozen source lock\n"), lock));
+  write(directory, "Cargo.lock", runtimeLockText());
+  const consumer = path.join(directory, "consumer");
+  write(directory, "consumer/Cargo.lock", runtimeLockText());
+  const corrupted = runtimeLockText().replace(lock.package[0].checksum, "a".repeat(64));
+  const runner = new Acceptance(
+    directory,
+    path.join(directory, "evidence"),
+    SHA,
+    { CARGO_TARGET_DIR: "/shared/target" },
+    (_args, options) => {
+      fs.writeSync(options.stdout, JSON.stringify(metadata));
+      fs.writeSync(options.stderr, "whole metadata stderr\n");
+      write(consumer, "Cargo.lock", corrupted);
+      return { status: 0 };
+    },
+  );
+  assert.throws(() => runner.metadata("post-metadata", consumer), /checksum/u);
+  assert.deepEqual(
+    fs.readFileSync(path.join(runner.output, "post-metadata.stdout")),
+    Buffer.from(JSON.stringify(metadata)),
+  );
+  const captured = JSON.parse(
+    fs.readFileSync(path.join(runner.output, "post-metadata.lock.json"), "utf8"),
+  );
+  assert.deepEqual(Buffer.from(captured.base64, "base64"), Buffer.from(corrupted));
 });
