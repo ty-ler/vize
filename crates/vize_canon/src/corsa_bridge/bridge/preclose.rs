@@ -1,4 +1,8 @@
 //! A frozen, pre-cleanup distinction between an active owner and a past epoch.
+#![expect(
+    clippy::disallowed_types,
+    reason = "opaque preclose epochs retain exact cross-thread bridge ownership"
+)]
 use super::{Arc, CorsaBridge, CorsaBridgeError, Ordering};
 use corsa::process::PreCloseTerminalProof;
 use serde_json::{Value, json};
