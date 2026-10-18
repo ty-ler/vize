@@ -373,3 +373,104 @@ fn known_path_membership_matches_original_vec_with_absence_duplicates_and_new_pa
     assert_eq!(checked.changes(), vec![absent.clone()]);
     assert_eq!(before.changed_paths(), vec![absent]);
 }
+
+#[test]
+fn workspace_watch_union_preserves_per_root_dependencies_and_failed_observations() {
+    let fixture = tempfile::tempdir().unwrap();
+    let canonical_root = fixture.path().canonicalize().unwrap();
+    let root = canonical_root.as_path();
+    let state = Arc::new(ServerState::new());
+    state.apply_project_path_identity(root, Some(root));
+    let mut loaded = super::super::config::host::load_lsp_config_snapshot(Some(root));
+    let common = root.join("common-config.json");
+    loaded.watch_dependencies = vec![common.clone(), common.clone()];
+    let observation = super::freshness::ConfigurationObservation::initial(
+        &loaded,
+        &loaded,
+        Default::default(),
+        true,
+        None,
+        false,
+    );
+    state
+        .project_contexts
+        .configuration_attempts
+        .lock()
+        .insert(root.to_path_buf().into(), observation.clone());
+    let primary = root.join("primary-last-good.json");
+    state
+        .project_contexts
+        .config_dependencies
+        .write()
+        .push(primary.clone());
+    let mut expected = vec![common.clone(), primary];
+    // Each root has a latest failed attempt plus a referenced owner whose
+    // admitted dependency must remain watched even when absent from that attempt.
+    for index in 0..64 {
+        let package = root.join(vize_l0::cstr!("packages/{index}").as_str());
+        let missing = package.join("missing-base.json");
+        let admitted = package.join("last-good-helper.mjs");
+        let mut raw = loaded.clone();
+        raw.watch_dependencies = vec![common.clone(), missing.clone()];
+        raw.watch_dependencies_complete = false;
+        let failed = super::freshness::ConfigurationObservation::initial(
+            &raw,
+            &raw,
+            Default::default(),
+            false,
+            None,
+            false,
+        );
+        state
+            .project_contexts
+            .configuration_attempts
+            .lock()
+            .insert(package.clone().into(), failed);
+        raw.project.dependencies = vec![admitted.clone(), common.clone()];
+        let key = super::ProjectContextKey {
+            root: package,
+            tsconfig: Some(root.join(vize_l0::cstr!("leaf-{index}.json").as_str())),
+        };
+        let context = Arc::new(super::registry::ProjectContext::new(key.clone()));
+        context.provide_snapshot(
+            super::ObservedLspConfig {
+                loaded: raw,
+                before: Default::default(),
+                needs_confirmation: true,
+            },
+            false,
+        );
+        state.project_contexts.contexts.lock().insert(key, context);
+        expected.extend([missing, admitted]);
+    }
+    // A context without any observation root was never in the old per-root
+    // expansion, even if it already carries a lazy config snapshot.
+    let unobserved = root.join("unobserved");
+    let mut raw = loaded;
+    raw.project.dependencies = vec![unobserved.join("not-yet-watched.json")];
+    let context = Arc::new(super::registry::ProjectContext::new(unobserved.clone()));
+    context.provide_snapshot(
+        super::ObservedLspConfig {
+            loaded: raw,
+            before: Default::default(),
+            needs_confirmation: true,
+        },
+        false,
+    );
+    state
+        .project_contexts
+        .contexts
+        .lock()
+        .insert(unobserved.into(), context);
+    let mut previous = state
+        .configuration_records()
+        .into_iter()
+        .flat_map(|(key, _)| state.configuration_watch_paths_for_root(&key.root))
+        .collect::<Vec<_>>();
+    previous.sort();
+    previous.dedup();
+    expected.sort();
+    expected.dedup();
+    assert_eq!(previous, expected);
+    assert_eq!(state.configuration_watch_paths(), expected);
+}
