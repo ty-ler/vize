@@ -107,6 +107,20 @@ test("startup diagnostics retain the production producer and unchanged scale-one
       "cargo test --locked --profile ci -p vize_maestro --features legacy --lib server::state::project_contexts:: -- --nocapture\n" +
       "cargo clippy --locked --profile ci -p vize_maestro --features legacy --all-targets -- -D warnings\n",
   );
+  const localControls = steps.findIndex(
+    (step) => step.name === "Protect cold local responses and existing initial diagnostic controls",
+  );
+  assert.ok(localControls > measurement && localControls < controls);
+  assert.equal(
+    steps[localControls].run,
+    "set +e\n" +
+      "node --test --test-concurrency=1 tests/tooling/lsp-startup-local-interactive.test.ts tests/tooling/lsp-initial-diagnostics-version.test.ts tests/tooling/native-config-preload-observations.test.ts > target/vize-tests/lsp-config-diagnostics/controls.stdout 2> target/vize-tests/lsp-config-diagnostics/controls.stderr\n" +
+      "status=$?\n" +
+      "cat target/vize-tests/lsp-config-diagnostics/controls.stdout\n" +
+      "cat target/vize-tests/lsp-config-diagnostics/controls.stderr >&2\n" +
+      "printf '%s\\n' \"$status\" > target/vize-tests/lsp-config-diagnostics/controls.status\n" +
+      'exit "$status"\n',
+  );
   const symlinkControls = steps.findIndex(
     (step) => step.name === "Observe the original six symlink workspace layouts",
   );

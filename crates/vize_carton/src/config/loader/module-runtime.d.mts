@@ -1,5 +1,9 @@
 type ConfigModule = Record<string, unknown>;
 
+/** Private loader-host clocks in milliseconds; module_total encloses the other rows. */
+export function configModuleEvaluationTimings(
+  value: unknown,
+): Array<{ phase: string; elapsedMs: number; processId: number }> | undefined;
 export function configModuleFailureArtifacts(error: unknown): Array<[string, string]>;
 export function configModuleImportPath(configURL: URL, windows?: boolean): string;
 export function failedConfigModuleRequests(error: unknown): string[];

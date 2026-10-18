@@ -102,6 +102,7 @@ test("a broken-present loader installed at the actual candidate phase never fall
 async function observedNative(
   selected: string,
   beforeRead: (paths: string[]) => Promise<boolean | void>,
+  trace?: boolean,
 ) {
   const child = spawn(
     process.execPath,
@@ -109,6 +110,9 @@ async function observedNative(
     {
       cwd: dirname(selected),
       stdio: ["pipe", "pipe", "pipe"],
+      ...(trace === undefined
+        ? {}
+        : { env: { ...process.env, VIZE_TRACE_EDITOR_PREPARATION: trace ? "1" : "0" } }),
     },
   );
   let stderr = "";
@@ -353,5 +357,71 @@ test("real Vite failures carry only actual owned adapter identity while preservi
     assert.equal("failureArtifacts" in repaired.value, false);
     assert.equal(await readFile(counter, "utf8"), "once\n");
     assert.equal(attempts.length, 4);
+  });
+});
+
+test("private timing envelope preserves real Vite values, factory counts, ACK order and failure identity", async () => {
+  await project(async (root, selected) => {
+    await mkdir(join(root, "node_modules"));
+    await symlink(vite, join(root, "node_modules/vite"), "junction");
+    const counter = join(root, "timed-factory.txt");
+    for (const failure of [false, true]) {
+      await writeFile(
+        selected,
+        `import {appendFileSync} from 'node:fs';
+        export default () => {
+          appendFileSync(${JSON.stringify(counter)}, 'once\\n');
+          ${failure ? "throw new Error('timed authored failure');" : "return {vue:{languageServer:{hover:false}}};"}
+        };`,
+      );
+      const outcomes = [];
+      for (const trace of [false, true]) {
+        const phases: string[][] = [];
+        const result = await observedNative(
+          selected,
+          async (paths) => {
+            phases.push(paths);
+          },
+          trace,
+        );
+        const timings = result.value.configEvaluationTimings;
+        if (!trace) assert.equal(timings, undefined);
+        else {
+          assert.deepEqual(
+            timings.map((row: { phase: string }) => row.phase),
+            [
+              "engine_selection_with_ack",
+              "engine_import",
+              "adapter_prepare",
+              "selected_before_read_ack",
+              "public_load",
+              "export_evaluation",
+              "adapter_cleanup",
+              "module_total",
+            ],
+          );
+          const total = timings.at(-1).elapsedMs;
+          for (const row of timings) {
+            assert.equal(typeof row.elapsedMs, "number");
+            assert.equal(Number.isSafeInteger(row.processId) && row.processId > 0, true);
+            assert.equal(row.processId, timings[0].processId);
+            assert.equal(row.elapsedMs <= total, true);
+            assert.equal(Number.isFinite(row.elapsedMs) && row.elapsedMs >= 0, true);
+          }
+          delete result.value.configEvaluationTimings;
+        }
+        const mappings = (result.value.failureArtifacts ?? []) as Array<[string, string]>;
+        const stderr = [...mappings]
+          .sort(([left], [right]) => right.length - left.length)
+          .reduce((text, [owned, source]) => text.split(owned).join(source), result.stderr);
+        delete result.value.failureArtifacts;
+        outcomes.push({ status: result.status, value: result.value, phases, stderr });
+      }
+      assert.deepEqual(outcomes[1], outcomes[0]);
+      assert.equal(outcomes[0].status, failure ? 1 : 0);
+      if (failure) assert.match(outcomes[0].stderr, /timed authored failure/);
+      else assert.equal(outcomes[0].value.config.languageServer.hover, false);
+    }
+    assert.equal(await readFile(counter, "utf8"), "once\nonce\nonce\nonce\n");
   });
 });

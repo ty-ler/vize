@@ -16,6 +16,23 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Failure identity is host metadata; never attach it to authored exports/errors.
 const configFailureArtifacts = new WeakMap();
+const configEvaluationTimings = new WeakMap();
+
+// Private host diagnostics, never attached to authored values or exceptions.
+export function configModuleEvaluationTimings(value) {
+  return configEvaluationTimings.get(value)?.map((row) => ({ ...row }));
+}
+
+function beginConfigTiming(rows, phase) {
+  const start = rows ? performance.now() : undefined;
+  let finished = false;
+  return () => {
+    if (start !== undefined && !finished) {
+      rows.push({ phase, elapsedMs: performance.now() - start, processId: process.pid });
+      finished = true;
+    }
+  };
+}
 
 export function configModuleFailureArtifacts(error) {
   return configFailureArtifacts.get(error)?.map(([owned, source]) => [owned, source]) ?? [];
@@ -98,6 +115,7 @@ async function captureConfigEvaluation(
   privateDirectory,
   observeDependencies,
   ownedAdapter,
+  timings,
 ) {
   const files = new Set([configPath]);
   const requestedFiles = new Set();
@@ -151,7 +169,13 @@ async function captureConfigEvaluation(
     const { namespace, dependencies = [] } = await load();
     for (const path of dependencies) if (!isPrivate(path)) files.add(path);
     moduleGraphLoaded = true;
-    const value = evaluate ? await evaluate(namespace) : namespace;
+    const finish = beginConfigTiming(timings, "export_evaluation");
+    let value;
+    try {
+      value = evaluate ? await evaluate(namespace) : namespace;
+    } finally {
+      finish();
+    }
     return { namespace, value, dependencies: [...files] };
   } catch (error) {
     if (
@@ -195,6 +219,11 @@ export async function importConfigModuleWithDependencies(
   observeDependencies,
   beforeRead,
 ) {
+  const timings = process.env.VIZE_TRACE_EDITOR_PREPARATION === "1" ? [] : undefined;
+  const finishTotal = beginConfigTiming(timings, "module_total");
+  const finishSelection = beginConfigTiming(timings, "engine_selection_with_ack");
+  let selectionFinished = false;
+  let result;
   const watchInputs = new Set([configPath]);
   let complete = false;
   const observe = (paths, observedComplete) => {
@@ -231,8 +260,10 @@ export async function importConfigModuleWithDependencies(
       }
     }
     if (candidate === undefined) {
+      finishSelection();
+      selectionFinished = true;
       await beforeRead?.([configPath]);
-      return await captureConfigEvaluation(
+      result = await captureConfigEvaluation(
         async () => ({
           namespace: await (withoutVite ? withoutVite(configURL) : import(configURL.href)),
         }),
@@ -241,7 +272,10 @@ export async function importConfigModuleWithDependencies(
         evaluate,
         undefined,
         observe,
+        undefined,
+        timings,
       );
+      return result;
     }
     const viteDirectory = realpathSync(candidate);
     watchInputs.add(join(viteDirectory, "package.json"));
@@ -257,8 +291,23 @@ export async function importConfigModuleWithDependencies(
       );
     }
     await beforeRead?.([resolvedEntry, viteEntry]);
-    const { loadConfigFromFile } = await import(pathToFileURL(viteEntry).href);
-    const temporary = await realpath(await mkdtemp(join(tmpdir(), "vize-config-module-")));
+    finishSelection();
+    selectionFinished = true;
+    const finishImport = beginConfigTiming(timings, "engine_import");
+    let loadConfigFromFile;
+    try {
+      ({ loadConfigFromFile } = await import(pathToFileURL(viteEntry).href));
+    } finally {
+      finishImport();
+    }
+    const finishAdapter = beginConfigTiming(timings, "adapter_prepare");
+    let temporary;
+    try {
+      temporary = await realpath(await mkdtemp(join(tmpdir(), "vize-config-module-")));
+    } catch (error) {
+      finishAdapter();
+      throw error;
+    }
     try {
       const adapter = join(temporary, "config.mjs");
       await writeFile(
@@ -266,17 +315,29 @@ export async function importConfigModuleWithDependencies(
         `import * as original from ${JSON.stringify(configModuleImportPath(configURL))};\nexport default { namespace: original };\n`,
         { flag: "wx", mode: 0o600 },
       );
-      return await captureConfigEvaluation(
+      finishAdapter();
+      result = await captureConfigEvaluation(
         async () => {
-          await beforeRead?.([configPath]);
-          const loaded = await loadConfigFromFile(
-            { mode: "development", command: "serve" },
-            adapter,
-            moduleConfigDirectory(configPath),
-            "silent",
-            undefined,
-            "bundle",
-          );
+          const finishAck = beginConfigTiming(timings, "selected_before_read_ack");
+          try {
+            await beforeRead?.([configPath]);
+          } finally {
+            finishAck();
+          }
+          const finishLoad = beginConfigTiming(timings, "public_load");
+          let loaded;
+          try {
+            loaded = await loadConfigFromFile(
+              { mode: "development", command: "serve" },
+              adapter,
+              moduleConfigDirectory(configPath),
+              "silent",
+              undefined,
+              "bundle",
+            );
+          } finally {
+            finishLoad();
+          }
           if (!loaded) throw new Error(`Vite did not load the selected config: ${configPath}`);
           return {
             namespace: loaded.config.namespace,
@@ -289,11 +350,29 @@ export async function importConfigModuleWithDependencies(
         temporary,
         observe,
         adapter,
+        timings,
       );
+      return result;
+    } catch (error) {
+      finishAdapter();
+      throw error;
     } finally {
-      await rm(temporary, { recursive: true, force: true });
+      const finishCleanup = beginConfigTiming(timings, "adapter_cleanup");
+      try {
+        await rm(temporary, { recursive: true, force: true });
+      } finally {
+        finishCleanup();
+      }
     }
+  } catch (error) {
+    if (timings && error !== null && (typeof error === "object" || typeof error === "function")) {
+      configEvaluationTimings.set(error, timings);
+    }
+    throw error;
   } finally {
+    if (!selectionFinished) finishSelection();
+    finishTotal();
+    if (timings && result) configEvaluationTimings.set(result, timings);
     observeDependencies?.([...watchInputs], complete);
   }
 }
