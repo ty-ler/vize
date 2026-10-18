@@ -197,3 +197,142 @@ fn null_ack_precedes_eof_foreign_exit_is_preserved_and_failed_ack_still_closes()
         );
     }
 }
+
+#[test]
+fn whole_initialize_contracts_and_images_are_matched_as_pairs() {
+    use super::{CONTENT_MAPPER_D6C_LINUX_X64, EofContract, content_mapper_contract, eof_contract};
+    let old = known_contract();
+    let current = content_mapper_contract().unwrap();
+    assert_eq!(eof_contract(&old), Some(EofContract::Native702));
+    assert_eq!(eof_contract(&current), Some(EofContract::ContentMapperD6c));
+    let mut expected_current = old.clone();
+    expected_current["serverInfo"] = json!({"name":"typescript","version":"7.1.0-dev"});
+    assert_eq!(current, expected_current);
+    for (initialized, expected_matches) in [
+        (&old, [true, true, false]),
+        (&current, [false, false, true]),
+    ] {
+        let contract = eof_contract(initialized).unwrap();
+        for (digest, expected) in [LINUX_X64, DARWIN_ARM64, CONTENT_MAPPER_D6C_LINUX_X64]
+            .into_iter()
+            .zip(expected_matches)
+        {
+            assert_eq!(
+                contract.accepts_image(digest),
+                expected,
+                "complete pair {digest}: {initialized}"
+            );
+        }
+        for digest in [
+            "",
+            "77dd575e",
+            &"f".repeat(64),
+            vize_l0::cstr!("{CONTENT_MAPPER_D6C_LINUX_X64}00").as_str(),
+        ] {
+            assert!(!contract.accepts_image(digest));
+        }
+    }
+    // The old image helper remains scoped to its original two identities.
+    assert!(!known_binary(CONTENT_MAPPER_D6C_LINUX_X64));
+}
+
+#[test]
+fn every_whole_contract_field_and_unexpected_member_is_authenticated() {
+    use super::{content_mapper_contract, eof_contract};
+    use serde_json::Value;
+
+    fn paths(value: &Value, path: &str, result: &mut Vec<vize_l0::String>) {
+        result.push(vize_l0::cstr!("{path}"));
+        match value {
+            Value::Object(object) => {
+                for (key, value) in object {
+                    let escaped = key.replace('~', "~0").replace('/', "~1");
+                    paths(value, vize_l0::cstr!("{path}/{escaped}").as_str(), result);
+                }
+            }
+            Value::Array(array) => {
+                for (index, value) in array.iter().enumerate() {
+                    paths(value, vize_l0::cstr!("{path}/{index}").as_str(), result);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    for initialized in [known_contract(), content_mapper_contract().unwrap()] {
+        let mut members = Vec::new();
+        paths(&initialized, "", &mut members);
+        assert!(members.len() > 80, "authenticate the complete tree");
+        for path in members {
+            let original = initialized.pointer(path.as_str()).unwrap();
+            let replacement = if original.is_null() {
+                json!(false)
+            } else {
+                Value::Null
+            };
+            let mut changed = initialized.clone();
+            *changed.pointer_mut(path.as_str()).unwrap() = replacement;
+            assert!(
+                eof_contract(&changed).is_none(),
+                "changed whole value at {path}"
+            );
+            if let Some(object) = original.as_object() {
+                for key in object.keys() {
+                    let mut changed = initialized.clone();
+                    changed
+                        .pointer_mut(path.as_str())
+                        .unwrap()
+                        .as_object_mut()
+                        .unwrap()
+                        .remove(key);
+                    assert!(eof_contract(&changed).is_none(), "missing {path}/{key}");
+                }
+                let mut changed = initialized.clone();
+                changed
+                    .pointer_mut(path.as_str())
+                    .unwrap()
+                    .as_object_mut()
+                    .unwrap()
+                    .insert("unexpectedCapability".into(), json!(true));
+                assert!(
+                    eof_contract(&changed).is_none(),
+                    "unexpected whole member at {path}"
+                );
+            }
+            if original.is_array() {
+                let mut changed = initialized.clone();
+                changed
+                    .pointer_mut(path.as_str())
+                    .unwrap()
+                    .as_array_mut()
+                    .unwrap()
+                    .push(json!(null));
+                assert!(
+                    eof_contract(&changed).is_none(),
+                    "unexpected array member at {path}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn current_initialize_cannot_authenticate_foreign_or_absent_physical_images() {
+    use super::content_mapper_contract;
+    let initialized = content_mapper_contract().unwrap();
+    let project = tempfile::tempdir().unwrap();
+    let fake = project.path().join("current-provider");
+    let observer = corsa_lsp::process::ProcessObserver::default();
+    for bytes in [
+        b"Version 7.1.0-dev\n".as_slice(),
+        b"Version 7.1.0-dev\n\0\xff".as_slice(),
+    ] {
+        fs::write(&fake, bytes).unwrap();
+        assert!(!eof_capability(&fake, &initialized, &observer));
+    }
+    assert!(!eof_capability(
+        &project.path().join("absent"),
+        &initialized,
+        &observer
+    ));
+}
