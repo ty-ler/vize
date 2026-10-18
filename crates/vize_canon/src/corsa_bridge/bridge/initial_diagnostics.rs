@@ -88,6 +88,8 @@ mod tests {
     const BOUND: Duration = Duration::from_secs(10);
     const CONFIG: &str = "/workspace/tsconfig.json";
     const FILE: &str = "/workspace/App.vue.ts";
+    // session_paths materializes the missing virtual document under this overlay.
+    const RPC_FILE: &str = "/workspace/node_modules/.vize/corsa-overlay/App.vue.ts";
     const URI: &str = "file:///workspace/App.vue.ts";
     const OLD: &str = "n0000000000000001";
     const NEW: &str = "n0000000000000002";
@@ -134,7 +136,7 @@ mod tests {
                         }
                         "getDefaultProjectForFile" => project(),
                         "getDiagnosticsForFile" => {
-                            assert_eq!(params["file"], FILE);
+                            assert_eq!(params["file"], RPC_FILE);
                             assert_eq!(params["project"], "p./workspace/tsconfig.json");
                             assert_eq!(params["snapshot"], OLD);
                             assert!(pending.replace(id).is_none());
@@ -155,7 +157,7 @@ mod tests {
                                 respond(
                                     &mut writer,
                                     id,
-                                    json!({"file":FILE,"semantic":[diagnostic()]}),
+                                    json!({"file":RPC_FILE,"semantic":[diagnostic()]}),
                                 );
                             }
                             Value::Null
