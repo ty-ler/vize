@@ -1,6 +1,0 @@
-<template>
-  <div>
-    <p>  two  spaces  </p>
-    <my-widget />
-  </div>
-</template>
