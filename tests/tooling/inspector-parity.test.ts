@@ -398,3 +398,74 @@ test("Inspector formats real CommonJS Prettier output in both complete target ro
   for (const provider of providers) assert.deepEqual(readFileSync(provider.file), provider.bytes);
   assert.deepEqual(readFileSync(packageFile), packageBytes);
 });
+
+test("Inspector retains empty authored TypeScript language only for formatter selection", (t) => {
+  const root = realpathSync(mkdtempSync(path.join(tmpdir(), "inspector-empty-script-")));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const require = createRequire(new URL("../package.json", import.meta.url));
+  const packageFile = require.resolve("prettier/package.json");
+  const prettierRoot = path.join(root, "node_modules/prettier");
+  mkdirSync(path.join(prettierRoot, "plugins"), { recursive: true });
+  copyFileSync(packageFile, path.join(prettierRoot, "package.json"));
+  for (const entry of ["standalone", "plugins/babel", "plugins/estree", "plugins/typescript"])
+    copyFileSync(require.resolve(`prettier/${entry}`), path.join(prettierRoot, `${entry}.js`));
+  const embedded = readFileSync(
+    new URL("../../crates/vize/src/commands/inspector/official_compiler.ts", import.meta.url),
+    "utf8",
+  );
+  const cases = [
+    ["empty-ts", '<script setup lang="ts"></script>', "typescript", false],
+    ["whitespace-ts", '<script setup lang="ts">\n </script>', "typescript", false],
+    ["empty-js", "<script setup></script>", "babel", false],
+    ["no-script", "", "babel", false],
+    ["nonempty-ts", '<script setup lang="ts">const value:number=1</script>', "typescript", true],
+  ] as const;
+  for (const target of ["dom", "ssr"]) {
+    const directory = path.join(root, target);
+    const input = JSON.stringify({
+      target,
+      moduleRoot: fileURLToPath(new URL("../", import.meta.url)),
+      files: cases.map(([name, script, parser]) => ({
+        path: `${name}.vue`,
+        source: `${script}<template><div /></template>`,
+        vizeCode: parser === "typescript" ? "const value:number=1" : "const value=1",
+      })),
+    });
+    const result = spawnSync(process.execPath, ["--input-type=module", "-e", embedded], {
+      cwd: root,
+      env: { ...process.env, VIZE_INSPECTOR_CAPTURE_DIR: directory },
+      input,
+      encoding: "utf8",
+      timeout: 30_000,
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.signal, null);
+    assert.equal(result.stderr, "");
+    const report = JSON.parse(result.stdout);
+    assert.equal(report.files.length, cases.length);
+    for (const [index, [name, , parser, hasSetup]] of cases.entries()) {
+      const file = report.files[index];
+      assert.equal(file.path, `${name}.vue`);
+      assert.equal(file.parser, parser);
+      assert.equal(file.official.error, null);
+      assert.deepEqual(file.official.warnings, []);
+      assert.equal(/setup\(/.test(file.official.code), hasSetup);
+      assert.equal(
+        file.vizeFormattedCode,
+        parser === "typescript" ? "const value: number = 1;\n" : "const value = 1;\n",
+      );
+    }
+    const receipt = JSON.parse(readFileSync(path.join(directory, "receipt.json"), "utf8"));
+    assert.deepEqual(receipt.pendingImports, []);
+    assert.equal(receipt.formatEvents.length, cases.length * 2);
+    assert.ok(receipt.formatEvents.every((event: any) => event.status === "formatted"));
+    for (const [name, , parser] of cases) {
+      const event = receipt.formatEvents.find(
+        (event: any) => event.file === `${name}.vue` && event.role === "vize",
+      );
+      assert.equal(event.parser, parser);
+    }
+    assert.equal(readFileSync(path.join(directory, "input.json"), "utf8"), input);
+  }
+});

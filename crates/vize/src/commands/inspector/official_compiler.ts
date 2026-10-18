@@ -199,7 +199,7 @@ async function compileOfficialVue(file, target, compiler, formatter) {
 
 function parserForFile(file, compiler) {
   try {
-    const parsed = compiler.parse(file.source, { filename: file.path });
+    const parsed = compiler.parse(file.source, { filename: file.path, ignoreEmpty: false });
     return descriptorUsesTypeScript(parsed.descriptor) ? "typescript" : "babel";
   } catch {
     return "babel";
