@@ -12,8 +12,8 @@ import {
 
 /** Validate the exact reviewed main union, then return the unchanged historical inputs. */
 export function verifyPackedFunctionalMainInheritance(root: string, workflowProducer: unknown) {
-  const producer = "f559efdfcc3586c751cf7b3d20c1a37cc4acca1b";
-  const main = "6eb69423ef2f97341074bf328000a8d4e1273aba";
+  const producer = "3911b47d83955f78433dfe10c90291f020411ad7";
+  const main = "ac83f18b28af9d545790e2bd3bef864d8e798661";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const current = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -119,14 +119,29 @@ export function verifyPackedFunctionalMainInheritance(root: string, workflowProd
     "tests/_fixtures/lint-default-correctness/current-range-cases.json",
     "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.vue",
     "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.sorted.vue",
+    "crates/vize_canon/src/lsp_client.rs",
+    "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport.rs",
+    "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport/tests/native/replay.rs",
+    "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source.rs",
+    "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests.rs",
+    "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests/diagnostic_response.rs",
+    "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests/native.rs",
+    "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests/native_diagnostics.rs",
+    "crates/vize_canon/src/lsp_client/materialized_refresh.rs",
+    "crates/vize_canon/src/lsp_client/workspace_project.rs",
+    "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown/peer.ts.txt",
   ];
   const currentFiles = Object.keys(current.producer.files);
   assert.deepEqual(currentFiles, [...oldFiles, ...newCompilerFiles]);
-  assert.equal(currentFiles.length, 607);
+  assert.equal(currentFiles.length, 618);
   assert.equal(new Set(currentFiles).size, currentFiles.length);
   assert.deepEqual(
     oldFiles.filter((file) => witness.producer.files[file] !== current.producer.files[file]),
     [
+      "Cargo.lock",
+      "Cargo.toml",
+      "crates/vize_canon/src/corsa_bridge/source_catalog.rs",
+      "crates/vize_canon/src/lsp_client/bootstrap.rs",
       "crates/vize_canon/src/virtual_ts/generator.rs",
       "crates/vize_canon/src/virtual_ts/scope/component_events.rs",
       "crates/vize_canon/src/virtual_ts/unknown_props_tests.rs",
@@ -150,7 +165,15 @@ export function verifyPackedFunctionalMainInheritance(root: string, workflowProd
     [...Object.keys(witness.producer), "previousFunctionalMainInheritance"].sort(),
   );
   for (const [field, value] of Object.entries(witness.producer))
-    if (!["head", "files", "sourceOnlyRust", "mainCompileTimeInputs"].includes(field))
+    if (
+      ![
+        "head",
+        "files",
+        "sourceOnlyRust",
+        "mainCompileTimeInputs",
+        "additionalCompileTimeInputs",
+      ].includes(field)
+    )
       assert.deepEqual(current.producer[field], value, "preserved complete history: " + field);
   const currentRoleBytes = fs.readFileSync(path.join(root, current.producer.sourceOnlyRust.path));
   assert.equal(digest(currentRoleBytes), current.producer.sourceOnlyRust.sha256);
@@ -204,7 +227,7 @@ export function verifyPackedFunctionalMainInheritance(root: string, workflowProd
     .trim()
     .split("\n")
     .filter(Boolean);
-  assert.equal(changedRust.length, 617);
+  assert.equal(changedRust.length, 627);
   const selected = git("rev-parse", "HEAD").toString().trim();
   // These existing guards independently bind every current path/mode/blob/byte,
   // exact finite role, physical file, absence, ancestry and ALL Rust source deltas.
@@ -223,6 +246,15 @@ export function verifyPackedFunctionalMainInheritance(root: string, workflowProd
   }
   // Old nineteen consumers remain exact; current main adds these three closed Cargo-test inputs.
   verifyPackedCompileTimeInputs(witness.producer);
+  assert.deepEqual(current.producer.additionalCompileTimeInputs, [
+    ...witness.producer.additionalCompileTimeInputs,
+    {
+      path: "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown/peer.ts.txt",
+      source: "crates/vize_canon/src/lsp_client/materialized_refresh.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: false,
+    },
+  ]);
   assert.deepEqual(current.producer.mainCompileTimeInputs, [
     ...witness.producer.mainCompileTimeInputs,
     ...[

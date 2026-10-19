@@ -1,7 +1,7 @@
 {
   "schema": "vize.native-smoke-packed-config-extension.v1",
   "beforeSha256": "26890094723c79ee46b27c710b42feed3d5a660f98c382246cf19458000aeaa3",
-  "afterSha256": "2c716c5eca11e308f65965da1379eb40d241cc5de786ab3d311f7c40b147c299",
+  "afterSha256": "ac0e26b7ffbc13599c8a62b013b2f935da2851ff6652a5d6b9d8ee140d49b48d",
   "scope": "exact named bounded manual extension; immutable historical recipes/hash remain independently checked",
   "hunks": [
     {
@@ -34,17 +34,17 @@
     },
     {
       "before": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n",
-      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: f559efdfcc3586c751cf7b3d20c1a37cc4acca1b\n    steps: *fresh-install-steps\n"
+      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: 3911b47d83955f78433dfe10c90291f020411ad7\n    steps: *fresh-install-steps\n"
     }
   ],
   "producer": {
-    "head": "f559efdfcc3586c751cf7b3d20c1a37cc4acca1b",
+    "head": "3911b47d83955f78433dfe10c90291f020411ad7",
     "composedBase": "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b",
     "priorProducer": "820bf6b5d688c77f8edea6ba18ff6f86f76bffae",
     "scope": "Reviewed whole source custody; the finite sourceOnlyRust partition excludes tooling primary source bytes, while producer HEAD/build identity stays bound; qualification unexecuted.",
     "files": {
-      "Cargo.lock": "0d8bae5839f1da39bcc735ab71470b9e357c535621fabbd8572daf4b509c34d5",
-      "Cargo.toml": "620b2b7e7b58fc53bd0066a3eeb982d9e3a90316e55d5edf51026f742ac4a780",
+      "Cargo.lock": "96ff7cc2cb15451a9d10bc542b860f3e1faec28c54eefe00afac837a5b6ecd0f",
+      "Cargo.toml": "1c1da724a9fc2202c08512856bb0955ecc2827b77d6789cfa659677862b6531f",
       "crates/vize/src/commands/check/runner.rs": "8e0d8309966f3c20d5a7374c9bbec25336d815c42d8ecc6585e6286b37843dcf",
       "crates/vize/src/commands/check/runner/direct.rs": "9577282e75a357e095dedf3a898fd3ac417a04bc5e1677b19da7c36b02acd903",
       "crates/vize/src/commands/check/runner/input_scope.rs": "a6790000390033bdf883e126ca251704d89694852271ad79ed4a1f7491825a0d",
@@ -132,7 +132,7 @@
       "crates/vize_canon/src/corsa_bridge/bridge.rs": "c295fdad648d8ede489b1e3eab5aa42a67e214a665e0da871287850ce4350e5a",
       "crates/vize_canon/src/corsa_bridge/editor_session.rs": "11dd22f8f7b65dc169a9a22a15877456db0252df386480ace03b769a7810471a",
       "crates/vize_canon/src/corsa_bridge/preparation_trace.rs": "562fcc2dbb563f8e97c06f947b46cd0a238805de47bec4d16b971f873990b9d6",
-      "crates/vize_canon/src/corsa_bridge/source_catalog.rs": "14f613c0c47a236bc1bdcc21e86a59799acedec459ab09a4295da7dffd174fc0",
+      "crates/vize_canon/src/corsa_bridge/source_catalog.rs": "6578e435efcd153477ff57fac169bfe5d59ec1b85ec976caf7163d735297f6fc",
       "crates/vize_canon/src/corsa_bridge/types.rs": "bea5ec0bd3f02b4951a8399c1db24b1554979dc96b5456de62df1f615386837f",
       "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build.rs": "365bb02cb6ad0ba35bd6eb73c867e5f170b7a5391f41f66083c9234b92f90558",
       "crates/vize_canon/src/corsa_bridge/vue_dependencies_alias/context/build/import_facts_tests.rs": "a29aa00988e53482ce05034fb601f7dcc9fb8e3f87624feed7159d1d20545219",
@@ -154,7 +154,7 @@
       "crates/vize_canon/src/corsa_bridge/vue_document_package_tests/symlink_workspace.rs": "9c202327ad3402ea3426047762605ce5c5558158e2a85fa638c0c35d81de372c",
       "crates/vize_canon/src/css_classes.rs": "fa0ccb519cf0bee1967eee29c5fadc40fe88c8043f1abe154bac8d4339be9d9c",
       "crates/vize_canon/src/lib.rs": "1d436b27dd45c072dc1cb7b15491e5bf25f8646cef318d2b4d77215db243a48c",
-      "crates/vize_canon/src/lsp_client/bootstrap.rs": "66b892fd3cbc055b9a5fd2c09ff8dae35fe1724da074f31eda923b8b693d1c37",
+      "crates/vize_canon/src/lsp_client/bootstrap.rs": "b0f9fa8f1a3b9eb8df8ea12f5141059cd195a60d393da7e671daf5a9010a4305",
       "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown.rs": "904845b2bfcec8fa0a31b50b3d75b8ed9e0919e9aaff0356e8c08c79b4f6c80b",
       "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown/tests.rs": "6b73b3d7f9c01cb678e2ca227fd9a74f4d287fc1ec50984c486b695eedb43020",
       "crates/vize_canon/src/lsp_client/editor_lsp/tests.rs": "3539fcaa4a5b217dfe6c0bdc3ee16d6d7d37d36916175e8a6040665cb493f35d",
@@ -649,7 +649,18 @@
       "davinci/vize_l3/src/decision/build/walk.rs": "0f4f7b2883e4263ab304e3c538f3faf11c21722d8c3af6ccddd60df74b29895b",
       "tests/_fixtures/lint-default-correctness/current-range-cases.json": "ed4aea8bf8a5a7f3c28089226e6a9dd239dd98b6c22d01f9fe834ab5298fcf2c",
       "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.vue": "ae86278aa0a0b247d9e027b703699f02cf370ea37da9dd96368adf3ff334b106",
-      "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.sorted.vue": "f3e7fbf3240f63389c3aa29b54a6545fd51c294afc7c5e088ba4de48e1af8a7a"
+      "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.sorted.vue": "f3e7fbf3240f63389c3aa29b54a6545fd51c294afc7c5e088ba4de48e1af8a7a",
+      "crates/vize_canon/src/lsp_client.rs": "afba9a5a3d2a1d17f7a0c376824d77da2e7649d7c9b7f9799a2e6a935902c088",
+      "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport.rs": "1329237257345d0a05469031e5bed63e4b147cbdc12a1a019691bbeb651369bb",
+      "crates/vize_canon/src/lsp_client/editor_lsp/configured_project/shared_transport/tests/native/replay.rs": "32b71f1c6a01a8f7cd66c239af8ab9ff16301c7748da765b059d2653bb657ef4",
+      "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source.rs": "362f0bb8df4b71b9727fc87057f62ddb51dc241be11e858833aea53655dca69f",
+      "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests.rs": "aa95911b3912d37b0582ad1b3f2f95d113010048bef831539dbb1287d96e0b17",
+      "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests/diagnostic_response.rs": "5463e9f950b007738dda98bdc403d01fee91499231f8d974ba9423714aa261be",
+      "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests/native.rs": "46231fb8be30a580abcbe6b73994602b8442e81048c5ce541201de86cfb3c8cd",
+      "crates/vize_canon/src/lsp_client/editor_lsp/snapshot_source/tests/native_diagnostics.rs": "b9f80d0dbc339dd617820114b7ce06858a5a12d36bee315730e9a5dcb99f1b2b",
+      "crates/vize_canon/src/lsp_client/materialized_refresh.rs": "b6a564e36abaef32661c2b9c1f656cf792c6fde8d266e7fa90fe6b41c509ad11",
+      "crates/vize_canon/src/lsp_client/workspace_project.rs": "8257cfb2499c4c88727152f9a2c5db6163322c93a42c4961831bca61e02b308b",
+      "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown/peer.ts.txt": "5f940922a51e2a651a542392604093d1a184c14ab1113d400a2fdcb0495d2e6b"
     },
     "previousFrozenProducer": "c8855589af88f3804686959377d29e85e3d7a4f4",
     "earlierFrozenProducer": "9654d136f504765f0dfbdb1e17cf806e0b967878",
@@ -754,7 +765,7 @@
     },
     "sourceOnlyRust": {
       "path": "tests/_fixtures/differential/vite-native-image-identity/packed-config-source-only-rust.json",
-      "sha256": "2824d3d6d06f01a92ea43d11149c5934416bd0f285ed4641400d06541ac4f7a7"
+      "sha256": "f0dfdc6e59fe81ec0082584056d318d8086814e47c99dbe28dfef6651eaadbc0"
     },
     "previousComposition": {
       "source": "ecb83f915f53aaf82b4b04980e26cd36b4f43f62",
@@ -786,6 +797,12 @@
       {
         "path": "tests/_fixtures/differential/lsp/component-native-events/checked-native.expected.json",
         "source": "crates/vize/tests/support/event_completion_project.rs",
+        "role": "cargo-test-embedded",
+        "incomingChanged": false
+      },
+      {
+        "path": "crates/vize_canon/src/lsp_client/editor_lsp/native_shutdown/peer.ts.txt",
+        "source": "crates/vize_canon/src/lsp_client/materialized_refresh.rs",
         "role": "cargo-test-embedded",
         "incomingChanged": false
       }
