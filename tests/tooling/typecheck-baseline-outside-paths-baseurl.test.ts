@@ -12,7 +12,7 @@ import {
   rewriteOutsidePackagePaths,
   writeIsolatedTsconfigOverlay,
 } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-paths.ts";
-import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.mjs";
+import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.ts";
 
 /**
  * Nuxt writes `baseUrl: ".."` on `.nuxt/tsconfig.json` and `paths` relative to

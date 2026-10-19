@@ -5,8 +5,8 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { validateTypecheckPerformanceTarget } from "./tool-matrix-typecheck-target.ts";
-import { runTypecheckCommand } from "./typecheck-command-runner.mjs";
-import { isolateFixtureTypePackages } from "./typecheck-baseline-isolation.mjs";
+import { runTypecheckCommand } from "./typecheck-command-runner.ts";
+import { isolateFixtureTypePackages } from "./typecheck-baseline-isolation.ts";
 import {
   isolateUniqueLocalTypePackages,
   isolateUniqueUiLibraryPackages,
@@ -16,7 +16,7 @@ import {
   isolateUniqueVueQueryPackages,
   isolateUniqueVueRuntimePackages,
   isolateUniqueVueUsePackages,
-} from "./typecheck-baseline-isolation-unique.mjs";
+} from "./typecheck-baseline-isolation-unique.ts";
 import { applyIsolatedTypecheckOverlays } from "./typecheck-baseline-outside-overlays.ts";
 import { selectTypecheckPerformanceProjects } from "./typecheck-performance-shard.mjs";
 

@@ -6,7 +6,7 @@ import { test } from "node:test";
 
 import { applyIsolatedAliasOverlay } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.ts";
 import { rewriteLocalVueRuntimePaths } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-vue-runtime-paths.ts";
-import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.mjs";
+import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.ts";
 
 /**
  * vue-tsc language-core still resolves `@vue/runtime-dom` from Vize's store

@@ -7,7 +7,7 @@ import { test } from "node:test";
 import { applyIsolatedAliasOverlay } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.ts";
 import { rewriteOutsideCompilerPlugins } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-compiler-plugins.ts";
 import { writeIsolatedTsconfigOverlay } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-paths.ts";
-import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.mjs";
+import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.ts";
 
 /**
  * Unique isolation cannot retarget `require("../../node_modules/<pkg>")` from

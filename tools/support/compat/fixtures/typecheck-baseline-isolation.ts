@@ -1,9 +1,9 @@
 import {
   existsSync,
   lstatSync,
+  type Dirent,
   mkdirSync,
   readdirSync,
-  readFileSync,
   statSync,
   symlinkSync,
 } from "node:fs";
@@ -17,7 +17,19 @@ import { recordCompilerOptionJsxImportSource } from "./typecheck-baseline-isolat
 import { recordCompilerOptionPlugins } from "./typecheck-baseline-isolation-plugins.ts";
 import { recordCompilerOptionTypes } from "./typecheck-baseline-isolation-types.ts";
 import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.ts";
-import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.ts";
+import {
+  extendsSpecifiers,
+  loadTsconfigExtendsChain,
+  parseTsconfig,
+  type TsconfigLink,
+} from "./typecheck-baseline-extends-chain.ts";
+import { isInside } from "./typecheck-baseline-local-package.ts";
+
+type Rec = Readonly<Record<string, unknown>>;
+const compilerOption = (config: Rec, option: string): unknown => {
+  const options = config.compilerOptions;
+  return options != null && typeof options === "object" ? (options as Rec)[option] : undefined;
+};
 import { pathMappingRoot } from "./typecheck-baseline-outside-paths.ts";
 
 /**
@@ -68,12 +80,20 @@ import { pathMappingRoot } from "./typecheck-baseline-outside-paths.ts";
 /** `paths` also carries `#imports`-style aliases and `foo/*` patterns, which are not packages. */
 const packageNamePattern = /^(?:@[a-z0-9][a-z0-9-._]*\/)?[a-z0-9][a-z0-9-._]*$/u;
 
-export function isolateFixtureTypePackages(fixtureRoot, sourceConfigPath) {
+export interface ShadowedPackage {
+  readonly name: string;
+  readonly target: string;
+}
+
+export function isolateFixtureTypePackages(
+  fixtureRoot: string,
+  sourceConfigPath: string,
+): ShadowedPackage[] {
   const root = resolve(fixtureRoot);
   const declared = readDeclaredPackagePaths(root, sourceConfigPath);
   if (declared.size === 0) return [];
   const reachable = collectAncestorPackageNames(root);
-  const shadowed = [];
+  const shadowed: ShadowedPackage[] = [];
   for (const [name, target] of [...declared].sort(([left], [right]) => compare(left, right))) {
     if (!reachable.has(name)) continue;
     const link = join(root, "node_modules", name);
@@ -86,13 +106,15 @@ export function isolateFixtureTypePackages(fixtureRoot, sourceConfigPath) {
   return shadowed;
 }
 
-export function readDeclaredPackagePaths(fixtureRoot, sourceConfigPath) {
-  const declared = new Map();
-  const conflicts = new Set();
-  const seen = new Set();
+export function readDeclaredPackagePaths(
+  fixtureRoot: string,
+  sourceConfigPath: string,
+): Map<string, string> {
+  const declared = new Map<string, string>();
+  const conflicts = new Set<string>();
+  const seen = new Set<string>();
   const queue = [resolve(sourceConfigPath)];
-  while (queue.length > 0) {
-    const current = queue.shift();
+  for (let current = queue.shift(); current !== undefined; current = queue.shift()) {
     if (seen.has(current)) continue;
     seen.add(current);
     const local = packagePathsFromExtends(fixtureRoot, current);
@@ -112,13 +134,18 @@ export function readDeclaredPackagePaths(fixtureRoot, sourceConfigPath) {
   return declared;
 }
 
-function mergePackageExtends(declared, conflicts, configPaths, fixtureRoot) {
+function mergePackageExtends(
+  declared: Map<string, string>,
+  conflicts: Set<string>,
+  configPaths: Iterable<string>,
+  fixtureRoot: string,
+): void {
   for (const configPath of configPaths) {
     const chain = loadExtendsChain(configPath);
     recordPackageExtends(declared, conflicts, fixtureRoot, chain);
-    let types;
+    let types: unknown;
     for (const { config: chained } of [...chain].reverse()) {
-      const candidate = chained?.compilerOptions?.types;
+      const candidate = compilerOption(chained, "types");
       if (Array.isArray(candidate)) types = candidate;
     }
     recordCompilerOptionTypes(declared, conflicts, fixtureRoot, types);
@@ -132,7 +159,12 @@ function mergePackageExtends(declared, conflicts, configPaths, fixtureRoot) {
   }
 }
 
-function recordPackageExtends(declared, conflicts, fixtureRoot, chain) {
+function recordPackageExtends(
+  declared: Map<string, string>,
+  conflicts: ReadonlySet<string>,
+  fixtureRoot: string,
+  chain: readonly TsconfigLink[],
+): void {
   for (const { config } of chain) {
     for (const specifier of extendsSpecifiers(config.extends)) {
       const name = packageNameFromExtendsSpecifier(specifier);
@@ -144,23 +176,28 @@ function recordPackageExtends(declared, conflicts, fixtureRoot, chain) {
   }
 }
 
-function packagePathsFromExtends(fixtureRoot, sourceConfigPath) {
-  const declared = new Map();
+function packagePathsFromExtends(
+  fixtureRoot: string,
+  sourceConfigPath: string,
+): Map<string, string> {
+  const declared = new Map<string, string>();
   // Child `compilerOptions.paths` replace the parent's object, matching tsc.
   // Targets resolve from last-wins `baseUrl`; `${configDir}` expands first (#4461).
-  let paths;
-  let configDir;
+  let paths: Rec | undefined;
+  let configDir = "";
   for (const { config, dir } of [...loadExtendsChain(sourceConfigPath)].reverse()) {
-    const candidate = config?.compilerOptions?.paths;
+    const candidate = compilerOption(config, "paths");
     if (candidate != null && typeof candidate === "object") {
-      paths = candidate;
+      paths = candidate as Rec;
       configDir = dir;
     }
   }
   if (paths == null) return declared;
   for (const [name, targets] of Object.entries(paths)) {
     if (!packageNamePattern.test(name) || !Array.isArray(targets)) continue;
-    const first = targets.find((entry) => typeof entry === "string" && !entry.includes("*"));
+    const first = (targets as readonly unknown[]).find(
+      (entry): entry is string => typeof entry === "string" && !entry.includes("*"),
+    );
     if (first == null) continue;
     declared.set(
       name,
@@ -174,7 +211,11 @@ function packagePathsFromExtends(fixtureRoot, sourceConfigPath) {
   return declared;
 }
 
-function mergeDeclared(declared, conflicts, local) {
+function mergeDeclared(
+  declared: Map<string, string>,
+  conflicts: Set<string>,
+  local: ReadonlyMap<string, string>,
+): void {
   for (const [name, target] of local) {
     if (conflicts.has(name)) continue;
     const existing = declared.get(name);
@@ -189,24 +230,11 @@ function mergeDeclared(declared, conflicts, local) {
   }
 }
 
-function loadExtendsChain(sourceConfigPath) {
+function loadExtendsChain(sourceConfigPath: string): TsconfigLink[] {
   return loadTsconfigExtendsChain(sourceConfigPath, resolveExtends);
 }
 
-function parseTsconfig(configPath) {
-  try {
-    return JSON.parse(stripJsonc(readFileSync(configPath, "utf8")));
-  } catch {
-    return null;
-  }
-}
-
-function extendsSpecifiers(value) {
-  if (typeof value === "string") return [value];
-  return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
-}
-
-function resolveExtends(fromConfig, specifier) {
+function resolveExtends(fromConfig: string, specifier: unknown): string | null {
   if (typeof specifier !== "string") return null;
   if (!(specifier.startsWith("./") || specifier.startsWith("../"))) return null;
   const resolved = resolve(dirname(fromConfig), specifier);
@@ -215,14 +243,15 @@ function resolveExtends(fromConfig, specifier) {
   return null;
 }
 
-function referenceSpecifiers(value) {
+function referenceSpecifiers(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return value.flatMap((entry) =>
-    entry != null && typeof entry.path === "string" ? [entry.path] : [],
-  );
+  return (value as readonly unknown[]).flatMap((entry) => {
+    const path = entry != null && typeof entry === "object" ? (entry as Rec).path : undefined;
+    return typeof path === "string" ? [path] : [];
+  });
 }
 
-function resolveReference(fromConfig, specifier) {
+function resolveReference(fromConfig: string, specifier: string): string | null {
   if (typeof specifier !== "string") return null;
   if (!(specifier.startsWith("./") || specifier.startsWith("../"))) return null;
   const resolved = resolve(dirname(fromConfig), specifier);
@@ -235,7 +264,7 @@ function resolveReference(fromConfig, specifier) {
   return null;
 }
 
-function isDirectory(path) {
+function isDirectory(path: string): boolean {
   try {
     return statSync(path).isDirectory();
   } catch {
@@ -248,10 +277,10 @@ function isDirectory(path) {
  * already self-contained is left byte-identical and the repair cannot invent a
  * resolution the real project never had.
  */
-function collectAncestorPackageNames(fixtureRoot) {
-  const names = new Set();
+export function collectAncestorPackageNames(fixtureRoot: string): Set<string> {
+  const names = new Set<string>();
   let directory = dirname(fixtureRoot);
-  let previous = null;
+  let previous: string | null = null;
   while (directory !== previous) {
     collectPackageNames(join(directory, "node_modules"), names);
     previous = directory;
@@ -260,7 +289,7 @@ function collectAncestorPackageNames(fixtureRoot) {
   return names;
 }
 
-function collectPackageNames(nodeModules, names) {
+function collectPackageNames(nodeModules: string, names: Set<string>): void {
   for (const entry of readDirectory(nodeModules)) {
     if (entry.name.startsWith(".")) continue;
     if (!entry.name.startsWith("@")) {
@@ -273,7 +302,7 @@ function collectPackageNames(nodeModules, names) {
   }
 }
 
-function readDirectory(directory) {
+export function readDirectory(directory: string): Dirent[] {
   try {
     return readdirSync(directory, { withFileTypes: true });
   } catch {
@@ -281,17 +310,12 @@ function readDirectory(directory) {
   }
 }
 
-function isPackageDirectory(target) {
+export function isPackageDirectory(target: string): boolean {
   return existsSync(join(target, "package.json"));
 }
 
-function isInside(root, target) {
-  const path = relative(root, target);
-  return path !== "" && !path.startsWith("..") && !path.startsWith("/");
-}
-
 /** `existsSync` follows symlinks, so a broken link would otherwise be overwritten. */
-function isDanglingLink(link) {
+export function isDanglingLink(link: string): boolean {
   try {
     lstatSync(link);
     return true;
@@ -300,46 +324,6 @@ function isDanglingLink(link) {
   }
 }
 
-function compare(left, right) {
+export function compare(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
-}
-
-/**
- * Strip JSONC comments and trailing commas, string-aware. A regex pass would
- * treat `"src/**\/*"` as a block comment and rewrite the config.
- */
-function stripJsonc(text) {
-  let out = "";
-  let inString = false;
-  for (let i = 0; i < text.length; i += 1) {
-    const ch = text[i];
-    if (inString) {
-      out += ch;
-      if (ch === "\\") {
-        out += text[i + 1] ?? "";
-        i += 1;
-      } else if (ch === '"') {
-        inString = false;
-      }
-      continue;
-    }
-    if (ch === '"') {
-      inString = true;
-      out += ch;
-      continue;
-    }
-    if (ch === "/" && text[i + 1] === "/") {
-      while (i < text.length && text[i] !== "\n") i += 1;
-      out += "\n";
-      continue;
-    }
-    if (ch === "/" && text[i + 1] === "*") {
-      i += 2;
-      while (i + 1 < text.length && !(text[i] === "*" && text[i + 1] === "/")) i += 1;
-      i += 1;
-      continue;
-    }
-    out += ch;
-  }
-  return out.replace(/,(\s*[}\]])/g, "$1");
 }

@@ -2,7 +2,7 @@
  * Detect a `vue-tsc` baseline that never loaded the project it was asked to
  * check (#3513).
  *
- * `typecheck-baseline-project.mjs` materializes the baseline as `files: [...]`
+ * `typecheck-baseline-project.ts` materializes the baseline as `files: [...]`
  * over Vize's exact Vue corpus, extending the fixture's pinned config for its
  * compiler options. That fixed the "solution-style config checks nothing" half
  * of the ledger's blindness, and it moved the remaining half out of reach of

@@ -4,8 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 
-import { readDeclaredPackagePaths } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation.mjs";
-import { isolateUniqueLocalTypePackages } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-unique.mjs";
+import { readDeclaredPackagePaths } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation.ts";
+import { isolateUniqueLocalTypePackages } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-unique.ts";
 import { typePackageNamesFromTypes } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-types.ts";
 
 /**

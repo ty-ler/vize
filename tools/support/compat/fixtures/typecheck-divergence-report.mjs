@@ -8,12 +8,12 @@ import { validateTypecheckPerformanceTarget } from "./tool-matrix-typecheck-targ
 import { selectTypecheckPerformanceProjects } from "./typecheck-performance-shard.mjs";
 import { evaluateBaselineAmbientEnvironment } from "./typecheck-baseline-ambient.ts";
 import { evaluateBaselineConfiguration } from "./typecheck-baseline-configuration.ts";
-import { materializeBaselineProject } from "./typecheck-baseline-project.mjs";
+import { materializeBaselineProject } from "./typecheck-baseline-project.ts";
 import { applyIsolatedJsxBaseline } from "./typecheck-baseline-outside-jsx.ts";
 import { typecheckSourceTsconfig } from "./tool-matrix-command.ts";
-import { runVueTscBaseline } from "./typecheck-baseline-run.mjs";
+import { runVueTscBaseline } from "./typecheck-baseline-run.ts";
 import { evaluateVueProgramCoverage } from "./typecheck-baseline-coverage.mjs";
-import { runTypecheckCommand } from "./typecheck-command-runner.mjs";
+import { runTypecheckCommand } from "./typecheck-command-runner.ts";
 import { assertBudgetsPassed, evaluateBudget } from "./typecheck-divergence-budget.mjs";
 import { renderMarkdown } from "./typecheck-divergence-markdown.mjs";
 import {

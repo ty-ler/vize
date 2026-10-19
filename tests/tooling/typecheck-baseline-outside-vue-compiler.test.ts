@@ -7,7 +7,7 @@ import { test } from "node:test";
 import { applyIsolatedAliasOverlay } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.ts";
 import { writeIsolatedTsconfigOverlay } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-paths.ts";
 import { rewriteOutsideVueCompilerOptions } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-vue-compiler.ts";
-import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.mjs";
+import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.ts";
 
 /**
  * Unique isolation cannot retarget `vueCompilerOptions.globalTypesPath` or

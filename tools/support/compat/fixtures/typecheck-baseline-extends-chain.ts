@@ -40,7 +40,7 @@ function appendExtendsChain(
   }
 }
 
-function parseTsconfig(configPath: string): TsconfigJson | null {
+export function parseTsconfig(configPath: string): TsconfigJson | null {
   try {
     const parsed: unknown = JSON.parse(stripJsonc(readFileSync(configPath, "utf8")));
     return parsed != null && typeof parsed === "object" ? (parsed as TsconfigJson) : null;
@@ -49,7 +49,7 @@ function parseTsconfig(configPath: string): TsconfigJson | null {
   }
 }
 
-function extendsSpecifiers(value: unknown): string[] {
+export function extendsSpecifiers(value: unknown): string[] {
   if (typeof value === "string") return [value];
   return Array.isArray(value)
     ? value.filter((entry): entry is string => typeof entry === "string")
