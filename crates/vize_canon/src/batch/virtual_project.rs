@@ -145,7 +145,7 @@ type PackageShadowOwners =
     std::collections::BTreeMap<crate::package_route::PackageRouteKey, PathBuf>;
 
 /// A virtual file in the project.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct VirtualFile {
     /// Generated or rewritten source code used by Corsa.
     pub content: CompactString,
@@ -171,6 +171,7 @@ pub struct OriginalPosition {
 }
 
 /// Virtual project for Corsa-backed type checking.
+#[derive(Clone)]
 pub struct VirtualProject {
     /// Project root directory.
     project_root: PathBuf,
@@ -355,7 +356,7 @@ pub struct VirtualProject {
     rewriter: ImportRewriter,
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 struct SourceArtifacts {
     virtual_paths: Vec<PathBuf>,
     passthrough_paths: Vec<PathBuf>,

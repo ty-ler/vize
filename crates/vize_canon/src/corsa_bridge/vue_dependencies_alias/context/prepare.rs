@@ -45,9 +45,11 @@ impl AliasContext {
         capture_phase.finish();
         let cache_phase =
             crate::corsa_bridge::preparation_trace::Phase::start("alias_cache_lookup", 1);
-        let cached = {
+        let (cached, reusable) = {
             let mut cache = environment.editor_session.cache();
-            cache.get(source_path, &fingerprint).map(|context| {
+            // Taken before the lookup, which drops a slot whose host changed.
+            let reusable = cache.reusable_for_host_edit(source_path, &fingerprint);
+            let cached = cache.get(source_path, &fingerprint).map(|context| {
                 let catalog = context
                     .mirror
                     .as_ref()
@@ -55,7 +57,8 @@ impl AliasContext {
                         cache.source_catalog(mirror.virtual_root())
                     });
                 (context, catalog)
-            })
+            });
+            (cached, reusable)
         };
         cache_phase.finish();
         if let Some((context, source_catalog)) = cached {
@@ -72,8 +75,24 @@ impl AliasContext {
                 .editor_session
                 .cache()
                 .take_prebuilt(source_path, &fingerprint, overlays);
+        let rebuilt =
+            reusable
+                .filter(|_| prebuilt.is_none())
+                .and_then(|(previous, previous_fingerprint)| {
+                    let phase = crate::corsa_bridge::preparation_trace::Phase::start(
+                        "alias_host_rebuild",
+                        1,
+                    );
+                    let mut facts = ModuleSpecifierFactsCache::default();
+                    let context = build::rebuild_host(&previous, source_path, content, &mut facts)?;
+                    phase.finish();
+                    Some((context, previous_fingerprint))
+                });
         let mut context = if let Some((context, stamped)) = prebuilt {
             fingerprint = stamped;
+            context
+        } else if let Some((context, previous)) = rebuilt {
+            fingerprint.adopt_stamps(&previous);
             context
         } else {
             // Pure syntax facts live through build and its immediate stamp only.

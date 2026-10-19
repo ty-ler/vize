@@ -8,6 +8,8 @@ use crate::batch::virtual_project::VirtualProject;
 use crate::batch::virtual_project::dependency_scan::resolve_dependency;
 
 mod build;
+#[cfg(test)]
+pub(in crate::corsa_bridge) use build::HOST_REBUILDS;
 mod cache;
 pub(in crate::corsa_bridge) use cache::SessionCache;
 pub(in crate::corsa_bridge) use cache::recover_lock;

@@ -21,6 +21,8 @@ use super::vue_document::CorsaVueVirtualDocumentOptions;
 use crate::batch::ImportRewriter;
 
 mod context;
+#[cfg(test)]
+pub(super) use context::HOST_REBUILDS;
 pub(super) use context::{AliasContext, SessionCache, recover_lock};
 
 /// Queue alias-resolved first-party dependencies of one document.

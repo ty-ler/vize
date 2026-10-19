@@ -9,6 +9,12 @@ use crate::batch::import_rewriter::{VirtualProjectRewriteOptions, apply_captured
 use crate::{PackageResolutionContext, PackageResolutionMode};
 
 impl VirtualProject {
+    /// The pre-rewrite projection of one registered source, whose module
+    /// specifiers decide the editor dependency setup.
+    pub(crate) fn registered_module_source(&self, original: &Path) -> Option<&String> {
+        self.module_source(self.find_by_original(original)?)
+    }
+
     /// Module graph edges are resolved from the pre-rewrite projection. A
     /// previous materialized path must never become the next source identity.
     pub(super) fn module_source(&self, file: &VirtualFile) -> Option<&String> {

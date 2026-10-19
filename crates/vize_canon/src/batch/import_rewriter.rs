@@ -52,6 +52,7 @@ pub(in crate::batch) use project_mirror::VirtualProjectRewriteOptions;
 mod source_map;
 pub use source_map::{ImportSourceMap, OffsetAdjustment, RewriteResult};
 
+#[derive(Clone, Copy)]
 pub struct ImportRewriter;
 
 impl ImportRewriter {

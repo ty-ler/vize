@@ -16,6 +16,9 @@ pub(crate) struct InputStamp {
     /// moves its ctime even when mtime and size are restored, so installed
     /// packages need no content hash on every editor revision.
     installed_identity: Option<(u64, u64, i64, i64)>,
+    /// Physically inside an install: a linked workspace package resolves
+    /// to authored source and stays content-stamped and revalidated.
+    installed: bool,
     symlink_target: Option<PathBuf>,
     source_content: bool,
 }
@@ -153,11 +156,12 @@ impl InputStamp {
         // revision may consult ~10^5 of them, and hashing every byte on each
         // edit dominated latency. Authored sources keep content digests.
         // Manifests and configs stay hashed: they are few and decide routes.
+        let installed = !source_content && is_physically_installed(&path);
         let installed_identity =
             (content.is_none() && !source_content && matches!(kind, Some(InputKind::File)))
                 .then(|| metadata.as_ref().and_then(installed_identity))
                 .flatten()
-                .filter(|_| is_installed_path(&path) && !is_route_manifest(&path));
+                .filter(|_| installed);
         // A file changed within the timestamp granularity can share size,
         // mtime and ctime with its previous bytes ("racy" metadata, as in Git),
         // so a recent installed file is hashed as well.
@@ -180,9 +184,17 @@ impl InputStamp {
             kind,
             content_digest,
             installed_identity,
+            installed,
             symlink_target,
             source_content,
         }
+    }
+
+    /// A route or resolution input physically inside an install (a file, link,
+    /// directory or absent probe, not a manifest). Editor revisions leave those
+    /// to file watchers and the lockfile instead of re-observing ~10^5 of them.
+    pub(crate) fn is_watched_install_input(path: &Path) -> bool {
+        is_physically_installed(path)
     }
 
     pub(crate) fn path(&self) -> &Path {
@@ -269,6 +281,7 @@ impl PartialEq for InputStamp {
             && self.len == other.len
             && self.kind == other.kind
             && self.installed_identity == other.installed_identity
+            && self.installed == other.installed
             && self.symlink_target == other.symlink_target
             && self.source_content == other.source_content
     }
@@ -310,6 +323,14 @@ fn status_changed(metadata: &std::fs::Metadata) -> std::io::Result<std::time::Sy
 #[cfg(not(unix))]
 fn status_changed(metadata: &std::fs::Metadata) -> std::io::Result<std::time::SystemTime> {
     metadata.modified()
+}
+
+/// Under `node_modules` both as spelled and physically (absent probes count
+/// by spelling), and not a manifest or compiler config.
+fn is_physically_installed(path: &Path) -> bool {
+    is_installed_path(path)
+        && !is_route_manifest(path)
+        && std::fs::canonicalize(path).map_or(true, |physical| is_installed_path(&physical))
 }
 
 fn is_installed_path(path: &Path) -> bool {

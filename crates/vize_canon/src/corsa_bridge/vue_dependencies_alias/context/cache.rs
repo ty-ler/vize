@@ -119,6 +119,31 @@ impl SessionCache {
         Some(Arc::clone(&cached.context))
     }
 
+    /// The still-valid revision of this host when only the host buffer
+    /// changed: its dependency setup can be reused if the host's imports did
+    /// not change either.
+    pub(super) fn reusable_for_host_edit(
+        &self,
+        source_path: &Path,
+        fingerprint: &ContextFingerprint,
+    ) -> Option<(Arc<AliasContext>, ContextFingerprint)> {
+        let cached = self.slots.get(source_path)?;
+        if cached.fingerprint == *fingerprint || !cached.fingerprint.same_except_host(fingerprint) {
+            return None;
+        }
+        let mut observed = crate::package_route::stamp::InputStampCache::default();
+        let current = cached.fingerprint.stamps_still_valid(&mut observed)
+            && cached.context.mirror.as_ref().is_none_or(|mirror| {
+                !self.project_members.contains_key(mirror.virtual_root())
+                    || self.project_revision_is_current_with_cache(
+                        mirror.virtual_root(),
+                        cached.fingerprint.overlay_identity(),
+                        &mut observed,
+                    )
+            });
+        current.then(|| (Arc::clone(&cached.context), cached.fingerprint.clone()))
+    }
+
     pub(super) fn insert(
         &mut self,
         source_path: PathBuf,

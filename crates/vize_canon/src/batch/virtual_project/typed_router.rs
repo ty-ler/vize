@@ -16,7 +16,7 @@ mod config_tests;
 
 const PLUGIN: &str = "vue-router/volar/sfc-typed-router";
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct Context {
     /// Explicit configuration for the known plugin; arbitrary plugins are not executed.
     pub(super) root: Option<PathBuf>,

@@ -12,12 +12,12 @@ use vize_carton::{String, cstr};
 
 use super::virtual_rewrite::{append_extension, resolve_source_path};
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub(crate) struct VirtualAliasRewritePolicy {
     patterns: Vec<PathAliasPattern>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct PathAliasPattern {
     prefix: String,
     suffix: String,

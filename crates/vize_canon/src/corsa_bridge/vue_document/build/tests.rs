@@ -50,7 +50,7 @@ fn context(
     source: &str,
     overlays: &[(PathBuf, &str)],
 ) -> impl std::ops::Deref<Target = AliasContext> {
-    let overlays = overlays.iter().map(|(p, s)| (p.clone(), *s)).collect();
+    let overlays = canonical_overlays(overlays);
     AliasContext::for_hosts_cached(
         path,
         source,
@@ -305,3 +305,69 @@ fn identical_source_in_separate_roots_keeps_authored_membership() {
 #[cfg(test)]
 #[path = "native_union_tests.rs"]
 mod native_union;
+
+/// Template-only and script-body edits keep the host's module specifiers, so
+/// they reuse the validated dependency setup instead of rediscovering it, and
+/// still produce exactly the projection a complete build would. An edit that
+/// changes the imports rebuilds everything.
+#[test]
+fn host_edits_with_unchanged_imports_reuse_the_dependency_setup() {
+    use crate::corsa_bridge::vue_dependencies_alias::HOST_REBUILDS;
+    let root = tempfile::tempdir().unwrap();
+    let host = root.path().join("Host.vue");
+    let child = root.path().join("Child.vue");
+    std::fs::write(&host, HOST).unwrap();
+    std::fs::write(root.path().join("Other.vue"), CHILD).unwrap();
+    std::fs::write(&child, CHILD).unwrap();
+    let session = EditorMirrorSession::new();
+    // Editors also send the host buffer itself as an overlay.
+    prepare(&session, &host, HOST, &[(host.clone(), HOST)], &[]);
+    let rebuilds = || HOST_REBUILDS.with(std::cell::Cell::get);
+    let before = rebuilds();
+    let template_edit = HOST.replace(":title=\"title\"", ":title=\"title + '!'\"");
+    let body_edit = template_edit.replace("'日本語 🦀'", "'edited'");
+    for (step, edited) in [template_edit.as_str(), body_edit.as_str()]
+        .into_iter()
+        .enumerate()
+    {
+        prepare(&session, &host, edited, &[(host.clone(), edited)], &[]);
+        assert_eq!(rebuilds(), before + step + 1, "edit {step} must reuse");
+        let overlay = [(host.clone(), edited)];
+        let reused = context(&session, &host, edited, &overlay);
+        let reused = reused.query_surface.get().unwrap();
+        let fresh = EditorMirrorSession::new();
+        prepare(&fresh, &host, edited, &[], &[]);
+        let complete = context(&fresh, &host, edited, &[]);
+        let complete = complete.query_surface.get().unwrap();
+        assert_eq!(
+            reused
+                .host
+                .code
+                .replace(session_root(&session).as_str(), ""),
+            complete
+                .host
+                .code
+                .replace(session_root(&fresh).as_str(), "")
+        );
+        assert_eq!(reused.host.mapping, complete.host.mapping);
+    }
+    let import_edit = body_edit.replace(
+        "import Child from './Child.vue';",
+        "import Child from './Child.vue'; import Other from './Other.vue'; void Other;",
+    );
+    prepare(
+        &session,
+        &host,
+        &import_edit,
+        &[(host.clone(), &import_edit)],
+        &[],
+    );
+    assert_eq!(rebuilds(), before + 2, "an import change rebuilds");
+}
+
+fn session_root(session: &EditorMirrorSession) -> vize_carton::String {
+    session
+        .root()
+        .map(|root| vize_carton::String::from(root.to_string_lossy().as_ref()))
+        .unwrap_or_default()
+}

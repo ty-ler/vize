@@ -10,7 +10,12 @@ use crate::batch::ModuleSpecifierFactsCache;
 #[derive(Clone)]
 pub(crate) struct ContextFingerprint {
     host_content: u64,
+    /// Requested workspace membership, kept apart from the host so an edit to
+    /// the host alone can reuse the dependency setup.
+    requested: u64,
     overlays: u64,
+    /// Overlays other than the host's own buffer, which `host_content` covers.
+    foreign_overlays: u64,
     generation_options: u64,
     stamps: Vec<crate::package_route::stamp::InputStamp>,
 }
@@ -19,7 +24,7 @@ impl PartialEq for ContextFingerprint {
     fn eq(&self, other: &Self) -> bool {
         self.host_content == other.host_content
             && self.overlays == other.overlays
-            && self.generation_options == other.generation_options
+            && self.same_except_host(other)
     }
 }
 
@@ -40,15 +45,23 @@ impl ContextFingerprint {
         let mut overlay_entries: Vec<_> = overlays.iter().collect();
         overlay_entries.sort_by(|left, right| left.0.cmp(right.0));
         let mut overlay_hash = std::hash::DefaultHasher::new();
+        let mut foreign_hash = std::hash::DefaultHasher::new();
+        let host_path = vize_carton::path::canonicalize_non_verbatim(source_path);
         for (path, text) in overlay_entries {
             path.hash(&mut overlay_hash);
             text.hash(&mut overlay_hash);
+            if **path != host_path && path.as_path() != source_path {
+                path.hash(&mut foreign_hash);
+                text.hash(&mut foreign_hash);
+            }
         }
         let generation_options =
             editor_namespace_identity(options, virtual_ts_options, project_root, tsconfig_path);
         Self {
             host_content: host.finish(),
+            requested: 0,
             overlays: overlay_hash.finish(),
+            foreign_overlays: foreign_hash.finish(),
             generation_options,
             stamps: Vec::new(),
         }
@@ -75,6 +88,7 @@ impl ContextFingerprint {
         facts: Option<&mut ModuleSpecifierFactsCache>,
     ) {
         let mut paths = Vec::new();
+        let mut registered = vize_carton::FxHashSet::default();
         if let Some(mirror) = context.mirror.as_ref() {
             // The immutable compiler epoch belongs to this editor session.
             // Its physical dependencies remain watched by the owner, while
@@ -90,7 +104,9 @@ impl ContextFingerprint {
             );
             // The materialized closure intentionally keeps content digests:
             // same-mtime, same-length edits must invalidate an editor session.
-            paths.extend(mirror.registered_original_paths_sorted());
+            let sources = mirror.registered_original_paths_sorted();
+            registered.extend(sources.iter().cloned());
+            paths.extend(sources);
             paths.extend(match facts {
                 Some(facts) => mirror.editor_resolution_inputs_with_import_facts(facts),
                 None => mirror.editor_resolution_inputs(),
@@ -108,8 +124,14 @@ impl ContextFingerprint {
         }
         paths.sort();
         paths.dedup();
+        // Registered sources are always stamped, installed or not. Installed
+        // route and resolution inputs follow watchers and the lockfile.
         self.stamps = paths
             .into_iter()
+            .filter(|path| {
+                registered.contains(path)
+                    || !crate::package_route::stamp::InputStamp::is_watched_install_input(path)
+            })
             .map(crate::package_route::stamp::InputStamp::capture)
             .collect();
     }
@@ -120,14 +142,13 @@ impl ContextFingerprint {
         }
         use std::hash::{Hash, Hasher};
         let mut hash = std::hash::DefaultHasher::new();
-        self.host_content.hash(&mut hash);
         let mut sources = sources.iter().collect::<Vec<_>>();
         sources.sort_by(|left, right| left.0.cmp(&right.0));
         for (path, source) in sources {
             path.hash(&mut hash);
             source.hash(&mut hash);
         }
-        self.host_content = hash.finish();
+        self.requested = hash.finish();
     }
 
     pub(super) fn stamps_still_valid(
@@ -137,6 +158,18 @@ impl ContextFingerprint {
         self.stamps
             .iter()
             .all(|stamp| stamp.is_current_with_cache(observed))
+    }
+
+    /// Everything but the host buffer: membership, overlays and options.
+    pub(super) fn same_except_host(&self, other: &Self) -> bool {
+        self.requested == other.requested
+            && self.foreign_overlays == other.foreign_overlays
+            && self.generation_options == other.generation_options
+    }
+
+    /// A host-only rebuild keeps every disk input of the revision it reuses.
+    pub(in super::super) fn adopt_stamps(&mut self, previous: &Self) {
+        self.stamps.clone_from(&previous.stamps);
     }
 
     pub(crate) fn input_stamps(&self) -> Vec<crate::package_route::stamp::InputStamp> {
@@ -152,7 +185,13 @@ impl ContextFingerprint {
     pub(crate) fn identity(&self) -> u64 {
         use std::hash::{Hash, Hasher};
         let mut hash = std::hash::DefaultHasher::new();
-        (self.host_content, self.overlays, self.generation_options).hash(&mut hash);
+        (
+            self.host_content,
+            self.requested,
+            self.overlays,
+            self.generation_options,
+        )
+            .hash(&mut hash);
         hash.finish()
     }
 }

@@ -346,6 +346,63 @@ pub(super) fn build_with_import_facts(
     })
 }
 
+/// Reuse a validated revision's dependency setup for an edit of the host
+/// alone (template or script body). Only the host is registered again; when
+/// its module specifiers changed, `None` asks for a complete build.
+pub(super) fn rebuild_host(
+    previous: &AliasContext,
+    source_path: &Path,
+    content: &str,
+    facts: &mut ModuleSpecifierFactsCache,
+) -> Option<AliasContext> {
+    let source_path = vize_carton::path::canonicalize_non_verbatim(source_path);
+    let mirror = previous.mirror.as_ref()?;
+    let specifiers = |project: &VirtualProject, facts: &mut ModuleSpecifierFactsCache| {
+        let file = project.find_by_original(&source_path)?;
+        let source_type = if file
+            .virtual_path
+            .extension()
+            .is_some_and(|extension| extension == "tsx")
+        {
+            oxc_span::SourceType::tsx()
+        } else {
+            oxc_span::SourceType::ts()
+        };
+        let source = project.registered_module_source(&source_path)?;
+        let mut occurrences = facts.collect_occurrences(source, source_type);
+        occurrences.sort();
+        Some(occurrences)
+    };
+    let before = specifiers(mirror, facts)?;
+    let mut project = mirror.clone();
+    project
+        .register_paths_with_content([(source_path.as_path(), content)])
+        .ok()?;
+    if specifiers(&project, facts)? != before {
+        return None;
+    }
+    project.finalize_editor_imports_with_import_facts(facts);
+    #[cfg(test)]
+    HOST_REBUILDS.with(|count| count.set(count.get() + 1));
+    Some(AliasContext {
+        project_root: previous.project_root.clone(),
+        aliases: previous.aliases.clone(),
+        package_routes: previous.package_routes.clone(),
+        route_inputs: previous.route_inputs.clone(),
+        refreshed_sources: previous.refreshed_sources.clone(),
+        mirror: Some(project),
+        virtual_ts_options: previous.virtual_ts_options.clone(),
+        query_surface: Default::default(),
+    })
+}
+
+#[cfg(test)]
+thread_local! {
+    /// Host-only rebuilds on this thread; tests observe reuse with it.
+    pub(in crate::corsa_bridge) static HOST_REBUILDS: std::cell::Cell<usize> =
+        const { std::cell::Cell::new(0) };
+}
+
 fn bridge_error(error: crate::CorsaError) -> CorsaBridgeError {
     CorsaBridgeError::from(error)
 }

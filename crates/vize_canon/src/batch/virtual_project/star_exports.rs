@@ -3,6 +3,7 @@
 use crate::batch::import_rewriter::{EmptyVueStar, ImportSourceMap, RewriteResult, VueStarTarget};
 use vize_carton::String;
 
+#[derive(Clone)]
 pub(super) struct StarProjection {
     pub(super) code: String,
     pub(super) source_map: ImportSourceMap,
