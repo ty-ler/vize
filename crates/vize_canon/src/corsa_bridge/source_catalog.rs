@@ -64,7 +64,7 @@ impl CorsaSourceCatalog {
     /// Synchronize the admitted live project, while keeping the query's own
     /// closure and projection packet unchanged. Opening a sibling's already
     /// materialized dependency later must not change the native document view.
-    pub(in crate::corsa_bridge) fn extend_native_project_documents(
+    pub(crate) fn extend_native_project_documents(
         &self,
         project_root: &Path,
         documents: &mut Vec<(String, String)>,

@@ -119,14 +119,8 @@ impl CorsaProjectClient {
         config: &Path,
         root: &Path,
     ) -> Result<(), String> {
-        if self.shared_editor_transport
-            && let Some((session, capabilities, editor)) =
-                try_shared_editor_project(self.executable.as_str(), &self.cwd, root, config)
-        {
-            self.session = Some(session);
-            self.capabilities = capabilities;
-            self.editor_lsp = Some(editor);
-            self.project_session_attached_to_editor = true;
+        let cwd = self.cwd.clone();
+        if self.try_replace_shared_project_transport(config, root, &cwd)? {
             return Ok(());
         }
         match crate::lsp_client::session::spawn_project_session(
@@ -155,6 +149,33 @@ impl CorsaProjectClient {
         }
         self.shared_editor_transport = false;
         Ok(())
+    }
+
+    /// A refused attachment leaves the caller's existing independent-API
+    /// fallback/error policy in charge. Requested ownership is not consumed.
+    pub(in crate::lsp_client) fn try_replace_shared_project_transport(
+        &mut self,
+        config: &Path,
+        root: &Path,
+        cwd: &Path,
+    ) -> Result<bool, String> {
+        if !self.shared_editor_transport_requested {
+            return Ok(false);
+        }
+        // An initial refusal may have spawned an independent editor later.
+        // Reap it before a replacement can acquire the same project owner.
+        self.retire_editor_lsp()?;
+        if let Some((session, capabilities, editor)) =
+            try_shared_editor_project(self.executable.as_str(), cwd, root, config)
+        {
+            self.session = Some(session);
+            self.capabilities = capabilities;
+            self.editor_lsp = Some(editor);
+            self.project_session_attached_to_editor = true;
+            self.shared_editor_transport = true;
+            return Ok(true);
+        }
+        Ok(false)
     }
 
     pub(in crate::lsp_client) fn retire_shared_editor_transport(
