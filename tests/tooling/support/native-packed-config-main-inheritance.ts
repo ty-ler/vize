@@ -12,8 +12,8 @@ import {
 
 /** Validate the exact reviewed main union, then return the unchanged historical inputs. */
 export function verifyPackedFunctionalMainInheritance(root: string, workflowProducer: unknown) {
-  const producer = "492c7dc6d04f34b792066f4483f24745e97a9301";
-  const main = "2b1e41a5b09005a97d24d1ff34f34c7507bbfb67";
+  const producer = "f559efdfcc3586c751cf7b3d20c1a37cc4acca1b";
+  const main = "6eb69423ef2f97341074bf328000a8d4e1273aba";
   const witnessPath =
     "tests/_fixtures/differential/vite-native-image-identity/packed-config-extension.json";
   const current = JSON.parse(fs.readFileSync(path.join(root, witnessPath), "utf8"));
@@ -59,10 +59,70 @@ export function verifyPackedFunctionalMainInheritance(root: string, workflowProd
     "crates/vize_canon/src/virtual_ts/scope/component_events/inference_helpers.rs",
     "crates/vize_canon/src/virtual_ts/scope/component_prop_checker.rs",
     "crates/vize_canon/tests/support/fix_history_observation.rs",
+    "crates/vize_atelier_core/tests/l2_support/surface_l2.rs",
+    "crates/vize_atelier_jsx/src/compile.rs",
+    "crates/vize_atelier_jsx/src/l2/directives.rs",
+    "crates/vize_atelier_jsx/src/l2/tests.rs",
+    "crates/vize_atelier_jsx/src/ssr.rs",
+    "crates/vize_atelier_jsx/src/ssr/l4_differential.rs",
+    "crates/vize_atelier_jsx/src/vapor.rs",
+    "crates/vize_atelier_jsx/src/vdom/l2_emit.rs",
+    "crates/vize_atelier_jsx/tests/l2_projection.rs",
+    "crates/vize_atelier_jsx/tests/ssr.rs",
+    "crates/vize_atelier_jsx/tests/v_slots_forwarding.rs",
+    "crates/vize_atelier_ssr/src/l4/emit/component.rs",
+    "crates/vize_atelier_ssr/src/l4/emit/slots.rs",
+    "crates/vize_atelier_ssr/src/l4/emit/vnode.rs",
+    "crates/vize_atelier_ssr/src/l4/string_plan/binding.rs",
+    "crates/vize_canon/src/projection/expr/bindings.rs",
+    "crates/vize_glyph/src/template/formatter/interpolation.rs",
+    "crates/vize_glyph/src/template/formatter/text.rs",
+    "crates/vize_glyph/tests/template_literal_interpolation.rs",
+    "crates/vize_incremental/src/snapshot/shift.rs",
+    "crates/vize_patina/src/markup/l2/binding.rs",
+    "crates/vize_patina/src/markup/l2/bound.rs",
+    "crates/vize_patina/src/preset/default_correctness_tests.rs",
+    "crates/vize_patina/src/rules/opinionated/html.rs",
+    "crates/vize_patina/src/rules/opinionated/html/no_duplicate_class.rs",
+    "crates/vize_patina/tests/davinci_authored_markup_budget.rs",
+    "crates/vize_vitrine/src/napi/format.rs",
+    "crates/vize_vitrine/src/napi/plugin_sdk/document.rs",
+    "davinci/vize_l1_to_l2/src/dialect/legalize/filter.rs",
+    "davinci/vize_l1_to_l2/src/emit/error.rs",
+    "davinci/vize_l1_to_l2/src/emit/props.rs",
+    "davinci/vize_l1_to_l2/src/emit/props_object/pieces.rs",
+    "davinci/vize_l1_to_l2/src/emit/slots.rs",
+    "davinci/vize_l1_to_l2/src/lower/if_keys.rs",
+    "davinci/vize_l1_to_l2/src/partial/page.rs",
+    "davinci/vize_l1_to_l2/src/pass/cfg/regions.rs",
+    "davinci/vize_l1_to_l2/src/pass/vmodel.rs",
+    "davinci/vize_l1_to_l2/tests/cfg_complexity_oracle/spec.rs",
+    "davinci/vize_l1_to_l2/tests/support/authored.rs",
+    "davinci/vize_l1_to_l2/tests/support/dump_spans.rs",
+    "davinci/vize_l2/src/dump.rs",
+    "davinci/vize_l2/src/dump/historical.rs",
+    "davinci/vize_l2/src/dump/owned.rs",
+    "davinci/vize_l2/src/dump/owned/binding.rs",
+    "davinci/vize_l2/src/dump/parse.rs",
+    "davinci/vize_l2/src/dump/parse/binding_line.rs",
+    "davinci/vize_l2/src/dump/parse/line.rs",
+    "davinci/vize_l2/src/dump/print/binding.rs",
+    "davinci/vize_l2/src/op.rs",
+    "davinci/vize_l2/src/op/slot.rs",
+    "davinci/vize_l2/src/verify/walk.rs",
+    "davinci/vize_l2/src/walk/nodes/surface.rs",
+    "davinci/vize_l2/tests/dump_protocol.rs",
+    "davinci/vize_l2/tests/op_family.rs",
+    "davinci/vize_l2_to_l3/src/lower/binding_operands.rs",
+    "davinci/vize_l2_to_l3/src/lower/classify.rs",
+    "davinci/vize_l3/src/decision/build/walk.rs",
+    "tests/_fixtures/lint-default-correctness/current-range-cases.json",
+    "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.vue",
+    "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.sorted.vue",
   ];
   const currentFiles = Object.keys(current.producer.files);
   assert.deepEqual(currentFiles, [...oldFiles, ...newCompilerFiles]);
-  assert.equal(currentFiles.length, 547);
+  assert.equal(currentFiles.length, 607);
   assert.equal(new Set(currentFiles).size, currentFiles.length);
   assert.deepEqual(
     oldFiles.filter((file) => witness.producer.files[file] !== current.producer.files[file]),
@@ -71,6 +131,7 @@ export function verifyPackedFunctionalMainInheritance(root: string, workflowProd
       "crates/vize_canon/src/virtual_ts/scope/component_events.rs",
       "crates/vize_canon/src/virtual_ts/unknown_props_tests.rs",
       "crates/vize_canon/tests/empty_vue_star_exports/membership.rs",
+      "crates/vize_patina/src/rule/happy_path.rs",
       "tools/support/release/pr_pin.rs",
       "tools/support/release/preflight_pinned_evidence_tests.rs",
       "crates/vize_canon/src/batch/virtual_project/vue_codegen/generic_component_tests/native/tree.rs",
@@ -89,7 +150,7 @@ export function verifyPackedFunctionalMainInheritance(root: string, workflowProd
     [...Object.keys(witness.producer), "previousFunctionalMainInheritance"].sort(),
   );
   for (const [field, value] of Object.entries(witness.producer))
-    if (!["head", "files", "sourceOnlyRust"].includes(field))
+    if (!["head", "files", "sourceOnlyRust", "mainCompileTimeInputs"].includes(field))
       assert.deepEqual(current.producer[field], value, "preserved complete history: " + field);
   const currentRoleBytes = fs.readFileSync(path.join(root, current.producer.sourceOnlyRust.path));
   assert.equal(digest(currentRoleBytes), current.producer.sourceOnlyRust.sha256);
@@ -143,7 +204,7 @@ export function verifyPackedFunctionalMainInheritance(root: string, workflowProd
     .trim()
     .split("\n")
     .filter(Boolean);
-  assert.equal(changedRust.length, 560);
+  assert.equal(changedRust.length, 617);
   const selected = git("rev-parse", "HEAD").toString().trim();
   // These existing guards independently bind every current path/mode/blob/byte,
   // exact finite role, physical file, absence, ancestry and ALL Rust source deltas.
@@ -160,6 +221,30 @@ export function verifyPackedFunctionalMainInheritance(root: string, workflowProd
       assert.equal(digest(fs.readFileSync(filename)), expected, file);
     }
   }
-  verifyPackedCompileTimeInputs(current.producer);
+  // Old nineteen consumers remain exact; current main adds these three closed Cargo-test inputs.
+  verifyPackedCompileTimeInputs(witness.producer);
+  assert.deepEqual(current.producer.mainCompileTimeInputs, [
+    ...witness.producer.mainCompileTimeInputs,
+    ...[
+      {
+        path: "tests/_fixtures/lint-default-correctness/current-range-cases.json",
+        source: "crates/vize_patina/src/preset/default_correctness_tests.rs",
+        role: "cargo-test-embedded",
+        incomingChanged: false,
+      },
+      {
+        path: "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.vue",
+        source: "crates/vize_vitrine/src/napi/format.rs",
+        role: "cargo-test-embedded",
+        incomingChanged: false,
+      },
+      {
+        path: "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.sorted.vue",
+        source: "crates/vize_vitrine/src/napi/format.rs",
+        role: "cargo-test-embedded",
+        incomingChanged: false,
+      },
+    ],
+  ]);
   return { witness, roleBytes, workflowProducer: oldProducer };
 }

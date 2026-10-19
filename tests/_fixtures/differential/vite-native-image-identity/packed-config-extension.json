@@ -1,7 +1,7 @@
 {
   "schema": "vize.native-smoke-packed-config-extension.v1",
   "beforeSha256": "26890094723c79ee46b27c710b42feed3d5a660f98c382246cf19458000aeaa3",
-  "afterSha256": "e328016cf14d7ed30c17796fffe0759606133e3a1e4ad2aeae7c0e90d7d6b51c",
+  "afterSha256": "2c716c5eca11e308f65965da1379eb40d241cc5de786ab3d311f7c40b147c299",
   "scope": "exact named bounded manual extension; immutable historical recipes/hash remain independently checked",
   "hunks": [
     {
@@ -34,11 +34,11 @@
     },
     {
       "before": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n",
-      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: 492c7dc6d04f34b792066f4483f24745e97a9301\n    steps: *fresh-install-steps\n"
+      "after": "            msvc_arch: amd64\n    env: *native-host-env\n    steps: *native-host-steps\n\n  packed-config-acceptance:\n    if: github.event_name == 'workflow_dispatch' && inputs.target == 'packed-config'\n    name: Packed configuration acceptance (linux-x64-gnu, Node24)\n    runs-on: ubuntu-22.04\n    timeout-minutes: 45\n    strategy:\n      matrix:\n        node-version: [\"24\"]\n        platform:\n          - runner: ubuntu-22.04\n            target: linux-x64-gnu\n            msvc_arch: amd64\n    env:\n      NODE_OPTIONS: \"--disable-warning=DEP0040 --disable-warning=DEP0169\"\n      PACKED_CONFIG_MODE: \"true\"\n      PACKED_CONFIG_EXPECTED_SOURCE: ${{ inputs.expected_source_sha }}\n      PACKED_CONFIG_HOST_ONLY: ${{ inputs.host_only }}\n      # Updated only when the reviewed producer is deliberately frozen again.\n      PACKED_CONFIG_PRODUCER: f559efdfcc3586c751cf7b3d20c1a37cc4acca1b\n    steps: *fresh-install-steps\n"
     }
   ],
   "producer": {
-    "head": "492c7dc6d04f34b792066f4483f24745e97a9301",
+    "head": "f559efdfcc3586c751cf7b3d20c1a37cc4acca1b",
     "composedBase": "178bbe12ea5cb939c2b43f4cc0656e45952c6d3b",
     "priorProducer": "820bf6b5d688c77f8edea6ba18ff6f86f76bffae",
     "scope": "Reviewed whole source custody; the finite sourceOnlyRust partition excludes tooling primary source bytes, while producer HEAD/build identity stays bound; qualification unexecuted.",
@@ -315,7 +315,7 @@
       "crates/vize_patina/src/preset/default_warning_tests.rs": "7071ea536dd073a5255aca1531726c41241be6db03f7da7dbb5adf55b4089a1d",
       "crates/vize_patina/src/preset/tests.rs": "5eb109380f3a4df58fc423b934a81901036d962f67ef742ab29501c09ca6723a",
       "crates/vize_patina/src/rule.rs": "365c687a5dc14ee294502828bd20c65062edac501fed38937bd9ffe377ee7c89",
-      "crates/vize_patina/src/rule/happy_path.rs": "742fbe9f2d727e487e64057c3d115cbf40ea84048a38062067883ceef4e42d49",
+      "crates/vize_patina/src/rule/happy_path.rs": "1a11b814d351ac638ddc331583f418f903e0f9139cce4e8a95afe7641e889a76",
       "crates/vize_patina/src/rules/opinionated/vue.rs": "c0b856b1eb6d08b6a6fdc282f6ba1342336751904bf8bbf7e470674d8dd03fa8",
       "crates/vize_patina/src/rules/script.rs": "ef4b89bad2009bb063bb4366c1e2d40b80280249cc24950a4e933a5bcc1926b9",
       "crates/vize_patina/src/rules/script/no_deep_destructure_in_props.rs": "00690dca91797ee2a6b2e6ebbbf867cf703df8fb2f5aed52ef348fc9c0eab608",
@@ -589,7 +589,67 @@
       "crates/vize_canon/src/virtual_ts/generator/component_export.rs": "0983039824204c48e1beea689dc33e14b4c9f21606d32ab3057413e09695a3af",
       "crates/vize_canon/src/virtual_ts/scope/component_events/inference_helpers.rs": "d9570df49c93a22e45b5bd4d5273f49baa3eda2e91beaf7853cde7ae6b17d59e",
       "crates/vize_canon/src/virtual_ts/scope/component_prop_checker.rs": "f93c2c5f3208113230f20506e01009fa6ded6478cb39ebfa295df46629bd0ae5",
-      "crates/vize_canon/tests/support/fix_history_observation.rs": "dc9f47da302abe12e98ff67594f5c9b2f22f7b2bd6c108366b3ec8b252c049e0"
+      "crates/vize_canon/tests/support/fix_history_observation.rs": "dc9f47da302abe12e98ff67594f5c9b2f22f7b2bd6c108366b3ec8b252c049e0",
+      "crates/vize_atelier_core/tests/l2_support/surface_l2.rs": "0a492d839c23879efd293bb7e8d9602cc5fb114af670d02e6428da5a1815b168",
+      "crates/vize_atelier_jsx/src/compile.rs": "c7556c657e3291e2217d03b50c20c5a79b858cdf969c45949922eaf17cea7715",
+      "crates/vize_atelier_jsx/src/l2/directives.rs": "b438c1714f997017add7a21d103afa81502304ac181ba38bda536b23efe8cb14",
+      "crates/vize_atelier_jsx/src/l2/tests.rs": "52d0b10eb58f3b6ce40289a3937d1d2cdd595345cb42f7a756538fb174fd0fce",
+      "crates/vize_atelier_jsx/src/ssr.rs": "1bddc68fdf0acb4258cd44e78a9a5dbc03349998c4092260b914ef201fa9a593",
+      "crates/vize_atelier_jsx/src/ssr/l4_differential.rs": "2f31888035a24e878c482d78afd12c01f27bc2ee18ff7f20f3519f18d0b7829c",
+      "crates/vize_atelier_jsx/src/vapor.rs": "76403eec42199c84871283b8d9b00f5dfc5d5059fb299637bf452c8887a1a57b",
+      "crates/vize_atelier_jsx/src/vdom/l2_emit.rs": "22a2d613fe28ade7509a9c16d50d7392b0a1cf1a10576624fc162f5b999528a3",
+      "crates/vize_atelier_jsx/tests/l2_projection.rs": "698f1460f882829f43d925527c35ad9631c7856b939f17b88fb3bfbba3177a8b",
+      "crates/vize_atelier_jsx/tests/ssr.rs": "7a0033079a246ae03fd7f4964022aeadf9766f6ebab8ef2def9378bc20df39e6",
+      "crates/vize_atelier_jsx/tests/v_slots_forwarding.rs": "f513083d1a09bea2680e527c014df68aef679cb691836f88c71635bcdc754217",
+      "crates/vize_atelier_ssr/src/l4/emit/component.rs": "fbfcf71a5a602228b16dfb6958d913fe0d166185faeac976c18cbcfcc85c421a",
+      "crates/vize_atelier_ssr/src/l4/emit/slots.rs": "417924f217764c788cccf733c2b8985f71d390b9bed49209e94b0ab8722c45f4",
+      "crates/vize_atelier_ssr/src/l4/emit/vnode.rs": "584d2d1a0f63d106458d23961bd532ca74f8a67fa8d56203c2b4792133adc3a2",
+      "crates/vize_atelier_ssr/src/l4/string_plan/binding.rs": "d208705bcd93564cc7c335dacc80ccbdf1dc11faca4486fb7800df548b885311",
+      "crates/vize_canon/src/projection/expr/bindings.rs": "aaca8718fa617115d6417b59f688ab3e2e9aa513d2494982111dcf2213ac7ca6",
+      "crates/vize_glyph/src/template/formatter/interpolation.rs": "f75d15bdaf17a452867067d02cb6e42cb0943a832a677b19930d6b0addd0709d",
+      "crates/vize_glyph/src/template/formatter/text.rs": "f88f1f5445a78aebc4ee48608e3088acaaef0c544665550552ceef53368fc8df",
+      "crates/vize_glyph/tests/template_literal_interpolation.rs": "f4270a8250c2cb969b8bf786667aa19f05f71647ef8f5b342ec4e247f6e717c4",
+      "crates/vize_incremental/src/snapshot/shift.rs": "0d37aee99cdf30059bdb126ab0570bdb9140c4bf0b55c38136b096cd98124685",
+      "crates/vize_patina/src/markup/l2/binding.rs": "f2ffa7f05ed8f351208f4cffab7e228d492683998f1a5eae57559cb0c10670ed",
+      "crates/vize_patina/src/markup/l2/bound.rs": "3e71aa1f1e1091373bbc30a57ee97fc6c159f14cc33075baf4c881355651b106",
+      "crates/vize_patina/src/preset/default_correctness_tests.rs": "15e2d9e1fb1233d9f55e6777cbdf3a0b587c47c324bc9bf61ed53c5e420c0d79",
+      "crates/vize_patina/src/rules/opinionated/html.rs": "065fb30d21ebfc169a49446bfbd344bfab54c9a83a5b32b7273c003aa40685b5",
+      "crates/vize_patina/src/rules/opinionated/html/no_duplicate_class.rs": "98170e0ed7438311bf1339cacab38cc32fae9b056766080698fdec7eba7e21f7",
+      "crates/vize_patina/tests/davinci_authored_markup_budget.rs": "fa351418981168b1bc1794cced9ffe9bbc4e4af523654f754e8180c129c3ccd6",
+      "crates/vize_vitrine/src/napi/format.rs": "974d144355707587d63b603ac4ad76cbd7db1da5ddcc76cd5752134538ed7915",
+      "crates/vize_vitrine/src/napi/plugin_sdk/document.rs": "5dfb1698222eb0bec920546ce455ddce612a4e1dc0353700143f7fa95a05c19a",
+      "davinci/vize_l1_to_l2/src/dialect/legalize/filter.rs": "ffba75e6a57adf94076a040caa2d7e9ad12f65063ca6d5d9cce4a4a6088ed499",
+      "davinci/vize_l1_to_l2/src/emit/error.rs": "01fa81eabe704e4eba21d53f207940d62406809005c01b90481f01665250aa5c",
+      "davinci/vize_l1_to_l2/src/emit/props.rs": "b8df5109e759e8113f3747769a06ec0ebdc9b9a347e3e4f41824b92cb4173fe6",
+      "davinci/vize_l1_to_l2/src/emit/props_object/pieces.rs": "55fce9500eb9d557d4de8363f8b508023c0a99895de95200c2b25ea16fc832d9",
+      "davinci/vize_l1_to_l2/src/emit/slots.rs": "9b27e9a6fe2650d892c2c3ed8244f83869a18d26abf6e15fbfc04c292c4ae0c5",
+      "davinci/vize_l1_to_l2/src/lower/if_keys.rs": "e531ccc1a551fdc7f3778ca51caa55e141821cd2c5b50359a244cd207ba3c19d",
+      "davinci/vize_l1_to_l2/src/partial/page.rs": "031b1bb63c2617001fffa3803dd0fd4aaa6023805fc2954e8d096f30e8a40c9d",
+      "davinci/vize_l1_to_l2/src/pass/cfg/regions.rs": "b9f520bb88439da4e547471bd8be925e7ffc103aec8da4e06eaaa4e6e0c77c0b",
+      "davinci/vize_l1_to_l2/src/pass/vmodel.rs": "623e9c2bf4a087c694ccab48894c4e0e7c76a933c9d2c72e62a1158023aab18e",
+      "davinci/vize_l1_to_l2/tests/cfg_complexity_oracle/spec.rs": "3ab333892a98ae4bb278f70b5db02da5c942ca11f98a63c8cf3a46e9d30ad0de",
+      "davinci/vize_l1_to_l2/tests/support/authored.rs": "e9678952bc8e77fb4faa8217390c811d1e4b3ff72802614825e070760ee6028d",
+      "davinci/vize_l1_to_l2/tests/support/dump_spans.rs": "ca255a452a07edb5293880ccf786048984e68c919f179c7d417ebe8557b6d8cd",
+      "davinci/vize_l2/src/dump.rs": "1adc37599a4fe0cc96fbd0612230e5b312bf892013d08fa4198ec16a00c5b1ec",
+      "davinci/vize_l2/src/dump/historical.rs": "fded659be2b4ae04d6edbb1139aeceac4173aa2e8cdfd20f47985f732919ecad",
+      "davinci/vize_l2/src/dump/owned.rs": "22f397def60594beb2a0005e94271bee4822b9d2d025203ce82eba90820d07a8",
+      "davinci/vize_l2/src/dump/owned/binding.rs": "8dcb8be7b7d0bb46f72083d04b2a6d490555d38ebaf9d2d6224f292c939391f7",
+      "davinci/vize_l2/src/dump/parse.rs": "51e9df1e29c25b56fa8557595e428f6039326c751c572f299f1f18de10466003",
+      "davinci/vize_l2/src/dump/parse/binding_line.rs": "72ec7b740207d5250db5f891311e1d4b71aeec04cbe62ba2ab5c9847cf3e1f2a",
+      "davinci/vize_l2/src/dump/parse/line.rs": "5d959243768c8d52a6bc9f3d45dbf184bfcb69f7e8d9cc23598395a4591b6008",
+      "davinci/vize_l2/src/dump/print/binding.rs": "ea19f944da1a47b9db51e948f3a63cbca2e470edeb2729b09d2ad68523ba92a5",
+      "davinci/vize_l2/src/op.rs": "3b8b460ed35993388e5fd6b51aa6412dddf7dfcad383beed03ced87add65a13b",
+      "davinci/vize_l2/src/op/slot.rs": "fa566a269e350c9aadec23bc686df3aa9aae8ff4eb52cc4e21b2e7fb7b076c2e",
+      "davinci/vize_l2/src/verify/walk.rs": "d310fce59f9f8b7f1b1dc0f468bee8a3641d659063f54adbca0e64432e5c5a52",
+      "davinci/vize_l2/src/walk/nodes/surface.rs": "fe388874fc424c1b816490359326148dd8222de8b45ebca0caea53fdd8cc4706",
+      "davinci/vize_l2/tests/dump_protocol.rs": "6870409a959fc223756502368a23e6e6a1d2c7b77db29bcbcd2e213b7b37b215",
+      "davinci/vize_l2/tests/op_family.rs": "b0a87ca92808a5edd57fcc77a6b67790ceae991e95798c6b80aeabbfce8b2229",
+      "davinci/vize_l2_to_l3/src/lower/binding_operands.rs": "ff0d8a7c7968aa7c57000d05b539c9dee0fcfe1ff8cf41d629d260f233da5343",
+      "davinci/vize_l2_to_l3/src/lower/classify.rs": "245bdd26687ceae2613efe228aaa5940e472f970e298de9167d5cbf634600d8e",
+      "davinci/vize_l3/src/decision/build/walk.rs": "0f4f7b2883e4263ab304e3c538f3faf11c21722d8c3af6ccddd60df74b29895b",
+      "tests/_fixtures/lint-default-correctness/current-range-cases.json": "ed4aea8bf8a5a7f3c28089226e6a9dd239dd98b6c22d01f9fe834ab5298fcf2c",
+      "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.vue": "ae86278aa0a0b247d9e027b703699f02cf370ea37da9dd96368adf3ff334b106",
+      "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.sorted.vue": "f3e7fbf3240f63389c3aa29b54a6545fd51c294afc7c5e088ba4de48e1af8a7a"
     },
     "previousFrozenProducer": "c8855589af88f3804686959377d29e85e3d7a4f4",
     "earlierFrozenProducer": "9654d136f504765f0dfbdb1e17cf806e0b967878",
@@ -694,7 +754,7 @@
     },
     "sourceOnlyRust": {
       "path": "tests/_fixtures/differential/vite-native-image-identity/packed-config-source-only-rust.json",
-      "sha256": "b4dac109c0a330c997769b404a7bc6c12a8e62104c0d0b0ad56a899013106c62"
+      "sha256": "2824d3d6d06f01a92ea43d11149c5934416bd0f285ed4641400d06541ac4f7a7"
     },
     "previousComposition": {
       "source": "ecb83f915f53aaf82b4b04980e26cd36b4f43f62",
@@ -829,6 +889,24 @@
         "source": "crates/vize_canon/src/virtual_ts/helpers/preamble.rs",
         "role": "production-canon-embedded",
         "incomingChanged": true
+      },
+      {
+        "path": "tests/_fixtures/lint-default-correctness/current-range-cases.json",
+        "source": "crates/vize_patina/src/preset/default_correctness_tests.rs",
+        "role": "cargo-test-embedded",
+        "incomingChanged": false
+      },
+      {
+        "path": "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.vue",
+        "source": "crates/vize_vitrine/src/napi/format.rs",
+        "role": "cargo-test-embedded",
+        "incomingChanged": false
+      },
+      {
+        "path": "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.sorted.vue",
+        "source": "crates/vize_vitrine/src/napi/format.rs",
+        "role": "cargo-test-embedded",
+        "incomingChanged": false
       }
     ],
     "previousFunctionalSource": {
