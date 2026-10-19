@@ -5517,7 +5517,7 @@ Enforce `v-bind` directive style
 [Bad](#vue-v-bind-style-bad) · [Good](#vue-v-bind-style-good)
 
 Default severity: `warning`  
-Presets: `nuxt`, `opinionated`  
+Presets: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Automatic fix: Available for supported findings  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -5578,7 +5578,7 @@ Enforce hyphenation of custom event names in v-on on components
 [Bad](#vue-v-on-event-hyphenation-bad) · [Good](#vue-v-on-event-hyphenation-good)
 
 Default severity: `warning`  
-Presets: `nuxt`, `opinionated`  
+Presets: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: See [typed options and defaults](options.md).

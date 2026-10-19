@@ -5519,7 +5519,7 @@ Aplicar um padrão de sintaxe à diretiva `v-bind`
 [Incorreto](#vue-v-bind-style-bad) · [Correto](#vue-v-bind-style-good)
 
 Severidade padrão: `warning`  
-Predefinições: `nuxt`, `opinionated`  
+Predefinições: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correção automática: Disponível para os diagnósticos compatíveis  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -5580,7 +5580,7 @@ Exigir hífens nos nomes de eventos personalizados em v-on de componentes
 [Incorreto](#vue-v-on-event-hyphenation-bad) · [Correto](#vue-v-on-event-hyphenation-good)
 
 Severidade padrão: `warning`  
-Predefinições: `nuxt`, `opinionated`  
+Predefinições: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md).

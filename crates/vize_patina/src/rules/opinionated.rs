@@ -16,7 +16,6 @@ pub(crate) fn register(registry: &mut RuleRegistry) {
     vue::register(registry);
     vapor::register(registry);
     a11y::register(registry);
-    html::register(registry);
     #[cfg(not(target_arch = "wasm32"))]
     type_aware::register(registry);
 }
@@ -25,7 +24,6 @@ pub(crate) fn register_nuxt(registry: &mut RuleRegistry) {
     vue::register_nuxt(registry);
     vapor::register(registry);
     a11y::register(registry);
-    html::register(registry);
     #[cfg(not(target_arch = "wasm32"))]
     type_aware::register(registry);
 }

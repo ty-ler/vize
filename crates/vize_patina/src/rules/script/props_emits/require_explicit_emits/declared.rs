@@ -44,7 +44,9 @@ impl<'a> Declared<'a> {
 /// declared or when the declaration cannot be fully enumerated.
 pub(super) fn resolve_declared_emits<'a>(program: &'a Program<'a>) -> Declared<'a> {
     if let Some(declaration) = find_define_emits(program) {
-        return Declared::from_names(collect_call_emits(declaration.call), declaration.binding);
+        let names = collect_call_emits(declaration.call)
+            .and_then(|names| add_define_model_events(program, names));
+        return Declared::from_names(names, declaration.binding);
     }
 
     // Options API: `export default { emits: [...] | { ... } }`. The captured
@@ -99,6 +101,41 @@ fn find_define_emits<'a>(program: &'a Program<'a>) -> Option<DefineEmitsDeclarat
         }
     }
     None
+}
+
+/// Add the `update:<name>` event each top-level `defineModel(...)` declares.
+/// `None` when a model name is not a string literal, so the set is unknown.
+fn add_define_model_events(
+    program: &Program<'_>,
+    mut names: FxHashSet<CompactString>,
+) -> Option<FxHashSet<CompactString>> {
+    for statement in &program.body {
+        let calls: Vec<&CallExpression<'_>> = match statement {
+            Statement::VariableDeclaration(declaration) => declaration
+                .declarations
+                .iter()
+                .filter_map(|declarator| declarator.init.as_ref().and_then(unwrap_call))
+                .collect(),
+            Statement::ExpressionStatement(expression) => {
+                unwrap_call(&expression.expression).into_iter().collect()
+            }
+            _ => continue,
+        };
+        for call in calls {
+            if !matches!(&call.callee, Expression::Identifier(id) if id.name == "defineModel") {
+                continue;
+            }
+            let model = match call.arguments.first() {
+                None | Some(Argument::ObjectExpression(_)) => "modelValue",
+                Some(Argument::StringLiteral(name)) => name.value.as_str(),
+                Some(_) => return None,
+            };
+            let mut event = CompactString::new("update:");
+            event.push_str(model);
+            names.insert(event);
+        }
+    }
+    Some(names)
 }
 
 /// Collect the declared events from a `defineEmits(...)` call: its type literal

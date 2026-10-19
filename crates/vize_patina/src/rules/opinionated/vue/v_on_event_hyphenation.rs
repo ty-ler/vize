@@ -105,6 +105,10 @@ impl Rule for VOnEventHyphenation {
             Some(ExpressionNode::Simple(s)) if s.is_static => s.content,
             _ => return,
         };
+        // `@vue:beforeMount` is a vnode lifecycle hook, not a component event.
+        if event_name.starts_with("vue:") {
+            return;
+        }
 
         // camelCase if it contains an uppercase ASCII letter. (Native modifiers
         // are stripped into `directive.modifiers`, so the arg is the bare name.)
@@ -233,6 +237,20 @@ mod tests {
             "test.vue",
         );
         assert_eq!(result.warning_count, 1);
+    }
+
+    #[test]
+    fn test_vnode_lifecycle_hooks_are_skipped() {
+        let always = create_linter().lint_template(
+            r#"<MyComponent @vue:beforeMount="a" @vue:before-unmount="b" />"#,
+            "test.vue",
+        );
+        assert_eq!(always.warning_count, 0);
+        let never = create_never_linter().lint_template(
+            r#"<MyComponent @vue:beforeMount="a" @vue:before-unmount="b" />"#,
+            "test.vue",
+        );
+        assert_eq!(never.warning_count, 0);
     }
 
     #[test]

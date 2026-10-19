@@ -276,7 +276,7 @@ Interdire les propriétés en double dans les attributs de style en ligne
 [Mauvais](#html-no-dupe-style-properties-bad) · [Bon](#html-no-dupe-style-properties-good)
 
 Gravité par défaut: `warning`  
-Préréglages: `nuxt`, `opinionated`  
+Préréglages: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correction automatique: Aucune ; examinez la modification proposée  
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.

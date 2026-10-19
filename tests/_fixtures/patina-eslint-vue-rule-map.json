@@ -1323,6 +1323,9 @@
     },
     "vue/require-explicit-emits": {
       "patinaPresets": [
+        "ecosystem",
+        "general-recommended",
+        "nuxt",
         "opinionated"
       ],
       "patinaRule": "script/require-explicit-emits",
@@ -1521,6 +1524,8 @@
     },
     "vue/v-bind-style": {
       "patinaPresets": [
+        "ecosystem",
+        "general-recommended",
         "nuxt",
         "opinionated"
       ],
@@ -1538,6 +1543,8 @@
     },
     "vue/v-on-event-hyphenation": {
       "patinaPresets": [
+        "ecosystem",
+        "general-recommended",
         "nuxt",
         "opinionated"
       ],

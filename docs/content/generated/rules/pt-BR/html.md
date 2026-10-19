@@ -276,7 +276,7 @@ Proibir propriedades duplicadas em atributos de estilo em linha
 [Incorreto](#html-no-dupe-style-properties-bad) · [Correto](#html-no-dupe-style-properties-good)
 
 Severidade padrão: `warning`  
-Predefinições: `nuxt`, `opinionated`  
+Predefinições: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Templates e blocos de SFC Vue, com o contexto do script quando exigido pela regra  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.

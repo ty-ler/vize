@@ -51,9 +51,9 @@ larger preset.
 | Preset | Rules | What is on |
 | --- | ---: | --- |
 | `essential` | 81 | Template and directive validity, Vue 3 removals (`vue/no-deprecated-*`, `script/no-deprecated-*`), script macro, `nextTick` and Options API correctness, unused components, `vue/no-v-html`, `vue/no-unsafe-url`, `html/id-duplication` |
-| `happy-path` (default) | 141 | `essential`, plus template formatting conventions, accessibility, HTML conformance, SSR hazards, unused properties, and typed props and emits |
-| `ecosystem` | 149 | `happy-path`, plus the ecosystem library checks |
-| `nuxt` | 197 | `opinionated`, adjusted for Nuxt auto-imports |
+| `happy-path` (default) | 145 | `essential`, plus template formatting conventions (including `v-bind` shorthand and hyphenated component events), accessibility, HTML conformance, SSR hazards, unused properties, declared emits, and typed props and emits |
+| `ecosystem` | 153 | `happy-path`, plus the ecosystem library checks |
+| `nuxt` | 198 | `opinionated`, adjusted for Nuxt auto-imports |
 | `opinionated` | 198 | `happy-path`, plus stricter conventions, typed props and the `css/*` style rules |
 | `incremental` | 0 | Nothing |
 
