@@ -12,7 +12,7 @@ impl<'a> IRDynamicInfo<'a> {
     /// tearing a deep lowering down costs nothing.
     pub fn new(allocator: &'a Allocator) -> Self {
         Self {
-            flags: 0,
+            flags: Default::default(),
             children: Vec::new_in(&allocator),
             id: None,
         }

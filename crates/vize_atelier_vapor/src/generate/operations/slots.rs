@@ -8,7 +8,7 @@ use super::insertion::emit_insertion_state;
 
 /// Generate SlotOutlet
 ///
-/// Emits the Vapor runtime's `createSlot(name, rawProps?, fallback?)` call,
+/// Emits the Vapor runtime's `createSlot(name, rawProps?, fallback?, flags?)` call,
 /// matching `@vue/compiler-vapor`:
 /// - a bare default outlet explicitly names the `default` slot;
 /// - dynamic slot names are lazy: `() => (expr)`;
@@ -28,7 +28,28 @@ pub(super) fn generate_slot_outlet(ctx: &mut GenerateContext, slot: &SlotOutletI
     };
 
     let slot_props = build_slot_props(ctx, slot);
+    let flag_bits = slot.flags.get();
+    let flags = if flag_bits == 0 {
+        String::default()
+    } else {
+        let names = [(4, "FORWARDED"), (8, "SHARED_FALLBACK")]
+            .into_iter()
+            .filter_map(|(bit, name)| (flag_bits & bit != 0).then_some(name))
+            .collect::<Vec<_>>()
+            .join(", ");
+        cstr!(", {flag_bits} /* {names} */")
+    };
     match (slot_props, slot.fallback.as_ref()) {
+        (None, None) if flag_bits != 0 => {
+            ctx.push_line_fmt(format_args!(
+                "const {name} = _createSlot({slot_name}, null, null{flags})"
+            ));
+        }
+        (Some(props), None) if flag_bits != 0 => {
+            ctx.push_line_fmt(format_args!(
+                "const {name} = _createSlot({slot_name}, {props}, null{flags})"
+            ));
+        }
         (None, None) => {
             ctx.push_line_fmt(format_args!("const {name} = _createSlot({slot_name})"));
         }
@@ -44,7 +65,7 @@ pub(super) fn generate_slot_outlet(ctx: &mut GenerateContext, slot: &SlotOutletI
             ctx.indent();
             generate_block(ctx, fallback, ctx.element_template_map);
             ctx.deindent();
-            ctx.push_line("})");
+            ctx.push_line_fmt(format_args!("}}{flags})"));
         }
         (Some(props), Some(fallback)) => {
             ctx.push_line_fmt(format_args!(
@@ -53,7 +74,7 @@ pub(super) fn generate_slot_outlet(ctx: &mut GenerateContext, slot: &SlotOutletI
             ctx.indent();
             generate_block(ctx, fallback, ctx.element_template_map);
             ctx.deindent();
-            ctx.push_line("})");
+            ctx.push_line_fmt(format_args!("}}{flags})"));
         }
     }
 }

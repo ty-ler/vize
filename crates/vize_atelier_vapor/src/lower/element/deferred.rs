@@ -282,6 +282,7 @@ fn transform_slot_outlet_child<'a>(
     block
         .operation
         .push(OperationNode::SlotOutlet(SlotOutletIRNode {
+            flags: Default::default(),
             id: element_id,
             name,
             props,

@@ -24,11 +24,11 @@ use super::super::{
     },
     slots::{generate_slots, has_dynamic_slots_flag, has_slot_children},
 };
-use super::helpers::{get_element_key, has_other_props, should_skip_prop};
+use super::helpers::{has_other_props, should_skip_prop};
 use super::item_props::{
-    EventPropAction, event_prop_action, event_prop_sets, generate_event_prop_action,
-    is_for_item_segment_skip_prop, push_null_props_if_missing, strip_need_patch_for_v_for_item,
-    unwrap_template_single_element,
+    EventPropAction, event_prop_action, event_prop_sets, for_item_element,
+    generate_event_prop_action, is_for_item_segment_skip_prop, push_null_props_if_missing,
+    strip_need_patch_for_v_for_item, unwrap_template_single_element,
 };
 use super::slot_outlet::generate_for_slot_outlet;
 use super::template_children::generate_template_for_children;
@@ -37,8 +37,8 @@ use vize_l0::ToCompactString;
 /// Generate item for v-for (as block, not regular vnode)
 pub fn generate_for_item(ctx: &mut CodegenContext, node: &TemplateChildNode<'_>, is_stable: bool) {
     match node {
-        TemplateChildNode::Element(el) => {
-            let key_exp = get_element_key(el);
+        TemplateChildNode::Element(template) => {
+            let (el, key_exp) = for_item_element(template);
             let is_template = el.tag_type == ElementType::Template;
             let is_component = el.tag_type == ElementType::Component;
             let is_dynamic = is_component && is_dynamic_component(el, ctx.source.as_str());

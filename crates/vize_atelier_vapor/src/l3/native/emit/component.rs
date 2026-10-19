@@ -121,6 +121,7 @@ impl<'a> Emitter<'a, '_> {
         block
             .operation
             .push(OperationNode::SlotOutlet(SlotOutletIRNode {
+                flags: Default::default(),
                 id,
                 name,
                 props,
@@ -143,6 +144,7 @@ impl<'a> Emitter<'a, '_> {
         });
         let name_span = self.slot_name_anchor(carrier, name.text);
         IRSlot {
+            nonstable: Default::default(),
             name: self.spanned(name, !dynamic, name_span),
             fn_exp: (!params.is_empty()).then(|| self.expression(Expr::plain(params), false)),
             block,

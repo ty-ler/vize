@@ -1,8 +1,11 @@
 //! Property helpers shared by the v-for item generation paths.
 
-use crate::{ElementNode, ElementType, PropNode, TemplateChildNode};
+use crate::{ElementNode, ElementType, ExpressionNode, PropNode, TemplateChildNode};
 
-use super::{generate::generate_single_prop, helpers::should_skip_prop};
+use super::{
+    generate::generate_single_prop,
+    helpers::{get_element_key, has_other_props, should_skip_prop},
+};
 use crate::codegen::{
     context::CodegenContext,
     element::helpers::is_is_prop,
@@ -10,6 +13,7 @@ use crate::codegen::{
         StaticMerge, duplicate_von_event_keys, generate_merged_event_handlers, get_von_event_key,
     },
 };
+use crate::steps::v_memo::has_v_memo;
 use vize_l0::{FxHashSet, String};
 
 pub(super) enum EventPropAction {
@@ -94,6 +98,25 @@ pub(super) fn unwrap_template_single_element<'a>(
         return None;
     };
     (child_el.tag_type == ElementType::Element).then_some(child_el)
+}
+
+/// The element a loop item renders and its key. A `<template v-for>` carrying
+/// only `v-for` and `key` around one key-less component keys that component as
+/// the item vnode instead of a fragment, as Vue's transformFor does.
+pub(super) fn for_item_element<'a, 'b>(
+    el: &'b ElementNode<'a>,
+) -> (&'b ElementNode<'a>, Option<&'b ExpressionNode<'a>>) {
+    let key = get_element_key(el);
+    if el.tag_type == ElementType::Template
+        && !has_other_props(el)
+        && !has_v_memo(el)
+        && let [TemplateChildNode::Element(child)] = el.children.as_slice()
+        && child.tag_type == ElementType::Component
+        && get_element_key(child).is_none()
+    {
+        return (child, key);
+    }
+    (el, key)
 }
 
 pub(super) fn push_null_props_if_missing(ctx: &mut CodegenContext, emitted_props: bool) {

@@ -92,6 +92,9 @@ pub(crate) fn generate_vapor_with_spans(
     experimental_options: VaporGenerateExperimentalOptions<'_>,
     spans: Option<&VaporSourceSpans>,
 ) -> VaporGenerateResult {
+    // Both lowering lanes share the same slot-boundary contract, derived here so
+    // lowering pays nothing for it.
+    ir.prepare_slot_roots();
     let ir_only =
         (spans.is_none() && experimental_options.source_map).then(VaporSourceSpans::default);
     let spans = spans.or(ir_only.as_ref());

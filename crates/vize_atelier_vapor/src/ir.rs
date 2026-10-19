@@ -3,6 +3,7 @@ mod constructors;
 mod control_flow;
 mod events;
 mod props;
+mod slot_roots;
 mod slots;
 
 pub use control_flow::{ForIRNode, IfIRNode, KeyIRNode, NegativeBranch};
@@ -101,7 +102,7 @@ impl<'a> BlockIRNode<'a> {
 /// Dynamic info for IR nodes
 #[derive(Debug)]
 pub struct IRDynamicInfo<'a> {
-    pub flags: u8,
+    pub flags: std::cell::Cell<u8>,
     pub children: Vec<'a, IRDynamicInfo<'a>>,
     pub id: Option<usize>,
 }
@@ -325,6 +326,8 @@ pub struct CreateComponentIRNode<'a> {
 /// Slot outlet operation
 #[derive(Debug)]
 pub struct SlotOutletIRNode<'a> {
+    /// Runtime forwarding and shared-fallback boundary flags, derived from slot roots.
+    pub flags: std::cell::Cell<u8>,
     pub id: usize,
     pub name: Box<'a, SimpleExpressionNode<'a>>,
     pub props: Vec<'a, IRProp<'a>>,

@@ -30,6 +30,7 @@ pub(super) fn lower<'a>(
         }
     }
     IRSlot {
+        nonstable: Default::default(),
         name: Box::new_in(
             SimpleExpressionNode::new("default", true, SourceLocation::STUB),
             &ctx.allocator,

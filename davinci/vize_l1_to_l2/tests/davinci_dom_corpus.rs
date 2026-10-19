@@ -99,6 +99,12 @@ const BATTERY: &[(&str, &str)] = &[
         "non_null_event_call_keeps_inline_handler_wrapper",
         r#"<template><div @contextmenu.prevent="options!.tippy?.show()" /></template>"#,
     ),
+    // A sole component under `<template v-for>` is the keyed item vnode on
+    // both lanes (#9455).
+    (
+        "template_for_single_component_item",
+        r#"<template><div><template v-for="item in list" :key="item.id"><Foo :item="item" /></template><template v-for="item in list"><Bar>{{ item }}</Bar></template></div></template>"#,
+    ),
 ];
 
 #[test]
