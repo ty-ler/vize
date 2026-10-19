@@ -209,7 +209,7 @@ fn vapor_output_reports_the_gap_instead_of_dropping_the_slots() {
 }
 
 #[test]
-fn ssr_output_reports_the_gap_instead_of_dropping_the_slots() {
+fn ssr_output_forwards_the_typed_slots_object() {
     let bump = Allocator::new();
     let out = compile_to_ssr(
         &bump,
@@ -217,18 +217,21 @@ fn ssr_output_reports_the_gap_instead_of_dropping_the_slots() {
         JsxLang::Jsx,
         SsrCompileOptions::default(),
     );
+    assert_eq!(out.diagnostics.len(), 0);
+    assert_eq!(out.components.len(), 1);
     assert_eq!(
-        out.diagnostics
-            .iter()
-            .map(|d| d.message.as_str().to_string())
-            .collect::<Vec<_>>(),
-        vec![
-            "v-slots forwards a slots object the compiler cannot see inside, which SSR \
-             output cannot express: the server renderer inlines each slot's content. \
-             Write the slots inline, e.g. v-slots={{ default: () => <div/> }}, or render \
-             this component on the client."
-                .to_string()
-        ]
+        out.components
+            .first()
+            .expect("one SSR component")
+            .code
+            .as_str(),
+        r#"import { ssrRenderComponent as _ssrRenderComponent } from "@vue/server-renderer"
+import { resolveComponent as _resolveComponent } from "vue"
+
+function ssrRender(_ctx, _push, _parent, _attrs) {
+  _push(_ssrRenderComponent(_resolveComponent("B"), _attrs, slots, _parent))
+}
+"#
     );
 }
 
@@ -294,7 +297,7 @@ fn camel_slots_forwarding_keeps_whole_modules_and_backend_diagnostics() {
                 ..Default::default()
             },
         ] {
-            let errors = usize::from(config.ssr || config.default_mode == JsxOutputMode::Vapor);
+            let errors = usize::from(!config.ssr && config.default_mode == JsxOutputMode::Vapor);
             assert_camel_alias(source, &config, errors);
         }
     }
@@ -386,6 +389,43 @@ fn slots_alias_lookalikes_remain_ordinary_props() {
         assert_eq!(
             common::simple_content(prop.exp.as_ref().expect("prop value")),
             "slots"
+        );
+    }
+}
+
+/// The original namespace spelling was accepted by legacy lowering, which
+/// discarded its argument. This preserves that behavior, not slot selection.
+#[test]
+fn legacy_namespace_spellings_forward_the_same_whole_ssr_module() {
+    let allocator = Allocator::new();
+    let expected = compile_to_ssr(
+        &allocator,
+        "const A = () => <B v-slots={slots}/>;",
+        JsxLang::Jsx,
+        SsrCompileOptions::default(),
+    );
+    assert!(expected.diagnostics.is_empty());
+    assert_eq!(expected.components.len(), 1);
+    let expected = expected
+        .components
+        .first()
+        .expect("golden-pinned bare module");
+    for source in [
+        "const A = () => <B v-slots:default={slots}/>;",
+        "const A = () => <B vSlots:default={slots}/>;",
+    ] {
+        let output = compile_to_ssr(
+            &allocator,
+            source,
+            JsxLang::Jsx,
+            SsrCompileOptions::default(),
+        );
+        assert!(output.diagnostics.is_empty(), "{source}");
+        assert_eq!(output.components.len(), 1, "{source}");
+        assert_eq!(
+            output.components.first().expect("one SSR module").code,
+            expected.code,
+            "{source}"
         );
     }
 }
