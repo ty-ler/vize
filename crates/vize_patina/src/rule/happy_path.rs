@@ -110,9 +110,6 @@ impl RuleRegistry {
         registry.register(Box::new(crate::rules::html::NoEmptyPalpableContent));
         registry.register(Box::new(crate::rules::html::RequireDatetime));
         registry.register(Box::new(crate::rules::opinionated::html::NoDuplicateClass));
-        registry.register(Box::new(
-            crate::rules::opinionated::html::NoDupeStyleProperties,
-        ));
 
         // SSR rules.
         registry.register(Box::new(crate::rules::ssr::NoBrowserGlobalsInSsr));

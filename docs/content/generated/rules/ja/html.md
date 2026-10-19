@@ -276,7 +276,7 @@ vp run lint
 [悪い例](#html-no-dupe-style-properties-bad) · [良い例](#html-no-dupe-style-properties-good)
 
 既定の重大度: `warning`  
-プリセット: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
+プリセット: `nuxt`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。

@@ -9,7 +9,7 @@ Disallow duplicate properties in inline style attributes
 [Bad](#bad) · [Good](#good)
 
 Default severity: `warning`  
-Presets: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
+Presets: `nuxt`, `opinionated`  
 Automatic fix: None; review the suggested change  
 Applies to: Vue SFC templates and blocks, with script context where the rule requires it  
 Options: No rule-specific options. Severity and preset selection are configurable.
