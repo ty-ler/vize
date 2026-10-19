@@ -296,15 +296,16 @@ test("suppression telemetry reports the mapped FP candidate and the unmapped nam
     reportPath,
   ]);
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
-  assert.deepStrictEqual(
-    readJson(reportPath),
-    readJson(path.join(expectedDir, "suppression-report.json")),
-  );
+  const expected = readJson(path.join(expectedDir, "suppression-report.json")) as {
+    ruleMap: { mappedRules: number };
+  };
+  assert.deepStrictEqual(readJson(reportPath), expected);
+  // The mapped-rule count follows the rule map; the expected report pins it once.
   const lines = result.stdout.trim().split("\n");
   assert.equal(
     lines[1],
     "scope-proof: files-scanned=4 suppression-comments=2 named=2 bare=0 " +
-      "rules-mapped=127 mapped-seen=1 unmapped-seen=1 fp-candidates=1",
+      `rules-mapped=${expected.ruleMap.mappedRules} mapped-seen=1 unmapped-seen=1 fp-candidates=1`,
   );
 });
 
