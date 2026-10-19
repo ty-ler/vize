@@ -257,26 +257,24 @@ export function verifyPackedFunctionalMainInheritance(root: string, workflowProd
   ]);
   assert.deepEqual(current.producer.mainCompileTimeInputs, [
     ...witness.producer.mainCompileTimeInputs,
-    ...[
-      {
-        path: "tests/_fixtures/lint-default-correctness/current-range-cases.json",
-        source: "crates/vize_patina/src/preset/default_correctness_tests.rs",
-        role: "cargo-test-embedded",
-        incomingChanged: false,
-      },
-      {
-        path: "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.vue",
-        source: "crates/vize_vitrine/src/napi/format.rs",
-        role: "cargo-test-embedded",
-        incomingChanged: false,
-      },
-      {
-        path: "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.sorted.vue",
-        source: "crates/vize_vitrine/src/napi/format.rs",
-        role: "cargo-test-embedded",
-        incomingChanged: false,
-      },
-    ],
+    {
+      path: "tests/_fixtures/lint-default-correctness/current-range-cases.json",
+      source: "crates/vize_patina/src/preset/default_correctness_tests.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: false,
+    },
+    {
+      path: "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.vue",
+      source: "crates/vize_vitrine/src/napi/format.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: false,
+    },
+    {
+      path: "crates/vize_glyph/tests/fixtures/sort-imports/UserCard.sorted.vue",
+      source: "crates/vize_vitrine/src/napi/format.rs",
+      role: "cargo-test-embedded",
+      incomingChanged: false,
+    },
   ]);
   return { witness, roleBytes, workflowProducer: oldProducer };
 }
