@@ -89,7 +89,7 @@ Enforce PascalCase for the component `name` option
 [Bad](#script-component-options-name-casing-bad) · [Good](#script-component-options-name-casing-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -154,7 +154,7 @@ Enforce camelCase for emitted custom event names
 [Bad](#script-custom-event-name-casing-bad) · [Good](#script-custom-event-name-casing-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: See [typed options and defaults](options.md).
@@ -217,7 +217,7 @@ Enforce the type-based defineEmits&lt;{}&gt;() form over the runtime/array form
 [Bad](#script-define-emits-declaration-bad) · [Good](#script-define-emits-declaration-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -280,7 +280,7 @@ Enforce a consistent order of the Vue compiler macros in &lt;script setup&gt;
 [Bad](#script-define-macros-order-bad) · [Good](#script-define-macros-order-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -310,13 +310,13 @@ vp run lint
 
 **Bad**
 
-`defineProps` appears before `defineModel`, although `defineModel` has the earlier rank in the canonical macro order.
+`defineEmits` comes before `defineProps`, but `defineProps` and then `defineEmits` must be the first statements of `<script setup>`.
 
 ```vue annotate="remove:2,3"
 <script setup lang="ts">
-// defineProps before defineModel (out of canonical order)
+// defineEmits before defineProps
+const emit = defineEmits<{ change: [value: string] }>()
 const props = defineProps<{ count: number }>()
-const model = defineModel<string>()
 </script>
 ```
 
@@ -324,21 +324,21 @@ const model = defineModel<string>()
 
 **Good**
 
-The declarations follow the exact sequence `defineOptions`, `defineModel`, `defineProps`, `defineEmits`, `defineSlots`, before unrelated runtime statements.
+`defineProps` and then `defineEmits` come right after the imports, before every other statement; the other macros may follow in any order.
 
 ```vue annotate="add:2,4,5,6"
 <script setup lang="ts">
-defineOptions({ name: 'MyComponent' })
-const model = defineModel<string>()
+import { ref } from 'vue'
 const props = defineProps<{ count: number }>()
 const emit = defineEmits<{ change: [value: string] }>()
-defineSlots<{ default(props: {}): any }>()
+const model = defineModel<string>()
+const value = ref(0)
 </script>
 ```
 
 Good avoids this rule's finding under the configuration above; other rules may still report diagnostics.
 
-[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/define_macros_order.rs#L46) · [All rules](all.md)
+[Implementation](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/define_macros_order.rs#L45) · [All rules](all.md)
 
 ### `script/define-props-declaration`
 
@@ -347,7 +347,7 @@ Enforce type-based defineProps&lt;{ ... }&gt;() over the runtime/object form
 [Bad](#script-define-props-declaration-bad) · [Good](#script-define-props-declaration-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -627,7 +627,7 @@ Disallow a default on a Boolean prop
 [Bad](#script-no-boolean-default-bad) · [Good](#script-no-boolean-default-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -2621,7 +2621,7 @@ Flag declared events that are never emitted
 [Bad](#script-no-unused-emit-declarations-bad) · [Good](#script-no-unused-emit-declarations-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -2875,7 +2875,7 @@ Prefer defineOptions() over a plain &lt;script&gt; that only sets name/inheritAt
 [Bad](#script-prefer-define-options-bad) · [Good](#script-prefer-define-options-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -3273,7 +3273,7 @@ Recommend useTemplateRef over ref for template references (Vue 3.5+)
 [Bad](#script-prefer-use-template-ref-bad) · [Good](#script-prefer-use-template-ref-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -3346,7 +3346,7 @@ Require a default value for every optional, non-Boolean prop
 [Bad](#script-require-default-prop-bad) · [Good](#script-require-default-prop-good)
 
 Default severity: `error`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -3482,7 +3482,7 @@ Require slots consumed via useSlots() to be explicitly typed with defineSlots&lt
 [Bad](#script-require-explicit-slots-bad) · [Good](#script-require-explicit-slots-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.
@@ -3840,7 +3840,7 @@ Require an explicit type on a prop whose runtime type is `Object` or `Array`
 [Bad](#script-require-typed-object-prop-bad) · [Good](#script-require-typed-object-prop-good)
 
 Default severity: `warning`  
-Presets: _none_  
+Presets: `opinionated`, `nuxt`  
 Automatic fix: None; review the suggested change  
 Applies to: JS/TS scripts in Vue SFCs; examples show the relevant Options API or script setup form  
 Options: No rule-specific options. Severity and preset selection are configurable.

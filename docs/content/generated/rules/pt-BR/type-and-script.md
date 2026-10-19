@@ -90,7 +90,7 @@ Exigir PascalCase na opção `name` do componente
 [Incorreto](#script-component-options-name-casing-bad) · [Correto](#script-component-options-name-casing-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -155,7 +155,7 @@ Exigir camelCase nos nomes de eventos personalizados emitidos
 [Incorreto](#script-custom-event-name-casing-bad) · [Correto](#script-custom-event-name-casing-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Consulte as [opções tipadas e os valores padrão](/rules/options.md).
@@ -218,7 +218,7 @@ Exigir a forma de defineEmits&lt;{}&gt;() baseada em tipos em vez da forma em te
 [Incorreto](#script-define-emits-declaration-bad) · [Correto](#script-define-emits-declaration-good)
 
 Severidade padrão: `warning`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -281,7 +281,7 @@ Exigir uma ordem consistente para as macros do compilador Vue em &lt;script setu
 [Incorreto](#script-define-macros-order-bad) · [Correto](#script-define-macros-order-good)
 
 Severidade padrão: `warning`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -311,13 +311,13 @@ vp run lint
 
 **Incorreto**
 
-`defineProps` aparece antes de `defineModel`, embora `defineModel` venha primeiro na ordem canônica das macros.
+`defineEmits` aparece antes de `defineProps`, mas `defineProps` e depois `defineEmits` devem ser as primeiras instruções de `<script setup>`.
 
 ```vue annotate="remove:2,3"
 <script setup lang="ts">
-// defineProps before defineModel (out of canonical order)
+// defineEmits before defineProps
+const emit = defineEmits<{ change: [value: string] }>()
 const props = defineProps<{ count: number }>()
-const model = defineModel<string>()
 </script>
 ```
 
@@ -325,21 +325,21 @@ const model = defineModel<string>()
 
 **Correto**
 
-As declarações seguem a sequência exata `defineOptions`, `defineModel`, `defineProps`, `defineEmits`, `defineSlots`, antes de instruções não relacionadas em tempo de execução.
+`defineProps` e depois `defineEmits` vêm logo após os imports, antes de qualquer outra instrução; as demais macros podem vir em qualquer ordem.
 
 ```vue annotate="add:2,4,5,6"
 <script setup lang="ts">
-defineOptions({ name: 'MyComponent' })
-const model = defineModel<string>()
+import { ref } from 'vue'
 const props = defineProps<{ count: number }>()
 const emit = defineEmits<{ change: [value: string] }>()
-defineSlots<{ default(props: {}): any }>()
+const model = defineModel<string>()
+const value = ref(0)
 </script>
 ```
 
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
-[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/define_macros_order.rs#L46) · [Todas as regras](all.md)
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/define_macros_order.rs#L45) · [Todas as regras](all.md)
 
 ### `script/define-props-declaration`
 
@@ -348,7 +348,7 @@ Exigir defineProps&lt;{ ... }&gt;() baseado em tipos em vez da forma com objeto 
 [Incorreto](#script-define-props-declaration-bad) · [Correto](#script-define-props-declaration-good)
 
 Severidade padrão: `warning`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -628,7 +628,7 @@ Proibir um valor padrão em uma prop Boolean
 [Incorreto](#script-no-boolean-default-bad) · [Correto](#script-no-boolean-default-good)
 
 Severidade padrão: `warning`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -2622,7 +2622,7 @@ Sinalizar eventos declarados que nunca são emitidos
 [Incorreto](#script-no-unused-emit-declarations-bad) · [Correto](#script-no-unused-emit-declarations-good)
 
 Severidade padrão: `warning`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -2876,7 +2876,7 @@ Preferir defineOptions() a um &lt;script&gt; comum que só define name/inheritAt
 [Incorreto](#script-prefer-define-options-bad) · [Correto](#script-prefer-define-options-good)
 
 Severidade padrão: `warning`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -3274,7 +3274,7 @@ Recomendar useTemplateRef em vez de ref para referências de template (Vue 3.5+)
 [Incorreto](#script-prefer-use-template-ref-bad) · [Correto](#script-prefer-use-template-ref-good)
 
 Severidade padrão: `warning`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -3347,7 +3347,7 @@ Exigir um valor padrão para toda prop opcional que não seja Boolean
 [Incorreto](#script-require-default-prop-bad) · [Correto](#script-require-default-prop-good)
 
 Severidade padrão: `error`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -3483,7 +3483,7 @@ Exigir que os slots consumidos por useSlots() sejam tipados explicitamente com d
 [Incorreto](#script-require-explicit-slots-bad) · [Correto](#script-require-explicit-slots-good)
 
 Severidade padrão: `warning`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
@@ -3841,7 +3841,7 @@ Exigir um tipo explícito em uma prop cujo tipo de tempo de execução seja `Obj
 [Incorreto](#script-require-typed-object-prop-bad) · [Correto](#script-require-typed-object-prop-good)
 
 Severidade padrão: `warning`  
-Predefinições: _none_  
+Predefinições: `opinionated`, `nuxt`  
 Correção automática: Nenhuma; revise a alteração sugerida  
 Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
 Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.

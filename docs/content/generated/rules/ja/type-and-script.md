@@ -89,7 +89,7 @@ title: "型と script のルール"
 [悪い例](#script-component-options-name-casing-bad) · [良い例](#script-component-options-name-casing-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -154,7 +154,7 @@ emit するカスタムイベント名を指定した形式に揃えます。
 [悪い例](#script-custom-event-name-casing-bad) · [良い例](#script-custom-event-name-casing-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: [型付きオプションと既定値](options.md)を参照してください。
@@ -217,7 +217,7 @@ defineEmits を型による宣言形式に揃えます。
 [悪い例](#script-define-emits-declaration-bad) · [良い例](#script-define-emits-declaration-good)
 
 既定の重大度: `warning`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -280,7 +280,7 @@ script setup のコンパイラーマクロを一定の順に宣言します。
 [悪い例](#script-define-macros-order-bad) · [良い例](#script-define-macros-order-good)
 
 既定の重大度: `warning`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -310,13 +310,13 @@ vp run lint
 
 **悪い**
 
-`defineProps` が `defineModel` より先にありますが、定められたマクロ順序では `defineModel` が先です。
+`defineEmits` が `defineProps` より先にありますが、`<script setup>` の先頭は `defineProps`、次に `defineEmits` でなければなりません。
 
 ```vue annotate="remove:2,3"
 <script setup lang="ts">
-// defineProps before defineModel (out of canonical order)
+// defineEmits before defineProps
+const emit = defineEmits<{ change: [value: string] }>()
 const props = defineProps<{ count: number }>()
-const model = defineModel<string>()
 </script>
 ```
 
@@ -324,21 +324,21 @@ const model = defineModel<string>()
 
 **良い**
 
-宣言を `defineOptions`、`defineModel`、`defineProps`、`defineEmits`、`defineSlots` の順に並べ、無関係な実行時処理より前に置きます。
+import の直後、他のすべての文より前に `defineProps`、`defineEmits` の順で置きます。その他のマクロの順序は自由です。
 
 ```vue annotate="add:2,4,5,6"
 <script setup lang="ts">
-defineOptions({ name: 'MyComponent' })
-const model = defineModel<string>()
+import { ref } from 'vue'
 const props = defineProps<{ count: number }>()
 const emit = defineEmits<{ change: [value: string] }>()
-defineSlots<{ default(props: {}): any }>()
+const model = defineModel<string>()
+const value = ref(0)
 </script>
 ```
 
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
-[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/define_macros_order.rs#L46) · [全ルール](all.md)
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/define_macros_order.rs#L45) · [全ルール](all.md)
 
 ### `script/define-props-declaration`
 
@@ -347,7 +347,7 @@ defineProps を型による宣言形式に揃えます。
 [悪い例](#script-define-props-declaration-bad) · [良い例](#script-define-props-declaration-good)
 
 既定の重大度: `warning`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -627,7 +627,7 @@ Boolean prop の冗長な default を検出します。
 [悪い例](#script-no-boolean-default-bad) · [良い例](#script-no-boolean-default-good)
 
 既定の重大度: `warning`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -2621,7 +2621,7 @@ export default { setup() { return { Child }; } };
 [悪い例](#script-no-unused-emit-declarations-bad) · [良い例](#script-no-unused-emit-declarations-good)
 
 既定の重大度: `warning`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -2875,7 +2875,7 @@ name / inheritAttrs だけの通常 script を defineOptions() にまとめま�
 [悪い例](#script-prefer-define-options-bad) · [良い例](#script-prefer-define-options-good)
 
 既定の重大度: `warning`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -3273,7 +3273,7 @@ export default defineComponent({
 [悪い例](#script-prefer-use-template-ref-bad) · [良い例](#script-prefer-use-template-ref-good)
 
 既定の重大度: `warning`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -3346,7 +3346,7 @@ const error = ref(null)
 [悪い例](#script-require-default-prop-bad) · [良い例](#script-require-default-prop-good)
 
 既定の重大度: `error`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -3482,7 +3482,7 @@ useSlots() で使う slot を defineSlots の型で宣言します。
 [悪い例](#script-require-explicit-slots-bad) · [良い例](#script-require-explicit-slots-good)
 
 既定の重大度: `warning`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -3840,7 +3840,7 @@ Object / Array の prop に具体的な型を指定します。
 [悪い例](#script-require-typed-object-prop-bad) · [良い例](#script-require-typed-object-prop-good)
 
 既定の重大度: `warning`  
-プリセット: _none_  
+プリセット: `opinionated`, `nuxt`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。

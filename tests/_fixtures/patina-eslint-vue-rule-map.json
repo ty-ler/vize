@@ -103,31 +103,46 @@
       "status": "mapped"
     },
     "vue/component-options-name-casing": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/component-options-name-casing",
       "patinaSeverity": "error",
       "status": "mapped"
     },
     "vue/custom-event-name-casing": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/custom-event-name-casing",
       "patinaSeverity": "error",
       "status": "mapped"
     },
     "vue/define-emits-declaration": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/define-emits-declaration",
       "patinaSeverity": "warning",
       "status": "mapped"
     },
     "vue/define-macros-order": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/define-macros-order",
       "patinaSeverity": "warning",
       "status": "mapped"
     },
     "vue/define-props-declaration": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/define-props-declaration",
       "patinaSeverity": "warning",
       "status": "mapped"
@@ -327,7 +342,10 @@
       "status": "mapped"
     },
     "vue/no-boolean-default": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/no-boolean-default",
       "patinaSeverity": "warning",
       "status": "mapped"
@@ -1028,7 +1046,10 @@
       "status": "mapped"
     },
     "vue/no-unused-emit-declarations": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/no-unused-emit-declarations",
       "patinaSeverity": "warning",
       "status": "mapped"
@@ -1225,7 +1246,10 @@
       "status": "unimplemented"
     },
     "vue/prefer-define-options": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/prefer-define-options",
       "patinaSeverity": "warning",
       "status": "mapped"
@@ -1267,7 +1291,10 @@
       "status": "mapped"
     },
     "vue/prefer-use-template-ref": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/prefer-use-template-ref",
       "patinaSeverity": "warning",
       "status": "mapped"
@@ -1308,7 +1335,10 @@
       "status": "unimplemented"
     },
     "vue/require-default-prop": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/require-default-prop",
       "patinaSeverity": "error",
       "status": "mapped"
@@ -1333,7 +1363,10 @@
       "status": "mapped"
     },
     "vue/require-explicit-slots": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/require-explicit-slots",
       "patinaSeverity": "warning",
       "status": "mapped"
@@ -1395,7 +1428,10 @@
       "status": "mapped"
     },
     "vue/require-typed-object-prop": {
-      "patinaPresets": [],
+      "patinaPresets": [
+        "nuxt",
+        "opinionated"
+      ],
       "patinaRule": "script/require-typed-object-prop",
       "patinaSeverity": "warning",
       "status": "mapped"
