@@ -167,7 +167,12 @@ test("full App E2E uses a planner, isolated matrix producers, and stable release
   assert.equal(producer["runs-on"], "${{ matrix.runner }}");
   assert.equal(producer.strategy?.["fail-fast"], false);
   assert.equal(producer.strategy?.matrix, "${{ fromJSON(needs.app-e2e-plan.outputs.matrix) }}");
-  assert.ok(producer.steps?.some((step) => step.uses === "./.github/actions/app-e2e-row"));
+  const row = producer.steps?.find((step) => step.uses === "./.github/actions/app-e2e-row");
+  assert.ok(row);
+  assert.equal(
+    row.with?.["nuxt-ui-reference"],
+    "${{ inputs.nuxt_ui_reference && matrix.suite == 'dev' && matrix.shard == 'nuxt-ui' }}",
+  );
   assert.match(namedStep(producer, "Verify producer SHA").run ?? "", /git rev-parse HEAD/);
 
   assert.equal(aggregate.name, "app-e2e");
