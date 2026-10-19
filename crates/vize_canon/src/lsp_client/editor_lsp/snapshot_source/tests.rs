@@ -186,3 +186,19 @@ fn assert_refused(offset: usize, value: u32, expected: SourceTextRefusal) {
 
 #[cfg(unix)]
 mod native;
+
+// Test-only ABI comparator; never adds a production diagnostic fallback.
+mod diagnostic_response;
+pub(in crate::lsp_client) mod native_diagnostics;
+
+fn trace_kind(params: &serde_json::Value, method: &str, response: &serde_json::Value) {
+    if crate::corsa_bridge::preparation_trace::enabled() {
+        tracing::info!(target: "vize_editor_preparation", phase="initial_compiler_kind",
+            request=%params, method, response=%response);
+    }
+}
+fn trace_source(params: &serde_json::Value, name: &str, text: &str) {
+    if crate::corsa_bridge::preparation_trace::enabled() {
+        tracing::info!(target: "vize_editor_preparation", phase="initial_compiler_source", request=%params, name, text);
+    }
+}

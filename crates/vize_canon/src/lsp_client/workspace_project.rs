@@ -10,6 +10,12 @@ use super::{
     session::{ProjectSessionSpawnError, spawn_project_session},
 };
 
+#[derive(Debug, PartialEq, Eq)]
+enum ProjectActivation {
+    Retained,
+    Replaced { retained_independent_editor: bool },
+}
+
 impl CorsaProjectClient {
     pub(crate) fn synchronize_materialized_project(
         &mut self,
@@ -17,13 +23,25 @@ impl CorsaProjectClient {
         config_path: Option<&Path>,
         changes: &crate::batch::virtual_project::MaterializedFileDelta,
     ) -> Result<(), String> {
-        if changes.has_topology_changes() {
-            self.activate_workspace_project_with_reload(project_root, config_path, true)?;
-            self.refresh_materialized_files(&changes.changed, &changes.created, &changes.deleted)?;
-        } else {
-            self.activate_workspace_project_with_reload(project_root, config_path, false)?;
-            if !changes.is_empty() {
-                self.refresh_materialized_files(
+        match self.activate_workspace_project_with_reload(
+            project_root,
+            config_path,
+            changes.has_topology_changes(),
+        )? {
+            ProjectActivation::Retained => {
+                if !changes.is_empty() {
+                    self.refresh_materialized_files(
+                        &changes.changed,
+                        &changes.created,
+                        &changes.deleted,
+                    )?;
+                }
+            }
+            ProjectActivation::Replaced {
+                retained_independent_editor,
+            } => {
+                self.refresh_after_project_replacement(
+                    retained_independent_editor,
                     &changes.changed,
                     &changes.created,
                     &changes.deleted,
@@ -46,7 +64,7 @@ impl CorsaProjectClient {
         project_root: &Path,
         config_path: Option<&Path>,
         reload: bool,
-    ) -> Result<(), String> {
+    ) -> Result<ProjectActivation, String> {
         let project_root = project_root
             .canonicalize()
             .unwrap_or_else(|_| project_root.to_path_buf());
@@ -57,7 +75,7 @@ impl CorsaProjectClient {
             &project_root,
         );
         if !reload && !root_changed && !config_changed {
-            return Ok(());
+            return Ok(ProjectActivation::Retained);
         }
 
         self.retire_original_diagnosing_session()?;
@@ -68,10 +86,14 @@ impl CorsaProjectClient {
         // The editor owner may still be live. Reap the previous API process
         // before the replacement can exist, including its initialization IPC.
         self.retire_project_session()?;
-        if self.shared_editor_transport {
+        let transport_replaced = if self.shared_editor_transport {
             self.cwd = project_root.clone();
             self.replace_project_transport(&config_path, &project_root)?;
+            true
         } else {
+            self.try_replace_shared_project_transport(&config_path, &project_root, &project_root)?
+        };
+        if !transport_replaced {
             let (session, capabilities) = match spawn_project_session(
                 self.executable.as_str(),
                 &project_root,
@@ -103,7 +125,13 @@ impl CorsaProjectClient {
         if (root_changed || config_changed) && !self.project_session_attached_to_editor {
             self.retire_editor_lsp()?;
         }
-        Ok(())
+        // This method only creates attached shared editors. Any editor left
+        // unattached here is the independent owner retained from before this
+        // replacement, and still needs its original filesystem transition.
+        Ok(ProjectActivation::Replaced {
+            retained_independent_editor: self.editor_lsp.is_some()
+                && !self.project_session_attached_to_editor,
+        })
     }
 
     fn clear_workspace_project_overlays(&mut self) {
@@ -124,7 +152,7 @@ fn explicit_config_changed(current: Option<&Path>, requested: Option<&Path>, roo
 
 #[cfg(test)]
 mod tests {
-    use super::{CorsaProjectClient, explicit_config_changed};
+    use super::{CorsaProjectClient, ProjectActivation, explicit_config_changed};
     use std::path::Path;
 
     #[test]
@@ -163,6 +191,28 @@ mod tests {
         assert!(client.overlay_versions.is_empty());
         assert!(client.editor_lsp_documents_dirty);
     }
+
+    #[test]
+    fn unchanged_project_keeps_the_existing_owner_and_overlay_revision() {
+        let root = tempfile::tempdir().unwrap();
+        let mut client = CorsaProjectClient::empty_for_test(root.path().canonicalize().unwrap());
+        client
+            .document_texts
+            .insert("file:///mirror/current.ts".into(), "retained".into());
+        assert_eq!(
+            client
+                .activate_workspace_project_with_reload(root.path(), None, false)
+                .unwrap(),
+            ProjectActivation::Retained,
+        );
+        assert_eq!(
+            client
+                .document_texts
+                .get("file:///mirror/current.ts")
+                .unwrap(),
+            "retained"
+        );
+    }
 }
 
 #[cfg(all(test, target_os = "linux"))]
@@ -171,8 +221,8 @@ mod native_process_control;
 
 #[cfg(all(test, target_os = "linux"))]
 mod process_tests {
-    use super::CorsaProjectClient;
     use super::native_process_control as control;
+    use super::{CorsaProjectClient, ProjectActivation};
     use std::{fs, io::Write, os::unix::fs::PermissionsExt, path::Path};
     use vize_l0::{FxHashMap, cstr};
 
@@ -277,9 +327,14 @@ exec "$native" "$@"
                 );
             }
             editor_owner = Some(observed);
-            client
-                .activate_workspace_project_with_reload(root.path(), None, true)
-                .unwrap();
+            assert_eq!(
+                client
+                    .activate_workspace_project_with_reload(root.path(), None, true)
+                    .unwrap(),
+                ProjectActivation::Replaced {
+                    retained_independent_editor: true
+                },
+            );
             control::assert_reaped(api_owners.last().unwrap());
             api_owners.push(control::native_process(root.path(), &native, b"--api"));
             assert!(

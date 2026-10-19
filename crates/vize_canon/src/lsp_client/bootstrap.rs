@@ -116,6 +116,7 @@ impl CorsaProjectClient {
             external_document_uris: Default::default(),
             temp_dir,
             editor_lsp,
+            shared_editor_transport_requested: shared_editor_transport,
             shared_editor_transport: project_session_attached_to_editor,
             project_session_attached_to_editor,
             original_diagnosing_session: None,

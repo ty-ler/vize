@@ -16,7 +16,16 @@ use vize_l0::{FxHashMap, String};
 
 mod protocol;
 #[cfg(test)]
-mod tests;
+pub(in crate::lsp_client) mod tests;
+
+/// Decode one owned response while a test retains the same live snapshot.
+#[cfg(test)]
+pub(in crate::lsp_client) fn decode_snapshot_text<'a>(
+    encoded: &'a EncodedPayload,
+    expected_name: &str,
+) -> Result<&'a str, SourceTextRefusal> {
+    protocol::source_text(encoded.as_bytes(), expected_name).map(|(text, _, _)| text)
+}
 
 /// A bounded refusal leaves the entire original response available for audit.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
