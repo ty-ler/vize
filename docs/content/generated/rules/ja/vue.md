@@ -5524,7 +5524,7 @@ v-bind の表記形式を揃えます。
 [悪い例](#vue-v-bind-style-bad) · [良い例](#vue-v-bind-style-good)
 
 既定の重大度: `warning`  
-プリセット: `nuxt`, `opinionated`  
+プリセット: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自動修正: 対応している診断で利用できます  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
@@ -5585,7 +5585,7 @@ vp run lint
 [悪い例](#vue-v-on-event-hyphenation-bad) · [良い例](#vue-v-on-event-hyphenation-good)
 
 既定の重大度: `warning`  
-プリセット: `nuxt`, `opinionated`  
+プリセット: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 自動修正: なし。修正内容を確認してください  
 適用範囲: Vue SFC のテンプレートと各ブロック。ルールに必要な script の文脈も例に含めています。  
 オプション: [型付きオプションと既定値](options.md)を参照してください。

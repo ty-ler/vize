@@ -38,6 +38,12 @@ impl RuleRegistry {
         registry.register(Box::new(crate::rules::vue::PropNameCasing::default()));
         registry.register(Box::new(crate::rules::vue::VOnStyle::default()));
         registry.register(Box::new(crate::rules::vue::VSlotStyle::default()));
+        registry.register(Box::new(
+            crate::rules::opinionated::vue::VBindStyle::default(),
+        ));
+        registry.register(Box::new(
+            crate::rules::opinionated::vue::VOnEventHyphenation::default(),
+        ));
         registry.register(Box::new(crate::rules::vue::UseVOnExact));
         registry.register(Box::new(crate::rules::vue::NoTemplateShadow));
         registry.register(Box::new(crate::rules::vue::ThisInTemplate));

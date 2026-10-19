@@ -81,7 +81,14 @@ fn missing_emit_and_partial_transaction_application_produce_complete_ts2345_befo
             let partial_app = partial_app.replace('\n', newline);
             let golden_toggle = UPDATED_TOGGLE.replace('\n', newline);
             let golden_app = UPDATED_APP.replace('\n', newline);
+            // The partial edit leaves the emitted name undeclared, which the
+            // default `script/require-explicit-emits` also reports.
             let diagnostics = json!([{
+                "range":{"start":{"line":6,"character":7},"end":{"line":6,"character":15}},
+                "severity":2,"code":"script/require-explicit-emits","source":"vize/lint",
+                "codeDescription":{"href":"https://eslint.vuejs.org/rules/script/require-explicit-emits.html"},
+                "message":format!("The emitted event '{argument}' is not declared in defineEmits or the emits option.\n\nHelp: Add this event to the defineEmits declaration (or the Options API emits option) so the component's event surface is explicit."),
+            }, {
                 "range":{"start":{"line":6,"character":7},"end":{"line":6,"character":15}},
                 "severity":1,"code":2345,"source":"vize/types",
                 "message":format!("Argument of type '\"{argument}\"' is not assignable to parameter of type '\"{parameter}\"'."),

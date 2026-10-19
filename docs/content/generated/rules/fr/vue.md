@@ -5518,7 +5518,7 @@ Imposer un style de directive `v-bind`
 [Mauvais](#vue-v-bind-style-bad) · [Bon](#vue-v-bind-style-good)
 
 Gravité par défaut: `warning`  
-Préréglages: `nuxt`, `opinionated`  
+Préréglages: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correction automatique: Disponible pour les diagnostics pris en charge  
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Aucune option propre à la règle. La gravité et le choix des préréglages sont configurables.
@@ -5579,7 +5579,7 @@ Imposer des tirets dans les noms d’événements personnalisés de v-on sur les
 [Mauvais](#vue-v-on-event-hyphenation-bad) · [Bon](#vue-v-on-event-hyphenation-good)
 
 Gravité par défaut: `warning`  
-Préréglages: `nuxt`, `opinionated`  
+Préréglages: `happy-path`, `nuxt`, `ecosystem`, `opinionated`  
 Correction automatique: Aucune ; examinez la modification proposée  
 Champ d’application: Templates et blocs des SFC Vue, avec le contexte du script requis par la règle  
 Options: Consultez les [options typées et leurs valeurs par défaut](/rules/options.md).

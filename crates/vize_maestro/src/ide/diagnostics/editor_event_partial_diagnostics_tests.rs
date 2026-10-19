@@ -52,7 +52,14 @@ fn original_partial_event_application_retains_complete_editor_native_diagnostic_
             "severity":1,"code":2322,"source":"vize/types",
             "message":"Type 'string' is not assignable to type 'number'."
         }]);
+        // The partial edit leaves 'change' undeclared, which the default
+        // `script/require-explicit-emits` also reports.
         let expected_partial = json!([{
+            "range":{"start":{"line":6,"character":7},"end":{"line":6,"character":15}},
+            "severity":2,"code":"script/require-explicit-emits","source":"vize/lint",
+            "codeDescription":{"href":"https://eslint.vuejs.org/rules/script/require-explicit-emits.html"},
+            "message":"The emitted event 'change' is not declared in defineEmits or the emits option.\n\nHelp: Add this event to the defineEmits declaration (or the Options API emits option) so the component's event surface is explicit."
+        }, {
             "range":{"start":{"line":6,"character":7},"end":{"line":6,"character":15}},
             "severity":1,"code":2345,"source":"vize/types",
             "message":"Argument of type '\"change\"' is not assignable to parameter of type '\"update\"'."

@@ -342,3 +342,26 @@ emit('input')
     assert_eq!(result.warning_count, 1);
     assert!(result.diagnostics[0].start >= 100);
 }
+
+// --- defineModel declares update:<name> -----------------------------------
+#[test]
+fn define_model_declares_its_update_events() {
+    let source = r#"
+const model = defineModel<string>()
+const [count, modifiers] = defineModel('count', { default: 0 })
+defineModel({ required: true })
+const emit = defineEmits<{ change: [] }>()
+emit('update:modelValue', '')
+emit('update:count', 1)
+emit('update:other', 1)
+"#;
+    let result = create_linter().lint(source, 0);
+    assert_eq!(result.warning_count, 1);
+    assert!(result.diagnostics[0].message.contains("'update:other'"));
+}
+
+#[test]
+fn non_literal_define_model_name_makes_the_set_unknown() {
+    let source = "const m = defineModel(NAME); const emit = defineEmits(['a']); emit('b')";
+    assert_eq!(create_linter().lint(source, 0).warning_count, 0);
+}

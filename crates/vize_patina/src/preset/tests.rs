@@ -245,10 +245,8 @@ fn happy_path_keeps_opinionated_rules_opt_in() {
         !super::builtin_script_rule_names(LintPreset::HappyPath)
             .contains(&"script/no-with-defaults")
     );
-    assert!(
-        !super::builtin_script_rule_names(LintPreset::HappyPath)
-            .contains(&"script/require-explicit-emits")
-    );
+    assert!(happy_path_script.contains(&"script/require-explicit-emits"));
+    assert!(!essential_script.contains(&"script/require-explicit-emits"));
     assert!(
         super::builtin_script_rule_names(LintPreset::Opinionated)
             .contains(&"script/no-options-api")

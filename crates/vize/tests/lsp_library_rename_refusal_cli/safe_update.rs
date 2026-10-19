@@ -57,8 +57,16 @@ pub(super) fn publish(
     expected_diagnostics: Value,
 ) -> Value {
     let uri = fixture.uri(file);
-    // The unchanged lint+typecheck contract publishes prompt sync feedback,
-    // then the complete native answer. Author both packets before didChange.
+    // The unchanged lint+typecheck contract publishes prompt sync feedback
+    // (the lint findings), then the complete native answer. Author both
+    // packets before didChange.
+    let lint: Vec<Value> = expected_diagnostics
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|diagnostic| diagnostic["source"] == "vize/lint")
+        .cloned()
+        .collect();
     let complete = json!({"jsonrpc":"2.0","method":"textDocument/publishDiagnostics",
         "params":{"uri":uri,"version":version,"diagnostics":expected_diagnostics}});
     let expected_packets = if opening {
@@ -66,7 +74,7 @@ pub(super) fn publish(
     } else {
         vec![
             json!({"jsonrpc":"2.0","method":"textDocument/publishDiagnostics",
-            "params":{"uri":uri,"version":version,"diagnostics":[]}}),
+            "params":{"uri":uri,"version":version,"diagnostics":lint}}),
             complete,
         ]
     };
