@@ -11,7 +11,7 @@ import {
 import {
   rewriteOutsidePackagePaths,
   writeIsolatedTsconfigOverlay,
-} from "../../tools/support/compat/fixtures/typecheck-baseline-outside-paths.mjs";
+} from "../../tools/support/compat/fixtures/typecheck-baseline-outside-paths.ts";
 import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.mjs";
 
 /**

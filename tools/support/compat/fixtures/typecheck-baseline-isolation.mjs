@@ -12,13 +12,13 @@ import { dirname, join, relative, resolve } from "node:path";
 import {
   ancestorPackagePath,
   packageNameFromExtendsSpecifier,
-} from "./typecheck-baseline-isolation-package-extends.mjs";
-import { recordCompilerOptionJsxImportSource } from "./typecheck-baseline-isolation-jsx.mjs";
-import { recordCompilerOptionPlugins } from "./typecheck-baseline-isolation-plugins.mjs";
-import { recordCompilerOptionTypes } from "./typecheck-baseline-isolation-types.mjs";
-import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.mjs";
-import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.mjs";
-import { pathMappingRoot } from "./typecheck-baseline-outside-paths.mjs";
+} from "./typecheck-baseline-isolation-package-extends.ts";
+import { recordCompilerOptionJsxImportSource } from "./typecheck-baseline-isolation-jsx.ts";
+import { recordCompilerOptionPlugins } from "./typecheck-baseline-isolation-plugins.ts";
+import { recordCompilerOptionTypes } from "./typecheck-baseline-isolation-types.ts";
+import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.ts";
+import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.ts";
+import { pathMappingRoot } from "./typecheck-baseline-outside-paths.ts";
 
 /**
  * Keep the fixture's type environment inside the fixture (run 31979524200).
@@ -51,7 +51,7 @@ import { pathMappingRoot } from "./typecheck-baseline-outside-paths.mjs";
  * config declares it, an ancestor `node_modules` could otherwise answer it, the
  * declared target is a real package directory, and that directory is inside the
  * fixture. Everything else is left alone, and the ambient-environment gate in
- * `typecheck-baseline-ambient.mjs` is what proves the outcome — this is the
+ * `typecheck-baseline-ambient.ts` is what proves the outcome — this is the
  * repair, not the check.
  *
  * Declaration comes from `compilerOptions.paths` after relative `extends`, and

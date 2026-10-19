@@ -47,13 +47,29 @@ const configurationFilePattern = /[jt]sconfig[^/]*\.json$/u;
 /** TS6307: not listed within the file list of project. TS6059: not under 'rootDir'. */
 const programConstructionCodes = new Set([6059, 6307]);
 
-export function evaluateBaselineConfiguration(vueTscOutput) {
+export interface ConfigurationDiagnostic {
+  readonly code: number;
+  readonly column: number | null;
+  readonly file: string | null;
+  readonly line: number | null;
+  readonly message: string;
+  readonly severity: string;
+}
+
+export interface BaselineConfiguration {
+  readonly diagnostics: readonly ConfigurationDiagnostic[];
+  readonly errorCount: number;
+  readonly unusableReason: string | null;
+  readonly verdict: "usable" | "unusable";
+}
+
+export function evaluateBaselineConfiguration(vueTscOutput: unknown): BaselineConfiguration {
   if (typeof vueTscOutput !== "string") throw new Error("vue-tsc output must be a string");
-  const diagnostics = [];
+  const diagnostics: ConfigurationDiagnostic[] = [];
   for (const line of vueTscOutput.replaceAll("\r\n", "\n").split("\n")) {
     const positioned = diagnosticPattern.exec(line);
     if (positioned != null) {
-      const file = positioned[1].replaceAll("\\", "/");
+      const file = (positioned[1] ?? "").replaceAll("\\", "/");
       const code = Number(positioned[5]);
       if (!configurationFilePattern.test(file) && !programConstructionCodes.has(code)) continue;
       diagnostics.push({
@@ -61,8 +77,8 @@ export function evaluateBaselineConfiguration(vueTscOutput) {
         column: Number(positioned[3]),
         file,
         line: Number(positioned[2]),
-        message: normalize(positioned[6]),
-        severity: positioned[4],
+        message: normalize(positioned[6] ?? ""),
+        severity: positioned[4] ?? "",
       });
       continue;
     }
@@ -73,8 +89,8 @@ export function evaluateBaselineConfiguration(vueTscOutput) {
       column: null,
       file: null,
       line: null,
-      message: normalize(project[3]),
-      severity: project[1],
+      message: normalize(project[3] ?? ""),
+      severity: project[1] ?? "",
     });
   }
   const errors = diagnostics.filter((diagnostic) => diagnostic.severity === "error");
@@ -84,21 +100,21 @@ export function evaluateBaselineConfiguration(vueTscOutput) {
     errors.length === 0
       ? null
       : `vue-tsc could not load the fixture project configuration (${errors.length} ` +
-        `error${errors.length === 1 ? "" : "s"}): ${render(errors[0])}`;
+        `error${errors.length === 1 ? "" : "s"}): ${errors[0] === undefined ? "" : render(errors[0])}`;
   return {
     diagnostics,
     errorCount: errors.length,
     unusableReason,
-    verdict: unusableReason == null ? "usable" : "unusable",
+    verdict: unusableReason == null ? ("usable" as const) : ("unusable" as const),
   };
 }
 
-function render(diagnostic) {
+function render(diagnostic: ConfigurationDiagnostic): string {
   const position =
     diagnostic.file == null ? "" : `${diagnostic.file}(${diagnostic.line},${diagnostic.column}): `;
   return `${position}${diagnostic.severity} TS${diagnostic.code}: ${diagnostic.message}`;
 }
 
-function normalize(message) {
+function normalize(message: string): string {
   return message.replace(/\s+/gu, " ").trim();
 }

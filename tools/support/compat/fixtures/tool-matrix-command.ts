@@ -2,21 +2,34 @@ import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { isolatedTsconfigOverlayPath } from "./typecheck-baseline-outside-paths.mjs";
+import { isolatedTsconfigOverlayPath } from "./typecheck-baseline-outside-paths.ts";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 
-export function typecheckCorpusGlobs(project) {
+export interface ToolMatrixProject {
+  readonly fixturePath?: unknown;
+  readonly tsconfig?: unknown;
+  readonly vueGlobs: readonly string[];
+  readonly expectedVueFileCount?: number;
+  readonly typecheckPerformance?: {
+    readonly corpusGlobs?: readonly string[];
+    readonly baseline?: { readonly tsconfig?: unknown };
+  };
+}
+
+export type ToolName = "compiler" | "linter" | "typechecker" | "formatter";
+
+export function typecheckCorpusGlobs(project: ToolMatrixProject): readonly string[] {
   return project.typecheckPerformance?.corpusGlobs ?? project.vueGlobs;
 }
 
-export function typecheckSourceTsconfig(project) {
+export function typecheckSourceTsconfig(project: ToolMatrixProject): string | null {
   const baseline = project.typecheckPerformance?.baseline?.tsconfig;
   if (typeof baseline === "string") return baseline;
   return typeof project.tsconfig === "string" ? project.tsconfig : null;
 }
 
-export function typecheckTsconfigPath(project) {
+export function typecheckTsconfigPath(project: ToolMatrixProject): string | null {
   // vue-tsc measures `baseline.tsconfig` when it is set. Elk's root config is
   // a solution (`files: []` + `references`); using it would compare a different
   // program than the baseline (#4461).
@@ -30,7 +43,12 @@ export function typecheckTsconfigPath(project) {
   return existsSync(overlayAbs) ? overlayRel : source;
 }
 
-export function toolArgs(project, tool, compilerOutputDir, options = {}) {
+export function toolArgs(
+  project: ToolMatrixProject,
+  tool: string,
+  compilerOutputDir: string,
+  options: { readonly typecheckTsconfigPath?: string | null } = {},
+): string[] {
   if (tool === "compiler") {
     return [
       "build",
@@ -79,10 +97,10 @@ export function toolArgs(project, tool, compilerOutputDir, options = {}) {
   return ["fmt", ...project.vueGlobs, "--check", "--no-config"];
 }
 
-export function displayCommand(command, args) {
+export function displayCommand(command: string, args: readonly string[]): string {
   return [command, ...args].map(shellQuote).join(" ");
 }
 
-function shellQuote(value) {
+function shellQuote(value: string): string {
   return /^[A-Za-z0-9_./:=@*-]+$/.test(value) ? value : `'${value.replaceAll("'", "'\\''")}'`;
 }

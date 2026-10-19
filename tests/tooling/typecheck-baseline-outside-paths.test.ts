@@ -4,12 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 
-import { toolArgs } from "../../tools/support/compat/fixtures/tool-matrix-command.mjs";
+import { toolArgs } from "../../tools/support/compat/fixtures/tool-matrix-command.ts";
 import {
   isolatedTsconfigOverlayPath,
   rewriteOutsidePackagePaths,
   writeIsolatedTsconfigOverlay,
-} from "../../tools/support/compat/fixtures/typecheck-baseline-outside-paths.mjs";
+} from "../../tools/support/compat/fixtures/typecheck-baseline-outside-paths.ts";
 import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.mjs";
 
 /**

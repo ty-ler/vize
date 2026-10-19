@@ -10,7 +10,7 @@ import {
 import { dirname, join, relative, resolve } from "node:path";
 
 import { readDeclaredPackagePaths } from "./typecheck-baseline-isolation.mjs";
-import { ancestorPackagePath } from "./typecheck-baseline-isolation-package-extends.mjs";
+import { ancestorPackagePath } from "./typecheck-baseline-isolation-package-extends.ts";
 
 /**
  * Close the remaining type-reference escape when Nuxt (or another generator)

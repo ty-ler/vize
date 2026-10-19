@@ -6,7 +6,7 @@ import { test } from "node:test";
 
 import { readDeclaredPackagePaths } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation.mjs";
 import { isolateUniqueLocalTypePackages } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-unique.mjs";
-import { jsxImportSourcePackageName } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-jsx.mjs";
+import { jsxImportSourcePackageName } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-jsx.ts";
 
 /**
  * `compilerOptions.jsxImportSource` resolves `<name>/jsx-runtime` by climbing

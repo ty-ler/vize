@@ -6,7 +6,7 @@ import { test } from "node:test";
 
 import { readDeclaredPackagePaths } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation.mjs";
 import { isolateUniqueLocalTypePackages } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-unique.mjs";
-import { pluginPackageNamesFromConfigs } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-plugins.mjs";
+import { pluginPackageNamesFromConfigs } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-plugins.ts";
 
 /**
  * Language-service plugins resolve by climbing `node_modules` (#4461). Unique

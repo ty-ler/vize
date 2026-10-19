@@ -1,20 +1,20 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 
-import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.mjs";
-import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.mjs";
+import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.ts";
+import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.ts";
 import {
   isolatedOverlayBaseUrl,
   isolatedTsconfigOverlayPath,
   pathMappingRoot,
   resolvePackageExtends,
-} from "./typecheck-baseline-outside-paths.mjs";
+} from "./typecheck-baseline-outside-paths.ts";
 import { rewriteOutsideVueCompilerOptions } from "./typecheck-baseline-outside-vue-compiler.mjs";
 import { rewriteOutsideCompilerPlugins } from "./typecheck-baseline-outside-compiler-plugins.mjs";
 import {
   mergeLocalVueRuntimePaths,
   rewriteLocalVueRuntimePaths,
-} from "./typecheck-baseline-outside-vue-runtime-paths.mjs";
+} from "./typecheck-baseline-outside-vue-runtime-paths.ts";
 
 /**
  * Close the remaining `compilerOptions.paths` escape for keys that are not

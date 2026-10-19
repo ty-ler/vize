@@ -15,7 +15,7 @@ import { dirname, join, resolve } from "node:path";
 
 const packageNamePattern = /^(?:@[a-z0-9][a-z0-9-._]*\/)?[a-z0-9][a-z0-9-._]*$/u;
 
-export function packageNameFromExtendsSpecifier(specifier) {
+export function packageNameFromExtendsSpecifier(specifier: unknown): string | null {
   if (typeof specifier !== "string") return null;
   const fromNodeModules = packageNameFromNodeModulesSpecifier(specifier);
   if (fromNodeModules != null) return fromNodeModules;
@@ -29,11 +29,11 @@ export function packageNameFromExtendsSpecifier(specifier) {
       second < 0 ? specifier : `${specifier.slice(0, slash + 1)}${rest.slice(0, second)}`;
     return packageNamePattern.test(name) ? name : null;
   }
-  const name = specifier.split("/")[0];
+  const name = specifier.split("/")[0] ?? "";
   return packageNamePattern.test(name) ? name : null;
 }
 
-function packageNameFromNodeModulesSpecifier(specifier) {
+function packageNameFromNodeModulesSpecifier(specifier: string): string | null {
   const normalized = specifier.replaceAll("\\", "/");
   const marker = "/node_modules/";
   const index = normalized.lastIndexOf(marker);
@@ -51,15 +51,15 @@ function packageNameFromNodeModulesSpecifier(specifier) {
     const name = second < 0 ? rest : rest.slice(0, second);
     return packageNamePattern.test(name) ? name : null;
   }
-  const name = rest.split("/")[0];
+  const name = rest.split("/")[0] ?? "";
   return packageNamePattern.test(name) ? name : null;
 }
 
-export function ancestorPackagePath(fixtureRoot, name) {
+export function ancestorPackagePath(fixtureRoot: string, name: string): string | null {
   const root = resolve(fixtureRoot);
   const segments = name.split("/");
   let directory = dirname(root);
-  let previous = null;
+  let previous: string | null = null;
   while (directory !== previous) {
     const candidate = join(directory, "node_modules", ...segments);
     if (existsSync(join(candidate, "package.json"))) return candidate;

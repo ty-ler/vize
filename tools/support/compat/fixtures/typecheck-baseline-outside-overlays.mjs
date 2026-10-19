@@ -1,6 +1,6 @@
 import { applyIsolatedAliasOverlay } from "./typecheck-baseline-outside-aliases.mjs";
 import { applyIsolatedJsxOverlay } from "./typecheck-baseline-outside-jsx.mjs";
-import { writeIsolatedTsconfigOverlay } from "./typecheck-baseline-outside-paths.mjs";
+import { writeIsolatedTsconfigOverlay } from "./typecheck-baseline-outside-paths.ts";
 
 /**
  * Write every isolated tsconfig overlay Vize and vue-tsc share (#4461).

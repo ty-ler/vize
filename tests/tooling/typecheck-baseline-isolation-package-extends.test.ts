@@ -8,7 +8,7 @@ import { readDeclaredPackagePaths } from "../../tools/support/compat/fixtures/ty
 import {
   ancestorPackagePath,
   packageNameFromExtendsSpecifier,
-} from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-package-extends.mjs";
+} from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-package-extends.ts";
 import { isolateUniqueLocalTypePackages } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-unique.mjs";
 
 /**

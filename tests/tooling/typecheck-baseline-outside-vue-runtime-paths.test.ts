@@ -5,7 +5,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import { applyIsolatedAliasOverlay } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.mjs";
-import { rewriteLocalVueRuntimePaths } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-vue-runtime-paths.mjs";
+import { rewriteLocalVueRuntimePaths } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-vue-runtime-paths.ts";
 import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.mjs";
 
 /**

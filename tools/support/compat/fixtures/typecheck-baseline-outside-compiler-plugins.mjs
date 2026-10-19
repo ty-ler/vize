@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 
-import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.mjs";
-import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.mjs";
-import { resolvePackageExtends } from "./typecheck-baseline-outside-paths.mjs";
+import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.ts";
+import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.ts";
+import { resolvePackageExtends } from "./typecheck-baseline-outside-paths.ts";
 
 /**
  * Close the TypeScript plugin require unique isolation cannot retarget (#4461).

@@ -1,7 +1,11 @@
 import {
   ancestorPackagePath,
   packageNameFromExtendsSpecifier,
-} from "./typecheck-baseline-isolation-package-extends.mjs";
+} from "./typecheck-baseline-isolation-package-extends.ts";
+
+type Rec = Readonly<Record<string, unknown>>;
+const field = (value: unknown, key: string): unknown =>
+  value != null && typeof value === "object" ? (value as Rec)[key] : undefined;
 
 /**
  * `compilerOptions.jsxImportSource` is a module walk out of the fixture (#4461).
@@ -14,16 +18,22 @@ import {
  * `extends` configs are not read for it, matching `paths` and `types`.
  */
 
-export function jsxImportSourcePackageName(specifier) {
+export function jsxImportSourcePackageName(specifier: unknown): string | null {
   return packageNameFromExtendsSpecifier(specifier);
 }
 
-export function recordCompilerOptionJsxImportSource(declared, conflicts, fixtureRoot, chain) {
+export function recordCompilerOptionJsxImportSource(
+  declared: Map<string, string>,
+  conflicts: ReadonlySet<string>,
+  fixtureRoot: string,
+  chain: unknown,
+): void {
   if (!Array.isArray(chain)) return;
-  let specifier;
-  for (const entry of [...chain].reverse()) {
+  let specifier: string | undefined;
+  for (const entry of [...(chain as readonly unknown[])].reverse()) {
     const candidate =
-      entry?.config?.compilerOptions?.jsxImportSource ?? entry?.compilerOptions?.jsxImportSource;
+      field(field(field(entry, "config"), "compilerOptions"), "jsxImportSource") ??
+      field(field(entry, "compilerOptions"), "jsxImportSource");
     if (typeof candidate === "string") specifier = candidate;
   }
   const name = packageNameFromExtendsSpecifier(specifier);

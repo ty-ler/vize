@@ -1,7 +1,11 @@
 import {
   ancestorPackagePath,
   packageNameFromExtendsSpecifier,
-} from "./typecheck-baseline-isolation-package-extends.mjs";
+} from "./typecheck-baseline-isolation-package-extends.ts";
+
+type Rec = Readonly<Record<string, unknown>>;
+const field = (value: unknown, key: string): unknown =>
+  value != null && typeof value === "object" ? (value as Rec)[key] : undefined;
 
 /**
  * `compilerOptions.plugins` and `vueCompilerOptions.plugins` load by climbing
@@ -14,18 +18,23 @@ import {
  * plugin lists rather than replacing the parent object.
  */
 
-export function pluginPackageNamesFromConfigs(configs) {
-  const names = [];
-  const seen = new Set();
+export function pluginPackageNamesFromConfigs(configs: unknown): string[] {
+  const names: string[] = [];
+  const seen = new Set<string>();
   if (!Array.isArray(configs)) return names;
-  for (const config of configs) {
-    addCompilerPlugins(names, seen, config?.compilerOptions?.plugins);
-    addVueCompilerPlugins(names, seen, config?.vueCompilerOptions?.plugins);
+  for (const config of configs as readonly unknown[]) {
+    addCompilerPlugins(names, seen, field(field(config, "compilerOptions"), "plugins"));
+    addVueCompilerPlugins(names, seen, field(field(config, "vueCompilerOptions"), "plugins"));
   }
   return names;
 }
 
-export function recordCompilerOptionPlugins(declared, conflicts, fixtureRoot, configs) {
+export function recordCompilerOptionPlugins(
+  declared: Map<string, string>,
+  conflicts: ReadonlySet<string>,
+  fixtureRoot: string,
+  configs: unknown,
+): void {
   for (const name of pluginPackageNamesFromConfigs(configs)) {
     if (conflicts.has(name) || declared.has(name)) continue;
     const ancestor = ancestorPackagePath(fixtureRoot, name);
@@ -34,32 +43,35 @@ export function recordCompilerOptionPlugins(declared, conflicts, fixtureRoot, co
   }
 }
 
-function addCompilerPlugins(names, seen, plugins) {
+function addCompilerPlugins(names: string[], seen: Set<string>, plugins: unknown): void {
   if (!Array.isArray(plugins)) return;
-  for (const plugin of plugins) {
-    if (plugin == null || typeof plugin.name !== "string") continue;
-    addName(names, seen, plugin.name);
+  for (const plugin of plugins as readonly unknown[]) {
+    const name = field(plugin, "name");
+    if (typeof name !== "string") continue;
+    addName(names, seen, name);
   }
 }
 
-function addVueCompilerPlugins(names, seen, plugins) {
+function addVueCompilerPlugins(names: string[], seen: Set<string>, plugins: unknown): void {
   if (!Array.isArray(plugins)) return;
-  for (const plugin of plugins) {
+  for (const plugin of plugins as readonly unknown[]) {
     if (typeof plugin === "string") {
       addName(names, seen, plugin);
       continue;
     }
-    if (Array.isArray(plugin) && typeof plugin[0] === "string") {
-      addName(names, seen, plugin[0]);
+    const first: unknown = Array.isArray(plugin) ? plugin[0] : undefined;
+    if (typeof first === "string") {
+      addName(names, seen, first);
       continue;
     }
-    if (plugin != null && typeof plugin.name === "string") {
-      addName(names, seen, plugin.name);
+    const name = field(plugin, "name");
+    if (typeof name === "string") {
+      addName(names, seen, name);
     }
   }
 }
 
-function addName(names, seen, specifier) {
+function addName(names: string[], seen: Set<string>, specifier: string): void {
   const name = packageNameFromExtendsSpecifier(specifier);
   if (name == null || seen.has(name)) return;
   seen.add(name);

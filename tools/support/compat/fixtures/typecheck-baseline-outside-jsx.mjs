@@ -1,12 +1,12 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 
-import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.mjs";
-import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.mjs";
+import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.ts";
+import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.ts";
 import {
   isolatedTsconfigOverlayPath,
   resolvePackageExtends,
-} from "./typecheck-baseline-outside-paths.mjs";
+} from "./typecheck-baseline-outside-paths.ts";
 
 /**
  * Close the jsx-runtime walk unique isolation cannot retarget (#4461).

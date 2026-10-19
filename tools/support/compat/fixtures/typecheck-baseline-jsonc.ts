@@ -2,11 +2,11 @@
  * Strip comments and trailing commas from a tsconfig-shaped JSONC string.
  * Shared so overlay parsers stay under the source-length budget.
  */
-export function stripJsonc(text) {
+export function stripJsonc(text: string): string {
   let out = "";
   let inString = false;
   for (let i = 0; i < text.length; i += 1) {
-    const ch = text[i];
+    const ch = text[i] ?? "";
     if (inString) {
       out += ch;
       if (ch === "\\") {

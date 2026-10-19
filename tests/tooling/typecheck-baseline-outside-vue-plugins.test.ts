@@ -5,7 +5,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import { applyIsolatedAliasOverlay } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.mjs";
-import { writeIsolatedTsconfigOverlay } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-paths.mjs";
+import { writeIsolatedTsconfigOverlay } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-paths.ts";
 import { rewriteOutsideVueCompilerOptions } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-vue-compiler.mjs";
 import { materializeBaselineProject } from "../../tools/support/compat/fixtures/typecheck-baseline-project.mjs";
 

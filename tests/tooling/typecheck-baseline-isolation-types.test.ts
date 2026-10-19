@@ -6,7 +6,7 @@ import { test } from "node:test";
 
 import { readDeclaredPackagePaths } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation.mjs";
 import { isolateUniqueLocalTypePackages } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-unique.mjs";
-import { typePackageNamesFromTypes } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-types.mjs";
+import { typePackageNamesFromTypes } from "../../tools/support/compat/fixtures/typecheck-baseline-isolation-types.ts";
 
 /**
  * `compilerOptions.types` is a type-reference walk out of the fixture (#4461).
