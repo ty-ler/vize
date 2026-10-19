@@ -1,12 +1,16 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, relative, resolve } from "node:path";
 
 import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.ts";
-import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.ts";
 import {
-  isolatedTsconfigOverlayPath,
-  resolvePackageExtends,
-} from "./typecheck-baseline-outside-paths.ts";
+  isInside,
+  isPathSpecifier,
+  localPackageTarget,
+  owningNodeModulePackage,
+  fixtureExtendsResolver,
+} from "./typecheck-baseline-local-package.ts";
+import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.ts";
+import { isolatedTsconfigOverlayPath } from "./typecheck-baseline-outside-paths.ts";
 
 /**
  * Close the jsx-runtime walk unique isolation cannot retarget (#4461).
@@ -19,7 +23,19 @@ import {
  * sources stay with unique-link. Child replaces parent, matching tsc.
  */
 
-export function rewriteOutsideJsxImportSource(fixtureRoot, sourceConfigPath, configDir) {
+type Rec = Readonly<Record<string, unknown>>;
+
+export interface JsxOverlay {
+  readonly path: string;
+  readonly jsxImportSource?: string;
+  readonly [field: string]: unknown;
+}
+
+export function rewriteOutsideJsxImportSource(
+  fixtureRoot: string,
+  sourceConfigPath: string,
+  configDir: string,
+): string | null {
   const root = resolve(fixtureRoot);
   const declared = winningJsxImportSource(sourceConfigPath, root);
   if (declared == null) return null;
@@ -27,33 +43,48 @@ export function rewriteOutsideJsxImportSource(fixtureRoot, sourceConfigPath, con
   return retargetJsxImportSourcePath(root, declared.dir, configDir, declared.specifier);
 }
 
-export function applyIsolatedJsxOverlay(fixtureRoot, sourceConfigPath, overlay) {
+export function applyIsolatedJsxOverlay(
+  fixtureRoot: string,
+  sourceConfigPath: string,
+  overlay: JsxOverlay | null | undefined,
+): JsxOverlay | null {
   const sourcePath = resolve(sourceConfigPath);
   const rewritten = rewriteOutsideJsxImportSource(fixtureRoot, sourcePath, dirname(sourcePath));
   if (rewritten == null) return overlay ?? null;
   const overlayPath = overlay?.path ?? isolatedTsconfigOverlayPath(sourcePath);
-  const document = existsSync(overlayPath)
-    ? JSON.parse(readFileSync(overlayPath, "utf8"))
-    : { extends: `./${basename(sourcePath)}` };
-  document.compilerOptions = { ...document.compilerOptions, jsxImportSource: rewritten };
+  const document = (
+    existsSync(overlayPath)
+      ? JSON.parse(readFileSync(overlayPath, "utf8"))
+      : { extends: `./${basename(sourcePath)}` }
+  ) as Record<string, unknown>;
+  document.compilerOptions = { ...(document.compilerOptions as Rec), jsxImportSource: rewritten };
   writeFileSync(overlayPath, `${JSON.stringify(document, null, 2)}\n`);
   return { ...overlay, path: overlayPath, jsxImportSource: rewritten };
 }
 
-export function applyIsolatedJsxBaseline(fixtureRoot, sourceConfigPath, baselinePath) {
+export function applyIsolatedJsxBaseline(
+  fixtureRoot: string,
+  sourceConfigPath: string,
+  baselinePath: string,
+): string | null {
   const rewritten = rewriteOutsideJsxImportSource(
     fixtureRoot,
     resolve(sourceConfigPath),
     dirname(resolve(baselinePath)),
   );
   if (rewritten == null) return null;
-  const document = JSON.parse(readFileSync(baselinePath, "utf8"));
-  document.compilerOptions = { ...document.compilerOptions, jsxImportSource: rewritten };
+  const document = JSON.parse(readFileSync(baselinePath, "utf8")) as Record<string, unknown>;
+  document.compilerOptions = { ...(document.compilerOptions as Rec), jsxImportSource: rewritten };
   writeFileSync(baselinePath, `${JSON.stringify(document, null, 2)}\n`);
   return rewritten;
 }
 
-function retargetJsxImportSourcePath(fixtureRoot, sourceDir, configDir, entry) {
+function retargetJsxImportSourcePath(
+  fixtureRoot: string,
+  sourceDir: string,
+  configDir: string,
+  entry: string,
+): string | null {
   const original = resolveWithConfigDir(sourceDir, sourceDir, entry);
   if (isInside(fixtureRoot, original)) return null;
   const owned = owningNodeModulePackage(original);
@@ -61,94 +92,21 @@ function retargetJsxImportSourcePath(fixtureRoot, sourceDir, configDir, entry) {
   return localPackageTarget(fixtureRoot, configDir, owned.name, relative(owned.root, original));
 }
 
-function localPackageTarget(fixtureRoot, configDir, name, subpath) {
-  const local = join(fixtureRoot, "node_modules", ...name.split("/"));
-  if (!existsSync(join(local, "package.json"))) return null;
-  const nested = typeof subpath === "string" ? subpath.replaceAll("\\", "/") : "";
-  if (nested.startsWith("..") || nested.startsWith("/")) return null;
-  const target = nested === "" ? local : join(local, nested);
-  if (nested !== "" && !existsSync(target)) return null;
-  return configRelativePath(configDir, target);
-}
-
-function isPathSpecifier(entry) {
-  return (
-    entry.startsWith("./") ||
-    entry.startsWith("../") ||
-    entry.startsWith("/") ||
-    entry.includes("/node_modules/") ||
-    entry.includes("${configDir}")
-  );
-}
-
-function winningJsxImportSource(sourceConfigPath, fixtureRoot) {
-  let specifier = null;
-  let dir = null;
+function winningJsxImportSource(
+  sourceConfigPath: string,
+  fixtureRoot: string,
+): { specifier: string; dir: string } | null {
+  let specifier: string | null = null;
+  let dir = "";
   for (const { config, dir: configDir } of [
-    ...loadTsconfigExtendsChain(
-      sourceConfigPath,
-      (fromConfig, specifier) =>
-        resolveRelativeExtends(fromConfig, specifier, fixtureRoot) ??
-        resolvePackageExtends(fromConfig, specifier, fixtureRoot),
-    ),
+    ...loadTsconfigExtendsChain(sourceConfigPath, fixtureExtendsResolver(fixtureRoot)),
   ].reverse()) {
-    const candidate = config?.compilerOptions?.jsxImportSource;
+    const options = config.compilerOptions;
+    const candidate: unknown =
+      options != null && typeof options === "object" ? (options as Rec).jsxImportSource : undefined;
     if (typeof candidate !== "string") continue;
     specifier = candidate;
     dir = configDir;
   }
   return specifier == null ? null : { specifier, dir };
-}
-
-function resolveRelativeExtends(fromConfig, specifier, fixtureRoot) {
-  if (typeof specifier !== "string") return null;
-  if (!(specifier.startsWith("./") || specifier.startsWith("../"))) return null;
-  const resolved = resolve(dirname(fromConfig), specifier);
-  const file = existsSync(resolved)
-    ? resolved
-    : !resolved.endsWith(".json") && existsSync(`${resolved}.json`)
-      ? `${resolved}.json`
-      : null;
-  if (file == null || !isInside(fixtureRoot, file)) return null;
-  return file;
-}
-
-function owningNodeModulePackage(resolvedPath) {
-  let directory = resolvedPath;
-  let previous = null;
-  while (directory !== previous) {
-    if (existsSync(join(directory, "package.json"))) {
-      const owned = nodeModulePackageName(directory);
-      if (owned != null) return owned;
-    }
-    previous = directory;
-    directory = dirname(directory);
-  }
-  return null;
-}
-
-function nodeModulePackageName(packageRoot) {
-  const parent = dirname(packageRoot);
-  const grandparent = dirname(parent);
-  if (basename(parent) === "node_modules") {
-    return { name: basename(packageRoot), root: packageRoot };
-  }
-  if (basename(grandparent) === "node_modules" && basename(parent).startsWith("@")) {
-    return {
-      name: `${basename(parent)}/${basename(packageRoot)}`,
-      root: packageRoot,
-    };
-  }
-  return null;
-}
-
-function isInside(root, target) {
-  const path = relative(root, target);
-  return path !== "" && !path.startsWith("..") && !path.startsWith("/");
-}
-
-function configRelativePath(from, to) {
-  const path = relative(from, to).replaceAll("\\", "/");
-  if (path.startsWith("/") || /^[A-Za-z]:\//u.test(path)) return path;
-  return path.startsWith(".") ? path : `./${path}`;
 }

@@ -8,7 +8,7 @@ import {
   applyIsolatedAliasOverlay,
   mergePathRewrites,
   rewriteOutsideAliasPaths,
-} from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.mjs";
+} from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.ts";
 import { writeIsolatedTsconfigOverlay } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-paths.ts";
 
 /**

@@ -9,7 +9,7 @@ import { selectTypecheckPerformanceProjects } from "./typecheck-performance-shar
 import { evaluateBaselineAmbientEnvironment } from "./typecheck-baseline-ambient.ts";
 import { evaluateBaselineConfiguration } from "./typecheck-baseline-configuration.ts";
 import { materializeBaselineProject } from "./typecheck-baseline-project.mjs";
-import { applyIsolatedJsxBaseline } from "./typecheck-baseline-outside-jsx.mjs";
+import { applyIsolatedJsxBaseline } from "./typecheck-baseline-outside-jsx.ts";
 import { typecheckSourceTsconfig } from "./tool-matrix-command.ts";
 import { runVueTscBaseline } from "./typecheck-baseline-run.mjs";
 import { evaluateVueProgramCoverage } from "./typecheck-baseline-coverage.mjs";

@@ -6,7 +6,7 @@ import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.ts"
 import {
   mergePathRewrites,
   rewriteOutsideAliasPaths,
-} from "./typecheck-baseline-outside-aliases.mjs";
+} from "./typecheck-baseline-outside-aliases.ts";
 import {
   isolatedOverlayBaseUrl,
   resolvePackageExtends,
@@ -14,8 +14,8 @@ import {
   rewriteOutsideRootDirs,
   rewriteOutsideTypeRoots,
 } from "./typecheck-baseline-outside-paths.ts";
-import { rewriteOutsideVueCompilerOptions } from "./typecheck-baseline-outside-vue-compiler.mjs";
-import { rewriteOutsideCompilerPlugins } from "./typecheck-baseline-outside-compiler-plugins.mjs";
+import { rewriteOutsideVueCompilerOptions } from "./typecheck-baseline-outside-vue-compiler.ts";
+import { rewriteOutsideCompilerPlugins } from "./typecheck-baseline-outside-compiler-plugins.ts";
 import {
   mergeLocalVueRuntimePaths,
   rewriteLocalVueRuntimePaths,

@@ -5,7 +5,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import { expandConfigDir } from "../../tools/support/compat/fixtures/typecheck-baseline-config-dir.ts";
-import { rewriteOutsideAliasPaths } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.mjs";
+import { rewriteOutsideAliasPaths } from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.ts";
 import {
   pathMappingRoot,
   rewriteOutsidePackagePaths,

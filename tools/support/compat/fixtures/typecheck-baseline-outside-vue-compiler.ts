@@ -1,10 +1,15 @@
-import { existsSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { relative, resolve } from "node:path";
 
 import { resolveWithConfigDir } from "./typecheck-baseline-config-dir.ts";
+import {
+  isInside,
+  isPathSpecifier,
+  localPackageTarget,
+  owningNodeModulePackage,
+  fixtureExtendsResolver,
+} from "./typecheck-baseline-local-package.ts";
 import { loadTsconfigExtendsChain } from "./typecheck-baseline-extends-chain.ts";
 import { packageNameFromExtendsSpecifier } from "./typecheck-baseline-isolation-package-extends.ts";
-import { resolvePackageExtends } from "./typecheck-baseline-outside-paths.ts";
 
 /**
  * Close the vue-tsc option escape unique isolation cannot see (#4461).
@@ -20,23 +25,33 @@ import { resolvePackageExtends } from "./typecheck-baseline-outside-paths.ts";
  * across relative extends, matching vue-tsc.
  */
 
-const pathOptionKeys = ["globalTypesPath", "typesRoot"];
+type Rec = Readonly<Record<string, unknown>>;
+interface Retargeted {
+  readonly value: unknown;
+  readonly changed: boolean;
+}
 
-export function rewriteOutsideVueCompilerOptions(fixtureRoot, sourceConfigPath, configDir) {
+const pathOptionKeys = ["globalTypesPath", "typesRoot"] as const;
+
+export function rewriteOutsideVueCompilerOptions(
+  fixtureRoot: string,
+  sourceConfigPath: string,
+  configDir: string,
+): Record<string, unknown> | null {
   const root = resolve(fixtureRoot);
   const declared = winningVueCompilerOptions(sourceConfigPath, root);
   if (declared == null) return null;
-  const rewritten = { ...declared.options };
+  const rewritten: Record<string, unknown> = { ...declared.options };
   let changed = false;
   for (const key of pathOptionKeys) {
     const entry = declared.options[key];
     if (typeof entry !== "string") continue;
-    const retargeted = retargetVueCompilerPath(root, declared.dirs[key], configDir, entry);
+    const retargeted = retargetVueCompilerPath(root, declared.dirs[key] ?? root, configDir, entry);
     if (retargeted == null) continue;
     rewritten[key] = retargeted;
     changed = true;
   }
-  const plugins = [];
+  const plugins: unknown[] = [];
   for (const { plugin, dir } of declared.plugins) {
     const next = retargetPluginEntry(root, dir, configDir, plugin);
     if (next.changed) changed = true;
@@ -46,24 +61,37 @@ export function rewriteOutsideVueCompilerOptions(fixtureRoot, sourceConfigPath, 
   return changed ? rewritten : null;
 }
 
-function retargetPluginEntry(fixtureRoot, sourceDir, configDir, plugin) {
+function retargetPluginEntry(
+  fixtureRoot: string,
+  sourceDir: string,
+  configDir: string,
+  plugin: unknown,
+): Retargeted {
   if (typeof plugin === "string") {
     return retargetPluginName(fixtureRoot, sourceDir, configDir, plugin, plugin);
   }
-  if (Array.isArray(plugin) && typeof plugin[0] === "string") {
-    const next = retargetPluginName(fixtureRoot, sourceDir, configDir, plugin[0], plugin);
+  const first: unknown = Array.isArray(plugin) ? plugin[0] : undefined;
+  if (Array.isArray(plugin) && typeof first === "string") {
+    const next = retargetPluginName(fixtureRoot, sourceDir, configDir, first, plugin);
     if (!next.changed) return next;
-    return { value: [next.value, ...plugin.slice(1)], changed: true };
+    return { value: [next.value, ...(plugin as readonly unknown[]).slice(1)], changed: true };
   }
-  if (plugin != null && typeof plugin.name === "string") {
-    const next = retargetPluginName(fixtureRoot, sourceDir, configDir, plugin.name, plugin);
+  const record = plugin != null && typeof plugin === "object" ? (plugin as Rec) : null;
+  if (record != null && typeof record.name === "string") {
+    const next = retargetPluginName(fixtureRoot, sourceDir, configDir, record.name, plugin);
     if (!next.changed) return next;
-    return { value: { ...plugin, name: next.value }, changed: true };
+    return { value: { ...record, name: next.value }, changed: true };
   }
   return { value: plugin, changed: false };
 }
 
-function retargetPluginName(fixtureRoot, sourceDir, configDir, name, fallback) {
+function retargetPluginName(
+  fixtureRoot: string,
+  sourceDir: string,
+  configDir: string,
+  name: string,
+  fallback: unknown,
+): Retargeted {
   const normalized = name.replaceAll("\\", "/");
   if (!isPathSpecifier(normalized)) return { value: fallback, changed: false };
   const retargeted = retargetVueCompilerPath(fixtureRoot, sourceDir, configDir, normalized);
@@ -72,7 +100,12 @@ function retargetPluginName(fixtureRoot, sourceDir, configDir, name, fallback) {
     : { value: retargeted, changed: true };
 }
 
-function retargetVueCompilerPath(fixtureRoot, sourceDir, configDir, entry) {
+function retargetVueCompilerPath(
+  fixtureRoot: string,
+  sourceDir: string,
+  configDir: string,
+  entry: string,
+): string | null {
   if (isPathSpecifier(entry)) {
     const original = resolveWithConfigDir(sourceDir, sourceDir, entry);
     if (isInside(fixtureRoot, original)) return null;
@@ -86,103 +119,33 @@ function retargetVueCompilerPath(fixtureRoot, sourceDir, configDir, entry) {
   return localPackageTarget(fixtureRoot, configDir, name, rest);
 }
 
-function localPackageTarget(fixtureRoot, configDir, name, subpath) {
-  const local = join(fixtureRoot, "node_modules", ...name.split("/"));
-  if (!existsSync(join(local, "package.json"))) return null;
-  const nested = typeof subpath === "string" ? subpath.replaceAll("\\", "/") : "";
-  if (nested.startsWith("..") || nested.startsWith("/")) return null;
-  const target = nested === "" ? local : join(local, nested);
-  if (nested !== "" && !existsSync(target)) return null;
-  return configRelativePath(configDir, target);
-}
-
-function isPathSpecifier(entry) {
-  return (
-    entry.startsWith("./") ||
-    entry.startsWith("../") ||
-    entry.startsWith("/") ||
-    entry.includes("/node_modules/") ||
-    entry.includes("${configDir}")
-  );
-}
-
-function winningVueCompilerOptions(sourceConfigPath, fixtureRoot) {
-  const options = {};
-  const dirs = {};
-  const plugins = [];
+function winningVueCompilerOptions(
+  sourceConfigPath: string,
+  fixtureRoot: string,
+): {
+  options: Record<string, unknown>;
+  dirs: Record<string, string>;
+  plugins: { plugin: unknown; dir: string }[];
+} | null {
+  const options: Record<string, unknown> = {};
+  const dirs: Record<string, string> = {};
+  const plugins: { plugin: unknown; dir: string }[] = [];
   for (const { config, dir } of [
-    ...loadTsconfigExtendsChain(
-      sourceConfigPath,
-      (fromConfig, specifier) =>
-        resolveRelativeExtends(fromConfig, specifier, fixtureRoot) ??
-        resolvePackageExtends(fromConfig, specifier, fixtureRoot),
-    ),
+    ...loadTsconfigExtendsChain(sourceConfigPath, fixtureExtendsResolver(fixtureRoot)),
   ].reverse()) {
-    const current = config?.vueCompilerOptions;
-    if (current == null || typeof current !== "object" || Array.isArray(current)) continue;
+    const value = config.vueCompilerOptions;
+    if (value == null || typeof value !== "object" || Array.isArray(value)) continue;
+    const current = value as Rec;
     for (const [key, value] of Object.entries(current)) {
       if (key === "plugins") continue;
       options[key] = value;
       dirs[key] = dir;
     }
     if (Array.isArray(current.plugins)) {
-      for (const plugin of current.plugins) plugins.push({ plugin, dir });
+      for (const plugin of current.plugins as readonly unknown[]) plugins.push({ plugin, dir });
     }
   }
   return Object.keys(options).length === 0 && plugins.length === 0
     ? null
     : { options, dirs, plugins };
-}
-
-function resolveRelativeExtends(fromConfig, specifier, fixtureRoot) {
-  if (typeof specifier !== "string") return null;
-  if (!(specifier.startsWith("./") || specifier.startsWith("../"))) return null;
-  const resolved = resolve(dirname(fromConfig), specifier);
-  const file = existsSync(resolved)
-    ? resolved
-    : !resolved.endsWith(".json") && existsSync(`${resolved}.json`)
-      ? `${resolved}.json`
-      : null;
-  if (file == null || !isInside(fixtureRoot, file)) return null;
-  return file;
-}
-
-function owningNodeModulePackage(resolvedPath) {
-  let directory = resolvedPath;
-  let previous = null;
-  while (directory !== previous) {
-    if (existsSync(join(directory, "package.json"))) {
-      const owned = nodeModulePackageName(directory);
-      if (owned != null) return owned;
-    }
-    previous = directory;
-    directory = dirname(directory);
-  }
-  return null;
-}
-
-function nodeModulePackageName(packageRoot) {
-  const parent = dirname(packageRoot);
-  const grandparent = dirname(parent);
-  if (basename(parent) === "node_modules") {
-    return { name: basename(packageRoot), root: packageRoot };
-  }
-  if (basename(grandparent) === "node_modules" && basename(parent).startsWith("@")) {
-    return {
-      name: `${basename(parent)}/${basename(packageRoot)}`,
-      root: packageRoot,
-    };
-  }
-  return null;
-}
-
-function isInside(root, target) {
-  const path = relative(root, target);
-  return path !== "" && !path.startsWith("..") && !path.startsWith("/");
-}
-
-function configRelativePath(from, to) {
-  const path = relative(from, to).replaceAll("\\", "/");
-  if (path.startsWith("/") || /^[A-Za-z]:\//u.test(path)) return path;
-  return path.startsWith(".") ? path : `./${path}`;
 }

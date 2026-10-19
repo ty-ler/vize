@@ -1,5 +1,5 @@
-import { applyIsolatedAliasOverlay } from "./typecheck-baseline-outside-aliases.mjs";
-import { applyIsolatedJsxOverlay } from "./typecheck-baseline-outside-jsx.mjs";
+import { applyIsolatedAliasOverlay } from "./typecheck-baseline-outside-aliases.ts";
+import { applyIsolatedJsxOverlay } from "./typecheck-baseline-outside-jsx.ts";
 import { writeIsolatedTsconfigOverlay } from "./typecheck-baseline-outside-paths.ts";
 
 /**
@@ -7,7 +7,7 @@ import { writeIsolatedTsconfigOverlay } from "./typecheck-baseline-outside-paths
  * JSX retargeting runs after path/alias rewrite so it can merge into the
  * same untracked overlay without growing `typecheck-dependency-prepare.mjs`.
  */
-export function applyIsolatedTypecheckOverlays(fixtureRoot, sourceConfigPath) {
+export function applyIsolatedTypecheckOverlays(fixtureRoot: string, sourceConfigPath: string) {
   return applyIsolatedJsxOverlay(
     fixtureRoot,
     sourceConfigPath,

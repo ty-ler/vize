@@ -7,7 +7,7 @@ import { test } from "node:test";
 import {
   applyIsolatedAliasOverlay,
   rewriteOutsideAliasPaths,
-} from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.mjs";
+} from "../../tools/support/compat/fixtures/typecheck-baseline-outside-aliases.ts";
 import {
   rewriteOutsidePackagePaths,
   writeIsolatedTsconfigOverlay,

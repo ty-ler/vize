@@ -17,7 +17,7 @@ import {
   isolateUniqueVueRuntimePackages,
   isolateUniqueVueUsePackages,
 } from "./typecheck-baseline-isolation-unique.mjs";
-import { applyIsolatedTypecheckOverlays } from "./typecheck-baseline-outside-overlays.mjs";
+import { applyIsolatedTypecheckOverlays } from "./typecheck-baseline-outside-overlays.ts";
 import { selectTypecheckPerformanceProjects } from "./typecheck-performance-shard.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
