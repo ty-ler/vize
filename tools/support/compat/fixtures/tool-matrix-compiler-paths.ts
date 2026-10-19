@@ -1,9 +1,15 @@
 import { existsSync, statSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
-export function expectedCompilerOutputs(cwd, patterns, inputPaths) {
+export function expectedCompilerOutputs(
+  cwd: string,
+  patterns: readonly string[],
+  inputPaths: readonly string[],
+): Map<string, string> {
   // Build plans layout from existing input roots, including roots that match no files.
-  const patternRoots = patterns.map((pattern) => compilerInputRoot(cwd, pattern)).filter(Boolean);
+  const patternRoots = patterns
+    .map((pattern) => compilerInputRoot(cwd, pattern))
+    .filter((root): root is string => Boolean(root));
   const roots =
     patternRoots.length > 0
       ? patternRoots
@@ -19,7 +25,7 @@ export function expectedCompilerOutputs(cwd, patterns, inputPaths) {
       ) {
         throw new Error(`compiler input is outside its output root: ${inputPath}`);
       }
-      return [relativeInput.replaceAll("\\", "/").replace(/\.vue$/, ".json"), inputPath];
+      return [relativeInput.replaceAll("\\", "/").replace(/\.vue$/, ".json"), inputPath] as const;
     }),
   );
   if (outputs.size !== inputPaths.length) {
@@ -28,7 +34,7 @@ export function expectedCompilerOutputs(cwd, patterns, inputPaths) {
   return outputs;
 }
 
-function compilerInputRoot(cwd, pattern) {
+function compilerInputRoot(cwd: string, pattern: string): string | null {
   const literal = resolve(cwd, pattern);
   if (existsSync(literal)) {
     const metadata = statSync(literal);
@@ -46,8 +52,9 @@ function compilerInputRoot(cwd, pattern) {
   return existsSync(root) && statSync(root).isDirectory() ? root : null;
 }
 
-function commonPathRoot(paths) {
+function commonPathRoot(paths: readonly string[]): string {
   let root = paths[0];
+  if (root === undefined) throw new Error("compiler inputs have no common output root");
   while (
     paths.some((entry) => {
       const nested = relative(root, entry);

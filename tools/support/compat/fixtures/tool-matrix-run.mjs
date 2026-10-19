@@ -14,7 +14,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { expectedCompilerOutputs } from "./tool-matrix-compiler-paths.mjs";
+import { expectedCompilerOutputs } from "./tool-matrix-compiler-paths.ts";
 import {
   displayCommand,
   toolArgs,
@@ -27,12 +27,12 @@ import {
   collectVueInputPaths,
   prepareScriptSourceScope,
 } from "./tool-matrix-inputs.ts";
-import { validateLinterOutput } from "./tool-matrix-linter.mjs";
+import { validateLinterOutput } from "./tool-matrix-linter.ts";
 import { validatedFileCount } from "./tool-matrix-metrics.ts";
 import {
   summarizeTypecheckerCoverage,
   validateTypecheckerOutput,
-} from "./tool-matrix-typechecker.mjs";
+} from "./tool-matrix-typechecker.ts";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 export function runTool(project, tool, args, launch, outputDir) {

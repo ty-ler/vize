@@ -10,7 +10,7 @@ import { runTool } from "../../tools/support/compat/fixtures/tool-matrix-run.mjs
 import {
   summarizeTypecheckerCoverage,
   validateTypecheckerOutput,
-} from "../../tools/support/compat/fixtures/tool-matrix-typechecker.mjs";
+} from "../../tools/support/compat/fixtures/tool-matrix-typechecker.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const project = { id: "coverage", expectedVueFileCount: 1 };

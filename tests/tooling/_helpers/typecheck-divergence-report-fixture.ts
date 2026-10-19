@@ -10,7 +10,7 @@ import { retainFixtureCommand } from "../support/typecheck-fixture-custody.ts";
 import {
   summarizeTypecheckerCoverage,
   validateTypecheckerOutput,
-} from "../../../tools/support/compat/fixtures/tool-matrix-typechecker.mjs";
+} from "../../../tools/support/compat/fixtures/tool-matrix-typechecker.ts";
 import {
   collectTypecheckerAuthoredPaths,
   collectVueInputPaths,

@@ -16,7 +16,7 @@ import {
 } from "./lint-divergence-budget.ts";
 import { renderMarkdown } from "./lint-divergence-markdown.ts";
 import { compareLintFindings } from "./lint-divergence.ts";
-import { collectRunEvidence } from "./run-evidence.mjs";
+import { collectRunEvidence } from "./run-evidence.ts";
 import { collectVueInputPaths } from "./tool-matrix-inputs.ts";
 import { resolveVizeLaunch } from "./tool-matrix-run.mjs";
 

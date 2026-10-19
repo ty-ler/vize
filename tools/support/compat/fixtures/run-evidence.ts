@@ -15,7 +15,19 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", ".
  * into the artifact. Shared by every `tools/fixtures/*-report.mjs` so their
  * artifacts stay comparable field for field.
  */
-export function collectRunEvidence() {
+export interface RunEvidence {
+  readonly commitSha: string;
+  readonly runtime: { readonly name: "node"; readonly version: string };
+  readonly machine: {
+    readonly platform: NodeJS.Platform;
+    readonly arch: string;
+    readonly cpuModel: string;
+    readonly logicalCpuCount: number;
+    readonly totalMemoryBytes: number;
+  };
+}
+
+export function collectRunEvidence(): RunEvidence {
   const machineCpus = cpus();
   const logicalCpuCount = machineCpus.length;
   const totalMemoryBytes = totalmem();
@@ -27,7 +39,7 @@ export function collectRunEvidence() {
   }
   return {
     commitSha: resolveCommitSha(),
-    runtime: { name: "node", version: process.versions.node },
+    runtime: { name: "node" as const, version: process.versions.node },
     machine: {
       platform: process.platform,
       arch: process.arch,
@@ -38,7 +50,7 @@ export function collectRunEvidence() {
   };
 }
 
-export function resolveCommitSha() {
+export function resolveCommitSha(): string {
   const environmentSha = process.env.GITHUB_SHA;
   if (environmentSha != null) return requireCommitSha(environmentSha, "GITHUB_SHA");
   const result = spawnSync("git", ["rev-parse", "HEAD"], {
@@ -52,7 +64,7 @@ export function resolveCommitSha() {
   return requireCommitSha(result.stdout.trim(), "git rev-parse HEAD");
 }
 
-function requireCommitSha(value, source) {
+function requireCommitSha(value: string, source: string): string {
   if (!/^[0-9a-f]{40}$/.test(value)) {
     throw new Error(`${source} must be a full lowercase commit SHA`);
   }

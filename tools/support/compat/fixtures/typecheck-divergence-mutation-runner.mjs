@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 
 import { displayCommand, toolArgs, typecheckCorpusGlobs } from "./tool-matrix-command.mjs";
 import { collectTypecheckerAuthoredPaths, collectVueInputPaths } from "./tool-matrix-inputs.ts";
-import { validateTypecheckerOutput } from "./tool-matrix-typechecker.mjs";
+import { validateTypecheckerOutput } from "./tool-matrix-typechecker.ts";
 import { runTypecheckCommand } from "./typecheck-command-runner.mjs";
 import { compareTypecheckDiagnostics } from "./typecheck-divergence.mjs";
 

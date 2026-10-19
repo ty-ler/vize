@@ -1,76 +1,110 @@
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { isAbsolute } from "node:path";
-import { validateScriptScope } from "./tool-matrix-inputs.ts";
+import { validateScriptScope, type ScriptScopeProject } from "./tool-matrix-inputs.ts";
 
-const outputKeys = ["errorCount", "fileCount", "files", "programs", "warningCount"];
-const fileKeys = ["diagnostics", "file"];
-const programKeys = ["compilerOptions", "files", "root", "tsconfig"];
+type Rec = Readonly<Record<string, unknown>>;
+
+export interface FileManifest {
+  readonly fileCount: number;
+  readonly files: string[];
+  readonly sha256: string;
+}
+
+export interface TypecheckerCoverage {
+  readonly schema: "vize.fixtureTypecheckerCoverage";
+  readonly version: 2;
+  readonly requested: FileManifest;
+  readonly transitiveAuthored: FileManifest;
+  readonly transitiveDependencies: FileManifest;
+  readonly checked: FileManifest;
+}
+
+const outputKeys: readonly string[] = [
+  "errorCount",
+  "fileCount",
+  "files",
+  "programs",
+  "warningCount",
+];
+const fileKeys: readonly string[] = ["diagnostics", "file"];
+const programKeys: readonly string[] = ["compilerOptions", "files", "root", "tsconfig"];
 const typecheckSourcePattern = /\.(?:vue|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/;
 
 export function validateTypecheckerOutput(
-  project,
-  output,
-  exitCode,
-  expectedFiles = null,
-  authoredFiles = expectedFiles,
-  scriptScope = null,
-) {
-  if (scriptScope != null)
-    validateScriptScope(project, output, expectedFiles, authoredFiles, scriptScope);
+  project: ScriptScopeProject,
+  output: unknown,
+  exitCode: number | null,
+  expectedFiles: readonly string[] | null = null,
+  authoredFiles: readonly string[] | null = expectedFiles,
+  scriptScope: unknown = null,
+): TypecheckerCoverage {
   requireRecord(output, "envelope");
+  if (scriptScope != null)
+    validateScriptScope(project, output, expectedFiles, authoredFiles ?? [], scriptScope);
   const expectedOutputKeys = Array.isArray(output.programs)
     ? outputKeys
     : outputKeys.filter((key) => key !== "programs");
   requireExactKeys(output, expectedOutputKeys, "envelope");
-  for (const field of ["errorCount", "warningCount", "fileCount"]) {
-    if (!Number.isSafeInteger(output[field]) || output[field] < 0) {
-      invalid(`${field} must be a non-negative safe integer`);
+  const [outputErrorCount, outputWarningCount, fileCount] = (
+    ["errorCount", "warningCount", "fileCount"] as const
+  ).map((field) => {
+    const value = output[field];
+    if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
+      return invalid(`${field} must be a non-negative safe integer`);
     }
+    return value;
+  }) as [number, number, number];
+  const files: unknown = output.files;
+  if (!Array.isArray(files)) return invalid("files must be an array");
+  const fileEntries = files as readonly unknown[];
+  if (fileCount > fileEntries.length) {
+    invalid(`fileCount ${fileCount} exceeds ${fileEntries.length} file entries`);
   }
-  if (!Array.isArray(output.files)) invalid("files must be an array");
-  if (output.fileCount > output.files.length) {
-    invalid(`fileCount ${output.fileCount} exceeds ${output.files.length} file entries`);
+  if (project.expectedVueFileCount === 0 && fileCount !== 0 && scriptScope == null) {
+    invalid(`expected zero checked files, received ${fileCount}`);
   }
-  if (project.expectedVueFileCount === 0 && output.fileCount !== 0 && scriptScope == null) {
-    invalid(`expected zero checked files, received ${output.fileCount}`);
-  }
-  if (project.expectedVueFileCount !== 0 && output.fileCount === 0) {
+  if (project.expectedVueFileCount !== 0 && fileCount === 0) {
     invalid("non-empty fixture checked zero Vue files");
   }
 
-  const seenFiles = new Set();
+  const seenFiles = new Set<string>();
+  const entryPaths: string[] = [];
   let errorCount = 0;
   let warningCount = 0;
-  for (const [index, file] of output.files.entries()) {
+  for (const [index, file] of fileEntries.entries()) {
     requireRecord(file, `files[${index}]`);
     requireExactKeys(file, fileKeys, `files[${index}]`);
-    requireRelativePath(file.file, `files[${index}].file`);
-    if (seenFiles.has(file.file)) invalid(`duplicate file entry: ${file.file}`);
-    seenFiles.add(file.file);
-    if (!Array.isArray(file.diagnostics)) {
-      invalid(`files[${index}].diagnostics must be an array`);
+    const path = file.file;
+    requireRelativePath(path, `files[${index}].file`);
+    if (seenFiles.has(path)) invalid(`duplicate file entry: ${path}`);
+    seenFiles.add(path);
+    entryPaths.push(path);
+    const diagnostics: unknown = file.diagnostics;
+    if (!Array.isArray(diagnostics)) {
+      return invalid(`files[${index}].diagnostics must be an array`);
     }
-    if (index < output.fileCount && expectedFiles == null && !file.file.endsWith(".vue")) {
-      invalid(`checked file is not a Vue SFC: ${file.file}`);
+    if (index < fileCount && expectedFiles == null && !path.endsWith(".vue")) {
+      invalid(`checked file is not a Vue SFC: ${path}`);
     }
-    if (index < output.fileCount && !typecheckSourcePattern.test(file.file)) {
-      invalid(`checked file has an unsupported typecheck extension: ${file.file}`);
+    if (index < fileCount && !typecheckSourcePattern.test(path)) {
+      invalid(`checked file has an unsupported typecheck extension: ${path}`);
     }
-    if (index >= output.fileCount && file.diagnostics.length === 0) {
-      invalid(`project-level file entry has no diagnostics: ${file.file}`);
+    if (index >= fileCount && diagnostics.length === 0) {
+      invalid(`project-level file entry has no diagnostics: ${path}`);
     }
-    for (const [diagnosticIndex, diagnostic] of file.diagnostics.entries()) {
+    for (const [diagnosticIndex, diagnostic] of (diagnostics as readonly unknown[]).entries()) {
       if (typeof diagnostic !== "string" || diagnostic.length === 0) {
         invalid(`files[${index}].diagnostics[${diagnosticIndex}] must be a non-empty string`);
       }
       if (diagnostic.startsWith("error:")) errorCount += 1;
       else if (diagnostic.startsWith("warning:")) warningCount += 1;
-      else if (diagnostic.startsWith("hint:")) validateHintDiagnostic(diagnostic, file.file);
-      else invalid(`diagnostic has no error or warning prefix: ${file.file}`);
+      else if (diagnostic.startsWith("hint:")) validateHintDiagnostic(diagnostic, path);
+      else invalid(`diagnostic has no error or warning prefix: ${path}`);
     }
   }
-  for (const [index, program] of (output.programs ?? []).entries()) {
+  const programs: readonly unknown[] = Array.isArray(output.programs) ? output.programs : [];
+  for (const [index, program] of programs.entries()) {
     requireRecord(program, `programs[${index}]`);
     const expectedKeys =
       typeof program.tsconfig === "string"
@@ -80,19 +114,20 @@ export function validateTypecheckerOutput(
     if (typeof program.root !== "string" || program.root.length === 0) {
       invalid(`programs[${index}].root must be a non-empty string`);
     }
-    if ("tsconfig" in program && program.tsconfig.length === 0) {
+    if ("tsconfig" in program && program.tsconfig === "") {
       invalid(`programs[${index}].tsconfig must be a non-empty string`);
     }
     if ("compilerOptions" in program) {
       requireRecord(program.compilerOptions, `programs[${index}].compilerOptions`);
     }
-    if (!Array.isArray(program.files)) invalid(`programs[${index}].files must be an array`);
-    for (const [fileIndex, file] of program.files.entries()) {
+    const programFiles: unknown = program.files;
+    if (!Array.isArray(programFiles)) return invalid(`programs[${index}].files must be an array`);
+    for (const [fileIndex, file] of (programFiles as readonly unknown[]).entries()) {
       requireProgramPath(file, `programs[${index}].files[${fileIndex}]`);
     }
   }
 
-  const checkedFiles = output.files.slice(0, output.fileCount).map((file) => file.file);
+  const checkedFiles = entryPaths.slice(0, fileCount);
   const sortedFiles = checkedFiles
     .map((file) => ({ file, buf: Buffer.from(file) }))
     .sort((left, right) => Buffer.compare(left.buf, right.buf))
@@ -100,19 +135,20 @@ export function validateTypecheckerOutput(
   if (JSON.stringify(checkedFiles) !== JSON.stringify(sortedFiles)) {
     invalid("checked file entries are not sorted");
   }
-  let requestedFiles = checkedFiles;
-  let transitiveAuthoredFiles = [];
-  let transitiveDependencyFiles = [];
+  let requested: readonly string[] = checkedFiles;
+  let transitiveAuthoredFiles: string[] = [];
+  let transitiveDependencyFiles: string[] = [];
   if (expectedFiles != null) {
     validateManifestInput(expectedFiles, "requested fixture inputs", isVueSfc);
     validateManifestInput(authoredFiles, "authored fixture sources", isTypecheckSource);
+    const authored: readonly string[] = authoredFiles ?? [];
     const checkedSet = new Set(checkedFiles);
     const expectedSet = new Set(expectedFiles);
     const missing = expectedFiles.filter((file) => !checkedSet.has(file));
     if (missing.length > 0) {
       invalid(`checked files are missing requested fixture inputs: [${missing.join(", ")}]`);
     }
-    const authoredSet = new Set(authoredFiles);
+    const authoredSet = new Set(authored);
     const missingAuthoredInputs = expectedFiles.filter((file) => !authoredSet.has(file));
     if (missingAuthoredInputs.length > 0) {
       invalid(
@@ -128,30 +164,30 @@ export function validateTypecheckerOutput(
         `checked transitive files are not authored fixture sources: [${unclassified.join(", ")}]`,
       );
     }
-    requestedFiles = expectedFiles;
+    requested = expectedFiles;
   }
-  if (output.errorCount !== errorCount) {
-    invalid(`errorCount ${output.errorCount} does not match ${errorCount} diagnostics`);
+  if (outputErrorCount !== errorCount) {
+    invalid(`errorCount ${outputErrorCount} does not match ${errorCount} diagnostics`);
   }
-  if (output.warningCount !== warningCount) {
-    invalid(`warningCount ${output.warningCount} does not match ${warningCount} diagnostics`);
+  if (outputWarningCount !== warningCount) {
+    invalid(`warningCount ${outputWarningCount} does not match ${warningCount} diagnostics`);
   }
   const expectedExitCode = errorCount > 0 ? 1 : 0;
   if (exitCode !== expectedExitCode) {
-    invalid(`exit code ${exitCode} does not match expected ${expectedExitCode}`);
+    invalid(`exit code ${String(exitCode)} does not match expected ${expectedExitCode}`);
   }
 
   return {
     schema: "vize.fixtureTypecheckerCoverage",
     version: 2,
-    requested: createManifest(requestedFiles),
+    requested: createManifest(requested),
     transitiveAuthored: createManifest(transitiveAuthoredFiles),
     transitiveDependencies: createManifest(transitiveDependencyFiles),
     checked: createManifest(checkedFiles),
   };
 }
 
-export function summarizeTypecheckerCoverage(coverage) {
+export function summarizeTypecheckerCoverage(coverage: unknown) {
   requireRecord(coverage, "typechecker coverage");
   requireExactKeys(
     coverage,
@@ -161,48 +197,60 @@ export function summarizeTypecheckerCoverage(coverage) {
   if (coverage.schema !== "vize.fixtureTypecheckerCoverage" || coverage.version !== 2) {
     invalid("typechecker coverage schema is unsupported");
   }
-  validateManifest(coverage.requested, "typechecker coverage.requested", isVueSfc);
-  validateManifest(
+  const requested = validateManifest(
+    coverage.requested,
+    "typechecker coverage.requested",
+    isVueSfc,
+  );
+  const transitiveAuthored = validateManifest(
     coverage.transitiveAuthored,
     "typechecker coverage.transitiveAuthored",
     (file) => isTypecheckSource(file) && !isDependencySource(file),
   );
-  validateManifest(
+  const transitiveDependencies = validateManifest(
     coverage.transitiveDependencies,
     "typechecker coverage.transitiveDependencies",
     (file) => isTypecheckSource(file) && isDependencySource(file),
   );
-  validateManifest(coverage.checked, "typechecker coverage.checked", isTypecheckSource);
+  const checked = validateManifest(
+    coverage.checked,
+    "typechecker coverage.checked",
+    isTypecheckSource,
+  );
   const combined = [
-    ...coverage.requested.files,
-    ...coverage.transitiveAuthored.files,
-    ...coverage.transitiveDependencies.files,
+    ...requested.files,
+    ...transitiveAuthored.files,
+    ...transitiveDependencies.files,
   ].sort(byteSort);
-  if (JSON.stringify(combined) !== JSON.stringify(coverage.checked.files)) {
+  if (JSON.stringify(combined) !== JSON.stringify(checked.files)) {
     invalid("typechecker coverage classes do not partition checked files");
   }
   return {
-    requestedFileCount: coverage.requested.fileCount,
-    requestedSha256: coverage.requested.sha256,
-    transitiveAuthoredFileCount: coverage.transitiveAuthored.fileCount,
-    transitiveAuthoredSha256: coverage.transitiveAuthored.sha256,
-    transitiveDependencyFileCount: coverage.transitiveDependencies.fileCount,
-    transitiveDependencySha256: coverage.transitiveDependencies.sha256,
-    checkedFileCount: coverage.checked.fileCount,
-    checkedSha256: coverage.checked.sha256,
+    requestedFileCount: requested.fileCount,
+    requestedSha256: requested.sha256,
+    transitiveAuthoredFileCount: transitiveAuthored.fileCount,
+    transitiveAuthoredSha256: transitiveAuthored.sha256,
+    transitiveDependencyFileCount: transitiveDependencies.fileCount,
+    transitiveDependencySha256: transitiveDependencies.sha256,
+    checkedFileCount: checked.fileCount,
+    checkedSha256: checked.sha256,
   };
 }
 
-function createManifest(files) {
+function createManifest(files: readonly string[]): FileManifest {
   const digest = createHash("sha256");
   for (const file of files) digest.update(file).update("\0");
   return { fileCount: files.length, files: [...files], sha256: digest.digest("hex") };
 }
 
-function validateManifestInput(files, label, acceptsFile) {
-  if (!Array.isArray(files)) invalid(`${label} must be an array`);
-  const seen = new Set();
-  for (const [index, file] of files.entries()) {
+function validateManifestInput(
+  files: unknown,
+  label: string,
+  acceptsFile: (file: string) => boolean,
+): asserts files is string[] {
+  if (!Array.isArray(files)) return invalid(`${label} must be an array`);
+  const seen = new Set<string>();
+  for (const [index, file] of (files as readonly unknown[]).entries()) {
     requireRelativePath(file, `${label}[${index}]`);
     if (!acceptsFile(file)) invalid(`${label}[${index}] has an unsupported source extension`);
     if (seen.has(file)) invalid(`${label} contains duplicate file: ${file}`);
@@ -213,46 +261,53 @@ function validateManifestInput(files, label, acceptsFile) {
   }
 }
 
-function validateManifest(manifest, label, acceptsFile) {
+function validateManifest(
+  manifest: unknown,
+  label: string,
+  acceptsFile: (file: string) => boolean,
+): FileManifest {
   requireRecord(manifest, label);
   requireExactKeys(manifest, ["fileCount", "files", "sha256"], label);
-  validateManifestInput(manifest.files, `${label}.files`, acceptsFile);
-  if (manifest.fileCount !== manifest.files.length) invalid(`${label}.fileCount is inconsistent`);
-  if (manifest.sha256 !== createManifest(manifest.files).sha256) {
+  const files = manifest.files;
+  validateManifestInput(files, `${label}.files`, acceptsFile);
+  if (manifest.fileCount !== files.length) invalid(`${label}.fileCount is inconsistent`);
+  const expected = createManifest(files);
+  if (manifest.sha256 !== expected.sha256) {
     invalid(`${label}.sha256 is inconsistent`);
   }
+  return expected;
 }
 
-function byteSort(left, right) {
+function byteSort(left: string, right: string): number {
   return Buffer.compare(Buffer.from(left), Buffer.from(right));
 }
 
-function isVueSfc(file) {
+function isVueSfc(file: string): boolean {
   return file.endsWith(".vue");
 }
 
-function isTypecheckSource(file) {
+function isTypecheckSource(file: string): boolean {
   return typecheckSourcePattern.test(file);
 }
 
-function isDependencySource(file) {
+function isDependencySource(file: string): boolean {
   return file.split("/").includes("node_modules");
 }
 
-function requireRecord(value, label) {
+function requireRecord(value: unknown, label: string): asserts value is Rec {
   if (value == null || typeof value !== "object" || Array.isArray(value)) {
     invalid(`${label} must be an object`);
   }
 }
 
-function requireExactKeys(value, expected, label) {
+function requireExactKeys(value: Rec, expected: readonly string[], label: string): void {
   const actual = Object.keys(value).sort();
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
     invalid(`${label} keys must be ${expected.join(", ")}; received ${actual.join(", ")}`);
   }
 }
 
-function requireRelativePath(value, label) {
+function requireRelativePath(value: unknown, label: string): asserts value is string {
   if (
     typeof value !== "string" ||
     value.length === 0 ||
@@ -266,9 +321,9 @@ function requireRelativePath(value, label) {
   }
 }
 
-function requireProgramPath(value, label) {
+function requireProgramPath(value: unknown, label: string): void {
   if (typeof value !== "string" || value.length === 0 || /[\\\0]/.test(value)) {
-    invalid(`${label} must be a normalized program path`);
+    return invalid(`${label} must be a normalized program path`);
   }
   let components = value;
   if (/^[A-Za-z]:/.test(value)) {
@@ -287,11 +342,11 @@ function requireProgramPath(value, label) {
   }
 }
 
-function invalid(message) {
+function invalid(message: string): never {
   throw new Error(`invalid typechecker JSON output: ${message}`);
 }
 
-function validateHintDiagnostic(diagnostic, file) {
+function validateHintDiagnostic(diagnostic: string, file: string): void {
   const match = /^hint:(\d+):(\d+) \[TS(\d+)\] ([\s\S]+)$/.exec(diagnostic);
   if (
     match == null ||
@@ -299,7 +354,7 @@ function validateHintDiagnostic(diagnostic, file) {
       const value = Number(field);
       return !Number.isSafeInteger(value) || value < 1;
     }) ||
-    match[4].trim().length === 0
+    (match[4] ?? "").trim().length === 0
   ) {
     invalid(`hint must have positive safe location/code and non-empty message: ${file}`);
   }

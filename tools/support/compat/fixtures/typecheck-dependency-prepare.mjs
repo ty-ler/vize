@@ -4,7 +4,7 @@ import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { validateTypecheckPerformanceTarget } from "./tool-matrix-typecheck-target.mjs";
+import { validateTypecheckPerformanceTarget } from "./tool-matrix-typecheck-target.ts";
 import { runTypecheckCommand } from "./typecheck-command-runner.mjs";
 import { isolateFixtureTypePackages } from "./typecheck-baseline-isolation.mjs";
 import {

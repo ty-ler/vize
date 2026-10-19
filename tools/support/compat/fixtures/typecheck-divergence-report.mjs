@@ -4,7 +4,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { resolveVizeLaunch } from "./tool-matrix-run.mjs";
-import { validateTypecheckPerformanceTarget } from "./tool-matrix-typecheck-target.mjs";
+import { validateTypecheckPerformanceTarget } from "./tool-matrix-typecheck-target.ts";
 import { selectTypecheckPerformanceProjects } from "./typecheck-performance-shard.mjs";
 import { evaluateBaselineAmbientEnvironment } from "./typecheck-baseline-ambient.mjs";
 import { evaluateBaselineConfiguration } from "./typecheck-baseline-configuration.mjs";

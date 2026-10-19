@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 
-import { validateTypecheckerOutput } from "../../tools/support/compat/fixtures/tool-matrix-typechecker.mjs";
+import { validateTypecheckerOutput } from "../../tools/support/compat/fixtures/tool-matrix-typechecker.ts";
 import { compareTypecheckDiagnostics } from "../../tools/support/compat/fixtures/typecheck-divergence.mjs";
 
 const evidence = new URL("./fixtures/typechecker-native-hints/", import.meta.url);

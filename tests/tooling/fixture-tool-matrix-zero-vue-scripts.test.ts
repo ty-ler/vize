@@ -13,7 +13,7 @@ import {
 } from "../../tools/support/compat/fixtures/tool-matrix-inputs.ts";
 import { runTool } from "../../tools/support/compat/fixtures/tool-matrix-run.mjs";
 import { toolArgs } from "../../tools/support/compat/fixtures/tool-matrix-command.mjs";
-import { validateTypecheckerOutput } from "../../tools/support/compat/fixtures/tool-matrix-typechecker.mjs";
+import { validateTypecheckerOutput } from "../../tools/support/compat/fixtures/tool-matrix-typechecker.ts";
 import { resolveVizeBin } from "./support/check-fixtures/cycle-targets.ts";
 import { expectedBuildIdentity, validateBuildReceipt } from "../differential/build-receipt.ts";
 

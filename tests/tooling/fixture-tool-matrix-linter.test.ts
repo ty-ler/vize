@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { runTool } from "../../tools/support/compat/fixtures/tool-matrix-run.mjs";
-import { validateLinterOutput } from "../../tools/support/compat/fixtures/tool-matrix-linter.mjs";
+import { validateLinterOutput } from "../../tools/support/compat/fixtures/tool-matrix-linter.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 

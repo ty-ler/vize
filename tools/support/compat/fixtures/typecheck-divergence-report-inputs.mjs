@@ -8,7 +8,7 @@ import { collectTypecheckerAuthoredPaths, collectVueInputPaths } from "./tool-ma
 import {
   summarizeTypecheckerCoverage,
   validateTypecheckerOutput,
-} from "./tool-matrix-typechecker.mjs";
+} from "./tool-matrix-typechecker.ts";
 
 /**
  * The matrix artifacts a divergence run is allowed to trust, split out of

@@ -2,9 +2,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { collectRunEvidence } from "./run-evidence.mjs";
+import { collectRunEvidence } from "./run-evidence.ts";
 import { resolveVizeLaunch, runToolWithHeartbeat } from "./tool-matrix-run.mjs";
-import { validateTypecheckPerformanceTarget } from "./tool-matrix-typecheck-target.mjs";
+import { validateTypecheckPerformanceTarget } from "./tool-matrix-typecheck-target.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..", "..", "..", "..");

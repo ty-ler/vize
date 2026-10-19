@@ -1,20 +1,34 @@
-import { statSync } from "node:fs";
+import { statSync, type Stats } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
 
+export interface TypecheckTargetProject {
+  readonly id: string;
+  readonly tsconfig?: unknown;
+  readonly typecheckPerformance?: Readonly<Record<string, unknown>>;
+  readonly [field: string]: unknown;
+}
+
+const lockfiles: Readonly<Record<string, string>> = {
+  npm: "package-lock.json",
+  pnpm: "pnpm-lock.yaml",
+  yarn: "yarn.lock",
+};
+
 export function validateTypecheckPerformanceTarget(
-  project,
-  fixtureRoot,
-  { requireBaseline = false } = {},
-) {
-  if (project.typecheckPerformance?.enabled !== true) return;
-  if (project.typecheckPerformance.compareTo !== "vue-tsc") {
+  project: TypecheckTargetProject,
+  fixtureRoot: string,
+  { requireBaseline = false }: { readonly requireBaseline?: boolean } = {},
+): void {
+  const performance = project.typecheckPerformance;
+  if (performance?.enabled !== true) return;
+  if (performance.compareTo !== "vue-tsc") {
     invalid(project, "compareTo must be vue-tsc");
   }
   requireFile(project, fixtureRoot, project.tsconfig, "tsconfig");
   // Optional: when shared `vueGlobs` reach past what `tsconfig` owns, the
   // typechecker corpus is narrowed here so one config is never asked to
   // answer for files it never included (#4454).
-  const corpus = project.typecheckPerformance.corpusGlobs;
+  const corpus = performance.corpusGlobs;
   if (corpus !== undefined) {
     if (!Array.isArray(corpus) || corpus.length === 0) {
       invalid(project, "corpusGlobs must be a non-empty array when present");
@@ -26,23 +40,26 @@ export function validateTypecheckPerformanceTarget(
       requireRelativePath(project, glob, "corpusGlobs entry");
     }
   }
-  const manager = project.typecheckPerformance.packageManager;
-  const lockfiles = { npm: "package-lock.json", pnpm: "pnpm-lock.yaml", yarn: "yarn.lock" };
-  if (!Object.hasOwn(lockfiles, manager)) {
-    invalid(project, "packageManager must be npm, pnpm, or yarn");
-  }
+  const manager = performance.packageManager;
+  const lockfile =
+    typeof manager === "string" && Object.hasOwn(lockfiles, manager)
+      ? lockfiles[manager]
+      : undefined;
+  if (lockfile === undefined) invalid(project, "packageManager must be npm, pnpm, or yarn");
   if (
     !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(
-      project.typecheckPerformance.packageManagerVersion ?? "",
+      typeof performance.packageManagerVersion === "string"
+        ? performance.packageManagerVersion
+        : "",
     )
   ) {
     invalid(project, "packageManagerVersion must be an exact semantic version");
   }
-  if (project.typecheckPerformance.lockfile !== lockfiles[manager]) {
-    invalid(project, `lockfile must be ${lockfiles[manager]} for ${manager}`);
+  if (performance.lockfile !== lockfile) {
+    invalid(project, `lockfile must be ${lockfile} for ${String(manager)}`);
   }
-  requireFile(project, fixtureRoot, project.typecheckPerformance.lockfile, "lockfile");
-  const baseline = project.typecheckPerformance.baseline;
+  requireFile(project, fixtureRoot, performance.lockfile, "lockfile");
+  const baseline = performance.baseline as Readonly<Record<string, unknown>> | null | undefined;
   if (baseline == null) return;
   requireRelativePath(project, baseline.tsconfig, "baseline tsconfig");
   if (baseline.prepare == null) {
@@ -59,23 +76,32 @@ export function validateTypecheckPerformanceTarget(
         typeof argument !== "string" || argument.length === 0 || argument.includes("\0"),
     )
   ) {
-    invalid(project, `baseline prepare must be a ${manager} command argument array`);
+    invalid(project, `baseline prepare must be a ${String(manager)} command argument array`);
   }
 }
 
-function requireFile(project, fixtureRoot, target, label) {
+function requireFile(
+  project: TypecheckTargetProject,
+  fixtureRoot: string,
+  target: unknown,
+  label: string,
+): void {
   requireRelativePath(project, target, label);
   const resolved = resolve(fixtureRoot, target);
-  let metadata;
+  let metadata: Stats;
   try {
     metadata = statSync(resolved);
   } catch {
-    invalid(project, `${label} does not exist: ${target}`);
+    return invalid(project, `${label} does not exist: ${target}`);
   }
   if (!metadata.isFile()) invalid(project, `${label} is not a file: ${target}`);
 }
 
-function requireRelativePath(project, target, label) {
+function requireRelativePath(
+  project: TypecheckTargetProject,
+  target: unknown,
+  label: string,
+): asserts target is string {
   if (
     typeof target !== "string" ||
     target.length === 0 ||
@@ -89,6 +115,6 @@ function requireRelativePath(project, target, label) {
   }
 }
 
-function invalid(project, message) {
+function invalid(project: TypecheckTargetProject, message: string): never {
   throw new Error(`Invalid typecheck performance target for ${project.id}: ${message}`);
 }
