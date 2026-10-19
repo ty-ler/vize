@@ -10,23 +10,29 @@ const TEMPLATE_RULES: [&str; 4] = [
     "vue/no-deprecated-router-link-tag-prop",
 ];
 
-const SCRIPT_RULES: [&str; 6] = [
+const SCRIPT_RULES: [&str; 9] = [
     "script/no-deprecated-data-object-declaration",
+    "script/no-deprecated-delete-set",
     "script/no-deprecated-destroyed-lifecycle",
     "script/no-deprecated-dollar-listeners-api",
     "script/no-deprecated-dollar-scopedslots-api",
     "script/no-deprecated-events-api",
+    "script/no-deprecated-model-definition",
     "script/no-deprecated-props-default-this",
+    "script/no-deprecated-vue-config-keycodes",
 ];
 
 const REMOVED: &str = r#"<script>
+Vue.config.keyCodes = { f1: 112 }
 export default {
+  model: { prop: 'checked', event: 'change' },
   data: { ready: false },
   props: {
     label: { type: String, default() { return this.fallback } },
   },
   beforeDestroy() {
     this.$off('ready')
+    this.$set(this.state, 'ready', false)
   },
   methods: {
     forward() {

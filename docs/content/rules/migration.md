@@ -4,7 +4,7 @@ title: ESLint rule migration map
 
 # ESLint rule migration map
 
-The committed ESLint mapping records 252 rule IDs: 130 mapped, 2 intentional divergences, and 120 unimplemented. A mapped ID identifies a Vize rule; it does not guarantee identical options, findings, fixes, or coverage.
+The committed ESLint mapping records 252 rule IDs: 133 mapped, 2 intentional divergences, and 117 unimplemented. A mapped ID identifies a Vize rule; it does not guarantee identical options, findings, fixes, or coverage.
 
 Enable Vize rules under `vue.linter.rules` in the Vite+ configuration. Keep JS/TS rules handled by Oxlint in `lint.rules`. Do not copy an ESLint option tuple directly: Vize severity and typed `ruleOptions` are separate.
 
@@ -92,7 +92,7 @@ For option conversion, see [Rule Options](./options.md) and [props destructuring
 | `vue/no-constant-condition` | — | unimplemented |
 | `vue/no-custom-modifiers-on-v-model` | — | unimplemented |
 | `vue/no-deprecated-data-object-declaration` | [`script/no-deprecated-data-object-declaration`](./reference/script-no-deprecated-data-object-declaration.md) | mapped |
-| `vue/no-deprecated-delete-set` | — | unimplemented |
+| `vue/no-deprecated-delete-set` | [`script/no-deprecated-delete-set`](./reference/script-no-deprecated-delete-set.md) | mapped |
 | `vue/no-deprecated-destroyed-lifecycle` | [`script/no-deprecated-destroyed-lifecycle`](./reference/script-no-deprecated-destroyed-lifecycle.md) | mapped |
 | `vue/no-deprecated-dollar-listeners-api` | [`script/no-deprecated-dollar-listeners-api`](./reference/script-no-deprecated-dollar-listeners-api.md) | mapped |
 | `vue/no-deprecated-dollar-scopedslots-api` | [`script/no-deprecated-dollar-scopedslots-api`](./reference/script-no-deprecated-dollar-scopedslots-api.md) | mapped |
@@ -101,7 +101,7 @@ For option conversion, see [Rule Options](./options.md) and [props destructuring
 | `vue/no-deprecated-functional-template` | [`vue/no-deprecated-functional-template`](./reference/vue-no-deprecated-functional-template.md) | mapped |
 | `vue/no-deprecated-html-element-is` | [`vue/no-deprecated-html-element-is`](./reference/vue-no-deprecated-html-element-is.md) | mapped |
 | `vue/no-deprecated-inline-template` | [`vue/no-deprecated-inline-template`](./reference/vue-no-deprecated-inline-template.md) | mapped |
-| `vue/no-deprecated-model-definition` | — | unimplemented |
+| `vue/no-deprecated-model-definition` | [`script/no-deprecated-model-definition`](./reference/script-no-deprecated-model-definition.md) | mapped |
 | `vue/no-deprecated-props-default-this` | [`script/no-deprecated-props-default-this`](./reference/script-no-deprecated-props-default-this.md) | mapped |
 | `vue/no-deprecated-router-link-tag-prop` | [`vue/no-deprecated-router-link-tag-prop`](./reference/vue-no-deprecated-router-link-tag-prop.md) | mapped |
 | `vue/no-deprecated-scope-attribute` | [`vue/no-deprecated-scope-attribute`](./reference/vue-no-deprecated-scope-attribute.md) | mapped |
@@ -111,7 +111,7 @@ For option conversion, see [Rule Options](./options.md) and [props destructuring
 | `vue/no-deprecated-v-is` | [`vue/no-deprecated-v-is`](./reference/vue-no-deprecated-v-is.md) | mapped |
 | `vue/no-deprecated-v-on-native-modifier` | [`vue/no-deprecated-v-on-native-modifier`](./reference/vue-no-deprecated-v-on-native-modifier.md) | mapped |
 | `vue/no-deprecated-v-on-number-modifiers` | [`vue/no-deprecated-v-on-number-modifiers`](./reference/vue-no-deprecated-v-on-number-modifiers.md) | mapped |
-| `vue/no-deprecated-vue-config-keycodes` | — | unimplemented |
+| `vue/no-deprecated-vue-config-keycodes` | [`script/no-deprecated-vue-config-keycodes`](./reference/script-no-deprecated-vue-config-keycodes.md) | mapped |
 | `vue/no-dupe-keys` | [`script/no-dupe-keys`](./reference/script-no-dupe-keys.md) | mapped |
 | `vue/no-dupe-v-else-if` | [`vue/no-dupe-v-else-if`](./reference/vue-no-dupe-v-else-if.md) | mapped |
 | `vue/no-duplicate-attr-inheritance` | [`script/no-duplicate-attr-inheritance`](./reference/script-no-duplicate-attr-inheritance.md) | mapped |

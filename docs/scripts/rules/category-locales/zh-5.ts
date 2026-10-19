@@ -179,4 +179,19 @@ export const chineseRules5: Record<string, readonly [string, string, string]> = 
     "`watch()` 在 `await loadData()` 之后创建且丢弃了停止句柄，因此侦听器不会随组件一起停止。",
     "侦听器在第一个 `await` 之前创建，因此组件卸载时 Vue 会停止它。",
   ],
+  "script/no-deprecated-delete-set": [
+    "禁止使用 Vue 3 已移除的 $set 和 $delete",
+    "`this.$set()` 和 `this.$delete()` 已在 Vue 3 中移除，组件实例上不存在这些方法。",
+    "该方法直接给属性赋值并使用 `delete` 运算符，Vue 3 的响应式系统会追踪这两种操作。",
+  ],
+  "script/no-deprecated-model-definition": [
+    "禁止使用 Vue 3 已移除的 model 组件选项",
+    "`model` 选项重命名了 `v-model` 的 prop 和事件，Vue 3 已移除该选项，组件将无法再接收 `v-model`。",
+    "组件声明 Vue 3 的 `v-model` 使用的 `modelValue` prop 和 `update:modelValue` 事件。",
+  ],
+  "script/no-deprecated-vue-config-keycodes": [
+    "禁止使用 Vue 3 已移除的 Vue.config.keyCodes",
+    "`Vue.config.keyCodes` 为 `v-on` 修饰符注册键码别名，Vue 3 已移除该功能。",
+    "应用通过 `createApp()` 创建，不注册键码别名；模板使用 `KeyboardEvent.key` 的名称作为修饰符。",
+  ],
 };

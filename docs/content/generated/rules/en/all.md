@@ -14,7 +14,7 @@ Severity is the implementation default; override it with `off`, `warn`, or `erro
 
 See the [ESLint migration map](./migration.md) for rule IDs, differences, and unsupported mappings.
 
-## Single-file rules (258)
+## Single-file rules (261)
 
 | Rule | Examples | Severity | Presets | Fixable | Options | Implementation | Description | Category |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -219,11 +219,14 @@ See the [ESLint migration map](./migration.md) for rule IDs, differences, and un
 | [`script/no-boolean-default`](#script-no-boolean-default) | [Bad](#script-no-boolean-default-bad) · [Good](#script-no-boolean-default-good) | `warning` | `opinionated`, `nuxt` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_boolean_default.rs#L54) | Disallow a default on a Boolean prop | Script |
 | [`script/no-deep-destructure-in-props`](#script-no-deep-destructure-in-props) | [Bad](#script-no-deep-destructure-in-props-bad) · [Good](#script-no-deep-destructure-in-props-good) | `warning` | `opinionated`, `nuxt` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deep_destructure_in_props.rs#L39) | Disallow deeply nested destructuring in defineProps | Script |
 | [`script/no-deprecated-data-object-declaration`](#script-no-deprecated-data-object-declaration) | [Bad](#script-no-deprecated-data-object-declaration-bad) · [Good](#script-no-deprecated-data-object-declaration-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_data_object_declaration.rs#L48) | Disallow an object literal as the component data option (Vue 3 requires a function) | Script |
+| [`script/no-deprecated-delete-set`](#script-no-deprecated-delete-set) | [Bad](#script-no-deprecated-delete-set-bad) · [Good](#script-no-deprecated-delete-set-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_delete_set.rs#L53) | Disallow $set and $delete, which Vue 3 removed | Script |
 | [`script/no-deprecated-destroyed-lifecycle`](#script-no-deprecated-destroyed-lifecycle) | [Bad](#script-no-deprecated-destroyed-lifecycle-bad) · [Good](#script-no-deprecated-destroyed-lifecycle-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | Yes | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_destroyed_lifecycle.rs#L17) | Disallow deprecated destroyed and beforeDestroy lifecycle hooks | Script |
 | [`script/no-deprecated-dollar-listeners-api`](#script-no-deprecated-dollar-listeners-api) | [Bad](#script-no-deprecated-dollar-listeners-api-bad) · [Good](#script-no-deprecated-dollar-listeners-api-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_dollar_listeners_api.rs#L54) | Disallow the $listeners instance property removed in Vue 3 (merged into $attrs) | Script |
 | [`script/no-deprecated-dollar-scopedslots-api`](#script-no-deprecated-dollar-scopedslots-api) | [Bad](#script-no-deprecated-dollar-scopedslots-api-bad) · [Good](#script-no-deprecated-dollar-scopedslots-api-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_dollar_scopedslots_api.rs#L45) | Disallow the $scopedSlots instance property removed in Vue 3 (use $slots) | Script |
 | [`script/no-deprecated-events-api`](#script-no-deprecated-events-api) | [Bad](#script-no-deprecated-events-api-bad) · [Good](#script-no-deprecated-events-api-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_events_api.rs#L51) | Disallow the removed Vue 2 events API ($on / $off / $once) | Script |
+| [`script/no-deprecated-model-definition`](#script-no-deprecated-model-definition) | [Bad](#script-no-deprecated-model-definition-bad) · [Good](#script-no-deprecated-model-definition-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_model_definition.rs#L38) | Disallow the model component option, which Vue 3 removed | Script |
 | [`script/no-deprecated-props-default-this`](#script-no-deprecated-props-default-this) | [Bad](#script-no-deprecated-props-default-this-bad) · [Good](#script-no-deprecated-props-default-this-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_props_default_this.rs#L71) | Disallow `this` inside a prop default/validator function (removed in Vue 3) | Script |
+| [`script/no-deprecated-vue-config-keycodes`](#script-no-deprecated-vue-config-keycodes) | [Bad](#script-no-deprecated-vue-config-keycodes-bad) · [Good](#script-no-deprecated-vue-config-keycodes-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_vue_config_keycodes.rs#L31) | Disallow Vue.config.keyCodes, which Vue 3 removed | Script |
 | [`script/no-dupe-keys`](#script-no-dupe-keys) | [Bad](#script-no-dupe-keys-bad) · [Good](#script-no-dupe-keys-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_dupe_keys.rs#L55) | Disallow duplicate keys across Options API props/data/computed/methods/setup/inject | Script |
 | [`script/no-duplicate-attr-inheritance`](#script-no-duplicate-attr-inheritance) | [Bad](#script-no-duplicate-attr-inheritance-bad) · [Good](#script-no-duplicate-attr-inheritance-good) | `warning` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance.rs#L35) | Flag a component that applies its fallthrough attributes twice | Script |
 | [`script/no-export-in-script-setup`](#script-no-export-in-script-setup) | [Bad](#script-no-export-in-script-setup-bad) · [Good](#script-no-export-in-script-setup-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | No | No | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_export_in_script_setup.rs#L49) | Disallow export statements inside &lt;script setup&gt; | Script |
@@ -279,7 +282,7 @@ See the [ESLint migration map](./migration.md) for rule IDs, differences, and un
 
 ## Project rules and analyzer contracts (66)
 
-These project entries supplement the 258 single-file catalog entries above. Each example includes its component/project context or an explicit tracked-graph scenario. CLI, experimental library producers, and contracts without a producer have different support boundaries; see the [cross-file overview](./cross-file.md).
+These project entries supplement the 261 single-file catalog entries above. Each example includes its component/project context or an explicit tracked-graph scenario. CLI, experimental library producers, and contracts without a producer have different support boundaries; see the [cross-file overview](./cross-file.md).
 
 | Rule / code | Examples | Current support |
 | --- | --- | --- |
@@ -3166,6 +3169,20 @@ Disallow an object literal as the component data option (Vue 3 requires a functi
 
 [Group examples](./type-and-script.md#script-no-deprecated-data-object-declaration) · [Rule reference](./reference/script-no-deprecated-data-object-declaration.md)
 
+### `script/no-deprecated-delete-set`
+
+Disallow $set and $delete, which Vue 3 removed
+
+<span id="script-no-deprecated-delete-set-bad"></span>
+
+[Bad](./type-and-script.md#script-no-deprecated-delete-set-bad)
+
+<span id="script-no-deprecated-delete-set-good"></span>
+
+[Good](./type-and-script.md#script-no-deprecated-delete-set-good)
+
+[Group examples](./type-and-script.md#script-no-deprecated-delete-set) · [Rule reference](./reference/script-no-deprecated-delete-set.md)
+
 ### `script/no-deprecated-destroyed-lifecycle`
 
 Disallow deprecated destroyed and beforeDestroy lifecycle hooks
@@ -3222,6 +3239,20 @@ Disallow the removed Vue 2 events API ($on / $off / $once)
 
 [Group examples](./type-and-script.md#script-no-deprecated-events-api) · [Rule reference](./reference/script-no-deprecated-events-api.md)
 
+### `script/no-deprecated-model-definition`
+
+Disallow the model component option, which Vue 3 removed
+
+<span id="script-no-deprecated-model-definition-bad"></span>
+
+[Bad](./type-and-script.md#script-no-deprecated-model-definition-bad)
+
+<span id="script-no-deprecated-model-definition-good"></span>
+
+[Good](./type-and-script.md#script-no-deprecated-model-definition-good)
+
+[Group examples](./type-and-script.md#script-no-deprecated-model-definition) · [Rule reference](./reference/script-no-deprecated-model-definition.md)
+
 ### `script/no-deprecated-props-default-this`
 
 Disallow `this` inside a prop default/validator function (removed in Vue 3)
@@ -3235,6 +3266,20 @@ Disallow `this` inside a prop default/validator function (removed in Vue 3)
 [Good](./type-and-script.md#script-no-deprecated-props-default-this-good)
 
 [Group examples](./type-and-script.md#script-no-deprecated-props-default-this) · [Rule reference](./reference/script-no-deprecated-props-default-this.md)
+
+### `script/no-deprecated-vue-config-keycodes`
+
+Disallow Vue.config.keyCodes, which Vue 3 removed
+
+<span id="script-no-deprecated-vue-config-keycodes-bad"></span>
+
+[Bad](./type-and-script.md#script-no-deprecated-vue-config-keycodes-bad)
+
+<span id="script-no-deprecated-vue-config-keycodes-good"></span>
+
+[Good](./type-and-script.md#script-no-deprecated-vue-config-keycodes-good)
+
+[Group examples](./type-and-script.md#script-no-deprecated-vue-config-keycodes) · [Rule reference](./reference/script-no-deprecated-vue-config-keycodes.md)
 
 ### `script/no-dupe-keys`
 

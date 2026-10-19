@@ -29,4 +29,19 @@ export const frenchRules6 = {
     "`watch()` est créé après `await loadData()` et sa fonction d’arrêt est ignorée ; l’observateur n’est donc jamais arrêté avec le composant.",
     "L’observateur est créé avant le premier `await`, donc Vue l’arrête lorsque le composant est démonté.",
   ],
+  "script/no-deprecated-delete-set": [
+    "Interdire $set et $delete, supprimés par Vue 3",
+    "`this.$set()` et `this.$delete()` ont été supprimés dans Vue 3 ; ces méthodes n’existent pas sur l’instance du composant.",
+    "La méthode affecte la propriété et utilise l’opérateur `delete` ; la réactivité de Vue 3 suit les deux.",
+  ],
+  "script/no-deprecated-model-definition": [
+    "Interdire l’option de composant model, supprimée par Vue 3",
+    "L’option `model` renomme la prop et l’événement de `v-model`, ce que Vue 3 a supprimé ; le composant ne recevrait plus `v-model`.",
+    "Le composant déclare la prop `modelValue` et l’événement `update:modelValue` qu’utilise le `v-model` de Vue 3.",
+  ],
+  "script/no-deprecated-vue-config-keycodes": [
+    "Interdire Vue.config.keyCodes, supprimé par Vue 3",
+    "`Vue.config.keyCodes` enregistre des alias de codes de touche pour les modificateurs de `v-on`, ce que Vue 3 a supprimé.",
+    "L’application est créée avec `createApp()` sans alias de codes de touche ; les templates utilisent les noms de `KeyboardEvent.key` comme modificateurs.",
+  ],
 } satisfies Record<string, readonly [string, string, string]>;

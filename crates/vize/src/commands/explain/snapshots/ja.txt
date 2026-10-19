@@ -2037,6 +2037,36 @@ script/no-deprecated-data-object-declaration · lint ルール
       return { count: 0 }
     }
   }
+=== script/no-deprecated-delete-set
+script/no-deprecated-delete-set · lint ルール
+Vue 3 で削除された $set と $delete を禁止する
+
+精度: exact
+対象: Options API component definitions written as object literals
+重大度: エラー
+カテゴリー: script
+自動修正: なし
+ドキュメント: docs/content/rules/type-and-script.md
+
+不正な例:
+  export default {
+    methods: {
+      update() {
+        this.$set(this.user, 'name', 'Ada')
+        this.$delete(this.user, 'age')
+      },
+    },
+  }
+
+正しい例:
+  export default {
+    methods: {
+      update() {
+        this.user.name = 'Ada'
+        delete this.user.age
+      },
+    },
+  }
 === script/no-deprecated-destroyed-lifecycle
 script/no-deprecated-destroyed-lifecycle · lint ルール
 非推奨の destroyed と beforeDestroy ライフサイクルフックを禁止する
@@ -2132,6 +2162,28 @@ script/no-deprecated-events-api · lint ルール
     }
   }
   </script>
+=== script/no-deprecated-model-definition
+script/no-deprecated-model-definition · lint ルール
+Vue 3 で削除された model オプションを禁止する
+
+精度: exact
+対象: Options API component definitions written as object literals
+重大度: エラー
+カテゴリー: script
+自動修正: なし
+ドキュメント: docs/content/rules/type-and-script.md
+
+不正な例:
+  export default {
+    model: { prop: 'checked', event: 'change' },
+    props: { checked: Boolean },
+  }
+
+正しい例:
+  export default {
+    props: { modelValue: Boolean },
+    emits: ['update:modelValue'],
+  }
 === script/no-deprecated-props-default-this
 script/no-deprecated-props-default-this · lint ルール
 props の default・validator 関数の中での `this` を禁止する（Vue 3 で削除）
@@ -2180,6 +2232,25 @@ props の default・validator 関数の中での `this` を禁止する（Vue 3 
       }
     }
   }
+=== script/no-deprecated-vue-config-keycodes
+script/no-deprecated-vue-config-keycodes · lint ルール
+Vue 3 で削除された Vue.config.keyCodes を禁止する
+
+精度: exact
+対象: the syntax of <script> and <script setup> programs, without type information
+重大度: エラー
+カテゴリー: script
+自動修正: なし
+ドキュメント: docs/content/rules/type-and-script.md
+
+不正な例:
+  import Vue from 'vue'
+  Vue.config.keyCodes = { f1: 112 }
+
+正しい例:
+  import { createApp } from 'vue'
+  import App from './App.vue'
+  createApp(App).mount('#app')
 === script/no-dupe-keys
 script/no-dupe-keys · lint ルール
 Options API の props・data・computed・methods・setup・inject の間でのキーの重複を禁止する

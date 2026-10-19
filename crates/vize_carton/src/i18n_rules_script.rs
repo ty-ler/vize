@@ -59,6 +59,12 @@ pub(crate) static ENTRIES: &[(&str, &str, &str, &str)] = &[
         "禁止将对象字面量用作组件的 data 选项（Vue 3 要求使用函数）",
     ),
     (
+        "script/no-deprecated-delete-set.description",
+        "Disallow $set and $delete, which Vue 3 removed",
+        "Vue 3 で削除された $set と $delete を禁止する",
+        "禁止使用 Vue 3 已移除的 $set 和 $delete",
+    ),
+    (
         "script/no-deprecated-destroyed-lifecycle.description",
         "Disallow deprecated destroyed and beforeDestroy lifecycle hooks",
         "非推奨の destroyed と beforeDestroy ライフサイクルフックを禁止する",
@@ -83,10 +89,22 @@ pub(crate) static ENTRIES: &[(&str, &str, &str, &str)] = &[
         "禁止使用已移除的 Vue 2 事件 API（$on / $off / $once）",
     ),
     (
+        "script/no-deprecated-model-definition.description",
+        "Disallow the model component option, which Vue 3 removed",
+        "Vue 3 で削除された model オプションを禁止する",
+        "禁止使用 Vue 3 已移除的 model 组件选项",
+    ),
+    (
         "script/no-deprecated-props-default-this.description",
         "Disallow `this` inside a prop default/validator function (removed in Vue 3)",
         "props の default・validator 関数の中での `this` を禁止する（Vue 3 で削除）",
         "禁止在 prop 的 default/validator 函数中使用 `this`（Vue 3 已移除）",
+    ),
+    (
+        "script/no-deprecated-vue-config-keycodes.description",
+        "Disallow Vue.config.keyCodes, which Vue 3 removed",
+        "Vue 3 で削除された Vue.config.keyCodes を禁止する",
+        "禁止使用 Vue 3 已移除的 Vue.config.keyCodes",
     ),
     (
         "script/no-dupe-keys.description",

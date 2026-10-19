@@ -89,6 +89,11 @@ pub(crate) const RULE_NO_UNSTABLE_NESTED_COMPONENTS: &str = "script/no-unstable-
 pub(crate) const RULE_NO_LIFECYCLE_AFTER_AWAIT: &str = "script/no-lifecycle-after-await";
 pub(crate) const RULE_NO_WATCH_AFTER_AWAIT: &str = "script/no-watch-after-await";
 pub(crate) const RULE_NO_EXPOSE_AFTER_AWAIT: &str = "script/no-expose-after-await";
+pub(crate) const RULE_NO_DEPRECATED_DELETE_SET: &str = "script/no-deprecated-delete-set";
+pub(crate) const RULE_NO_DEPRECATED_MODEL_DEFINITION: &str =
+    "script/no-deprecated-model-definition";
+pub(crate) const RULE_NO_DEPRECATED_VUE_CONFIG_KEYCODES: &str =
+    "script/no-deprecated-vue-config-keycodes";
 
 pub(in crate::linter::script_rules) const ALL_BUILTIN_SCRIPT_RULE_NAMES: &[&str] = &[
     RULE_NO_OPTIONS_API,
@@ -165,6 +170,9 @@ pub(in crate::linter::script_rules) const ALL_BUILTIN_SCRIPT_RULE_NAMES: &[&str]
     RULE_NO_LIFECYCLE_AFTER_AWAIT,
     RULE_NO_WATCH_AFTER_AWAIT,
     RULE_NO_EXPOSE_AFTER_AWAIT,
+    RULE_NO_DEPRECATED_DELETE_SET,
+    RULE_NO_DEPRECATED_MODEL_DEFINITION,
+    RULE_NO_DEPRECATED_VUE_CONFIG_KEYCODES,
 ];
 
 #[cfg(test)]
@@ -240,4 +248,7 @@ pub(in crate::linter::script_rules) const OPT_IN_SCRIPT_RULE_NAMES: &[&str] = &[
     RULE_NO_LIFECYCLE_AFTER_AWAIT,
     RULE_NO_WATCH_AFTER_AWAIT,
     RULE_NO_EXPOSE_AFTER_AWAIT,
+    RULE_NO_DEPRECATED_DELETE_SET,
+    RULE_NO_DEPRECATED_MODEL_DEFINITION,
+    RULE_NO_DEPRECATED_VUE_CONFIG_KEYCODES,
 ];

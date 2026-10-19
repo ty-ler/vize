@@ -22,11 +22,14 @@ title: "类型与脚本规则"
 | [`script/no-boolean-default`](#script-no-boolean-default) | [错误示例](#script-no-boolean-default-bad) · [正确示例](#script-no-boolean-default-good) | 禁止为 Boolean prop 设置默认值 |
 | [`script/no-deep-destructure-in-props`](#script-no-deep-destructure-in-props) | [错误示例](#script-no-deep-destructure-in-props-bad) · [正确示例](#script-no-deep-destructure-in-props-good) | 禁止在 defineProps 中进行深层嵌套解构 |
 | [`script/no-deprecated-data-object-declaration`](#script-no-deprecated-data-object-declaration) | [错误示例](#script-no-deprecated-data-object-declaration-bad) · [正确示例](#script-no-deprecated-data-object-declaration-good) | 禁止将对象字面量作为组件 data 选项（Vue 3 要求函数） |
+| [`script/no-deprecated-delete-set`](#script-no-deprecated-delete-set) | [错误示例](#script-no-deprecated-delete-set-bad) · [正确示例](#script-no-deprecated-delete-set-good) | 禁止使用 Vue 3 已移除的 $set 和 $delete |
 | [`script/no-deprecated-destroyed-lifecycle`](#script-no-deprecated-destroyed-lifecycle) | [错误示例](#script-no-deprecated-destroyed-lifecycle-bad) · [正确示例](#script-no-deprecated-destroyed-lifecycle-good) | 禁止已弃用的 destroyed 和 beforeDestroy 生命周期钩子 |
 | [`script/no-deprecated-dollar-listeners-api`](#script-no-deprecated-dollar-listeners-api) | [错误示例](#script-no-deprecated-dollar-listeners-api-bad) · [正确示例](#script-no-deprecated-dollar-listeners-api-good) | 禁止 Vue 3 已移除的 $listeners 实例属性（已合并到 $attrs） |
 | [`script/no-deprecated-dollar-scopedslots-api`](#script-no-deprecated-dollar-scopedslots-api) | [错误示例](#script-no-deprecated-dollar-scopedslots-api-bad) · [正确示例](#script-no-deprecated-dollar-scopedslots-api-good) | 禁止 Vue 3 已移除的 $scopedSlots 实例属性（使用 $slots） |
 | [`script/no-deprecated-events-api`](#script-no-deprecated-events-api) | [错误示例](#script-no-deprecated-events-api-bad) · [正确示例](#script-no-deprecated-events-api-good) | 禁止已移除的 Vue 2 事件 API（$on / $off / $once） |
+| [`script/no-deprecated-model-definition`](#script-no-deprecated-model-definition) | [错误示例](#script-no-deprecated-model-definition-bad) · [正确示例](#script-no-deprecated-model-definition-good) | 禁止使用 Vue 3 已移除的 model 组件选项 |
 | [`script/no-deprecated-props-default-this`](#script-no-deprecated-props-default-this) | [错误示例](#script-no-deprecated-props-default-this-bad) · [正确示例](#script-no-deprecated-props-default-this-good) | 禁止在 prop 默认值或校验函数中使用 `this`（Vue 3 已移除） |
+| [`script/no-deprecated-vue-config-keycodes`](#script-no-deprecated-vue-config-keycodes) | [错误示例](#script-no-deprecated-vue-config-keycodes-bad) · [正确示例](#script-no-deprecated-vue-config-keycodes-good) | 禁止使用 Vue 3 已移除的 Vue.config.keyCodes |
 | [`script/no-dupe-keys`](#script-no-dupe-keys) | [错误示例](#script-no-dupe-keys-bad) · [正确示例](#script-no-dupe-keys-good) | 禁止 Options API 的 props/data/computed/methods/setup/inject 之间重复的键 |
 | [`script/no-duplicate-attr-inheritance`](#script-no-duplicate-attr-inheritance) | [错误示例](#script-no-duplicate-attr-inheritance-bad) · [正确示例](#script-no-duplicate-attr-inheritance-good) | 标记重复应用透传属性的组件 |
 | [`script/no-export-in-script-setup`](#script-no-export-in-script-setup) | [错误示例](#script-no-export-in-script-setup-bad) · [正确示例](#script-no-export-in-script-setup-good) | 禁止 &lt;script setup&gt; 内的 export 语句 |
@@ -835,6 +838,81 @@ export default {
 
 [实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_data_object_declaration.rs#L48) · [全部规则](all.md)
 
+### `script/no-deprecated-delete-set`
+
+禁止使用 Vue 3 已移除的 $set 和 $delete
+
+[错误示例](#script-no-deprecated-delete-set-bad) · [正确示例](#script-no-deprecated-delete-set-good)
+
+默认严重程度: `error`  
+预设: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
+自动修复: 无；请检查建议的修改  
+适用范围: Vue SFC 中的 JS/TS 脚本；示例展示对应的 Options API 或 script setup 形式  
+选项: 没有规则专属选项。可以配置严重程度和预设。
+
+**配置（Vite+）**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  vue: {
+    linter: {
+      "preset": "incremental",
+      "rules": {
+        "script/no-deprecated-delete-set": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="script-no-deprecated-delete-set-bad"></span>
+
+**错误示例**
+
+`this.$set()` 和 `this.$delete()` 已在 Vue 3 中移除，组件实例上不存在这些方法。
+
+```vue annotate="remove:5,6"
+<script lang="ts">
+export default {
+  methods: {
+    update() {
+      this.$set(this.user, 'name', 'Ada')
+      this.$delete(this.user, 'age')
+    },
+  },
+}
+</script>
+```
+
+<span id="script-no-deprecated-delete-set-good"></span>
+
+**正确示例**
+
+该方法直接给属性赋值并使用 `delete` 运算符，Vue 3 的响应式系统会追踪这两种操作。
+
+```vue annotate="add:5,6"
+<script lang="ts">
+export default {
+  methods: {
+    update() {
+      this.user.name = 'Ada'
+      delete this.user.age
+    },
+  },
+}
+</script>
+```
+
+正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
+
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_delete_set.rs#L53) · [全部规则](all.md)
+
 ### `script/no-deprecated-destroyed-lifecycle`
 
 禁止已弃用的 destroyed 和 beforeDestroy 生命周期钩子
@@ -1108,6 +1186,73 @@ export default {
 
 [实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_events_api.rs#L51) · [全部规则](all.md)
 
+### `script/no-deprecated-model-definition`
+
+禁止使用 Vue 3 已移除的 model 组件选项
+
+[错误示例](#script-no-deprecated-model-definition-bad) · [正确示例](#script-no-deprecated-model-definition-good)
+
+默认严重程度: `error`  
+预设: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
+自动修复: 无；请检查建议的修改  
+适用范围: Vue SFC 中的 JS/TS 脚本；示例展示对应的 Options API 或 script setup 形式  
+选项: 没有规则专属选项。可以配置严重程度和预设。
+
+**配置（Vite+）**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  vue: {
+    linter: {
+      "preset": "incremental",
+      "rules": {
+        "script/no-deprecated-model-definition": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="script-no-deprecated-model-definition-bad"></span>
+
+**错误示例**
+
+`model` 选项重命名了 `v-model` 的 prop 和事件，Vue 3 已移除该选项，组件将无法再接收 `v-model`。
+
+```vue annotate="remove:3,4"
+<script lang="ts">
+export default {
+  model: { prop: 'checked', event: 'change' },
+  props: { checked: Boolean },
+}
+</script>
+```
+
+<span id="script-no-deprecated-model-definition-good"></span>
+
+**正确示例**
+
+组件声明 Vue 3 的 `v-model` 使用的 `modelValue` prop 和 `update:modelValue` 事件。
+
+```vue annotate="add:3,4"
+<script lang="ts">
+export default {
+  props: { modelValue: Boolean },
+  emits: ['update:modelValue'],
+}
+</script>
+```
+
+正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
+
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_model_definition.rs#L38) · [全部规则](all.md)
+
 ### `script/no-deprecated-props-default-this`
 
 禁止在 prop 默认值或校验函数中使用 `this`（Vue 3 已移除）
@@ -1200,6 +1345,70 @@ export default {
 正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
 
 [实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_props_default_this.rs#L71) · [全部规则](all.md)
+
+### `script/no-deprecated-vue-config-keycodes`
+
+禁止使用 Vue 3 已移除的 Vue.config.keyCodes
+
+[错误示例](#script-no-deprecated-vue-config-keycodes-bad) · [正确示例](#script-no-deprecated-vue-config-keycodes-good)
+
+默认严重程度: `error`  
+预设: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
+自动修复: 无；请检查建议的修改  
+适用范围: Vue SFC 中的 JS/TS 脚本；示例展示对应的 Options API 或 script setup 形式  
+选项: 没有规则专属选项。可以配置严重程度和预设。
+
+**配置（Vite+）**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  vue: {
+    linter: {
+      "preset": "incremental",
+      "rules": {
+        "script/no-deprecated-vue-config-keycodes": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="script-no-deprecated-vue-config-keycodes-bad"></span>
+
+**错误示例**
+
+`Vue.config.keyCodes` 为 `v-on` 修饰符注册键码别名，Vue 3 已移除该功能。
+
+```vue annotate="remove:2,3"
+<script setup lang="ts">
+import Vue from 'vue'
+Vue.config.keyCodes = { f1: 112 }
+</script>
+```
+
+<span id="script-no-deprecated-vue-config-keycodes-good"></span>
+
+**正确示例**
+
+应用通过 `createApp()` 创建，不注册键码别名；模板使用 `KeyboardEvent.key` 的名称作为修饰符。
+
+```vue annotate="add:2,3,4"
+<script setup lang="ts">
+import { createApp } from 'vue'
+import App from './App.vue'
+createApp(App).mount('#app')
+</script>
+```
+
+正确示例在上述配置下不会触发这条规则的诊断；其他规则仍可能报告诊断。
+
+[实现](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_vue_config_keycodes.rs#L31) · [全部规则](all.md)
 
 ### `script/no-dupe-keys`
 

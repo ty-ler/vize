@@ -154,4 +154,25 @@ export const scriptType3Explanations: readonly ExplanationRecord[] = [
     "`await loadData()` の後に `watch()` を作成し、停止ハンドルも捨てています。このウォッチャーはコンポーネントと一緒に停止されません。",
     "最初の `await` より前にウォッチャーを作成するため、コンポーネントのアンマウント時に Vue が停止します。",
   ],
+  [
+    "script/no-deprecated-delete-set",
+    "`this.$set()` and `this.$delete()` were removed in Vue 3; the methods do not exist on the component instance.",
+    "The method assigns the property and uses the `delete` operator; Vue 3 reactivity tracks both.",
+    "`this.$set()` と `this.$delete()` は Vue 3 で削除され、コンポーネントのインスタンスに存在しません。",
+    "プロパティへの代入と `delete` 演算子を使います。Vue 3 のリアクティビティはどちらも追跡します。",
+  ],
+  [
+    "script/no-deprecated-model-definition",
+    "The `model` option renames the `v-model` prop and event, which Vue 3 removed; the component would no longer receive `v-model`.",
+    "The component declares the `modelValue` prop and the `update:modelValue` event that Vue 3's `v-model` uses.",
+    "`model` オプションで `v-model` の prop とイベントを変更していますが、Vue 3 では削除されたため `v-model` を受け取れません。",
+    "Vue 3 の `v-model` が使う `modelValue` prop と `update:modelValue` イベントを宣言します。",
+  ],
+  [
+    "script/no-deprecated-vue-config-keycodes",
+    "`Vue.config.keyCodes` registers key-code aliases for `v-on` modifiers, which Vue 3 removed.",
+    "The app is created with `createApp()` and registers no key-code aliases; templates use `KeyboardEvent.key` names as modifiers.",
+    "`Vue.config.keyCodes` で `v-on` 修飾子のキーコード別名を登録していますが、Vue 3 で削除されました。",
+    "`createApp()` でアプリを作成し、キーコードの別名は登録しません。テンプレートでは `KeyboardEvent.key` の名前を修飾子に使います。",
+  ],
 ];

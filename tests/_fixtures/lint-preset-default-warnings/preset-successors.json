@@ -616,5 +616,117 @@
         "after": "            .and_then(|argument| argument.as_expression())\n            .and_then(macro_of_expression);\n    }\n    name.starts_with(\"define\").then_some(name)\n}\n\n/// Statements that may precede the macros, as in eslint-plugin-vue: imports,\n/// type declarations, enums, exports, `declare` statements, `debugger`, empty\n/// statements and a `\"use strict\"` directive.\nfn is_skipped_statement(statement: &Statement<'_>) -> bool {\n    match statement {\n        Statement::ImportDeclaration(_)\n        | Statement::TSEnumDeclaration(_)\n        | Statement::TSModuleDeclaration(_)\n        | Statement::TSInterfaceDeclaration(_)\n        | Statement::TSTypeAliasDeclaration(_)\n        | Statement::DebuggerStatement(_)\n        | Statement::EmptyStatement(_)\n        | Statement::ExportNamedDeclaration(_) => true,\n        Statement::VariableDeclaration(decl) => decl.declare,\n        Statement::ClassDeclaration(class) => class.declare,\n        Statement::FunctionDeclaration(function) => function.declare,\n        Statement::ExpressionStatement(stmt) => matches!(\n            &stmt.expression,\n            Expression::StringLiteral(literal) if literal.value == \"use strict\"\n        ),\n        _ => false,\n    }\n}\n"
       }
     ]
+  },
+  {
+    "reason": "essential: $set/$delete, the model option and Vue.config.keyCodes (eslint-plugin-vue Vue 3 essential)",
+    "path": "crates/vize_patina/src/linter/script_rules/registry/rules.rs",
+    "before": {
+      "bytes": 23005,
+      "sha256": "800ea4322827e40e9dbde63e7dc1c169d173ba73aa0bbfb987de060f0c6a43f9"
+    },
+    "after": {
+      "bytes": 23957,
+      "sha256": "dd9925079a01b0ee534f41781a42f95c3cae6146c7000a1db9f17e40f0cc58e4"
+    },
+    "hunks": [
+      {
+        "before": "    RULE_NO_BOOLEAN_DEFAULT, RULE_NO_DEEP_DESTRUCTURE_IN_PROPS,\n    RULE_NO_DEPRECATED_DATA_OBJECT_DECLARATION, RULE_NO_DEPRECATED_DESTROYED_LIFECYCLE,\n    RULE_NO_DEPRECATED_DOLLAR_LISTENERS_API, RULE_NO_DEPRECATED_DOLLAR_SCOPEDSLOTS_API,\n    RULE_NO_DEPRECATED_EVENTS_API, RULE_NO_DEPRECATED_PROPS_DEFAULT_THIS, RULE_NO_DUPE_KEYS,\n    RULE_NO_DUPLICATE_ATTR_INHERITANCE, RULE_NO_EXPORT_IN_SCRIPT_SETUP, RULE_NO_EXPOSE_AFTER_AWAIT,\n    RULE_NO_GET_CURRENT_INSTANCE, RULE_NO_IMPORT_COMPILER_MACROS, RULE_NO_INTERNAL_IMPORTS,\n    RULE_NO_LIFECYCLE_AFTER_AWAIT, RULE_NO_MULTIPLE_SLOT_ARGS, RULE_NO_NEXT_TICK,\n    RULE_NO_OPTIONS_API, RULE_NO_POTENTIAL_COMPONENT_OPTION_TYPO, RULE_NO_REACTIVE_DESTRUCTURE,\n    RULE_NO_REF_AS_OPERAND, RULE_NO_REQUIRED_PROP_WITH_DEFAULT, RULE_NO_RESERVED_IDENTIFIERS,\n    RULE_NO_RESERVED_KEYS, RULE_NO_RESERVED_PROPS, RULE_NO_RESTRICTED_GLOBALS,\n    RULE_NO_RESTRICTED_MEMBERS, RULE_NO_SIDE_EFFECTS_IN_COMPUTED, RULE_NO_TOP_LEVEL_REF_IN_SCRIPT,\n    RULE_NO_UNSTABLE_NESTED_COMPONENTS, RULE_NO_UNUSED_EMIT_DECLARATIONS,",
+        "after": "    RULE_NO_BOOLEAN_DEFAULT, RULE_NO_DEEP_DESTRUCTURE_IN_PROPS,\n    RULE_NO_DEPRECATED_DATA_OBJECT_DECLARATION, RULE_NO_DEPRECATED_DELETE_SET,\n    RULE_NO_DEPRECATED_DESTROYED_LIFECYCLE, RULE_NO_DEPRECATED_DOLLAR_LISTENERS_API,\n    RULE_NO_DEPRECATED_DOLLAR_SCOPEDSLOTS_API, RULE_NO_DEPRECATED_EVENTS_API,\n    RULE_NO_DEPRECATED_MODEL_DEFINITION, RULE_NO_DEPRECATED_PROPS_DEFAULT_THIS,\n    RULE_NO_DEPRECATED_VUE_CONFIG_KEYCODES, RULE_NO_DUPE_KEYS, RULE_NO_DUPLICATE_ATTR_INHERITANCE,\n    RULE_NO_EXPORT_IN_SCRIPT_SETUP, RULE_NO_EXPOSE_AFTER_AWAIT, RULE_NO_GET_CURRENT_INSTANCE,\n    RULE_NO_IMPORT_COMPILER_MACROS, RULE_NO_INTERNAL_IMPORTS, RULE_NO_LIFECYCLE_AFTER_AWAIT,\n    RULE_NO_MULTIPLE_SLOT_ARGS, RULE_NO_NEXT_TICK, RULE_NO_OPTIONS_API,\n    RULE_NO_POTENTIAL_COMPONENT_OPTION_TYPO, RULE_NO_REACTIVE_DESTRUCTURE, RULE_NO_REF_AS_OPERAND,\n    RULE_NO_REQUIRED_PROP_WITH_DEFAULT, RULE_NO_RESERVED_IDENTIFIERS, RULE_NO_RESERVED_KEYS,\n    RULE_NO_RESERVED_PROPS, RULE_NO_RESTRICTED_GLOBALS, RULE_NO_RESTRICTED_MEMBERS,\n    RULE_NO_SIDE_EFFECTS_IN_COMPUTED, RULE_NO_TOP_LEVEL_REF_IN_SCRIPT,\n    RULE_NO_UNSTABLE_NESTED_COMPONENTS, RULE_NO_UNUSED_EMIT_DECLARATIONS,"
+      },
+      {
+        "before": "    NoBooleanDefault, NoDeepDestructureInProps, NoDeprecatedDataObjectDeclaration,\n    NoDeprecatedDestroyedLifecycle, NoDeprecatedDollarListenersApi,\n    NoDeprecatedDollarScopedSlotsApi, NoDeprecatedEventsApi, NoDeprecatedPropsDefaultThis,\n    NoDupeKeys, NoDuplicateAttrInheritance, NoExportInScriptSetup, NoExposeAfterAwait,\n    NoGetCurrentInstance, NoImportCompilerMacros, NoInternalImports, NoLifecycleAfterAwait,\n    NoMultipleSlotArgs, NoNextTick, NoNuxtConfigTestKey, NoOptionsApi, NoPageMetaRuntimeValues,\n    NoPotentialComponentOptionTypo, NoReactiveDestructure, NoRefAsOperand,",
+        "after": "    NoBooleanDefault, NoDeepDestructureInProps, NoDeprecatedDataObjectDeclaration,\n    NoDeprecatedDeleteSet, NoDeprecatedDestroyedLifecycle, NoDeprecatedDollarListenersApi,\n    NoDeprecatedDollarScopedSlotsApi, NoDeprecatedEventsApi, NoDeprecatedModelDefinition,\n    NoDeprecatedPropsDefaultThis, NoDeprecatedVueConfigKeycodes, NoDupeKeys,\n    NoDuplicateAttrInheritance, NoExportInScriptSetup, NoExposeAfterAwait, NoGetCurrentInstance,\n    NoImportCompilerMacros, NoInternalImports, NoLifecycleAfterAwait, NoMultipleSlotArgs,\n    NoNextTick, NoNuxtConfigTestKey, NoOptionsApi, NoPageMetaRuntimeValues,\n    NoPotentialComponentOptionTypo, NoReactiveDestructure, NoRefAsOperand,"
+      },
+      {
+        "before": "    BuiltinScriptRuleEntry { rule_name: RULE_NO_EXPOSE_AFTER_AWAIT, profile_name: \"patina.script_rule.no_expose_after_await\", category: \"Script\", fixable: false, presets: ESSENTIAL_SCRIPT_PRESETS, rule: &NoExposeAfterAwait },\n];",
+        "after": "    BuiltinScriptRuleEntry { rule_name: RULE_NO_EXPOSE_AFTER_AWAIT, profile_name: \"patina.script_rule.no_expose_after_await\", category: \"Script\", fixable: false, presets: ESSENTIAL_SCRIPT_PRESETS, rule: &NoExposeAfterAwait },\n    BuiltinScriptRuleEntry { rule_name: RULE_NO_DEPRECATED_DELETE_SET, profile_name: \"patina.script_rule.no_deprecated_delete_set\", category: \"Script\", fixable: false, presets: ESSENTIAL_SCRIPT_PRESETS, rule: &NoDeprecatedDeleteSet },\n    BuiltinScriptRuleEntry { rule_name: RULE_NO_DEPRECATED_MODEL_DEFINITION, profile_name: \"patina.script_rule.no_deprecated_model_definition\", category: \"Script\", fixable: false, presets: ESSENTIAL_SCRIPT_PRESETS, rule: &NoDeprecatedModelDefinition },\n    BuiltinScriptRuleEntry { rule_name: RULE_NO_DEPRECATED_VUE_CONFIG_KEYCODES, profile_name: \"patina.script_rule.no_deprecated_vue_config_keycodes\", category: \"Script\", fixable: false, presets: ESSENTIAL_SCRIPT_PRESETS, rule: &NoDeprecatedVueConfigKeycodes },\n];"
+      }
+    ]
+  },
+  {
+    "reason": "essential: $set/$delete, the model option and Vue.config.keyCodes (eslint-plugin-vue Vue 3 essential)",
+    "path": "crates/vize_patina/src/preset/snapshots/vize_patina__preset__tests__lint_preset_rule_membership.snap",
+    "before": {
+      "bytes": 31986,
+      "sha256": "07725387d747348819e9862b397e929d9e8745493c591691c11492da35fdb4de"
+    },
+    "after": {
+      "bytes": 32778,
+      "sha256": "1546d3a17fd7f86d03a5652afd449771197fa1b68802ad8699e4b33be9c70908"
+    },
+    "hunks": [
+      {
+        "before": "    \"script/no-lifecycle-after-await\",\n    \"script/no-watch-after-await\",\n    \"script/no-expose-after-await\"\n  ],\n  \"essential\": [",
+        "after": "    \"script/no-lifecycle-after-await\",\n    \"script/no-watch-after-await\",\n    \"script/no-expose-after-await\",\n    \"script/no-deprecated-delete-set\",\n    \"script/no-deprecated-model-definition\",\n    \"script/no-deprecated-vue-config-keycodes\"\n  ],\n  \"essential\": ["
+      },
+      {
+        "before": "    \"script/no-lifecycle-after-await\",\n    \"script/no-watch-after-await\",\n    \"script/no-expose-after-await\"\n  ],\n  \"happy_path\": [",
+        "after": "    \"script/no-lifecycle-after-await\",\n    \"script/no-watch-after-await\",\n    \"script/no-expose-after-await\",\n    \"script/no-deprecated-delete-set\",\n    \"script/no-deprecated-model-definition\",\n    \"script/no-deprecated-vue-config-keycodes\"\n  ],\n  \"happy_path\": ["
+      },
+      {
+        "before": "    \"script/no-lifecycle-after-await\",\n    \"script/no-watch-after-await\",\n    \"script/no-expose-after-await\"\n  ],\n  \"incremental\": [],",
+        "after": "    \"script/no-lifecycle-after-await\",\n    \"script/no-watch-after-await\",\n    \"script/no-expose-after-await\",\n    \"script/no-deprecated-delete-set\",\n    \"script/no-deprecated-model-definition\",\n    \"script/no-deprecated-vue-config-keycodes\"\n  ],\n  \"incremental\": [],"
+      },
+      {
+        "before": "    \"script/require-valid-default-prop\",\n    \"script/require-typed-object-prop\",\n    \"script/custom-event-name-casing\",\n    \"script/no-ref-as-operand\",\n    \"script/require-explicit-slots\",\n    \"script/no-duplicate-attr-inheritance\",\n    \"script/no-multiple-slot-args\",\n    \"script/require-explicit-emits\",\n    \"script/no-unstable-nested-components\",\n    \"script/no-lifecycle-after-await\",\n    \"script/no-watch-after-await\",\n    \"script/no-expose-after-await\",\n    \"css/no-important\",\n    \"css/no-id-selectors\",\n    \"css/prefer-logical-properties\",\n    \"css/require-font-display\",\n    \"css/prefer-nested-selectors\",\n    \"css/no-display-none\",\n    \"css/no-v-bind-performance\",\n    \"css/no-hardcoded-values\",\n    \"css/no-utility-classes\",\n    \"css/prefer-slotted\"\n  ],\n  \"opinionated\": [",
+        "after": "    \"script/require-valid-default-prop\",\n    \"script/require-typed-object-prop\",\n    \"script/custom-event-name-casing\",\n    \"script/no-ref-as-operand\",\n    \"script/require-explicit-slots\",\n    \"script/no-duplicate-attr-inheritance\",\n    \"script/no-multiple-slot-args\",\n    \"script/require-explicit-emits\",\n    \"script/no-unstable-nested-components\",\n    \"script/no-lifecycle-after-await\",\n    \"script/no-watch-after-await\",\n    \"script/no-expose-after-await\",\n    \"script/no-deprecated-delete-set\",\n    \"script/no-deprecated-model-definition\",\n    \"script/no-deprecated-vue-config-keycodes\",\n    \"css/no-important\",\n    \"css/no-id-selectors\",\n    \"css/prefer-logical-properties\",\n    \"css/require-font-display\",\n    \"css/prefer-nested-selectors\",\n    \"css/no-display-none\",\n    \"css/no-v-bind-performance\",\n    \"css/no-hardcoded-values\",\n    \"css/no-utility-classes\",\n    \"css/prefer-slotted\"\n  ],\n  \"opinionated\": ["
+      },
+      {
+        "before": "    \"script/require-valid-default-prop\",\n    \"script/require-typed-object-prop\",\n    \"script/custom-event-name-casing\",\n    \"script/no-ref-as-operand\",\n    \"script/require-explicit-slots\",\n    \"script/no-duplicate-attr-inheritance\",\n    \"script/no-multiple-slot-args\",\n    \"script/require-explicit-emits\",\n    \"script/no-unstable-nested-components\",\n    \"script/no-lifecycle-after-await\",\n    \"script/no-watch-after-await\",\n    \"script/no-expose-after-await\",\n    \"css/no-important\",\n    \"css/no-id-selectors\",\n    \"css/prefer-logical-properties\",\n    \"css/require-font-display\",\n    \"css/prefer-nested-selectors\",\n    \"css/no-display-none\",\n    \"css/no-v-bind-performance\",\n    \"css/no-hardcoded-values\",\n    \"css/no-utility-classes\",\n    \"css/prefer-slotted\"\n  ],\n  \"opt_in\": [",
+        "after": "    \"script/require-valid-default-prop\",\n    \"script/require-typed-object-prop\",\n    \"script/custom-event-name-casing\",\n    \"script/no-ref-as-operand\",\n    \"script/require-explicit-slots\",\n    \"script/no-duplicate-attr-inheritance\",\n    \"script/no-multiple-slot-args\",\n    \"script/require-explicit-emits\",\n    \"script/no-unstable-nested-components\",\n    \"script/no-lifecycle-after-await\",\n    \"script/no-watch-after-await\",\n    \"script/no-expose-after-await\",\n    \"script/no-deprecated-delete-set\",\n    \"script/no-deprecated-model-definition\",\n    \"script/no-deprecated-vue-config-keycodes\",\n    \"css/no-important\",\n    \"css/no-id-selectors\",\n    \"css/prefer-logical-properties\",\n    \"css/require-font-display\",\n    \"css/prefer-nested-selectors\",\n    \"css/no-display-none\",\n    \"css/no-v-bind-performance\",\n    \"css/no-hardcoded-values\",\n    \"css/no-utility-classes\",\n    \"css/prefer-slotted\"\n  ],\n  \"opt_in\": ["
+      },
+      {
+        "before": "    \"script/no-expose-after-await\",\n    \"musea/require-title\",",
+        "after": "    \"script/no-expose-after-await\",\n    \"script/no-deprecated-delete-set\",\n    \"script/no-deprecated-model-definition\",\n    \"script/no-deprecated-vue-config-keycodes\",\n    \"musea/require-title\","
+      }
+    ]
+  },
+  {
+    "reason": "essential: $set/$delete, the model option and Vue.config.keyCodes (eslint-plugin-vue Vue 3 essential)",
+    "path": "tests/_fixtures/patina-eslint-vue-rule-map.json",
+    "before": {
+      "bytes": 47660,
+      "sha256": "6beca7bd5c41f92498f93bba28725ba76377640ad9a5a455af1e350cf6b27e11"
+    },
+    "after": {
+      "bytes": 48290,
+      "sha256": "09e0f41347c9c8ff9db320f2894fe27ee57172d05a312cea77b2cbe3755c3327"
+    },
+    "hunks": [
+      {
+        "before": "    \"vue/no-deprecated-delete-set\": {\n      \"issue\": 3223,\n      \"status\": \"unimplemented\"\n    },",
+        "after": "    \"vue/no-deprecated-delete-set\": {\n      \"patinaPresets\": [\n        \"ecosystem\",\n        \"essential\",\n        \"general-recommended\",\n        \"nuxt\",\n        \"opinionated\"\n      ],\n      \"patinaRule\": \"script/no-deprecated-delete-set\",\n      \"patinaSeverity\": \"error\",\n      \"status\": \"mapped\"\n    },"
+      },
+      {
+        "before": "    \"vue/no-deprecated-model-definition\": {\n      \"issue\": 3223,\n      \"status\": \"unimplemented\"\n    },",
+        "after": "    \"vue/no-deprecated-model-definition\": {\n      \"patinaPresets\": [\n        \"ecosystem\",\n        \"essential\",\n        \"general-recommended\",\n        \"nuxt\",\n        \"opinionated\"\n      ],\n      \"patinaRule\": \"script/no-deprecated-model-definition\",\n      \"patinaSeverity\": \"error\",\n      \"status\": \"mapped\"\n    },"
+      },
+      {
+        "before": "    \"vue/no-deprecated-vue-config-keycodes\": {\n      \"issue\": 3223,\n      \"status\": \"unimplemented\"\n    },",
+        "after": "    \"vue/no-deprecated-vue-config-keycodes\": {\n      \"patinaPresets\": [\n        \"ecosystem\",\n        \"essential\",\n        \"general-recommended\",\n        \"nuxt\",\n        \"opinionated\"\n      ],\n      \"patinaRule\": \"script/no-deprecated-vue-config-keycodes\",\n      \"patinaSeverity\": \"error\",\n      \"status\": \"mapped\"\n    },"
+      },
+      {
+        "before": "    \"intentionalDivergence\": 2,\n    \"mapped\": 130,\n    \"unimplemented\": 120\n  },",
+        "after": "    \"intentionalDivergence\": 2,\n    \"mapped\": 133,\n    \"unimplemented\": 117\n  },"
+      }
+    ]
+  },
+  {
+    "reason": "essential: $set/$delete, the model option and Vue.config.keyCodes (eslint-plugin-vue Vue 3 essential)",
+    "path": "crates/vize_patina/src/linter/script_rules/registry.rs",
+    "before": {
+      "bytes": 4998,
+      "sha256": "1539c0f45077e156a8c3c5fe7e7a3ef93ac64ae31caf39dc95ecde6b4f6cca3b"
+    },
+    "after": {
+      "bytes": 5114,
+      "sha256": "134df065314f6d021163001deb7e2dc1c72c4420cd48800a993649d26ac23069"
+    },
+    "hunks": [
+      {
+        "before": "    RULE_NO_ASYNC_IN_COMPUTED, RULE_NO_DEPRECATED_DATA_OBJECT_DECLARATION,\n    RULE_NO_DEPRECATED_DESTROYED_LIFECYCLE, RULE_NO_DEPRECATED_DOLLAR_LISTENERS_API,\n    RULE_NO_DEPRECATED_DOLLAR_SCOPEDSLOTS_API, RULE_NO_DEPRECATED_EVENTS_API,\n    RULE_NO_DEPRECATED_PROPS_DEFAULT_THIS, RULE_NO_DUPE_KEYS, RULE_NO_DUPLICATE_ATTR_INHERITANCE,\n    RULE_NO_EXPOSE_AFTER_AWAIT, RULE_NO_GET_CURRENT_INSTANCE, RULE_NO_IMPORT_COMPILER_MACROS,\n    RULE_NO_INTERNAL_IMPORTS, RULE_NO_LIFECYCLE_AFTER_AWAIT, RULE_NO_MULTIPLE_SLOT_ARGS,\n    RULE_NO_POTENTIAL_COMPONENT_OPTION_TYPO, RULE_NO_REF_AS_OPERAND,",
+        "after": "    RULE_NO_ASYNC_IN_COMPUTED, RULE_NO_DEPRECATED_DATA_OBJECT_DECLARATION,\n    RULE_NO_DEPRECATED_DELETE_SET, RULE_NO_DEPRECATED_DESTROYED_LIFECYCLE,\n    RULE_NO_DEPRECATED_DOLLAR_LISTENERS_API, RULE_NO_DEPRECATED_DOLLAR_SCOPEDSLOTS_API,\n    RULE_NO_DEPRECATED_EVENTS_API, RULE_NO_DEPRECATED_MODEL_DEFINITION,\n    RULE_NO_DEPRECATED_PROPS_DEFAULT_THIS, RULE_NO_DEPRECATED_VUE_CONFIG_KEYCODES,\n    RULE_NO_DUPE_KEYS, RULE_NO_DUPLICATE_ATTR_INHERITANCE, RULE_NO_EXPOSE_AFTER_AWAIT,\n    RULE_NO_GET_CURRENT_INSTANCE, RULE_NO_IMPORT_COMPILER_MACROS, RULE_NO_INTERNAL_IMPORTS,\n    RULE_NO_LIFECYCLE_AFTER_AWAIT, RULE_NO_MULTIPLE_SLOT_ARGS,\n    RULE_NO_POTENTIAL_COMPONENT_OPTION_TYPO, RULE_NO_REF_AS_OPERAND,"
+      }
+    ]
   }
 ]

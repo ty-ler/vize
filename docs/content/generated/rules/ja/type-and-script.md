@@ -20,11 +20,14 @@ title: "型と script のルール"
 | [`script/no-boolean-default`](#script-no-boolean-default) | [悪い](#script-no-boolean-default-bad) · [良い](#script-no-boolean-default-good) | Boolean prop の冗長な default を検出します。 |
 | [`script/no-deep-destructure-in-props`](#script-no-deep-destructure-in-props) | [悪い](#script-no-deep-destructure-in-props-bad) · [良い](#script-no-deep-destructure-in-props-good) | defineProps の深い分割代入を検出します。 |
 | [`script/no-deprecated-data-object-declaration`](#script-no-deprecated-data-object-declaration) | [悪い](#script-no-deprecated-data-object-declaration-bad) · [良い](#script-no-deprecated-data-object-declaration-good) | Vue 3 で関数にすべき data オプションのオブジェクト指定を検出します。 |
+| [`script/no-deprecated-delete-set`](#script-no-deprecated-delete-set) | [悪い](#script-no-deprecated-delete-set-bad) · [良い](#script-no-deprecated-delete-set-good) | Vue 3 で削除された $set・$delete と Vue.set・Vue.delete を禁止します。 |
 | [`script/no-deprecated-destroyed-lifecycle`](#script-no-deprecated-destroyed-lifecycle) | [悪い](#script-no-deprecated-destroyed-lifecycle-bad) · [良い](#script-no-deprecated-destroyed-lifecycle-good) | Vue 2 の destroyed / beforeDestroy を検出し、Vue 3 のライフサイクルフックに置き換えます。 |
 | [`script/no-deprecated-dollar-listeners-api`](#script-no-deprecated-dollar-listeners-api) | [悪い](#script-no-deprecated-dollar-listeners-api-bad) · [良い](#script-no-deprecated-dollar-listeners-api-good) | Vue 3 で $attrs に統合された $listeners を検出します。 |
 | [`script/no-deprecated-dollar-scopedslots-api`](#script-no-deprecated-dollar-scopedslots-api) | [悪い](#script-no-deprecated-dollar-scopedslots-api-bad) · [良い](#script-no-deprecated-dollar-scopedslots-api-good) | Vue 3 で $slots に統合された $scopedSlots を検出します。 |
 | [`script/no-deprecated-events-api`](#script-no-deprecated-events-api) | [悪い](#script-no-deprecated-events-api-bad) · [良い](#script-no-deprecated-events-api-good) | Vue 3 で削除された $on / $off / $once を検出します。 |
+| [`script/no-deprecated-model-definition`](#script-no-deprecated-model-definition) | [悪い](#script-no-deprecated-model-definition-bad) · [良い](#script-no-deprecated-model-definition-good) | Vue 3 で削除された model オプションを禁止します。 |
 | [`script/no-deprecated-props-default-this`](#script-no-deprecated-props-default-this) | [悪い](#script-no-deprecated-props-default-this-bad) · [良い](#script-no-deprecated-props-default-this-good) | prop の default / validator 内で使えなくなった this を検出します。 |
+| [`script/no-deprecated-vue-config-keycodes`](#script-no-deprecated-vue-config-keycodes) | [悪い](#script-no-deprecated-vue-config-keycodes-bad) · [良い](#script-no-deprecated-vue-config-keycodes-good) | Vue 3 で削除された Vue.config.keyCodes を禁止します。 |
 | [`script/no-dupe-keys`](#script-no-dupe-keys) | [悪い](#script-no-dupe-keys-bad) · [良い](#script-no-dupe-keys-good) | Options API の props / data / computed などのキー重複を検出します。 |
 | [`script/no-duplicate-attr-inheritance`](#script-no-duplicate-attr-inheritance) | [悪い](#script-no-duplicate-attr-inheritance-bad) · [良い](#script-no-duplicate-attr-inheritance-good) | fallthrough 属性を同じコンポーネントで二重に適用する箇所を検出します。 |
 | [`script/no-export-in-script-setup`](#script-no-export-in-script-setup) | [悪い](#script-no-export-in-script-setup-bad) · [良い](#script-no-export-in-script-setup-good) | script setup 内の export 文を検出します。 |
@@ -833,6 +836,81 @@ export default {
 
 [実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_data_object_declaration.rs#L48) · [全ルール](all.md)
 
+### `script/no-deprecated-delete-set`
+
+Vue 3 で削除された $set・$delete と Vue.set・Vue.delete を禁止します。
+
+[悪い例](#script-no-deprecated-delete-set-bad) · [良い例](#script-no-deprecated-delete-set-good)
+
+既定の重大度: `error`  
+プリセット: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
+自動修正: なし。修正内容を確認してください  
+適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
+オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
+
+**設定（Vite+）**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  vue: {
+    linter: {
+      "preset": "incremental",
+      "rules": {
+        "script/no-deprecated-delete-set": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="script-no-deprecated-delete-set-bad"></span>
+
+**悪い**
+
+`this.$set()` と `this.$delete()` は Vue 3 で削除され、コンポーネントのインスタンスに存在しません。
+
+```vue annotate="remove:5,6"
+<script lang="ts">
+export default {
+  methods: {
+    update() {
+      this.$set(this.user, 'name', 'Ada')
+      this.$delete(this.user, 'age')
+    },
+  },
+}
+</script>
+```
+
+<span id="script-no-deprecated-delete-set-good"></span>
+
+**良い**
+
+プロパティへの代入と `delete` 演算子を使います。Vue 3 のリアクティビティはどちらも追跡します。
+
+```vue annotate="add:5,6"
+<script lang="ts">
+export default {
+  methods: {
+    update() {
+      this.user.name = 'Ada'
+      delete this.user.age
+    },
+  },
+}
+</script>
+```
+
+良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
+
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_delete_set.rs#L53) · [全ルール](all.md)
+
 ### `script/no-deprecated-destroyed-lifecycle`
 
 Vue 2 の destroyed / beforeDestroy を検出し、Vue 3 のライフサイクルフックに置き換えます。
@@ -1106,6 +1184,73 @@ export default {
 
 [実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_events_api.rs#L51) · [全ルール](all.md)
 
+### `script/no-deprecated-model-definition`
+
+Vue 3 で削除された model オプションを禁止します。
+
+[悪い例](#script-no-deprecated-model-definition-bad) · [良い例](#script-no-deprecated-model-definition-good)
+
+既定の重大度: `error`  
+プリセット: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
+自動修正: なし。修正内容を確認してください  
+適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
+オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
+
+**設定（Vite+）**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  vue: {
+    linter: {
+      "preset": "incremental",
+      "rules": {
+        "script/no-deprecated-model-definition": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="script-no-deprecated-model-definition-bad"></span>
+
+**悪い**
+
+`model` オプションで `v-model` の prop とイベントを変更していますが、Vue 3 では削除されたため `v-model` を受け取れません。
+
+```vue annotate="remove:3,4"
+<script lang="ts">
+export default {
+  model: { prop: 'checked', event: 'change' },
+  props: { checked: Boolean },
+}
+</script>
+```
+
+<span id="script-no-deprecated-model-definition-good"></span>
+
+**良い**
+
+Vue 3 の `v-model` が使う `modelValue` prop と `update:modelValue` イベントを宣言します。
+
+```vue annotate="add:3,4"
+<script lang="ts">
+export default {
+  props: { modelValue: Boolean },
+  emits: ['update:modelValue'],
+}
+</script>
+```
+
+良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
+
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_model_definition.rs#L38) · [全ルール](all.md)
+
 ### `script/no-deprecated-props-default-this`
 
 prop の default / validator 内で使えなくなった this を検出します。
@@ -1198,6 +1343,70 @@ export default {
 良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
 
 [実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_props_default_this.rs#L71) · [全ルール](all.md)
+
+### `script/no-deprecated-vue-config-keycodes`
+
+Vue 3 で削除された Vue.config.keyCodes を禁止します。
+
+[悪い例](#script-no-deprecated-vue-config-keycodes-bad) · [良い例](#script-no-deprecated-vue-config-keycodes-good)
+
+既定の重大度: `error`  
+プリセット: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
+自動修正: なし。修正内容を確認してください  
+適用範囲: Vue SFC の JavaScript / TypeScript の script ブロック。対象となる Options API または script setup の形式は例を参照してください。  
+オプション: ルール固有のオプションはありません。重大度とプリセットは設定できます。
+
+**設定（Vite+）**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  vue: {
+    linter: {
+      "preset": "incremental",
+      "rules": {
+        "script/no-deprecated-vue-config-keycodes": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="script-no-deprecated-vue-config-keycodes-bad"></span>
+
+**悪い**
+
+`Vue.config.keyCodes` で `v-on` 修飾子のキーコード別名を登録していますが、Vue 3 で削除されました。
+
+```vue annotate="remove:2,3"
+<script setup lang="ts">
+import Vue from 'vue'
+Vue.config.keyCodes = { f1: 112 }
+</script>
+```
+
+<span id="script-no-deprecated-vue-config-keycodes-good"></span>
+
+**良い**
+
+`createApp()` でアプリを作成し、キーコードの別名は登録しません。テンプレートでは `KeyboardEvent.key` の名前を修飾子に使います。
+
+```vue annotate="add:2,3,4"
+<script setup lang="ts">
+import { createApp } from 'vue'
+import App from './App.vue'
+createApp(App).mount('#app')
+</script>
+```
+
+良い例は上記の設定でこのルールの診断が出ない例です。他のルールの診断は出る場合があります。
+
+[実装](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_vue_config_keycodes.rs#L31) · [全ルール](all.md)
 
 ### `script/no-dupe-keys`
 

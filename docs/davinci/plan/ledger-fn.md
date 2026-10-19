@@ -165,11 +165,14 @@ assert is not relaxed to count-only or to an optional span.
 - `script/no-boolean-default`
 - `script/no-deep-destructure-in-props`
 - `script/no-deprecated-data-object-declaration`
+- `script/no-deprecated-delete-set`
 - `script/no-deprecated-destroyed-lifecycle`
 - `script/no-deprecated-dollar-listeners-api`
 - `script/no-deprecated-dollar-scopedslots-api`
 - `script/no-deprecated-events-api`
+- `script/no-deprecated-model-definition`
 - `script/no-deprecated-props-default-this`
+- `script/no-deprecated-vue-config-keycodes`
 - `script/no-dupe-keys`
 - `script/no-export-in-script-setup`
 - `script/no-expose-after-await`

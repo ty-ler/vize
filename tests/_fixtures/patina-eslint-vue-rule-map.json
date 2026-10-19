@@ -391,8 +391,16 @@
       "status": "mapped"
     },
     "vue/no-deprecated-delete-set": {
-      "issue": 3223,
-      "status": "unimplemented"
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
+      "patinaRule": "script/no-deprecated-delete-set",
+      "patinaSeverity": "error",
+      "status": "mapped"
     },
     "vue/no-deprecated-destroyed-lifecycle": {
       "patinaPresets": [
@@ -491,8 +499,16 @@
       "status": "mapped"
     },
     "vue/no-deprecated-model-definition": {
-      "issue": 3223,
-      "status": "unimplemented"
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
+      "patinaRule": "script/no-deprecated-model-definition",
+      "patinaSeverity": "error",
+      "status": "mapped"
     },
     "vue/no-deprecated-props-default-this": {
       "patinaPresets": [
@@ -603,8 +619,16 @@
       "status": "mapped"
     },
     "vue/no-deprecated-vue-config-keycodes": {
-      "issue": 3223,
-      "status": "unimplemented"
+      "patinaPresets": [
+        "ecosystem",
+        "essential",
+        "general-recommended",
+        "nuxt",
+        "opinionated"
+      ],
+      "patinaRule": "script/no-deprecated-vue-config-keycodes",
+      "patinaSeverity": "error",
+      "status": "mapped"
     },
     "vue/no-dupe-keys": {
       "patinaPresets": [
@@ -1920,8 +1944,8 @@
   "schemaVersion": 1,
   "summary": {
     "intentionalDivergence": 2,
-    "mapped": 130,
-    "unimplemented": 120
+    "mapped": 133,
+    "unimplemented": 117
   },
   "upstream": {
     "package": "eslint-plugin-vue",

@@ -21,11 +21,14 @@ Cada regra desta categoria reúne nesta página sua finalidade, configuração e
 | [`script/no-boolean-default`](#script-no-boolean-default) | [Incorreto](#script-no-boolean-default-bad) · [Correto](#script-no-boolean-default-good) | Proibir um valor padrão em uma prop Boolean |
 | [`script/no-deep-destructure-in-props`](#script-no-deep-destructure-in-props) | [Incorreto](#script-no-deep-destructure-in-props-bad) · [Correto](#script-no-deep-destructure-in-props-good) | Proibir desestruturação profundamente aninhada em defineProps |
 | [`script/no-deprecated-data-object-declaration`](#script-no-deprecated-data-object-declaration) | [Incorreto](#script-no-deprecated-data-object-declaration-bad) · [Correto](#script-no-deprecated-data-object-declaration-good) | Proibir um literal de objeto como opção data do componente (o Vue 3 exige uma função) |
+| [`script/no-deprecated-delete-set`](#script-no-deprecated-delete-set) | [Incorreto](#script-no-deprecated-delete-set-bad) · [Correto](#script-no-deprecated-delete-set-good) | Proibir $set e $delete, removidos no Vue 3 |
 | [`script/no-deprecated-destroyed-lifecycle`](#script-no-deprecated-destroyed-lifecycle) | [Incorreto](#script-no-deprecated-destroyed-lifecycle-bad) · [Correto](#script-no-deprecated-destroyed-lifecycle-good) | Proibir os hooks de ciclo de vida obsoletos destroyed e beforeDestroy |
 | [`script/no-deprecated-dollar-listeners-api`](#script-no-deprecated-dollar-listeners-api) | [Incorreto](#script-no-deprecated-dollar-listeners-api-bad) · [Correto](#script-no-deprecated-dollar-listeners-api-good) | Proibir a propriedade de instância $listeners removida no Vue 3 (incorporada a $attrs) |
 | [`script/no-deprecated-dollar-scopedslots-api`](#script-no-deprecated-dollar-scopedslots-api) | [Incorreto](#script-no-deprecated-dollar-scopedslots-api-bad) · [Correto](#script-no-deprecated-dollar-scopedslots-api-good) | Proibir a propriedade de instância $scopedSlots removida no Vue 3 (usar $slots) |
 | [`script/no-deprecated-events-api`](#script-no-deprecated-events-api) | [Incorreto](#script-no-deprecated-events-api-bad) · [Correto](#script-no-deprecated-events-api-good) | Proibir a API de eventos do Vue 2 removida ($on / $off / $once) |
+| [`script/no-deprecated-model-definition`](#script-no-deprecated-model-definition) | [Incorreto](#script-no-deprecated-model-definition-bad) · [Correto](#script-no-deprecated-model-definition-good) | Proibir a opção de componente model, removida no Vue 3 |
 | [`script/no-deprecated-props-default-this`](#script-no-deprecated-props-default-this) | [Incorreto](#script-no-deprecated-props-default-this-bad) · [Correto](#script-no-deprecated-props-default-this-good) | Proibir `this` dentro de uma função de valor padrão ou validação de prop (removido no Vue 3) |
+| [`script/no-deprecated-vue-config-keycodes`](#script-no-deprecated-vue-config-keycodes) | [Incorreto](#script-no-deprecated-vue-config-keycodes-bad) · [Correto](#script-no-deprecated-vue-config-keycodes-good) | Proibir Vue.config.keyCodes, removido no Vue 3 |
 | [`script/no-dupe-keys`](#script-no-dupe-keys) | [Incorreto](#script-no-dupe-keys-bad) · [Correto](#script-no-dupe-keys-good) | Proibir chaves duplicadas entre props/data/computed/methods/setup/inject da Options API |
 | [`script/no-duplicate-attr-inheritance`](#script-no-duplicate-attr-inheritance) | [Incorreto](#script-no-duplicate-attr-inheritance-bad) · [Correto](#script-no-duplicate-attr-inheritance-good) | Sinalizar um componente que aplica duas vezes seus atributos repassados |
 | [`script/no-export-in-script-setup`](#script-no-export-in-script-setup) | [Incorreto](#script-no-export-in-script-setup-bad) · [Correto](#script-no-export-in-script-setup-good) | Proibir instruções export dentro de &lt;script setup&gt; |
@@ -834,6 +837,81 @@ O exemplo correto evita o diagnóstico desta regra com a configuração acima; o
 
 [Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_data_object_declaration.rs#L48) · [Todas as regras](all.md)
 
+### `script/no-deprecated-delete-set`
+
+Proibir $set e $delete, removidos no Vue 3
+
+[Incorreto](#script-no-deprecated-delete-set-bad) · [Correto](#script-no-deprecated-delete-set-good)
+
+Severidade padrão: `error`  
+Predefinições: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
+Correção automática: Nenhuma; revise a alteração sugerida  
+Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
+Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
+
+**Configuração (Vite+)**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  vue: {
+    linter: {
+      "preset": "incremental",
+      "rules": {
+        "script/no-deprecated-delete-set": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="script-no-deprecated-delete-set-bad"></span>
+
+**Incorreto**
+
+`this.$set()` e `this.$delete()` foram removidos no Vue 3; os métodos não existem na instância do componente.
+
+```vue annotate="remove:5,6"
+<script lang="ts">
+export default {
+  methods: {
+    update() {
+      this.$set(this.user, 'name', 'Ada')
+      this.$delete(this.user, 'age')
+    },
+  },
+}
+</script>
+```
+
+<span id="script-no-deprecated-delete-set-good"></span>
+
+**Correto**
+
+O método atribui a propriedade e usa o operador `delete`; a reatividade do Vue 3 acompanha ambos.
+
+```vue annotate="add:5,6"
+<script lang="ts">
+export default {
+  methods: {
+    update() {
+      this.user.name = 'Ada'
+      delete this.user.age
+    },
+  },
+}
+</script>
+```
+
+O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
+
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_delete_set.rs#L53) · [Todas as regras](all.md)
+
 ### `script/no-deprecated-destroyed-lifecycle`
 
 Proibir os hooks de ciclo de vida obsoletos destroyed e beforeDestroy
@@ -1107,6 +1185,73 @@ O exemplo correto evita o diagnóstico desta regra com a configuração acima; o
 
 [Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_events_api.rs#L51) · [Todas as regras](all.md)
 
+### `script/no-deprecated-model-definition`
+
+Proibir a opção de componente model, removida no Vue 3
+
+[Incorreto](#script-no-deprecated-model-definition-bad) · [Correto](#script-no-deprecated-model-definition-good)
+
+Severidade padrão: `error`  
+Predefinições: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
+Correção automática: Nenhuma; revise a alteração sugerida  
+Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
+Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
+
+**Configuração (Vite+)**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  vue: {
+    linter: {
+      "preset": "incremental",
+      "rules": {
+        "script/no-deprecated-model-definition": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="script-no-deprecated-model-definition-bad"></span>
+
+**Incorreto**
+
+A opção `model` renomeia a prop e o evento do `v-model`, algo que o Vue 3 removeu; o componente deixaria de receber `v-model`.
+
+```vue annotate="remove:3,4"
+<script lang="ts">
+export default {
+  model: { prop: 'checked', event: 'change' },
+  props: { checked: Boolean },
+}
+</script>
+```
+
+<span id="script-no-deprecated-model-definition-good"></span>
+
+**Correto**
+
+O componente declara a prop `modelValue` e o evento `update:modelValue` usados pelo `v-model` do Vue 3.
+
+```vue annotate="add:3,4"
+<script lang="ts">
+export default {
+  props: { modelValue: Boolean },
+  emits: ['update:modelValue'],
+}
+</script>
+```
+
+O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
+
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_model_definition.rs#L38) · [Todas as regras](all.md)
+
 ### `script/no-deprecated-props-default-this`
 
 Proibir `this` dentro de uma função de valor padrão ou validação de prop (removido no Vue 3)
@@ -1199,6 +1344,70 @@ export default {
 O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
 
 [Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_props_default_this.rs#L71) · [Todas as regras](all.md)
+
+### `script/no-deprecated-vue-config-keycodes`
+
+Proibir Vue.config.keyCodes, removido no Vue 3
+
+[Incorreto](#script-no-deprecated-vue-config-keycodes-bad) · [Correto](#script-no-deprecated-vue-config-keycodes-good)
+
+Severidade padrão: `error`  
+Predefinições: `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated`  
+Correção automática: Nenhuma; revise a alteração sugerida  
+Aplicável a: Scripts JS/TS em SFCs Vue; os exemplos mostram a forma relevante de Options API ou script setup  
+Opções: Sem opções específicas da regra. A severidade e a seleção de predefinições são configuráveis.
+
+**Configuração (Vite+)**
+
+```ts
+import { defineConfig } from "@vizejs/vite-plugin/vite-plus";
+
+export default defineConfig({
+  vue: {
+    linter: {
+      "preset": "incremental",
+      "rules": {
+        "script/no-deprecated-vue-config-keycodes": "error"
+      }
+    },
+  },
+});
+```
+
+```sh
+vp run lint
+```
+
+<span id="script-no-deprecated-vue-config-keycodes-bad"></span>
+
+**Incorreto**
+
+`Vue.config.keyCodes` registra apelidos de códigos de tecla para modificadores de `v-on`, algo que o Vue 3 removeu.
+
+```vue annotate="remove:2,3"
+<script setup lang="ts">
+import Vue from 'vue'
+Vue.config.keyCodes = { f1: 112 }
+</script>
+```
+
+<span id="script-no-deprecated-vue-config-keycodes-good"></span>
+
+**Correto**
+
+O app é criado com `createApp()` sem apelidos de códigos de tecla; os templates usam os nomes de `KeyboardEvent.key` como modificadores.
+
+```vue annotate="add:2,3,4"
+<script setup lang="ts">
+import { createApp } from 'vue'
+import App from './App.vue'
+createApp(App).mount('#app')
+</script>
+```
+
+O exemplo correto evita o diagnóstico desta regra com a configuração acima; outras regras ainda podem emitir diagnósticos.
+
+[Implementação](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_vue_config_keycodes.rs#L31) · [Todas as regras](all.md)
 
 ### `script/no-dupe-keys`
 

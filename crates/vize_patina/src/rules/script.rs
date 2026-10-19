@@ -2,6 +2,7 @@
 //! in `<script>` and `<script setup>` blocks and are **opt-in** via `[rules.script]`.
 
 mod after_await;
+mod component_objects;
 mod component_options_name_casing;
 mod custom_event_name_casing;
 mod define_emits_declaration;
@@ -15,11 +16,14 @@ mod no_async_in_computed;
 mod no_boolean_default;
 mod no_deep_destructure_in_props;
 mod no_deprecated_data_object_declaration;
+mod no_deprecated_delete_set;
 mod no_deprecated_destroyed_lifecycle;
 mod no_deprecated_dollar_listeners_api;
 mod no_deprecated_dollar_scopedslots_api;
 mod no_deprecated_events_api;
+mod no_deprecated_model_definition;
 mod no_deprecated_props_default_this;
+mod no_deprecated_vue_config_keycodes;
 mod no_dupe_keys;
 mod no_duplicate_attr_inheritance;
 mod no_export_in_script_setup;

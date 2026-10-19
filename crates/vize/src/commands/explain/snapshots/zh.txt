@@ -2118,6 +2118,36 @@ script/no-deprecated-data-object-declaration · lint 规则
       return { count: 0 }
     }
   }
+=== script/no-deprecated-delete-set
+script/no-deprecated-delete-set · lint 规则
+禁止使用 Vue 3 已移除的 $set 和 $delete
+
+精度层级: exact
+适用范围: Options API component definitions written as object literals
+严重级别: 错误
+类别: script
+自动修复: 不支持
+文档: docs/content/rules/type-and-script.md
+
+错误示例:
+  export default {
+    methods: {
+      update() {
+        this.$set(this.user, 'name', 'Ada')
+        this.$delete(this.user, 'age')
+      },
+    },
+  }
+
+正确示例:
+  export default {
+    methods: {
+      update() {
+        this.user.name = 'Ada'
+        delete this.user.age
+      },
+    },
+  }
 === script/no-deprecated-destroyed-lifecycle
 script/no-deprecated-destroyed-lifecycle · lint 规则
 禁止使用已弃用的 destroyed 和 beforeDestroy 生命周期钩子
@@ -2213,6 +2243,28 @@ script/no-deprecated-events-api · lint 规则
     }
   }
   </script>
+=== script/no-deprecated-model-definition
+script/no-deprecated-model-definition · lint 规则
+禁止使用 Vue 3 已移除的 model 组件选项
+
+精度层级: exact
+适用范围: Options API component definitions written as object literals
+严重级别: 错误
+类别: script
+自动修复: 不支持
+文档: docs/content/rules/type-and-script.md
+
+错误示例:
+  export default {
+    model: { prop: 'checked', event: 'change' },
+    props: { checked: Boolean },
+  }
+
+正确示例:
+  export default {
+    props: { modelValue: Boolean },
+    emits: ['update:modelValue'],
+  }
 === script/no-deprecated-props-default-this
 script/no-deprecated-props-default-this · lint 规则
 禁止在 prop 的 default/validator 函数中使用 `this`（Vue 3 已移除）
@@ -2261,6 +2313,25 @@ script/no-deprecated-props-default-this · lint 规则
       }
     }
   }
+=== script/no-deprecated-vue-config-keycodes
+script/no-deprecated-vue-config-keycodes · lint 规则
+禁止使用 Vue 3 已移除的 Vue.config.keyCodes
+
+精度层级: exact
+适用范围: the syntax of <script> and <script setup> programs, without type information
+严重级别: 错误
+类别: script
+自动修复: 不支持
+文档: docs/content/rules/type-and-script.md
+
+错误示例:
+  import Vue from 'vue'
+  Vue.config.keyCodes = { f1: 112 }
+
+正确示例:
+  import { createApp } from 'vue'
+  import App from './App.vue'
+  createApp(App).mount('#app')
 === script/no-dupe-keys
 script/no-dupe-keys · lint 规则
 禁止在选项式 API 的 props/data/computed/methods/setup/inject 之间出现重复的键

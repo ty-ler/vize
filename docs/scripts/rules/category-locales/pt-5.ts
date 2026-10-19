@@ -179,4 +179,19 @@ export const portugueseRules5: Record<string, readonly [string, string, string]>
     "`watch()` é criado depois de `await loadData()` e a função de parada é descartada, então o watcher nunca é parado junto com o componente.",
     "O watcher é criado antes do primeiro `await`, então o Vue o para quando o componente é desmontado.",
   ],
+  "script/no-deprecated-delete-set": [
+    "Proibir $set e $delete, removidos no Vue 3",
+    "`this.$set()` e `this.$delete()` foram removidos no Vue 3; os métodos não existem na instância do componente.",
+    "O método atribui a propriedade e usa o operador `delete`; a reatividade do Vue 3 acompanha ambos.",
+  ],
+  "script/no-deprecated-model-definition": [
+    "Proibir a opção de componente model, removida no Vue 3",
+    "A opção `model` renomeia a prop e o evento do `v-model`, algo que o Vue 3 removeu; o componente deixaria de receber `v-model`.",
+    "O componente declara a prop `modelValue` e o evento `update:modelValue` usados pelo `v-model` do Vue 3.",
+  ],
+  "script/no-deprecated-vue-config-keycodes": [
+    "Proibir Vue.config.keyCodes, removido no Vue 3",
+    "`Vue.config.keyCodes` registra apelidos de códigos de tecla para modificadores de `v-on`, algo que o Vue 3 removeu.",
+    "O app é criado com `createApp()` sem apelidos de códigos de tecla; os templates usam os nomes de `KeyboardEvent.key` como modificadores.",
+  ],
 };

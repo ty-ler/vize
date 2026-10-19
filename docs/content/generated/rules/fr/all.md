@@ -120,11 +120,14 @@ Le CLI public expose la même passe avec `vize lint --cross-file`. Les codes aff
 | [`script/no-boolean-default`](#script-no-boolean-default) | [Mauvais](#script-no-boolean-default-bad) · [Bon](#script-no-boolean-default-good) | Interdire une valeur par défaut sur une prop Boolean |
 | [`script/no-deep-destructure-in-props`](#script-no-deep-destructure-in-props) | [Mauvais](#script-no-deep-destructure-in-props-bad) · [Bon](#script-no-deep-destructure-in-props-good) | Interdire la déstructuration profondément imbriquée dans defineProps |
 | [`script/no-deprecated-data-object-declaration`](#script-no-deprecated-data-object-declaration) | [Mauvais](#script-no-deprecated-data-object-declaration-bad) · [Bon](#script-no-deprecated-data-object-declaration-good) | Interdire un objet littéral comme option data du composant (Vue 3 exige une fonction) |
+| [`script/no-deprecated-delete-set`](#script-no-deprecated-delete-set) | [Mauvais](#script-no-deprecated-delete-set-bad) · [Bon](#script-no-deprecated-delete-set-good) | Interdire $set et $delete, supprimés par Vue 3 |
 | [`script/no-deprecated-destroyed-lifecycle`](#script-no-deprecated-destroyed-lifecycle) | [Mauvais](#script-no-deprecated-destroyed-lifecycle-bad) · [Bon](#script-no-deprecated-destroyed-lifecycle-good) | Interdire les hooks de cycle de vie dépréciés destroyed et beforeDestroy |
 | [`script/no-deprecated-dollar-listeners-api`](#script-no-deprecated-dollar-listeners-api) | [Mauvais](#script-no-deprecated-dollar-listeners-api-bad) · [Bon](#script-no-deprecated-dollar-listeners-api-good) | Interdire la propriété d’instance $listeners supprimée dans Vue 3 (fusionnée dans $attrs) |
 | [`script/no-deprecated-dollar-scopedslots-api`](#script-no-deprecated-dollar-scopedslots-api) | [Mauvais](#script-no-deprecated-dollar-scopedslots-api-bad) · [Bon](#script-no-deprecated-dollar-scopedslots-api-good) | Interdire la propriété d’instance $scopedSlots supprimée dans Vue 3 (utiliser $slots) |
 | [`script/no-deprecated-events-api`](#script-no-deprecated-events-api) | [Mauvais](#script-no-deprecated-events-api-bad) · [Bon](#script-no-deprecated-events-api-good) | Interdire l’API d’événements de Vue 2 supprimée ($on / $off / $once) |
+| [`script/no-deprecated-model-definition`](#script-no-deprecated-model-definition) | [Mauvais](#script-no-deprecated-model-definition-bad) · [Bon](#script-no-deprecated-model-definition-good) | Interdire l’option de composant model, supprimée par Vue 3 |
 | [`script/no-deprecated-props-default-this`](#script-no-deprecated-props-default-this) | [Mauvais](#script-no-deprecated-props-default-this-bad) · [Bon](#script-no-deprecated-props-default-this-good) | Interdire `this` dans une fonction de valeur par défaut ou de validation de prop (supprimé dans Vue 3) |
+| [`script/no-deprecated-vue-config-keycodes`](#script-no-deprecated-vue-config-keycodes) | [Mauvais](#script-no-deprecated-vue-config-keycodes-bad) · [Bon](#script-no-deprecated-vue-config-keycodes-good) | Interdire Vue.config.keyCodes, supprimé par Vue 3 |
 | [`script/no-dupe-keys`](#script-no-dupe-keys) | [Mauvais](#script-no-dupe-keys-bad) · [Bon](#script-no-dupe-keys-good) | Interdire les clés dupliquées entre props/data/computed/methods/setup/inject de l’Options API |
 | [`script/no-duplicate-attr-inheritance`](#script-no-duplicate-attr-inheritance) | [Mauvais](#script-no-duplicate-attr-inheritance-bad) · [Bon](#script-no-duplicate-attr-inheritance-good) | Signaler un composant qui applique deux fois ses attributs transmis automatiquement |
 | [`script/no-export-in-script-setup`](#script-no-export-in-script-setup) | [Mauvais](#script-no-export-in-script-setup-bad) · [Bon](#script-no-export-in-script-setup-good) | Interdire les instructions export dans &lt;script setup&gt; |
@@ -1578,6 +1581,20 @@ Interdire un objet littéral comme option data du composant (Vue 3 exige une fon
 
 [Exemples du groupe](./type-and-script.md#script-no-deprecated-data-object-declaration) · [Fiche de la règle](/rules/reference/script-no-deprecated-data-object-declaration.md)
 
+### `script/no-deprecated-delete-set`
+
+Interdire $set et $delete, supprimés par Vue 3
+
+<span id="script-no-deprecated-delete-set-bad"></span>
+
+[Mauvais](./type-and-script.md#script-no-deprecated-delete-set-bad)
+
+<span id="script-no-deprecated-delete-set-good"></span>
+
+[Bon](./type-and-script.md#script-no-deprecated-delete-set-good)
+
+[Exemples du groupe](./type-and-script.md#script-no-deprecated-delete-set) · [Fiche de la règle](/rules/reference/script-no-deprecated-delete-set.md)
+
 ### `script/no-deprecated-destroyed-lifecycle`
 
 Interdire les hooks de cycle de vie dépréciés destroyed et beforeDestroy
@@ -1634,6 +1651,20 @@ Interdire l’API d’événements de Vue 2 supprimée ($on / $off / $once)
 
 [Exemples du groupe](./type-and-script.md#script-no-deprecated-events-api) · [Fiche de la règle](/rules/reference/script-no-deprecated-events-api.md)
 
+### `script/no-deprecated-model-definition`
+
+Interdire l’option de composant model, supprimée par Vue 3
+
+<span id="script-no-deprecated-model-definition-bad"></span>
+
+[Mauvais](./type-and-script.md#script-no-deprecated-model-definition-bad)
+
+<span id="script-no-deprecated-model-definition-good"></span>
+
+[Bon](./type-and-script.md#script-no-deprecated-model-definition-good)
+
+[Exemples du groupe](./type-and-script.md#script-no-deprecated-model-definition) · [Fiche de la règle](/rules/reference/script-no-deprecated-model-definition.md)
+
 ### `script/no-deprecated-props-default-this`
 
 Interdire `this` dans une fonction de valeur par défaut ou de validation de prop (supprimé dans Vue 3)
@@ -1647,6 +1678,20 @@ Interdire `this` dans une fonction de valeur par défaut ou de validation de pro
 [Bon](./type-and-script.md#script-no-deprecated-props-default-this-good)
 
 [Exemples du groupe](./type-and-script.md#script-no-deprecated-props-default-this) · [Fiche de la règle](/rules/reference/script-no-deprecated-props-default-this.md)
+
+### `script/no-deprecated-vue-config-keycodes`
+
+Interdire Vue.config.keyCodes, supprimé par Vue 3
+
+<span id="script-no-deprecated-vue-config-keycodes-bad"></span>
+
+[Mauvais](./type-and-script.md#script-no-deprecated-vue-config-keycodes-bad)
+
+<span id="script-no-deprecated-vue-config-keycodes-good"></span>
+
+[Bon](./type-and-script.md#script-no-deprecated-vue-config-keycodes-good)
+
+[Exemples du groupe](./type-and-script.md#script-no-deprecated-vue-config-keycodes) · [Fiche de la règle](/rules/reference/script-no-deprecated-vue-config-keycodes.md)
 
 ### `script/no-dupe-keys`
 

@@ -123,11 +123,14 @@ title: "全部规则"
 | [`script/no-boolean-default`](#script-no-boolean-default) | [错误示例](#script-no-boolean-default-bad) · [正确示例](#script-no-boolean-default-good) | 禁止为 Boolean prop 设置默认值 |
 | [`script/no-deep-destructure-in-props`](#script-no-deep-destructure-in-props) | [错误示例](#script-no-deep-destructure-in-props-bad) · [正确示例](#script-no-deep-destructure-in-props-good) | 禁止在 defineProps 中进行深层嵌套解构 |
 | [`script/no-deprecated-data-object-declaration`](#script-no-deprecated-data-object-declaration) | [错误示例](#script-no-deprecated-data-object-declaration-bad) · [正确示例](#script-no-deprecated-data-object-declaration-good) | 禁止将对象字面量作为组件 data 选项（Vue 3 要求函数） |
+| [`script/no-deprecated-delete-set`](#script-no-deprecated-delete-set) | [错误示例](#script-no-deprecated-delete-set-bad) · [正确示例](#script-no-deprecated-delete-set-good) | 禁止使用 Vue 3 已移除的 $set 和 $delete |
 | [`script/no-deprecated-destroyed-lifecycle`](#script-no-deprecated-destroyed-lifecycle) | [错误示例](#script-no-deprecated-destroyed-lifecycle-bad) · [正确示例](#script-no-deprecated-destroyed-lifecycle-good) | 禁止已弃用的 destroyed 和 beforeDestroy 生命周期钩子 |
 | [`script/no-deprecated-dollar-listeners-api`](#script-no-deprecated-dollar-listeners-api) | [错误示例](#script-no-deprecated-dollar-listeners-api-bad) · [正确示例](#script-no-deprecated-dollar-listeners-api-good) | 禁止 Vue 3 已移除的 $listeners 实例属性（已合并到 $attrs） |
 | [`script/no-deprecated-dollar-scopedslots-api`](#script-no-deprecated-dollar-scopedslots-api) | [错误示例](#script-no-deprecated-dollar-scopedslots-api-bad) · [正确示例](#script-no-deprecated-dollar-scopedslots-api-good) | 禁止 Vue 3 已移除的 $scopedSlots 实例属性（使用 $slots） |
 | [`script/no-deprecated-events-api`](#script-no-deprecated-events-api) | [错误示例](#script-no-deprecated-events-api-bad) · [正确示例](#script-no-deprecated-events-api-good) | 禁止已移除的 Vue 2 事件 API（$on / $off / $once） |
+| [`script/no-deprecated-model-definition`](#script-no-deprecated-model-definition) | [错误示例](#script-no-deprecated-model-definition-bad) · [正确示例](#script-no-deprecated-model-definition-good) | 禁止使用 Vue 3 已移除的 model 组件选项 |
 | [`script/no-deprecated-props-default-this`](#script-no-deprecated-props-default-this) | [错误示例](#script-no-deprecated-props-default-this-bad) · [正确示例](#script-no-deprecated-props-default-this-good) | 禁止在 prop 默认值或校验函数中使用 `this`（Vue 3 已移除） |
+| [`script/no-deprecated-vue-config-keycodes`](#script-no-deprecated-vue-config-keycodes) | [错误示例](#script-no-deprecated-vue-config-keycodes-bad) · [正确示例](#script-no-deprecated-vue-config-keycodes-good) | 禁止使用 Vue 3 已移除的 Vue.config.keyCodes |
 | [`script/no-dupe-keys`](#script-no-dupe-keys) | [错误示例](#script-no-dupe-keys-bad) · [正确示例](#script-no-dupe-keys-good) | 禁止 Options API 的 props/data/computed/methods/setup/inject 之间重复的键 |
 | [`script/no-duplicate-attr-inheritance`](#script-no-duplicate-attr-inheritance) | [错误示例](#script-no-duplicate-attr-inheritance-bad) · [正确示例](#script-no-duplicate-attr-inheritance-good) | 标记重复应用透传属性的组件 |
 | [`script/no-export-in-script-setup`](#script-no-export-in-script-setup) | [错误示例](#script-no-export-in-script-setup-bad) · [正确示例](#script-no-export-in-script-setup-good) | 禁止 &lt;script setup&gt; 内的 export 语句 |
@@ -1581,6 +1584,20 @@ Vue Router 编程式导航优先使用具名路由对象
 
 [分组示例](./type-and-script.md#script-no-deprecated-data-object-declaration) · [规则参考](/rules/reference/script-no-deprecated-data-object-declaration.md)
 
+### `script/no-deprecated-delete-set`
+
+禁止使用 Vue 3 已移除的 $set 和 $delete
+
+<span id="script-no-deprecated-delete-set-bad"></span>
+
+[错误示例](./type-and-script.md#script-no-deprecated-delete-set-bad)
+
+<span id="script-no-deprecated-delete-set-good"></span>
+
+[正确示例](./type-and-script.md#script-no-deprecated-delete-set-good)
+
+[分组示例](./type-and-script.md#script-no-deprecated-delete-set) · [规则参考](/rules/reference/script-no-deprecated-delete-set.md)
+
 ### `script/no-deprecated-destroyed-lifecycle`
 
 禁止已弃用的 destroyed 和 beforeDestroy 生命周期钩子
@@ -1637,6 +1654,20 @@ Vue Router 编程式导航优先使用具名路由对象
 
 [分组示例](./type-and-script.md#script-no-deprecated-events-api) · [规则参考](/rules/reference/script-no-deprecated-events-api.md)
 
+### `script/no-deprecated-model-definition`
+
+禁止使用 Vue 3 已移除的 model 组件选项
+
+<span id="script-no-deprecated-model-definition-bad"></span>
+
+[错误示例](./type-and-script.md#script-no-deprecated-model-definition-bad)
+
+<span id="script-no-deprecated-model-definition-good"></span>
+
+[正确示例](./type-and-script.md#script-no-deprecated-model-definition-good)
+
+[分组示例](./type-and-script.md#script-no-deprecated-model-definition) · [规则参考](/rules/reference/script-no-deprecated-model-definition.md)
+
 ### `script/no-deprecated-props-default-this`
 
 禁止在 prop 默认值或校验函数中使用 `this`（Vue 3 已移除）
@@ -1650,6 +1681,20 @@ Vue Router 编程式导航优先使用具名路由对象
 [正确示例](./type-and-script.md#script-no-deprecated-props-default-this-good)
 
 [分组示例](./type-and-script.md#script-no-deprecated-props-default-this) · [规则参考](/rules/reference/script-no-deprecated-props-default-this.md)
+
+### `script/no-deprecated-vue-config-keycodes`
+
+禁止使用 Vue 3 已移除的 Vue.config.keyCodes
+
+<span id="script-no-deprecated-vue-config-keycodes-bad"></span>
+
+[错误示例](./type-and-script.md#script-no-deprecated-vue-config-keycodes-bad)
+
+<span id="script-no-deprecated-vue-config-keycodes-good"></span>
+
+[正确示例](./type-and-script.md#script-no-deprecated-vue-config-keycodes-good)
+
+[分组示例](./type-and-script.md#script-no-deprecated-vue-config-keycodes) · [规则参考](/rules/reference/script-no-deprecated-vue-config-keycodes.md)
 
 ### `script/no-dupe-keys`
 

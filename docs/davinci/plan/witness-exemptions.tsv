@@ -25,11 +25,14 @@ vize_patina	script/custom-event-name-casing	1
 vize_patina	script/no-arrow-functions-in-watch	1
 vize_patina	script/no-async-in-computed	1
 vize_patina	script/no-deprecated-data-object-declaration	1
+vize_patina	script/no-deprecated-delete-set	1
 vize_patina	script/no-deprecated-destroyed-lifecycle	1
 vize_patina	script/no-deprecated-dollar-listeners-api	1
 vize_patina	script/no-deprecated-dollar-scopedslots-api	1
 vize_patina	script/no-deprecated-events-api	1
+vize_patina	script/no-deprecated-model-definition	1
 vize_patina	script/no-deprecated-props-default-this	1
+vize_patina	script/no-deprecated-vue-config-keycodes	1
 vize_patina	script/no-dupe-keys	1
 vize_patina	script/no-export-in-script-setup	1
 vize_patina	script/no-expose-after-await	1

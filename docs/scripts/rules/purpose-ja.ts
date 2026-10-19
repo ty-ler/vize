@@ -99,9 +99,14 @@ export const purposeJa: Readonly<Record<string, string>> = {
     "Vue 3 で $attrs に統合された $listeners を検出します。",
   "script/no-deprecated-dollar-scopedslots-api":
     "Vue 3 で $slots に統合された $scopedSlots を検出します。",
+  "script/no-deprecated-delete-set":
+    "Vue 3 で削除された $set・$delete と Vue.set・Vue.delete を禁止します。",
   "script/no-deprecated-events-api": "Vue 3 で削除された $on / $off / $once を検出します。",
   "script/no-deprecated-props-default-this":
     "prop の default / validator 内で使えなくなった this を検出します。",
+  "script/no-deprecated-model-definition": "Vue 3 で削除された model オプションを禁止します。",
+  "script/no-deprecated-vue-config-keycodes":
+    "Vue 3 で削除された Vue.config.keyCodes を禁止します。",
   "script/no-dupe-keys": "Options API の props / data / computed などのキー重複を検出します。",
   "script/no-duplicate-attr-inheritance":
     "fallthrough 属性を同じコンポーネントで二重に適用する箇所を検出します。",

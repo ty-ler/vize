@@ -14,7 +14,7 @@ Vite+ では `@vizejs/vite-plugin/vite-plus` の `defineConfig` を使い、`vue
 
 [ESLint からのルール移行対応表](./migration.md)で対応名と未実装の範囲を確認できます。
 
-## 単一ファイルのルール (258)
+## 単一ファイルのルール (261)
 
 | ルール | 例 | 重大度 | プリセット | 自動修正 | オプション | 実装 | 目的 | カテゴリ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -219,11 +219,14 @@ Vite+ では `@vizejs/vite-plugin/vite-plus` の `defineConfig` を使い、`vue
 | [`script/no-boolean-default`](#script-no-boolean-default) | [悪い例](#script-no-boolean-default-bad) · [良い例](#script-no-boolean-default-good) | `warning` | `opinionated`, `nuxt` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_boolean_default.rs#L54) | Boolean prop の冗長な default を検出します。 | Script |
 | [`script/no-deep-destructure-in-props`](#script-no-deep-destructure-in-props) | [悪い例](#script-no-deep-destructure-in-props-bad) · [良い例](#script-no-deep-destructure-in-props-good) | `warning` | `opinionated`, `nuxt` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deep_destructure_in_props.rs#L39) | defineProps の深い分割代入を検出します。 | Script |
 | [`script/no-deprecated-data-object-declaration`](#script-no-deprecated-data-object-declaration) | [悪い例](#script-no-deprecated-data-object-declaration-bad) · [良い例](#script-no-deprecated-data-object-declaration-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_data_object_declaration.rs#L48) | Vue 3 で関数にすべき data オプションのオブジェクト指定を検出します。 | Script |
+| [`script/no-deprecated-delete-set`](#script-no-deprecated-delete-set) | [悪い例](#script-no-deprecated-delete-set-bad) · [良い例](#script-no-deprecated-delete-set-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_delete_set.rs#L53) | Vue 3 で削除された $set・$delete と Vue.set・Vue.delete を禁止します。 | Script |
 | [`script/no-deprecated-destroyed-lifecycle`](#script-no-deprecated-destroyed-lifecycle) | [悪い例](#script-no-deprecated-destroyed-lifecycle-bad) · [良い例](#script-no-deprecated-destroyed-lifecycle-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | あり | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_destroyed_lifecycle.rs#L17) | Vue 2 の destroyed / beforeDestroy を検出し、Vue 3 のライフサイクルフックに置き換えます。 | Script |
 | [`script/no-deprecated-dollar-listeners-api`](#script-no-deprecated-dollar-listeners-api) | [悪い例](#script-no-deprecated-dollar-listeners-api-bad) · [良い例](#script-no-deprecated-dollar-listeners-api-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_dollar_listeners_api.rs#L54) | Vue 3 で $attrs に統合された $listeners を検出します。 | Script |
 | [`script/no-deprecated-dollar-scopedslots-api`](#script-no-deprecated-dollar-scopedslots-api) | [悪い例](#script-no-deprecated-dollar-scopedslots-api-bad) · [良い例](#script-no-deprecated-dollar-scopedslots-api-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_dollar_scopedslots_api.rs#L45) | Vue 3 で $slots に統合された $scopedSlots を検出します。 | Script |
 | [`script/no-deprecated-events-api`](#script-no-deprecated-events-api) | [悪い例](#script-no-deprecated-events-api-bad) · [良い例](#script-no-deprecated-events-api-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_events_api.rs#L51) | Vue 3 で削除された $on / $off / $once を検出します。 | Script |
+| [`script/no-deprecated-model-definition`](#script-no-deprecated-model-definition) | [悪い例](#script-no-deprecated-model-definition-bad) · [良い例](#script-no-deprecated-model-definition-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_model_definition.rs#L38) | Vue 3 で削除された model オプションを禁止します。 | Script |
 | [`script/no-deprecated-props-default-this`](#script-no-deprecated-props-default-this) | [悪い例](#script-no-deprecated-props-default-this-bad) · [良い例](#script-no-deprecated-props-default-this-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_props_default_this.rs#L71) | prop の default / validator 内で使えなくなった this を検出します。 | Script |
+| [`script/no-deprecated-vue-config-keycodes`](#script-no-deprecated-vue-config-keycodes) | [悪い例](#script-no-deprecated-vue-config-keycodes-bad) · [良い例](#script-no-deprecated-vue-config-keycodes-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_deprecated_vue_config_keycodes.rs#L31) | Vue 3 で削除された Vue.config.keyCodes を禁止します。 | Script |
 | [`script/no-dupe-keys`](#script-no-dupe-keys) | [悪い例](#script-no-dupe-keys-bad) · [良い例](#script-no-dupe-keys-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_dupe_keys.rs#L55) | Options API の props / data / computed などのキー重複を検出します。 | Script |
 | [`script/no-duplicate-attr-inheritance`](#script-no-duplicate-attr-inheritance) | [悪い例](#script-no-duplicate-attr-inheritance-bad) · [良い例](#script-no-duplicate-attr-inheritance-good) | `warning` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_duplicate_attr_inheritance.rs#L35) | fallthrough 属性を同じコンポーネントで二重に適用する箇所を検出します。 | Script |
 | [`script/no-export-in-script-setup`](#script-no-export-in-script-setup) | [悪い例](#script-no-export-in-script-setup-bad) · [良い例](#script-no-export-in-script-setup-good) | `error` | `essential`, `happy-path`, `ecosystem`, `nuxt`, `opinionated` | なし | なし | [source](https://github.com/ubugeeei-prod/vize/blob/main/crates/vize_patina/src/rules/script/no_export_in_script_setup.rs#L49) | script setup 内の export 文を検出します。 | Script |
@@ -281,7 +284,7 @@ Vite+ では `@vizejs/vite-plugin/vite-plus` の `defineConfig` を使い、`vue
 
 ## プロジェクトのルールと解析器の診断契約 (66)
 
-以下の項目は、上の 258 件の単一ファイルのルールを補足します。それぞれの例には、コンポーネントやプロジェクトの構成、または参照を追跡するグラフの具体的な条件が含まれます。CLI の検査、実験的なライブラリーの生成元、生成元のない診断契約では対応範囲が異なります。[ファイル間検査の概要](./cross-file.md)を確認してください。
+以下の項目は、上の 261 件の単一ファイルのルールを補足します。それぞれの例には、コンポーネントやプロジェクトの構成、または参照を追跡するグラフの具体的な条件が含まれます。CLI の検査、実験的なライブラリーの生成元、生成元のない診断契約では対応範囲が異なります。[ファイル間検査の概要](./cross-file.md)を確認してください。
 
 | ルール / コード | 例 | 現在の対応 |
 | --- | --- | --- |
@@ -3168,6 +3171,20 @@ Vue 3 で関数にすべき data オプションのオブジェクト指定を�
 
 [カテゴリの例](./type-and-script.md#script-no-deprecated-data-object-declaration) · [ルール参照](./reference/script-no-deprecated-data-object-declaration.md)
 
+### `script/no-deprecated-delete-set`
+
+Vue 3 で削除された $set・$delete と Vue.set・Vue.delete を禁止します。
+
+<span id="script-no-deprecated-delete-set-bad"></span>
+
+[悪い](./type-and-script.md#script-no-deprecated-delete-set-bad)
+
+<span id="script-no-deprecated-delete-set-good"></span>
+
+[良い](./type-and-script.md#script-no-deprecated-delete-set-good)
+
+[カテゴリの例](./type-and-script.md#script-no-deprecated-delete-set) · [ルール参照](./reference/script-no-deprecated-delete-set.md)
+
 ### `script/no-deprecated-destroyed-lifecycle`
 
 Vue 2 の destroyed / beforeDestroy を検出し、Vue 3 のライフサイクルフックに置き換えます。
@@ -3224,6 +3241,20 @@ Vue 3 で削除された $on / $off / $once を検出します。
 
 [カテゴリの例](./type-and-script.md#script-no-deprecated-events-api) · [ルール参照](./reference/script-no-deprecated-events-api.md)
 
+### `script/no-deprecated-model-definition`
+
+Vue 3 で削除された model オプションを禁止します。
+
+<span id="script-no-deprecated-model-definition-bad"></span>
+
+[悪い](./type-and-script.md#script-no-deprecated-model-definition-bad)
+
+<span id="script-no-deprecated-model-definition-good"></span>
+
+[良い](./type-and-script.md#script-no-deprecated-model-definition-good)
+
+[カテゴリの例](./type-and-script.md#script-no-deprecated-model-definition) · [ルール参照](./reference/script-no-deprecated-model-definition.md)
+
 ### `script/no-deprecated-props-default-this`
 
 prop の default / validator 内で使えなくなった this を検出します。
@@ -3237,6 +3268,20 @@ prop の default / validator 内で使えなくなった this を検出します
 [良い](./type-and-script.md#script-no-deprecated-props-default-this-good)
 
 [カテゴリの例](./type-and-script.md#script-no-deprecated-props-default-this) · [ルール参照](./reference/script-no-deprecated-props-default-this.md)
+
+### `script/no-deprecated-vue-config-keycodes`
+
+Vue 3 で削除された Vue.config.keyCodes を禁止します。
+
+<span id="script-no-deprecated-vue-config-keycodes-bad"></span>
+
+[悪い](./type-and-script.md#script-no-deprecated-vue-config-keycodes-bad)
+
+<span id="script-no-deprecated-vue-config-keycodes-good"></span>
+
+[良い](./type-and-script.md#script-no-deprecated-vue-config-keycodes-good)
+
+[カテゴリの例](./type-and-script.md#script-no-deprecated-vue-config-keycodes) · [ルール参照](./reference/script-no-deprecated-vue-config-keycodes.md)
 
 ### `script/no-dupe-keys`
 
