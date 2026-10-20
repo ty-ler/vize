@@ -166,5 +166,17 @@
     "vapor": null,
     "diagnostics": 1,
     "fixes": 1
+  },
+  {
+    "id": "multiline-v-for-type-aware-9880",
+    "history": "04541e20047f0cc3bf30bb219e127d59fe8ad44b",
+    "source": "<script setup lang=\"ts\">\nconst pages: string[][] = [[\"a\", \"b\"], [\"c\"]];\nconst current = 0;\nfunction pick(index: number): string[] { return pages[index] ?? []; }\n</script>\n<template>\n  <span v-for=\"item in pages[\n    current\n  ]\" :key=\"item\" />\n  <span v-for=\"item in pick(\n    current\n  )\" :key=\"item\" />\n</template>",
+    "filename": "History.vue",
+    "entry": "sfc",
+    "rule": "type/no-unsafe-template-binding",
+    "vue_version": null,
+    "vapor": null,
+    "diagnostics": 0,
+    "fixes": 0
   }
 ]
