@@ -69,7 +69,6 @@ pub(crate) fn transform_to_ir_with_spans<'a>(
         vize_atelier_core::walk_probe::WalkStage::VaporLower,
     );
 
-    key::memo_warnings(&root.children, &mut ctx.warnings);
     // Create block for root
     let block = transform_children(&mut ctx, &root.children);
 

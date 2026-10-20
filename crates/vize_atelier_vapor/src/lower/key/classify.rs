@@ -7,9 +7,7 @@ use vize_atelier_core::{
 use super::super::element::template::{RootAttributes, is_static_element};
 
 mod scope;
-#[cfg(test)]
-pub(in crate::lower) use scope::memo_warning;
-pub(in crate::lower) use scope::{ScopeDirectives, memo_warnings};
+pub(in crate::lower) use scope::{MEMO_IGNORED, ScopeDirectives, memo_warning};
 
 pub(in crate::lower) struct DirectiveAnalysis<'a, 'b> {
     pub(in crate::lower) should_lower_as_once: bool,

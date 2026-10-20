@@ -65,9 +65,9 @@ pub(super) fn get_slot_outlet_props<'a>(
     get_slot_props::<false>(ctx, el).0
 }
 
-pub(super) fn get_slot_outlet_props_and_scope<'a, 'b>(
+pub(super) fn get_slot_outlet_props_and_scope<'a>(
     ctx: &TransformContext<'a>,
-    el: &'b ElementNode<'a>,
+    el: &ElementNode<'a>,
 ) -> (
     Vec<'a, IRProp<'a>>,
     super::super::key::ScopeDirectives,
@@ -83,9 +83,9 @@ pub(super) fn get_slot_outlet_props_and_scope<'a, 'b>(
     (props, scope, name)
 }
 
-fn get_slot_props<'a, 'b, const CLASSIFY: bool>(
+fn get_slot_props<'a, const CLASSIFY: bool>(
     ctx: &TransformContext<'a>,
-    el: &'b ElementNode<'a>,
+    el: &ElementNode<'a>,
 ) -> (
     Vec<'a, IRProp<'a>>,
     super::super::key::ScopeDirectives,
@@ -184,6 +184,9 @@ pub(in crate::lower) fn transform_slot<'a>(
 ) {
     let (props, scope, name) = get_slot_outlet_props_and_scope(ctx, el);
     let (once, _) = scope.finish();
+    if let Some(warning) = super::super::key::memo_warning(el) {
+        ctx.warnings.push(warning.into());
+    }
     if once {
         ctx.enter_non_reactive_scope();
     }

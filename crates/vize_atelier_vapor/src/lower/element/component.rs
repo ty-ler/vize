@@ -175,6 +175,8 @@ pub(super) fn transform_component<'a>(
                     }
                 } else if dir.name == "model" {
                     transform_component_v_model(ctx, dir, &mut props);
+                } else if dir.name == "memo" {
+                    ctx.warnings.push(super::super::key::MEMO_IGNORED.into());
                 }
             }
             PropNode::Attribute(attr) => {

@@ -15,7 +15,9 @@ use crate::ir::{BlockIRNode, InsertionAnchor, KeyIRNode, OperationNode};
 mod branch;
 mod classify;
 pub(super) use branch::transform_branch;
-pub(super) use classify::{DirectiveAnalysis, ScopeDirectives, classify, memo_warnings};
+pub(super) use classify::{
+    DirectiveAnalysis, MEMO_IGNORED, ScopeDirectives, classify, memo_warning,
+};
 
 pub(super) fn is_non_reactive(el: &ElementNode<'_>, inherited: bool) -> bool {
     inherited

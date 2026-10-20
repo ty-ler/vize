@@ -297,7 +297,8 @@ pub(crate) fn transform_directive<'a>(
             }
         }
         "once" => {}
-        "memo" => {}
+        // Ignored like upstream, which warns once per element carrying it.
+        "memo" => ctx.warnings.push(super::key::MEMO_IGNORED.into()),
         "show" => {
             // v-show - builtin directive
             let new_dir = clone_directive(ctx, dir);
