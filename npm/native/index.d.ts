@@ -1072,6 +1072,8 @@ export interface PatinaLintOptionsNapi {
   vOnEventHyphenation?: string;
   /** Style for `vue/attribute-hyphenation`: "always" or "never" */
   attributeHyphenation?: string;
+  /** CLI-compatible `linter.ruleOptions` encoded as JSON. */
+  ruleOptionsJson?: string;
 }
 
 /** One stable value a cached JS plugin declares it reads outside the batch. */

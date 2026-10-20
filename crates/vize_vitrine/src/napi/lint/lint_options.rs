@@ -73,6 +73,8 @@ pub struct PatinaLintOptionsNapi {
     pub v_on_event_hyphenation: Option<String>,
     /// Style for `vue/attribute-hyphenation`: "always" or "never"
     pub attribute_hyphenation: Option<String>,
+    /// CLI-compatible `linter.ruleOptions` encoded as JSON.
+    pub rule_options_json: Option<String>,
 }
 
 /// No-mutating-props options for NAPI
