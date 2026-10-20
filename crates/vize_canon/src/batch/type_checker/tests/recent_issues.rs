@@ -23,6 +23,7 @@ mod imported_runtime_props;
 mod javascript_sfc_membership;
 mod large_declaration_identity;
 mod lexical_dollar_slots;
+mod listener_attribute_parity;
 mod literal_dynamic_slot_names;
 mod native_prop_anchors;
 mod normalization;

@@ -27,6 +27,9 @@ export const TYPECHECKER_TESTS = {
   "template-suppression-original": "template_suppression_preserves_complete_original_diagnostics",
   "allow-importing-ts-extensions-9890": "authored_ts_extensions_report_ts5097_by_default",
   "nuxt-plugin-injection-types": "nuxt_reference_graph_preserves_plugin_injection_import_types",
+  "listener-attribute-parity-9852": "listener_keeps_class_style_and_spread_attribute_parity",
+  "art-variant-implicit-component-9854":
+    "implicit_art_component_reports_the_same_prop_errors_as_an_explicit_import",
 } as const;
 
 const originalFixtureRevision = "9aaa1fe458a09e0d0c6604dc8835ccf7c737d943";
@@ -48,6 +51,8 @@ const sourceRevisions = {
   "template-suppression-original": "e199979dfb32dfd8eb9ad32a2928fb010768f239",
   "allow-importing-ts-extensions-9890": "f1b07174a4a86ffc3433f31b8c78406d5bf5b760",
   "nuxt-plugin-injection-types": "2c22691f0f8303a28c425213c423e299f9ad5420",
+  "listener-attribute-parity-9852": "11cb03950bc8d2a4e9cb8d164b0aaca79e302291",
+  "art-variant-implicit-component-9854": "f07065df35d25bc76f355e5f106c80dbefa922b5",
 } satisfies Record<keyof typeof TYPECHECKER_TESTS, string>;
 
 export type Artifact = { path: string; sha256: string };

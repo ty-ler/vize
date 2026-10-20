@@ -65,6 +65,8 @@ pub struct PatinaLintOptionsNapi {
     pub custom_event_name_casing: Option<String>,
     /// Options for `vue/no-mutating-props`
     pub no_mutating_props: Option<NoMutatingPropsOptionsNapi>,
+    /// Options for `script/define-macros-order`
+    pub define_macros_order: Option<DefineMacrosOrderOptionsNapi>,
     /// Options for `vue/sfc-element-order`
     pub sfc_element_order: Option<SfcElementOrderOptionsNapi>,
     /// Options for `vue/html-self-closing`
@@ -82,6 +84,13 @@ pub struct PatinaLintOptionsNapi {
 #[derive(Default)]
 pub struct NoMutatingPropsOptionsNapi {
     pub shallow_only: Option<bool>,
+}
+
+/// Define-macros-order options for NAPI
+#[cfg_attr(feature = "napi", napi(object))]
+#[derive(Default)]
+pub struct DefineMacrosOrderOptionsNapi {
+    pub order: Option<Vec<String>>,
 }
 
 /// SFC element order options for NAPI
@@ -175,6 +184,7 @@ pub(super) fn configure_patina_rule_options(
     component_name_in_template_casing: Option<&str>,
     custom_event_name_casing: Option<&str>,
     no_mutating_props: Option<NoMutatingPropsOptionsNapi>,
+    define_macros_order: Option<DefineMacrosOrderOptionsNapi>,
     sfc_element_order: Option<SfcElementOrderOptionsNapi>,
     html_self_closing: Option<HtmlSelfClosingOptionsNapi>,
     v_on_event_hyphenation: Option<&str>,
@@ -189,6 +199,9 @@ pub(super) fn configure_patina_rule_options(
     if let Some(options) = no_mutating_props.map(no_mutating_props_from_option) {
         linter = linter.with_no_mutating_props_options(options);
     }
+    if let Some(options) = define_macros_order.map(define_macros_order_from_option) {
+        linter = linter.with_define_macros_order(options);
+    }
     if let Some(options) = sfc_element_order.map(sfc_element_order_from_option) {
         linter = linter.with_sfc_element_order_options(options);
     }
@@ -202,6 +215,17 @@ pub(super) fn configure_patina_rule_options(
         linter = linter.with_attribute_hyphenation(style);
     }
     linter
+}
+
+fn define_macros_order_from_option(
+    options: DefineMacrosOrderOptionsNapi,
+) -> vize_l0::config::DefineMacrosOrderOptions {
+    vize_l0::config::DefineMacrosOrderOptions {
+        order: options
+            .order
+            .map(|order| order.into_iter().map(Into::into).collect())
+            .unwrap_or_else(|| vize_l0::config::DefineMacrosOrderOptions::default().order),
+    }
 }
 
 pub(super) fn component_casing_from_option(

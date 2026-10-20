@@ -90,6 +90,13 @@ pub(super) fn generate_inferred_emit_args(
             ctx.component_ref,
         );
     } else {
+        if !usage.spread_props.is_empty() {
+            append!(
+                *ts,
+                "{}// @ts-ignore Inference-only props; the canonical component-props call owns diagnostics.\n",
+                ctx.indent
+            );
+        }
         append!(
             *ts,
             "{}const {emit_props} = (undefined as unknown as {resolver_type})({})(",

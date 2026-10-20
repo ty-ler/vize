@@ -88,7 +88,11 @@ impl<'b> PrefixScope<'b> {
         {
             return None;
         }
+        // The transform writes a tracked direct binding without unwrapping.
+        // Ref-valued and untracked setup bindings retain the runtime `_isRef`
+        // fallback required by the binding metadata contract.
         self.bindings
+            .filter(|table| table.reactive_read(name) != Some(ReactiveRead::Direct))
             .and_then(|table| table.kind(name))
             .filter(|kind| matches!(kind, BindingKind::SetupLet | BindingKind::SetupMaybeRef))
     }
@@ -437,7 +441,7 @@ mod tests {
             ("state", ReactiveRead::Direct),
             ("nested", ReactiveRead::Value),
         ]);
-        let inline = PrefixScope::new(Some(&table), true, false, true);
+        let mut inline = PrefixScope::new(Some(&table), true, false, true);
         let transform = |name| (inline.is_ref_binding(name), inline.needs_unref(name));
         let codegen = |name| {
             (
@@ -455,6 +459,17 @@ mod tests {
         assert_eq!(codegen("draft"), (false, true));
         assert_eq!(transform("nested"), (true, false));
         assert_eq!(codegen("nested"), (false, false));
+
+        inline.enable_vdom_setup_writes();
+        assert_eq!(
+            inline.guarded_setup_write_kind("total"),
+            Some(BindingKind::SetupMaybeRef)
+        );
+        assert_eq!(inline.guarded_setup_write_kind("state"), None);
+        assert_eq!(
+            inline.guarded_setup_write_kind("draft"),
+            Some(BindingKind::SetupLet)
+        );
 
         let module = PrefixScope::new(Some(&table), true, false, false);
         for name in ["total", "state", "count", "draft", "nested"] {
