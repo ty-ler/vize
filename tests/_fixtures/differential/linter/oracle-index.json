@@ -183,6 +183,10 @@
     "path": "crates/vize_patina/tests/snapshots/integration__lint_history__dynamic-slot-v-for-component-bodies.snap",
     "sha256": "6de424f4c524b76fc7063c1a73621a2883123e9b54b2a9400eddaf0bf1e8ddce"
   },
+  "linter/current-api/shared-rule-options-9876": {
+    "path": "crates/vize_patina/tests/snapshots/integration__lint_history__shared-rule-options-9876.snap",
+    "sha256": "e09030554f0c1b0758a6106dec91268c9b61339c6c77ceeaef4dffcd71fb245f"
+  },
   "linter/current-api/require-symbol-provide-range-9882": {
     "path": "crates/vize_patina/tests/snapshots/integration__lint_history__require-symbol-provide-range-9882.snap",
     "sha256": "b0eadd0dede28eb463f4e8064924b1297ed0030a0694dc09abbde968ca911980"

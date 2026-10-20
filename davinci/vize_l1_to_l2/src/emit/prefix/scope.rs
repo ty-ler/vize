@@ -79,13 +79,18 @@ impl<'b> PrefixScope<'b> {
         self.vdom_setup_writes = true;
     }
 
-    pub(super) fn guards_setup_let_write(&self, name: &str) -> bool {
-        self.vdom_setup_writes
+    pub(super) fn guarded_setup_write_kind(&self, name: &str) -> Option<BindingKind> {
+        if !(self.vdom_setup_writes
             && self.inline
             && self.is_script_setup()
             && !self.is_slot_param(name)
-            && !self.is_in_transform_scope(name)
-            && self.bindings.and_then(|table| table.kind(name)) == Some(BindingKind::SetupLet)
+            && !self.is_in_transform_scope(name))
+        {
+            return None;
+        }
+        self.bindings
+            .and_then(|table| table.kind(name))
+            .filter(|kind| matches!(kind, BindingKind::SetupLet | BindingKind::SetupMaybeRef))
     }
 
     /// The transform's `is_ref_binding`: an inline-mode ref is read

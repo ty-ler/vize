@@ -67,6 +67,37 @@
       }
     },
     {
+      "id": "compiler/sfc/production-v-if-comment-9920",
+      "state": "active",
+      "targets": ["ssr"],
+      "inputs": {
+        "root": "production-v-if-comment-9920",
+        "files": [
+          {
+            "path": "Layout.vue.txt",
+            "sha256": "57d40f893090202714c9208b46c0f83c9079b6d27397a6de7bf20e80abde57e9",
+            "role": "entry"
+          }
+        ]
+      },
+      "reference": {
+        "path": "production-v-if-comment-9920/module.expected.txt",
+        "sha256": "039bdb7e43645c8c57af347ee36ae3e3d2931a397e193a3d4644b437304f5cba",
+        "source": "crates/vize_atelier_sfc/src/compile/tests.rs:production_v_if_placeholder_omits_development_comment_text"
+      },
+      "adapters": {
+        "legacy": "compiler-cli-ssr-v1",
+        "native": null,
+        "reasons": {
+          "native": "Whole-product native SFC and Vue markup paths are unavailable (#6835, #6842); Croquis descriptor and armature tokenizer remain legacy-backed."
+        }
+      },
+      "comparison": {
+        "contract": "compiler-ssr-module-bytes-v1",
+        "requiredFacets": ["code", "css", "errors", "warnings", "macro_artifacts"]
+      }
+    },
+    {
       "id": "compiler/sfc/template-asset-urls-9895",
       "state": "active",
       "targets": ["ssr"],
@@ -84,6 +115,37 @@
         "path": "template-asset-urls-9895/module.expected.txt",
         "sha256": "869bd1e2692aef5f641c466be809d7e98a627eac0f5b933cfc9a96d2b8b5a901",
         "source": "crates/vize_atelier_sfc/src/vite_plugin/transform_tests.rs:rewrites_relative_and_package_import_asset_src_values_without_aliases"
+      },
+      "adapters": {
+        "legacy": "compiler-cli-ssr-v1",
+        "native": null,
+        "reasons": {
+          "native": "Whole-product native SFC and Vue markup paths are unavailable (#6835, #6842); Croquis descriptor and armature tokenizer remain legacy-backed."
+        }
+      },
+      "comparison": {
+        "contract": "compiler-ssr-module-bytes-v1",
+        "requiredFacets": ["code", "css", "errors", "warnings", "macro_artifacts"]
+      }
+    },
+    {
+      "id": "compiler/sfc/v-model-maybe-ref-9897",
+      "state": "active",
+      "targets": ["ssr"],
+      "inputs": {
+        "root": "v-model-maybe-ref-9897",
+        "files": [
+          {
+            "path": "Layout.vue.txt",
+            "sha256": "b12ea8a4bd06d84b8bbc07802c6e3fb3a975ff6aabdd204b3d15925b771d6c0e",
+            "role": "entry"
+          }
+        ]
+      },
+      "reference": {
+        "path": "v-model-maybe-ref-9897/module.expected.txt",
+        "sha256": "ad8685aa9602b30b0dd93a590f6c7963c5559f04113bbccf843988036dc9857e",
+        "source": "crates/vize_atelier_sfc/src/compile/tests.rs:test_script_setup_maybe_ref_v_model_uses_is_ref_guard"
       },
       "adapters": {
         "legacy": "compiler-cli-ssr-v1",
