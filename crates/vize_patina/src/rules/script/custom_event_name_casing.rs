@@ -134,6 +134,7 @@ impl ScriptRule for CustomEventNameCasing {
             result,
             emit_binding,
             casing: self.casing,
+            is_sfc: sfc.is_sfc,
         };
         visitor.visit_program(program);
 
@@ -179,6 +180,7 @@ struct CustomEventNameCasingVisitor<'a, 'result> {
     result: &'result mut ScriptLintResult,
     emit_binding: Option<&'a str>,
     casing: EventNameCasing,
+    is_sfc: bool,
 }
 
 impl<'a> Visit<'a> for CustomEventNameCasingVisitor<'a, '_> {
@@ -202,7 +204,7 @@ impl<'a> CustomEventNameCasingVisitor<'a, '_> {
                 self.emit_binding == Some(identifier.name.as_str())
             }
             Expression::StaticMemberExpression(member) => {
-                matches!(member.property.name.as_str(), "emit" | "$emit")
+                self.is_sfc && matches!(member.property.name.as_str(), "emit" | "$emit")
             }
             _ => false,
         }
@@ -255,6 +257,15 @@ fn report(
 }
 
 fn is_valid_event_name(value: &str, casing: EventNameCasing) -> bool {
+    // Component v-model events mirror their prop names after `update:`. Their
+    // suffix therefore follows the prop's authored casing independently of the
+    // project's custom-event convention.
+    if value
+        .strip_prefix("update:")
+        .is_some_and(|suffix| !suffix.is_empty())
+    {
+        return true;
+    }
     match casing {
         EventNameCasing::CamelCase => is_camel_case_event(value),
         EventNameCasing::KebabCase => is_kebab_case_event(value),

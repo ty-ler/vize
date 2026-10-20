@@ -138,6 +138,21 @@
       }
     },
     {
+      "id": "linter/current-api/custom-event-name-casing-9879",
+      "state": "active",
+      "targets": ["lint"],
+      "inputs": {
+        "root": "custom-event-name-casing-9879",
+        "files": [
+          {
+            "path": "source.vue",
+            "role": "issue-authored-reproduction",
+            "sha256": "a9711f14967743c5c2833a96e09f532bb5f29fe84fc0f86b4f9292b1fe1b0587"
+          }
+        ]
+      }
+    },
+    {
       "id": "linter/next-tick/valid-arrow-expression-return-script",
       "state": "active",
       "targets": ["lint"]
