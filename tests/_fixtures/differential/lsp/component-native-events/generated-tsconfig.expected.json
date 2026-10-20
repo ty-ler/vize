@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
     "moduleResolution": "Bundler",
     "noEmit": true,
     "noUncheckedSideEffectImports": false,

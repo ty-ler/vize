@@ -57,8 +57,12 @@ void test("processMuseaArtFile scopes art style blocks onto variant elements", a
     const scopeAttr = artScopeAttribute(artPath);
     assert.match(info.variants[0]?.template ?? "", new RegExp(`<div class="wrap" ${scopeAttr}>`));
     assert.match(info.variants[0]?.template ?? "", new RegExp(`<span ${scopeAttr}>`));
-    assert.match(info.styleBlocks?.[0] ?? "", new RegExp(`\\.${"wrap"}\\[${scopeAttr}\\]`));
-    assert.doesNotMatch(info.styleBlocks?.[0] ?? "", /^\.wrap \{/);
+    assert.equal(info.styleBlocks?.[0], ".wrap { padding: 16px; }");
+    assert.deepEqual(info.styleBlockDetails?.[0], {
+      content: ".wrap { padding: 16px; }",
+      lang: "css",
+      scoped: true,
+    });
   } finally {
     await fs.promises.rm(tempDir, { recursive: true, force: true });
   }

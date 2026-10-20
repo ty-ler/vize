@@ -176,32 +176,6 @@ fn entry_may_match(
             || script_rule_may_match(entry.rule_name, source))
 }
 
-/// Whether any enabled built-in script rule could match `source`.
-///
-/// Mirrors the per-rule `is_rule_enabled` + `script_rules.contains` +
-/// `script_rule_may_match` gate so a block matching no rule is never parsed.
-fn block_has_active_rule(
-    linter: &Linter,
-    vapor_component: bool,
-    source: &str,
-    filename: &str,
-) -> bool {
-    active_builtin_script_rule_entries(linter, vapor_component)
-        .any(|entry| entry_may_match(linter, entry, source, filename))
-}
-
-/// Whether any enabled AST-based built-in script rule could match `source`.
-fn block_has_active_ast_rule(
-    linter: &Linter,
-    vapor_component: bool,
-    source: &str,
-    filename: &str,
-) -> bool {
-    active_builtin_script_rule_entries(linter, vapor_component).any(|entry| {
-        resolved_rule(linter, entry).uses_ast() && entry_may_match(linter, entry, source, filename)
-    })
-}
-
 /// Run a single built-in script rule against a script block.
 ///
 /// AST rules consume the shared parse when available and receive the
@@ -221,9 +195,7 @@ fn run_builtin_script_rule(
     runtime_props_eligible: bool,
     result: &mut LintResult,
 ) {
-    if !entry_may_match(linter, entry, source, result.filename.as_str())
-        || !script_rule_applies_to_language(entry.rule_name, sfc.typescript)
-    {
+    if !script_rule_applies_to_language(entry.rule_name, sfc.typescript) {
         return;
     }
     let mut lint = ScriptLintResult::default();
@@ -323,22 +295,29 @@ pub(crate) fn append_builtin_script_rules_for_source(
     offset: usize,
     result: &mut LintResult,
 ) {
-    // Skip work entirely when no enabled rule could match this block.
-    if !block_has_active_rule(linter, linter.vapor_mode, source, result.filename.as_str()) {
+    // Resolve the byte prefilters once. The previous three-pass flow scanned
+    // the same source to decide whether any rule matched, whether an AST was
+    // needed, and again before dispatching every rule. Presets grow over time,
+    // so that repeated fixed cost showed up even on clean files.
+    let matching: Vec<_> = active_builtin_script_rule_entries(linter, linter.vapor_mode)
+        .filter(|entry| entry_may_match(linter, entry, source, result.filename.as_str()))
+        .collect();
+    if matching.is_empty() {
         return;
     }
 
     let allocator = Allocator::default();
-    let parsed =
-        block_has_active_ast_rule(linter, linter.vapor_mode, source, result.filename.as_str())
-            .then(|| {
-                profile!(
-                    "patina.script_rule.parse",
-                    Parser::new(&allocator, source, script_source_type()).parse()
-                )
-            });
+    let parsed = matching
+        .iter()
+        .any(|entry| resolved_rule(linter, entry).uses_ast())
+        .then(|| {
+            profile!(
+                "patina.script_rule.parse",
+                Parser::new(&allocator, source, script_source_type()).parse()
+            )
+        });
 
-    for entry in active_builtin_script_rule_entries(linter, linter.vapor_mode) {
+    for entry in matching {
         let rule = resolved_rule(linter, entry);
         // Standalone and inline HTML scripts have no SFC template.
         run_builtin_script_rule(

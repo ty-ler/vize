@@ -4,7 +4,6 @@ expression: tsconfig_content.as_str()
 ---
 {
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
     "noEmit": true,
     "noUncheckedSideEffectImports": false
   },

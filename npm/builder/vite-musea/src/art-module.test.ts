@@ -63,7 +63,9 @@ import "../generated/tokens.css"
 
   assert.doesNotMatch(code, /import "..\/generated\/tokens\.css"/);
   assert.match(code, /import "\/repo\/generated\/tokens\.css";?/);
-  assert.match(code, /export const __styles__ = \["\.logo-preview \{ color: red; \}"\];/);
+  assert.match(code, /import "\/repo\/components\/MfLogo\.art\.vue\.__musea_style_0\.css\?/);
+  assert.match(code, /musea-art-style=/);
+  assert.doesNotMatch(code, /__styles__/);
   // The bindings moved into the variant's own SFC, which is what compiles the
   // template now (#3857). Its imports are rebased too: a relative specifier
   // cannot resolve from a virtual module.
@@ -163,7 +165,7 @@ void test("generateArtModule can resolve component only from defineArt source", 
   assert.match(variant, /import BaseButton from "\/repo\/components\/base-button\.vue"/);
 });
 
-void test("generatePreviewModule injects art-scoped styles from the virtual art module", () => {
+void test("generatePreviewModule relies on the art module's Vite CSS imports", () => {
   const art: ArtFileInfo = {
     path: "/repo/components/MfCard.art.vue",
     metadata: {
@@ -187,8 +189,8 @@ void test("generatePreviewModule injects art-scoped styles from the virtual art 
 
   const code = generatePreviewModule(art, "Default", "default");
 
-  assert.match(code, /ensureArtStyles\(artModule\.__styles__\);/);
-  assert.match(code, /document\.createElement\('style'\)/);
+  assert.match(code, /import \* as artModule from "virtual:musea-art:/);
+  assert.doesNotMatch(code, /ensureArtStyles|musea-art-styles-/);
 });
 
 void test("generated modules quote dynamic specifiers", () => {

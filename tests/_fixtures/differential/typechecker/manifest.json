@@ -1234,6 +1234,90 @@
           "sha256": "e36b280dce185f4be85cbff1838c0ee06d8d7a46b38b3e63df995c0decd7b13b"
         }
       ]
+    },
+    {
+      "id": "typechecker/allow-importing-ts-extensions-9890/default-policy",
+      "state": "active",
+      "targets": [
+        "batch"
+      ],
+      "adapters": {
+        "legacy": "batch-typechecker-fixture-v1",
+        "native": null
+      },
+      "pack": "allow-importing-ts-extensions-9890",
+      "case": "default-policy",
+      "test": "authored_ts_extensions_report_ts5097_by_default",
+      "regressionCommit": "f1b07174a4a86ffc3433f31b8c78406d5bf5b760",
+      "sourceRevision": "f1b07174a4a86ffc3433f31b8c78406d5bf5b760",
+      "packReference": {
+        "path": "allow-importing-ts-extensions-9890/cases.json",
+        "sha256": "edd1dab8946635adeee8cdb1cea52ad05c396a7077aeb901e37de3f2fc3fc59f"
+      },
+      "inputs": [
+        {
+          "file": "src/math.ts",
+          "path": "allow-importing-ts-extensions-9890/math.ts.txt",
+          "sha256": "c2b5a4777f147831e236ea0c304d5121a0113cb634d4edb39f60e2f25733fa6d"
+        },
+        {
+          "file": "src/main.ts",
+          "path": "allow-importing-ts-extensions-9890/main.ts.txt",
+          "sha256": "be28a7af7183e50e1550255c6230295181194e3314e8d0dc4e4b27bbb8813db5"
+        },
+        {
+          "file": "src/App.vue",
+          "path": "allow-importing-ts-extensions-9890/App.vue.txt",
+          "sha256": "b9774a1893e7f349c55913a21021f12c36a8764d1d922bb81debf9190f239329"
+        },
+        {
+          "file": "tsconfig.json",
+          "path": "allow-importing-ts-extensions-9890/tsconfig-default.json.txt",
+          "sha256": "4690f8384ac2d5ee17b908e3f44773d23836d6542f4bb459b018f3899dc52336"
+        }
+      ]
+    },
+    {
+      "id": "typechecker/allow-importing-ts-extensions-9890/explicit-opt-in",
+      "state": "active",
+      "targets": [
+        "batch"
+      ],
+      "adapters": {
+        "legacy": "batch-typechecker-fixture-v1",
+        "native": null
+      },
+      "pack": "allow-importing-ts-extensions-9890",
+      "case": "explicit-opt-in",
+      "test": "authored_ts_extensions_report_ts5097_by_default",
+      "regressionCommit": "f1b07174a4a86ffc3433f31b8c78406d5bf5b760",
+      "sourceRevision": "f1b07174a4a86ffc3433f31b8c78406d5bf5b760",
+      "packReference": {
+        "path": "allow-importing-ts-extensions-9890/cases.json",
+        "sha256": "edd1dab8946635adeee8cdb1cea52ad05c396a7077aeb901e37de3f2fc3fc59f"
+      },
+      "inputs": [
+        {
+          "file": "src/math.ts",
+          "path": "allow-importing-ts-extensions-9890/math.ts.txt",
+          "sha256": "c2b5a4777f147831e236ea0c304d5121a0113cb634d4edb39f60e2f25733fa6d"
+        },
+        {
+          "file": "src/main.ts",
+          "path": "allow-importing-ts-extensions-9890/main.ts.txt",
+          "sha256": "be28a7af7183e50e1550255c6230295181194e3314e8d0dc4e4b27bbb8813db5"
+        },
+        {
+          "file": "src/App.vue",
+          "path": "allow-importing-ts-extensions-9890/App.vue.txt",
+          "sha256": "b9774a1893e7f349c55913a21021f12c36a8764d1d922bb81debf9190f239329"
+        },
+        {
+          "file": "tsconfig.json",
+          "path": "allow-importing-ts-extensions-9890/tsconfig-opt-in.json.txt",
+          "sha256": "332311d6d44cd6d6451b103e4986088dc3efd03af1e9a66b61c3e53d46528d8b"
+        }
+      ]
     }
   ]
 }

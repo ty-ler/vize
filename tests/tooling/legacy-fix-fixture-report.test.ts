@@ -101,6 +101,30 @@ void test("only a newly registered active case with a matching pinned input pass
   );
 });
 
+void test("typechecker manifests retain their registered input array shape", () => {
+  const path = "tests/_fixtures/differential/typechecker/new-fix/App.vue.txt";
+  const row = {
+    id: "typechecker/new-fix/default",
+    state: "active",
+    targets: ["batch"],
+    inputs: [{ file: "src/App.vue", path: "new-fix/App.vue.txt", sha256: sha(input) }],
+  };
+  const analyze = (bytes: Buffer) =>
+    analyzeLegacyFix({
+      title: "fix(canon): preserve project policy",
+      paths: ["crates/vize_canon/src/batch.rs"],
+      readFile: (side, file) => {
+        if (file === "tests/_fixtures/differential/typechecker/manifest.json") {
+          return manifest("typechecker", side === "base" ? [] : [row]);
+        }
+        return side === "head" && file === path ? bytes : null;
+      },
+    }).products[0]?.state;
+
+  assert.equal(analyze(input), "new-inputs-registered");
+  assert.equal(analyze(Buffer.from("drift")), "invalid-manifest-or-input");
+});
+
 void test("a new compiler input also requires a pinned full-module reference", () => {
   const reference = Buffer.from("export default {}\n");
   const compilerCase = {

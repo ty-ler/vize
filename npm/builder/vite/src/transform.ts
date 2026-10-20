@@ -23,7 +23,7 @@ import type { DynamicImportAliasRule } from "./virtual.ts";
  * pipeline handles alias expansion and asset hashing in both dev and build.
  */
 export function rewriteStaticAssetUrls(code: string, aliasRules: DynamicImportAliasRule[]): string {
-  if (aliasRules.length === 0 || !code.includes("src")) {
+  if (!code.includes("src")) {
     return code;
   }
   return rewriteViteStaticAssetUrls(code, aliasRules);

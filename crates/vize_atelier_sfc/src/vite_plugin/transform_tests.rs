@@ -16,6 +16,25 @@ fn rewrites_static_asset_src_values() {
 }
 
 #[test]
+fn rewrites_relative_and_package_import_asset_src_values_without_aliases() {
+    let code = r##"const nodes = [
+      { src: "./assets/logo.png" },
+      { src: "#assets/logo.png" },
+      { src: "#icon" },
+    ];"##;
+
+    insta::assert_snapshot!(rewrite_static_asset_urls(code, &[]), @r###"
+        import __vize_static_0 from "./assets/logo.png";
+        import __vize_static_1 from "#assets/logo.png";
+        const nodes = [
+              { src: __vize_static_0 },
+              { src: __vize_static_1 },
+              { src: "#icon" },
+            ];
+        "###);
+}
+
+#[test]
 fn skips_script_asset_src_values() {
     let rules = [DynamicImportAliasRule {
         from_prefix: "@/".into(),

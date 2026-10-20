@@ -83,6 +83,88 @@ void test("Vite+ Oxlint rules are retained with their authored namespaces", asyn
   });
 });
 
+void test("Vue entry rules and supported rule options reach generated Oxlint overrides", async (t) => {
+  const root = await temporaryRoot(t, "vize-nuxt-project-entry-rules-");
+  await mkdir(path.join(root, "app"));
+  await writeFile(
+    path.join(root, "vite.config.mjs"),
+    `export default { vue: {
+      linter: {
+        rules: {
+          "vue/no-inline-style": "warn",
+          "script/custom-event-name-casing": "error",
+          "vue/require-component-registration": "error"
+        },
+        ruleOptions: {
+          "script/custom-event-name-casing": { casing: "kebab-case" },
+          "vue/require-component-registration": { globals: ["NuxtLink"] }
+        }
+      },
+      entries: [{
+        name: "legacy",
+        basePath: "app",
+        files: ["components/legacy/**/*.vue"],
+        ignores: ["components/legacy/generated/**"],
+        linter: {
+          rules: { "vue/no-inline-style": "off" },
+          ruleOptions: { "script/custom-event-name-casing": { casing: "camelCase" } }
+        }
+      }]
+    } };`,
+  );
+
+  assert.deepEqual(await readProjectLintRuleSets(root, unexpectedPreset), {
+    entries: [
+      {
+        files: [path.join("app", "components/legacy/**/*.vue")],
+        ignores: [path.join("app", "components/legacy/generated/**")],
+        name: "legacy",
+        rules: {
+          "script/custom-event-name-casing": ["error", "camelCase"],
+          "vue/no-inline-style": "off",
+        },
+      },
+    ],
+    vize: {
+      "script/custom-event-name-casing": ["error", "kebab-case"],
+      "vue/no-inline-style": "warn",
+      "vue/require-component-registration": "error",
+    },
+    warnings: [
+      'vue.linter.ruleOptions["vue/require-component-registration"] is not supported by oxlint-vize',
+    ],
+  });
+
+  const warnings: string[] = [];
+  const generation = await setupNuxtLintConfigGeneration({ autoInit: false }, createNuxt(root), {
+    resolvePluginSpecifier: () => "../plugin.mjs",
+    warn: (message) => warnings.push(message),
+  });
+  const artifact = JSON.parse(await readFile(generation?.configFile ?? "", "utf8")) as {
+    overrides: Array<{
+      excludeFiles?: string[];
+      files: string[];
+      rules?: Record<string, unknown>;
+    }>;
+    rules: Record<string, unknown>;
+  };
+  assert.deepEqual(artifact.rules["vize/script/custom-event-name-casing"], ["error", "kebab-case"]);
+  assert.deepEqual(
+    artifact.overrides.find(({ files }) => files.includes("app/components/legacy/**/*.vue")),
+    {
+      excludeFiles: ["app/components/legacy/generated/**"],
+      files: ["app/components/legacy/**/*.vue"],
+      rules: {
+        "vize/script/custom-event-name-casing": ["error", "camelCase"],
+        "vize/vue/no-inline-style": "off",
+      },
+    },
+  );
+  assert.deepEqual(warnings, [
+    '@vizejs/nuxt lint config: vue.linter.ruleOptions["vue/require-component-registration"] is not supported by oxlint-vize',
+  ]);
+});
+
 void test("Nuxt Vite factories receive serve and retired files cannot override them", async (t) => {
   const root = await temporaryRoot(t, "vize-nuxt-config-command-");
   await writeFile(

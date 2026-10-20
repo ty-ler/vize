@@ -125,7 +125,9 @@ fn run_cli_for_config(
         .into());
     }
 
-    let success = (output.status.success() || patterns::only_pattern_warnings(&output, project))
+    let success = (output.status.success()
+        || patterns::only_pattern_warnings(&output, project)
+        || patterns::only_rewritten_vue_extension_errors(&output, project))
         && diagnostics
             .iter()
             .all(|diagnostic| diagnostic.severity != 1);

@@ -30,8 +30,6 @@ export function generatePreviewModule(
     ? `await __museaPreviewSetup(app${globals ? ", { globals: __museaGlobals }" : ""});`
     : "";
   const actionEvents = JSON.stringify(art.metadata.actionEvents ?? []);
-  const artStyleId = `musea-art-styles-${art.path.replace(/[^\w-]+/g, "_")}`;
-  const artStyleIdLiteral = JSON.stringify(artStyleId);
   const legacyVue = isLegacyVueVersion(vueVersion);
   const vueImport = legacyVue
     ? `import Vue, { reactive, shallowRef${globals ? ", ref as __museaCreateGlobalsRef" : ""} } from 'vue';`
@@ -60,24 +58,6 @@ let currentApp = null;
 // Replace raw JSON snapshots so every literal prop name stays an own key.
 const propsOverride = shallowRef({});
 const slotsOverride = reactive({ default: '' });
-
-function ensureArtStyles(styles) {
-  const styleId = ${artStyleIdLiteral};
-  const existing = document.getElementById(styleId);
-
-  if (!Array.isArray(styles) || styles.length === 0) {
-    existing?.remove();
-    return;
-  }
-
-  const tag = existing ?? document.createElement('style');
-  tag.id = styleId;
-  tag.textContent = styles.join('\\n\\n');
-
-  if (!existing) {
-    document.head.appendChild(tag);
-  }
-}
 
 function renderError(title, error) {
   container.textContent = '';
@@ -128,7 +108,6 @@ async function mount() {
 
     // Create and mount the app
     ${mountInitialApp}
-    ensureArtStyles(artModule.__styles__);
     ${setupCall}
     container.innerHTML = '';
     container.className = 'musea-variant';
@@ -161,7 +140,6 @@ async function remountWithProps(Component) {
     ${destroyCurrentApp}
   }
   ${remountApp}
-  ensureArtStyles(artModule.__styles__);
   ${setupCall}
   container.innerHTML = '';
   ${mountCurrentApp}
@@ -243,8 +221,6 @@ export function generatePreviewModuleWithProps(
     ? `await __museaPreviewSetup(app${globals ? ", { globals: __museaGlobals }" : ""});`
     : "";
   const actionEvents = JSON.stringify(art.metadata.actionEvents ?? []);
-  const artStyleId = `musea-art-styles-${art.path.replace(/[^\w-]+/g, "_")}`;
-  const artStyleIdLiteral = JSON.stringify(artStyleId);
   const legacyVue = isLegacyVueVersion(vueVersion);
   const vueImport = legacyVue
     ? `import Vue${globals ? ", { ref as __museaCreateGlobalsRef }" : ""} from 'vue';`
@@ -278,24 +254,6 @@ const propsOverride = JSON.parse(${JSON.stringify(propsJson)});
 
 ${MUSEA_ADDONS_INIT_CODE}${generatePreviewGlobals(toolbar)}
 
-function ensureArtStyles(styles) {
-  const styleId = ${artStyleIdLiteral};
-  const existing = document.getElementById(styleId);
-
-  if (!Array.isArray(styles) || styles.length === 0) {
-    existing?.remove();
-    return;
-  }
-
-  const tag = existing ?? document.createElement('style');
-  tag.id = styleId;
-  tag.textContent = styles.join('\\n\\n');
-
-  if (!existing) {
-    document.head.appendChild(tag);
-  }
-}
-
 function renderError(title, error) {
   container.textContent = '';
   const root = document.createElement('div');
@@ -323,7 +281,6 @@ async function mount() {
     ${wrappedComponent}
 
     ${appCreate}
-    ensureArtStyles(artModule.__styles__);
     ${setupCall}
     container.innerHTML = '';
     container.className = 'musea-variant';

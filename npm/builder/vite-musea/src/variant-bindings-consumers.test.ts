@@ -158,8 +158,8 @@ void test("HMR adding and removing a collision refreshes producer and previews w
 void test("noncolliding generated modules remain byte-exact for Vue 2 and Vue 3", () => {
   const { art } = context(["State enabled", "State disabled"]);
   const expected = {
-    2: "e09be98768ab656823be38c618d0bae4dc31288c560d7a587856d50333abbb2f",
-    3: "2539ded0191a840bc7fe8bdabd4d2c517a43bb57d5f929ae249976d685d7ee82",
+    2: "05853f97eadd278c6bb9be0209e16ef6a07c47cfab25d21076867cfb3b087a9e",
+    3: "5b3cf66760727da5e5f10cf95a544fd850cb825a6ed6f84f3e91d012611509c5",
   };
   for (const vueVersion of [2, 3] as const) {
     const code = generateArtModule(art, art.path, { vueVersion });

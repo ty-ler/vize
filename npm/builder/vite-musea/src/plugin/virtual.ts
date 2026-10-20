@@ -20,6 +20,7 @@ import { compileVariantSfc } from "../art-variant-sfc.js";
 import { generateSharedSetupModule, sharedBindingNames } from "../art-shared-setup.js";
 import { parseScriptSetupForArt } from "../art-module.js";
 import { variantComponentNames } from "../variant-bindings.js";
+import { loadArtStyle, parseArtStyleRequest } from "../art-style-module.js";
 
 // Virtual module prefixes
 const VIRTUAL_MUSEA_PREFIX = "\0musea:";
@@ -65,6 +66,11 @@ export function decodeVariantName(encoded: string): string {
 export function createResolveId(state: VirtualModuleState) {
   return function resolveId(id: string): string | null {
     const root = state.getConfigRoot();
+
+    const styleRequest = parseArtStyleRequest(id);
+    if (styleRequest && state.artFiles.has(styleRequest.filePath)) {
+      return id.startsWith("\0") ? id : `\0${id}`;
+    }
 
     if (id === VIRTUAL_GALLERY) {
       return VIRTUAL_GALLERY;
@@ -115,6 +121,10 @@ export function createResolveId(state: VirtualModuleState) {
 
 export function createLoad(state: VirtualModuleState) {
   return function load(id: string): string | null {
+    const styleRequest = parseArtStyleRequest(id);
+    if (styleRequest) {
+      return loadArtStyle(state.artFiles.get(styleRequest.filePath), styleRequest);
+    }
     if (id === VIRTUAL_GALLERY) {
       return generateGalleryModule(state.basePath);
     }
@@ -262,7 +272,11 @@ function artHotUpdateModules(
     `\0musea-art:${file}?musea-virtual`,
     `\0musea-shared:${file}?musea-virtual`,
   ]);
-  const derivedPrefixes = [`\0musea-variant:${file}:`, `\0musea-preview:${file}:`];
+  const derivedPrefixes = [
+    `\0musea-variant:${file}:`,
+    `\0musea-preview:${file}:`,
+    `\0${file}.__musea_style_`,
+  ];
   for (const [id, module] of graph.idToModuleMap) {
     if (exactIds.has(id) || derivedPrefixes.some((prefix) => id.startsWith(prefix))) {
       modules.add(module);

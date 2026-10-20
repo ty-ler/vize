@@ -326,24 +326,6 @@ let currentApp = null;
 const propsOverride = shallowRef({});
 const slotsOverride = reactive({ default: '' });
 
-function ensureArtStyles(styles) {
-  const styleId = "musea-art-styles-_tmp_Toolbar_art_vue";
-  const existing = document.getElementById(styleId);
-
-  if (!Array.isArray(styles) || styles.length === 0) {
-    existing?.remove();
-    return;
-  }
-
-  const tag = existing ?? document.createElement('style');
-  tag.id = styleId;
-  tag.textContent = styles.join('\n\n');
-
-  if (!existing) {
-    document.head.appendChild(tag);
-  }
-}
-
 function renderError(title, error) {
   container.textContent = '';
   const root = document.createElement('div');
@@ -393,7 +375,6 @@ async function mount() {
 
     // Create and mount the app
     const app = createApp(VariantComponent);
-    ensureArtStyles(artModule.__styles__);
     await __museaPreviewSetup(app);
     container.innerHTML = '';
     container.className = 'musea-variant';
@@ -437,7 +418,6 @@ async function remountWithProps(Component) {
       };
     }
   });
-  ensureArtStyles(artModule.__styles__);
   await __museaPreviewSetup(app);
   container.innerHTML = '';
   app.mount(container);

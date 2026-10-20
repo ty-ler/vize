@@ -12,6 +12,8 @@ import type { ArtFileInfo } from "./types/index.js";
 import { variantComponentNames } from "./variant-bindings.js";
 import { emitLegacyVariant } from "./art-module-vue2.js";
 import { componentNameFromSource, expandSelfTag } from "./art-component.js";
+import { artScopeAttribute } from "./art-style.js";
+import { artStyleRequestId } from "./art-style-module.js";
 
 /**
  * Extract the content of the first <script setup> block from a Vue SFC source.
@@ -455,6 +457,15 @@ export function generateArtModule(
 // Auto-generated module for: ${path.basename(filePath)}
 `;
 
+  const styles =
+    art.styleBlockDetails ??
+    art.styleBlocks?.map((content) => ({ content, lang: "css", scoped: false })) ??
+    [];
+  const scopeAttr = styles.some((style) => style.scoped) ? artScopeAttribute(filePath) : undefined;
+  for (const [index, style] of styles.entries()) {
+    code += `import ${JSON.stringify(artStyleRequestId(filePath, index, style, scopeAttr))};\n`;
+  }
+
   // Vue 2 variants stay runtime-compiled (see art-module-vue2.ts), and only a
   // variant with a setup block is wrapped in `defineComponent`, a Vue 2.7+
   // export that therefore stays unimported otherwise. The alias keeps it from
@@ -487,7 +498,6 @@ export function generateArtModule(
   code += `
 export const metadata = ${JSON.stringify(art.metadata)};
 export const variants = ${JSON.stringify(art.variants)};
-export const __styles__ = ${JSON.stringify(art.styleBlocks ?? [])};
 `;
 
   const setupReturn = `{ ${scriptSetup?.returnNames.join(", ") ?? ""} }`;

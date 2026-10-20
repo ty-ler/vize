@@ -90,8 +90,11 @@ export function isIncrementalPreset(settings: PatinaSettings): boolean {
   return getActivePreset(settings) === "incremental";
 }
 
-export function getCacheKey(filename: string, settings: PatinaSettings): string {
-  const selection = parseRuleSelection(settings.rules);
+export function getCacheKey(
+  filename: string,
+  settings: PatinaSettings,
+  selection = parseRuleSelection(settings.rules),
+): string {
   return JSON.stringify([
     filename,
     settings.locale ?? "",

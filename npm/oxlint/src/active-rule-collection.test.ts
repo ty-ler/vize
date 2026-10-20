@@ -126,6 +126,25 @@ it("collects the actual frozen 51 options before one native call, without author
   assert.equal((context.settings as { vize: PatinaSettings }).vize.rules, undefined);
 });
 
+it("reads and keys one physical revision once while all active rules share a Program", () => {
+  installNative();
+  const filename = fixture("SingleRead.vue");
+  const rules = structuredClone(frozenRules);
+  const context = contextFor(filename, {
+    preset: "incremental",
+    rules,
+  });
+  const readFileSync = vi.spyOn(fs, "readFileSync");
+  const stringify = vi.spyOn(JSON, "stringify");
+
+  run(context, rules);
+
+  assert.equal(readFileSync.mock.calls.filter(([candidate]) => candidate === filename).length, 1);
+  assert.equal(stringify.mock.calls.filter(([candidate]) => candidate === rules).length, 1);
+  readFileSync.mockRestore();
+  stringify.mockRestore();
+});
+
 it("actual scalar override resets options and activation changes invalidate only the current bounded result", () => {
   installNative();
   const context = contextFor(fixture(), { preset: "incremental" });

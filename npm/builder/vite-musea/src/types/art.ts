@@ -24,6 +24,12 @@ export interface ArtVariant {
   args?: Record<string, unknown>;
 }
 
+export interface ArtStyleBlock {
+  content: string;
+  lang: string;
+  scoped: boolean;
+}
+
 /**
  * Parsed Art file information.
  */
@@ -44,8 +50,10 @@ export interface ArtFileInfo {
   hasScript: boolean;
   /** Number of style blocks */
   styleCount: number;
-  /** Raw CSS blocks extracted from the Art file for preview injection */
+  /** Raw style contents retained for ArtFileInfo compatibility. */
   styleBlocks?: string[];
+  /** Style metadata used to delegate each block to Vite's CSS pipeline. */
+  styleBlockDetails?: ArtStyleBlock[];
   /** Whether this art comes from an inline <art> block in a regular .vue file */
   isInline?: boolean;
   /** For inline art: absolute path to the host .vue component file */
