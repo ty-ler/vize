@@ -4,9 +4,8 @@ use super::prefilter::{
 use super::registry::{RULE_NO_DUPE_KEYS, RULE_RETURN_IN_EMITS_VALIDATOR};
 use super::template_context;
 use super::{
-    LintResult, Linter, active_builtin_script_rule_entries, block_has_active_ast_rule,
-    block_has_active_rule, entry_may_match, has_active_builtin_script_rules, merge_script_result,
-    resolved_rule, run_builtin_script_rule,
+    LintResult, Linter, active_builtin_script_rule_entries, entry_may_match,
+    has_active_builtin_script_rules, merge_script_result, resolved_rule, run_builtin_script_rule,
 };
 use crate::rules::script::{
     EmitsModuleScript, NoDupeKeys, NoDupeKeysModuleScript, NoDuplicateAttrInheritance,
@@ -137,21 +136,35 @@ pub(crate) fn append_builtin_script_diagnostics_with_template_context<'a>(
         .script
         .as_ref()
         .map(|block| (block.content.as_ref(), block.loc.start));
-    let script = script_source.filter(|(source, _)| {
-        registered_scripts
-            || block_has_active_rule(linter, vapor_component, source, result.filename.as_str())
-    });
-    let script_setup = descriptor
+    let script_setup_source = descriptor
         .script_setup
         .as_ref()
-        .map(|block| (block.content.as_ref(), block.loc.start))
-        .filter(|(source, _)| {
-            block_has_active_rule(linter, vapor_component, source, result.filename.as_str())
-        });
+        .map(|block| (block.content.as_ref(), block.loc.start));
+    // Resolve the byte prefilters once per block. Parse admission, cross-block
+    // ownership, and final dispatch all consume this plan instead of rescanning
+    // the same source for every decision.
+    let planned: Vec<_> = active_builtin_script_rule_entries(linter, vapor_component)
+        .map(|entry| {
+            let script_matches = script_source.is_some_and(|(source, _)| {
+                entry_may_match(linter, entry, source, result.filename.as_str())
+            });
+            let setup_matches = script_setup_source.is_some_and(|(source, _)| {
+                entry_may_match(linter, entry, source, result.filename.as_str())
+            });
+            (entry, script_matches, setup_matches)
+        })
+        .collect();
+    let script = script_source.filter(|_| {
+        registered_scripts || planned.iter().any(|(_, script_matches, _)| *script_matches)
+    });
+    let script_setup =
+        script_setup_source.filter(|_| planned.iter().any(|(_, _, setup_matches)| *setup_matches));
     let setup_alloc = Allocator::default();
     let script_setup_parsed = script_setup
-        .filter(|(source, _)| {
-            block_has_active_ast_rule(linter, vapor_component, source, result.filename.as_str())
+        .filter(|_| {
+            planned.iter().any(|(entry, _, setup_matches)| {
+                *setup_matches && resolved_rule(linter, entry).uses_ast()
+            })
         })
         .map(|(source, _)| {
             let parsed = profile!(
@@ -174,13 +187,12 @@ pub(crate) fn append_builtin_script_diagnostics_with_template_context<'a>(
     // Only the actual active return-validator rule can request normal-script
     // ownership evidence. Other rules retain their existing dispatch and parse
     // conditions. Inspect the shared setup AST before forcing a sibling parse.
-    let emits_setup_rule = active_builtin_script_rule_entries(linter, vapor_component)
-        .find(|entry| entry.rule_name == RULE_RETURN_IN_EMITS_VALIDATOR)
-        .filter(|entry| {
-            script_setup.is_some_and(|(source, _)| {
-                entry_may_match(linter, entry, source, result.filename.as_str())
-            })
+    let emits_setup_rule = planned
+        .iter()
+        .find(|(entry, _, setup_matches)| {
+            entry.rule_name == RULE_RETURN_IN_EMITS_VALIDATOR && *setup_matches
         })
+        .map(|(entry, _, _)| *entry)
         .and_then(|entry| resolved_rule(linter, entry).as_setup_emits_validator());
     // An external block's content cannot establish its loaded bindings. Keep
     // ordinary rule dispatch unchanged, but never infer macro ownership from
@@ -200,13 +212,10 @@ pub(crate) fn append_builtin_script_diagnostics_with_template_context<'a>(
                 && parsed.diagnostics.is_empty()
                 && ReturnInEmitsValidator::setup_needs_module(&parsed.program)
         });
-    let dupe_setup_rule = active_builtin_script_rule_entries(linter, vapor_component)
-        .find(|entry| entry.rule_name == RULE_NO_DUPE_KEYS)
-        .filter(|entry| {
-            script_setup.is_some_and(|(source, _)| {
-                entry_may_match(linter, entry, source, result.filename.as_str())
-            })
-        })
+    let dupe_setup_rule = planned
+        .iter()
+        .find(|(entry, _, setup_matches)| entry.rule_name == RULE_NO_DUPE_KEYS && *setup_matches)
+        .map(|(entry, _, _)| *entry)
         .and_then(|entry| resolved_rule(linter, entry).as_setup_dupe_keys());
     let needs_dupe_module = inline_emits_blocks
         && dupe_setup_rule.is_some()
@@ -217,10 +226,13 @@ pub(crate) fn append_builtin_script_diagnostics_with_template_context<'a>(
         });
     let script_alloc = Allocator::default();
     let script_parsed = script_source
-        .filter(|(source, _)| {
-            registered_scripts || needs_emits_module || needs_dupe_module || {
-                block_has_active_ast_rule(linter, vapor_component, source, result.filename.as_str())
-            }
+        .filter(|_| {
+            registered_scripts
+                || needs_emits_module
+                || needs_dupe_module
+                || planned.iter().any(|(entry, script_matches, _)| {
+                    *script_matches && resolved_rule(linter, entry).uses_ast()
+                })
         })
         .map(|(source, _)| {
             profile!(
@@ -317,9 +329,9 @@ pub(crate) fn append_builtin_script_diagnostics_with_template_context<'a>(
         .as_ref()
         .filter(|parsed| !parsed.panicked && parsed.diagnostics.is_empty())
         .map(|parsed| &parsed.program);
-    for entry in active_builtin_script_rule_entries(linter, vapor_component) {
+    for (entry, script_matches, setup_matches) in planned {
         let rule = resolved_rule(linter, entry);
-        if let Some((source, offset)) = script {
+        if script_matches && let Some((source, offset)) = script {
             run_builtin_script_rule(
                 linter,
                 entry,
@@ -338,7 +350,9 @@ pub(crate) fn append_builtin_script_diagnostics_with_template_context<'a>(
                 result,
             );
         }
-        if let Some((source, offset)) = script_setup.filter(|_| rule.runs_on_script_setup()) {
+        if setup_matches
+            && let Some((source, offset)) = script_setup.filter(|_| rule.runs_on_script_setup())
+        {
             run_builtin_script_rule(
                 linter,
                 entry,

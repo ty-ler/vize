@@ -32,6 +32,7 @@ function resolved(
 
 function ok(overrides: Partial<NuxtLintCheckerResult> = {}): NuxtLintCheckerResult {
   return {
+    diagnostics: [],
     diagnosticCount: 0,
     hasErrors: false,
     hasWarnings: false,

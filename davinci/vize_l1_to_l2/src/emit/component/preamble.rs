@@ -51,7 +51,8 @@ fn is_self_reference(component: &str, own: &str) -> bool {
     if component == own {
         return true;
     }
-    vize_l0::capitalize(&vize_l0::camelize(component)).as_str() == own
+    vize_l0::capitalize(&vize_l0::camelize(component))
+        == vize_l0::capitalize(&vize_l0::camelize(own))
 }
 
 fn collect_from<'a>(region: &Region<'a>, source: &str, names: &mut StdVec<&'a str>) {

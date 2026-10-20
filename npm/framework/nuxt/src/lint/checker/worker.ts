@@ -19,13 +19,14 @@ export interface NuxtLintCheckerTask {
 }
 
 export interface NuxtLintCheckerResult {
+  diagnostics: NuxtLintCheckerDiagnostic[];
   diagnosticCount: number;
   hasErrors: boolean;
   hasWarnings: boolean;
   output: string;
 }
 
-interface OxlintDiagnostic {
+export interface NuxtLintCheckerDiagnostic {
   code?: string;
   filePath?: string;
   filename?: string;
@@ -35,7 +36,7 @@ interface OxlintDiagnostic {
 }
 
 interface OxlintPayload {
-  diagnostics: OxlintDiagnostic[];
+  diagnostics: NuxtLintCheckerDiagnostic[];
   [key: string]: unknown;
 }
 
@@ -166,7 +167,7 @@ async function executeOxlint(entrypoint: string, args: string[], cwd: string): P
   }
 }
 
-function diagnosticKind(diagnostic: OxlintDiagnostic): "error" | "warning" | undefined {
+function diagnosticKind(diagnostic: NuxtLintCheckerDiagnostic): "error" | "warning" | undefined {
   if (diagnostic.severity === 2 || diagnostic.severity === "error") return "error";
   if (
     diagnostic.severity === 1 ||
@@ -178,7 +179,13 @@ function diagnosticKind(diagnostic: OxlintDiagnostic): "error" | "warning" | und
   return undefined;
 }
 
-function readableDiagnostics(diagnostics: OxlintDiagnostic[], formatter: string): string {
+export function formatNuxtLintCheckerDiagnostics(
+  diagnostics: NuxtLintCheckerDiagnostic[],
+  formatter: string,
+): string {
+  if (formatter === "json") {
+    return diagnostics.length > 0 ? `${JSON.stringify({ diagnostics })}\n` : "";
+  }
   const unix = formatter === "unix";
   const lines = diagnostics.map((diagnostic) => {
     const span = diagnostic.labels?.find((label) => label.span)?.span;
@@ -210,8 +217,8 @@ function resultFromPayload(
       ? diagnostics.length > 0
         ? `${JSON.stringify({ ...payload, diagnostics })}\n`
         : ""
-      : readableDiagnostics(diagnostics, task.formatter);
-  return { diagnosticCount: diagnostics.length, hasErrors, hasWarnings, output };
+      : formatNuxtLintCheckerDiagnostics(diagnostics, task.formatter);
+  return { diagnostics, diagnosticCount: diagnostics.length, hasErrors, hasWarnings, output };
 }
 
 /** Run one checker pass. This function executes inside the long-lived worker. */
@@ -219,7 +226,13 @@ export async function runNuxtLintCheckerTask(
   task: NuxtLintCheckerTask,
 ): Promise<NuxtLintCheckerResult> {
   if (!task.emitError && !task.emitWarning && !task.fix) {
-    return { diagnosticCount: 0, hasErrors: false, hasWarnings: false, output: "" };
+    return {
+      diagnostics: [],
+      diagnosticCount: 0,
+      hasErrors: false,
+      hasWarnings: false,
+      output: "",
+    };
   }
   const entrypoint = task.oxlintEntrypoint ?? resolveOxlintEntrypoint();
   const stdout = await executeOxlint(entrypoint, await checkerArgs(task), task.cwd);

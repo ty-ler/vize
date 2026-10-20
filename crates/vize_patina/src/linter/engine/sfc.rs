@@ -94,6 +94,14 @@ impl Linter {
                 if descriptor.script_setup.is_some()
                     && self.registry.has_rule("vue/no-unused-components")
                     && self.is_rule_enabled("vue/no-unused-components")
+                    && descriptor.script_setup.as_ref().is_some_and(|script| {
+                        // Script-setup candidates for this rule are runtime
+                        // imports whose module path ends in `.vue`. Without
+                        // one, the ordinary analysis already owns every
+                        // possible Options API registration and there are no
+                        // authored component-import reads to retain.
+                        script.content.contains(".vue")
+                    })
                 {
                     super::rule_sets::analyze_descriptor_for_component_reads(
                         descriptor,

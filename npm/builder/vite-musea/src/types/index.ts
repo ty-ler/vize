@@ -13,7 +13,7 @@ export type {
   ResolvedTokenPreview,
 } from "../tokens/preview.js";
 
-export type { ArtMetadata, ArtVariant, ArtFileInfo, CsfOutput } from "./art.js";
+export type { ArtMetadata, ArtVariant, ArtStyleBlock, ArtFileInfo, CsfOutput } from "./art.js";
 
 export type {
   ViewportConfig,

@@ -42,6 +42,7 @@ import { resolveStaticPreviewVueVersion } from "./static-preview.js";
 import { attachMuseaOptions } from "./options.js";
 import { registerSourceGalleryDependencies } from "../gallery-dependencies.js";
 import { resolveMuseaGalleryUrls } from "./gallery-url.js";
+import { transformPreprocessedArtStyle } from "../art-style-module.js";
 
 export function musea(options: MuseaOptions = {}): Plugin[] {
   let include = options.include ?? ["**/*.art.vue"];
@@ -323,7 +324,15 @@ export function musea(options: MuseaOptions = {}): Plugin[] {
     if (info) artFiles.set(filePath, info);
   }
 
-  return [attachMuseaOptions(mainPlugin, options)];
+  const artStylePostTransform: Plugin = {
+    name: "vite-plugin-musea:style-post-transform",
+    transform(code, id) {
+      const transformed = transformPreprocessedArtStyle(code, id);
+      return transformed === null ? null : { code: transformed, map: null };
+    },
+  };
+
+  return [attachMuseaOptions(mainPlugin, options), artStylePostTransform];
 }
 
 function resolveProjectRoot(projectRoot: string | undefined, viteRoot: string): string | undefined {

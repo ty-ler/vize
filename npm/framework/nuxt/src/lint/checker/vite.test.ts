@@ -10,6 +10,7 @@ const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
 
 function result(overrides: Partial<NuxtLintCheckerResult> = {}): NuxtLintCheckerResult {
   return {
+    diagnostics: [],
     diagnosticCount: 0,
     hasErrors: false,
     hasWarnings: false,
@@ -130,11 +131,26 @@ void test("Vite addon lints changed files with cache and full includes without i
   }
 });
 
-void test("Vite addon reports terminal diagnostics, opens and clears the overlay", async () => {
+void test("Vite addon keeps diagnostics from unchanged files in the overlay", async () => {
   const state = harness([
-    result({ diagnosticCount: 1, hasErrors: true, output: "error output\n" }),
+    result({
+      diagnostics: [
+        { filename: "/project/app/error.vue", message: "error output", severity: "error" },
+      ],
+      diagnosticCount: 1,
+      hasErrors: true,
+      output: "error output\n",
+    }),
     result(),
-    result({ diagnosticCount: 1, hasWarnings: true, output: "warning output\n" }),
+    result({
+      diagnostics: [
+        { filename: "/project/app/warning.vue", message: "warning output", severity: "warning" },
+      ],
+      diagnosticCount: 1,
+      hasWarnings: true,
+      output: "warning output\n",
+    }),
+    result(),
   ]);
   const plugin = createNuxtLintCheckerVitePlugin(
     {
@@ -152,14 +168,19 @@ void test("Vite addon reports terminal diagnostics, opens and clears the overlay
   await flush();
   state.watcher.emit("change", "/project/app/warning.vue");
   await flush();
+  state.watcher.emit("change", "/project/app/error.vue");
+  state.watcher.emit("change", "/project/app/warning.vue");
+  await flush();
 
   assert.deepEqual(state.errors, ["error output\n"]);
   assert.deepEqual(state.warnings, ["warning output\n"]);
   assert.deepEqual(
     state.messages.map((message) => (message as { type: string }).type),
-    ["error", "update", "error"],
+    ["error", "error", "error", "update"],
   );
   assert.match(JSON.stringify(state.messages[0]), /error output/u);
+  assert.match(JSON.stringify(state.messages[1]), /error output/u);
+  assert.match(JSON.stringify(state.messages[2]), /error output/u);
   assert.match(JSON.stringify(state.messages[2]), /warning output/u);
 });
 
