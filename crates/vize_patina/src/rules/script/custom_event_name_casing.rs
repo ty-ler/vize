@@ -1,6 +1,6 @@
 //! script/custom-event-name-casing
 //!
-//! Enforce camelCase for emitted custom event names.
+//! Enforce configured casing for emitted custom event names.
 //!
 //! eslint-plugin-vue recommends a consistent casing for the events a component
 //! emits. For Vue 3 the default is **camelCase**, so an emit whose event name is
@@ -60,11 +60,11 @@ use vize_l0::CompactString;
 
 static META: ScriptRuleMeta = ScriptRuleMeta {
     name: "script/custom-event-name-casing",
-    description: "Enforce camelCase for emitted custom event names",
+    description: "Enforce configured casing for emitted custom event names",
     default_severity: Severity::Error,
 };
 
-/// Enforce camelCase for emitted custom event names.
+/// Enforce configured casing for emitted custom event names.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum EventNameCasing {
     #[default]
