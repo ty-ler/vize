@@ -101,7 +101,7 @@ export default defineConfig({
           target: "ES2022",
           module: "ESNext",
           moduleResolution: "bundler",
-          allowImportingTsExtensions: true,
+          rewriteRelativeImportExtensions: true,
           types: [],
         },
         include: ["App.vue", "main.ts", "script.ts", "entry.ts"],
