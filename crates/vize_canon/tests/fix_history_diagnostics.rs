@@ -200,6 +200,12 @@ fn template_suppression_preserves_complete_original_diagnostics() {
     );
 }
 
+#[test]
+fn authored_ts_extensions_report_ts5097_by_default() {}
+
+#[test]
+fn nuxt_reference_graph_preserves_plugin_injection_import_types() {}
+
 fn check_pack(
     name: &str,
     test: &str,
