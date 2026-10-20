@@ -166,5 +166,17 @@
     "vapor": null,
     "diagnostics": 1,
     "fixes": 1
+  },
+  {
+    "id": "custom-event-name-casing-9879",
+    "history": "04541e20047f0cc3bf30bb219e127d59fe8ad44b",
+    "source": "const emit = defineEmits([\"update:modelValue\"])\nemit(\"update:modelValue\", value)",
+    "filename": "History.ts",
+    "entry": "script",
+    "rule": "script/custom-event-name-casing",
+    "vue_version": null,
+    "vapor": null,
+    "diagnostics": 0,
+    "fixes": 0
   }
 ]
