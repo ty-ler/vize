@@ -3,7 +3,7 @@
  * Uses axe-core for automated accessibility auditing via Playwright.
  */
 
-import type { Page } from "playwright";
+import type { LaunchOptions, Page } from "playwright";
 import type { AxeResults, Result } from "axe-core";
 import type {
   ArtFileInfo,
@@ -16,6 +16,7 @@ import type { MuseaVrtRunner } from "../vrt.js";
 import { runJobsWithWorkers } from "../vrt/jobs.js";
 import { buildVariantUrl } from "../vrt/utils.js";
 import { observePreviewReady, waitForMountedPreview } from "../vrt/preview-ready.js";
+import { launchChromium } from "../vrt/browser-launch.js";
 
 import { computeA11ySummary, generateA11yHtmlReport, generateA11yJsonReport } from "./report.js";
 
@@ -75,14 +76,16 @@ export async function resolveAxeSource(): Promise<string> {
  */
 export class MuseaA11yRunner {
   private options: Required<A11yOptions>;
+  private launchOptions: LaunchOptions;
 
-  constructor(options: A11yOptions = {}) {
+  constructor(options: A11yOptions = {}, launchOptions: LaunchOptions = {}) {
     this.options = {
       enabled: options.enabled ?? true,
       includeRules: options.includeRules ?? [],
       excludeRules: options.excludeRules ?? [],
       level: options.level ?? "AA",
     };
+    this.launchOptions = launchOptions;
   }
 
   /**
@@ -113,7 +116,7 @@ export class MuseaA11yRunner {
         } else {
           // Standalone mode: launch own browser
           const { chromium } = await import("playwright");
-          const browser = await chromium.launch({ headless: true });
+          const browser = await launchChromium(chromium, this.launchOptions);
           const ctx = await browser.newContext({
             viewport: { width: defaultViewport.width, height: defaultViewport.height },
           });

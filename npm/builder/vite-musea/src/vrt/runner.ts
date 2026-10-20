@@ -25,6 +25,7 @@ import { SnapshotIndex } from "./snapshot-index.js";
 import { resolveSnapshotIdentity } from "./snapshot-identity.js";
 import { matchesSnapshotPattern } from "./snapshot-pattern.js";
 import { hostedCertificateArguments } from "./hosted-navigation.js";
+import { launchChromium } from "./browser-launch.js";
 export { normalizeVrtWorkerCount } from "./jobs.js";
 /**
  * VRT runner using Playwright.
@@ -58,6 +59,7 @@ export class MuseaVrtRunner {
         { width: 375, height: 667, name: "mobile" },
       ],
       workers: normalizeVrtWorkerCount(options.workers),
+      launchOptions: options.launchOptions ?? {},
     };
     this.capture = {
       animations: options.capture?.animations ?? "disabled",
@@ -121,10 +123,7 @@ export class MuseaVrtRunner {
   async init(trust?: { hostedCertificateSpki?: string }): Promise<void> {
     const { chromium } = await import("playwright");
     const args = hostedCertificateArguments(trust?.hostedCertificateSpki);
-    this.browser = await chromium.launch({
-      headless: true,
-      ...(args.length ? { args } : {}),
-    });
+    this.browser = await launchChromium(chromium, this.options.launchOptions, args);
     this.startTime = Date.now();
   }
 

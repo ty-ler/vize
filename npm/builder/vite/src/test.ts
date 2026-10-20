@@ -45,6 +45,7 @@ import "./plugin/resolve-vue-runtime.test.ts";
 import "./plugin/resolve-dependency-style.test.ts";
 import "./plugin/resolve-relative-vue.test.ts";
 import "./plugin/resolve.test.ts";
+import "./plugin/shared-config.test.ts";
 import "./plugin/source-map.test.ts";
 import "./plugin/style-request.test.ts";
 import "./plugin/style-request-normalization.test.ts";

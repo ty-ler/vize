@@ -97,7 +97,7 @@ void test("a failed mixed adoption leaves the complete old index unchanged", asy
     await fs.writeFile(path.join(dir, "Badge--Default--200x100.png"), "unowned");
     await assert.rejects(
       index.plan([unowned, { ...capture, art: { path: "src/Alert.art.vue" } }]),
-      /Explicit adoptLegacySnapshots/,
+      /--adopt-legacy-snapshots.*identities\.json/s,
     );
     assert.equal(await fs.readFile(path.join(dir, SNAPSHOT_INDEX_FILE), "utf8"), before);
     const fresh = { ...capture, art: { path: "src/Alert.art.vue" } };

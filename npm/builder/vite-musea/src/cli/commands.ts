@@ -48,6 +48,12 @@ export function createVrtOptions(options: CliOptions): ExtendedVrtOptions {
   if (workers !== undefined) {
     vrtOptions.workers = normalizeVrtWorkerCount(workers);
   }
+  if (options.browserArgs.length > 0) {
+    vrtOptions.launchOptions = {
+      ...configured.launchOptions,
+      args: [...(configured.launchOptions?.args ?? []), ...options.browserArgs],
+    };
+  }
   return vrtOptions;
 }
 
@@ -71,8 +77,11 @@ function withoutA11y(vrt: MuseaVrtOptions | undefined): Omit<MuseaVrtOptions, "a
 }
 
 /** Options object `musea-vrt --a11y` passes to `MuseaA11yRunner`. */
-export function createA11yRunner<T>(options: CliOptions, Runner: new (a11y?: A11yOptions) => T): T {
-  return new Runner(options.vrt?.a11y);
+export function createA11yRunner<T>(
+  options: CliOptions,
+  Runner: new (a11y?: A11yOptions, launchOptions?: MuseaVrtOptions["launchOptions"]) => T,
+): T {
+  return new Runner(options.vrt?.a11y, createVrtOptions(options).launchOptions);
 }
 
 export async function runVrt(options: CliOptions, artFiles: ArtFileInfo[]): Promise<void> {

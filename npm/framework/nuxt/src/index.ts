@@ -63,6 +63,8 @@ type NuxtWithBuilderOptions = {
     dev?: boolean;
     experimental?: { viteEnvironmentApi?: boolean };
     modules: unknown[];
+    imports?: false | { autoImport?: boolean };
+    components?: unknown;
     rootDir: string;
     router?: {
       base?: string;
@@ -243,7 +245,7 @@ async function setupVizeNuxtModule(options: VizeNuxtOptions, nuxt: NuxtWithBuild
   const supportsViteCompiler = hasNuxtViteCompilerSupport(nuxtWithBuilderOptions);
   const appBaseURL = getNuxtAppBaseURL(nuxtWithBuilderOptions);
   const buildAssetsDir = getNuxtBuildAssetsDir(nuxtWithBuilderOptions);
-  const bridgeOptions = resolveNuxtBridgeOptions(options.bridge);
+  const bridgeOptions = resolveNuxtBridgeOptions(options.bridge, nuxt.options);
   const devOptions = resolveNuxtDevOptions(options.dev);
   const museaOptions = detectedNuxtMajor === 2 ? false : resolveNuxtMuseaOptions(options.musea);
   const unocssOptions = resolveNuxtUnoCssOptions(options.unocss);

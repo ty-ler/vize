@@ -1,4 +1,5 @@
 import type { NuxtLintConfigItem } from "@vizejs/nuxt-lint-config";
+import path from "node:path";
 
 /** Hook other Nuxt modules use to extend Vize's generated lint config. */
 export const VIZE_NUXT_LINT_CONFIG_ADDONS_HOOK = "vize:lint:config:addons" as const;
@@ -25,8 +26,15 @@ export interface NuxtLintConfigAddon {
 
 /** Nuxt options that decide whether an unimport registry is actually injected. */
 export interface NuxtLintAutoImportOptions {
+  rootDir?: string;
   imports?: false | { autoImport?: boolean };
-  nitro?: { imports?: false | { autoImport?: boolean } };
+  nitro?: { imports?: false | { autoImport?: boolean }; srcDir?: string };
+  _layers?: Array<{ config?: { rootDir?: string } }>;
+}
+
+export interface NuxtLintConfigAddonsOptions {
+  /** Directory generated lint globs are relative to. */
+  rootDir?: string;
 }
 
 /** The Nuxt hook surface used by lint config addons. */
@@ -68,7 +76,32 @@ function nitroImportContext(value: unknown): NuxtLintImportContext | undefined {
  * their latest values in the addon means every config regeneration observes
  * the current registry rather than a module-setup-time snapshot.
  */
-function createNuxtImportGlobalsAddon(nuxt: NuxtLintConfigAddonNuxt): NuxtLintConfigAddon {
+function toPosix(value: string): string {
+  return value.split(path.sep).join("/");
+}
+
+function nitroImportFiles(
+  nuxt: NuxtLintConfigAddonNuxt,
+  options: NuxtLintConfigAddonsOptions,
+): string[] {
+  const nuxtRoot = path.resolve(nuxt.options?.rootDir ?? options.rootDir ?? ".");
+  const lintRoot = path.resolve(options.rootDir ?? nuxtRoot);
+  const directories = new Set<string>();
+  directories.add(path.resolve(nuxtRoot, nuxt.options?.nitro?.srcDir ?? "server"));
+  for (const layer of nuxt.options?._layers ?? []) {
+    if (layer.config?.rootDir) directories.add(path.resolve(layer.config.rootDir, "server"));
+  }
+  return [...directories]
+    .map(
+      (directory) => `${toPosix(path.relative(lintRoot, directory)) || "."}/**/*.{js,ts,jsx,tsx}`,
+    )
+    .sort();
+}
+
+function createNuxtImportGlobalsAddon(
+  nuxt: NuxtLintConfigAddonNuxt,
+  options: NuxtLintConfigAddonsOptions,
+): NuxtLintConfigAddon {
   let unimport: NuxtLintImportContext | undefined;
   let nitroUnimport: NuxtLintImportContext | undefined;
 
@@ -82,19 +115,37 @@ function createNuxtImportGlobalsAddon(nuxt: NuxtLintConfigAddonNuxt): NuxtLintCo
   return {
     name: "vize:lint:import-globals",
     async getConfigs() {
-      const imports = [
-        ...(autoImportEnabled(nuxt.options?.imports) ? ((await unimport?.getImports()) ?? []) : []),
-        ...(autoImportEnabled(nuxt.options?.nitro?.imports)
-          ? ((await nitroUnimport?.getImports()) ?? [])
-          : []),
-      ].sort(
+      const appAutoImports = autoImportEnabled(nuxt.options?.imports);
+      const imports = (appAutoImports ? ((await unimport?.getImports()) ?? []) : []).sort(
         (left, right) => left.from.localeCompare(right.from) || left.name.localeCompare(right.name),
       );
       const globals = Object.fromEntries(
         imports.map((imported) => [imported.as ?? imported.name, "readonly"] as const),
       ) as Record<string, "readonly">;
 
-      return [{ name: "nuxt/import-globals", globals }];
+      const nitroImports = (
+        appAutoImports && autoImportEnabled(nuxt.options?.nitro?.imports)
+          ? ((await nitroUnimport?.getImports()) ?? [])
+          : []
+      ).sort(
+        (left, right) => left.from.localeCompare(right.from) || left.name.localeCompare(right.name),
+      );
+      const nitroGlobals = Object.fromEntries(
+        nitroImports.map((imported) => [imported.as ?? imported.name, "readonly"] as const),
+      ) as Record<string, "readonly">;
+
+      return [
+        { name: "nuxt/import-globals", globals },
+        ...(Object.keys(nitroGlobals).length > 0
+          ? [
+              {
+                name: "nitro/import-globals",
+                files: nitroImportFiles(nuxt, options),
+                globals: nitroGlobals,
+              },
+            ]
+          : []),
+      ];
     },
   };
 }
@@ -110,8 +161,9 @@ function createNuxtImportGlobalsAddon(nuxt: NuxtLintConfigAddonNuxt): NuxtLintCo
  */
 export function setupNuxtLintConfigAddons(
   nuxt: NuxtLintConfigAddonNuxt,
+  options: NuxtLintConfigAddonsOptions = {},
 ): ResolveNuxtLintConfigAddons {
-  const defaults = [createNuxtImportGlobalsAddon(nuxt)] satisfies NuxtLintConfigAddon[];
+  const defaults = [createNuxtImportGlobalsAddon(nuxt, options)] satisfies NuxtLintConfigAddon[];
 
   return async () => {
     const addons = [...defaults];

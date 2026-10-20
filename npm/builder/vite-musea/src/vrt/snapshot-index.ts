@@ -129,7 +129,7 @@ export class SnapshotIndex {
       const key = foldName(name);
       if (byName.has(key)) throw new Error(`Snapshot filename ownership collision: ${name}`);
       if (existing.has(key) && !this.options.adoptLegacySnapshots)
-        throw new Error(`Unowned snapshot ${name}. Explicit adoptLegacySnapshots is required.`);
+        throw new Error(this.legacyAdoptionMessage(existing.get(key)!.length));
       if (existing.has(key)) {
         const matches = existing.get(key)!;
         if (matches.length !== 1)
@@ -146,6 +146,11 @@ export class SnapshotIndex {
     await this.persist(owners);
     this.owners = owners;
     return result;
+  }
+
+  private legacyAdoptionMessage(count: number): string {
+    const directory = path.relative(this.options.projectRoot!, this.directory) || ".";
+    return `Found ${count} baseline PNG(s) without an owner in ${directory} (created by an older musea-vrt).\nReview them, then run once with --adopt-legacy-snapshots and commit ${path.join(directory, SNAPSHOT_INDEX_FILE)}.`;
   }
 
   async close(): Promise<void> {

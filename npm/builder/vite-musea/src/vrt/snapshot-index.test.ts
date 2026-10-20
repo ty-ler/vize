@@ -105,7 +105,10 @@ void test("unowned ordinary PNG requires explicit adoption and then remains owne
   await fs.writeFile(path.join(dir, filename), "legacy pixels");
   const unapproved = await SnapshotIndex.open(dir);
   try {
-    await assert.rejects(unapproved.plan([job()]), /Explicit adoptLegacySnapshots/);
+    await assert.rejects(
+      unapproved.plan([job()]),
+      /Found 1 baseline PNG\(s\).*--adopt-legacy-snapshots.*identities\.json/s,
+    );
     await assert.rejects(fs.access(path.join(dir, SNAPSHOT_INDEX_FILE)), { code: "ENOENT" });
     assert.equal(await fs.readFile(path.join(dir, filename), "utf8"), "legacy pixels");
   } finally {

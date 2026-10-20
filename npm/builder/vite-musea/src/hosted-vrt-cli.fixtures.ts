@@ -159,7 +159,7 @@ export async function proveCompiledStartupRefusal(
   );
   assert.deepEqual(receipt.exit, { code: 1, signal: null });
   assert.equal(receipt.failure, "Error: Compiled CLI exited before listening");
-  assert.match(receipt.stderr, /\n  Error: Error: serve requires an HTTPS gallery/);
+  assert.match(receipt.stderr, /\n  Error: serve requires an HTTPS gallery/);
   assert.equal(receipt.stderr.includes("Session token:"), false);
   const commands = [];
   for (const [args, message] of [
@@ -197,7 +197,7 @@ export async function proveCompiledStartupRefusal(
         },
       );
       assert.deepEqual(exit, { code: 1, signal: null });
-      assert.ok(stderr.includes(`\n  Error: Error: ${message}`), stderr);
+      assert.ok(stderr.includes(`\n  Error: ${message}`), stderr);
       assert.equal(stdout.includes("Session token:"), false);
       commands.push({ args, exit, stderr });
     } finally {

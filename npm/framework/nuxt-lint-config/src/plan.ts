@@ -48,6 +48,8 @@ export interface NuxtLintConfigItem {
   ignores?: string[];
   /** Rule severities keyed by eslint-compatible rule id. */
   rules?: Record<string, NuxtLintSeverity>;
+  /** Oxlint-owned rules that must keep their authored namespace. */
+  nativeRules?: Record<string, NuxtLintSeverity>;
   /** Globals the block declares, so undefined-variable rules stay quiet. */
   globals?: Record<string, "readonly" | "writable">;
 }

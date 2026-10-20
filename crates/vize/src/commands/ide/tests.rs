@@ -1,4 +1,7 @@
-use super::{EditorArgs, EditorOperation, editor_operation, vscode_extension_is_installed};
+use super::{
+    EditorArgs, EditorOperation, editor_operation, vscode_extension_is_installed,
+    vscode_extension_spec, vscode_extension_version, zed_dev_extension_dir, zed_release_asset_url,
+};
 use crate::commands::lsp::{LspTransport, transport_from_port};
 
 #[test]
@@ -6,6 +9,48 @@ fn vscode_status_accepts_published_extension_id() {
     assert!(vscode_extension_is_installed(
         "ms-vscode.cpptools\nubugeeei.vize\n"
     ));
+}
+
+#[test]
+fn vscode_status_reads_published_extension_version() {
+    assert_eq!(
+        vscode_extension_version("ms-vscode.cpptools@1.0.0\nubugeeei.vize@0.493.0\n"),
+        Some(Some("0.493.0"))
+    );
+}
+
+#[test]
+fn vscode_status_reads_legacy_extension_version() {
+    assert_eq!(
+        vscode_extension_version("vize.vize@0.443.0\n"),
+        Some(Some("0.443.0"))
+    );
+}
+
+#[test]
+fn vscode_status_handles_code_without_version_output() {
+    assert_eq!(vscode_extension_version("ubugeeei.vize\n"), Some(None));
+}
+
+#[test]
+fn vscode_install_pins_the_cli_version() {
+    assert_eq!(vscode_extension_spec("0.493.0"), "ubugeeei.vize@0.493.0");
+}
+
+#[test]
+fn zed_release_asset_matches_the_cli_version() {
+    assert_eq!(
+        zed_release_asset_url("0.493.0"),
+        "https://github.com/ubugeeei-prod/vize/releases/download/v0.493.0/zed-vize-extension.tar.gz"
+    );
+}
+
+#[test]
+fn zed_source_is_prepared_outside_the_installed_extension_store() {
+    assert_eq!(
+        zed_dev_extension_dir(std::path::Path::new("/data/Zed/extensions/installed")),
+        std::path::Path::new("/data/Zed/extensions/dev/vize")
+    );
 }
 
 #[test]

@@ -94,6 +94,13 @@ export interface VizeNuxtBridgeOptions {
   stableInjectedKeys?: boolean;
 }
 
+export interface VizeNuxtBridgeHostOptions {
+  imports?: false | { autoImport?: boolean };
+  components?: unknown;
+  modules?: unknown[];
+  _requiredModules?: Record<string, boolean>;
+}
+
 export interface VizeNuxtUnoCssOptions {
   /**
    * Feed the original .vue source to UnoCSS extraction-only plugins so
@@ -244,25 +251,43 @@ export const DEFAULT_NUXT_DEV_OPTIONS: Required<VizeNuxtDevOptions> = {
 
 export function resolveNuxtBridgeOptions(
   bridge: VizeNuxtOptions["bridge"],
+  host?: VizeNuxtBridgeHostOptions,
 ): Required<VizeNuxtBridgeOptions> {
+  let resolved: Required<VizeNuxtBridgeOptions>;
   if (bridge === false) {
-    return {
+    resolved = {
       autoImports: false,
       components: false,
       i18n: false,
       stableInjectedKeys: false,
     };
+  } else if (bridge === true || bridge == null) {
+    resolved = { ...DEFAULT_NUXT_BRIDGE_OPTIONS };
+  } else {
+    resolved = {
+      autoImports: bridge.autoImports ?? DEFAULT_NUXT_BRIDGE_OPTIONS.autoImports,
+      components: bridge.components ?? DEFAULT_NUXT_BRIDGE_OPTIONS.components,
+      i18n: bridge.i18n ?? DEFAULT_NUXT_BRIDGE_OPTIONS.i18n,
+      stableInjectedKeys:
+        bridge.stableInjectedKeys ?? DEFAULT_NUXT_BRIDGE_OPTIONS.stableInjectedKeys,
+    };
   }
 
-  if (bridge === true || bridge == null) {
-    return { ...DEFAULT_NUXT_BRIDGE_OPTIONS };
-  }
+  if (!host) return resolved;
+
+  const autoImports = host.imports !== false && host.imports?.autoImport !== false;
+  const hasI18n =
+    host._requiredModules?.["@nuxtjs/i18n"] === true ||
+    host.modules?.some((entry) => {
+      const module = Array.isArray(entry) ? entry[0] : entry;
+      return typeof module === "string" && /^@nuxtjs\/i18n(?:\/|$)/.test(module);
+    }) === true;
 
   return {
-    autoImports: bridge.autoImports ?? DEFAULT_NUXT_BRIDGE_OPTIONS.autoImports,
-    components: bridge.components ?? DEFAULT_NUXT_BRIDGE_OPTIONS.components,
-    i18n: bridge.i18n ?? DEFAULT_NUXT_BRIDGE_OPTIONS.i18n,
-    stableInjectedKeys: bridge.stableInjectedKeys ?? DEFAULT_NUXT_BRIDGE_OPTIONS.stableInjectedKeys,
+    autoImports: resolved.autoImports && autoImports,
+    components: resolved.components && host.components !== false,
+    i18n: resolved.i18n && hasI18n,
+    stableInjectedKeys: resolved.stableInjectedKeys && autoImports,
   };
 }
 

@@ -32,6 +32,7 @@ void test("worker execution reports the complete filtered diagnostic payload", a
   assert.equal(result.hasErrors, true);
   assert.equal(result.hasWarnings, true);
   assert.equal(result.diagnosticCount, 2);
+  assert.equal(result.diagnostics.length, 2);
   const payload = JSON.parse(result.output) as {
     diagnostics: Array<{ message: string; severity: string }>;
   };
@@ -78,6 +79,7 @@ void test("worker execution honours emitError and emitWarning independently", as
   assert.equal(errors.diagnosticCount, 1);
 
   assert.deepEqual(await runNuxtLintCheckerTask(task({ emitError: false, emitWarning: false })), {
+    diagnostics: [],
     diagnosticCount: 0,
     hasErrors: false,
     hasWarnings: false,
