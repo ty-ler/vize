@@ -38,13 +38,13 @@ function packet(value: any) {
 void test("all current SFC wires have the complete bounded transition and old packs stay exact", () => {
   assert.equal(
     sha256(fs.readFileSync(manifest)),
-    "069a493be21ebec11afa2f0c977bd8330a20d0c3121880d8fb91605f666f5dfe",
+    "f63d3d6e35bbe7686b8055594b302c22f74aff97e6e8c8c860589338af2f6a83",
   );
   assert.equal(
     sha256(
       fs.readFileSync(path.join(root, "tests/_fixtures/differential/linter/oracle-index.json")),
     ),
-    "c58f6b35b44cba4991d90a35491a77243f58739837eb941634942eec3d6f7993",
+    "171c3b750a004b04cb8aaaaee1c51e058cf5e5c9fb4020b921c04540ab09c4f0",
   );
   const expected: [string, ReturnType<typeof missing> | null][] = [
     ["current-api/ref-string-untyped", null],
@@ -87,6 +87,7 @@ void test("all current SFC wires have the complete bounded transition and old pa
     ["current-api/static-class-utf8-fix-corrected", missing("vapor/prefer-static-class")],
     ["current-api/valid-v-else-autofix-preserves-directive", missing("vue/valid-v-else")],
     ["current-api/dynamic-slot-v-for-component-bodies", missing("vue/valid-v-for")],
+    ["current-api/patina-rule-guards-9870-9871", missing("vue/attribute-order")],
     ["current-api/multiline-v-for-type-aware-9880", missing("type/no-unsafe-template-binding")],
     ["next-tick/valid-arrow-expression-return-sfc", missing("script/valid-next-tick")],
     [
