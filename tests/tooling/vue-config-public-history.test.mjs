@@ -38,10 +38,7 @@ void test("the original archives remain pinned while active package cases follow
   assert.equal(current.split(addedRewritePolicy).length, 2);
   const migratedPacked = packed.replaceAll("vize: {", "vue: {");
   assert.equal(
-    current
-      .replace(addedImport, "")
-      .replace(addedCall, "")
-      .replace(addedRewritePolicy, ""),
+    current.replace(addedImport, "").replace(addedCall, "").replace(addedRewritePolicy, ""),
     migratedPacked,
   );
 
