@@ -165,14 +165,14 @@ fn all_complete_keyed_outputs_maps_and_ordinary_boundaries_agree() {
             "<section v-once><input :key=\"epoch\" :value=\"value\" /></section>",
             0,
         ),
-        ("<i v-memo=\"[]\" :key=\"epoch\">{{ value }}</i>", 0),
+        ("<i v-memo=\"[]\" :key=\"epoch\">{{ value }}</i>", 1),
         (
             "<section><div v-once><input :key=\"epoch\" :value=\"value\" /></div></section>",
             0,
         ),
         (
             "<section><div v-memo=\"[]\"><input :key=\"epoch\" :value=\"value\" /></div></section>",
-            0,
+            1,
         ),
         (
             "<section><template v-once><input :key=\"epoch\" :value=\"value\" /></template></section>",

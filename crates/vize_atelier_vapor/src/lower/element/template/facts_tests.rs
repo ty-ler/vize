@@ -24,8 +24,8 @@ fn classified_root_scope_preserves_full_templates_and_recursive_child_facts() {
             "<section v-memo=\"deps\" v-memo=\"[]\"><input :key=\"child\" /></section>",
             false,
             true,
-            true,
-            "<section><input></section>",
+            false,
+            "<section></section>",
         ),
         (
             "<section :key=\"epoch\"><input :key=\"child\" /></section>",

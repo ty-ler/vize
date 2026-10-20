@@ -65,10 +65,7 @@ pub(super) fn collect_dynamic_attrs<'a>(
                 }
                 PropNode::Directive(dir) => {
                     if derive_non_reactive && !*non_reactive {
-                        *non_reactive = dir.name == "once"
-                            || dir.name == "memo"
-                                && matches!(dir.exp.as_ref(), Some(ExpressionNode::Simple(exp))
-                                if exp.content.trim() == "[]");
+                        *non_reactive = dir.name == "once";
                     }
                     if dir.name == "bind" {
                         match dir.arg.as_ref() {

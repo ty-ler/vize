@@ -40,7 +40,7 @@ fn refused_key_targets_keep_original_once_and_first_memo_diagnostics() {
             "<slot v-memo=\"deps\" v-once :key=\"epoch\"></slot>",
             ElementType::Slot,
             true,
-            None,
+            Some(memo_warning),
         ),
     ];
     for (source, expected_type, expected_once, expected_error) in cases {
@@ -55,6 +55,10 @@ fn refused_key_targets_keep_original_once_and_first_memo_diagnostics() {
         assert_eq!(facts.key.map(|key| key.content), None, "{source}");
         assert_eq!(value(el, false).map(|key| key.content), None, "{source}");
         assert_eq!(facts.should_lower_as_once, expected_once, "{source}");
-        assert_eq!(facts.memo_warning, expected_error, "{source}");
+        assert_eq!(
+            super::classify::memo_warning(el),
+            expected_error,
+            "{source}"
+        );
     }
 }

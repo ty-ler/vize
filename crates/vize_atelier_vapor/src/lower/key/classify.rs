@@ -7,11 +7,12 @@ use vize_atelier_core::{
 use super::super::element::template::{RootAttributes, is_static_element};
 
 mod scope;
-pub(in crate::lower) use scope::ScopeDirectives;
+#[cfg(test)]
+pub(in crate::lower) use scope::memo_warning;
+pub(in crate::lower) use scope::{ScopeDirectives, memo_warnings};
 
 pub(in crate::lower) struct DirectiveAnalysis<'a, 'b> {
     pub(in crate::lower) should_lower_as_once: bool,
-    pub(in crate::lower) memo_warning: Option<&'static str>,
     pub(in crate::lower) key: Option<&'b SimpleExpressionNode<'a>>,
     pub(in crate::lower) has_control_flow_children: bool,
     pub(in crate::lower) has_dynamic_element_children: bool,
@@ -81,11 +82,10 @@ fn classify_role<'a, 'b, const READ_KEY: bool>(
             },
         }
     }
-    let (should_lower_as_once, memo_warning, key_non_reactive) = scope.finish();
+    let (should_lower_as_once, key_non_reactive) = scope.finish();
     template_attributes.set_non_reactive(key_non_reactive);
     DirectiveAnalysis {
         should_lower_as_once,
-        memo_warning,
         key: key.filter(|value| {
             !key_non_reactive
                 && !has_for

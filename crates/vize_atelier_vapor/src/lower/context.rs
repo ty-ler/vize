@@ -161,8 +161,4 @@ impl<'a> TransformContext<'a> {
             operations: effect_ops,
         });
     }
-
-    pub(crate) fn push_warning(&mut self, message: impl Into<String>) {
-        self.warnings.push(message.into());
-    }
 }

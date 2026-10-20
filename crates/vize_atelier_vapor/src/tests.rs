@@ -860,7 +860,7 @@ fn test_compile_v_once_lowers_without_runtime_directives() {
 }
 
 #[test]
-fn test_compile_v_memo_empty_array_lowers_without_runtime_directives() {
+fn test_compile_v_memo_empty_array_is_ignored_like_any_v_memo() {
     let allocator = vize_carton::Allocator::new();
     let result = compile_vapor(
         &allocator,
@@ -877,7 +877,14 @@ fn test_compile_v_memo_empty_array_lowers_without_runtime_directives() {
 
     let code = normalize_code(&result.code);
     assert!(!code.contains("_withDirectives"), "{code}");
-    assert!(!code.contains("_renderEffect"), "{code}");
+    // Upstream ignores every `v-memo`, so the text stays reactive.
+    assert_eq!(
+        result.warning_messages,
+        vec![String::from(
+            "v-memo is not supported in Vapor mode and will be ignored."
+        )]
+    );
+    assert!(code.contains("_renderEffect"), "{code}");
     insta::assert_snapshot!(code.as_str());
 }
 

@@ -54,9 +54,6 @@ pub(super) fn transform_classified_element<'a>(
     block: &mut BlockIRNode<'a>,
     non_reactive: super::key::DirectiveAnalysis<'a, '_>,
 ) {
-    if let Some(memo_warning) = non_reactive.memo_warning {
-        ctx.push_warning(memo_warning);
-    }
     let entered_non_reactive = non_reactive.should_lower_as_once;
     if entered_non_reactive {
         ctx.enter_non_reactive_scope();

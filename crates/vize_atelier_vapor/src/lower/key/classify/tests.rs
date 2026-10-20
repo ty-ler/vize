@@ -30,9 +30,9 @@ fn original_directives_keep_once_precedence_key_identity_and_refusals() {
             "<i v-memo=\" [] \" :key=\"epoch\" />",
             false,
             true,
-            None,
-            true,
-            None,
+            Some("epoch"),
+            false,
+            Some(memo),
         ),
         (
             "<i :key=\"epoch\" v-memo=\"[dep]\" />",
@@ -56,7 +56,7 @@ fn original_directives_keep_once_precedence_key_identity_and_refusals() {
             true,
             None,
             true,
-            None,
+            Some(memo),
         ),
         (
             "<i v-once :key=\"epoch\" v-memo=\"[dep]\" />",
@@ -64,7 +64,7 @@ fn original_directives_keep_once_precedence_key_identity_and_refusals() {
             true,
             None,
             true,
-            None,
+            Some(memo),
         ),
         ("<i :key=\"epoch\" />", true, true, None, false, None),
         ("<i :key=\"epoch\" />", false, false, None, false, None),
@@ -142,9 +142,9 @@ fn original_directives_keep_once_precedence_key_identity_and_refusals() {
             "<i v-memo=\" [] \" :key=\"epoch\"></i>",
             false,
             true,
-            None,
-            true,
-            None,
+            Some("epoch"),
+            false,
+            Some(memo),
         ),
         (
             "<i :key=\"epoch\" v-memo=\"[dep]\"></i>",
@@ -168,7 +168,7 @@ fn original_directives_keep_once_precedence_key_identity_and_refusals() {
             true,
             None,
             true,
-            None,
+            Some(memo),
         ),
         (
             "<i v-once :key=\"epoch\" v-memo=\"[dep]\"></i>",
@@ -176,7 +176,7 @@ fn original_directives_keep_once_precedence_key_identity_and_refusals() {
             true,
             None,
             true,
-            None,
+            Some(memo),
         ),
         ("<i :key=\"epoch\"></i>", true, true, None, false, None),
         ("<i :key=\"epoch\"></i>", false, false, None, false, None),
@@ -234,7 +234,7 @@ fn original_directives_keep_once_precedence_key_identity_and_refusals() {
         };
         let facts = classify(el, inherited, own_key);
         assert_eq!(facts.should_lower_as_once, expected_once, "{source}");
-        assert_eq!(facts.memo_warning, expected_error, "{source}");
+        assert_eq!(super::memo_warning(el), expected_error, "{source}");
         assert_eq!(facts.key.map(|key| key.content), expected_key, "{source}");
         if let Some(key) = facts.key {
             assert_eq!(key.loc.span.slice(source), key.content, "{source}");

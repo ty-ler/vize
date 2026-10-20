@@ -70,7 +70,7 @@ pub(super) fn get_slot_outlet_props_and_scope<'a, 'b>(
     el: &'b ElementNode<'a>,
 ) -> (
     Vec<'a, IRProp<'a>>,
-    super::super::key::ScopeDirectives<'a, 'b>,
+    super::super::key::ScopeDirectives,
     Box<'a, SimpleExpressionNode<'a>>,
 ) {
     let (props, scope, name) = get_slot_props::<true>(ctx, el);
@@ -88,7 +88,7 @@ fn get_slot_props<'a, 'b, const CLASSIFY: bool>(
     el: &'b ElementNode<'a>,
 ) -> (
     Vec<'a, IRProp<'a>>,
-    super::super::key::ScopeDirectives<'a, 'b>,
+    super::super::key::ScopeDirectives,
     Option<Box<'a, SimpleExpressionNode<'a>>>,
 ) {
     let mut scope = super::super::key::ScopeDirectives::new(ctx.is_key_non_reactive());
@@ -183,10 +183,7 @@ pub(in crate::lower) fn transform_slot<'a>(
     block: &mut BlockIRNode<'a>,
 ) {
     let (props, scope, name) = get_slot_outlet_props_and_scope(ctx, el);
-    let (once, warning, _) = scope.finish();
-    if let Some(warning) = warning {
-        ctx.push_warning(warning);
-    }
+    let (once, _) = scope.finish();
     if once {
         ctx.enter_non_reactive_scope();
     }

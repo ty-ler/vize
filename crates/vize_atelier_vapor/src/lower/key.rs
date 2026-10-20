@@ -15,12 +15,14 @@ use crate::ir::{BlockIRNode, InsertionAnchor, KeyIRNode, OperationNode};
 mod branch;
 mod classify;
 pub(super) use branch::transform_branch;
-pub(super) use classify::{DirectiveAnalysis, ScopeDirectives, classify};
+pub(super) use classify::{DirectiveAnalysis, ScopeDirectives, classify, memo_warnings};
 
 pub(super) fn is_non_reactive(el: &ElementNode<'_>, inherited: bool) -> bool {
-    inherited || el.props.iter().any(|prop| matches!(prop, PropNode::Directive(dir)
-        if dir.name == "once" || dir.name == "memo"
-            && matches!(dir.exp.as_ref(), Some(ExpressionNode::Simple(exp)) if exp.content.trim() == "[]")))
+    inherited
+        || el
+            .props
+            .iter()
+            .any(|prop| matches!(prop, PropNode::Directive(dir) if dir.name == "once"))
 }
 
 /// The exact original binding, shared by lowering and template classification.
