@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "lsp/regression/script-setup-completion-dedupe-9908",
+  "provenance": {
+    "fixCommit": "80ebffecc09368ca5a6f139f0c086e39f073b328",
+    "witnessPath": "crates/vize/tests/lsp_script_setup_completion_dedup_cli.rs",
+    "witnessTest": "native_script_setup_completion_merges_checker_builtins_and_globals_by_label",
+    "inputOrigin": "exact minimal reproduction from issue 9908",
+    "contractOrigin": "the dedicated stdio regression validates complete native completion labels and metadata; this differential row pins and admits the exact authored SFC bytes"
+  },
+  "input": {
+    "source": "App.vue.txt",
+    "runtimePath": "App.vue",
+    "sha256": "6cb1edbaef8d25b8e9de477fbddf4a371fd22b8a71b68c82bd9397d56c0528a1"
+  },
+  "expected": {
+    "source": "response.expected.json",
+    "sha256": "97e4d88f1925c793349cfb7395753728daddbd213af598410bee7bc3e80bb9ce"
+  },
+  "method": "textDocument/foldingRange",
+  "documentVersion": 1,
+  "scope": "exact issue input custody plus source-built stdio completion witness; no native adapter or acceptance credit"
+}

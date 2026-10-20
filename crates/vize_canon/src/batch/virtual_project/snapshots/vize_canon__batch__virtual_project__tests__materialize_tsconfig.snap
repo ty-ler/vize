@@ -4,7 +4,6 @@ expression: "fs::read_to_string(&tsconfig_path).unwrap().as_str()"
 ---
 {
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
     "noEmit": true,
     "noUncheckedSideEffectImports": false
   },

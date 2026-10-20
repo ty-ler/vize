@@ -122,9 +122,9 @@ impl super::CompletionService {
                     if let Some(ref bridge) = corsa_bridge {
                         let items = Self::complete_script_with_corsa(ctx, true, bridge).await;
                         if !items.is_empty() {
-                            let mut all = items;
-                            all.extend(script::script_extras(ctx, true));
-                            return Some(CompletionResponse::Array(all));
+                            return Some(CompletionResponse::Array(
+                                script::merge_checker_completions(ctx, true, items),
+                            ));
                         }
                     }
                     Self::complete(ctx)
@@ -133,9 +133,9 @@ impl super::CompletionService {
                     if let Some(ref bridge) = corsa_bridge {
                         let items = Self::complete_script_with_corsa(ctx, false, bridge).await;
                         if !items.is_empty() {
-                            let mut all = items;
-                            all.extend(script::script_extras(ctx, false));
-                            return Some(CompletionResponse::Array(all));
+                            return Some(CompletionResponse::Array(
+                                script::merge_checker_completions(ctx, false, items),
+                            ));
                         }
                     }
                     Self::complete(ctx)
@@ -197,21 +197,30 @@ impl super::CompletionService {
             };
 
             if !corsa_items.is_empty() {
-                let mut items = corsa_items;
-                items.extend(match block_type {
+                let items = match block_type {
+                    BlockType::Script => script::merge_checker_completions(ctx, false, corsa_items),
+                    BlockType::ScriptSetup => {
+                        script::merge_checker_completions(ctx, true, corsa_items)
+                    }
                     // Inside a template expression the checker's answer is
                     // the whole story; markup completions are noise (#3911).
                     BlockType::Template
                         if crate::ide::is_in_vue_template_expression(&ctx.content, ctx.offset) =>
                     {
-                        vec![]
+                        corsa_items
                     }
-                    BlockType::Template => template::corsa_template_completions(ctx),
-                    BlockType::Script => script::script_extras(ctx, false),
-                    BlockType::ScriptSetup => script::script_extras(ctx, true),
-                    BlockType::Style(_) => style::vue_css_completions(),
-                    BlockType::Art(_) => vec![],
-                });
+                    BlockType::Template => {
+                        let mut items = corsa_items;
+                        items.extend(template::corsa_template_completions(ctx));
+                        items
+                    }
+                    BlockType::Style(_) => {
+                        let mut items = corsa_items;
+                        items.extend(style::vue_css_completions());
+                        items
+                    }
+                    BlockType::Art(_) => corsa_items,
+                };
 
                 return Some(CompletionResponse::Array(items));
             }

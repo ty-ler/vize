@@ -188,7 +188,6 @@ impl VirtualProject {
         // normal imports look like project-build membership errors (TS6307).
         compiler_options.remove("composite");
         normalize_native_removed_options(&mut compiler_options);
-        compiler_options.insert("allowImportingTsExtensions".into(), Value::Bool(true));
         if self.requires_arbitrary_extensions() || preserved_arbitrary_extensions {
             compiler_options.insert("allowArbitraryExtensions".into(), Value::Bool(true));
         }

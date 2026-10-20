@@ -5,7 +5,7 @@
  * stay enabled. A preset from the shared project config is therefore expanded into
  * explicit rule entries instead of replacing that runtime preset.
  */
-import type { NuxtLintSeverity } from "@vizejs/nuxt-lint-config";
+import type { NuxtLintRuleConfig, NuxtLintSeverity } from "@vizejs/nuxt-lint-config";
 import type { VizeRuleConfigPreset } from "oxlint-plugin-vize";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -15,11 +15,20 @@ import {
   resolveViteConfigSource,
 } from "../../../../cli/src/config/vite-runtime.mjs";
 
-export type ProjectLintRules = Record<string, NuxtLintSeverity>;
+export type ProjectLintRules = Record<string, NuxtLintRuleConfig>;
+
+export interface ProjectLintRuleEntry {
+  files: string[];
+  ignores?: string[];
+  name?: string;
+  rules: ProjectLintRules;
+}
 
 export interface ProjectLintRuleSets {
+  entries?: ProjectLintRuleEntry[];
   vize?: ProjectLintRules;
   oxlint?: ProjectLintRules;
+  warnings?: string[];
 }
 
 export type ProjectPresetLoader = (
@@ -44,8 +53,15 @@ type ConfigPreset = (typeof CONFIG_PRESETS)[number];
 
 interface ProjectLinterConfig {
   preset?: ConfigPreset;
+  ruleOptions: Record<string, unknown>;
   typeAware: boolean;
   rules: ProjectLintRules;
+}
+
+interface ProjectLinterEntry extends ProjectLinterConfig {
+  files: string[];
+  ignores?: string[];
+  name?: string;
 }
 
 export async function readProjectLintRules(
@@ -62,47 +78,115 @@ export async function readProjectLintRuleSets(
   const project = await readProjectConfig(rootDir);
   const linter = project.linter;
   const oxlint = explicitOxlintRules(project.oxlint);
+  const warnings: string[] = [];
   let vize: ProjectLintRules | undefined;
   if (linter) {
     const presetRules =
       linter.preset && linter.preset !== "incremental"
         ? await loadPreset(linter.preset, linter.typeAware)
         : {};
-    const rules = { ...presetRules, ...linter.rules };
+    const rules = applyRuleOptions(
+      { ...presetRules, ...linter.rules },
+      linter.ruleOptions,
+      warnings,
+      "vue.linter",
+    );
     if (Object.keys(rules).length > 0) vize = rules;
   }
+  const entries = project.entries
+    .map((entry, index): ProjectLintRuleEntry | undefined => {
+      const rules = applyRuleOptions(
+        { ...entry.rules },
+        entry.ruleOptions,
+        warnings,
+        `vue.entries[${String(index)}].linter`,
+        vize,
+      );
+      if (Object.keys(rules).length === 0) return undefined;
+      return {
+        files: entry.files,
+        ...(entry.ignores ? { ignores: entry.ignores } : {}),
+        ...(entry.name ? { name: entry.name } : {}),
+        rules,
+      };
+    })
+    .filter((entry): entry is ProjectLintRuleEntry => entry !== undefined);
   return {
+    ...(entries.length > 0 ? { entries } : {}),
     ...(vize ? { vize } : {}),
     ...(Object.keys(oxlint).length > 0 ? { oxlint } : {}),
+    ...(warnings.length > 0 ? { warnings } : {}),
   };
 }
 
 interface ProjectConfig {
+  entries: ProjectLinterEntry[];
   linter?: ProjectLinterConfig;
   oxlint?: unknown;
 }
 
 async function readProjectConfig(rootDir: string): Promise<ProjectConfig> {
   const parsed = await loadProjectViteConfigSource(rootDir);
-  if (!parsed) return {};
-  const rawLinter =
-    parsed.vue &&
-    typeof parsed.vue === "object" &&
-    "linter" in parsed.vue &&
-    parsed.vue.linter &&
-    typeof parsed.vue.linter === "object"
-      ? (parsed.vue.linter as { preset?: unknown; rules?: unknown; typeAware?: unknown })
-      : undefined;
+  if (!parsed) return { entries: [] };
+  const rawVue = parsed.vue && typeof parsed.vue === "object" ? parsed.vue : undefined;
+  const rawLinter = rawVue && "linter" in rawVue ? projectLinter(rawVue.linter) : undefined;
+  const entries = rawVue && "entries" in rawVue ? projectEntries(rawVue.entries) : [];
   return {
-    linter: rawLinter
-      ? {
-          preset: isConfigPreset(rawLinter.preset) ? rawLinter.preset : undefined,
-          typeAware: rawLinter.typeAware === true,
-          rules: explicitRules(rawLinter.rules),
-        }
-      : undefined,
+    entries,
+    linter: rawLinter,
     oxlint: parsed.lint,
   };
+}
+
+function projectLinter(value: unknown): ProjectLinterConfig | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const raw = value as {
+    preset?: unknown;
+    ruleOptions?: unknown;
+    rules?: unknown;
+    typeAware?: unknown;
+  };
+  return {
+    preset: isConfigPreset(raw.preset) ? raw.preset : undefined,
+    ruleOptions: explicitRuleOptions(raw.ruleOptions),
+    typeAware: raw.typeAware === true,
+    rules: explicitRules(raw.rules),
+  };
+}
+
+function projectEntries(value: unknown): ProjectLinterEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((candidate) => {
+    if (!candidate || typeof candidate !== "object") return [];
+    const raw = candidate as {
+      basePath?: unknown;
+      files?: unknown;
+      ignores?: unknown;
+      linter?: unknown;
+      name?: unknown;
+    };
+    const linter = projectLinter(raw.linter);
+    const files = scopedGlobs(raw.files, raw.basePath);
+    if (!linter || files.length === 0) return [];
+    const ignores = scopedGlobs(raw.ignores, raw.basePath);
+    return [
+      {
+        ...linter,
+        files,
+        ...(ignores.length > 0 ? { ignores } : {}),
+        ...(typeof raw.name === "string" && raw.name ? { name: raw.name } : {}),
+      },
+    ];
+  });
+}
+
+function scopedGlobs(value: unknown, basePath: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const base = typeof basePath === "string" && basePath ? basePath : undefined;
+  return value.flatMap((glob) => {
+    if (typeof glob !== "string" || !glob) return [];
+    return [base && !path.isAbsolute(glob) ? path.join(base, glob) : glob];
+  });
 }
 
 async function loadProjectViteConfigSource(
@@ -174,6 +258,71 @@ function explicitRules(value: unknown): ProjectLintRules {
     if (bare.length > 0) rules[bare] = severity;
   }
   return rules;
+}
+
+function explicitRuleOptions(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object") return {};
+  const options: Record<string, unknown> = {};
+  for (const [id, option] of Object.entries(value)) {
+    const bare = id.startsWith("vize/") ? id.slice("vize/".length) : id;
+    if (bare.length > 0) options[bare] = option;
+  }
+  return options;
+}
+
+function applyRuleOptions(
+  source: ProjectLintRules,
+  options: Record<string, unknown>,
+  warnings: string[],
+  scope: string,
+  fallback: ProjectLintRules = {},
+): ProjectLintRules {
+  const rules = { ...source };
+  for (const [ruleId, option] of Object.entries(options)) {
+    const arguments_ = bridgedRuleOptions(ruleId, option);
+    if (!arguments_) {
+      warnings.push(
+        `${scope}.ruleOptions[${JSON.stringify(ruleId)}] is not supported by oxlint-vize`,
+      );
+      continue;
+    }
+    const configured = rules[ruleId] ?? fallback[ruleId];
+    const severity = Array.isArray(configured) ? configured[0] : configured;
+    if (!isSeverity(severity)) {
+      warnings.push(
+        `${scope}.ruleOptions[${JSON.stringify(ruleId)}] has no enabled rule severity to attach to`,
+      );
+      continue;
+    }
+    rules[ruleId] = [severity, ...arguments_];
+  }
+  return rules;
+}
+
+function bridgedRuleOptions(ruleId: string, value: unknown): unknown[] | undefined {
+  if (ruleId === "vue/v-on-event-hyphenation" || ruleId === "vue/attribute-hyphenation") {
+    return value === "always" || value === "never" ? [value] : undefined;
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const option = value as Record<string, unknown>;
+  switch (ruleId) {
+    case "vue/component-name-in-template-casing":
+      return Object.keys(option).every((key) => key === "casing") &&
+        (option.casing === "PascalCase" || option.casing === "kebab-case")
+        ? [option.casing]
+        : undefined;
+    case "script/custom-event-name-casing":
+      return Object.keys(option).every((key) => key === "casing") &&
+        (option.casing === "camelCase" || option.casing === "kebab-case")
+        ? [option.casing]
+        : undefined;
+    case "vue/no-mutating-props":
+    case "vue/sfc-element-order":
+    case "vue/html-self-closing":
+      return [value];
+    default:
+      return undefined;
+  }
 }
 
 function isConfigPreset(value: unknown): value is ConfigPreset {

@@ -6,7 +6,10 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import vm from "node:vm";
-import { verifyNuxtSourceBindingEvents } from "../../tools/support/compat/nuxt/source-binding.ts";
+import {
+  normalizeNuxtCompilerCall,
+  verifyNuxtSourceBindingEvents,
+} from "../../tools/support/compat/nuxt/source-binding.ts";
 
 const custody = {
   schema: "vize.nuxt.source-binding",
@@ -41,6 +44,37 @@ const calls = [
     }),
   ),
 ];
+
+await test("scalar and batch custody calls normalize to the same per-file result", () => {
+  const source = custody.fixtures[0].source;
+  const filename = custody.fixtures[0].filename;
+  const options = { ssr: false, whitespace: "preserve" };
+  const comparable = { code: "original complete code", errors: [], warnings: [] };
+  assert.deepEqual(
+    normalizeNuxtCompilerCall(
+      event("call", {
+        entrypoint: "compileSfc",
+        args: [source, { ...options, filename }],
+        outcome: "return",
+        result: comparable,
+      }),
+    ),
+    [{ filename, source, options: { ...options, filename }, result: comparable }],
+  );
+  assert.deepEqual(
+    normalizeNuxtCompilerCall(
+      event("call", {
+        entrypoint: "compileSfcBatchWithResults",
+        args: [[{ path: filename, source }], options],
+        outcome: "return",
+        result: {
+          results: [{ path: filename, scopeId: "data-v-batch", ...comparable }],
+        },
+      }),
+    ),
+    [{ filename, source, options, result: comparable }],
+  );
+});
 
 await test("native fixture custody requires original inputs, actual load, and both source backends", () => {
   assert.equal(verifyNuxtSourceBindingEvents(custody, calls).calls, 2);

@@ -82,10 +82,6 @@ pub fn rewrite_import_meta_glob_base(code: &str, importer: &str, root: &str) -> 
 
 /// Rewrite static asset `src` values in compiled render output into imports.
 pub fn rewrite_static_asset_urls(code: &str, alias_rules: &[DynamicImportAliasRule]) -> String {
-    if alias_rules.is_empty() {
-        return String::from(code);
-    }
-
     let bytes = code.as_bytes();
     let mut output = String::with_capacity(code.len());
     let mut imports: SmallVec<[String; 4]> = SmallVec::new();
@@ -102,11 +98,7 @@ pub fn rewrite_static_asset_urls(code: &str, alias_rules: &[DynamicImportAliasRu
         let full_path = code
             .get(candidate.value_start..candidate.value_end)
             .unwrap_or_default();
-        if !is_script_asset(full_path)
-            && alias_rules
-                .iter()
-                .any(|rule| full_path.starts_with(rule.from_prefix.as_str()))
-        {
+        if !is_script_asset(full_path) && is_importable_static_asset(full_path, alias_rules) {
             output.push_str(
                 code.get(last..candidate.value_prefix_end)
                     .unwrap_or_default(),
@@ -136,6 +128,17 @@ pub fn rewrite_static_asset_urls(code: &str, alias_rules: &[DynamicImportAliasRu
     }
     rewritten.push_str(output.as_str());
     rewritten
+}
+
+fn is_importable_static_asset(path: &str, alias_rules: &[DynamicImportAliasRule]) -> bool {
+    path.starts_with("./")
+        || path.starts_with("../")
+        || path
+            .strip_prefix('#')
+            .is_some_and(|subpath| subpath.contains('/'))
+        || alias_rules
+            .iter()
+            .any(|rule| path.starts_with(rule.from_prefix.as_str()))
 }
 
 struct ImportMetaGlobCollector<'a> {

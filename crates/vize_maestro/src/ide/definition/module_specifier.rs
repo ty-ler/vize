@@ -54,7 +54,7 @@ pub(super) async fn definition_with_corsa(
         .iter()
         .filter_map(|location| {
             corsa_support::map_canonical_corsa_location(ctx, &document, location).or_else(|| {
-                corsa_support::map_canonical_materialized_module_location(&document, location)
+                corsa_support::map_canonical_materialized_module_location(ctx, &document, location)
             })
         })
         .map(pin_to_module_origin)

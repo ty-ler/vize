@@ -19,6 +19,7 @@ import {
   at,
   readJson,
 } from "../../json-value.ts";
+import type { JsonRecord } from "../../json-value.ts";
 
 export interface SourceFixture {
   filename: string;
@@ -167,6 +168,44 @@ function compilerInputs(entrypoint: unknown, args: unknown[]): CompilerInput[] {
     filename: at(input, "path"),
     source: at(input, "source"),
   }));
+}
+
+export interface NormalizedNuxtCompilerCall {
+  filename: string;
+  source: string;
+  options: JsonRecord;
+  result: JsonRecord;
+}
+
+/** Flatten scalar and batch native custody calls into comparable per-file results. */
+export function normalizeNuxtCompilerCall(value: unknown): NormalizedNuxtCompilerCall[] {
+  const event = asRecord(value, "native event");
+  assert.equal(event.kind, "call");
+  assert.equal(event.outcome, "return");
+  assert.ok(event.entrypoint === "compileSfc" || event.entrypoint === "compileSfcBatchWithResults");
+  const args = asArray(event.args, "event.args");
+  const inputs = compilerInputs(event.entrypoint, args);
+  const options = args[1] == null ? {} : asRecord(args[1], "compiler options");
+  const result = asRecord(event.result, "compiler result");
+  const outputs =
+    event.entrypoint === "compileSfc"
+      ? [result]
+      : asArray(result.results, "batch results").map((output) => asRecord(output, "batch result"));
+  return inputs.map((input) => {
+    const filename = asString(input.filename, "compiler filename");
+    const source = asString(input.source, "compiler source");
+    const matches =
+      event.entrypoint === "compileSfc"
+        ? outputs
+        : outputs.filter((output) => output.path === filename);
+    assert.equal(matches.length, 1, `retain one native result for ${filename}`);
+    const comparable = { ...matches[0] };
+    if (event.entrypoint === "compileSfcBatchWithResults") {
+      delete comparable.path;
+      delete comparable.scopeId;
+    }
+    return { filename, source, options, result: comparable };
+  });
 }
 
 export function verifyNuxtSourceBindingEvents(

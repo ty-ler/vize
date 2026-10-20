@@ -3,6 +3,7 @@ import test from "node:test";
 import type { ModuleNode } from "vite";
 
 import type { ArtFileInfo } from "../types/art.ts";
+import { artStyleRequestId } from "../art-style-module.ts";
 import { createHandleHotUpdate, createLoad, type VirtualModuleState } from "./virtual.ts";
 
 void test("art changes refresh loaded art, variant, shared setup and preview modules", async () => {
@@ -13,16 +14,20 @@ void test("art changes refresh loaded art, variant, shared setup and preview mod
     variants: [{ name: "Default", template: "<MyCard />", isDefault: true, skipVrt: false }],
     hasScriptSetup: false,
     hasScript: false,
-    styleCount: 0,
+    styleCount: 1,
+    styleBlocks: [".card { color: red; }"],
+    styleBlockDetails: [{ content: ".card { color: red; }", lang: "css", scoped: false }],
   };
   const artFiles = new Map([[file, art]]);
   const sourceModule = {} as ModuleNode;
+  const styleId = `\0${artStyleRequestId(file, 0, art.styleBlockDetails![0]!)}`;
   const moduleIds = [
     `\0musea:${file}?musea-virtual`,
     `\0musea-art:${file}?musea-virtual`,
     `\0musea-variant:${file}:Default?musea-virtual`,
     `\0musea-shared:${file}?musea-virtual`,
     `\0musea-preview:${file}:Default`,
+    styleId,
   ];
   const moduleGraph = new Map(moduleIds.map((id) => [id, { id } as ModuleNode]));
   const unrelatedModule = {

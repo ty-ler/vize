@@ -13,7 +13,7 @@ export default /*@__PURE__*/_defineComponent({
 
 
 return (_ctx: any,_cache: any) => {
-  const _component_Test = _resolveComponent("Test")
+  const _component_Test = _resolveComponent("Test", true)
 
   return (_openBlock(), _createElementBlock(_Fragment, null, [
     _createElementVNode("div", {
