@@ -178,5 +178,9 @@
   "linter/current-api/valid-v-else-autofix-preserves-directive": {
     "path": "crates/vize_patina/tests/snapshots/integration__lint_history__valid-v-else-autofix-preserves-directive.snap",
     "sha256": "606d5afb73fe7512be388241ace3e5f8a9de84fc6f6c2215ebeb3ac8942154a0"
+  },
+  "linter/current-api/require-symbol-provide-range-9882": {
+    "path": "crates/vize_patina/tests/snapshots/integration__lint_history__require-symbol-provide-range-9882.snap",
+    "sha256": "b0eadd0dede28eb463f4e8064924b1297ed0030a0694dc09abbde968ca911980"
   }
 }
