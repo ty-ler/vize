@@ -119,7 +119,9 @@ export function renderNuxtOxlintConfig(
       const override: OxlintOverride = { files: item.files.map((glob) => rebase(glob)) };
       if (item.ignores) override.excludeFiles = item.ignores.map((glob) => rebase(glob));
       if (item.globals) override.globals = { ...item.globals };
-      if (item.rules) override.rules = prefixVizeRules(item.rules);
+      if (item.rules || item.nativeRules) {
+        override.rules = { ...prefixVizeRules(item.rules), ...item.nativeRules };
+      }
       overrides.push(override);
       continue;
     }
@@ -127,6 +129,7 @@ export function renderNuxtOxlintConfig(
     if (item.ignores) ignorePatterns.push(...item.ignores.map((glob) => rebase(glob, true)));
     mergeGlobals(globals, item.globals);
     mergeRules(rules, item.rules);
+    Object.assign(rules, item.nativeRules);
   }
 
   const config: NuxtOxlintConfig = {

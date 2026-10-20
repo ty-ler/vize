@@ -66,14 +66,21 @@ void test("Nuxt module regenerates lint globals from live registries before late
 
   const regenerated = JSON.parse(fs.readFileSync(generated, "utf8")) as {
     globals: Record<string, string>;
+    overrides: Array<{ files: string[]; globals?: Record<string, string> }>;
   };
   assert.deepEqual(Object.keys(regenerated.globals), [
     "$fetch",
     "constructor",
-    "__proto__",
     "useRoute",
     "observe",
     "afterImports",
   ]);
   assert.deepEqual(new Set(Object.values(regenerated.globals)), new Set(["readonly"]));
+  const nitro = regenerated.overrides.find((override) =>
+    override.globals ? Object.hasOwn(override.globals, "__proto__") : false,
+  );
+  assert.deepEqual(nitro, {
+    files: ["server/**/*.{js,ts,jsx,tsx}"],
+    globals: { ["__proto__"]: "readonly" },
+  });
 });

@@ -65,16 +65,19 @@ void test("auto-import addon emits the complete deterministically ordered global
   });
 
   const configs = await resolveAddons();
-  assert.equal(configs.length, 1);
+  assert.equal(configs.length, 2);
   assert.equal(configs[0].name, "nuxt/import-globals");
   assert.deepEqual(Object.entries(configs[0].globals ?? {}), [
-    ["useAsyncData", "readonly"],
     ["fetchData", "readonly"],
     ["useRoute", "readonly"],
-    ["defineNitroPlugin", "readonly"],
     ["computed", "readonly"],
     ["observe", "readonly"],
   ]);
+  assert.deepEqual(configs[1], {
+    name: "nitro/import-globals",
+    files: ["server/**/*.{js,ts,jsx,tsx}"],
+    globals: { useAsyncData: "readonly", defineNitroPlugin: "readonly" },
+  });
 });
 
 void test("auto-import addon skips registries whose auto-import is disabled", async () => {
@@ -92,6 +95,7 @@ void test("auto-import addon skips registries whose auto-import is disabled", as
 
   const configs = await resolveAddons();
   assert.deepEqual(configs[0]?.globals, {});
+  assert.equal(configs.length, 1);
 });
 
 void test("auto-import addon remains valid before Nuxt publishes either registry", async () => {
@@ -184,9 +188,46 @@ void test("the most recently published unimport contexts drive regeneration", as
   await nuxt.callRegisteredHook("nitro:init", {
     unimport: importContext([{ from: "nitro", name: "serverImport" }]),
   });
-  assert.deepEqual((await resolveAddons())[0].globals, {
-    newImport: "readonly",
-    serverImport: "readonly",
+  const configs = await resolveAddons();
+  assert.deepEqual(configs[0].globals, { newImport: "readonly" });
+  assert.deepEqual(configs[1], {
+    name: "nitro/import-globals",
+    files: ["server/**/*.{js,ts,jsx,tsx}"],
+    globals: { serverImport: "readonly" },
+  });
+});
+
+void test("top-level autoImport false suppresses both Nuxt and Nitro registries", async () => {
+  const nuxt = createNuxtStub();
+  nuxt.options = { imports: { autoImport: false } };
+  const resolveAddons = setupNuxtLintConfigAddons(nuxt);
+  await nuxt.callRegisteredHook("imports:context", importContext([{ from: "vue", name: "ref" }]));
+  await nuxt.callRegisteredHook("nitro:init", {
+    unimport: importContext([
+      { from: "h3", name: "createError" },
+      { from: "#internal/nitro", name: "useRuntimeConfig" },
+    ]),
+  });
+
+  assert.deepEqual(await resolveAddons(), [{ name: "nuxt/import-globals", globals: {} }]);
+});
+
+void test("Nitro globals follow the configured server directory and stay scoped", async () => {
+  const nuxt = createNuxtStub();
+  nuxt.options = {
+    rootDir: "/repo",
+    nitro: { srcDir: "backend" },
+    _layers: [{ config: { rootDir: "/repo/layers/admin" } }],
+  };
+  const resolveAddons = setupNuxtLintConfigAddons(nuxt, { rootDir: "/repo" });
+  await nuxt.callRegisteredHook("nitro:init", {
+    unimport: importContext([{ from: "h3", name: "defineEventHandler" }]),
+  });
+
+  assert.deepEqual((await resolveAddons())[1], {
+    name: "nitro/import-globals",
+    files: ["backend/**/*.{js,ts,jsx,tsx}", "layers/admin/server/**/*.{js,ts,jsx,tsx}"],
+    globals: { defineEventHandler: "readonly" },
   });
 });
 
@@ -195,6 +236,22 @@ function ownedRootArtifact(artifact: string): string {
   const config = JSON.parse(artifact) as { settings: { vize: Record<string, string> } };
   config.settings.vize.generatedBy = "@vizejs/nuxt";
   return `${JSON.stringify(config, null, 2)}\n`;
+}
+
+function scopeRecordedNitroGlobals(artifact: string, imports: NuxtLintImport[]): string {
+  const config = JSON.parse(artifact) as {
+    globals: Record<string, string>;
+    overrides: Array<Record<string, unknown>>;
+  };
+  const nitroGlobals = Object.fromEntries(
+    imports.map((imported) => [imported.as ?? imported.name, "readonly"]),
+  );
+  for (const name of Object.keys(nitroGlobals)) delete config.globals[name];
+  config.overrides.push({
+    files: ["server/**/*.{js,ts,jsx,tsx}"],
+    globals: nitroGlobals,
+  });
+  return ownedRootArtifact(JSON.stringify(config));
 }
 
 void test("generation writes the recorded initial and regenerated artifacts byte for byte", async (t) => {
@@ -258,7 +315,10 @@ void test("generation writes the recorded initial and regenerated artifacts byte
   await nuxt.callHook("builder:generateApp");
   assert.equal(
     await readFile(generation?.configFile ?? "", "utf8"),
-    ownedRootArtifact(recording.importGlobals.artifacts.regenerated),
+    scopeRecordedNitroGlobals(
+      recording.importGlobals.artifacts.regenerated,
+      corpus.importGlobals.nitro,
+    ),
   );
 });
 

@@ -17,7 +17,11 @@ import { getDetectedNuxtMajor } from "../builder.ts";
 import { setupNuxtLintConfigAddons, type NuxtLintConfigAddonNuxt } from "./addons.ts";
 import { renderNuxtOxlintConfig } from "./emitter.ts";
 import { toNuxtLintProjectState, type NuxtLintSourceOptions } from "./nuxt-state.ts";
-import { readProjectLintRules, type ProjectLintRules } from "./project-rules.ts";
+import {
+  readProjectLintRuleSets,
+  type ProjectLintRules,
+  type ProjectLintRuleSets,
+} from "./project-rules.ts";
 import { writeOwnedNuxtConfig } from "./owned-config.ts";
 
 const GENERATED_CONFIG_NAME = ".oxlint.vize.json";
@@ -233,9 +237,16 @@ export async function setupNuxtLintConfigGeneration(
   const resolveAddons =
     dependencies.resolveAddons ??
     ("callHook" in nuxt
-      ? setupNuxtLintConfigAddons(nuxt as NuxtLintGenerationNuxt & NuxtLintConfigAddonNuxt)
+      ? setupNuxtLintConfigAddons(nuxt as NuxtLintGenerationNuxt & NuxtLintConfigAddonNuxt, {
+          rootDir: planRoot,
+        })
       : undefined);
-  const resolveProjectRules = dependencies.resolveProjectLintRules ?? readProjectLintRules;
+  const resolveProjectRuleSets = dependencies.resolveProjectLintRules
+    ? async (rootDir: string): Promise<ProjectLintRuleSets> => {
+        const rules = await dependencies.resolveProjectLintRules?.(rootDir);
+        return rules && Object.keys(rules).length > 0 ? { vize: rules } : {};
+      }
+    : readProjectLintRuleSets;
 
   let currentPlan: readonly NuxtLintConfigItem[] = [];
 
@@ -250,11 +261,14 @@ export async function setupNuxtLintConfigGeneration(
       getDetectedNuxtMajor(nuxt) ?? 3,
     );
     const addons = (await resolveAddons?.()) ?? [];
-    const projectRules = await resolveProjectRules(planRoot);
-    const projectItems =
-      projectRules && Object.keys(projectRules).length > 0
-        ? [{ name: "project/preset", rules: projectRules }]
-        : [];
+    const projectRules = await resolveProjectRuleSets(planRoot);
+    const projectItems: NuxtLintConfigItem[] = [];
+    if (projectRules.vize) {
+      projectItems.push({ name: "project/preset", rules: projectRules.vize });
+    }
+    if (projectRules.oxlint) {
+      projectItems.push({ name: "project/oxlint", nativeRules: projectRules.oxlint });
+    }
     const nextPlan = [...projectItems, ...plan, ...addons];
     const artifact = renderNuxtOxlintConfig(
       nextPlan,

@@ -5,8 +5,10 @@
 //! - Editor extension installation for VSCode and Zed
 
 use clap::{Args, Subcommand};
-use std::path::PathBuf;
+use std::ffi::OsString;
+use std::path::{Path, PathBuf};
 use std::process::Command;
+use vize_l0::{String, cstr};
 
 mod editor_files;
 
@@ -15,6 +17,8 @@ use editor_files::{copy_dir_all, find_vscode_vsix, find_zed_extension_source};
 
 const VSCODE_EXTENSION_ID: &str = "ubugeeei.vize";
 const LEGACY_VSCODE_EXTENSION_ID: &str = "vize.vize";
+const RELEASE_REPOSITORY: &str = "https://github.com/ubugeeei-prod/vize";
+const ZED_RELEASE_ASSET: &str = "zed-vize-extension.tar.gz";
 
 #[derive(Args)]
 pub struct IdeArgs {
@@ -129,9 +133,10 @@ fn vscode_install() {
             install_vsix(&path);
         }
         None => {
-            // Try to build from source
-            println!("VSIX not found, building from source...");
-            if build_vscode_extension() {
+            if Path::new("editors/vscode").is_dir() {
+                println!("VSIX not found, building from source...");
+            }
+            if Path::new("editors/vscode").is_dir() && build_vscode_extension() {
                 if let Some(path) = find_vscode_vsix() {
                     install_vsix(&path);
                 } else {
@@ -139,7 +144,10 @@ fn vscode_install() {
                     std::process::exit(1);
                 }
             } else {
-                println!("Source build unavailable; installing published extension...");
+                println!(
+                    "Installing published extension version {}...",
+                    env!("CARGO_PKG_VERSION")
+                );
                 install_published_vscode_extension();
             }
         }
@@ -169,16 +177,28 @@ fn vscode_uninstall() {
 }
 
 fn vscode_status() {
-    let output = Command::new("code").args(["--list-extensions"]).output();
+    let output = Command::new("code")
+        .args(["--list-extensions", "--show-versions"])
+        .output();
 
     match output {
         Ok(out) => {
             #[expect(clippy::disallowed_types, reason = "from_utf8_lossy yields std Cow")]
             let extensions = std::string::String::from_utf8_lossy(&out.stdout);
-            if vscode_extension_is_installed(&extensions) {
-                println!("✓ Vize extension is installed in VSCode");
-            } else {
-                println!("✗ Vize extension is not installed in VSCode");
+            match vscode_extension_version(&extensions) {
+                Some(Some(version)) => {
+                    println!("✓ Vize extension {version} is installed in VSCode");
+                    if version != env!("CARGO_PKG_VERSION") {
+                        println!(
+                            "⚠ Installed extension {version} does not match Vize CLI {}",
+                            env!("CARGO_PKG_VERSION")
+                        );
+                    }
+                }
+                Some(None) => {
+                    println!("✓ Vize extension is installed in VSCode (version unavailable)");
+                }
+                None => println!("✗ Vize extension is not installed in VSCode"),
             }
         }
         Err(e) => {
@@ -188,11 +208,20 @@ fn vscode_status() {
     }
 }
 
+#[cfg(test)]
 fn vscode_extension_is_installed(extensions: &str) -> bool {
-    extensions.lines().any(|line| {
+    vscode_extension_version(extensions).is_some()
+}
+
+fn vscode_extension_version(extensions: &str) -> Option<Option<&str>> {
+    extensions.lines().find_map(|line| {
         let extension = line.trim();
-        extension.eq_ignore_ascii_case(VSCODE_EXTENSION_ID)
-            || extension.eq_ignore_ascii_case(LEGACY_VSCODE_EXTENSION_ID)
+        let (id, version) = extension
+            .rsplit_once('@')
+            .map_or((extension, None), |(id, version)| (id, Some(version)));
+        (id.eq_ignore_ascii_case(VSCODE_EXTENSION_ID)
+            || id.eq_ignore_ascii_case(LEGACY_VSCODE_EXTENSION_ID))
+        .then_some(version)
     })
 }
 
@@ -249,8 +278,9 @@ fn install_vsix(path: &std::path::Path) {
 }
 
 fn install_published_vscode_extension() {
+    let extension = vscode_extension_spec(env!("CARGO_PKG_VERSION"));
     let status = Command::new("code")
-        .args(["--install-extension", VSCODE_EXTENSION_ID])
+        .args(["--install-extension", extension.as_str(), "--force"])
         .status();
 
     match status {
@@ -259,10 +289,7 @@ fn install_published_vscode_extension() {
             println!("  Restart VSCode to activate the extension.");
         }
         Ok(_) => {
-            eprintln!(
-                "Failed to install published extension: {}",
-                VSCODE_EXTENSION_ID
-            );
+            eprintln!("Failed to install published extension: {}", extension);
             std::process::exit(1);
         }
         Err(e) => {
@@ -271,6 +298,10 @@ fn install_published_vscode_extension() {
             std::process::exit(1);
         }
     }
+}
+
+fn vscode_extension_spec(version: &str) -> String {
+    cstr!("{VSCODE_EXTENSION_ID}@{version}")
 }
 
 // =============================================================================
@@ -284,13 +315,27 @@ fn zed_install() {
 
     match extensions_dir {
         Some(dir) => {
-            let vize_dir = dir.join("vize");
-            let Some(source_dir) = find_zed_extension_source() else {
-                eprintln!("Could not find editors/zed extension source");
-                eprintln!(
-                    "Please run from the vize repository or install from Zed's extension gallery"
+            let vize_dir = zed_dev_extension_dir(&dir);
+            let downloaded;
+            let source_dir = if let Some(source_dir) = find_zed_extension_source() {
+                source_dir
+            } else {
+                println!(
+                    "Downloading the matching Zed extension from Vize {}...",
+                    env!("CARGO_PKG_VERSION")
                 );
-                std::process::exit(1);
+                downloaded = match download_zed_extension(env!("CARGO_PKG_VERSION")) {
+                    Ok(downloaded) => downloaded,
+                    Err(error) => {
+                        eprintln!("Failed to download the Zed extension: {error}");
+                        eprintln!(
+                            "Download {} and select its extracted zed directory with 'Zed: Install Dev Extension'.",
+                            zed_release_asset_url(env!("CARGO_PKG_VERSION"))
+                        );
+                        std::process::exit(1);
+                    }
+                };
+                downloaded.path().join("zed")
             };
 
             if vize_dir.exists()
@@ -305,7 +350,11 @@ fn zed_install() {
                 std::process::exit(1);
             }
 
-            println!("✓ Vize extension installed to: {}", vize_dir.display());
+            println!(
+                "✓ Vize extension source prepared at: {}",
+                vize_dir.display()
+            );
+            println!("  In Zed, run 'Zed: Install Dev Extension' and select this directory.");
             println!("  Note: Configure Vize features explicitly in Zed settings.");
             println!();
             println!("  Start with lint-only mode:");
@@ -326,23 +375,83 @@ fn zed_install() {
     }
 }
 
+fn zed_release_asset_url(version: &str) -> String {
+    cstr!("{RELEASE_REPOSITORY}/releases/download/v{version}/{ZED_RELEASE_ASSET}")
+}
+
+fn download_zed_extension(version: &str) -> Result<tempfile::TempDir, String> {
+    let temporary = tempfile::Builder::new()
+        .prefix("vize-zed-extension-")
+        .tempdir()
+        .map_err(|error| cstr!("could not create a temporary directory: {error}"))?;
+    let archive = temporary.path().join(ZED_RELEASE_ASSET);
+    let source = temporary.path().join("zed");
+    std::fs::create_dir(&source)
+        .map_err(|error| cstr!("could not prepare the extension directory: {error}"))?;
+
+    let curl = std::env::var_os("VIZE_IDE_CURL").unwrap_or_else(|| OsString::from("curl"));
+    let url = zed_release_asset_url(version);
+    let download = Command::new(curl)
+        .args([
+            "--fail",
+            "--silent",
+            "--show-error",
+            "--location",
+            "--proto",
+            "=https",
+            "--proto-redir",
+            "=https",
+        ])
+        .arg("--output")
+        .arg(&archive)
+        .arg(url.as_str())
+        .status()
+        .map_err(|error| cstr!("could not run curl: {error}"))?;
+    if !download.success() {
+        return Err(cstr!("curl exited with {download} while fetching {url}"));
+    }
+
+    let tar = std::env::var_os("VIZE_IDE_TAR").unwrap_or_else(|| OsString::from("tar"));
+    let extract = Command::new(tar)
+        .arg("-xzf")
+        .arg(&archive)
+        .arg("-C")
+        .arg(&source)
+        .arg("--strip-components=1")
+        .status()
+        .map_err(|error| cstr!("could not run tar: {error}"))?;
+    if !extract.success() {
+        return Err(cstr!(
+            "tar exited with {extract} while extracting the extension"
+        ));
+    }
+    if !source.join("extension.toml").is_file() {
+        return Err(cstr!("release archive does not contain zed/extension.toml"));
+    }
+
+    Ok(temporary)
+}
+
 fn zed_uninstall() {
-    println!("Uninstalling Vize Zed extension...");
+    println!("Removing the prepared Vize Zed extension source...");
 
     let extensions_dir = get_zed_extensions_dir();
 
     match extensions_dir {
         Some(dir) => {
-            let vize_dir = dir.join("vize");
+            let vize_dir = zed_dev_extension_dir(&dir);
 
             if vize_dir.exists() {
                 if let Err(e) = std::fs::remove_dir_all(&vize_dir) {
                     eprintln!("Failed to remove extension: {}", e);
                     std::process::exit(1);
                 }
-                println!("✓ Vize extension removed from Zed");
+                println!("✓ Prepared Vize extension source removed");
+                println!(
+                    "  Use Zed's extension settings to remove an already activated extension."
+                );
             } else {
-                println!("Extension not installed");
+                println!("Prepared extension source not found");
             }
         }
         None => {
@@ -356,18 +465,33 @@ fn zed_status() {
 
     match extensions_dir {
         Some(dir) => {
-            let vize_dir = dir.join("vize");
+            let installed_dir = dir.join("vize");
+            let vize_dir = zed_dev_extension_dir(&dir);
+            if installed_dir.join("extension.wasm").is_file() {
+                println!("✓ Vize extension is active in Zed");
+                println!("  Location: {}", installed_dir.display());
+                return;
+            }
             if vize_dir.exists() {
-                println!("✓ Vize extension is installed in Zed");
-                println!("  Location: {}", vize_dir.display());
+                println!("○ Vize extension source is prepared for Zed");
+                println!("  Source: {}", vize_dir.display());
+                println!("  Run 'Zed: Install Dev Extension' in Zed and select this directory.");
             } else {
-                println!("✗ Vize extension is not installed in Zed");
+                println!("✗ Vize extension is not active or prepared for Zed");
             }
         }
         None => {
             println!("✗ Zed extensions directory not found");
         }
     }
+}
+
+fn zed_dev_extension_dir(installed_dir: &Path) -> PathBuf {
+    installed_dir
+        .parent()
+        .unwrap_or(installed_dir)
+        .join("dev")
+        .join("vize")
 }
 
 fn get_zed_extensions_dir() -> Option<PathBuf> {
