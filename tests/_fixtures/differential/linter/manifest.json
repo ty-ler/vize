@@ -16,7 +16,7 @@
       "api": "--current-api",
       "cases": {
         "path": "crates/vize_patina/tests/fixtures/lint-history/cases.json",
-        "sha256": "7487bad05c77cfddc858a33c113ed62525e3965563c43639c4a3f05335efac0c"
+        "sha256": "22041366d4ceb9a19b9ffb347d3bf1cdb874df503e102355ae69738f8f233205"
       }
     },
     {
@@ -54,9 +54,31 @@
   ],
   "oracles": {
     "path": "tests/_fixtures/differential/linter/oracle-index.json",
-    "sha256": "787bdf442517cd0a77c2baa307f9b1bfabf37a8c916347401a0b1deb3a51edec"
+    "sha256": "fae0002078a062d06df8ba02e67e1502b3ed47dca96a3678839b1793390e5899"
   },
   "cases": [
+    {
+      "id": "linter/current-api/patina-rule-guards-9870-9871",
+      "state": "active",
+      "targets": [
+        "lint"
+      ],
+      "inputs": {
+        "root": "patina-rule-guards-9870-9871",
+        "files": [
+          {
+            "path": "FadeIn.vue.txt",
+            "role": "issue-authored-reproduction",
+            "sha256": "6b85c49c50df7f2c1d0bd8a013c94866aee7efad84b239e92dc7a1c850879a80"
+          },
+          {
+            "path": "BaseButton.vue.txt",
+            "role": "issue-authored-reproduction",
+            "sha256": "bd5a5174c124fa411586d2c41519c4481189d2c6befbcd6fa5c46da5c0df8cfd"
+          }
+        ]
+      }
+    },
     {
       "id": "linter/current-api/ref-string-untyped",
       "state": "active",

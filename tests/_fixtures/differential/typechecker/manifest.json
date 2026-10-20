@@ -1318,6 +1318,33 @@
           "sha256": "332311d6d44cd6d6451b103e4986088dc3efd03af1e9a66b61c3e53d46528d8b"
         }
       ]
+    },
+    {
+      "id": "typechecker/nuxt-plugin-injection-types/authored-dependency-identity",
+      "state": "active",
+      "targets": [
+        "batch"
+      ],
+      "adapters": {
+        "legacy": "batch-typechecker-fixture-v1",
+        "native": null
+      },
+      "pack": "nuxt-plugin-injection-types",
+      "case": "authored-dependency-identity",
+      "test": "nuxt_reference_graph_preserves_plugin_injection_import_types",
+      "regressionCommit": "2c22691f0f8303a28c425213c423e299f9ad5420",
+      "sourceRevision": "2c22691f0f8303a28c425213c423e299f9ad5420",
+      "packReference": {
+        "path": "nuxt-plugin-injection-types/cases.json",
+        "sha256": "58e15b54055e812275faf7fd99345c684f4184bc602bc8f1f8be4471336ac476"
+      },
+      "inputs": [
+        {
+          "file": "project.json",
+          "path": "nuxt-plugin-injection-types/project.json",
+          "sha256": "2ad499a9665600b7ce468b7568641491f1262c3010dc40d5d4c53b2b5b775412"
+        }
+      ]
     }
   ]
 }
