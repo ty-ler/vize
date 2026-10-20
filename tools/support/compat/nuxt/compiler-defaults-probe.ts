@@ -22,7 +22,11 @@ import {
   vitePlugin,
 } from "./host-types.ts";
 import type { LoadRow, VitePlugin } from "./host-types.ts";
-import { readSourceBindingCustody, verifyNuxtSourceBindingEvents } from "./source-binding.ts";
+import {
+  normalizeNuxtCompilerCall,
+  readSourceBindingCustody,
+  verifyNuxtSourceBindingEvents,
+} from "./source-binding.ts";
 
 interface NuxtInstance {
   options: JsonRecord;
@@ -172,20 +176,16 @@ const readEvents = (): JsonRecord[] =>
         .split("\n")
         .map((line) => asRecord(parseJson(line), "native event"))
     : [];
-const callFilename = (event: JsonRecord): string =>
-  asString(at(event, "args", 1, "filename"), "compileSfc filename");
 const results = (events: readonly JsonRecord[]) =>
   events
     .filter((event) => event.kind === "call")
-    .map((event) => {
-      assert.equal(event.entrypoint, "compileSfc");
-      assert.equal(event.outcome, "return");
-      const filename = callFilename(event);
+    .flatMap(normalizeNuxtCompilerCall)
+    .map(({ filename, source, result }) => {
       assert.ok(sources.includes(filename));
-      assert.equal(at(event, "args", 0), fs.readFileSync(filename, "utf8"));
-      assert.deepEqual(at(event, "result", "errors"), []);
-      assert.deepEqual(at(event, "result", "warnings"), []);
-      return { filename, result: event.result };
+      assert.equal(source, fs.readFileSync(filename, "utf8"));
+      assert.deepEqual(result.errors, []);
+      assert.deepEqual(result.warnings, []);
+      return { filename, result };
     })
     .sort((a, b) => a.filename.localeCompare(b.filename));
 for (const scenario of selected) {
@@ -236,13 +236,14 @@ for (const scenario of selected) {
       const observed = await compile(current, plugins, ssr);
       const currentEvents = readEvents().slice(before);
       json(current, "native-events.json", currentEvents);
-      for (const event of currentEvents.filter((event) => event.kind === "call")) {
-        assert.equal(at(event, "args", 1, "ssr"), ssr);
-        assert.equal(
-          at(event, "args", 1, "whitespace") ?? "condense",
-          expectedWhitespace[sources.indexOf(callFilename(event))],
-        );
-      }
+      for (const event of currentEvents.filter((event) => event.kind === "call"))
+        for (const call of normalizeNuxtCompilerCall(event)) {
+          assert.equal(call.options.ssr, ssr);
+          assert.equal(
+            call.options.whitespace ?? "condense",
+            expectedWhitespace[sources.indexOf(call.filename)],
+          );
+        }
       const literal = sources.flatMap((filename, index) =>
         [
           vize({

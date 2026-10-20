@@ -1,4 +1,8 @@
 use super::infer_reactive_value_type;
+#[cfg(feature = "native")]
+use super::merge_completion_items;
+#[cfg(feature = "native")]
+use tower_lsp::lsp_types::{CompletionItem, CompletionItemKind};
 use vize_croquis::reactivity::ReactiveKind;
 
 fn infer(script: &str, name: &str, kind: ReactiveKind) -> Option<String> {
@@ -128,4 +132,56 @@ fn member_positions_suppress_extras_identifier_positions_keep_them() {
             "content={content:?} offset={offset}"
         );
     }
+}
+
+#[cfg(feature = "native")]
+#[test]
+fn checker_script_completions_keep_one_enriched_item_per_name() {
+    let checker = |label: &str, kind, sort_text: &str| CompletionItem {
+        label: label.to_string(),
+        kind: Some(kind),
+        sort_text: Some(sort_text.to_string()),
+        ..Default::default()
+    };
+    let items = merge_completion_items([
+        checker("ref", CompletionItemKind::VARIABLE, "11"),
+        checker("defineProps", CompletionItemKind::VARIABLE, "15"),
+        checker("Comment", CompletionItemKind::VARIABLE, "15"),
+        checker("Comment", CompletionItemKind::VARIABLE, "16"),
+        super::composition_api_completions()
+            .into_iter()
+            .find(|item| item.label == "ref")
+            .unwrap(),
+        super::macro_completions()
+            .into_iter()
+            .find(|item| item.label == "defineProps")
+            .unwrap(),
+    ]);
+
+    for label in ["ref", "defineProps", "Comment"] {
+        assert_eq!(
+            items.iter().filter(|item| item.label == label).count(),
+            1,
+            "duplicate completion for {label}: {items:#?}",
+        );
+    }
+    let r#ref = items.iter().find(|item| item.label == "ref").unwrap();
+    assert_eq!(r#ref.kind, Some(CompletionItemKind::VARIABLE));
+    assert_eq!(r#ref.sort_text.as_deref(), Some("11"));
+    assert_eq!(
+        r#ref.detail.as_deref(),
+        Some("function ref<T>(value: T): Ref<T>")
+    );
+    assert!(r#ref.documentation.is_some());
+    let define_props = items
+        .iter()
+        .find(|item| item.label == "defineProps")
+        .unwrap();
+    assert_eq!(define_props.kind, Some(CompletionItemKind::VARIABLE));
+    assert_eq!(define_props.sort_text.as_deref(), Some("15"));
+    assert_eq!(
+        define_props.detail.as_deref(),
+        Some("Macro: defineProps<T>()")
+    );
+    assert!(define_props.insert_text.is_none());
 }

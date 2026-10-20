@@ -92,15 +92,20 @@ function syntheticReport(code = fixture.expected) {
 void test("compiler fixture pins a real full-module reference without native credit", () => {
   assert.deepEqual(
     loaded.cases.map((current) => current.id),
-    ["compiler/sfc/ssr-slot-scope", "compiler/sfc/slot-fallback-compound-text-9889"],
+    [
+      "compiler/sfc/ssr-slot-scope",
+      "compiler/sfc/slot-fallback-compound-text-9889",
+      "compiler/sfc/template-asset-urls-9895",
+      "compiler/sfc/v-model-maybe-ref-9897",
+    ],
   );
   const report = syntheticReport();
   assert.deepEqual(validateCompilerReport(loaded, report, build), report.summary);
   assert.deepEqual(summarizeNativeAcceptance(loaded, report, { sourceRevision }).total, {
-    planned: 2,
+    planned: 4,
     nativeHandled: 0,
     nativeEquivalent: 0,
-    unsupported: 2,
+    unsupported: 4,
     legacyBacked: 0,
     unverified: 0,
   });

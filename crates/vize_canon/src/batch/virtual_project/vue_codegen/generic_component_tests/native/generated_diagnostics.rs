@@ -178,6 +178,18 @@ fn generated_tuple_and_property_references_keep_raw_and_authored_diagnostics_dis
                 .find(|file| file.original_path == root.join("App.vue"))
                 .unwrap();
             let mut expected_raw = Vec::new();
+            if case == "inferred-data-attribute" {
+                let needle = "./Child.vue.ts";
+                let start = app.content.find(needle).unwrap() - 1;
+                expected_raw.push(native_diagnostic(
+                    &app.content,
+                    start,
+                    start + needle.len() + 2,
+                    5097,
+                    1,
+                    "An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.",
+                ));
+            }
             if let Some((code, message)) = expected {
                 let (needle, relative, length) = if code == 2493 {
                     ("empty[0]", "empty[".len(), 1)
@@ -224,7 +236,28 @@ fn generated_tuple_and_property_references_keep_raw_and_authored_diagnostics_dis
                 "{packet}"
             );
             assert_eq!(public.diagnostics.len(), expected_rows.len(), "{public:#?}");
-            assert_eq!(mapped.len(), expected_rows.len(), "{packet}");
+            let generated_import_findings = usize::from(case == "inferred-data-attribute");
+            assert_eq!(
+                mapped.len(),
+                expected_rows.len() + generated_import_findings,
+                "{packet}"
+            );
+            if case == "inferred-data-attribute" {
+                assert_eq!(
+                    mapped,
+                    [(
+                        String::from("App.vue"),
+                        1,
+                        18,
+                        Some(5097),
+                        Some(1),
+                        String::from(
+                            "An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+                        )
+                    )],
+                    "{packet}"
+                );
+            }
             if let Some((code, message)) = expected {
                 let (needle, relative, length) = if code == 2493 {
                     ("empty[0]", "empty[".len(), 1)

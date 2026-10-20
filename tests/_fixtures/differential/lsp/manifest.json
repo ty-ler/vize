@@ -506,6 +506,32 @@
         "lint": false,
         "typecheck": false
       }
+    },
+    {
+      "id": "lsp/regression/script-setup-completion-dedupe-9908",
+      "state": "active",
+      "targets": [
+        "stdio"
+      ],
+      "inputs": {
+        "root": "script-setup-completion-dedupe-9908",
+        "files": [
+          {
+            "path": "App.vue.txt",
+            "sha256": "6cb1edbaef8d25b8e9de477fbddf4a371fd22b8a71b68c82bd9397d56c0528a1"
+          }
+        ]
+      },
+      "case": {
+        "path": "script-setup-completion-dedupe-9908/case.json",
+        "sha256": "d889adbd9bea9b8ed5eb149385e6c24460363ef9a74d84f804d77aa3c0de1821"
+      },
+      "requestCount": 1,
+      "initializationOptions": {
+        "editor": true,
+        "lint": false,
+        "typecheck": false
+      }
     }
   ]
 }

@@ -258,6 +258,7 @@ mod lsp_reactive_props_rename_cli;
 mod lsp_reactive_recursive_rename_cli;
 mod lsp_recursive_prop_rename_cli;
 mod lsp_same_name_rename_cli;
+mod lsp_script_setup_completion_dedup_cli;
 mod lsp_symlink_workspace_staging_cli;
 mod lsp_tag_completion_cli;
 mod lsp_template_literal_hover_cli;

@@ -1,0 +1,2 @@
+import { double } from './math.ts';
+export const four: number = double(2);

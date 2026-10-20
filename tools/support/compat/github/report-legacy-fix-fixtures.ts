@@ -36,10 +36,16 @@ interface ManifestCase {
   id?: string;
   state?: string;
   targets?: unknown;
-  inputs?: { root?: string; files?: { path?: string; role?: string; sha256?: string }[] };
+  inputs?: { root?: string; files?: PinnedInput[] } | PinnedInput[];
   adapters?: { legacy?: unknown; native?: unknown; reasons?: { native?: unknown } };
   comparison?: { contract?: unknown; requiredFacets?: unknown };
   reference?: { path?: string; sha256?: string; source?: unknown };
+}
+
+interface PinnedInput {
+  path?: string;
+  role?: string;
+  sha256?: string;
 }
 
 interface Manifest {
@@ -79,8 +85,12 @@ function requirePinned(readFile: ReadFile, path: string, expected: string, label
 }
 
 // Compiler cases compare whole SSR modules, so they also pin the expected module.
-function checkCompilerCase(entry: ManifestCase, root: string, readFile: ReadFile): void {
-  const files = entry.inputs?.files ?? [];
+function checkCompilerCase(
+  entry: ManifestCase,
+  root: string,
+  files: PinnedInput[],
+  readFile: ReadFile,
+): void {
   const reference = entry.reference;
   const expectedPath = `${root}/module.expected.txt`;
   if (
@@ -152,23 +162,28 @@ function checkProduct(product: Product, readFile: ReadFile): ProductReport {
         ) {
           throw new Error(`invalid case targets: ${id}`);
         }
-        const root = entry.inputs?.root;
-        const files = entry.inputs?.files;
-        if (!Array.isArray(files) || files.length === 0 || !root) {
+        const legacyInputs = entry.inputs;
+        const files = Array.isArray(legacyInputs) ? legacyInputs : legacyInputs?.files;
+        const root = Array.isArray(legacyInputs) ? undefined : legacyInputs?.root;
+        if (!Array.isArray(files) || files.length === 0) {
           throw new Error(`missing input files: ${id}`);
         }
         for (const input of files) {
+          const relativePath = root ? `${root}/${input.path}` : input.path;
           if (
-            !/^[a-zA-Z0-9_.-]+$/.test(input.path ?? "") ||
-            !/^[a-zA-Z0-9_.-]+$/.test(root) ||
+            !/^(?:[a-zA-Z0-9_.-]+\/)*[a-zA-Z0-9_.-]+$/.test(relativePath ?? "") ||
+            (root !== undefined && !/^[a-zA-Z0-9_.-]+$/.test(root)) ||
             !/^[a-f0-9]{64}$/.test(input.sha256 ?? "")
           ) {
             throw new Error(`invalid pinned input: ${id}`);
           }
-          const path = `tests/_fixtures/differential/${product}/${root}/${input.path}`;
+          const path = `tests/_fixtures/differential/${product}/${relativePath}`;
           requirePinned(readFile, path, input.sha256 ?? "", "input");
         }
-        if (product === "compiler") checkCompilerCase(entry, root, readFile);
+        if (product === "compiler") {
+          if (root === undefined) throw new Error(`missing compiler input root: ${id}`);
+          checkCompilerCase(entry, root, files, readFile);
+        }
         return id;
       });
     return { product, state: cases.length ? "new-inputs-registered" : "new-input-missing", cases };

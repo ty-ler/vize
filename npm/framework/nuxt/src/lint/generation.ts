@@ -60,6 +60,7 @@ export interface NuxtLintGenerationDependencies {
   resolvePluginSpecifier?: (configDir: string) => string;
   /** Shared project rules. Tests inject this so generation never loads the native preset binding. */
   resolveProjectLintRules?: (rootDir: string) => Awaitable<ProjectLintRules | undefined>;
+  warn?: (message: string) => void;
 }
 
 export interface NuxtLintConfigGeneration {
@@ -249,6 +250,7 @@ export async function setupNuxtLintConfigGeneration(
     : readProjectLintRuleSets;
 
   let currentPlan: readonly NuxtLintConfigItem[] = [];
+  const emittedWarnings = new Set<string>();
 
   const regenerate = async (): Promise<boolean> => {
     const features = resolveNuxtLintFeatures(featureOptions, () => hasTypeScriptProbe(planRoot));
@@ -268,6 +270,19 @@ export async function setupNuxtLintConfigGeneration(
     }
     if (projectRules.oxlint) {
       projectItems.push({ name: "project/oxlint", nativeRules: projectRules.oxlint });
+    }
+    for (const [index, entry] of (projectRules.entries ?? []).entries()) {
+      projectItems.push({
+        name: entry.name ? `project/${entry.name}` : `project/entry-${String(index + 1)}`,
+        files: entry.files,
+        ...(entry.ignores ? { ignores: entry.ignores } : {}),
+        rules: entry.rules,
+      });
+    }
+    for (const warning of projectRules.warnings ?? []) {
+      if (emittedWarnings.has(warning)) continue;
+      emittedWarnings.add(warning);
+      (dependencies.warn ?? console.warn)(`@vizejs/nuxt lint config: ${warning}`);
     }
     const nextPlan = [...projectItems, ...plan, ...addons];
     const artifact = renderNuxtOxlintConfig(

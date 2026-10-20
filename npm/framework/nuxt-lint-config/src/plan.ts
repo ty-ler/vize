@@ -38,6 +38,9 @@ export const NUXT_LINT_IGNORES = [
 /** A severity as it appears in the plan. */
 export type NuxtLintSeverity = "off" | "warn" | "error";
 
+/** A rule severity with optional Oxlint-compatible positional options. */
+export type NuxtLintRuleConfig = NuxtLintSeverity | readonly [NuxtLintSeverity, ...unknown[]];
+
 /** One item of the generated config: a named block of rules over a glob set. */
 export interface NuxtLintConfigItem {
   /** Stable identity, matching `@nuxt/eslint`'s config item names. */
@@ -47,9 +50,9 @@ export interface NuxtLintConfigItem {
   /** Paths excluded from linting entirely. */
   ignores?: string[];
   /** Rule severities keyed by eslint-compatible rule id. */
-  rules?: Record<string, NuxtLintSeverity>;
+  rules?: Record<string, NuxtLintRuleConfig>;
   /** Oxlint-owned rules that must keep their authored namespace. */
-  nativeRules?: Record<string, NuxtLintSeverity>;
+  nativeRules?: Record<string, NuxtLintRuleConfig>;
   /** Globals the block declares, so undefined-variable rules stay quiet. */
   globals?: Record<string, "readonly" | "writable">;
 }

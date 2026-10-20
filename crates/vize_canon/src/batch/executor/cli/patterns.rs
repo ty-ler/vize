@@ -59,6 +59,40 @@ pub(super) fn only_pattern_warnings(output: &Output, project: &VirtualProject) -
     found > 0
 }
 
+/// A nonzero CLI status caused only by Canon's `.vue` -> `.vue.ts` rewrite is
+/// clean after diagnostic assembly. Require every output line to be one of
+/// those verified TS5097 findings so an unrelated backend failure cannot hide.
+pub(super) fn only_rewritten_vue_extension_errors(
+    output: &Output,
+    project: &VirtualProject,
+) -> bool {
+    if !matches!(output.status.code(), Some(1 | 2)) {
+        return false;
+    }
+    let mut found = 0;
+    let mut mapper = DiagnosticMapper::new(project);
+    let mut paths = CliPathResolver::new(project.virtual_root());
+    for stream in [&output.stdout, &output.stderr] {
+        #[expect(clippy::disallowed_types, reason = "from_utf8_lossy yields std Cow")]
+        let text = std::string::String::from_utf8_lossy(stream);
+        for line in text.lines().filter(|line| !line.trim().is_empty()) {
+            if warning_summary_count(line) == Some(found) && found > 0 {
+                continue;
+            }
+            let Some(Decoded::Raw { raw, .. }) =
+                parse_cli_diagnostic_line(line, project, &mut mapper, &mut paths)
+            else {
+                return false;
+            };
+            if raw.severity != 1 || !mapper.is_rewritten_vue_import_extension(&raw) {
+                return false;
+            }
+            found += 1;
+        }
+    }
+    found > 0
+}
+
 // Generated reachability assertions only produce assignability diagnostics.
 // Do not accept arbitrary indented output: JS/Go stack traces are indented too.
 pub(super) fn is_warning_continuation(line: &str) -> bool {

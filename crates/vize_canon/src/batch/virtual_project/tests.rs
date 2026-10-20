@@ -890,10 +890,7 @@ fn materialized_tsconfig_preserves_original_path_option_bases() {
     let compiler_options = value["compilerOptions"].as_object().unwrap();
 
     assert_eq!(compiler_options["strict"], serde_json::Value::Bool(true));
-    assert_eq!(
-        compiler_options["allowImportingTsExtensions"],
-        serde_json::Value::Bool(true)
-    );
+    assert!(!compiler_options.contains_key("allowImportingTsExtensions"));
     for option in ["baseUrl", "rootDir", "rootDirs"] {
         assert!(
             !compiler_options.contains_key(option),
