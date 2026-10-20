@@ -120,6 +120,61 @@ export default {
 }
 
 #[test]
+fn production_v_if_placeholder_omits_development_comment_text() {
+    let descriptor = parse_sfc(
+        r#"<template><div><p v-if="open">open</p><span>always</span></div></template>"#,
+        SfcParseOptions::default(),
+    )
+    .expect("parse SFC");
+    let development_code = r#"import { createElementVNode as _createElementVNode, openBlock as _openBlock, createElementBlock as _createElementBlock, createCommentVNode as _createCommentVNode } from "vue"
+
+export function render(_ctx, _cache) {
+  return (_openBlock(), _createElementBlock("div", null, [
+    (_ctx.open)
+      ? (_openBlock(), _createElementBlock("p", { key: 0 }, "open"))
+      : _createCommentVNode("v-if", true),
+    _createElementVNode("span", null, "always")
+  ]))
+}"#;
+    let production_code = r#"import { createElementVNode as _createElementVNode, openBlock as _openBlock, createElementBlock as _createElementBlock, createCommentVNode as _createCommentVNode } from "vue"
+
+export function render(_ctx, _cache) {
+  return (_openBlock(), _createElementBlock("div", null, [
+    (_ctx.open)
+      ? (_openBlock(), _createElementBlock("p", { key: 0 }, "open"))
+      : _createCommentVNode("", true),
+    _createElementVNode("span", null, "always")
+  ]))
+}"#;
+
+    for custom_renderer in [false, true] {
+        let compiler_options = vize_atelier_dom::DomCompilerOptions {
+            custom_renderer,
+            ..Default::default()
+        };
+        let mut development_options = SfcCompileOptions::default();
+        development_options.template.is_prod = false;
+        development_options.template.compiler_options = Some(compiler_options.clone());
+        let development =
+            compile_sfc(&descriptor, development_options).expect("compile development SFC");
+        assert_eq!(
+            development.code, development_code,
+            "development output mismatch for custom_renderer={custom_renderer}"
+        );
+
+        let mut production_options = SfcCompileOptions::default();
+        production_options.template.is_prod = true;
+        production_options.template.compiler_options = Some(compiler_options);
+        let production =
+            compile_sfc(&descriptor, production_options).expect("compile production SFC");
+        assert_eq!(
+            production.code, production_code,
+            "production output mismatch for custom_renderer={custom_renderer}"
+        );
+    }
+}
+
+#[test]
 fn test_script_only_ssr_preserves_default_export() {
     let source = r#"<script lang="ts">
 import type { PropType } from 'vue'
