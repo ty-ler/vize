@@ -16,7 +16,7 @@
       "api": "--current-api",
       "cases": {
         "path": "crates/vize_patina/tests/fixtures/lint-history/cases.json",
-        "sha256": "aec4c63e6a8398c980b867b0ef0855f18ca34de86735c3b9cb75bac5508ec0a9"
+        "sha256": "85bed47e8980b3ef91d510046d09ed87fd1dc7c236339c606a645280abfd673e"
       }
     },
     {
@@ -54,7 +54,7 @@
   ],
   "oracles": {
     "path": "tests/_fixtures/differential/linter/oracle-index.json",
-    "sha256": "1e5da034803d80d58f2b753814f0666b358ce79367e075eb9a3c02b8a991110d"
+    "sha256": "c58f6b35b44cba4991d90a35491a77243f58739837eb941634942eec3d6f7993"
   },
   "cases": [
     {
@@ -178,6 +178,28 @@
             "path": "source.txt",
             "role": "issue-authored-reproduction",
             "sha256": "d50755b2532cb85e5da3aa35a9e97b2f3b9c30d0b9e6e41ecb8774a421fe200c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "linter/current-api/shared-rule-options-9876",
+      "state": "active",
+      "targets": [
+        "lint"
+      ],
+      "inputs": {
+        "root": "shared-rule-options-9876",
+        "files": [
+          {
+            "path": "config.json",
+            "role": "issue-authored-config",
+            "sha256": "bde48dd28c1c9fce42624f3b2232520e149f96c45f9b5a14b8f4f3fc4894f2b8"
+          },
+          {
+            "path": "App.vue.txt",
+            "role": "issue-authored-reproduction",
+            "sha256": "79e4817baa6d3345b3f74ec23dc73d2a316c4ea035ba2f0ab37fc753de83038d"
           }
         ]
       }

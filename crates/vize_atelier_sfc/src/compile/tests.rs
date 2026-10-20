@@ -3093,3 +3093,45 @@ export default defineComponent({
         "class component render function must match the Options API equivalent"
     );
 }
+
+#[test]
+fn test_script_setup_maybe_ref_v_model_uses_is_ref_guard() {
+    let source = r#"<script setup>
+import Child from './Child.js'
+import { useThing } from './thing.js'
+const { count } = useThing()
+</script>
+<template><Child v-model="count" /></template>"#;
+
+    let descriptor = parse_sfc(
+        source,
+        SfcParseOptions {
+            filename: "Parent.vue".into(),
+            ..Default::default()
+        },
+    )
+    .expect("parse SFC");
+    let result = compile_sfc(
+        &descriptor,
+        SfcCompileOptions {
+            script: crate::types::ScriptCompileOptions {
+                inline_template: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .expect("compile SFC");
+
+    let (_, handler) = result
+        .code
+        .split_once("\"onUpdate:modelValue\": ")
+        .expect("v-model update handler");
+    assert_eq!(
+        handler.lines().next(),
+        Some(
+            "_cache[0] || (_cache[0] = $event => ((_isRef(count) ? (count.value) = $event : null)))"
+        ),
+        "setup-maybe-ref v-model write handler must match Vue exactly"
+    );
+}

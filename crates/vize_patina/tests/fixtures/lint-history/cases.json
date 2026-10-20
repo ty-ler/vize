@@ -180,6 +180,18 @@
     "fixes": 0
   },
   {
+    "id": "shared-rule-options-9876",
+    "history": "22cd835dde0e1e6b81473004a858897c478fa7fd",
+    "source": "const emit = defineEmits(['itemSelect'])\nemit('itemSelect')\n",
+    "filename": "App.ts",
+    "entry": "script",
+    "rule": "script/custom-event-name-casing",
+    "vue_version": "3",
+    "vapor": null,
+    "diagnostics": 0,
+    "fixes": 0
+  },
+  {
     "id": "multiline-v-for-type-aware-9880",
     "history": "04541e20047f0cc3bf30bb219e127d59fe8ad44b",
     "source": "<script setup lang=\"ts\">\nconst pages: string[][] = [[\"a\", \"b\"], [\"c\"]];\nconst current = 0;\nfunction pick(index: number): string[] { return pages[index] ?? []; }\n</script>\n<template>\n  <span v-for=\"item in pages[\n    current\n  ]\" :key=\"item\" />\n  <span v-for=\"item in pick(\n    current\n  )\" :key=\"item\" />\n</template>",

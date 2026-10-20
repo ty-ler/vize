@@ -14,6 +14,7 @@ export function lintPatina(
   enabledRules?: readonly string[],
   ruleOptions?: PatinaRuleOptions,
 ): PatinaLintResult {
+  const { ruleOptions: cliRuleOptions, ...directRuleOptions } = ruleOptions ?? {};
   return loadBinding().lintPatinaSfc(source, {
     filename,
     locale: settings.locale,
@@ -22,7 +23,8 @@ export function lintPatina(
     enabledRules: enabledRules ? [...enabledRules] : undefined,
     typeAware: settings.typeAware,
     corsaPath: settings.corsaPath,
-    ...ruleOptions,
+    ruleOptionsJson: cliRuleOptions ? JSON.stringify(cliRuleOptions) : undefined,
+    ...directRuleOptions,
   });
 }
 
