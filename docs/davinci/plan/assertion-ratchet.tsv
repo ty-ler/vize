@@ -338,7 +338,6 @@ crates/vize_maestro/src/document/store/tests.rs	8
 crates/vize_maestro/src/ide/call_hierarchy/tests.rs	1
 crates/vize_maestro/src/ide/completion/art_tests.rs	26
 crates/vize_maestro/src/ide/completion/component_emits_tests/airi.rs	1
-crates/vize_maestro/src/ide/completion/component_props_tests.rs	3
 crates/vize_maestro/src/ide/completion/template/component_interface/tests/corpus.rs	1
 crates/vize_maestro/src/ide/completion/template/globals_tests.rs	1
 crates/vize_maestro/src/ide/completion/template/native_tests.rs	2

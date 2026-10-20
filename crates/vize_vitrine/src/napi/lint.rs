@@ -75,6 +75,17 @@ pub fn lint_patina_sfc(source: String, options: Option<PatinaLintOptionsNapi>) -
     let html_self_closing = opts.html_self_closing;
     let v_on_event_hyphenation = opts.v_on_event_hyphenation.as_deref();
     let attribute_hyphenation = opts.attribute_hyphenation.as_deref();
+    let rule_options = opts
+        .rule_options_json
+        .as_deref()
+        .map(serde_json::from_str::<vize_l0::config::ConfigLintRuleOptions>)
+        .transpose()
+        .map_err(|error| {
+            Error::new(
+                Status::InvalidArg,
+                format!("Invalid Patina rule options: {error}"),
+            )
+        })?;
     let enabled_rules = opts
         .enabled_rules
         .map(|rules| rules.into_iter().map(Into::into).collect());
@@ -95,6 +106,10 @@ pub fn lint_patina_sfc(source: String, options: Option<PatinaLintOptionsNapi>) -
         v_on_event_hyphenation,
         attribute_hyphenation,
     );
+    let linter = match rule_options.as_ref() {
+        Some(options) => linter.with_config_rule_options(options),
+        None => linter,
+    };
     let result = lint_source(&linter, &source, &filename);
     let lsp_diagnostics = LspEmitter::to_lsp_diagnostics_with_source(&result, &source);
 
