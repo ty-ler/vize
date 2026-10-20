@@ -12,7 +12,9 @@
 /// once there are enough Vue files to amortize each extra program's fixed
 /// parse/bind cost, and the upper bound keeps that duplicated cost contained.
 pub(super) fn shard_count(threads: usize, checkers: usize, vue_files: usize) -> usize {
-    (threads / checkers.max(1)).min(vue_files / 64).clamp(1, 8)
+    (threads / checkers.max(1))
+        .min(vue_files / 32)
+        .clamp(1, 16)
 }
 
 #[cfg(test)]
@@ -25,7 +27,7 @@ mod tests {
     fn shards_cover_the_machine_at_one_checker_per_process() {
         // 32-vCPU runner, 1000-file corpus: the old fixed divisor of 4 (plus a
         // cap of 4) left four single-checker processes on 32 cores.
-        assert_eq!(shard_count(32, 1, 1000), 8);
+        assert_eq!(shard_count(32, 1, 1000), 16);
         assert_eq!(shard_count(8, 1, 1000), 8);
         assert_eq!(shard_count(4, 1, 1000), 4);
         assert_eq!(shard_count(1, 1, 1000), 1);
@@ -60,8 +62,8 @@ mod tests {
     #[test]
     fn small_projects_stay_unsharded() {
         assert_eq!(shard_count(32, 1, 0), 1);
+        assert_eq!(shard_count(32, 1, 31), 1);
         assert_eq!(shard_count(32, 1, 63), 1);
-        assert_eq!(shard_count(32, 1, 127), 1);
-        assert_eq!(shard_count(32, 1, 128), 2);
+        assert_eq!(shard_count(32, 1, 64), 2);
     }
 }
