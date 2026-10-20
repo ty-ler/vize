@@ -532,6 +532,36 @@
         "lint": false,
         "typecheck": false
       }
+    },
+    {
+      "id": "lsp/regression/template-slot-completion-9907",
+      "state": "active",
+      "targets": [
+        "stdio"
+      ],
+      "inputs": {
+        "root": "template-slot-completion-9907",
+        "files": [
+          {
+            "path": "App.vue.txt",
+            "sha256": "b4d5a598b220640f06b64eadd75872f534aa97e4894b2b1827fc61430e405eb7"
+          },
+          {
+            "path": "MySelect.vue.txt",
+            "sha256": "128fd5e68e0ede7da66bbb4415005509933eebdf3202d51f684b58c951bee338"
+          }
+        ]
+      },
+      "case": {
+        "path": "template-slot-completion-9907/case.json",
+        "sha256": "3aa3d35f43e98f327342be0124c987338d9e4a198645011aaaec09345c75e57f"
+      },
+      "requestCount": 1,
+      "initializationOptions": {
+        "editor": true,
+        "lint": false,
+        "typecheck": false
+      }
     }
   ]
 }
