@@ -31,19 +31,11 @@ void test("the original archives remain pinned while active package cases follow
     '      path.join(path.dirname(require.resolve("typescript/package.json")), "bin/tsc"),\n' +
     '      path.dirname(require.resolve("vite/package.json")),\n' +
     "    );\n";
-  const addedRewritePolicy = "          rewriteRelativeImportExtensions: true,\n";
   const current = read("tests/tooling/vite-plus-fast-path.test.ts");
   assert.equal(current.split(addedImport).length, 2);
   assert.equal(current.split(addedCall).length, 2);
-  assert.equal(current.split(addedRewritePolicy).length, 2);
   const migratedPacked = packed.replaceAll("vize: {", "vue: {");
-  assert.equal(
-    current
-      .replace(addedImport, "")
-      .replace(addedCall, "")
-      .replace(addedRewritePolicy, ""),
-    migratedPacked,
-  );
+  assert.equal(current.replace(addedImport, "").replace(addedCall, ""), migratedPacked);
 
   const dialect = read(archive + "original-vue-version-index.test.ts.fixture");
   assert.equal(hash(dialect), "6e97eb6a6af314856b7cd16395544c34a839eb7eac9bd651d110fafe5580aeaf");
