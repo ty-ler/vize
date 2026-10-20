@@ -1,4 +1,7 @@
-use super::{TypeAwareDocument, generated_offset_for_content, generated_offset_for_text};
+use super::{
+    TypeAwareDocument, generated_offset_for_content, generated_offset_for_text,
+    v_for_source_binding_offset,
+};
 use crate::linter::native_type_aware::expression_bindings;
 use vize_canon::virtual_ts::{ProjectionMapping, VizeMapping, VizeSubSpan};
 use vize_l0::String;
@@ -113,4 +116,15 @@ fn a_nested_callee_uses_the_authored_initializer_and_the_full_expression_is_infe
             .content
             .starts_with("  const __expr_0 = (() => emit('retry'));\n")
     );
+}
+
+#[test]
+fn multiline_v_for_source_probes_the_iterable_binding() {
+    let generated = "  const __vize_v_for_source_7 = __vForList(pages[\n    current\n  ]);\n  for (const [item] of __vize_v_for_source_7) {";
+    let expression_offset = generated.find("current").unwrap() as u32;
+
+    let binding =
+        v_for_source_binding_offset(generated, expression_offset).expect("v-for source binding");
+
+    assert_eq!(&generated[binding as usize..binding as usize + 1], "7");
 }

@@ -254,16 +254,19 @@ fn generated_offset_for_content(
 /// assertion has no useful symbol type even when the iterable is fully typed.
 pub(super) fn v_for_source_binding_offset(generated: &str, expression_offset: u32) -> Option<u32> {
     let offset = expression_offset as usize;
-    let line_start = generated.get(..offset)?.rfind('\n').map_or(0, |at| at + 1);
-    let line_end = generated
-        .get(offset..)?
-        .find('\n')
-        .map_or(generated.len(), |at| offset + at);
-    let line = generated.get(line_start..line_end)?;
     let marker = "const __vize_v_for_source_";
-    let name_start = line.find(marker)? + "const ".len();
-    let name_end = name_start + line.get(name_start..)?.find(" = ")?;
-    u32::try_from(line_start + name_end.checked_sub(1)?).ok()
+    // The source expression is preserved verbatim inside `__vForList(...)`, so
+    // its generated offset may be several lines below the declaration name.
+    // Walk back to the owning declaration rather than inspecting only the
+    // expression's current line.
+    let before_offset = generated.get(..=offset)?;
+    let declaration_start = before_offset.rfind(marker)?;
+    let declaration = generated.get(declaration_start..=offset)?;
+    if declaration.contains("\n  for (") {
+        return None;
+    }
+    let name_end = declaration.find(" = ")?;
+    u32::try_from(declaration_start + name_end.checked_sub(1)?).ok()
 }
 
 fn probe_offset_for_text(source_start: u32, source_text: &str) -> Option<u32> {

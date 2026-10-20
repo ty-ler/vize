@@ -1,0 +1,13 @@
+<script setup lang="ts">
+const pages: string[][] = [["a", "b"], ["c"]];
+const current = 0;
+function pick(index: number): string[] { return pages[index] ?? []; }
+</script>
+<template>
+  <span v-for="item in pages[
+    current
+  ]" :key="item" />
+  <span v-for="item in pick(
+    current
+  )" :key="item" />
+</template>

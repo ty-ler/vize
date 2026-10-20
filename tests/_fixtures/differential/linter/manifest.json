@@ -138,6 +138,21 @@
       }
     },
     {
+      "id": "linter/current-api/multiline-v-for-type-aware-9880",
+      "state": "active",
+      "targets": ["lint"],
+      "inputs": {
+        "root": "multiline-v-for-type-aware-9880",
+        "files": [
+          {
+            "path": "source.vue",
+            "role": "issue-authored-reproduction",
+            "sha256": "8a60ffb2b2644379c1a92d182bd1cc46f3906aa2b73f5d85c5b6f14ddcef8cb6"
+          }
+        ]
+      }
+    },
+    {
       "id": "linter/next-tick/valid-arrow-expression-return-script",
       "state": "active",
       "targets": ["lint"]
