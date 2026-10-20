@@ -178,6 +178,38 @@ void test("emitStaticGallery packages browser-facing static output", async () =>
   }
 });
 
+void test("static galleries infer a shared snapshot root for Arts outside the Vite root", async () => {
+  const workspace = await fs.promises.mkdtemp(path.join(os.tmpdir(), "musea-static-workspace-"));
+  try {
+    const galleryRoot = path.join(workspace, "gallery");
+    const artPath = path.join(workspace, "ui", "src", "Button.art.vue");
+    await fs.promises.mkdir(galleryRoot, { recursive: true });
+    await fs.promises.mkdir(path.dirname(artPath), { recursive: true });
+    await fs.promises.writeFile(artPath, "<art></art>", "utf8");
+    const art = createArt(artPath);
+    const assets = new Map<string, string>();
+
+    await emitStaticGallery(collectAssets(assets), STATIC_RUNTIME_BUNDLE, {
+      config: { root: galleryRoot } as ResolvedConfig,
+      artFiles: new Map([[art.path, art]]),
+      scanRoots: [path.dirname(artPath)],
+      tokensPath: undefined,
+      basePath: "/__musea__",
+      resolvedPreviewCss: [],
+      resolvedPreviewSetup: null,
+      devSessionToken: "outside-root-test",
+      themeConfig: undefined,
+    });
+
+    const payload = JSON.parse(assetText(assets, "__musea__/api/static.json")) as {
+      snapshotIdentities: Record<string, string>;
+    };
+    assert.equal(payload.snapshotIdentities[artPath], "ui/src/Button.art.vue");
+  } finally {
+    await fs.promises.rm(workspace, { recursive: true, force: true });
+  }
+});
+
 void test("emitStaticGallery prefixes browser URLs with Vite base without nesting output", async () => {
   const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "musea-static-base-"));
   try {

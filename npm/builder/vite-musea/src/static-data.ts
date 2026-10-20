@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
+import path from "node:path";
 import { resolveSnapshotIdentity } from "./vrt/snapshot-identity.js";
 import type { ResolvedConfig } from "vite";
 
@@ -74,12 +75,15 @@ export async function createStaticGalleryPayload(
   const previews: StaticGalleryPayload["previews"] = Object.create(null);
   const details: StaticGalleryPayload["details"] = {};
   const snapshotIdentities: Record<string, string> = Object.create(null);
+  const snapshotRoot =
+    ctx.projectRoot ??
+    inferStaticSnapshotRoot(
+      ctx.config.root,
+      arts.map((art) => art.path),
+    );
 
   for (const art of arts) {
-    snapshotIdentities[art.path] = resolveSnapshotIdentity(
-      art.path,
-      ctx.projectRoot ?? ctx.config.root,
-    );
+    snapshotIdentities[art.path] = resolveSnapshotIdentity(art.path, snapshotRoot);
     previews[art.path] = Object.create(null);
 
     for (const variant of art.variants) {
@@ -118,6 +122,31 @@ export async function createStaticGalleryPayload(
     tokens: await captureJson((sendJson) => handleTokensGet(apiCtx, sendJson), emptyTokens()),
     tokenUsage: await captureJson((sendJson) => handleTokensUsage(apiCtx, sendJson), {}),
   };
+}
+
+function inferStaticSnapshotRoot(viteRoot: string, artPaths: string[]): string {
+  let root = path.resolve(viteRoot);
+  for (const artPath of artPaths) {
+    const directory = path.dirname(path.resolve(artPath));
+    while (!isPathInside(root, directory)) {
+      const parent = path.dirname(root);
+      if (parent === root) {
+        throw new Error(
+          `Art is outside the Vite root on another filesystem: ${artPath}. Configure projectRoot.`,
+        );
+      }
+      root = parent;
+    }
+  }
+  return root;
+}
+
+function isPathInside(root: string, candidate: string): boolean {
+  const relative = path.relative(root, candidate);
+  return (
+    relative === "" ||
+    (relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative))
+  );
 }
 
 function createApiContext(ctx: StaticGalleryDataContext): ApiRoutesContext {
