@@ -245,6 +245,41 @@ const unusedLocal = 2
     assert_eq!(diagnostics[0].block_type, Some(SfcBlockType::ScriptSetup));
 }
 
+#[test]
+fn unprojected_ts5097_suppresses_rewritten_vue_but_keeps_authored_ts() {
+    let temp_dir = TempDir::new().unwrap();
+    let source = temp_dir.path().join("Consumer.ts");
+    let message = "An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.";
+
+    for (contents, expected) in [
+        ("import Panel from './Panel.vue';\n", 0),
+        ("import { value } from './value.ts';\n", 1),
+    ] {
+        std::fs::write(&source, contents).unwrap();
+        let source = source.canonicalize().unwrap();
+        let mut project = VirtualProject::new(temp_dir.path()).unwrap();
+        project.set_diagnostic_paths([source.as_path()]);
+        let (line, character) = virtual_position_for(contents, "'");
+        let diagnostics = map_batch_diagnostics(
+            vec![(
+                file_uri_for(&source),
+                vec![crate::corsa_client::LspDiagnostic {
+                    range: crate::corsa_client::LspRange {
+                        start: crate::corsa_client::LspPosition { line, character },
+                        end: crate::corsa_client::LspPosition { line, character },
+                    },
+                    severity: Some(1),
+                    code: Some(json!("TS5097")),
+                    source: Some("ts".into()),
+                    message: message.into(),
+                }],
+            )],
+            &project,
+        );
+        assert_eq!(diagnostics.len(), expected, "{diagnostics:#?}");
+    }
+}
+
 fn ts2307_diagnostic_at(
     virtual_source: &str,
     needle: &str,

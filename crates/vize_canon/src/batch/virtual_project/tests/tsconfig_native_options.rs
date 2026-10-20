@@ -116,6 +116,58 @@ fn materialized_tsconfig_pins_stable_side_effect_import_checking() {
 }
 
 #[test]
+fn materialized_tsconfig_preserves_ts_extension_import_policy() {
+    for (name, declared) in [
+        ("tsconfig-ts-extension-default", None),
+        ("tsconfig-ts-extension-opt-in", Some(true)),
+        ("tsconfig-ts-extension-explicit-off", Some(false)),
+    ] {
+        let case_dir = unique_case_dir(name);
+        let _ = fs::remove_dir_all(&case_dir);
+        let src_dir = case_dir.join("src");
+        fs::create_dir_all(&src_dir).unwrap();
+        let declared_line = declared
+            .map(|value| format!("\n    \"allowImportingTsExtensions\": {value},"))
+            .unwrap_or_default();
+        fs::write(
+            case_dir.join("tsconfig.json"),
+            format!(
+                r#"{{
+  "compilerOptions": {{{declared_line}
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true
+  }}
+}}"#
+            ),
+        )
+        .unwrap();
+        let vue_path = src_dir.join("App.vue");
+        fs::write(
+            &vue_path,
+            "<script setup lang=\"ts\">const count = 1</script>",
+        )
+        .unwrap();
+
+        let mut project = VirtualProject::new(&case_dir).unwrap();
+        project.register_path(&vue_path).unwrap();
+        project.materialize().unwrap();
+
+        let tsconfig_path = project.virtual_root().join("tsconfig.json");
+        let value: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(tsconfig_path).unwrap()).unwrap();
+        let actual = value["compilerOptions"].get("allowImportingTsExtensions");
+        assert_eq!(
+            actual.and_then(serde_json::Value::as_bool),
+            declared,
+            "{name}: {value:#}"
+        );
+
+        let _ = fs::remove_dir_all(&case_dir);
+    }
+}
+
+#[test]
 fn materialized_check_tsconfig_drops_composite_membership_checks() {
     let case_dir = unique_case_dir("tsconfig-drop-composite");
     let _ = fs::remove_dir_all(&case_dir);

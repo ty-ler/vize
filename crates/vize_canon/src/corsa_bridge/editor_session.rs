@@ -75,6 +75,14 @@ impl EditorMirrorSession {
         recover_lock(&self.preparing)
     }
 
+    pub(in crate::corsa_bridge) fn trust_watched_disk_inputs(&self) {
+        self.cache().trust_watched_disk_inputs();
+    }
+
+    pub(in crate::corsa_bridge) fn invalidate_disk_inputs(&self) {
+        self.cache().invalidate_disk_inputs();
+    }
+
     pub(crate) fn clear(&self) {
         self.cache().clear();
         let Ok(root) = self.root() else {

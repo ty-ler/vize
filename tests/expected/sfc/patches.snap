@@ -1626,7 +1626,7 @@ export default {
 
 
 return (_ctx, _cache) => {
-  const _component_Test = _resolveComponent("Test")
+  const _component_Test = _resolveComponent("Test", true)
 
   return (_openBlock(), _createElementBlock(_Fragment, null, [
     _createElementVNode("div", {

@@ -416,6 +416,30 @@ const color = 'tomato'
 }
 
 #[test]
+fn test_scoped_css_moves_scope_before_trailing_universal_selectors() {
+    let source = r#"<template><div class="row"><slot /></div></template>
+<style scoped>
+.row > * { flex-shrink: 0; }
+.row * { margin: 0; }
+</style>"#;
+
+    let descriptor = parse_sfc(source, SfcParseOptions::default()).expect("parse SFC");
+    let result = compile_sfc(
+        &descriptor,
+        SfcCompileOptions {
+            scope_id: Some("test".into()),
+            ..Default::default()
+        },
+    )
+    .expect("compile SFC");
+
+    assert_eq!(
+        result.css.as_deref(),
+        Some(".row[data-v-test] > *{ flex-shrink: 0; }.row[data-v-test] *{ margin: 0; }\n")
+    );
+}
+
+#[test]
 fn test_script_setup_css_v_bind_handles_quoted_parentheses() {
     let source = r#"<script setup>
 const parentBg = 'red'

@@ -57,8 +57,8 @@ function extractCustomArtMetadata(source: string): Pick<ArtMetadata, "actionEven
 function extractStyleBlocks(
   source: string,
   filePath: string,
-): { blocks: string[]; scopeAttr?: string } {
-  const styles: Array<{ content: string; scoped: boolean }> = [];
+): { blocks: Array<{ content: string; lang: string; scoped: boolean }>; scopeAttr?: string } {
+  const styles: Array<{ content: string; lang: string; scoped: boolean }> = [];
 
   for (const match of source.matchAll(
     /<style\b((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/style>/gi,
@@ -68,27 +68,17 @@ function extractStyleBlocks(
     const lang = attrs.match(/\blang\s*=\s*["']([^"']+)["']/i)?.[1]?.toLowerCase();
 
     if (!content) continue;
-    if (lang && lang !== "css") {
-      console.warn(
-        `[musea] ${filePath}: <style lang="${lang}"> is not processed. Art styles are plain CSS.`,
-      );
-      continue;
-    }
-
-    styles.push({ content, scoped: /\bscoped\b/i.test(attrs) });
+    styles.push({ content, lang: lang ?? "css", scoped: /\bscoped\b/i.test(attrs) });
   }
 
   if (!styles.some((style) => style.scoped)) {
-    return { blocks: styles.map((style) => style.content) };
+    return { blocks: styles };
   }
 
   const scopeAttr = artScopeAttribute(filePath);
-  const scope = loadNative().scopeViteCssForPipeline;
   return {
     scopeAttr,
-    blocks: styles.map((style) =>
-      style.scoped && scope ? scope(style.content, scopeAttr) : style.content,
-    ),
+    blocks: styles,
   };
 }
 
@@ -142,7 +132,9 @@ export async function processMuseaArtFile(
     if (!parsed.variants || parsed.variants.length === 0) return null;
 
     const isInline = !filePath.endsWith(".art.vue");
-    const styles = isInline ? { blocks: [] as string[] } : extractStyleBlocks(source, filePath);
+    const styles = isInline
+      ? { blocks: [] as Array<{ content: string; lang: string; scoped: boolean }> }
+      : extractStyleBlocks(source, filePath);
 
     return {
       path: filePath,
@@ -169,7 +161,8 @@ export async function processMuseaArtFile(
         !isInline && parsed.hasScriptSetup ? extractScriptSetupIsolated(source) : true,
       hasScript: parsed.hasScript,
       styleCount: parsed.styleCount,
-      styleBlocks: styles.blocks,
+      styleBlocks: styles.blocks.map((style) => style.content),
+      styleBlockDetails: styles.blocks,
       isInline,
       componentPath: isInline ? filePath : undefined,
     };

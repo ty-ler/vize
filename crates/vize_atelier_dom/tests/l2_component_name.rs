@@ -122,6 +122,14 @@ fn the_self_reference_flag_is_pinned() {
         "const _component_foo_bar = _resolveComponent(\"foo-bar\", true)"
     );
     assert_eq!(
+        asset("<div><TreeItem /></div>", Some("tree-item")),
+        "const _component_TreeItem = _resolveComponent(\"TreeItem\", true)"
+    );
+    assert_eq!(
+        asset("<div><TreeItem /></div>", Some("treeItem")),
+        "const _component_TreeItem = _resolveComponent(\"TreeItem\", true)"
+    );
+    assert_eq!(
         asset("<div><Foo /></div>", Some("Other")),
         "const _component_Foo = _resolveComponent(\"Foo\")"
     );

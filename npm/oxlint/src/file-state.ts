@@ -59,7 +59,8 @@ let fileStateCacheClock = 0;
 export function getFileState(context: Context): FileState {
   const settings = getVizeSettings(context);
   const physicalSource = fs.readFileSync(context.physicalFilename, "utf8");
-  const cacheKey = getCacheKey(context.physicalFilename, settings);
+  const ruleSelection = parseRuleSelection(settings.rules);
+  const cacheKey = getCacheKey(context.physicalFilename, settings, ruleSelection);
   const cached = fileStateCache.get(cacheKey);
   if (cached && cached.state.revision.physicalSource === physicalSource) {
     validateWorkaroundAuthority(cached.state, context.physicalFilename);
@@ -96,7 +97,7 @@ export function getFileState(context: Context): FileState {
     partialDiagnosticsByRule: new Map(),
     requestedRules: new Set(),
     reportedTypeAwareRuntimeDiagnostic: false,
-    ruleSelection: parseRuleSelection(settings.rules),
+    ruleSelection,
     selectedDiagnosticsByRule: null,
   };
   fileStateCache.set(cacheKey, {

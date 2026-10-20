@@ -16,7 +16,7 @@
       "api": "--current-api",
       "cases": {
         "path": "crates/vize_patina/tests/fixtures/lint-history/cases.json",
-        "sha256": "902443f7635802f6bcddd40ced79a42194e171c939033187391167bac6d662dc"
+        "sha256": "da827d4e3fc0a76947cc2d605f9ac55505197116cd4ffa099e826b13e53c238d"
       }
     },
     {
@@ -54,78 +54,106 @@
   ],
   "oracles": {
     "path": "tests/_fixtures/differential/linter/oracle-index.json",
-    "sha256": "c6f93566e90f64c624faae21ffcf89df0c93d1bc5554ad6f3a512f3e7cc44de8"
+    "sha256": "49621609f3efb89a240246e5c964432a623dacc6f886c821919f2c165430a0ac"
   },
   "cases": [
     {
       "id": "linter/current-api/ref-string-untyped",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/ref-string-typed",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/ref-call-control",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/v-for-no-separator",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/v-for-separator-control",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/slot-compat-vue2",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/shorthand-compat-vue2",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/slot-compat-vue3",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/shorthand-compat-vue3",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/next-tick-unspecified",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/next-tick-disabled",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/static-class-empty-expression",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/static-class-utf8-fix-corrected",
       "state": "active",
-      "targets": ["lint"]
+      "targets": [
+        "lint"
+      ]
     },
     {
       "id": "linter/current-api/valid-v-else-autofix-preserves-directive",
       "state": "active",
-      "targets": ["lint"],
+      "targets": [
+        "lint"
+      ],
       "inputs": {
         "root": "valid-v-else-autofix-9863",
         "files": [
@@ -138,9 +166,245 @@
       }
     },
     {
+      "id": "linter/current-api/dynamic-slot-v-for-component-bodies",
+      "state": "active",
+      "targets": [
+        "lint"
+      ],
+      "inputs": {
+        "root": "dynamic-slot-v-for-9924",
+        "files": [
+          {
+            "path": "source.txt",
+            "role": "issue-authored-reproduction",
+            "sha256": "d50755b2532cb85e5da3aa35a9e97b2f3b9c30d0b9e6e41ecb8774a421fe200c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "linter/next-tick/valid-arrow-expression-return-script",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/next-tick/valid-arrow-expression-return-sfc",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/next-tick/valid-parenthesized-arrow-expression-return-script",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/next-tick/valid-parenthesized-arrow-expression-return-sfc",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/next-tick/invalid-arrow-block-bare-call-script",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/next-tick/invalid-arrow-block-bare-call-sfc",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/next-tick/invalid-arrow-expression-void-call-script",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/next-tick/invalid-arrow-expression-void-call-sfc",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/next-tick/nested-arrow-restores-statement-context-script",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/next-tick/nested-arrow-restores-statement-context-sfc",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/report/original-line-columns",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/report/unicode-crlf-columns",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/report/source-map-order-and-missing",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/report/no-findings-output-control",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/static-class/short-binding",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/static-class/long-binding",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/static-class/self-closing",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/static-class/adjacent-attribute",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/static-class/outer-single-quote",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/static-class/utf8-crlf-sfc",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/static-class/existing-static-class",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/static-class/dynamic-expression",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/static-class/empty-expression",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/component-name/valid-kebab-case",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/component-name/valid-kebab-case-with-path",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/component-name/valid-kebab-case-with-digits",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/component-name/invalid-mixed-kebab-and-pascal",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/component-name/invalid-leading-hyphen",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/component-name/invalid-trailing-hyphen",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/component-name/invalid-doubled-hyphen",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
+      "id": "linter/component-name/invalid-dotted-name",
+      "state": "active",
+      "targets": [
+        "lint"
+      ]
+    },
+    {
       "id": "linter/current-api/custom-event-name-casing-9879",
       "state": "active",
-      "targets": ["lint"],
+      "targets": [
+        "lint"
+      ],
       "inputs": {
         "root": "custom-event-name-casing-9879",
         "files": [
@@ -151,161 +415,6 @@
           }
         ]
       }
-    },
-    {
-      "id": "linter/next-tick/valid-arrow-expression-return-script",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/next-tick/valid-arrow-expression-return-sfc",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/next-tick/valid-parenthesized-arrow-expression-return-script",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/next-tick/valid-parenthesized-arrow-expression-return-sfc",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/next-tick/invalid-arrow-block-bare-call-script",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/next-tick/invalid-arrow-block-bare-call-sfc",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/next-tick/invalid-arrow-expression-void-call-script",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/next-tick/invalid-arrow-expression-void-call-sfc",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/next-tick/nested-arrow-restores-statement-context-script",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/next-tick/nested-arrow-restores-statement-context-sfc",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/report/original-line-columns",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/report/unicode-crlf-columns",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/report/source-map-order-and-missing",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/report/no-findings-output-control",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/static-class/short-binding",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/static-class/long-binding",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/static-class/self-closing",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/static-class/adjacent-attribute",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/static-class/outer-single-quote",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/static-class/utf8-crlf-sfc",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/static-class/existing-static-class",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/static-class/dynamic-expression",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/static-class/empty-expression",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/component-name/valid-kebab-case",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/component-name/valid-kebab-case-with-path",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/component-name/valid-kebab-case-with-digits",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/component-name/invalid-mixed-kebab-and-pascal",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/component-name/invalid-leading-hyphen",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/component-name/invalid-trailing-hyphen",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/component-name/invalid-doubled-hyphen",
-      "state": "active",
-      "targets": ["lint"]
-    },
-    {
-      "id": "linter/component-name/invalid-dotted-name",
-      "state": "active",
-      "targets": ["lint"]
     }
   ]
 }

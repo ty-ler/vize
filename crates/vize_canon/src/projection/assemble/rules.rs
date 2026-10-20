@@ -64,14 +64,29 @@ pub(super) fn is_generated_vue_ts_import_extension<P>(
     generated: &str,
     diagnostic: &FinishedDiagnostic<P>,
 ) -> bool {
-    is_ts5097_import_extension(diagnostic.code, &diagnostic.message)
-        && generated
-            .get(diagnostic.start..diagnostic.end)
-            .is_some_and(|range| range.contains(".vue.ts") || range.contains(".vue.tsx"))
+    is_generated_vue_ts_import_extension_at(
+        generated,
+        diagnostic.code,
+        &diagnostic.message,
+        diagnostic.start,
+        diagnostic.end,
+    )
+}
+
+pub(crate) fn is_generated_vue_ts_import_extension_at(
+    generated: &str,
+    code: Option<u32>,
+    message: &str,
+    start: usize,
+    end: usize,
+) -> bool {
+    is_ts5097_import_extension(code, message)
+        && specifier_at(generated, start, end)
+            .is_some_and(|specifier| has_extension(specifier, &[".vue.ts", ".vue.tsx"]))
 }
 
 /// `TS5097` on an authored `.vue` specifier: SFC imports are always allowed.
-pub(super) fn is_authored_vue_import_extension(
+pub(crate) fn is_authored_vue_import_extension(
     authored: &str,
     code: Option<u32>,
     message: &str,
@@ -79,17 +94,158 @@ pub(super) fn is_authored_vue_import_extension(
     end: usize,
 ) -> bool {
     is_ts5097_import_extension(code, message)
-        && authored.get(start..end).is_some_and(|range| {
-            let specifier = range.trim_matches(|character| matches!(character, '\'' | '"' | '`'));
-            let path = specifier
-                .split_once(['?', '#'])
-                .map_or(specifier, |(path, _)| path);
-            path.ends_with(".vue")
-        })
+        && specifier_at(authored, start, end)
+            .is_some_and(|specifier| has_extension(specifier, &[".vue"]))
+}
+
+/// `TS5097` caused only by Canon adding a TypeScript extension while routing
+/// an authored extensionless or `.vue` import into the virtual project.
+pub(crate) fn is_rewritten_ts_import_extension(
+    generated: &str,
+    authored: &str,
+    code: Option<u32>,
+    message: &str,
+    generated_range: Range<usize>,
+    authored_range: Range<usize>,
+) -> bool {
+    if !is_ts5097_import_extension(code, message) {
+        return false;
+    }
+    let Some(generated) = specifier_at(generated, generated_range.start, generated_range.end)
+    else {
+        return false;
+    };
+    let Some(authored) = specifier_at(authored, authored_range.start, authored_range.end) else {
+        return false;
+    };
+    has_extension(generated, &[".ts", ".tsx", ".mts", ".cts"])
+        && !has_extension(authored, &[".ts", ".tsx", ".mts", ".cts"])
+}
+
+/// TypeScript's CLI formatter only supplies the diagnostic start, so recover
+/// the quoted module specifier that contains that zero-width position. LSP
+/// diagnostics usually carry the whole literal and take the same path.
+fn specifier_at(source: &str, start: usize, end: usize) -> Option<&str> {
+    let start = start.min(source.len());
+    let end = end.min(source.len()).max(start);
+    let line_start = source
+        .get(..start)?
+        .rfind(['\n', '\r'])
+        .map_or(0, |at| at + 1);
+    let line_end = source
+        .get(start..)?
+        .find(['\n', '\r'])
+        .map_or(source.len(), |at| start + at);
+    let line = source.get(line_start..line_end)?;
+    let local_start = start - line_start;
+    let local_end = end - line_start;
+    let mut quote: Option<(char, usize)> = None;
+    let mut escaped = false;
+
+    for (offset, character) in line.char_indices() {
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        if character == '\\' {
+            escaped = true;
+            continue;
+        }
+        match quote {
+            Some((delimiter, open)) if character == delimiter => {
+                let close = offset + character.len_utf8();
+                if open <= local_end && local_start <= close {
+                    return line.get(open + delimiter.len_utf8()..offset);
+                }
+                quote = None;
+            }
+            None if matches!(character, '\'' | '"' | '`') => quote = Some((character, offset)),
+            _ => {}
+        }
+    }
+    None
+}
+
+fn has_extension(specifier: &str, extensions: &[&str]) -> bool {
+    let path = specifier
+        .split_once(['?', '#'])
+        .map_or(specifier, |(path, _)| path);
+    extensions.iter().any(|extension| path.ends_with(extension))
 }
 
 fn is_ts5097_import_extension(code: Option<u32>, message: &str) -> bool {
     code == Some(5097) && message.contains("allowImportingTsExtensions")
+}
+
+#[cfg(test)]
+mod import_extension_tests {
+    use super::{
+        is_authored_vue_import_extension, is_generated_vue_ts_import_extension,
+        is_rewritten_ts_import_extension,
+    };
+    use crate::projection::FinishedDiagnostic;
+
+    const MESSAGE: &str = "An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.";
+
+    fn diagnostic(source: &str, needle: &str) -> FinishedDiagnostic<()> {
+        let start = source.find(needle).unwrap();
+        FinishedDiagnostic {
+            document: 0,
+            start,
+            end: start,
+            code: Some(5097),
+            severity: Some(1),
+            message: MESSAGE.into(),
+            payload: (),
+        }
+    }
+
+    #[test]
+    fn generated_vue_extension_is_found_from_a_zero_width_cli_diagnostic() {
+        let source = "import Panel from './Panel.vue.ts';\n";
+        assert!(is_generated_vue_ts_import_extension(
+            source,
+            &diagnostic(source, "'./Panel.vue.ts'")
+        ));
+    }
+
+    #[test]
+    fn authored_vue_is_suppressed_but_authored_ts_is_not() {
+        for (source, suppressed) in [
+            ("import Panel from './Panel.vue';\n", true),
+            ("import { value } from './value.ts';\n", false),
+        ] {
+            let start = source.find('\'').unwrap();
+            assert_eq!(
+                is_authored_vue_import_extension(source, Some(5097), MESSAGE, start, start),
+                suppressed
+            );
+        }
+    }
+
+    #[test]
+    fn generated_typescript_extension_is_suppressed_only_for_an_authored_rewrite() {
+        let generated = "import { value } from '/virtual/src/value.ts';\n";
+        let extensionless = "import { value } from './value';\n";
+        let explicit = "import { value } from './value.ts';\n";
+        let generated_start = generated.find("'/virtual").unwrap();
+        let generated_end = generated.find("';").unwrap() + 1;
+        for (authored, suppressed) in [(extensionless, true), (explicit, false)] {
+            let authored_start = authored.find("'./value").unwrap();
+            let authored_end = authored.find("';").unwrap() + 1;
+            assert_eq!(
+                is_rewritten_ts_import_extension(
+                    generated,
+                    authored,
+                    Some(5097),
+                    MESSAGE,
+                    generated_start..generated_end,
+                    authored_start..authored_end,
+                ),
+                suppressed
+            );
+        }
+    }
 }
 
 /// One elaboration line of an exhaustiveness failure

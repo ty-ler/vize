@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "issue": 6879,
+  "historicalIssue": 9890,
+  "regressionCommit": "f1b07174a4a86ffc3433f31b8c78406d5bf5b760",
+  "sourceRevision": "f1b07174a4a86ffc3433f31b8c78406d5bf5b760",
+  "diagnosticContract": {
+    "requiredTier": "T1",
+    "positionBase": 1,
+    "positions": "authored UTF16 start",
+    "comparison": "all production diagnostics in returned order",
+    "missingFields": ["end", "relatedInformation", "raw backend diagnostics"],
+    "native": "unsupported"
+  },
+  "cases": [
+    {
+      "id": "default-policy",
+      "inputs": [
+        { "file": "src/math.ts", "source": "math.ts.txt" },
+        { "file": "src/main.ts", "source": "main.ts.txt" },
+        { "file": "src/App.vue", "source": "App.vue.txt" },
+        { "file": "tsconfig.json", "source": "tsconfig-default.json.txt" }
+      ],
+      "diagnostics": [
+        {
+          "file": "src/App.vue",
+          "line": 2,
+          "column": 24,
+          "severity": 1,
+          "code": 5097,
+          "message": "An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+        },
+        {
+          "file": "src/main.ts",
+          "line": 1,
+          "column": 24,
+          "severity": 1,
+          "code": 5097,
+          "message": "An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled."
+        }
+      ]
+    },
+    {
+      "id": "explicit-opt-in",
+      "inputs": [
+        { "file": "src/math.ts", "source": "math.ts.txt" },
+        { "file": "src/main.ts", "source": "main.ts.txt" },
+        { "file": "src/App.vue", "source": "App.vue.txt" },
+        { "file": "tsconfig.json", "source": "tsconfig-opt-in.json.txt" }
+      ],
+      "diagnostics": []
+    }
+  ]
+}

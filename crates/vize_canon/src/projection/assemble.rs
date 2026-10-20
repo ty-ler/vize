@@ -27,7 +27,10 @@ mod keyof;
 mod rules;
 
 pub use dedup::widen_leading_literal_type;
-pub(crate) use rules::sfc_template_block_range;
+pub(crate) use rules::{
+    is_authored_vue_import_extension, is_generated_vue_ts_import_extension_at,
+    is_rewritten_ts_import_extension, sfc_template_block_range,
+};
 pub use rules::{is_exhaustiveness_elaboration, is_reportable};
 
 /// The authored file every projected document of one assembly maps into.
@@ -225,6 +228,7 @@ fn project<P>(
     };
     let FinishedDiagnostic {
         start,
+        end,
         code,
         severity,
         message,
@@ -237,6 +241,16 @@ fn project<P>(
         }
         return rules::missing_vue_import(authored.text, code, severity, message, payload);
     };
+    if rules::is_rewritten_ts_import_extension(
+        document.generated,
+        authored.text,
+        code,
+        &message,
+        start..end,
+        authored_start..authored_end,
+    ) {
+        return None;
+    }
     if rules::is_authored_vue_import_extension(
         authored.text,
         code,

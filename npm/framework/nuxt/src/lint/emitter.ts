@@ -7,13 +7,13 @@
  */
 import path from "node:path";
 
-import type { NuxtLintConfigItem, NuxtLintSeverity } from "@vizejs/nuxt-lint-config";
+import type { NuxtLintConfigItem, NuxtLintRuleConfig } from "@vizejs/nuxt-lint-config";
 
 interface OxlintOverride {
   files: string[];
   excludeFiles?: string[];
   globals?: Record<string, "readonly" | "writable">;
-  rules?: Record<string, NuxtLintSeverity>;
+  rules?: Record<string, NuxtLintRuleConfig>;
 }
 
 interface NuxtOxlintConfig {
@@ -22,7 +22,7 @@ interface NuxtOxlintConfig {
   settings: { vize: { preset: "incremental"; generatedBy?: "@vizejs/nuxt" } };
   ignorePatterns?: string[];
   globals?: Record<string, "readonly" | "writable">;
-  rules?: Record<string, NuxtLintSeverity>;
+  rules?: Record<string, NuxtLintRuleConfig>;
   overrides?: OxlintOverride[];
 }
 
@@ -49,8 +49,8 @@ function toOxlintRuleId(ruleId: string): string {
 }
 
 function prefixVizeRules(
-  rules: Readonly<Record<string, NuxtLintSeverity>> | undefined,
-): Record<string, NuxtLintSeverity> | undefined {
+  rules: Readonly<Record<string, NuxtLintRuleConfig>> | undefined,
+): Record<string, NuxtLintRuleConfig> | undefined {
   if (!rules) return undefined;
 
   return Object.fromEntries(
@@ -77,8 +77,8 @@ function mergeGlobals(
 }
 
 function mergeRules(
-  target: Record<string, NuxtLintSeverity>,
-  source: Readonly<Record<string, NuxtLintSeverity>> | undefined,
+  target: Record<string, NuxtLintRuleConfig>,
+  source: Readonly<Record<string, NuxtLintRuleConfig>> | undefined,
 ): void {
   Object.assign(target, prefixVizeRules(source));
 }
@@ -111,7 +111,7 @@ export function renderNuxtOxlintConfig(
     globBase ? rebaseGlob(glob, globBase, ignore) : glob;
   const ignorePatterns: string[] = [];
   const globals: Record<string, "readonly" | "writable"> = {};
-  const rules: Record<string, NuxtLintSeverity> = {};
+  const rules: Record<string, NuxtLintRuleConfig> = {};
   const overrides: OxlintOverride[] = [];
 
   for (const item of items) {
