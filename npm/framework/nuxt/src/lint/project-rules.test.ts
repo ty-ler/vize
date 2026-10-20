@@ -9,7 +9,11 @@ import type { TestContext } from "node:test";
 import type { VizeRuleConfigPreset } from "oxlint-plugin-vize";
 
 import { setupNuxtLintConfigGeneration } from "./generation.ts";
-import { readProjectLintRules, type ProjectLintRules } from "./project-rules.ts";
+import {
+  readProjectLintRules,
+  readProjectLintRuleSets,
+  type ProjectLintRules,
+} from "./project-rules.ts";
 
 async function temporaryRoot(t: TestContext, prefix: string): Promise<string> {
   const root = await mkdtemp(path.join(os.tmpdir(), prefix));
@@ -52,6 +56,31 @@ void test("Vite shared lint settings work without a dedicated Vize config", asyn
   });
   assert.deepEqual(seen, [{ preset: "essential", typeAware: true }]);
   assert.deepEqual(rules, { "vue/require-v-for-key": "off", "vue/no-array-index-key": "error" });
+});
+
+void test("Vite+ Oxlint rules are retained with their authored namespaces", async (t) => {
+  const root = await temporaryRoot(t, "vize-nuxt-project-oxlint-rules-");
+  await writeFile(
+    path.join(root, "vite.config.mjs"),
+    `export default {
+      vue: { linter: { rules: { "vue/no-v-html": "error" } } },
+      lint: { rules: {
+        "no-console": "error",
+        "no-debugger": "warn",
+        "vue/no-unused-properties": "error",
+        ignored: ["error", { option: true }]
+      } }
+    };`,
+  );
+
+  assert.deepEqual(await readProjectLintRuleSets(root, unexpectedPreset), {
+    vize: { "vue/no-v-html": "error" },
+    oxlint: {
+      "no-console": "error",
+      "no-debugger": "warn",
+      "vue/no-unused-properties": "error",
+    },
+  });
 });
 
 void test("Nuxt Vite factories receive serve and retired files cannot override them", async (t) => {
@@ -182,6 +211,30 @@ void test("generated config lists project rules under the incremental preset", a
   assert.equal(artifact.settings.vize.preset, "incremental");
   assert.equal(artifact.rules["vize/vue/require-v-for-key"], "error");
   assert.equal(artifact.rules["vize/nuxt/prefer-import-meta"], "error");
+});
+
+void test("generated config includes Vite+ Oxlint rules without Patina prefixing", async (t) => {
+  const root = await temporaryRoot(t, "vize-nuxt-project-oxlint-emit-");
+  await mkdir(path.join(root, "app"));
+  await writeFile(
+    path.join(root, "vite.config.mjs"),
+    `export default {
+      vue: { linter: { rules: { "vue/no-v-html": "error" } } },
+      lint: { rules: { "no-console": "error", "vue/no-unused-properties": "warn" } }
+    };`,
+  );
+
+  const generation = await setupNuxtLintConfigGeneration({ autoInit: false }, createNuxt(root), {
+    resolvePluginSpecifier: () => "../plugin.mjs",
+  });
+  const artifact = JSON.parse(await readFile(generation?.configFile ?? "", "utf8")) as {
+    rules: Record<string, string>;
+  };
+
+  assert.equal(artifact.rules["vize/vue/no-v-html"], "error");
+  assert.equal(artifact.rules["no-console"], "error");
+  assert.equal(artifact.rules["vue/no-unused-properties"], "warn");
+  assert.equal(artifact.rules["vize/vue/no-unused-properties"], undefined);
 });
 
 function unexpectedPreset(): Promise<ProjectLintRules> {

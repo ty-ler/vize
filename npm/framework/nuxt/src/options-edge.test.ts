@@ -21,7 +21,7 @@ void test("resolveNuxtCompilerOptions merges an internal baseURL with buildAsset
       exclude: NUXT_OG_IMAGE_RENDERER_SFC_EXCLUDE,
       handleNodeModulesVue: true,
       root: "/repo/app",
-      scanPatterns: [],
+      scanPatterns: ["**/*.vue"],
     },
     "an internal baseURL should prefix the normalized buildAssetsDir",
   );
@@ -35,7 +35,7 @@ void test("resolveNuxtCompilerOptions defaults buildAssetsDir only when undefine
       exclude: NUXT_OG_IMAGE_RENDERER_SFC_EXCLUDE,
       handleNodeModulesVue: true,
       root: "/repo/app",
-      scanPatterns: [],
+      scanPatterns: ["**/*.vue"],
     },
     "undefined buildAssetsDir should fall back to /_nuxt/",
   );
@@ -47,7 +47,7 @@ void test("resolveNuxtCompilerOptions defaults buildAssetsDir only when undefine
       exclude: NUXT_OG_IMAGE_RENDERER_SFC_EXCLUDE,
       handleNodeModulesVue: true,
       root: "/repo/app",
-      scanPatterns: [],
+      scanPatterns: ["**/*.vue"],
     },
     "an empty buildAssetsDir normalizes to a bare / instead of /_nuxt/",
   );
@@ -68,7 +68,7 @@ void test("resolveNuxtCompilerOptions treats Vue 0.11 as host-compiler legacy", 
       exclude: NUXT_OG_IMAGE_RENDERER_SFC_EXCLUDE,
       handleNodeModulesVue: true,
       root: "/repo/app",
-      scanPatterns: [],
+      scanPatterns: ["**/*.vue"],
       vueVersion: 0.11,
     },
     "the oldest legacy Vue version should enable host-compiler mode",
@@ -90,7 +90,7 @@ void test("resolveNuxtCompilerOptions treats the legacy string Vue version as ho
       exclude: NUXT_OG_IMAGE_RENDERER_SFC_EXCLUDE,
       handleNodeModulesVue: true,
       root: "/repo/app",
-      scanPatterns: [],
+      scanPatterns: ["**/*.vue"],
       vueVersion: "legacy",
     },
     "the legacy string Vue version should enable host-compiler mode",
@@ -116,7 +116,7 @@ void test("resolveNuxtCompilerOptions keeps the Takumi exclude when overrides.ex
       exclude: [NUXT_OG_IMAGE_RENDERER_SFC_EXCLUDE],
       handleNodeModulesVue: true,
       root: "/repo/app",
-      scanPatterns: [],
+      scanPatterns: ["**/*.vue"],
     },
     "an empty user exclude array still merges the Takumi OG-image exclude",
   );
@@ -133,7 +133,7 @@ void test("resolveNuxtCompilerOptions drops the Takumi exclude when customRender
       devUrlBase: "/_nuxt/",
       handleNodeModulesVue: true,
       root: "/repo/app",
-      scanPatterns: [],
+      scanPatterns: ["**/*.vue"],
     },
     "customRenderer without a user exclude should omit exclude entirely",
   );
@@ -152,7 +152,7 @@ void test("resolveNuxtCompilerOptions with empty overrides preserves the bare Ta
       exclude: NUXT_OG_IMAGE_RENDERER_SFC_EXCLUDE,
       handleNodeModulesVue: true,
       root: "/repo/app",
-      scanPatterns: [],
+      scanPatterns: ["**/*.vue"],
     },
     "empty overrides should not clobber the default Takumi exclude (kept as the bare regex)",
   );
@@ -194,6 +194,30 @@ void test("resolveNuxtBridgeOptions merges a partial object and treats explicit 
     resolveNuxtBridgeOptions({ i18n: undefined }),
     { ...DEFAULT_NUXT_BRIDGE_OPTIONS },
     "an explicitly undefined flag should fall back to its default",
+  );
+});
+
+void test("resolveNuxtBridgeOptions disables transforms unavailable in the Nuxt host", () => {
+  assert.deepEqual(
+    resolveNuxtBridgeOptions(true, {
+      imports: { autoImport: false },
+      components: false,
+      modules: ["@vizejs/nuxt"],
+    }),
+    {
+      autoImports: false,
+      components: false,
+      i18n: false,
+      stableInjectedKeys: false,
+    },
+  );
+  assert.deepEqual(
+    resolveNuxtBridgeOptions(true, {
+      imports: {},
+      components: [],
+      modules: [["@nuxtjs/i18n", { defaultLocale: "en" }]],
+    }),
+    { ...DEFAULT_NUXT_BRIDGE_OPTIONS },
   );
 });
 

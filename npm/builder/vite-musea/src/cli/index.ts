@@ -47,6 +47,7 @@ export interface CliOptions {
   thresholdProvided: boolean;
   workers: number;
   workersProvided: boolean;
+  browserArgs: string[];
   json: boolean;
   ci: boolean;
   a11y: boolean;
@@ -72,6 +73,7 @@ export function parseArgs(args: string[]): CliOptions {
     thresholdProvided: false,
     workers: 1,
     workersProvided: false,
+    browserArgs: [],
     json: false,
     ci: false,
     a11y: false,
@@ -143,6 +145,12 @@ export function parseArgs(args: string[]): CliOptions {
       case "--a11y":
         options.a11y = true;
         break;
+      case "--browser-arg": {
+        const browserArg = args[++i];
+        if (browserArg === undefined) throw new Error("--browser-arg requires a value");
+        options.browserArgs.push(browserArg);
+        break;
+      }
       case "-b":
       case "--base-url":
         options.baseUrl = args[++i] || "http://localhost:5173";
@@ -197,6 +205,7 @@ Options:
   --json               Output JSON report instead of HTML
   --ci                 CI mode - exit with non-zero code on failures
   --a11y               Run accessibility audits alongside VRT
+  --browser-arg <arg>  Add a Chromium launch argument (repeatable)
   -h, --help           Show this help message
 
 Examples:
@@ -217,6 +226,9 @@ Examples:
 
   # Capture variants concurrently
   musea-vrt --workers 8
+
+  # Stabilize Chromium rasterization
+  musea-vrt --browser-arg --disable-partial-raster
 
   # Approve all failed snapshots
   musea-vrt approve

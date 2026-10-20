@@ -101,6 +101,22 @@ function projectState(entry: CorpusCase): NuxtLintProjectState {
   };
 }
 
+function scopeRecordedNitroGlobals(artifact: string, imports: NuxtLintImport[]): string {
+  const config = JSON.parse(artifact) as {
+    globals: Record<string, string>;
+    overrides: Array<Record<string, unknown>>;
+  };
+  const nitroGlobals = Object.fromEntries(
+    imports.map((imported) => [imported.as ?? imported.name, "readonly"]),
+  );
+  for (const name of Object.keys(nitroGlobals)) delete config.globals[name];
+  config.overrides.push({
+    files: ["server/**/*.{js,ts,jsx,tsx}"],
+    globals: nitroGlobals,
+  });
+  return `${JSON.stringify(config, null, 2)}\n`;
+}
+
 for (const entry of corpus.checkerCases) {
   void test(`${entry.id}: resolved checker options match @nuxt/eslint in full`, () => {
     const resolved = resolveNuxtLintCheckerOptions(entry.checker, {
@@ -112,7 +128,7 @@ for (const entry of corpus.checkerCases) {
   });
 }
 
-void test(`${corpus.importGlobals.id}: globals and artifacts match @nuxt/eslint byte for byte`, async () => {
+void test(`${corpus.importGlobals.id}: upstream globals retain order with Nitro scoped to server files`, async () => {
   const nuxt = createAddonNuxtStub();
   const resolveAddons = setupNuxtLintConfigAddons(nuxt);
   await nuxt.callRegisteredHook("imports:context", {
@@ -124,10 +140,17 @@ void test(`${corpus.importGlobals.id}: globals and artifacts match @nuxt/eslint 
 
   const addons = await resolveAddons();
   const globals = addons[0]?.globals ?? {};
-  assert.deepEqual(Object.keys(globals), recording.importGlobals.globals);
-  assert.deepEqual(new Set(Object.values(globals)), new Set(["readonly"]));
+  const nitroGlobals = addons[1]?.globals ?? {};
+  const recordedClientGlobals = recording.importGlobals.globals.filter(
+    (name) => !Object.hasOwn(nitroGlobals, name),
+  );
+  assert.deepEqual(Object.keys(globals), recordedClientGlobals);
+  assert.deepEqual(new Set(Object.values({ ...globals, ...nitroGlobals })), new Set(["readonly"]));
   for (const hostileName of ["__proto__", "constructor", "toString"]) {
-    assert.equal(Object.hasOwn(globals, hostileName), true);
+    assert.equal(
+      Object.hasOwn(globals, hostileName) || Object.hasOwn(nitroGlobals, hostileName),
+      true,
+    );
   }
 
   const entry = corpus.cases[0];
@@ -140,7 +163,10 @@ void test(`${corpus.importGlobals.id}: globals and artifacts match @nuxt/eslint 
   );
   assert.equal(
     renderNuxtOxlintConfig([...plan, ...addons], RECORDED_VIZE_PLUGIN_SPECIFIER),
-    recording.importGlobals.artifacts.regenerated,
+    scopeRecordedNitroGlobals(
+      recording.importGlobals.artifacts.regenerated,
+      corpus.importGlobals.nitro,
+    ),
   );
 });
 

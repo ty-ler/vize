@@ -1,3 +1,5 @@
+import type { LaunchOptions } from "playwright";
+
 /**
  * Viewport configuration.
  */
@@ -16,6 +18,8 @@ export interface ViewportConfig {
  * VRT configuration options.
  */
 export interface VrtOptions {
+  /** Options forwarded to Playwright's Chromium launcher. */
+  launchOptions?: LaunchOptions;
   /** Public gallery route, including the Vite base path. @default '/__musea__' */
   previewBasePath?: string;
   /**

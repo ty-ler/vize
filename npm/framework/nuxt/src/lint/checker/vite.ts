@@ -3,7 +3,9 @@ import path from "node:path";
 import { matchesNuxtLintCheckerFile } from "./filter.ts";
 import type { ResolvedVizeNuxtLintCheckerOptions } from "./options.ts";
 import {
+  formatNuxtLintCheckerDiagnostics,
   NuxtLintCheckerWorker,
+  type NuxtLintCheckerDiagnostic,
   type NuxtLintCheckerResult,
   type NuxtLintCheckerTask,
 } from "./worker.ts";
@@ -62,6 +64,7 @@ class NuxtLintChangeCollector {
   private draining = false;
   private closed = false;
   private overlayVisible = false;
+  private readonly diagnosticsByFile = new Map<string, NuxtLintCheckerDiagnostic[]>();
   private readonly config: NuxtLintCheckerViteOptions;
   private readonly runner: NuxtLintCheckerRunner;
   private readonly server: CheckerServer;
@@ -116,14 +119,13 @@ class NuxtLintChangeCollector {
 
   private async drain(): Promise<void> {
     while (!this.closed && (this.pendingFull || this.pendingFiles.size > 0)) {
-      const targets = this.pendingFull
-        ? [...this.config.options.include]
-        : [...this.pendingFiles].sort();
+      const full = this.pendingFull;
+      const targets = full ? [...this.config.options.include] : [...this.pendingFiles].sort();
       this.pendingFull = false;
       this.pendingFiles.clear();
       try {
         const result = await this.runner.run(this.task(targets));
-        if (!this.closed) this.report(result);
+        if (!this.closed) this.report(result, targets, full);
       } catch (error) {
         if (!this.closed) this.reportFailure(error);
       }
@@ -148,13 +150,37 @@ class NuxtLintChangeCollector {
     };
   }
 
-  private report(result: NuxtLintCheckerResult): void {
+  private diagnosticFile(diagnostic: NuxtLintCheckerDiagnostic): string | undefined {
+    const file = diagnostic.filename ?? diagnostic.filePath;
+    if (!file) return undefined;
+    return path.resolve(this.config.rootDir, file);
+  }
+
+  private report(result: NuxtLintCheckerResult, targets: string[], full: boolean): void {
     if (result.output) {
       if (result.hasErrors) this.server.config.logger.error(result.output);
       else if (result.hasWarnings) this.server.config.logger.warn(result.output);
     }
-    if (result.diagnosticCount > 0) {
-      this.server.ws.send(overlayError(result.output));
+    if (full) this.diagnosticsByFile.clear();
+    else for (const target of targets) this.diagnosticsByFile.delete(path.resolve(target));
+
+    for (const diagnostic of result.diagnostics) {
+      const file = this.diagnosticFile(diagnostic);
+      if (!file) continue;
+      const diagnostics = this.diagnosticsByFile.get(file) ?? [];
+      diagnostics.push(diagnostic);
+      this.diagnosticsByFile.set(file, diagnostics);
+    }
+
+    const currentDiagnostics = [...this.diagnosticsByFile.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .flatMap(([, diagnostics]) => diagnostics);
+    if (currentDiagnostics.length > 0) {
+      this.server.ws.send(
+        overlayError(
+          formatNuxtLintCheckerDiagnostics(currentDiagnostics, this.config.options.formatter),
+        ),
+      );
       this.overlayVisible = true;
     } else if (this.overlayVisible) {
       // Vite clears its error overlay whenever an update payload arrives.

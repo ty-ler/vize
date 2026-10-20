@@ -83,6 +83,7 @@ void test("real worker re-reads its oxlint + Patina config on every pass", async
 
   await writeConfig("off");
   assert.deepEqual(await worker.run(task), {
+    diagnostics: [],
     diagnosticCount: 0,
     hasErrors: false,
     hasWarnings: false,

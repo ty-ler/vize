@@ -89,8 +89,17 @@ export async function resolveViteConfigExport(exported, env, configDir) {
   if (env.command !== "build" && env.command !== "serve") {
     env = { ...env, command: "serve" };
   }
-  const source = await resolveSource(exported, env);
+  const source = await resolveViteConfigSource(exported, env);
   return projectViteConfigSource(source, env, configDir);
+}
+
+/** Resolve an authored Vite export without projecting away Vite-owned task settings. */
+export async function resolveViteConfigSource(exported, env) {
+  env ??= { mode: "development", command: "serve" };
+  if (env.command !== "build" && env.command !== "serve") {
+    env = { ...env, command: "serve" };
+  }
+  return resolveSource(exported, env);
 }
 
 /** Project already evaluated settings; the owning adapter evaluates its Vite export once. */

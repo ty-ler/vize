@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 
-import type { A11yOptions } from "../types/index.ts";
+import type { A11yOptions, MuseaVrtOptions } from "../types/index.ts";
 import { MuseaA11yRunner } from "../a11y/index.ts";
 import {
   hasCiBlockingVrtResult,
@@ -63,6 +63,23 @@ void test("CLI workers accepts positive concurrency and clamps invalid values", 
   const invalid = parseArgs(["-w", "0"]);
   assert.equal(invalid.workers, 1);
   assert.equal(invalid.workersProvided, true);
+});
+
+void test("CLI browser arguments append to configured Chromium launch options", () => {
+  const options = parseArgs([
+    "--browser-arg",
+    "--disable-partial-raster",
+    "--browser-arg",
+    "--disable-gpu",
+  ]);
+  options.vrt = {
+    launchOptions: { channel: "chromium", args: ["--use-angle=metal"] },
+  };
+
+  assert.deepEqual(createVrtOptions(options).launchOptions, {
+    channel: "chromium",
+    args: ["--use-angle=metal", "--disable-partial-raster", "--disable-gpu"],
+  });
 });
 
 void test("CLI VRT options preserve config threshold when CLI threshold is omitted", () => {
@@ -144,22 +161,28 @@ void test("vrt.a11y excludeRules is the object passed to MuseaA11yRunner", () =>
     level: "AA",
   };
   const options = parseArgs(["--a11y"]);
-  options.vrt = { a11y, threshold: 4 };
+  const launchOptions: MuseaVrtOptions["launchOptions"] = {
+    args: ["--disable-partial-raster"],
+  };
+  options.vrt = { a11y, threshold: 4, launchOptions };
 
-  const received: Array<A11yOptions | undefined> = [];
+  const received: Array<{
+    a11y: A11yOptions | undefined;
+    launchOptions: MuseaVrtOptions["launchOptions"];
+  }> = [];
   class RecordingA11yRunner extends MuseaA11yRunner {
-    constructor(configured?: A11yOptions) {
-      super(configured);
-      received.push(configured);
+    constructor(configured?: A11yOptions, launchOptions?: MuseaVrtOptions["launchOptions"]) {
+      super(configured, launchOptions);
+      received.push({ a11y: configured, launchOptions });
     }
   }
 
   const runner = createA11yRunner(options, RecordingA11yRunner);
 
   assert.equal(runner instanceof RecordingA11yRunner, true);
-  assert.deepEqual(received, [a11y]);
-  assert.equal(received[0], a11y);
-  assert.deepEqual(received[0]?.excludeRules, ["color-contrast"]);
+  assert.deepEqual(received, [{ a11y, launchOptions }]);
+  assert.equal(received[0]?.a11y, a11y);
+  assert.deepEqual(received[0]?.a11y?.excludeRules, ["color-contrast"]);
   assert.equal("a11y" in createVrtOptions(options), false);
   assert.equal(createVrtOptions(options).threshold, 4);
 });

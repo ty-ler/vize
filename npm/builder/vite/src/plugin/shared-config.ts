@@ -69,7 +69,11 @@ export async function resolveSharedConfig(
       mode: options.configMode ?? "root",
       configFile,
       env,
-      viteConfig: false,
+      // Nuxt deliberately runs Vite with `configFile: false`, so its resolved
+      // config cannot carry the project's shared `vue:` settings. Read the
+      // project Vite config in that host context; ordinary Vite integrations
+      // already provide the evaluated config below and must not load it twice.
+      viteConfig: hostContext === "nuxt",
     });
     if (fileConfig) logger.log("Loaded explicitly selected native Vue settings");
   }
