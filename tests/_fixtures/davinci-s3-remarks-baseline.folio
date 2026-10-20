@@ -740,3 +740,4 @@
 "tests/_fixtures/vue-language-tools/upstream/test-workspace/tsc/withDotValue/main.vue" s3.extract-placements missed cache @133:156 reason="regressed-emitted-size" emitted-size=6 reactive-edges=-1 update-path=-1 budget-left=125
 "tests/_fixtures/vue-language-tools/upstream/test-workspace/tsc/withDotValue/main.vue" s3.extract-placements missed cache @209:229 reason="regressed-emitted-size" emitted-size=6 reactive-edges=-1 update-path=-1 budget-left=124
 "tests/_fixtures/vue-language-tools/upstream/test-workspace/tsc/withDotValue/main.vue" s3.extract-placements missed cache @279:302 reason="regressed-emitted-size" emitted-size=6 reactive-edges=-1 update-path=-1 budget-left=123
+

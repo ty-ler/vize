@@ -1843,3 +1843,4 @@
 "tests/_fixtures/vue-language-tools/upstream/test-workspace/tsc/withDotValue/main.vue" s2.hoist-static missed static-props @271:312 tag="button" blocker="binding" op="ui.on"
 "tests/_fixtures/vue-language-tools/upstream/test-workspace/tsc/withDotValue/main.vue" s2.hoist-static missed static-subtree @271:312 tag="button" blocker="binding" op="ui.on"
 "tests/_fixtures/vue-language-tools/upstream/test-workspace/tsc/withDotValue/main.vue" s2.hoist-static missed static-subtree @314:345 tag="div" blocker="child" op="ui.interpolation"
+
