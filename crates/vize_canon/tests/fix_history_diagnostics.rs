@@ -299,6 +299,17 @@ fn named_prop_before_spread_reports_once_with_or_without_listener() {
     );
 }
 
+#[test]
+fn content_mapper_global_components_preserve_batch_acceptance() {
+    check_pack(
+        "content-mapper-global-component-10185",
+        "content_mapper_global_components_preserve_batch_acceptance",
+        "10a9eaa743e3fb92b6372daa64c509bce2b204f1",
+        Some(10185),
+        &["unimported-framework-global-with-children"],
+    );
+}
+
 fn check_pack(
     name: &str,
     test: &str,
@@ -338,7 +349,8 @@ fn check_pack(
             | "generic-fallthrough-spread-9956"
             | "misskey-generated-inference-9516"
             | "component-v-bind-duplicate-diagnostic-10069"
-            | "inferred-project-tsconfig-9718" => regression,
+            | "inferred-project-tsconfig-9718"
+            | "content-mapper-global-component-10185" => regression,
             _ => "9aaa1fe458a09e0d0c6604dc8835ccf7c737d943",
         }
     );

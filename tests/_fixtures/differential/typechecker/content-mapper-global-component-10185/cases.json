@@ -1,19 +1,37 @@
 {
   "version": 1,
-  "issue": 10185,
-  "sourceRevision": "995a9107a408380dcd1a5742a10ea3f473e6c13a",
+  "issue": 6879,
+  "historicalIssue": 10185,
+  "regressionCommit": "10a9eaa743e3fb92b6372daa64c509bce2b204f1",
+  "sourceRevision": "10a9eaa743e3fb92b6372daa64c509bce2b204f1",
   "diagnosticContract": {
-    "host": "standard-tsgo-content-mapper",
-    "comparison": "complete stdout and stderr",
-    "expected": "no diagnostics"
+    "requiredTier": "T1",
+    "positionBase": 1,
+    "positions": "authored UTF16 start",
+    "comparison": "all production diagnostics in returned order",
+    "missingFields": [
+      "end",
+      "relatedInformation",
+      "raw backend diagnostics"
+    ],
+    "native": "unsupported"
   },
   "cases": [
     {
       "id": "unimported-framework-global-with-children",
       "inputs": [
-        { "file": "tsconfig.json", "source": "tsconfig.json.txt" },
-        { "file": "src/App.vue", "source": "App.vue.txt" },
-        { "file": "src/Child.vue", "source": "Child.vue.txt" }
+        {
+          "file": "tsconfig.json",
+          "source": "tsconfig.json.txt"
+        },
+        {
+          "file": "src/App.vue",
+          "source": "App.vue.txt"
+        },
+        {
+          "file": "src/Child.vue",
+          "source": "Child.vue.txt"
+        }
       ],
       "diagnostics": []
     }
