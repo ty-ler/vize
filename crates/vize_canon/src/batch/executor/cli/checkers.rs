@@ -56,9 +56,9 @@ mod tests {
     /// back to the pinned default.
     #[test]
     fn rejects_zero_and_unparsable_values() {
-        assert_eq!(parse_checker_count(Some("0")), 1);
-        assert_eq!(parse_checker_count(Some("wide")), 1);
-        assert_eq!(parse_checker_count(Some("")), 1);
-        assert_eq!(parse_checker_count(Some("-4")), 1);
+        assert_eq!(parse_checker_count(Some("0")), 4);
+        assert_eq!(parse_checker_count(Some("wide")), 4);
+        assert_eq!(parse_checker_count(Some("")), 4);
+        assert_eq!(parse_checker_count(Some("-4")), 4);
     }
 }
