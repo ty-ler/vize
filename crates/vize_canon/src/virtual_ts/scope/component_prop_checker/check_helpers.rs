@@ -112,7 +112,7 @@ pub(in crate::virtual_ts::scope) fn append_prop_check_helpers(
     // `unknown`. Trust raw metadata only when its generated identity is proven,
     // otherwise use the public component contract (including the empty one).
     ts.push_str(
-        "  type __VizeComponentRawProps<C> = __VizeHasInstanceRawProps<C> extends true ? __VizeInstanceRawProps<C> : __VizeHasStaticRawProps<C> extends true ? __VizeStaticRawProps<C> : __VizePublicProps<C>;\n",
+        "  type __VizeComponentRawProps<C, __P = __VizeHasInstanceRawProps<C> extends true ? __VizeInstanceRawProps<C> : __VizeHasStaticRawProps<C> extends true ? __VizeStaticRawProps<C> : __VizePublicProps<C>> = unknown extends __P ? Record<string, unknown> : __P;\n",
     );
     ts.push_str(
         "  type __VizeHasRawProps<C> = __VizeHasInstanceRawProps<C> extends true ? true : __VizeHasStaticRawProps<C>;\n",
