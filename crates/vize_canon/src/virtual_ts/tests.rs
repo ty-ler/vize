@@ -677,7 +677,7 @@ fn test_unknown_pascal_component_props_use_the_ambient_fallback() {
     );
 
     assert!(output.code.contains(
-        "declare const AutoCard: import(\"vue\").GlobalComponents extends { \"AutoCard\": infer __C } ? __C : any;"
+        "declare const AutoCard: \"AutoCard\" extends keyof import(\"vue\").GlobalComponents ? import(\"vue\").GlobalComponents[\"AutoCard\" & keyof import(\"vue\").GlobalComponents] : any;"
     ));
     assert!(output.code.contains("type __AutoCard_Props_0"));
     assert!(output.code.contains("__AutoCard_Check_0"));

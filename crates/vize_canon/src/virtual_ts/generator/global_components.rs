@@ -248,14 +248,14 @@ fn append_global_component_stub(
 ) {
     append!(
         *ts,
-        "declare const {component_ref}: import(\"vue\").GlobalComponents extends {{ \"{name}\": infer __C }} ? __C"
+        "declare const {component_ref}: \"{name}\" extends keyof import(\"vue\").GlobalComponents ? import(\"vue\").GlobalComponents[\"{name}\" & keyof import(\"vue\").GlobalComponents]"
     );
     if pascal_name == name {
         ts.push_str(" : any;\n");
     } else {
         append!(
             *ts,
-            " : import(\"vue\").GlobalComponents extends {{ \"{pascal_name}\": infer __C }} ? __C : any;\n"
+            " : \"{pascal_name}\" extends keyof import(\"vue\").GlobalComponents ? import(\"vue\").GlobalComponents[\"{pascal_name}\" & keyof import(\"vue\").GlobalComponents] : any;\n"
         );
     }
 }

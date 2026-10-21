@@ -5,8 +5,8 @@ use std::path::PathBuf;
 use serde::Deserialize;
 
 use super::{
-    assert_success, check_project, install_mapper_manifest, install_vue_package, output_text,
-    workspace_root, TSGO_ENV,
+    TSGO_ENV, check_project, install_mapper_manifest, install_vue_package, output_text,
+    workspace_root,
 };
 
 const CASES: &str = include_str!(concat!(
@@ -70,7 +70,20 @@ fn standard_tsgo_accepts_unimported_framework_global_components() {
         }
 
         let output = check_project(&tsgo, project.path(), "tsconfig.json");
-        assert_success(&output);
+        if !output.status.success() {
+            let source = std::fs::read_to_string(project.path().join("src/App.vue")).unwrap();
+            let transform = vize_canon::generate_vue_content_mapper_transform(
+                &project.path().join("src/App.vue"),
+                &source,
+            )
+            .unwrap();
+            panic!(
+                "{}: {}\nvirtual TypeScript:\n{}",
+                case.id,
+                output_text(&output),
+                transform.text
+            );
+        }
         assert_eq!(output.stdout, b"", "{}: {}", case.id, output_text(&output));
         assert_eq!(output.stderr, b"", "{}: {}", case.id, output_text(&output));
     }

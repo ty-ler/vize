@@ -163,7 +163,7 @@ type BadgeInstance = typeof ElBadge
 
     assert!(
         output.code.contains(
-            "declare const __VizeComponent_el_badge: import(\"vue\").GlobalComponents extends { \"el-badge\": infer __C } ? __C : import(\"vue\").GlobalComponents extends { \"ElBadge\": infer __C } ? __C : any;"
+            "declare const __VizeComponent_el_badge: \"el-badge\" extends keyof import(\"vue\").GlobalComponents ? import(\"vue\").GlobalComponents[\"el-badge\" & keyof import(\"vue\").GlobalComponents] : \"ElBadge\" extends keyof import(\"vue\").GlobalComponents ? import(\"vue\").GlobalComponents[\"ElBadge\" & keyof import(\"vue\").GlobalComponents] : any;"
         ),
         "{}",
         output.code,
@@ -204,7 +204,7 @@ fn unresolved_slot_host_uses_vue_global_components_fallback() {
 
     assert!(
         output.code.contains(
-            "declare const el_badge: import(\"vue\").GlobalComponents extends { \"el-badge\": infer __C } ? __C : import(\"vue\").GlobalComponents extends { \"ElBadge\": infer __C } ? __C : any;"
+            "declare const el_badge: \"el-badge\" extends keyof import(\"vue\").GlobalComponents ? import(\"vue\").GlobalComponents[\"el-badge\" & keyof import(\"vue\").GlobalComponents] : \"ElBadge\" extends keyof import(\"vue\").GlobalComponents ? import(\"vue\").GlobalComponents[\"ElBadge\" & keyof import(\"vue\").GlobalComponents] : any;"
         ),
         "{}",
         output.code,
