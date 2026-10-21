@@ -8,9 +8,9 @@ use crate::batch::Diagnostic;
 /// 4/8/14 each produce a DIFFERENT set and drop 15–18 oracle diagnostics,
 /// while one worker is count-exact (#3905). Machine-derived counts also made
 /// `vize check` report different errors on different machines for the same
-/// commit. Pinned to one until the upstream divergence is fixed;
-/// `VIZE_CHECKERS` opts back into width where throughput matters more than
-/// oracle fidelity.
+/// commit. The Corsa v2 beta probe pins four workers on every machine so the
+/// same real-project corpus can determine whether that divergence is fixed;
+/// `VIZE_CHECKERS` retains an explicit width override.
 pub(in crate::batch::executor) fn checker_count() -> usize {
     parse_checker_count(std::env::var("VIZE_CHECKERS").ok().as_deref())
 }
@@ -21,7 +21,7 @@ fn parse_checker_count(value: Option<&str>) -> usize {
     value
         .and_then(|value| value.parse::<usize>().ok())
         .filter(|&count| count >= 1)
-        .unwrap_or(1)
+        .unwrap_or(4)
 }
 
 /// Whether the run failed because the runtime does not know `--checkers`: an
@@ -39,10 +39,11 @@ pub(super) fn rejects_checkers_flag(diagnostics: &[Diagnostic]) -> bool {
 mod tests {
     use super::parse_checker_count;
 
-    /// The default is pinned, not machine-derived — the whole point of #3905.
+    /// The v2-beta probe stays pinned, not machine-derived, so every runner
+    /// exercises the same candidate width against the #3905 corpus.
     #[test]
-    fn default_is_one_checker() {
-        assert_eq!(parse_checker_count(None), 1);
+    fn default_is_four_for_v2_beta_probe() {
+        assert_eq!(parse_checker_count(None), 4);
     }
 
     #[test]
