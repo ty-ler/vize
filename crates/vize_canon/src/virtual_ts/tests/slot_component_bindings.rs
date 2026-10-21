@@ -163,7 +163,7 @@ type BadgeInstance = typeof ElBadge
 
     assert!(
         output.code.contains(
-            "declare const __VizeComponent_el_badge: __VizeGlobalComponent<\"el-badge\", \"ElBadge\">;"
+            "declare const __VizeComponent_el_badge: __VizeGlobalComponent<\"el-badge\", \"ElBadge\"> & __VizeGlobalComponentFallback;"
         ),
         "{}",
         output.code,
@@ -205,7 +205,7 @@ fn unresolved_slot_host_uses_vue_global_components_fallback() {
     assert!(
         output
             .code
-            .contains("declare const el_badge: __VizeGlobalComponent<\"el-badge\", \"ElBadge\">;"),
+            .contains("declare const el_badge: __VizeGlobalComponent<\"el-badge\", \"ElBadge\"> & __VizeGlobalComponentFallback;"),
         "{}",
         output.code,
     );
