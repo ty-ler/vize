@@ -9,6 +9,8 @@ const TSGO_ENV: &str = "VIZE_TEST_CONTENT_MAPPER_TSGO";
 const JAVASCRIPT_TSC_ENV: &str = "VIZE_TEST_CONTENT_MAPPER_JAVASCRIPT_TSC";
 const VUE_ENV: &str = "VIZE_TEST_CONTENT_MAPPER_VUE";
 
+#[path = "content_mapper_tsgo_cli/global_components.rs"]
+mod global_components;
 #[path = "content_mapper_tsgo_cli/incomplete_tags.rs"]
 mod incomplete_tags;
 
