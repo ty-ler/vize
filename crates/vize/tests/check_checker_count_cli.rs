@@ -37,7 +37,7 @@ exit 0
 #[test]
 fn cli_checker_count_overrides_environment_for_single_and_sharded_programs() {
     for (explicit, environment, servers, expected) in [
-        (None, None, "1", "1"),
+        (None, None, "1", "4"),
         (None, Some("6"), "1", "6"),
         (Some("4"), Some("1"), "1", "4"),
         (Some("4"), Some("1"), "2", "4"),

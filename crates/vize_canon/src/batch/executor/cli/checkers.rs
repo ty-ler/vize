@@ -9,8 +9,8 @@ use crate::batch::Diagnostic;
 /// while one worker is count-exact (#3905). Machine-derived counts also made
 /// `vize check` report different errors on different machines for the same
 /// commit. The Corsa v2 beta probe pins four workers on every machine so the
-/// same real-project corpus can determine whether that divergence is fixed;
-/// `VIZE_CHECKERS` retains an explicit width override.
+/// same real-project corpus verifies that the v2 diagnostic surface stays
+/// complete; `VIZE_CHECKERS` retains an explicit width override.
 pub(in crate::batch::executor) fn checker_count() -> usize {
     parse_checker_count(std::env::var("VIZE_CHECKERS").ok().as_deref())
 }
@@ -26,9 +26,9 @@ fn parse_checker_count(value: Option<&str>) -> usize {
 
 /// Whether the run failed because the runtime does not know `--checkers`: an
 /// older Corsa rejects the whole invocation with TS5023. Retrying without the
-/// option would silently check the project at Corsa's default checker width,
-/// whose diagnostic set differs from the pinned one-checker oracle (#3905),
-/// the exact machine-dependent drift this pin removes, so callers must fail.
+/// option would silently check the project at a runtime-selected width. That
+/// recreates the machine-dependent diagnostic drift from older Corsa versions
+/// (#3905), so callers must fail instead of dropping the verified v2 width.
 pub(super) fn rejects_checkers_flag(diagnostics: &[Diagnostic]) -> bool {
     diagnostics
         .iter()

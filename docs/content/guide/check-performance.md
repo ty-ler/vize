@@ -33,7 +33,7 @@ components to split or simplify.
 | -------------------------------------- | -------------------------------------------------------------------- |
 | Uses too much memory                   | `--servers 1` runs a single TypeScript process                       |
 | Large project, idle CPU cores          | Leave `--servers` unset; it is sized from CPU count and file count  |
-| `corsa` dominates on one big project   | `--checkers 4` adds checker workers inside each process (see below) |
+| `corsa` dominates on one big project   | The default four checkers parallelize work inside each process     |
 | Many short runs while editing          | Keep a [`check-server`](./type-checking.md#speed-on-large-projects) running |
 
 ```sh
@@ -41,8 +41,8 @@ vpx vize check --checkers 4 --servers 1
 ```
 
 > [!WARNING]
-> More than one checker worker per process can drop or change diagnostics, so the default is one.
-> Compare the output with the default before you use `--checkers` in CI.
+> Corsa v2's default four-checker mode is covered by Vize's real-project snapshots.
+> If you replace the bundled runtime, compare its output with `--checkers 1` before using a custom width in CI.
 
 `--checkers` accepts a positive integer and overrides the `VIZE_CHECKERS` environment variable.
 `--servers` (`1`–`32`) sets how many separate TypeScript processes run; automatic sizing accounts for

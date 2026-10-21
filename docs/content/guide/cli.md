@@ -231,7 +231,7 @@ Key options:
 | `--corsa-path`      | Override the native TypeScript (Corsa) executable path |
 | `--tsrs-path`       | Use an experimental tsrs executable                 |
 | `--servers`         | Parallel Corsa CLI servers (`1`–`32`); auto-tuned when omitted |
-| `--checkers`        | Checker workers per Corsa process (default `1`)    |
+| `--checkers`        | Checker workers per Corsa process (default `4`)    |
 | `--declaration`     | Emit `.d.ts` output                                |
 | `--declaration-dir` | Output directory for emitted declarations          |
 

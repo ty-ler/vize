@@ -229,7 +229,7 @@ vize check --profile src
 | `--corsa-path`      | ネイティブ TypeScript（Corsa）実行ファイルのパスを指定する   |
 | `--tsrs-path`       | 実験的な tsrs 実行ファイルを使用する                         |
 | `--servers`         | 並列に起動する Corsa CLI サーバー数（`1`〜`32`）。省略時は自動調整 |
-| `--checkers`        | Corsa プロセスごとのチェッカー数（デフォルト `1`）           |
+| `--checkers`        | Corsa プロセスごとのチェッカー数（デフォルト `4`）           |
 | `--declaration`     | `.d.ts` を出力する                                           |
 | `--declaration-dir` | 宣言ファイルの出力先                                         |
 

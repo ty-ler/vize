@@ -7,7 +7,7 @@ use std::fs;
 
 /// A runtime that rejects `--checkers` must fail the run. Retrying without the
 /// option would check the project at Corsa's default checker width, whose
-/// diagnostic set differs from the pinned one-checker oracle (#3905).
+/// diagnostic set can differ from the verified Corsa v2 width (#3905).
 #[cfg(unix)]
 #[test]
 fn corsa_without_checkers_support_fails_instead_of_retrying() {
