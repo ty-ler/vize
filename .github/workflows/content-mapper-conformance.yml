@@ -1,6 +1,9 @@
 name: Content Mapper Conformance
 
 on:
+  push:
+    branches:
+      - ci/content-mapper-10185-exact
   schedule:
     - cron: "21 4 * * *"
   workflow_dispatch:
