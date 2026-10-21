@@ -201,8 +201,8 @@ impl<'a> GlobalComponentPlan<'a> {
             if !has_header {
                 ts.push_str(concat!(
                     "\n// Global component stubs (vue module augmentations)\n",
-                    "type __VizeGlobalComponent<__K extends PropertyKey, __F extends PropertyKey = __K, __G = import(\"vue\").GlobalComponents> = ",
-                    "__K extends keyof __G ? __G[__K] : __F extends keyof __G ? __G[__F] : any;\n",
+                    "type __VizeGlobalComponent<__K extends PropertyKey, __F extends PropertyKey = __K, __G = import(\"vue\").GlobalComponents, ",
+                    "__C = __K extends keyof __G ? __G[__K] : __F extends keyof __G ? __G[__F] : any> = unknown extends __C ? any : __C;\n",
                 ));
                 has_header = true;
             }
