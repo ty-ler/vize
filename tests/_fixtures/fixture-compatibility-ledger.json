@@ -1102,6 +1102,7 @@
           "tests/_fixtures/_git/vue-echarts",
           "tests/_fixtures/_git/vuelidate",
           "tests/_fixtures/_git/vue-draggable-resizable",
+          "tests/_fixtures/_git/vue-grid-layout",
           "tests/_fixtures/_git/element",
           "tests/_fixtures/_git/element-plus",
           "tests/_fixtures/_git/element-plus-x",
