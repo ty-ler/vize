@@ -1104,6 +1104,7 @@
           "tests/_fixtures/_git/vue-draggable-resizable",
           "tests/_fixtures/_git/vue-grid-layout",
           "tests/_fixtures/_git/vue-calendar",
+          "tests/_fixtures/_git/cssgridgenerator",
           "tests/_fixtures/_git/element",
           "tests/_fixtures/_git/element-plus",
           "tests/_fixtures/_git/element-plus-x",
