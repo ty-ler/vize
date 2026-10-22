@@ -1130,6 +1130,7 @@
           "tests/_fixtures/_git/frappe-crm",
           "tests/_fixtures/_git/solidtime",
           "tests/_fixtures/_git/dashy",
+          "tests/_fixtures/_git/tdesign",
           "tests/_fixtures/_git/element",
           "tests/_fixtures/_git/element-plus",
           "tests/_fixtures/_git/element-plus-x",
