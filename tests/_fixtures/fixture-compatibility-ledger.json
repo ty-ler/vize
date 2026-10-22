@@ -1126,6 +1126,7 @@
           "tests/_fixtures/_git/mealie",
           "tests/_fixtures/_git/frappe-builder",
           "tests/_fixtures/_git/vuestic-ui",
+          "tests/_fixtures/_git/crater",
           "tests/_fixtures/_git/element",
           "tests/_fixtures/_git/element-plus",
           "tests/_fixtures/_git/element-plus-x",
